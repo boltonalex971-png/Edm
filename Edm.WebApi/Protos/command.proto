@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+option csharp_namespace = "Edm.WebApi";
+
+package Edm;
+
+service CommandExecutor {
+  rpc ExecuteCommand (CommandParams) returns (CommandResponse);
+  rpc GetAvailableTasks (AvalableTaskParams) returns (AvailableTasks);
+}
+
+// The request message containing the user's name.
+message CommandParams {
+	string command = 1;
+	string params = 2;
+}
+
+message CommandResponse {
+	string status = 1;
+	string message = 2;
+	string response = 3;
+}
+ 
+message AvalableTaskParams {
+
+}
+
+message AvailableTasks {
+	
+	message Task {
+		string TaskName = 1;
+        string Status = 2;
+        string Type = 3;
+        string Pid = 4;
+	}
+
+	repeated Task tasks = 1;
+}
