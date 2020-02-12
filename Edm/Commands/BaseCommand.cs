@@ -10,12 +10,15 @@ using System.Threading.Tasks;
 using Microprojects.Edm;
 using Microprojects.Edm.Log;
 using Microprojects.Edm.Utils;
+using Newtonsoft.Json;
 using Testcalibur.Utils;
 
 namespace Microprojects.Edm.Commands
 {
     public class BaseCommand : ICommand
     {
+        protected ICommandParameters CommandParameters { get; set; }
+
         public virtual string Name
         {
             get
@@ -42,105 +45,25 @@ namespace Microprojects.Edm.Commands
             return await ExecuteAsync();
         }
 
-        public virtual Params GetParameters()
+        public virtual Dictionary<string, object> GetParameters()
         {
-            var result = new List<string>();
-            var props = GetType().GetProperties()
-                .Where(p => p.GetCustomAttributes(typeof(CommandParameterAttribute), false).Count() == 1);
-            foreach (var prop in props)
-            {
-                var attr = prop.GetCustomAttribute<CommandParameterAttribute>(false);
-                var propName = attr.Name ?? prop.Name;
-                string propValue = null;
-                if (prop.GetValue(this) != null)
-                {
-                    if (prop.PropertyType.GetInterfaces().Contains(typeof(IEnumerable<int>)))
-                    {
-                        var arr = (IEnumerable<int>)prop.GetValue(this);
-                        propValue = $"[{string.Join(", ", arr)}]";
-                    }
-                    else
-                    {
-                        propValue = $"\"{prop.GetValue(this)}\"";
-                    }
-                    result.Add($"\"{propName}\":{propValue}");
-                }
-            }
-            return JsonHelper.ToParams(string.Join(", ", result));
+            var paramStr = JsonConvert.SerializeObject((object)CommandParameters ?? this);
+            return JsonConvert.DeserializeObject<Dictionary<string, object>>(paramStr);
         }
 
-        public void SetParameters(Params data)
+        public void SetParameters(string data)
         {
-            var props = GetType().GetProperties()
-                .Where(p => p.GetCustomAttributes(typeof(CommandParameterAttribute), false).Count() == 1);
-
-            if (data == null)
+            data = data ?? "{}";
+            var commandParamsType = GetType().GetCustomAttribute<CommandAttribute>(true)?.Parameters;
+            if (commandParamsType != null)
             {
-                data = new Params();
+                var param = Activator.CreateInstance(commandParamsType);
+                JsonConvert.PopulateObject(data, param);
+                CommandParameters = param as ICommandParameters;
             }
-
-            string errors = string.Empty;
-
-            foreach (var prop in props)
+            else
             {
-                var attr = prop.GetCustomAttribute<CommandParameterAttribute>(false);
-                var propName = attr.Name ?? prop.Name;
-                // TODO Cannot store arrays in Registry, needs to convert string to array first
-                var newValue = data.ContainsKey(propName) ? data[propName] : 
-                    this.GetCommandSetting(propName) ?? (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? RegistryHelper.GetAppSetting(propName) : default);
-                if (newValue != null)
-                {
-                    if (prop.PropertyType == typeof(bool?) || prop.PropertyType == typeof(bool))
-                    {
-                        if (bool.TryParse((string) newValue, out bool value))
-                        {
-                            prop.SetValue(this, (bool?) value);
-                        }
-                        else
-                        {
-                            errors += $"Parameter '{propName}' must be boolean (TRUE or FALSE)\r\n";
-                        }
-                    }
-                    else if (prop.PropertyType == typeof(int?) || prop.PropertyType == typeof(int))
-                    {
-                        if (int.TryParse((string) newValue, out int value))
-                        {
-                            prop.SetValue(this, (int?) value);
-                        }
-                        else
-                        {
-                            errors += $"Parameter '{propName}' must be integer\r\n";
-                        }
-                    }
-                    else if (prop.PropertyType == typeof(int[]))
-                    {
-                        if (newValue.GetType() != typeof(object[]))
-                        {
-                            errors += $"Parameter '{propName}' must be an array\r\n";
-                        }
-                        try
-                        {
-                            prop.SetValue(this, ((object[])newValue).Cast<int>().ToArray());
-                        }
-                        catch (InvalidCastException)
-                        {
-                            errors += $"Parameter '{propName}' must be an array of integers\r\n";
-                        }
-                    }
-                    else
-                    {
-                        prop.SetValue(this, newValue);
-                    }
-                }
-                else if (attr.Required)
-                {
-                    //throw new ArgumentException($"Parameter '{prop.Name}' is required");
-                    errors += $"Parameter '{propName}' is required\r\n";
-                }
-            }
-            if (!string.IsNullOrEmpty(errors))
-            {
-                throw new ArgumentException($"\r\n{errors}");
+                JsonConvert.PopulateObject(data, this);
             }
         }
     }

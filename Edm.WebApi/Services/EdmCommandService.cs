@@ -21,8 +21,8 @@ namespace Edm.WebApi
 
         public async override Task<CommandResponse> ExecuteCommand(CommandParams request, ServerCallContext context)
         {
-            var param = JsonConvert.DeserializeObject<Params>(request.Params);
-            var parameters = new CommandData { Command = request.Command, Params = param };
+            //var param = JsonConvert.DeserializeObject<Params>(request.Params);
+            var parameters = new CommandData { Command = request.Command, Params = request.Params };
             var result = await CommandManager.GetInstance().Execute(parameters);
 
             return new CommandResponse

@@ -7,40 +7,32 @@ using System.Threading.Tasks;
 
 namespace Edm.Test.Plugins
 {
-    [Command(Name = "Test", Lifetime = CommandType.ShortRunning)]
+    [Command(Name = "Test", Lifetime = CommandType.ShortRunning, Parameters = typeof(TestCommandParameters))]
     class TestCommand : BaseCommand
     {
-        #region Command parameters
-
-        [CommandParameter]
-        public string CacheConnectionString { get; set; }
-
-        [CommandParameter]
-        public string Port { get; set; }
-
-        [CommandParameter]
-        public string Command { get; set; }
-
-        [CommandParameter(Name = "Address")]
-        public int? SensorAddress { get; set; }
-
-        [CommandParameter]
-        public bool SingleLine { get; set; } = false;
-
-        [CommandParameter]
-        public int BaudRate { get; set; } = 57600;
-
-        [CommandParameter]
-        public int DataBits { get; set; } = 8;
-
-        [CommandParameter]
-        public int Timeout { get; set; } = 1200;
-
-        #endregion
-
         public async override Task<object> ExecuteAsync()
         {
-            return await Task.FromResult(this);
+            return await Task.FromResult(this.CommandParameters);
         }
+    }
+
+    public class TestCommandParameters : ICommandParameters
+    {
+        public string CacheConnectionString { get; set; }
+        public string Port { get; set; }
+        public string Command { get; set; }
+        [CommandParameter(Name = "Address")]
+        public int? SensorAddress { get; set; }
+        public bool SingleLine { get; set; } = false;
+        public int BaudRate { get; set; } = 57600;
+        public int DataBits { get; set; } = 8;
+        public int Timeout { get; set; } = 1200;
+        public IEnumerable<ProfilePoint> Profile { get; set; }
+    }
+
+    public class ProfilePoint
+    {
+        public long Millis { get; set; }
+        public double Value { get; set; }
     }
 }

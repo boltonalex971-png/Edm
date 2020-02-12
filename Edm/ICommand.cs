@@ -12,9 +12,13 @@ namespace Microprojects.Edm
         string Name { get; }
         Task<object> ExecuteAsync();
         Task<object> ExecuteAsync(CancellationToken cancellationToken);
-        Params GetParameters();
-        void SetParameters(Params data);
+        Dictionary<string, object> GetParameters();
+        void SetParameters(string data);
         bool Init();
+    }
+
+    public interface ICommandParameters
+    {
     }
 
     public enum CommandType
@@ -29,6 +33,7 @@ namespace Microprojects.Edm
     {
         public string Name { get; set; }
         public CommandType Lifetime { get; set; }
+        public Type Parameters { get; set; }
     }
 
 }

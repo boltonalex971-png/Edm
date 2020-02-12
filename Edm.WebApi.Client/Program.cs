@@ -19,7 +19,7 @@ namespace Edm.WebApi.Client
                 Console.WriteLine($"{t.TaskName} ({t.Type}) -> {t.Status}");
             }
             var reply = await client.ExecuteCommandAsync(
-                              new CommandParams { Command = "Test", Params = "{\"CacheConnectionString\": \"qqq\"}" });
+                              new CommandParams { Command = "Test", Params = "{\"CacheConnectionString\": \"qqq\", \"Profile\": [{\"Millis\": 100, \"Value\": 0.5}]}" });
             Console.WriteLine($"Response: {reply.Status} {reply.Message} {reply.Response}");
             Console.WriteLine("Press any key to exit...");
             Console.ReadKey();

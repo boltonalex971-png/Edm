@@ -48,7 +48,7 @@ namespace Microprojects.Edm
             foreach (var command in everCommands)
             {
                 var commandInstance = (ICommand) Activator.CreateInstance(command.GetType());
-                commandInstance.SetParameters(new CommandData().Params);
+                commandInstance.SetParameters(null);
                 commandInstance.Init();
                 var taskId = RunLongTask(commandInstance);
             }
@@ -216,9 +216,10 @@ namespace Microprojects.Edm
                 ?? throw new Exception($"Running task with PID {pid} not found");
         }
 
-        private CancellableTask GetTaskByParams(Params parameters)
+        private CancellableTask GetTaskByParams(string param)
         {
             int pid;
+            var parameters = JsonConvert.DeserializeObject<Dictionary<string, object>>(param);
             if (parameters.ContainsKey("Pid"))
             {
                 if (!int.TryParse(parameters["Pid"] as string, out pid))

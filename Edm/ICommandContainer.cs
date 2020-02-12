@@ -26,11 +26,7 @@ namespace Microprojects.Edm
     public class CommandData
     {
         public string Command { get; set; }
-        public Params Params { get; set; }
-    }
-
-    public class Params : Dictionary<string, object>
-    {
+        public string Params { get; set; }
     }
 
     public class ResponseData

@@ -20,8 +20,7 @@ namespace Edm.WebApi
             services.AddGrpc();
             services.AddControllers();
             EdmConfig.Configure(c => c.SetPluginPaths(
-                @"C:\Projects\2017\Optosense PKTKD\Testcalibur\Edm.Test\bin\Debug\netcoreapp3.0\Edm.Test.dll",
-                @"C:\Projects\2017\Optosense PKTKD\Testcalibur\Edm.Test\bin\Debug\netcoreapp3.0\Microprojects.Edm.dll"
+                @"C:\Projects\2020\Edm\Edm.Test\bin\Debug\netcoreapp3.0\Edm.Test.dll"
             ));
 
         }
