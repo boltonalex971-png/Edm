@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 //using Domain.Model;
 using Microprojects.Edm.Cache;
-using Microprojects.Edm.Util.Notifications;
+using Microprojects.Edm.Utils.Notifications;
 
 namespace Microprojects.Edm.Log
 {

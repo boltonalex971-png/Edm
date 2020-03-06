@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Microprojects.Edm.Log;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -23,33 +25,50 @@ namespace Microprojects.Edm
         private static Dictionary<string, IEnumerable<ICommand>> LoadPlugins(string[] paths)
         {
             var dic = new Dictionary<string, IEnumerable<ICommand>>();
+            
+            // Load default commands
+            //var commands = Assembly.GetExecutingAssembly().ExportedTypes
+            //        .Where(t => typeof(ICommand).IsAssignableFrom(t) && !t.IsAbstract)
+            //        .Select(t => (ICommand) Activator.CreateInstance(t))
+            //        .ToList();
+            //dic[Assembly.GetExecutingAssembly().FullName] = commands;
+
+            // Load plugin commands
             foreach (var path in paths)
             {
-                var context = (AssemblyLoadContext) Activator.CreateInstance(_config.Context.GetType());
-                List<Assembly> allAssemblies = new List<Assembly>();
+                var context = (AssemblyLoadContext) Activator.CreateInstance(_config.Context, path);
                 if (!File.Exists(path))
                 {
                     continue;
                 }
 
-                var assembly = context.LoadFromAssemblyPath(path);
-                var commands = assembly.GetTypes()
+                var name = new AssemblyName(Path.GetFileNameWithoutExtension(path));
+                var assembly = context.LoadFromAssemblyName(name);
+
+                var commands = assembly.ExportedTypes
                     .Where(t => typeof(ICommand).IsAssignableFrom(t))
                     .Select(t => (ICommand) Activator.CreateInstance(t))
                     .ToList();
-                dic[path] = commands;
+                dic[assembly.FullName] = commands;
 
-                //foreach (string dll in Directory.GetFiles(path, "*.dll"))
+                //var commandCollection = new List<ICommand>();
+                //foreach (var dll in Directory.GetFiles(path, "*.dll"))
                 //{
-                //    if (dll.Contains(@"\Testcalibur.dll"))
-                //        continue;
+                //    //if (dll.Contains(@"\Testcalibur.dll"))
+                //    //    continue;
                 //    var assembly = context.LoadFromAssemblyPath(dll);
                 //    //allAssemblies.Add(assembly);
                 //    var commands = assembly.GetTypes()
                 //        .Where(t => typeof(ICommand).IsAssignableFrom(t))
-                //        .Select(t => (ICommand) Activator.CreateInstance(t));
-                //    dic[path] = commands;
+                //        .Select(t => (ICommand) Activator.CreateInstance(t))
+                //        .ToList();
+                //    if (commands.Any())
+                //    {
+                //        commandCollection.AddRange(commands);
+                //    }
                 //}
+
+                //dic[path] = commandCollection;
             }
 
             return dic;
@@ -58,18 +77,29 @@ namespace Microprojects.Edm
 
     public class EdmConfiguration
     {
-        internal AssemblyLoadContext Context { get; set; } = new DefaultLoadContext();
+        internal Type Context { get; set; } = AssemblyLoadContext.Default.GetType();
         internal string[] PluginPaths { get; set; }
+        internal ILogger DefaultLogger { get; set; }
 
-        public EdmConfiguration SetLoadContext(AssemblyLoadContext context)
+        public EdmConfiguration SetLoadContext(Type type)
         {
-            Context = context;
+            if (!typeof(EdmLoadContext).IsAssignableFrom(type))
+            {
+                throw new EdmException($"The load context must be inherit from {typeof(EdmLoadContext).FullName}");
+            }
+            Context = type;
             return this;
         }
 
         public EdmConfiguration SetPluginPaths(params string[] paths)
         {
             PluginPaths = paths;
+            return this;
+        }
+
+        public EdmConfiguration SetDefaultLogger(ILogger logger)
+        {
+            Logger.SetLogger(logger);
             return this;
         }
     }

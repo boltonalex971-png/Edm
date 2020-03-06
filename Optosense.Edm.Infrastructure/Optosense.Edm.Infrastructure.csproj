@@ -1,7 +1,6 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
 
@@ -16,13 +15,19 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Optosense.Edm\Optosense.Edm.csproj" />
+    <Folder Include="Edm\Protos\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Edm\Edm.csproj" />
+    <ProjectReference Include="..\Optosense.Edm.Domain\Optosense.Edm.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Protobuf Include="..\Optosense.Edm.WebApi\Protos\command.proto" GrpcServices="Client">
-      <Link>Protos\command.proto</Link>
+      <Link>Edm\Protos\command.proto</Link>
     </Protobuf>
   </ItemGroup>
 
 </Project>
+    

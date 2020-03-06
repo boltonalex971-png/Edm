@@ -15,7 +15,7 @@ namespace Edm.Test
                 @"C:\Projects\2020\Edm\Edm.Test\bin\Debug\netcoreapp3.0\Microprojects.Edm.dll"
             ));
             var tasks = CommandManager.GetInstance().GetAvailableTasks();
-            var result = await CommandManager.GetInstance().Execute(new CommandData { Command = "Test", Params = "{Profile: [{Millis: 100, Value: 0.5}]}" });
+            var result = await CommandManager.GetInstance().Execute(new CommandData { Command = "Test", Params = "{Profile: \"[{Millis: 100, Value: 0.5}]\"}" });
         }
     }
 }

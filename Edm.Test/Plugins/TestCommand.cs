@@ -10,6 +10,8 @@ namespace Edm.Test.Plugins
     [Command(Name = "Test", Lifetime = CommandType.ShortRunning, Parameters = typeof(TestCommandParameters))]
     class TestCommand : BaseCommand
     {
+        protected TestCommandParameters TestCommandParameters => (TestCommandParameters) CommandParameters;
+
         public async override Task<object> ExecuteAsync()
         {
             return await Task.FromResult(this.CommandParameters);

@@ -68,6 +68,12 @@ namespace Microprojects.Edm.Commands
         }
     }
 
+    public class CommandParameters : ICommandParameters
+    {
+        public string CacheConnectionString { get; set; }
+        public int CacheDbNumber { get; set; }
+    }
+
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
     public class CommandParameterAttribute : Attribute
     {

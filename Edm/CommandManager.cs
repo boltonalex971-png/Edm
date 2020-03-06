@@ -12,9 +12,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microprojects.Edm.Log;
-using Microprojects.Edm.Util;
-using Microprojects.Edm.Util.Notifications;
 using Microprojects.Edm.Utils;
+using Microprojects.Edm.Utils.Notifications;
 using Newtonsoft.Json;
 
 namespace Microprojects.Edm
@@ -22,6 +21,7 @@ namespace Microprojects.Edm
     public class CommandManager : ICommandContainer
     {
         private static ICommandContainer _commandContainerInstance;
+
         public static ICommandContainer GetInstance()
         {
             if (EdmConfig.Plugins == null)
@@ -128,14 +128,11 @@ namespace Microprojects.Edm
                 }
                 else
                 {
-                    var command = GetAllCommands().First(c => c.GetType().GetCustomAttribute<CommandAttribute>()?.Name == data.Command);
-                    var lifetime = command.GetType().GetCustomAttribute<CommandAttribute>()?.Lifetime;
-
-                    if (command == null)
-                    {
+                    var command = GetAllCommands()
+                        .FirstOrDefault(c => c.GetType().GetCustomAttribute<CommandAttribute>()?.Name == data.Command) ??
                         throw new ArgumentException($"Command {data.Command} does not exist");
-                    }
 
+                    var lifetime = command.GetType().GetCustomAttribute<CommandAttribute>()?.Lifetime;
                     var commandInstance = (ICommand) Activator.CreateInstance(command.GetType());
                     commandInstance.SetParameters(data.Params);
                     commandInstance.Init();
