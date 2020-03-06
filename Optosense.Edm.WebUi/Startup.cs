@@ -26,6 +26,7 @@ namespace Optosense.Edm.WebUi
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddControllersWithViews();
             services.AddDbContext<EdmContext>(options =>
             {
                 options.UseSqlServer(Configuration.GetConnectionString("Edm"));
@@ -39,15 +40,25 @@ namespace Optosense.Edm.WebUi
             {
                 app.UseDeveloperExceptionPage();
             }
+            else
+            {
+                app.UseExceptionHandler("/Home/Error");
+                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+                app.UseHsts();
+            }
+            app.UseHttpsRedirection();
+            app.UseStaticFiles();
 
             app.UseRouting();
 
+            //app.UseAuthorization();
+            //app.UseMvc();
+
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapGet("/", async context =>
-                {
-                    await context.Response.WriteAsync("Hello World!");
-                });
+                endpoints.MapControllerRoute(
+                    name: "default",
+                    pattern: "{controller=Home}/{action=Index}/{id?}");
             });
         }
     }

@@ -1,6 +1,6 @@
 ﻿{
   "profiles": {
-    "Edm.WebApi": {
+    "Optosense.Edm.WebApi": {
       "commandName": "Project",
       "launchBrowser": false,
       "applicationUrl": "https://localhost:5001",

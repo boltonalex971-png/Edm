@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Edm.WebApi\Optosense.Edm.WebApi.csproj" />
+    <ProjectReference Include="..\Optosense.Edm.WebApi\Optosense.Edm.WebApi.csproj" />
     <ProjectReference Include="..\Edm\Edm.csproj" />
     <ProjectReference Include="..\Optosense.Edm.DataAccess\Optosense.Edm.DataAccess.csproj" />
     <ProjectReference Include="..\Optosense.Edm.Domain\Optosense.Edm.Domain.csproj" />
