@@ -22,11 +22,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Optosense.Edm.DataAccess", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Optosense.Edm.Domain", "Optosense.Edm.Domain\Optosense.Edm.Domain.csproj", "{506F9A54-39E1-4A24-B072-E014272A45F4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Optosense.Edm.WebUi", "Optosense.Edm.WebUi\Optosense.Edm.WebUi.csproj", "{D856FD7C-F414-49F9-869F-36485B92B1FC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Optosense.Edm.WebUi", "Optosense.Edm.WebUi\Optosense.Edm.WebUi.csproj", "{D856FD7C-F414-49F9-869F-36485B92B1FC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Optosense.Edm.Test", "Optosense.Edm.Test\Optosense.Edm.Test.csproj", "{D7874D37-D757-41A2-9023-B3482AF52661}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Optosense.Edm.Test", "Optosense.Edm.Test\Optosense.Edm.Test.csproj", "{D7874D37-D757-41A2-9023-B3482AF52661}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Optosense.Edm.Infrastructure", "Optosense.Edm.Infrastructure\Optosense.Edm.Infrastructure.csproj", "{C0CD8238-4992-4AE2-ABC9-A0E1100412BA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Optosense.Edm.Infrastructure", "Optosense.Edm.Infrastructure\Optosense.Edm.Infrastructure.csproj", "{C0CD8238-4992-4AE2-ABC9-A0E1100412BA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Operations", "Operations", "{89B8BDA7-EE19-4878-AA00-E0C5A18A87D5}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Optosense.Edm.Operations.Test", "Optosense.Edm.Operations.Test\Optosense.Edm.Operations.Test.csproj", "{9C8C2129-0F74-4581-86D2-B43D951525FA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -74,9 +78,16 @@ Global
 		{C0CD8238-4992-4AE2-ABC9-A0E1100412BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C0CD8238-4992-4AE2-ABC9-A0E1100412BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C0CD8238-4992-4AE2-ABC9-A0E1100412BA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9C8C2129-0F74-4581-86D2-B43D951525FA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9C8C2129-0F74-4581-86D2-B43D951525FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9C8C2129-0F74-4581-86D2-B43D951525FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9C8C2129-0F74-4581-86D2-B43D951525FA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{9C8C2129-0F74-4581-86D2-B43D951525FA} = {89B8BDA7-EE19-4878-AA00-E0C5A18A87D5}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F93F8111-60F8-4D4C-994F-1A46CE7F76FA}
