@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,6 +33,10 @@ namespace Optosense.Edm.WebUi
         {
             services.AddControllers();
             services.AddControllersWithViews();
+            services.AddSpaStaticFiles(configuration =>
+            {
+                configuration.RootPath = "ClientApp/build";
+            });
             services.AddDbContext<EdmContext>(options =>
             {
                 options.UseSqlServer(Configuration.GetConnectionString("Edm"));
@@ -53,6 +58,7 @@ namespace Optosense.Edm.WebUi
             }
             app.UseHttpsRedirection();
             app.UseStaticFiles();
+            app.UseSpaStaticFiles();
             app.UseOperations();
             app.UseRouting();
 
@@ -68,6 +74,16 @@ namespace Optosense.Edm.WebUi
                 endpoints.MapControllerRoute(
                     name: "api",
                     pattern: "api/{controller}/{action}");
+            });
+
+            app.UseSpa(spa =>
+            {
+                spa.Options.SourcePath = "ClientApp";
+
+                if (env.IsDevelopment())
+                {
+                    spa.UseReactDevelopmentServer(npmScript: "start");
+                }
             });
         }
 
