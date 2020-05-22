@@ -47,9 +47,10 @@ namespace Optosense.Edm.DataAccess.Migrations
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Created = table.Column<DateTime>(nullable: false),
-                    Started = table.Column<DateTime>(nullable: true),
-                    Completed = table.Column<DateTime>(nullable: true)
+                    Name = table.Column<string>(nullable: true),
+                    Description = table.Column<string>(nullable: true),
+                    IsActive = table.Column<bool>(nullable: false),
+                    DeviceTypes = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -70,29 +71,38 @@ namespace Optosense.Edm.DataAccess.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "HostDevices",
+                name: "Workplaces",
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    DeviceId = table.Column<int>(nullable: false),
-                    HostId = table.Column<int>(nullable: false),
-                    Parameters = table.Column<string>(nullable: true),
+                    Name = table.Column<string>(nullable: true),
+                    Description = table.Column<string>(nullable: true),
                     IsActive = table.Column<bool>(nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_HostDevices", x => x.Id);
+                    table.PrimaryKey("PK_Workplaces", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Operations",
+                columns: table => new
+                {
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ProcessId = table.Column<int>(nullable: false),
+                    Created = table.Column<DateTime>(nullable: false),
+                    Started = table.Column<DateTime>(nullable: true),
+                    Completed = table.Column<DateTime>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Operations", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_HostDevices_Devices_DeviceId",
-                        column: x => x.DeviceId,
-                        principalTable: "Devices",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_HostDevices_Hosts_HostId",
-                        column: x => x.HostId,
-                        principalTable: "Hosts",
+                        name: "FK_Operations_Processes_ProcessId",
+                        column: x => x.ProcessId,
+                        principalTable: "Processes",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -120,33 +130,68 @@ namespace Optosense.Edm.DataAccess.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ProcessHostDevices",
+                name: "HostDevices",
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    ProcessId = table.Column<int>(nullable: false),
+                    DeviceId = table.Column<int>(nullable: false),
+                    HostId = table.Column<int>(nullable: false),
+                    Parameters = table.Column<string>(nullable: true),
+                    IsActive = table.Column<bool>(nullable: false),
+                    WorkplaceId = table.Column<int>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_HostDevices", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_HostDevices_Devices_DeviceId",
+                        column: x => x.DeviceId,
+                        principalTable: "Devices",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_HostDevices_Hosts_HostId",
+                        column: x => x.HostId,
+                        principalTable: "Hosts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_HostDevices_Workplaces_WorkplaceId",
+                        column: x => x.WorkplaceId,
+                        principalTable: "Workplaces",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "OperationHostDevices",
+                columns: table => new
+                {
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    OperationId = table.Column<int>(nullable: false),
                     HostDeviceId = table.Column<int>(nullable: false),
                     ProfileId = table.Column<int>(nullable: false),
                     Options = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ProcessHostDevices", x => x.Id);
+                    table.PrimaryKey("PK_OperationHostDevices", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ProcessHostDevices_HostDevices_HostDeviceId",
+                        name: "FK_OperationHostDevices_HostDevices_HostDeviceId",
                         column: x => x.HostDeviceId,
                         principalTable: "HostDevices",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_ProcessHostDevices_Processes_ProcessId",
-                        column: x => x.ProcessId,
-                        principalTable: "Processes",
+                        name: "FK_OperationHostDevices_Operations_OperationId",
+                        column: x => x.OperationId,
+                        principalTable: "Operations",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_ProcessHostDevices_Profiles_ProfileId",
+                        name: "FK_OperationHostDevices_Profiles_ProfileId",
                         column: x => x.ProfileId,
                         principalTable: "Profiles",
                         principalColumn: "Id",
@@ -159,7 +204,7 @@ namespace Optosense.Edm.DataAccess.Migrations
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    ProcessHostDeviceId = table.Column<int>(nullable: false),
+                    OperationHostDeviceId = table.Column<int>(nullable: false),
                     ScheduledAt = table.Column<DateTime>(nullable: false),
                     ExecutedAt = table.Column<DateTime>(nullable: false),
                     Parameters = table.Column<string>(nullable: true),
@@ -174,9 +219,9 @@ namespace Optosense.Edm.DataAccess.Migrations
                 {
                     table.PrimaryKey("PK_Records", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Records_ProcessHostDevices_ProcessHostDeviceId",
-                        column: x => x.ProcessHostDeviceId,
-                        principalTable: "ProcessHostDevices",
+                        name: "FK_Records_OperationHostDevices_OperationHostDeviceId",
+                        column: x => x.OperationHostDeviceId,
+                        principalTable: "OperationHostDevices",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -192,19 +237,29 @@ namespace Optosense.Edm.DataAccess.Migrations
                 column: "HostId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ProcessHostDevices_HostDeviceId",
-                table: "ProcessHostDevices",
+                name: "IX_HostDevices_WorkplaceId",
+                table: "HostDevices",
+                column: "WorkplaceId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OperationHostDevices_HostDeviceId",
+                table: "OperationHostDevices",
                 column: "HostDeviceId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ProcessHostDevices_ProcessId",
-                table: "ProcessHostDevices",
-                column: "ProcessId");
+                name: "IX_OperationHostDevices_OperationId",
+                table: "OperationHostDevices",
+                column: "OperationId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ProcessHostDevices_ProfileId",
-                table: "ProcessHostDevices",
+                name: "IX_OperationHostDevices_ProfileId",
+                table: "OperationHostDevices",
                 column: "ProfileId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Operations_ProcessId",
+                table: "Operations",
+                column: "ProcessId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ProfilePoint_ProfileId",
@@ -212,9 +267,9 @@ namespace Optosense.Edm.DataAccess.Migrations
                 column: "ProfileId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Records_ProcessHostDeviceId",
+                name: "IX_Records_OperationHostDeviceId",
                 table: "Records",
-                column: "ProcessHostDeviceId");
+                column: "OperationHostDeviceId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
@@ -226,13 +281,13 @@ namespace Optosense.Edm.DataAccess.Migrations
                 name: "Records");
 
             migrationBuilder.DropTable(
-                name: "ProcessHostDevices");
+                name: "OperationHostDevices");
 
             migrationBuilder.DropTable(
                 name: "HostDevices");
 
             migrationBuilder.DropTable(
-                name: "Processes");
+                name: "Operations");
 
             migrationBuilder.DropTable(
                 name: "Profiles");
@@ -242,6 +297,12 @@ namespace Optosense.Edm.DataAccess.Migrations
 
             migrationBuilder.DropTable(
                 name: "Hosts");
+
+            migrationBuilder.DropTable(
+                name: "Workplaces");
+
+            migrationBuilder.DropTable(
+                name: "Processes");
         }
     }
 }

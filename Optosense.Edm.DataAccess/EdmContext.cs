@@ -12,11 +12,13 @@ namespace Optosense.Edm.DataAccess
 
         public DbSet<Device> Devices { get; set; }
         public DbSet<Host> Hosts { get; set; }
-        public DbSet<Process> Processes { get; set; }
         public DbSet<HostDevice> HostDevices { get; set; }
-        public DbSet<ProcessHostDevice> ProcessHostDevices { get; set; }
-        public DbSet<Record> Records { get; set; }
+        public DbSet<Operation> Operations { get; set; }
+        public DbSet<OperationHostDevice> OperationHostDevices { get; set; }
+        public DbSet<Process> Processes { get; set; }
         public DbSet<Profile> Profiles { get; set; }
+        public DbSet<Record> Records { get; set; }
+        public DbSet<Workplace> Workplaces { get; set; }
 
         public EdmContext()
         {
@@ -33,7 +35,7 @@ namespace Optosense.Edm.DataAccess
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlServer(_connectionString);
+            optionsBuilder.UseSqlServer(_connectionString ?? "Data Source=.\\SQLEXPRESS;MultipleActiveResultSets=true;Initial Catalog=optosense_edm;Integrated Security=SSPI;");
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

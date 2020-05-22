@@ -31,8 +31,4 @@
     <ProjectReference Include="..\Edm\Edm.csproj" />
   </ItemGroup>
 
-  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="yarn build" />
-  </Target>
-
 </Project>

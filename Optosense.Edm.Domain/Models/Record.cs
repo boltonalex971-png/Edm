@@ -12,7 +12,7 @@ namespace Optosense.Edm.Domain.Models
 
     public class Record : DomainObject
     {
-        public int ProcessHostDeviceId { get; set; }
+        public int OperationHostDeviceId { get; set; }
 
         public DateTime ScheduledAt { get; set; }
         public DateTime ExecutedAt { get; set; }
@@ -24,6 +24,6 @@ namespace Optosense.Edm.Domain.Models
         public bool IsValid { get; set; }
         public string Message { get; set; }
 
-        public virtual ProcessHostDevice Device { get; set; }
+        public virtual OperationHostDevice Device { get; set; }
     }
 }

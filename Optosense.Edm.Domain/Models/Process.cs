@@ -7,12 +7,11 @@ using System.Threading.Tasks;
 
 namespace Optosense.Edm.Domain.Models
 {
-    public class Process : DomainObject
+    public class Process : TypeObject
     {
-        public DateTime Created { get; set; } = DateTime.Now;
-        public DateTime? Started { get; set; }
-        public DateTime? Completed { get; set; }
-        
-        public ICollection<ProcessHostDevice> Devices { get; set; }
+        /// <summary>
+        /// Json-formatted list of allowed device types, e.g. <code>['Gas', 'Temperature']"</code>.
+        /// </summary>
+        public string DeviceTypes { get; set; }
     }
 }

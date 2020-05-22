@@ -61,7 +61,7 @@ namespace Optosense.Edm.Commands
             {
                 ExecutedAt = DateTime.Now,
                 Request = command,
-                ProcessHostDeviceId = Parameters.Process,
+                OperationHostDeviceId = Parameters.OperationHostDevice,
             };
             try
             {
@@ -96,7 +96,7 @@ namespace Optosense.Edm.Commands
         public IEnumerable<ProfilePoint> Profile { get; set; }
 
         [CommandParameter(Required = true)]
-        public int Process { get; set; }
+        public int OperationHostDevice { get; set; }
         public DeviceModel Device { get; set; }
         public DateTime StartAt { get; set; } = DateTime.Now.AddSeconds(10);
 

@@ -18,11 +18,11 @@ using System.Dynamic;
 
 namespace Optosense.Edm.Commands
 {
-    [Command(Name = "StartProcess", Lifetime = CommandType.LongRunning, Parameters = typeof(StartProcessCommandParameters))]
-    public class StartProcessCommand : BaseCommand
+    [Command(Name = "StartOperation", Lifetime = CommandType.LongRunning, Parameters = typeof(StartOperationCommandParameters))]
+    public class StartOperationCommand : BaseCommand
     {
         protected ICache Cache { get; set; } = CacheHelper.GetInstance();
-        protected StartProcessCommandParameters Parameters => (StartProcessCommandParameters) CommandParameters;
+        protected StartOperationCommandParameters Parameters => (StartOperationCommandParameters) CommandParameters;
 
         public override bool Init()
         {
@@ -33,29 +33,29 @@ namespace Optosense.Edm.Commands
         {
             using (var db = new EdmContext(Parameters.DbConnectionString))
             {
-                var devices = await db.ProcessHostDevices
+                var devices = await db.OperationHostDevices
                         .Include(d => d.Profile)
                         .Include(d => d.HostDevice.Device)
                         .Include(d => d.HostDevice.Host)
                         .Include(d => d.Profile.Points)
-                        .Where(p => p.ProcessId == Parameters.Process)
+                        .Where(p => p.OperationId == Parameters.Operation)
                         .ToListAsync();
 
                 var remoteCommands = new RemoteCommands();
-                foreach (var device in devices)
+                foreach (var operationHostDevice in devices)
                 {
-                    var driverOptions = JsonConvert.DeserializeObject<ExpandoObject>(device.HostDevice.Device.Parameters);
-                    JsonConvert.PopulateObject(device.HostDevice.Parameters, driverOptions);
-                    JsonConvert.PopulateObject(device.Options, driverOptions);
+                    var driverOptions = JsonConvert.DeserializeObject<ExpandoObject>(operationHostDevice.HostDevice.Device.Parameters);
+                    JsonConvert.PopulateObject(operationHostDevice.HostDevice.Parameters, driverOptions);
+                    JsonConvert.PopulateObject(operationHostDevice.Options, driverOptions);
                     var deviceParams = new StartDeviceCommandParameters
                     {
-                        Device = device.HostDevice.Device.Type,
+                        Device = operationHostDevice.HostDevice.Device.Type,
                         DriverOptions = driverOptions,
-                        Process = device.Id,
+                        OperationHostDevice = operationHostDevice.Id,
                         StartAt = Parameters.StartAt,
-                        Profile = device.Profile.Points
+                        Profile = operationHostDevice.Profile.Points
                     };
-                    var response = await remoteCommands.Execute(device.HostDevice.Host.Url, "StartDevice", JsonConvert.SerializeObject(deviceParams), Parameters.StartAt);
+                    var response = await remoteCommands.Execute(operationHostDevice.HostDevice.Host.Url, "StartDevice", JsonConvert.SerializeObject(deviceParams), Parameters.StartAt);
                 }
             }
 
@@ -64,13 +64,13 @@ namespace Optosense.Edm.Commands
 
     }
 
-    public class StartProcessCommandParameters : ICommandParameters
+    public class StartOperationCommandParameters : ICommandParameters
     {
         public string CacheConnectionString { get; set; }
         public string DbConnectionString { get; set; }
 
         [CommandParameter(Required = true)]
-        public int Process { get; set; }
+        public int Operation { get; set; }
         public DateTime StartAt { get; set; } = DateTime.Now.AddSeconds(10);
 
     }
