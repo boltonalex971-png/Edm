@@ -49,7 +49,7 @@ namespace Optosense.Edm.Commands
                     JsonConvert.PopulateObject(operationHostDevice.Options, driverOptions);
                     var deviceParams = new StartDeviceCommandParameters
                     {
-                        Device = operationHostDevice.HostDevice.Device.Type,
+                        Device = operationHostDevice.HostDevice.Device.Model,
                         DriverOptions = driverOptions,
                         OperationHostDevice = operationHostDevice.Id,
                         StartAt = Parameters.StartAt,

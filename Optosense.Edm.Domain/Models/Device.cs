@@ -34,15 +34,15 @@ namespace Optosense.Edm.Domain.Models
 
     public class Device : TypeObject
     {
-        public DeviceModel Type { get; set; }
+        public DeviceModel Model { get; set; }
         public string Parameters { get; set; }
 
         [NotMapped]
         public DeviceType EnvType =>
-            ((int) Type & (int) DeviceType.Gas) > 0 ? DeviceType.Gas :
-            ((int) Type & (int) DeviceType.Temperature) > 0 ? DeviceType.Temperature :
-            ((int) Type & (int) DeviceType.Humidity) > 0 ? DeviceType.Humidity :
-            ((int) Type & (int) DeviceType.Testing) > 0 ? DeviceType.Testing :
+            ((int) Model & (int) DeviceType.Gas) > 0 ? DeviceType.Gas :
+            ((int) Model & (int) DeviceType.Temperature) > 0 ? DeviceType.Temperature :
+            ((int) Model & (int) DeviceType.Humidity) > 0 ? DeviceType.Humidity :
+            ((int) Model & (int) DeviceType.Testing) > 0 ? DeviceType.Testing :
             DeviceType.None;
 
         public ICollection<HostDevice> Hosts { get; set; }

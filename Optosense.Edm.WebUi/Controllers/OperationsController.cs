@@ -6,11 +6,10 @@ using Microprojects.Edm;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Optosense.Edm.WebUi.Api
+namespace Optosense.Edm.WebUi.Controllers
 {
-    [Route("api/ops/[action]")]
-    [Consumes("application/json")]
     [ApiController]
+    [Route("api/[controller]/[action]")]
     public class OperationsController : ControllerBase
     {
         [HttpPost]

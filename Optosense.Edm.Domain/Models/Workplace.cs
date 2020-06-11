@@ -14,6 +14,11 @@ namespace Optosense.Edm.Domain.Models
         /// <summary>
         /// List of attached devices
         /// </summary>
-        public ICollection<HostDevice> Devices { get; set; }
+        public ICollection<WorkplaceHostDevice> Devices { get; set; }
+
+        /// <summary>
+        /// List of processes, allowed to run on this workplace
+        /// </summary>
+        public ICollection<WorkplaceProcess> Processes { get; set; }
     }
 }

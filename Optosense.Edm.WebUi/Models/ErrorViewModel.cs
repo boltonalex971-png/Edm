@@ -1,6 +1,6 @@
 using System;
 
-namespace CoreMvcText.Models
+namespace Optosense.Edm.WebUi.Models
 {
     public class ErrorViewModel
     {

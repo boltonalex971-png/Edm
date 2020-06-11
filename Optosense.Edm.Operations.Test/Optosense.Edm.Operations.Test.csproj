@@ -6,6 +6,7 @@
     <DefaultItemExcludes>$(DefaultItemExcludes);</DefaultItemExcludes>
     <OutputType>Library</OutputType>
     <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
+    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

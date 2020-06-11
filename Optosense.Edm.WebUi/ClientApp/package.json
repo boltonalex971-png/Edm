@@ -1,53 +1,74 @@
 {
-  "name": "reacttest",
-  "homepage": "/apps/",
-  "version": "0.1.0",
-  "private": true,
-  "dependencies": {
-    "babel-eslint": "10.1.0",
-    "bootstrap": "^4.4.1",
-    "eslint": "^6.8.0",
-    "jquery": "^3.4.1",
-    "merge": "^1.2.1",
-    "oidc-client": "^1.10.1",
-    "react": "^16.13.0",
-    "react-dom": "^16.13.0",
-    "react-router-bootstrap": "^0.24.4",
-    "react-router-dom": "^4.2.2",
-    "react-scripts": "^3.4.0",
-    "reactstrap": "^6.3.0",
-    "rimraf": "^2.7.1"
-  },
-  "devDependencies": {
-    "ajv": "^6.12.0",
-    "cross-env": "^5.2.1",
-    "eslint-config-react-app": "^4.0.1",
-    "eslint-plugin-flowtype": "^2.0.0",
-    "eslint-plugin-import": "^2.20.2",
-    "eslint-plugin-jsx-a11y": "^6.2.3",
-    "eslint-plugin-react": "^7.20.0",
-    "typescript": "^3.8.3"
-  },
-  "eslintConfig": {
-    "extends": "react-app"
-  },
-  "scripts": {
-    "start": "rimraf ./build && react-scripts start",
-    "build": "react-scripts build",
-    "test": "cross-env CI=true react-scripts test --env=jsdom",
-    "eject": "react-scripts eject",
-    "lint": "eslint ./src/"
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  }
+    "name": "edm-ui",
+    "homepage": "/",
+    "version": "0.1.0",
+    "private": true,
+    "dependencies": {
+        "@progress/kendo-data-query": "^1.5.4",
+        "@progress/kendo-drawing": "^1.7.0",
+        "@progress/kendo-react-animation": "^3.14.0",
+        "@progress/kendo-react-buttons": "^3.14.0",
+        "@progress/kendo-react-data-tools": "^3.14.0",
+        "@progress/kendo-react-dateinputs": "^3.14.0",
+        "@progress/kendo-react-dropdowns": "^3.14.0",
+        "@progress/kendo-react-form": "^3.14.0",
+        "@progress/kendo-react-grid": "^3.14.0",
+        "@progress/kendo-react-inputs": "^3.14.0",
+        "@progress/kendo-react-intl": "^3.14.0",
+        "@progress/kendo-react-labels": "^3.14.0",
+        "@progress/kendo-react-layout": "^3.14.0",
+        "@progress/kendo-react-notification": "^3.14.0",
+        "@progress/kendo-react-progressbars": "^3.14.0",
+        "@progress/kendo-react-tooltip": "^3.14.0",
+        "@progress/kendo-react-treeview": "^3.14.0",
+        "@progress/kendo-theme-bootstrap": "^4.16.2",
+        "axios": "^0.19.2",
+        "bootstrap": "^4.5.0",
+        "jquery": "^3.4.1",
+        "merge": "^1.2.1",
+        "oidc-client": "^1.10.1",
+        "react": "^16.13.0",
+        "react-dom": "^16.13.0",
+        "react-router-bootstrap": "^0.25.0",
+        "react-router-dom": "^5.2.0",
+        "react-scripts": "^3.4.1",
+        "reactstrap": "^8.4.1",
+        "rimraf": "^2.7.1",
+        "styled-components": "^5.1.1"
+    },
+    "devDependencies": {
+        "ajv": "^6.12.0",
+        "babel-eslint": "10.1.0",
+        "cross-env": "^5.2.1",
+        "eslint": "^6.6.0",
+        "eslint-config-airbnb": "^18.1.0",
+        "eslint-config-react-app": "^4.0.1",
+        "eslint-plugin-flowtype": "^2.0.0",
+        "eslint-plugin-import": "^2.20.2",
+        "eslint-plugin-jsx-a11y": "^6.2.3",
+        "eslint-plugin-react": "^7.20.0",
+        "typescript": "^3.8.3"
+    },
+    "eslintConfig": {
+        "extends": "react-app"
+    },
+    "scripts": {
+        "start": "rimraf ./build && react-scripts start",
+        "build": "react-scripts build",
+        "test": "cross-env CI=true react-scripts test --env=jsdom",
+        "eject": "react-scripts eject",
+        "lint": "eslint ./src/"
+    },
+    "browserslist": {
+        "production": [
+            ">0.2%",
+            "not dead",
+            "not op_mini all"
+        ],
+        "development": [
+            "last 1 chrome version",
+            "last 1 firefox version",
+            "last 1 safari version"
+        ]
+    }
 }

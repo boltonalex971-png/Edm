@@ -15,7 +15,7 @@ namespace Optosense.Edm.DataAccess.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "3.1.2")
+                .HasAnnotation("ProductVersion", "3.1.4")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
@@ -32,14 +32,14 @@ namespace Optosense.Edm.DataAccess.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
+                    b.Property<int>("Model")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Parameters")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -92,16 +92,11 @@ namespace Optosense.Edm.DataAccess.Migrations
                     b.Property<string>("Parameters")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("WorkplaceId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("DeviceId");
 
                     b.HasIndex("HostId");
-
-                    b.HasIndex("WorkplaceId");
 
                     b.ToTable("HostDevices");
                 });
@@ -292,6 +287,50 @@ namespace Optosense.Edm.DataAccess.Migrations
                     b.ToTable("Workplaces");
                 });
 
+            modelBuilder.Entity("Optosense.Edm.Domain.Models.WorkplaceHostDevice", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<int>("HostDeviceId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("WorkplaceId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HostDeviceId");
+
+                    b.HasIndex("WorkplaceId");
+
+                    b.ToTable("WorkplaceHostDevices");
+                });
+
+            modelBuilder.Entity("Optosense.Edm.Domain.Models.WorkplaceProcess", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<int>("ProcessId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("WorkplaceId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProcessId");
+
+                    b.HasIndex("WorkplaceId");
+
+                    b.ToTable("WorkplaceProcesses");
+                });
+
             modelBuilder.Entity("Optosense.Edm.Domain.Models.HostDevice", b =>
                 {
                     b.HasOne("Optosense.Edm.Domain.Models.Device", "Device")
@@ -305,10 +344,6 @@ namespace Optosense.Edm.DataAccess.Migrations
                         .HasForeignKey("HostId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("Optosense.Edm.Domain.Models.Workplace", null)
-                        .WithMany("Devices")
-                        .HasForeignKey("WorkplaceId");
                 });
 
             modelBuilder.Entity("Optosense.Edm.Domain.Models.Operation", b =>
@@ -355,6 +390,36 @@ namespace Optosense.Edm.DataAccess.Migrations
                     b.HasOne("Optosense.Edm.Domain.Models.OperationHostDevice", "Device")
                         .WithMany()
                         .HasForeignKey("OperationHostDeviceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Optosense.Edm.Domain.Models.WorkplaceHostDevice", b =>
+                {
+                    b.HasOne("Optosense.Edm.Domain.Models.HostDevice", "HostDevice")
+                        .WithMany()
+                        .HasForeignKey("HostDeviceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Optosense.Edm.Domain.Models.Workplace", "Workplace")
+                        .WithMany("Devices")
+                        .HasForeignKey("WorkplaceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Optosense.Edm.Domain.Models.WorkplaceProcess", b =>
+                {
+                    b.HasOne("Optosense.Edm.Domain.Models.Process", "Process")
+                        .WithMany()
+                        .HasForeignKey("ProcessId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Optosense.Edm.Domain.Models.Workplace", "Workplace")
+                        .WithMany("Processes")
+                        .HasForeignKey("WorkplaceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

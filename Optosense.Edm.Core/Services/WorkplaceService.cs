@@ -1,0 +1,145 @@
+﻿using AutoMapper.QueryableExtensions;
+using Microsoft.EntityFrameworkCore;
+using Optosense.Edm.Core.Contracts;
+using Optosense.Edm.Core.Persistance;
+using Optosense.Edm.Domain.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Optosense.Edm.Core.Services
+{
+    public class WorkplaceService : ServiceBase, IWorkplaceService
+    {
+        #region injected properties
+        //protected IIstpContextFactory ContextFactory { get; set; }
+        #endregion
+
+        public WorkplaceService() { }
+
+        public WorkplaceService(IEdmContext db) : base(db) { }
+
+        public async Task<IEnumerable<Workplace>> GetAll()
+        {
+            var workplace = await Db.Workplaces.AsNoTracking()
+                .Where(p => p.IsActive)
+                .ToListAsync();
+            return workplace;
+        }
+
+        public async Task<Workplace> Get(int id)
+        {
+            return await Db.Workplaces
+                .FirstOrDefaultAsync(p => id == p.Id);
+        }
+
+        public async Task<Workplace> Save(Workplace workplace)
+        {
+            if (workplace.Id > 0)
+            {
+                var upd = await Db.Workplaces.SingleAsync(p => p.Id == workplace.Id);
+                upd.Name = workplace.Name;
+                upd.Description = workplace.Description;
+                upd.IsActive = true;
+            }
+            else
+            {
+                workplace.IsActive = true;
+                Db.Workplaces.Add(workplace);
+            }
+            await Db.SaveChangesAsync();
+            return workplace;
+        }
+
+        public async Task<Workplace> Delete(int id)
+        {
+            var workplace = await Get(id);
+            var used = false; //await Db.Operations.AnyAsync(o => o.ProcessId == id);
+            if (used)
+            {
+                workplace.IsActive = false;
+            }
+            else
+            {
+                Db.Workplaces.Remove(workplace);
+            }
+
+            await Db.SaveChangesAsync();
+            return workplace;
+        }
+
+        #region devices-tab
+        public async Task<IEnumerable<WorkplaceHostDevice>> GetDevices(int workspaceId)
+        {
+            var devices = await Db.WorkplaceHostDevices
+                .Include(w => w.HostDevice.Device)
+                .Include(w => w.HostDevice.Host)
+                .Where(w => w.WorkplaceId == workspaceId)
+                .ToListAsync();
+            return devices;
+        }
+
+        public async Task<WorkplaceHostDevice> AttachDevice(WorkplaceHostDevice workplaceHostDevice)
+        {
+            var result = Db.WorkplaceHostDevices.Add(workplaceHostDevice);
+            await Db.SaveChangesAsync();
+            return result.Entity;
+        }
+
+        public async Task<bool> DetachDevice(int id, int devId)
+        {
+            var dev = await Db.WorkplaceHostDevices.FindAsync(devId);
+            Db.WorkplaceHostDevices.Remove(dev);
+            await Db.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<IEnumerable<HostDevice>> GetAvailableHostDevices()
+        {
+            var hostDevices = await Db.HostDevices
+                .Include(hd => hd.Host)
+                .Include(hd => hd.Device)
+                .Where(hd => hd.IsActive)
+                .ToListAsync();
+            return hostDevices;
+        }
+        #endregion
+
+        #region processes-tab
+        public async Task<IEnumerable<WorkplaceProcess>> GetProcesses(int workspaceId)
+        {
+            var devices = await Db.WorkplaceProcesses
+                .Include(w => w.Process)
+                .Where(w => w.WorkplaceId == workspaceId)
+                .ToListAsync();
+            return devices;
+        }
+
+        public async Task<WorkplaceProcess> AttachProcess(WorkplaceProcess workplaceProcess)
+        {
+            var result = Db.WorkplaceProcesses.Add(workplaceProcess);
+            await Db.SaveChangesAsync();
+            return result.Entity;
+        }
+
+        public async Task<bool> DetachProcess(int id, int procId)
+        {
+            var dev = await Db.WorkplaceProcesses.FindAsync(procId);
+            Db.WorkplaceProcesses.Remove(dev);
+            await Db.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<IEnumerable<Process>> GetAvailableProcesses()
+        {
+            var processes = await Db.Processes
+                .Where(p => p.IsActive)
+                .ToListAsync();
+            return processes;
+        }
+        #endregion 
+
+    }
+}
