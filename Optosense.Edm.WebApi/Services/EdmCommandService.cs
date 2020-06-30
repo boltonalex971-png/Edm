@@ -27,9 +27,9 @@ namespace Optosense.Edm.WebApi.Services
 
             return new CommandResponse
             {
-                Status = result.Status,
-                Message = result.Message,
-                Response = result.Response
+                Status = result.Status ?? string.Empty,
+                Message = result.Message ?? string.Empty,
+                Response = result.Response ?? string.Empty
             };
         }
 

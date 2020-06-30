@@ -31,7 +31,7 @@ HostDetail.propTypes = {
 function HostDetail(props) {
     let { id } = useParams();
     let [[data, setData], loading, error] = useGet(`${props.api}/${id}`, [id]);
-    if (!data || data.id == 0) {
+    if (!data || data.id === 0) {
         data = { ...data, name: '', description: '', url: '' };
     }
     return (

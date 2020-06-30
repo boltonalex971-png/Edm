@@ -123,8 +123,18 @@ namespace Microprojects.Edm
                 }
                 else if (data.Command == "Check")
                 {
-                    var task = GetTaskByParams(data.Params);
-                    response.Message = task.Task.Status.ToString();
+                    try
+                    {
+                        var task = GetTaskByParams(data.Params);
+                        response.Message = task.Task.Status.ToString();
+                    }
+                    catch (EdmException e)
+                    {
+                        // Likely the task has been completed and disposed already
+                        // TODO keep finished tasks in the container before first check?
+                        response.Message = TaskStatus.RanToCompletion.ToString();
+                        response.Response = e.Message;
+                    }
                 }
                 else
                 {
@@ -235,7 +245,7 @@ namespace Microprojects.Edm
                             p.Key == "Command" ||
                             t.Command.GetParameters().ContainsKey(p.Key) &&
                             parameters[p.Key] == p.Value))
-                    ?? throw new Exception($"Running command with parameters {JsonConvert.SerializeObject(parameters)} cannot be found");
+                    ?? throw new EdmException($"Running command with parameters {JsonConvert.SerializeObject(parameters)} cannot be found");
                 pid = command.Task.Id;
             }
             var task = GetTaskByPid(pid);

@@ -81,5 +81,12 @@ namespace Optosense.Edm.WebUi.Controllers
             return models;
         }
 
+        [HttpGet("{model:alpha}")]
+        public async Task<IEnumerable<Device>> GetByModel(DeviceModel model)
+        {
+            var devices = await _deviceService.Get(d => d.Model == model && d.IsActive);
+            return devices;
+        }
+
     }
 }

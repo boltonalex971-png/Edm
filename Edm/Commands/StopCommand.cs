@@ -11,11 +11,12 @@ namespace Microprojects.Edm.Commands
         public StopCommand(ICommand command)
         {
             Command = command;
+            CommandParameters = command.CommandParameters;
         }
 
         public override Dictionary<string, object> GetParameters()
         {
-            var p = base.GetParameters();
+            var p = Command.GetParameters();
             p.Add("Command", Command.Name);
             return p;
         }

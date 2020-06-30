@@ -76,7 +76,7 @@ export function RelationTable({ api, children, ...props }) {
         <>
             <style>
                 {`
-                    /* TODO Fix for kendo grid width in container */
+                    /* TODO Fix for Kendo Grid width in container */
                     .k-animation-container-relative {
                         width: 100%;
                     }

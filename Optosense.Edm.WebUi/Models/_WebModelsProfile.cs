@@ -35,10 +35,12 @@ namespace Optosense.Edm.WebUi.Models
             CreateMap<Process, IdNameModel>();
 
             CreateMap<HostDevice, HostDeviceModel>();
-            CreateMap<HostDeviceModel, HostDevice>()
-                .ForMember(d => d.Host, o => o.Ignore());
+            CreateMap<HostDeviceModel, HostDevice>();
+                //.ForMember(d => d.Host, o => o.Ignore());
 
             CreateMap<Device, IdNameModel>();
+
+            CreateMap<Operation, OperationModel>();
         }
     }
 }

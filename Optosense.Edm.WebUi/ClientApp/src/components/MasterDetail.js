@@ -63,7 +63,7 @@ Detail.propTypes = {
 export function Detail(props) {
     const history = useHistory();
     let [editMode, setEditMode] = useState(false);
-    editMode = editMode || props.id == 0;
+    editMode = editMode || props.id === 0;
     return (
         props.error ?
             <Alert color='danger' style={{ display: 'flex', justifyContent: 'space-around' }}>{props.error}</Alert> :
@@ -114,7 +114,7 @@ export function Detail(props) {
                         </div>
                     </CardHeader>
                     <CardBody>
-                        {editMode && props.editor || props.card}
+                        {(editMode && props.editor) || props.card}
                         {!editMode && props.relations}
                     </CardBody>
                 </Card>

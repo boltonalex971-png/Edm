@@ -10,6 +10,7 @@ namespace Microprojects.Edm
     public interface ICommand
     {
         string Name { get; }
+        ICommandParameters CommandParameters { get; set; }
         Task<object> ExecuteAsync();
         Task<object> ExecuteAsync(CancellationToken cancellationToken);
         Dictionary<string, object> GetParameters();

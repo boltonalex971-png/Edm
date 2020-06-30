@@ -19,13 +19,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove=".env.local" />
+    <None Remove="yarn-error.log" />
     <None Remove="yarn.lock" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Formatters.Json" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="3.1.3" />
+    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="3.1.5" />
   </ItemGroup>
 
   <ItemGroup>

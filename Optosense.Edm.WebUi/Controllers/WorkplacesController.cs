@@ -101,11 +101,15 @@ namespace Optosense.Edm.WebUi.Controllers
         }
 
         [HttpGet("devices")]
-        public async Task<IEnumerable<IdNameModel>> GetAvailableHostDevices()
+        public async Task<IEnumerable<IdNameModel>> GetAvailableHostDevices(DeviceType? type)
         {
             var hostDevices = await _workplaceService.GetAvailableHostDevices();
+            if (type != null) {
+                hostDevices = hostDevices.Where(hd => hd.Device.EnvType == type);
+            }
             return _mapper.Map<IEnumerable<IdNameModel>>(hostDevices);
         }
+
         #endregion
 
         #region processes

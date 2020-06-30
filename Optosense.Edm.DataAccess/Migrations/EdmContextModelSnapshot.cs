@@ -15,7 +15,7 @@ namespace Optosense.Edm.DataAccess.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "3.1.4")
+                .HasAnnotation("ProductVersion", "3.1.5")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
@@ -108,6 +108,9 @@ namespace Optosense.Edm.DataAccess.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
+                    b.Property<DateTime?>("Cancelled")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime?>("Completed")
                         .HasColumnType("datetime2");
 
@@ -116,6 +119,9 @@ namespace Optosense.Edm.DataAccess.Migrations
 
                     b.Property<int>("ProcessId")
                         .HasColumnType("int");
+
+                    b.Property<DateTime?>("Scheduled")
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("Started")
                         .HasColumnType("datetime2");
@@ -181,6 +187,28 @@ namespace Optosense.Edm.DataAccess.Migrations
                     b.ToTable("Processes");
                 });
 
+            modelBuilder.Entity("Optosense.Edm.Domain.Models.ProcessProfile", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<int>("ProcessId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProfileId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProcessId");
+
+                    b.HasIndex("ProfileId");
+
+                    b.ToTable("ProcessProfile");
+                });
+
             modelBuilder.Entity("Optosense.Edm.Domain.Models.Profile", b =>
                 {
                     b.Property<int>("Id")
@@ -188,7 +216,19 @@ namespace Optosense.Edm.DataAccess.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Model")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TextJson")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
@@ -366,6 +406,21 @@ namespace Optosense.Edm.DataAccess.Migrations
                     b.HasOne("Optosense.Edm.Domain.Models.Operation", "Operation")
                         .WithMany("Devices")
                         .HasForeignKey("OperationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Optosense.Edm.Domain.Models.Profile", "Profile")
+                        .WithMany()
+                        .HasForeignKey("ProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Optosense.Edm.Domain.Models.ProcessProfile", b =>
+                {
+                    b.HasOne("Optosense.Edm.Domain.Models.Process", "Process")
+                        .WithMany("Profiles")
+                        .HasForeignKey("ProcessId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

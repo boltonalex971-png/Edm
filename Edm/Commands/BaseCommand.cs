@@ -17,7 +17,7 @@ namespace Microprojects.Edm.Commands
 {
     public class BaseCommand : ICommand
     {
-        protected ICommandParameters CommandParameters { get; set; }
+        public virtual ICommandParameters CommandParameters { get; set; }
 
         public virtual string Name
         {

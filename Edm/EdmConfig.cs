@@ -22,17 +22,9 @@ namespace Microprojects.Edm
             Plugins = LoadPlugins(_config.PluginPaths);
         }
 
-        private static Dictionary<string, IEnumerable<ICommand>> LoadPlugins(string[] paths)
+        private static Dictionary<string, IEnumerable<ICommand>> LoadPlugins(IEnumerable<string> paths)
         {
             var dic = new Dictionary<string, IEnumerable<ICommand>>();
-            
-            // Load default commands
-            //var commands = Assembly.GetExecutingAssembly().ExportedTypes
-            //        .Where(t => typeof(ICommand).IsAssignableFrom(t) && !t.IsAbstract)
-            //        .Select(t => (ICommand) Activator.CreateInstance(t))
-            //        .ToList();
-            //dic[Assembly.GetExecutingAssembly().FullName] = commands;
-
             // Load plugin commands
             foreach (var path in paths)
             {
@@ -50,25 +42,6 @@ namespace Microprojects.Edm
                     .Select(t => (ICommand) Activator.CreateInstance(t))
                     .ToList();
                 dic[assembly.FullName] = commands;
-
-                //var commandCollection = new List<ICommand>();
-                //foreach (var dll in Directory.GetFiles(path, "*.dll"))
-                //{
-                //    //if (dll.Contains(@"\Testcalibur.dll"))
-                //    //    continue;
-                //    var assembly = context.LoadFromAssemblyPath(dll);
-                //    //allAssemblies.Add(assembly);
-                //    var commands = assembly.GetTypes()
-                //        .Where(t => typeof(ICommand).IsAssignableFrom(t))
-                //        .Select(t => (ICommand) Activator.CreateInstance(t))
-                //        .ToList();
-                //    if (commands.Any())
-                //    {
-                //        commandCollection.AddRange(commands);
-                //    }
-                //}
-
-                //dic[path] = commandCollection;
             }
 
             return dic;
@@ -78,7 +51,7 @@ namespace Microprojects.Edm
     public class EdmConfiguration
     {
         internal Type Context { get; set; } = AssemblyLoadContext.Default.GetType();
-        internal string[] PluginPaths { get; set; }
+        internal IEnumerable<string> PluginPaths { get; set; } = Enumerable.Empty<string>();
         internal ILogger DefaultLogger { get; set; }
 
         public EdmConfiguration SetLoadContext(Type type)
@@ -93,7 +66,13 @@ namespace Microprojects.Edm
 
         public EdmConfiguration SetPluginPaths(params string[] paths)
         {
-            PluginPaths = paths;
+            PluginPaths = paths.Concat(PluginPaths);
+            return this;
+        }
+
+        public EdmConfiguration SetPluginAssemblies(params Assembly[] assemblies)
+        {
+            PluginPaths = assemblies.Select(a => a.Location).Concat(PluginPaths);
             return this;
         }
 

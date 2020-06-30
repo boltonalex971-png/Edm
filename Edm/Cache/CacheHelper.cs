@@ -12,6 +12,7 @@ namespace Microprojects.Edm.Cache
         private static ICache _cache;
         private static ICache _spare;
 
+        // TODO make cache initialization configurable from application.json
         public static ICache GetInstance()
         {
             _cache = _cache ?? new RedisCache();

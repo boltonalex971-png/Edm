@@ -6,6 +6,7 @@ using Optosense.Edm.Domain.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -27,6 +28,11 @@ namespace Optosense.Edm.Core.Services
                 .Where(p => p.IsActive)
                 .ToListAsync();
             return workplace;
+        }
+
+        public async Task<IEnumerable<Workplace>> Get(Expression<Func<Workplace, bool>> predicate)
+        {
+            throw new NotImplementedException();
         }
 
         public async Task<Workplace> Get(int id)
@@ -70,7 +76,7 @@ namespace Optosense.Edm.Core.Services
             return workplace;
         }
 
-        #region devices-tab
+        #region devices
         public async Task<IEnumerable<WorkplaceHostDevice>> GetDevices(int workspaceId)
         {
             var devices = await Db.WorkplaceHostDevices
@@ -107,7 +113,7 @@ namespace Optosense.Edm.Core.Services
         }
         #endregion
 
-        #region processes-tab
+        #region processes
         public async Task<IEnumerable<WorkplaceProcess>> GetProcesses(int workspaceId)
         {
             var devices = await Db.WorkplaceProcesses
@@ -139,7 +145,8 @@ namespace Optosense.Edm.Core.Services
                 .ToListAsync();
             return processes;
         }
-        #endregion 
+
+        #endregion
 
     }
 }

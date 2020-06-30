@@ -10,7 +10,8 @@ namespace Microprojects.Edm.Cache.Redis
     public static class RedisHelper
     {
         // WARNING! always use "abortConnect=false" in connection string 
-        private static readonly Lazy<ConnectionMultiplexer> LazyConnection = new Lazy<ConnectionMultiplexer>(() => ConnectionMultiplexer.Connect("localhost,abortConnect=false"));
+        private static readonly Lazy<ConnectionMultiplexer> LazyConnection = 
+            new Lazy<ConnectionMultiplexer>(() => ConnectionMultiplexer.Connect("localhost,abortConnect=false"));
 
         public static ConnectionMultiplexer Connection => LazyConnection.Value;
 

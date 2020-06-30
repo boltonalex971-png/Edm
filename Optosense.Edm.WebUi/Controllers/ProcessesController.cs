@@ -38,10 +38,11 @@ namespace Optosense.Edm.WebUi.Controllers
             }
             else
             {
-                return new Process 
-                { 
+                return new Process
+                {
                     Name = string.Empty,
                     Description = string.Empty,
+                    DeviceTypes = "[]",
                     IsActive = true
                 };
             }

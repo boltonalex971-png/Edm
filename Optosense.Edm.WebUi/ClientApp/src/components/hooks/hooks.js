@@ -36,7 +36,7 @@ function useFetch(url, deps = [], type = requestType.get, data = null) {
                 const json = response.ok && await response.json();
                 setState({ loading: false, data: json, error: error });
             } catch (error) {
-                if (error.name != 'AbortError') {
+                if (error.name !== 'AbortError') {
                     setState({ loading: false, data: null, error: 'Cannot load the data' });
                 }
             }

@@ -5,6 +5,7 @@ using Optosense.Edm.Domain.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -26,6 +27,11 @@ namespace Optosense.Edm.Core.Services
                 .Where(p => p.IsActive)
                 .ToListAsync();
             return processes;
+        }
+
+        public async Task<IEnumerable<Process>> Get(Expression<Func<Process, bool>> predicate)
+        {
+            throw new NotImplementedException();
         }
 
         public async Task<Process> Get(int id)

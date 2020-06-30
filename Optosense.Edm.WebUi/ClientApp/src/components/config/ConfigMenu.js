@@ -1,7 +1,6 @@
 import React from 'react';
 import { Nav, NavItem, NavLink } from 'reactstrap';
 import { NavLink as Link, useRouteMatch } from 'react-router-dom';
-import './ConfigMenu.css';
 
 export function ConfigMenu() {
     let { path } = useRouteMatch();

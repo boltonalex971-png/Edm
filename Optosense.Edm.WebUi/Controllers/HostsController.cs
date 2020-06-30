@@ -41,8 +41,8 @@ namespace Optosense.Edm.WebUi.Controllers
             }
             else
             {
-                return new Host 
-                { 
+                return new Host
+                {
                     Name = string.Empty,
                     Description = string.Empty,
                     Port = 4333,
@@ -107,7 +107,13 @@ namespace Optosense.Edm.WebUi.Controllers
             var devices = await _hostService.GetAvailableDevices();
             return _mapper.Map<IEnumerable<IdNameModel>>(devices);
         }
-        #endregion
 
+        [HttpGet("devices/{id:int}")]
+        public async Task<HostDeviceModel> GetHostDevice(int id)
+        {
+            var device = await _hostService.GetHostDevice(id);
+            return _mapper.Map<HostDeviceModel>(device);
+        }
+        #endregion
     }
 }

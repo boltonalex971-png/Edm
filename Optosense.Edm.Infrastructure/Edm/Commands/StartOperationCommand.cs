@@ -15,6 +15,7 @@ using Optosense.Edm.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Optosense.Edm.Infrastructure.Edm;
 using System.Dynamic;
+using Optosense.Edm.Infrastructure.Edm.Commands;
 
 namespace Optosense.Edm.Commands
 {
@@ -31,6 +32,7 @@ namespace Optosense.Edm.Commands
 
         public override async Task<object> ExecuteAsync()
         {
+            var running = new List<(string url, ICommand command)>();
             using (var db = new EdmContext(Parameters.DbConnectionString))
             {
                 var devices = await db.OperationHostDevices
@@ -40,8 +42,13 @@ namespace Optosense.Edm.Commands
                         .Include(d => d.Profile.Points)
                         .Where(p => p.OperationId == Parameters.Operation)
                         .ToListAsync();
+                if (devices.All(d => d.HostDevice.Device.EnvType == DeviceType.None))
+                {
+                    // Start test operation if all devices of type None
+                    var test = new StartTestOperationCommand { CommandParameters = CommandParameters };
+                    return await test.ExecuteAsync(CancellationToken);
+                }
 
-                var remoteCommands = new RemoteCommands();
                 foreach (var operationHostDevice in devices)
                 {
                     var driverOptions = JsonConvert.DeserializeObject<ExpandoObject>(operationHostDevice.HostDevice.Device.Parameters);
@@ -55,13 +62,54 @@ namespace Optosense.Edm.Commands
                         StartAt = Parameters.StartAt,
                         Profile = operationHostDevice.Profile.Points
                     };
-                    var response = await remoteCommands.Execute(operationHostDevice.HostDevice.Host.Url, "StartDevice", JsonConvert.SerializeObject(deviceParams), Parameters.StartAt);
+                    var url = $"{operationHostDevice.HostDevice.Host.Url}:{operationHostDevice.HostDevice.Host.Port}";
+                    var deviceCommand = new StartDeviceCommand { CommandParameters = deviceParams };
+                    running.Add((url, deviceCommand));
+                    var response = await deviceCommand.RemoteExecute(url);
+                    // TODO check response for validity
                 }
             }
 
+            int count;
+            do
+            {
+                count = 0;
+                await Task.Delay(10000, CancellationToken); 
+                foreach (var dev in running)
+                {
+                    var check = new CheckCommand(dev.command);
+                    var response = await check.RemoteExecute(dev.url, new
+                    {
+                        Command = dev.command.Name,
+                        ((StartDeviceCommandParameters) dev.command.CommandParameters).OperationHostDevice,
+                        ((StartDeviceCommandParameters) dev.command.CommandParameters).Device
+                    });
+                    if (response.Status == "Ok" && Enum.TryParse(response.Message, out TaskStatus commandStatus))
+                    {
+                        if (commandStatus == TaskStatus.Running ||
+                                commandStatus == TaskStatus.WaitingForActivation ||
+                                commandStatus == TaskStatus.WaitingToRun ||
+                                commandStatus == TaskStatus.WaitingForChildrenToComplete)
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            count++;
+                        }
+                    }
+                }
+            } while (count < running.Count);
+
+            using (var db = new EdmContext(Parameters.DbConnectionString))
+            {
+                var operation = await db.Operations.FindAsync(Parameters.Operation);
+                operation.Completed = DateTime.Now;
+                await db.SaveChangesAsync();
+            }
+        
             return "Ok";
         }
-
     }
 
     public class StartOperationCommandParameters : ICommandParameters
