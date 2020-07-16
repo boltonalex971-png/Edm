@@ -27,10 +27,13 @@ export function NewOperationWizard() {
     const step3Disabled = !devices && true;
     const step4Disabled = !profiles && true;
     const onProcessChange = (event) => {
-        history.push('/process');
+        openProcess();
         setProcess(event.value);
         setDevices(null);
         setProfiles(null);
+    };
+    const openProcess = () => {
+        history.push('/process');
     };
     const onOperationStart = () => {
         const data = {
@@ -75,14 +78,17 @@ export function NewOperationWizard() {
                             step={1}
                         >
                             <p>Select appropriate process to run</p>
-                            <DropDownList
-                                data={processList || []}
-                                dataItemKey='id'
-                                textField='name'
-                                loading={!processList}
-                                onChange={onProcessChange}
-                                style={{ minWidth: '300px' }}
-                            />
+                            <div className='d-inline-flex'>
+                                <DropDownList
+                                    data={processList || []}
+                                    dataItemKey='id'
+                                    textField='name'
+                                    loading={!processList}
+                                    onChange={onProcessChange}
+                                    style={{ minWidth: '300px' }}
+                                />
+                                {process && <Button onClick={openProcess} icon='info' className='text-info' look='bare' style={{ outline: 'none' }}></Button>}
+                            </div>
                         </Step>
                         <Step
                             step={2}
@@ -99,6 +105,7 @@ export function NewOperationWizard() {
                             description='Configure selected devices and choose executing profiles'
                         >
                             <ProfilesStep
+                                key={devices && devices.map((d) => d.id).join(',')}
                                 devices={devices}
                                 onAllSelected={setProfiles}
                             />
@@ -191,7 +198,7 @@ function DevicesStep({ process, onAllSelected }) {
         if (devices.length != 0 && devices.length == deviceTypes.length) {
             onAllSelected(devices);
         }
-    }, [devices]);
+    });
     return (
         <>
             <div>
@@ -212,6 +219,7 @@ function DevicesStep({ process, onAllSelected }) {
                         api={`${api.workplaces}/devices?type=${el}`}
                         key={el}
                         type={el}
+                        details={'/options'}
                         onChange={(event) => {
                             history.push(`/options/${event.value.id}`);
                             setDevices([...devices.filter((d) => d.id !== event.value.id), event.value]);
@@ -244,6 +252,7 @@ function ProfilesStep({ devices, onAllSelected }) {
                     api={`${api.profiles}/devices/${el.id}`}
                     key={el.id}
                     type={el.name}
+                    details={'/profiles'}
                     onChange={(event) => {
                         history.push(`/profiles/${event.value.id}`);
                         setProfiles([...profiles.filter((d) => d.id != event.value.id), { ...event.value, deviceId: el.id }]);
@@ -257,22 +266,32 @@ function ProfilesStep({ devices, onAllSelected }) {
 DeviceDropDown.propTypes = {
     api: PropTypes.string,
     type: PropTypes.string,
+    details: PropTypes.string,
     onChange: PropTypes.func
 }
 
-function DeviceDropDown({ api, type, onChange }) {
+function DeviceDropDown({ api, type, details, onChange }) {
+    const history = useHistory();
     const [[data]] = useGet(api, [api]);
+    const [id, setId] = useState();
+    const onDeviceChanged = (event) => {
+        setId(event.value.id);
+        onChange(event);
+    };
     return (
         <div style={{ marginRight: '10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <span>{type}</span>
-            <DropDownList
-                data={data || []}
-                loading={!data}
-                dataItemKey='id'
-                textField='name'
-                onChange={onChange}
-                style={{ minWidth: '300px' }}
-            />
+            <div className='d-inline-flex'>
+                <DropDownList
+                    data={data || []}
+                    loading={!data}
+                    dataItemKey='id'
+                    textField='name'
+                    onChange={onDeviceChanged}
+                    style={{ minWidth: '300px' }}
+                />
+                {id && <Button onClick={() => history.push(`${details}/${id}`)} icon='info' className='text-info' look='bare' style={{ outline: 'none' }}></Button>}
+            </div>
         </div>
     );
 }
@@ -338,7 +357,7 @@ function ProfileDetails() {
         :
         '';
     const handleSubmit = (dataItem) => {
-        console.log('e :>> ', dataItem);
+        //console.log('e :>> ', dataItem);
     };
     return (
         <>
