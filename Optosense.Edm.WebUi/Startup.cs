@@ -20,6 +20,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using Optosense.Edm.Attributes;
 using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Core.Infrastructure;
 using Optosense.Edm.Core.Infrastructure.Mapper;
@@ -27,6 +28,7 @@ using Optosense.Edm.Core.Persistance;
 using Optosense.Edm.Core.Services;
 using Optosense.Edm.DataAccess;
 using Optosense.Edm.Domain.Models;
+using Optosense.Edm.Drivers.Null;
 using Optosense.Edm.Infrastructure.Edm;
 using Optosense.Edm.WebApi.Utils;
 
@@ -144,20 +146,18 @@ namespace Optosense.Edm.WebUi
 
     static class Extensions
     {
-        private static IEnumerable<Assembly> OperationPlugins { get; set; }
+        private static IEnumerable<Type> Plugins { get; set; }
         internal class OperationPluginsConfig
         {
             public string PluginsPath { get; set; }
         }
 
-        private static IEnumerable<Assembly> CollectOperationPlugins(string path)
+        private static IEnumerable<Type> CollectOperationPlugins(string path)
         {
-            var plugins = AppDomain.CurrentDomain.GetAssemblies().Where(a => a.GetName().Name.Contains(".Operations."));
+            var p = new NullDriver();
+            var plugins = AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(a => a.GetTypes().Where(t => t.GetCustomAttribute<PluginAttribute>() != null));
             return plugins;
-            //foreach (var plugin in plugins)
-            //{
-            //    yield return plugin;
-            //}
         }
 
         public static void AddOperationPlugins(this IServiceCollection service, Action<OperationPluginsConfig> config)
@@ -172,33 +172,28 @@ namespace Optosense.Edm.WebUi
             {
                 throw new EdmException("Startup: 'PluginsPath' option must be specified");
             }
-            OperationPlugins = CollectOperationPlugins(conf.PluginsPath);
-        }
-        public static void AddOperationPlugins(this IServiceCollection service, IConfiguration config, string section = "Edm")
-        {
-            var path = config[$"{section}:PluginsPath"] ?? throw new EdmException("Startup: Cofiguration must contain 'Edm' section with 'PluginsPath' option");
-            OperationPlugins = CollectOperationPlugins(path);
+            Plugins = CollectOperationPlugins(conf.PluginsPath);
         }
 
         public static void MapSpaPlugins(this IApplicationBuilder builder)
         {
-            if (OperationPlugins == null)
+            if (Plugins == null)
             {
                 throw new EdmException("Startup: Operation plugins must be located by 'IServiceCollection.AddOperationPlugins' method");
             }
-            foreach (var plugin in OperationPlugins)
+            foreach (var plugin in Plugins)
             {
                 builder.MapSpa(plugin);
             }
         }
 
-        public static void MapSpa(this IApplicationBuilder builder, Assembly assembly)
+        public static void MapSpa(this IApplicationBuilder builder, Type plugin)
         {
-            var prefix = ".Operations.";
-            var name = assembly.GetName().Name;
-            var packageName = name.Substring(name.IndexOf(prefix) + prefix.Length);
-            var pluginPath = $"/apps/{packageName.ToLower()}";
-            var fileProvider = new ManifestEmbeddedFileProvider(assembly, "build");
+            var attr = plugin.GetCustomAttribute<PluginAttribute>();
+            var name = plugin.Assembly.GetName().Name;
+            var packageName = name.Substring(name.LastIndexOf('.') + 1);
+            var pluginPath = $"/{attr.UiRoot}/{packageName.ToLower()}";
+            var fileProvider = new ManifestEmbeddedFileProvider(plugin.Assembly, attr.UiPath);
             builder.Use((context, next) =>
             {
                 if (context.Request.Path.StartsWithSegments(pluginPath, out var remain))
@@ -217,62 +212,6 @@ namespace Optosense.Edm.WebUi
                 FileProvider = fileProvider,
                 RequestPath = new PathString(pluginPath)
             });
-        }
-
-        public static void MapSpa(this IApplicationBuilder builder)
-        {
-            var pluginPath = "/apps/test";
-            var fileProvider = new PhysicalFileProvider(@"C:\Projects\2020\Edm\Optosense.Edm.Operations.Test\build");
-            builder.Use((context, next) =>
-            {
-                if (context.Request.Path.StartsWithSegments(pluginPath, out var remain))
-                {
-                    var fileInfo = fileProvider.GetFileInfo(remain);
-                    if (!fileInfo.Exists)
-                    {
-                        context.Request.Path = new PathString($"{pluginPath}/index.html");
-                    }
-                }
-                return next();
-            });
-
-            builder.UseStaticFiles(new StaticFileOptions
-            {
-                FileProvider = fileProvider,
-                RequestPath = new PathString(pluginPath)
-            });
-        }
-
-        public static void UseOperations(this IApplicationBuilder builder)
-        {
-            string codeBase = Assembly.GetExecutingAssembly().CodeBase;
-            UriBuilder uri = new UriBuilder(codeBase);
-
-            string path = Path.GetDirectoryName(Uri.UnescapeDataString(uri.Path));
-            foreach (var assPath in Directory.GetFiles(path, "Optosense.Edm.Operations.*.dll"))
-            {
-                var fileName = Path.GetFileNameWithoutExtension(assPath);
-                var packageName = fileName.Replace("Optosense.Edm.Operations.", string.Empty);
-                builder.UseStaticFiles(new StaticFileOptions
-                {
-                    FileProvider = new ManifestEmbeddedFileProvider(Assembly.Load($"Optosense.Edm.Operations.{packageName}"), "build"),
-                    RequestPath = $"/apps/{packageName.ToLower()}"
-                });
-            }
-        }
-        public static void UseDevelopmentOperations(this IApplicationBuilder builder)
-        {
-            var path = Directory.GetParent(Directory.GetCurrentDirectory()).FullName;
-            foreach (var folderName in Directory.GetDirectories(path, "Optosense.Edm.Operations.*"))
-            {
-                var packageName = folderName.Replace("Optosense.Edm.Operations.", string.Empty);
-                builder.UseStaticFiles(new StaticFileOptions
-                {
-                    FileProvider = new PhysicalFileProvider(folderName),
-                    RequestPath = $"/apps/{packageName.ToLower()}",
-
-                });
-            }
         }
 
         public static IServiceCollection InjectDeps(this IServiceCollection services)
@@ -318,6 +257,5 @@ namespace Optosense.Edm.WebUi
                 return prop;
             }
         }
-
     }
 }

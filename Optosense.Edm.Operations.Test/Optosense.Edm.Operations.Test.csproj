@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
     <SpaRoot>.\</SpaRoot>
     <DefaultItemExcludes>$(DefaultItemExcludes);</DefaultItemExcludes>
     <OutputType>Library</OutputType>
@@ -32,6 +32,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Edm\Edm.csproj" />
+    <ProjectReference Include="..\Optosense.Edm\Optosense.Edm.csproj" />
   </ItemGroup>
 
 </Project>

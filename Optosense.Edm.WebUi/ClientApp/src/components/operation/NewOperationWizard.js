@@ -52,7 +52,7 @@ export function NewOperationWizard() {
         Axios.post(api.operations, data)
             .then((op) => {
                 //setStarted(true);
-                window.open(`/apps/test?id=${op.data.id}`, '_blank');
+                window.open(`/app/test?id=${op.data.id}`, '_blank');
             })
             .catch((error) => setError(error));
     };

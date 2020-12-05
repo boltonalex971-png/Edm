@@ -13,7 +13,7 @@ export function Apps() {
             <p><strong>Available apps</strong></p>
             <ul>
                 <li>
-                    <p>Test process. <a target='_blank' href='/apps/test'>Take a look</a></p>
+                    <p>Test process. <a target='_blank' href='/app/test'>Take a look</a></p>
                 </li>
                 <li>
                     <p>Interesting process (under constraction)</p>

@@ -115,6 +115,7 @@ namespace Optosense.Edm.Drivers
     {
         public DeviceModel DeviceType { get; set; }
         public Type OptionsType { get; set; }
+        public string UiPath { get; set; }
         public Type CommandType { get; set; }
     }
 }

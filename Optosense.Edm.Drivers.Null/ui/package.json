@@ -1,28 +1,16 @@
 {
-  "name": "test",
-  "homepage": "/app/test",
+  "name": "null",
+  "homepage": "/driver/null",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@progress/kendo-react-buttons": "^3.13.0",
-    "@progress/kendo-react-dateinputs": "^3.14.0",
-    "@progress/kendo-react-dialogs": "^3.13.0",
-    "@progress/kendo-react-form": "^3.14.0",
-    "@progress/kendo-react-intl": "^3.14.0",
-    "@progress/kendo-react-labels": "^3.14.0",
-    "@progress/kendo-theme-bootstrap": "^4.15.0",
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.3.2",
     "@testing-library/user-event": "^7.1.2",
-    "axios": "^0.19.2",
-    "bootstrap": "^4.4.1",
-    "bootstrap-icons": "^1.0.0-alpha3",
     "react": "^16.13.1",
-    "react-bootstrap-icons": "^1.0.1-alpha3",
     "react-dom": "^16.13.1",
     "react-router-dom": "^5.2.0",
-    "react-scripts": "3.4.1",
-    "reactstrap": "^8.4.1"
+    "react-scripts": "3.4.1"
   },
   "scripts": {
     "start": "react-scripts start",

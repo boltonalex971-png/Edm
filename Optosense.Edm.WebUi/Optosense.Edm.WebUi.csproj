@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Optosense.Edm.Core\Optosense.Edm.Core.csproj" />
+    <ProjectReference Include="..\Optosense.Edm.Drivers.Null\Optosense.Edm.Drivers.Null.csproj" />
     <ProjectReference Include="..\Optosense.Edm.Infrastructure\Optosense.Edm.Infrastructure.csproj" />
     <ProjectReference Include="..\Optosense.Edm.Operations.Test\Optosense.Edm.Operations.Test.csproj" />
     <ProjectReference Include="..\Optosense.Edm.WebApi\Optosense.Edm.WebApi.csproj" />

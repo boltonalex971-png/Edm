@@ -27,7 +27,7 @@ export function OperationMenu(props) {
                                 <NavLink tag={Link} className="text-dark" to="/"><span className='k-icon k-i-home'></span></NavLink>
                             </NavItem>
                             <NavItem>
-                                <NavLink tag={Link} className="text-dark" to="/configuration"><span className='k-icon k-i-gear'></span></NavLink>
+                                <NavLink tag={Link} className="text-dark" to="/config"><span className='k-icon k-i-gear'></span></NavLink>
                             </NavItem>
                         </ul>
                         <NavbarText>

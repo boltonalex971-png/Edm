@@ -6,6 +6,7 @@ import {
 import api from '../api';
 import { useGet } from '../hooks/hooks';
 import { Loading, dateToSpan, dateToHumanSpan } from '../utils/Utils';
+import { Link } from 'react-router-dom';
 
 let interval;
 
@@ -24,7 +25,7 @@ const Operations = (props) => {
                     {operations.map((o) =>
                         <Card key={o.id} style={{ maxWidth: '400px' }}>
                             <CardBody>
-                                <CardTitle><h5>{o.processName}</h5></CardTitle>
+                                <CardTitle><Link to={`/app/test/${o.id}`}><h5>{o.processName}</h5></Link></CardTitle>
                                 <CardSubtitle>{o.processDescription}</CardSubtitle>
                                 <CardText>
                                     <span title={dateToSpan(o.created)}>Created {dateToHumanSpan(o.created)} ago</span><br />

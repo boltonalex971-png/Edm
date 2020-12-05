@@ -7,6 +7,7 @@ import { Layout } from "./components/Layout";
 import { OperationInfo } from "./components/OperationInfo";
 import queryString from 'query-string';
 import { OperationMenu } from "./components/OperationMenu";
+import { Config } from "./components/Config";
 
 function App(props) {
     const location = useLocation();
@@ -32,7 +33,7 @@ function App(props) {
                             <OperationInfo operationId={operationId} started={started} {...props} />
                         </Route>
                         <Route path='/config'>
-
+                            <Config apiBase={props.apiBase} />
                         </Route>
                     </>
                 }
