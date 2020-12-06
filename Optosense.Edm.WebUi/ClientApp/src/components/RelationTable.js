@@ -123,7 +123,7 @@ function cellWithEditing({ edit, remove, save, discard }) {
                             hidden={!inEdit}
                             title='Save record'
                             style={{ padding: '6px' }}
-                            look='bare'
+                            look='flat'
                             className='k-button k-grid-save-command'
                             onClick={() => { save(this.props.dataItem); }}
                         >
@@ -133,7 +133,7 @@ function cellWithEditing({ edit, remove, save, discard }) {
                             hidden={!inEdit}
                             title='Discard changes'
                             style={{ padding: '6px' }}
-                            look='bare'
+                            look='flat'
                             className="k-button k-grid-close-command"
                             onClick={() => { discard(this.props.dataItem); }}
                         >
@@ -143,7 +143,7 @@ function cellWithEditing({ edit, remove, save, discard }) {
                             hidden={!edit || inEdit}
                             title='Edit record'
                             style={{ padding: '6px' }}
-                            look='bare'
+                            look='flat'
                             className='k-button k-grid-edit-command'
                             onClick={() => { edit(this.props.dataItem); }}
                         >
@@ -153,7 +153,7 @@ function cellWithEditing({ edit, remove, save, discard }) {
                             hidden={!remove || inEdit}
                             title='Delete record'
                             style={{ padding: '6px' }}
-                            look='bare'
+                            look='flat'
                             className="k-button k-grid-remove-command"
                             onClick={() => { remove(this.props.dataItem); }}
                         >

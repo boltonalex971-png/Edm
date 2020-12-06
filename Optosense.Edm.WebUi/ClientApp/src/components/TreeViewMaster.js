@@ -41,7 +41,7 @@ export function TreeViewMaster(props) {
                             onChange={(e) => setFilter(e.target.value)}
                         />
                     </InputGroup>
-                    <Button icon='add' look='bare' title='Add new' onClick={() => history.push(`${url}/0`)} style={{ justifySelf: 'end' }} />
+                    <Button icon='add' look='flat' title='Add new' onClick={() => history.push(`${url}/0`)} style={{ justifySelf: 'end' }} />
                 </div>
                 {error ?
                     <Alert color='danger' style={{ display: 'flex', justifyContent: 'space-around' }}>{error}</Alert> :

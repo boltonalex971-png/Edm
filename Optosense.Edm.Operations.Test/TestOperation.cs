@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Optosense.Edm.Operations.Test
 {
-    [OperationPlugin(UiPath = "build", UiRoot = "app")]
+    [OperationPlugin(UiPath = "ui/build", UiRoot = "app")]
     public class TestOperation
     {
     }

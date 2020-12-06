@@ -1,11 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
-    <OutputType>Library</OutputType>
-    <DefaultItemExcludes>$(DefaultItemExcludes);</DefaultItemExcludes>
+    <TargetFramework>net5</TargetFramework>
     <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
-    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,11 +15,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="ui\.env.development.local" />
+    <None Remove="ui\.env.local" />
+    <None Remove="ui\.eslintcache" />
+    <None Remove="ui\.gitignore" />
+    <None Remove="ui\yarn-error.log" />
+    <None Remove="ui\yarn.lock" />
+    <None Remove="ui\*.local" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="3.1.5" />
+    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup>

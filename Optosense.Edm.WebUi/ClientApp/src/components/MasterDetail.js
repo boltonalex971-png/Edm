@@ -79,12 +79,12 @@ export function Detail(props) {
                             <Button
                                 title={editMode ? 'View mode' : 'Edit mode'}
                                 icon={editMode ? "close" : "edit"}
-                                look="bare"
+                                look='flat'
                                 onClick={() => setEditMode(!editMode)}
                             />
                             <Button
                                 title='Copy'
-                                look='bare'
+                                look='flat'
                                 icon='copy'
                                 onClick={(e) => {
                                     e.preventDefault();
@@ -98,7 +98,7 @@ export function Detail(props) {
                             />
                             <Button
                                 title='Delete'
-                                look='bare'
+                                look='flat'
                                 icon='delete'
                                 onClick={(e) => {
                                     e.preventDefault();

@@ -296,6 +296,10 @@ function DeviceDropDown({ api, type, details, onChange }) {
     );
 }
 
+DeviceDetails.propTypes = {
+    onOptionsChanged: PropTypes.func
+};
+
 function DeviceDetails({ onOptionsChanged }) {
     const { device } = useParams();
     const [[data]] = useGet(`${api.hosts}/devices/${device}`);

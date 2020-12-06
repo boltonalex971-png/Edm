@@ -1,33 +1,32 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
-    <SpaRoot>.\</SpaRoot>
-    <DefaultItemExcludes>$(DefaultItemExcludes);</DefaultItemExcludes>
-    <OutputType>Library</OutputType>
+    <TargetFramework>net5</TargetFramework>
     <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
-    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="build\**" />
-    <Compile Remove="node_modules\**" />
-    <EmbeddedResource Include="build/**" />
-    <EmbeddedResource Remove="node_modules\**" />
-    <None Remove="build\**" />
-    <None Remove="node_modules\**" />
+    <Compile Remove="ui\build\**" />
+    <Compile Remove="ui\node_modules\**" />
+    <EmbeddedResource Include="ui\build/**" />
+    <EmbeddedResource Remove="ui\node_modules\**" />
+    <None Remove="ui\build\**" />
+    <None Remove="ui\node_modules\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove=".env.local" />
-    <None Remove="yarn-error.log" />
-    <None Remove="yarn.lock" />
+    <None Remove="ui\*.local" />
+    <None Remove="ui\.env.local" />
+    <None Remove="ui\.gitignore" />
+    <None Remove="ui\kendo-ui-license.txt" />
+    <None Remove="ui\yarn-error.log" />
+    <None Remove="ui\yarn.lock" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Formatters.Json" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="3.1.5" />
+    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup>

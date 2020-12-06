@@ -10,7 +10,7 @@ import { Link } from 'react-router-dom';
 
 let interval;
 
-const Operations = (props) => {
+const Operations = () => {
     const [time, setTime] = useState();
     const [[operations]] = useGet(`${api.operations}/running`, [time]);
     useEffect(() => {

@@ -339,3 +339,11 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database
 healthchecksdb
+/Optosense.Edm.Drivers.Null/ui/.eslintcache
+/Optosense.Edm.Drivers.Null/ui/yarn.lock
+/Optosense.Edm.WebUi/ClientApp/.eslintcache
+/Optosense.Edm.WebUi/ClientApp/yarn.lock
+/Optosense.Edm.WebUi/ClientApp/kendo-ui-license.txt
+/Optosense.Edm.Operations.Test/ui/.eslintcache
+/Optosense.Edm.Operations.Test/ui/kendo-ui-license.txt
+/Optosense.Edm.Operations.Test/ui/yarn.lock

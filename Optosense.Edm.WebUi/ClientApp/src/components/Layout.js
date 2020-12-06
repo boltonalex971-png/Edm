@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import { Container } from 'reactstrap';
 import { NavMenu } from './NavMenu';
 
@@ -21,3 +22,7 @@ export class Layout extends Component {
     );
   }
 }
+
+Layout.propTypes = {
+  children: PropTypes.any
+};
