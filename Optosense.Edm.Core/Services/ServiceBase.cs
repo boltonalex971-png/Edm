@@ -1,13 +1,17 @@
-﻿using Optosense.Edm.Core.Persistance;
+﻿using Microsoft.EntityFrameworkCore;
+using Optosense.Edm.Core.Contracts;
+using Optosense.Edm.Core.Persistance;
+using Optosense.Edm.Domain.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Optosense.Edm.Core.Services
 {
-    public class ServiceBase
+    public class ServiceBase<TEntity> : IGenericService<TEntity> where TEntity : TypeObject
     {
         #region Injected Properties
         protected IEdmContext Db { get; set; }
@@ -20,6 +24,71 @@ namespace Optosense.Edm.Core.Services
         public ServiceBase(IEdmContext db)
         {
             Db = db;
+        }
+
+        protected DbSet<TEntity> Set()
+        {
+            var set = Db.Set<TEntity>();
+            return set;
+        }
+
+        public virtual async Task<IEnumerable<TEntity>> GetAll() 
+        {
+            var result = await Set().AsNoTracking()
+                .Where(p => p.IsActive)
+                .ToListAsync();
+            return result;
+        }
+
+        public virtual async Task<TEntity> Get(int id)
+        {
+            var result =  await Set()
+                .FirstOrDefaultAsync(p => id == p.Id);
+            return result;
+        }
+
+        public virtual async Task<IEnumerable<TEntity>> Get(Expression<Func<TEntity, bool>> predicate)
+        {
+            var result = await Set().Where(predicate).ToListAsync();
+            return result;
+        }
+
+        public virtual async Task<TEntity> Save(TEntity entity)
+        {
+            var track = Set().Attach(entity);
+            track.State = entity.Id == 0 ? EntityState.Added : EntityState.Modified;
+            await Db.SaveChangesAsync();
+            return entity;
+        }
+
+        protected virtual async Task<TEntity> Delete(TEntity entity, bool physical = false)
+        {
+            if (entity is not null)
+            {
+                if (physical)
+                {
+                    Set().Remove(entity);
+                }
+                else
+                {
+                    entity.IsActive = false;
+                }
+                await Db.SaveChangesAsync();
+            }
+
+            return entity;
+        }
+
+        public virtual async Task<TEntity> Delete(int id)
+        {
+            var entity = await Get(id);
+            return await Delete(entity, false);
+        }
+
+        protected virtual async Task<TEntity> Delete(int id, Func<TEntity, bool> isLogical)
+        {
+            var entity = await Get(id);
+            return await Delete(entity, isLogical(entity));
         }
     }
 }

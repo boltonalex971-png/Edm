@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace Optosense.Edm.Core.Services
 {
-    public class OperationService : ServiceBase, IOperationService
+    public class OperationService : ServiceBase<Operation>, IOperationService
     {
         private IRemoteCommands _commands;
         public OperationService()
@@ -26,32 +26,6 @@ namespace Optosense.Edm.Core.Services
         public OperationService(IEdmContext db, IRemoteCommands commands): base(db)
         {
             _commands = commands;
-        }
-
-        public async Task<IEnumerable<Operation>> GetAll()
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<IEnumerable<Operation>> Get(Expression<Func<Operation, bool>> predicate)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<Operation> Get(int id)
-        {
-            return await Db.Operations
-                .FirstOrDefaultAsync(p => id == p.Id);
-        }
-
-        public async Task<Operation> Save(Operation operation)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<Operation> Delete(int id)
-        {
-            throw new NotImplementedException();
         }
 
         public async Task<Operation> Create(Operation operation)

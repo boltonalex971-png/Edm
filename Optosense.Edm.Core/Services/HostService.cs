@@ -12,70 +12,19 @@ using System.Threading.Tasks;
 
 namespace Optosense.Edm.Core.Services
 {
-    public class HostService : ServiceBase, IHostService
+    public class HostService : ServiceBase<Host>, IHostService
     {
         #region injected properties
         //protected IIstpContextFactory ContextFactory { get; set; }
         #endregion
 
-        public HostService() { }
+        private IDeviceService _deviceService;
 
-        public HostService(IEdmContext db) : base(db) { }
+        protected HostService() { }
 
-        public async Task<IEnumerable<Host>> GetAll()
+        public HostService(IEdmContext db, IDeviceService deviceService) : base(db) 
         {
-            var hosts = await Db.Hosts.AsNoTracking()
-                .Where(p => p.IsActive)
-                .ToListAsync();
-            return hosts;
-        }
-
-        public async Task<IEnumerable<Host>> Get(Expression<Func<Host, bool>> predicate)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<Host> Get(int id)
-        {
-            return await Db.Hosts
-                .FirstOrDefaultAsync(p => id == p.Id);
-        }
-
-        public async Task<Host> Save(Host host)
-        {
-            if (host.Id > 0)
-            {
-                var upd = await Db.Hosts.SingleAsync(p => p.Id == host.Id);
-                upd.Name = host.Name;
-                upd.Description = host.Description;
-                upd.Port = host.Port;
-                upd.Url = host.Url;
-                upd.IsActive = true;
-            }
-            else
-            {
-                host.IsActive = true;
-                Db.Hosts.Add(host);
-            }
-            await Db.SaveChangesAsync();
-            return host;
-        }
-
-        public async Task<Host> Delete(int id)
-        {
-            var host = await Get(id);
-            var used = await Db.HostDevices.AnyAsync(o => o.HostId == id);
-            if (used)
-            {
-                host.IsActive = false;
-            }
-            else
-            {
-                Db.Hosts.Remove(host);
-            }
-
-            await Db.SaveChangesAsync();
-            return host;
+            _deviceService = deviceService;
         }
 
         #region devices
@@ -105,10 +54,7 @@ namespace Optosense.Edm.Core.Services
 
         public async Task<IEnumerable<Device>> GetAvailableDevices()
         {
-            var devices = await Db.Devices
-                .Where(d => d.IsActive)
-                .ToListAsync();
-            return devices;
+            return await _deviceService.GetAll();
         }
 
         public async Task<HostDevice> GetHostDevice(int id)

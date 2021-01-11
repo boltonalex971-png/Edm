@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Optosense.Edm.Core.Services
 {
-    public class WorkplaceService : ServiceBase, IWorkplaceService
+    public class WorkplaceService : ServiceBase<Workplace>, IWorkplaceService
     {
         #region injected properties
         //protected IIstpContextFactory ContextFactory { get; set; }
@@ -21,60 +21,6 @@ namespace Optosense.Edm.Core.Services
         public WorkplaceService() { }
 
         public WorkplaceService(IEdmContext db) : base(db) { }
-
-        public async Task<IEnumerable<Workplace>> GetAll()
-        {
-            var workplace = await Db.Workplaces.AsNoTracking()
-                .Where(p => p.IsActive)
-                .ToListAsync();
-            return workplace;
-        }
-
-        public async Task<IEnumerable<Workplace>> Get(Expression<Func<Workplace, bool>> predicate)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<Workplace> Get(int id)
-        {
-            return await Db.Workplaces
-                .FirstOrDefaultAsync(p => id == p.Id);
-        }
-
-        public async Task<Workplace> Save(Workplace workplace)
-        {
-            if (workplace.Id > 0)
-            {
-                var upd = await Db.Workplaces.SingleAsync(p => p.Id == workplace.Id);
-                upd.Name = workplace.Name;
-                upd.Description = workplace.Description;
-                upd.IsActive = true;
-            }
-            else
-            {
-                workplace.IsActive = true;
-                Db.Workplaces.Add(workplace);
-            }
-            await Db.SaveChangesAsync();
-            return workplace;
-        }
-
-        public async Task<Workplace> Delete(int id)
-        {
-            var workplace = await Get(id);
-            var used = false; //await Db.Operations.AnyAsync(o => o.ProcessId == id);
-            if (used)
-            {
-                workplace.IsActive = false;
-            }
-            else
-            {
-                Db.Workplaces.Remove(workplace);
-            }
-
-            await Db.SaveChangesAsync();
-            return workplace;
-        }
 
         #region devices
         public async Task<IEnumerable<WorkplaceHostDevice>> GetDevices(int workspaceId)

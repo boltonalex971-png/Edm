@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Optosense.Edm.Domain.Models
 {
-    public class Operation : DomainObject
+    public class Operation : TypeObject
     {
         public int ProcessId { get; set; }
 

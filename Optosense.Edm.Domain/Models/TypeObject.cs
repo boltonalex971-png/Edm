@@ -2,7 +2,7 @@
 
 namespace Optosense.Edm.Domain.Models
 {
-    public abstract class TypeObject : NamedObject
+    public abstract class TypeObject : NamedObject, ILogicallyDeletableEntity
     {
         public string Description { get; set; }
 

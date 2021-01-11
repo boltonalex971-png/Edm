@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Optosense.Edm.Core.Services
 {
-    public class ProfileService : ServiceBase, IProfileService
+    public class ProfileService : ServiceBase<Profile>, IProfileService
     {
         #region injected properties
         //protected IIstpContextFactory ContextFactory { get; set; }
@@ -21,62 +21,11 @@ namespace Optosense.Edm.Core.Services
 
         public ProfileService(IEdmContext db) : base(db) { }
 
-        public async Task<IEnumerable<Profile>> GetAll()
-        {
-            var profile = await Db.Profiles.AsNoTracking()
-                .Where(p => p.IsActive)
-                .ToListAsync();
-            return profile;
-        }
-
-        public async Task<IEnumerable<Profile>> Get(Expression<Func<Profile, bool>> predicate)
-        {
-            var profiles = await Db.Profiles.Where(predicate).ToListAsync();
-            return profiles;
-        }
-
-        public async Task<Profile> Get(int id)
-        {
-            return await Db.Profiles
-                .Include(p => p.Points)
-                .FirstOrDefaultAsync(p => id == p.Id);
-        }
-
-        public async Task<Profile> Save(Profile profile)
-        {
-            if (profile.Id > 0)
-            {
-                var upd = await Db.Profiles.SingleAsync(p => p.Id == profile.Id);
-                upd.Name = profile.Name;
-                upd.Description = profile.Description;
-                upd.Model = profile.Model;
-                upd.TextJson = profile.TextJson;
-                upd.IsActive = true;
-            }
-            else
-            {
-                profile.IsActive = true;
-                Db.Profiles.Add(profile);
-            }
-            await Db.SaveChangesAsync();
-            return profile;
-        }
-
-        public async Task<Profile> Delete(int id)
+        public override async Task<Profile> Delete(int id)
         {
             var profile = await Get(id);
             var used = await Db.OperationHostDevices.AnyAsync(o => o.ProfileId == id);
-            if (used)
-            {
-                profile.IsActive = false;
-            }
-            else
-            {
-                Db.Profiles.Remove(profile);
-            }
-
-            await Db.SaveChangesAsync();
-            return profile;
+            return await Delete(profile, used);
         }
 
         public async Task<IEnumerable<Profile>> GetByDevice(int deviceId)
