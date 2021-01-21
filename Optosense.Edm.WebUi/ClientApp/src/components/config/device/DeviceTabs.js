@@ -1,20 +1,20 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { TabStrip, TabStripTab } from '@progress/kendo-react-layout';
-import { HostDevicesTab } from './HostDevicesTab';
+import { DeviceHostsTab } from './DeviceHostsTab';
 
-HostTabs.propTypes = {
+DeviceTabs.propTypes = {
     api: PropTypes.string,
     id: PropTypes.number,
     onDetailSelected: PropTypes.func
 }
 
-export function HostTabs(props) {
+export function DeviceTabs(props) {
     const [selected, setSelected] = useState(0);
     return (
         <TabStrip selected={selected} onSelect={(e) => setSelected(e.selected)}>
-            <TabStripTab title={'Devices'} >
-                <HostDevicesTab {...props} />
+            <TabStripTab title={'Hosts'} >
+                <DeviceHostsTab {...props} />
             </TabStripTab>
         </TabStrip>
     );

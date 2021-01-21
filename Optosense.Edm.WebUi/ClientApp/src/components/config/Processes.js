@@ -1,25 +1,28 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useGet } from '../hooks/hooks';
 import { Field } from '@progress/kendo-react-form';
 import { Input } from '@progress/kendo-react-inputs';
 import { Label } from 'reactstrap';
-import { useParams } from 'react-router-dom';
+import { useHistory, useParams } from 'react-router-dom';
 import { useRouteMatch } from 'react-router-dom';
 import { MasterDetail, reloadMaster, Detail, Info, Editor } from '../MasterDetail';
 
 export function Processes() {
     let { path } = useRouteMatch();
+    const history = useHistory();
     const api = '/api/processes';
     return (
         <MasterDetail
             api={api}
+            path={path}
             stubMessage='Please select a process'
             detail={
                 <ProcessDetail
                     api={api}
                     path={path}
                     onChange={() => reloadMaster()}
+                    onClose={() => history.push(path)}
                 />
             }
         />
@@ -29,11 +32,15 @@ export function Processes() {
 ProcessDetail.propTypes = {
     onChange: PropTypes.func,
     path: PropTypes.string,
-    api: PropTypes.string
+    api: PropTypes.string,
+    processId: PropTypes.number
 }
 
-function ProcessDetail(props) {
+export function ProcessDetail({ processId, ...props }) {
     let { id } = useParams();
+    id = processId || id;
+    let [sub, setSub] = useState();
+    useEffect(setSub, [id]);
     let [[data, setData], loading, error] = useGet(`${props.api}/${id}`, [id]);
     if (!data || data.id == 0) {
         data = { ...data, name: '', description: '', deviceTypes: '' };
@@ -44,6 +51,7 @@ function ProcessDetail(props) {
             loading={loading}
             error={error}
             data={data}
+            subDetail={sub}
             card={
                 <Info {...props}
                     data={data}

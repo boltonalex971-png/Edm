@@ -8,5 +8,8 @@ namespace Optosense.Edm.Core.Contracts
 {
     public interface IDeviceService : IGenericService<Device>
     {
+        Task<IEnumerable<HostDevice>> GetHosts(int id);
+        Task<IEnumerable<Host>> GetAvailableHosts();
+        Task<HostDevice> GetHostDevice(int id);
     }
 }

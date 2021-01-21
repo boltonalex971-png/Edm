@@ -4,27 +4,68 @@ import { GridColumn } from '@progress/kendo-react-grid';
 import { RelationTable } from '../../RelationTable';
 import { dropDownCell } from '../../DropDownCell';
 import { useGet } from '../../hooks/hooks';
+import { DeviceDetail } from '../Devices';
+import Api from '../../api';
+import { useHistory } from 'react-router-dom';
+import { HostDetail } from '../Hosts';
 
 WorkplaceDevicesTab.propTypes = {
     id: PropTypes.number,
-    api: PropTypes.string
+    api: PropTypes.string,
+    onDetailSelected: PropTypes.func
 }
 
-export function WorkplaceDevicesTab({ id, api }) {
-    const [[data]] = useGet(`${api}/devices`);
+export function WorkplaceDevicesTab({ id, api, onDetailSelected }) {
+    const history = useHistory();
+    const [[deviceList]] = useGet(`${api}/devices`, []);
+    const deviceClick = (deviceId) => {
+        const path = '/config/devices';
+        onDetailSelected(
+            <DeviceDetail
+                deviceId={deviceId}
+                api={Api.devices}
+                path={path}
+                onClose={() => onDetailSelected()}
+                onUp={() => history.push(`${path}/${deviceId}`)}
+            />
+        );
+    };
+    const hostClick = (hostId) => {
+        const path = '/config/hosts';
+        onDetailSelected(
+            <HostDetail
+                hostId={hostId}
+                api={Api.hosts}
+                path={path}
+                onClose={() => onDetailSelected()}
+                onUp={() => history.push(`${path}/${hostId}`)}
+            />
+        );
+    };
     return (
         <RelationTable api={`${api}/${id}/devices`} removable>
-            {data &&
+            {deviceList &&
                 <GridColumn
-                    width={200}
                     field='hostDeviceId'
                     title='Device'
-                    cell={dropDownCell(() => data, 'id', 'name')}
+                    cell={dropDownCell({
+                        getData: () => deviceList,
+                        key: 'id',
+                        text: 'name',
+                        fieldId: 'deviceId',
+                        fieldName: 'device',
+                        onClick: deviceClick
+                    })}
                 />
             }
+            <GridColumn field='hostId' title='Host' editable={false}
+                cell={dropDownCell({
+                    fieldName: 'host',
+                    onClick: hostClick
+                })}
+            />
             <GridColumn field='model' title='Model' editable={false} />
             <GridColumn field='envType' title='Type' editable={false} />
-            <GridColumn field='host' title='Control Host' editable={false} />
         </RelationTable>
     );
 }

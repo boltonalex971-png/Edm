@@ -14,6 +14,7 @@ RelationTable.propTypes = {
     columns: PropTypes.node,
     editable: PropTypes.bool,
     removable: PropTypes.bool,
+    onRowSelected: PropTypes.func,
     children: PropTypes.node
 }
 
@@ -25,7 +26,13 @@ export function RelationTable({ api, children, ...props }) {
     const rowClick = (event) => {
         // eslint-disable-next-line no-unused-vars
         const { inEdit, ...item } = event.dataItem;
-        setEditItem(item);
+        if (props.editable) {
+            setEditItem(item);
+        }
+
+        if (props.onRowSelected) {
+            props.onRowSelected(item);
+        }
     };
     const itemChange = (event) => {
         const inEditID = event.dataItem.id;
@@ -89,7 +96,7 @@ export function RelationTable({ api, children, ...props }) {
                     data={data.map((item) => ({ ...item, inEdit: editItem && item.id === editItem.id }))}
                     editField="inEdit"
                     scrollable='none'
-                    onRowClick={props.editable && rowClick}
+                    onRowClick={rowClick}
                     onItemChange={itemChange}
                 >
                     <GridToolbar>

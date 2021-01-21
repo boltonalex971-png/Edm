@@ -1,22 +1,28 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useGet } from '../hooks/hooks';
 import { Field } from '@progress/kendo-react-form';
 import { Input, NumericTextBox } from '@progress/kendo-react-inputs';
-import { useParams } from 'react-router-dom';
+import { useHistory, useParams } from 'react-router-dom';
 import { useRouteMatch } from 'react-router-dom';
 import { MasterDetail, reloadMaster, Detail, Info, Editor } from '../MasterDetail';
 import { HostTabs } from './host/HostTabs';
 
 export function Hosts() {
-    let { path } = useRouteMatch();
+    const history = useHistory();
+    const { path } = useRouteMatch();
     const api = '/api/hosts';
     return (
         <MasterDetail
             api={api}
             stubMessage='Please select a host'
             detail={(
-                <HostDetail api={api} path={path} onChange={() => reloadMaster()} />
+                <HostDetail
+                    api={api}
+                    path={path}
+                    onChange={() => reloadMaster()}
+                    onClose={() => history.push(path)}
+                />
             )}
         />
     );
@@ -25,11 +31,15 @@ export function Hosts() {
 HostDetail.propTypes = {
     onChange: PropTypes.func,
     path: PropTypes.string,
-    api: PropTypes.string
+    api: PropTypes.string,
+    hostId: PropTypes.number
 }
 
-function HostDetail(props) {
+export function HostDetail({ hostId, ...props }) {
     let { id } = useParams();
+    id = hostId || id;
+    let [sub, setSub] = useState();
+    useEffect(setSub, [id]);
     let [[data, setData], loading, error] = useGet(`${props.api}/${id}`, [id]);
     if (!data || data.id === 0) {
         data = { ...data, name: '', description: '', url: '' };
@@ -40,6 +50,7 @@ function HostDetail(props) {
             loading={loading}
             error={error}
             data={data}
+            subDetail={sub}
             card={
                 <Info {...props}
                     data={data}
@@ -74,7 +85,7 @@ function HostDetail(props) {
                 />
             }
             relations={
-                <HostTabs id={parseInt(id)} api={props.api} />
+                <HostTabs id={parseInt(id)} api={props.api} onDetailSelected={setSub}/>
             } />
     );
 }

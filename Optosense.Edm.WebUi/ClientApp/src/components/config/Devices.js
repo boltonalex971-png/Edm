@@ -1,15 +1,16 @@
-import React from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useGet } from '../hooks/hooks';
 import { Field } from '@progress/kendo-react-form';
 import { Input } from '@progress/kendo-react-inputs';
 import { ComboBox } from '@progress/kendo-react-dropdowns';
-import { useParams } from 'react-router-dom';
-import { useRouteMatch } from 'react-router-dom';
+import { useHistory, useParams, useRouteMatch } from 'react-router-dom';
 import { MasterDetail, reloadMaster, Detail, Info, Editor } from '../MasterDetail';
+import { DeviceTabs } from './device/DeviceTabs';
 
 export function Devices() {
-    let { path } = useRouteMatch();
+    const history = useHistory();
+    const { path } = useRouteMatch();
     const api = '/api/devices';
     return (
         <MasterDetail
@@ -19,7 +20,9 @@ export function Devices() {
                 <DeviceDetail
                     api={api}
                     path={path}
-                    onChange={() => reloadMaster()} />
+                    onChange={() => reloadMaster()}
+                    onClose={() => history.push(path)}
+                />
             )}
         />
     );
@@ -28,28 +31,23 @@ export function Devices() {
 DeviceDetail.propTypes = {
     onChange: PropTypes.func,
     path: PropTypes.string,
-    api: PropTypes.string
+    api: PropTypes.string,
+    deviceId: PropTypes.number
 }
 
-function DeviceDetail(props) {
-    const FormComboBox = (formProps) => {
-        return (
-            <ComboBox {...formProps}
-                // label={formProps.label}
-                // name={formProps.name}
-                // value={formProps.value}
-                // onChange={formProps.onChange}
-                data={models || ['Loading...']}
-            />
-        );
-    };
+export function DeviceDetail({ deviceId, ...props }) {
     let { id } = useParams();
+    id = deviceId || id;
+    let [sub, setSub] = useState();
+    useEffect(setSub, [id]);
     let [[data, setData], loading, error] = useGet(`${props.api}/${id}`, [id]);
     const [[models]] = useGet(`${props.api}/models`, []);
+    const FormComboBox = useCallback((formProps) => <ComboBox {...formProps} data={models || ['Loading...']} />, []);
     data = data || {};
     return (
         <Detail {...props}
             id={id}
+            subDetail={sub}
             loading={loading}
             error={error}
             data={data}
@@ -85,6 +83,9 @@ function DeviceDetail(props) {
                         </fieldset>
                     }
                 />
+            }
+            relations={
+                <DeviceTabs id={parseInt(id)} api={props.api} onDetailSelected={setSub} />
             }
         />
     );

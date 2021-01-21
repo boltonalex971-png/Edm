@@ -6,7 +6,8 @@ import { WorkplaceProcessesTab } from './WorkplaceProcessesTab';
 
 WorkplaceTabs.propTypes = {
     api: PropTypes.string,
-    id: PropTypes.number
+    id: PropTypes.number,
+    onDetailSelected: PropTypes.func
 }
 
 export function WorkplaceTabs(props) {

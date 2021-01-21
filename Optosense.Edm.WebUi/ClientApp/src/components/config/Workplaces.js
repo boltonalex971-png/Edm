@@ -1,22 +1,29 @@
-import React from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useGet } from '../hooks/hooks';
 import { Field } from '@progress/kendo-react-form';
 import { Input } from '@progress/kendo-react-inputs';
-import { useParams } from 'react-router-dom';
+import { useHistory, useParams } from 'react-router-dom';
 import { useRouteMatch } from 'react-router-dom';
 import { MasterDetail, reloadMaster, Detail, Info, Editor } from '../MasterDetail';
 import { WorkplaceTabs } from './workplace/WorkplaceTabs';
 
 export function Workplaces() {
     let { path } = useRouteMatch();
+    const history = useHistory();
     const api = '/api/workplaces';
     return (
         <MasterDetail
             api={api}
+            path={path}
             stubMessage='Please select a workplace'
             detail={(
-                <WorkplaceDetail api={api} path={path} onChange={() => reloadMaster()} />
+                <WorkplaceDetail
+                    api={api}
+                    path={path}
+                    onChange={() => reloadMaster()}
+                    onClose={() => history.push(path)}
+                />
             )}
         />
     );
@@ -28,9 +35,11 @@ WorkplaceDetail.propTypes = {
     api: PropTypes.string
 }
 
-function WorkplaceDetail(props) {
+export function WorkplaceDetail(props) {
     let { id } = useParams();
     let [[data, setData], loading, error] = useGet(`${props.api}/${id}`, [id]);
+    let [sub, setSub] = useState();
+    useEffect(setSub, [id]);
     if (!data || data.id === 0) {
         data = { ...data, name: '', description: '' };
     }
@@ -40,6 +49,7 @@ function WorkplaceDetail(props) {
             loading={loading}
             error={error}
             data={data}
+            subDetail={sub}
             card={
                 <Info {...props}
                     data={data}
@@ -68,7 +78,7 @@ function WorkplaceDetail(props) {
                 />
             }
             relations={
-                <WorkplaceTabs id={parseInt(id)} api={props.api} />
+                <WorkplaceTabs id={parseInt(id)} api={props.api} onDetailSelected={setSub} />
             }
         />
     );

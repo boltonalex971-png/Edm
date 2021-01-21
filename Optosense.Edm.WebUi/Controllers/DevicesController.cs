@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Domain.Models;
+using Optosense.Edm.Webui.Models;
 
 namespace Optosense.Edm.WebUi.Controllers
 {
@@ -16,10 +17,12 @@ namespace Optosense.Edm.WebUi.Controllers
     {
         private readonly ILogger<DevicesController> _logger;
         private readonly IDeviceService _deviceService;
+        private readonly IMapper _mapper;
 
-        public DevicesController(ILogger<DevicesController> logger, IDeviceService deviceService)
+        public DevicesController(ILogger<DevicesController> logger, IMapper mapper, IDeviceService deviceService)
         {
             _logger = logger;
+            _mapper = mapper;
             _deviceService = deviceService;
         }
 
@@ -88,5 +91,45 @@ namespace Optosense.Edm.WebUi.Controllers
             return devices;
         }
 
+        #region devices
+
+        [HttpGet("{id:int}/hosts")]
+        public async Task<IEnumerable<HostDeviceModel>> GetDevices(int id)
+        {
+            var hosts = await _deviceService.GetHosts(id);
+            return _mapper.Map<IEnumerable<HostDeviceModel>>(hosts);
+        }
+
+        //[HttpPost("{id:int}/devices")]
+        //public async Task<HostDeviceModel> AttachHostDevice(int id, HostDeviceModel model)
+        //{
+        //    var hostDevice = _mapper.Map<HostDevice>(model);
+        //    hostDevice.HostId = id;
+        //    var device = await _hostService.AttachDevice(hostDevice);
+        //    return _mapper.Map<HostDeviceModel>(device);
+        //}
+
+        //[HttpDelete("{id:int}/devices/{devId:int}")]
+        //public async Task<bool> DetachDevice(int id, int devId)
+        //{
+        //    var wasDetached = await _hostService.DetachDevice(id, devId);
+        //    return wasDetached;
+        //}
+
+        [HttpGet("hosts")]
+        public async Task<IEnumerable<IdNameModel>> GetAvailableDevices()
+        {
+            var hosts = await _deviceService.GetAvailableHosts();
+            return _mapper.Map<IEnumerable<IdNameModel>>(hosts);
+        }
+
+        [HttpGet("hosts/{id:int}")]
+        public async Task<HostDeviceModel> GetHostDevice(int id)
+        {
+            var host = await _deviceService.GetHostDevice(id);
+            return _mapper.Map<HostDeviceModel>(host);
+        }
+
+        #endregion
     }
 }

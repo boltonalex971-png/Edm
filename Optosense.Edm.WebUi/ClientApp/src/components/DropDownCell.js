@@ -3,7 +3,7 @@ import React
 import { DropDownList } from '@progress/kendo-react-dropdowns';
 import { GridCell } from '@progress/kendo-react-grid';
 
-export function dropDownCell(getData, key, text, fieldName) {
+export function dropDownCell({ getData, key, text, fieldName, fieldId, onClick }) {
     return class extends GridCell {
         handleChange = (e) => {
             this.props.onChange({
@@ -18,21 +18,21 @@ export function dropDownCell(getData, key, text, fieldName) {
             let content;
             const { dataItem, field } = this.props;
             const dataValue = dataItem[field];
-            const dataName = dataItem[fieldName];
-            if (dataItem.inEdit || !fieldName) {
-                const list = getData();
-                const value = list.find(c => c[key] === dataValue);
-                content = dataItem.inEdit ?
-                    < DropDownList
-                        onChange={this.handleChange}
-                        value={value}
-                        data={list}
-                        textField={text}
-                        dataItemKey={key}
-                    /> : (value && value[text] || '- DELETED -').toString();
-            } else if (fieldName) {
-                content = dataItem[fieldName];
-            } 
+            const list = getData && getData() || [];
+            let value = list.find(c => c[key] === dataValue);
+            if (getData && dataItem.inEdit) {
+                content = <DropDownList
+                    onChange={this.handleChange}
+                    value={value}
+                    data={list}
+                    textField={text}
+                    dataItemKey={key}
+                />;
+            } else {
+                const valueName = fieldName ? dataItem[fieldName] : (value && value[text] || '- DELETED -');
+                const valueId = fieldId ? dataItem[fieldId] : value ? value[key] : dataItem[field];
+                content = <button type='button' onClick={() => onClick(valueId)} className='btn btn-link'>{valueName}</button>;
+            }
 
             return (
                 <td style={{ whiteSpace: 'nowrap' }}>
