@@ -1,15 +1,35 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { Loader } from '@progress/kendo-react-indicators';
 
 export function Loading() {
     return (
-        <div className="k-loading-mask" style={{ width: '100%', textAlign: 'center' }}>
-            <span className="k-loading-text">Loading...</span>
-            <div className="k-loading-image"></div>
-            <div className="k-loading-color"></div>
+        <div style={{ width: '100%', textAlign: 'center' }} className='small' >
+            <Loader type='converging-spinner' />
         </div>
     );
 }
+
+LoadingContainer.propTypes = {
+    loading: PropTypes.bool,
+    children: PropTypes.node
+};
+
+export function LoadingContainer({ loading, children }) {
+    return (
+        <div style={{ position: 'relative' }}>
+            {children}
+            {loading &&
+                <div className='small'
+                    style={{ width: '100%', textAlign: 'center', opacity: '100%', position: 'absolute', top: 0, left: 0 }}
+                >
+                    <Loader type='converging-spinner' />
+                </div>
+            }
+        </div>
+    );
+}
+
 
 DetailStub.propTypes = {
     message: PropTypes.string.isRequired

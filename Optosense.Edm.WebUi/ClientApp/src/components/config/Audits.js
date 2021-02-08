@@ -2,51 +2,28 @@ import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useGet } from '../hooks/hooks';
 import { Field } from '@progress/kendo-react-form';
-import { Input } from '@progress/kendo-react-inputs';
-import { Label } from 'reactstrap';
+import { Input, NumericTextBox } from '@progress/kendo-react-inputs';
 import { useHistory, useParams } from 'react-router-dom';
 import { useRouteMatch } from 'react-router-dom';
 import { MasterDetail, reloadMaster, Detail, Info, Editor } from '../MasterDetail';
-import { ProcessTabs } from './process/ProcessTabs';
+import { AuditTabs } from './audit/AuditTabs';
 
-export function Processes() {
-    let { path } = useRouteMatch();
-    const history = useHistory();
-    const api = '/api/processes';
-    return (
-        <MasterDetail
-            api={api}
-            path={path}
-            stubMessage='Please select a process'
-            detail={
-                <ProcessDetail
-                    api={api}
-                    path={path}
-                    onChange={() => reloadMaster()}
-                    onClose={() => history.push(path)}
-                />
-            }
-        />
-    );
-}
-
-ProcessDetail.propTypes = {
+AuditDetail.propTypes = {
     onChange: PropTypes.func,
     path: PropTypes.string,
     api: PropTypes.string,
-    processId: PropTypes.number
+    auditId: PropTypes.number
 }
 
-export function ProcessDetail({ processId, ...props }) {
+export function AuditDetail({ auditId, ...props }) {
     let { id } = useParams();
-    id = processId || id;
+    id = auditId || id;
     let [sub, setSub] = useState();
     useEffect(setSub, [id]);
     let [[data, setData], loading, error] = useGet(`${props.api}/${id}`, [id]);
-    if (!data || data.id == 0) {
-        data = { ...data, name: '', description: '' };
+    if (!data || data.id === 0) {
+        data = { ...data, name: '', description: '', url: '' };
     }
-
     return (
         <Detail {...props}
             id={id}
@@ -59,6 +36,7 @@ export function ProcessDetail({ processId, ...props }) {
                     data={data}
                     content={
                         <div>
+                            <p>{`${data.name}`}</p>
                         </div>
                     }
                 />
@@ -69,22 +47,19 @@ export function ProcessDetail({ processId, ...props }) {
                     setData={setData}
                     content={
                         <fieldset className={'k-form-fieldset'}>
-                            <legend className={'k-form-legend'}>Edit process data</legend>
+                            <legend className={'k-form-legend'}>Edit profile data</legend>
                             <div className="mb-3">
                                 <Field name={'name'} component={Input} label={'Name'} />
                             </div>
                             <div className="mb-3">
                                 <Field name={'description'} component={Input} label={'Description'} />
                             </div>
-                            <div className="mb-3">
-                                <Field name={'deviceTypes'} component={Input} label={'Applicable devices'} />
-                            </div>
                         </fieldset>
                     }
                 />
             }
             relations={
-                <ProcessTabs id={parseInt(id)} api={props.api} onDetailSelected={setSub} />
+                <AuditTabs id={parseInt(id)} api={props.api} onDetailSelected={setSub} />
             }
         />
     );

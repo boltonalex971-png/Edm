@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Domain.Models;
+using Optosense.Edm.Webui.Models;
 
 namespace Optosense.Edm.WebUi.Controllers
 {
@@ -15,11 +16,13 @@ namespace Optosense.Edm.WebUi.Controllers
     public class ProcessesController : ControllerBase
     {
         private readonly ILogger<ProcessesController> _logger;
+        private readonly IMapper _mapper;
         private readonly IProcessService _processService;
 
-        public ProcessesController(ILogger<ProcessesController> logger, IProcessService processService)
+        public ProcessesController(ILogger<ProcessesController> logger, IMapper mapper, IProcessService processService)
         {
             _logger = logger;
+            _mapper = mapper;
             _processService = processService;
         }
 
@@ -42,7 +45,6 @@ namespace Optosense.Edm.WebUi.Controllers
                 {
                     Name = string.Empty,
                     Description = string.Empty,
-                    DeviceTypes = "[]",
                     IsActive = true
                 };
             }
@@ -73,5 +75,31 @@ namespace Optosense.Edm.WebUi.Controllers
             var result = await _processService.Save(process);
             return result;
         }
+
+        #region profiles
+
+        [HttpGet("{id:int}/profiles")]
+        public async Task<IEnumerable<ProfileViewModel>> GetProfiles(int id)
+        {
+            var profiles = await _processService.GetProfiles(id);
+            return _mapper.Map<IEnumerable<ProfileViewModel>>(profiles);
+        }
+
+        [HttpPost("{id:int}/profiles")]
+        public async Task<ProfileViewModel> AddProfile(int id, ProfileViewModel model)
+        {
+            var profile = _mapper.Map<Domain.Models.Profile>(model);
+            profile = await _processService.AddProfile(id, profile);
+            return _mapper.Map<ProfileViewModel>(profile);
+        }
+
+        [HttpDelete("{id:int}/profiles/{profileId:int}")]
+        public async Task<bool> DeleteProfile(int id, int profileId)
+        {
+            var wasDetached = await _processService.DeleteProfile(id, profileId);
+            return wasDetached;
+        }
+
+        #endregion
     }
 }

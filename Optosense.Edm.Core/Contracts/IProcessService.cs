@@ -8,5 +8,8 @@ namespace Optosense.Edm.Core.Contracts
 {
     public interface IProcessService : IGenericService<Process>
     {
+        Task<IEnumerable<Profile>> GetProfiles(int id);
+        Task<Profile> AddProfile(int processId, Profile profile);
+        Task<bool> DeleteProfile(int processId, int profileId);
     }
 }

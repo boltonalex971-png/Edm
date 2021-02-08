@@ -42,6 +42,9 @@ namespace Optosense.Edm.WebUi.Models
             CreateMap<Host, IdNameModel>();
 
             CreateMap<Operation, OperationModel>();
+
+            CreateMap<Domain.Models.Profile, ProfileViewModel>();
+            CreateMap<ProfileViewModel, Domain.Models.Profile>();
         }
     }
 }

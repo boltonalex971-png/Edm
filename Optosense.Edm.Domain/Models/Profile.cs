@@ -18,17 +18,23 @@ namespace Optosense.Edm.Domain.Models
     /// </summary>
     public class Profile : TypeObject
     {
+        public int ProcessId { get; set; }
+
         /// <summary>
-        /// The device model which the profile is appropriate for
+        /// The device type to which the profile is targeted
         /// </summary>
-        public DeviceModel Model { get; set; }
+        public DeviceType Type { get; set; }
+
         /// <summary>
         /// Profile can be described in Json format as alternative to set of steps
         /// </summary>
         public string TextJson { get; set; }
+
+        public Process Process { get; set; }
         /// <summary>
         /// Profile can be described as a set of steps
         /// </summary>
         public ICollection<ProfilePoint> Points { get; set; }
+        public ICollection<Audit> Audits { get; set; }
     }
 }

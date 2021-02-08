@@ -221,6 +221,7 @@ namespace Optosense.Edm.WebUi
             services.AddTransient<IRemoteCommands, RemoteCommands>();
             services.AddSingleton<ICommandContainer>(CommandManager.GetInstance());
 
+            services.AddTransient<IAuditService, AuditService>();
             services.AddTransient<IProcessService, ProcessService>();
             services.AddTransient<IHostService, HostService>();
             services.AddTransient<IDeviceService, DeviceService>();

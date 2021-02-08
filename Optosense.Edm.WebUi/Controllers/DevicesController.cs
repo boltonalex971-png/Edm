@@ -84,6 +84,14 @@ namespace Optosense.Edm.WebUi.Controllers
             return models;
         }
 
+        [HttpGet("types")]
+        public IEnumerable<IdNameModel> GetDeviceTypes()
+        {
+            var models = ((DeviceType[]) Enum.GetValues(typeof(DeviceType)))
+                .Select(o => new IdNameModel { Id = (int) o, Name = o.ToString() });
+            return models;
+        }
+
         [HttpGet("{model:alpha}")]
         public async Task<IEnumerable<Device>> GetByModel(DeviceModel model)
         {

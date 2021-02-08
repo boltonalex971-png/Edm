@@ -1,4 +1,5 @@
 const api = {
+    audits: '/api/audits',
     processes: '/api/processes',
     devices: '/api/devices',
     hosts: '/api/hosts',

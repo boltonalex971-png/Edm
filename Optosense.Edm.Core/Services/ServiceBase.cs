@@ -32,6 +32,12 @@ namespace Optosense.Edm.Core.Services
             return set;
         }
 
+        protected DbSet<T> Set<T>() where T : DomainObject
+        {
+            var set = Db.Set<T>();
+            return set;
+        }
+
         public virtual async Task<IEnumerable<TEntity>> GetAll() 
         {
             var result = await Set().AsNoTracking()
@@ -42,7 +48,14 @@ namespace Optosense.Edm.Core.Services
 
         public virtual async Task<TEntity> Get(int id)
         {
-            var result =  await Set()
+            var result = await Set()
+                .FirstOrDefaultAsync(p => id == p.Id);
+            return result;
+        }
+
+        protected virtual async Task<T> Get<T>(int id) where T : DomainObject
+        {
+            var result = await Set<T>()
                 .FirstOrDefaultAsync(p => id == p.Id);
             return result;
         }
@@ -57,6 +70,24 @@ namespace Optosense.Edm.Core.Services
         {
             var track = Set().Attach(entity);
             track.State = entity.Id == 0 ? EntityState.Added : EntityState.Modified;
+            if (entity is TypeObject && track.State == EntityState.Added)
+            {
+                (entity as TypeObject).IsActive = true;
+            }
+
+            await Db.SaveChangesAsync();
+            return entity;
+        }
+
+        protected virtual async Task<T> Save<T>(T entity) where T : DomainObject
+        {
+            var track = Set<T>().Attach(entity);
+            track.State = entity.Id == 0 ? EntityState.Added : EntityState.Modified;
+            if (entity is TypeObject && track.State == EntityState.Added)
+            {
+                (entity as TypeObject).IsActive = true;
+            }
+
             await Db.SaveChangesAsync();
             return entity;
         }
@@ -83,6 +114,15 @@ namespace Optosense.Edm.Core.Services
         {
             var entity = await Get(id);
             return await Delete(entity, false);
+        }
+
+        protected virtual async Task<T> Delete<T>(int id) where T : DomainObject
+        {
+            var entity = await Get<T>(id);
+            // TODO Make soft delete as well
+            var result = Set<T>().Remove(entity);
+            await Db.SaveChangesAsync();
+            return entity;
         }
 
         protected virtual async Task<TEntity> Delete(int id, Func<TEntity, bool> isLogical)

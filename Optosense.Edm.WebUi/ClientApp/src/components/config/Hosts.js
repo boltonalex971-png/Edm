@@ -86,7 +86,8 @@ export function HostDetail({ hostId, ...props }) {
             }
             relations={
                 <HostTabs id={parseInt(id)} api={props.api} onDetailSelected={setSub}/>
-            } />
+            }
+        />
     );
 }
 

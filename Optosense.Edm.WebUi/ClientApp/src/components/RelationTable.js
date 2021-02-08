@@ -87,6 +87,12 @@ export function RelationTable({ api, children, ...props }) {
                     .k-animation-container-relative {
                         width: 100%;
                     }
+                    .k-grid td {
+                        padding: 0.5rem 0.5rem;
+                    }
+                    .k-grid td button {
+                        padding: 0;
+                    }
                 `}
             </style>
             {error && <Alert color='danger' style={{ display: 'flex', justifyContent: 'space-around' }}>{error}</Alert>}

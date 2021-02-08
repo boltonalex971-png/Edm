@@ -30,14 +30,45 @@ namespace Optosense.Edm.Core.Services
 
         public async Task<IEnumerable<Profile>> GetByDevice(int deviceId)
         {
-            var model = (await Db.HostDevices
+            var type = (await Db.HostDevices
                 .Include(hd => hd.Device)
-                .FirstOrDefaultAsync(hd => hd.Id == deviceId))?.Device.Model ??
+                .FirstOrDefaultAsync(hd => hd.Id == deviceId))?.Device.EnvType ??
                 throw new Exception($"No device with id {deviceId} found");
             var profiles = await Db.Profiles
-                .Where(p => p.Model == model && p.IsActive)
+                .Where(p => p.Type == type && p.IsActive)
                 .ToListAsync();
             return profiles;
+        }
+
+        public async Task<IEnumerable<Audit>> GetAudits(int id)
+        {
+            var audits = await Db.Audits
+                .Where(s => s.ProfileId == id && s.IsActive)
+                .ToListAsync();
+            return audits;
+        }
+
+        public async Task<Audit> AddAudit(int id, Audit audit)
+        {
+            var profile = await Db.Profiles
+                .Include(p => p.Audits)
+                .FirstOrDefaultAsync(p => p.Id == id) ?? throw new ArgumentException("Profile not found");
+            audit.IsActive = true;
+            profile.Audits.Add(audit);
+            await Db.SaveChangesAsync();
+            return audit;
+        }
+
+        public async Task<bool> DeleteAudit(int id, int auditId)
+        {
+            var profile = await Db.Profiles
+                .Include(p => p.Audits)
+                .FirstOrDefaultAsync(p => p.Id == id) ?? throw new ArgumentException("Profile not found");
+            var audit = profile.Audits.FirstOrDefault(p => p.Id == auditId) ??
+                throw new ArgumentException("Audit not found");
+            profile.Audits.Remove(audit);
+            await Db.SaveChangesAsync();
+            return true;
         }
     }
 }

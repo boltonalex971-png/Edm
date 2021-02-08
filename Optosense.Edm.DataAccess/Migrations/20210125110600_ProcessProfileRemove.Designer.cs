@@ -3,108 +3,23 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Optosense.Edm.DataAccess;
 
 namespace Optosense.Edm.DataAccess.Migrations
 {
     [DbContext(typeof(EdmContext))]
-    partial class EdmContextModelSnapshot : ModelSnapshot
+    [Migration("20210125110600_ProcessProfileRemove")]
+    partial class ProcessProfileRemove
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .UseIdentityColumns()
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("ProductVersion", "5.0.0");
-
-            modelBuilder.Entity("Optosense.Edm.Domain.Models.Audit", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .UseIdentityColumn();
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("ProfileId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Rules")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProfileId");
-
-                    b.ToTable("Audits");
-                });
-
-            modelBuilder.Entity("Optosense.Edm.Domain.Models.AuditCriterion", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .UseIdentityColumn();
-
-                    b.Property<string>("Arg1")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Arg2")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Args")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Function")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Param")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("ZoneId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ZoneId");
-
-                    b.ToTable("AuditCriteria");
-                });
-
-            modelBuilder.Entity("Optosense.Edm.Domain.Models.AuditZone", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .UseIdentityColumn();
-
-                    b.Property<int>("AuditId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Duration")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("No")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Offset")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AuditId");
-
-                    b.ToTable("AuditZones");
-                });
 
             modelBuilder.Entity("Optosense.Edm.Domain.Models.Device", b =>
                 {
@@ -269,6 +184,9 @@ namespace Optosense.Edm.DataAccess.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("DeviceTypes")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -293,21 +211,16 @@ namespace Optosense.Edm.DataAccess.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
+                    b.Property<int>("Model")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("ProcessId")
-                        .HasColumnType("int");
 
                     b.Property<string>("TextJson")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("ProcessId");
 
                     b.ToTable("Profiles");
                 });
@@ -447,39 +360,6 @@ namespace Optosense.Edm.DataAccess.Migrations
                     b.ToTable("WorkplaceProcesses");
                 });
 
-            modelBuilder.Entity("Optosense.Edm.Domain.Models.Audit", b =>
-                {
-                    b.HasOne("Optosense.Edm.Domain.Models.Profile", "Profile")
-                        .WithMany("Audits")
-                        .HasForeignKey("ProfileId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Profile");
-                });
-
-            modelBuilder.Entity("Optosense.Edm.Domain.Models.AuditCriterion", b =>
-                {
-                    b.HasOne("Optosense.Edm.Domain.Models.AuditZone", "Zone")
-                        .WithMany("Criteria")
-                        .HasForeignKey("ZoneId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Zone");
-                });
-
-            modelBuilder.Entity("Optosense.Edm.Domain.Models.AuditZone", b =>
-                {
-                    b.HasOne("Optosense.Edm.Domain.Models.Audit", "Audit")
-                        .WithMany("Zones")
-                        .HasForeignKey("AuditId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Audit");
-                });
-
             modelBuilder.Entity("Optosense.Edm.Domain.Models.HostDevice", b =>
                 {
                     b.HasOne("Optosense.Edm.Domain.Models.Device", "Device")
@@ -535,17 +415,6 @@ namespace Optosense.Edm.DataAccess.Migrations
                     b.Navigation("Operation");
 
                     b.Navigation("Profile");
-                });
-
-            modelBuilder.Entity("Optosense.Edm.Domain.Models.Profile", b =>
-                {
-                    b.HasOne("Optosense.Edm.Domain.Models.Process", "Process")
-                        .WithMany("Profiles")
-                        .HasForeignKey("ProcessId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Process");
                 });
 
             modelBuilder.Entity("Optosense.Edm.Domain.Models.ProfilePoint", b =>
@@ -608,16 +477,6 @@ namespace Optosense.Edm.DataAccess.Migrations
                     b.Navigation("Workplace");
                 });
 
-            modelBuilder.Entity("Optosense.Edm.Domain.Models.Audit", b =>
-                {
-                    b.Navigation("Zones");
-                });
-
-            modelBuilder.Entity("Optosense.Edm.Domain.Models.AuditZone", b =>
-                {
-                    b.Navigation("Criteria");
-                });
-
             modelBuilder.Entity("Optosense.Edm.Domain.Models.Device", b =>
                 {
                     b.Navigation("Hosts");
@@ -633,15 +492,8 @@ namespace Optosense.Edm.DataAccess.Migrations
                     b.Navigation("Devices");
                 });
 
-            modelBuilder.Entity("Optosense.Edm.Domain.Models.Process", b =>
-                {
-                    b.Navigation("Profiles");
-                });
-
             modelBuilder.Entity("Optosense.Edm.Domain.Models.Profile", b =>
                 {
-                    b.Navigation("Audits");
-
                     b.Navigation("Points");
                 });
 
