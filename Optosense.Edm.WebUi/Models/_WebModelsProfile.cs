@@ -45,6 +45,19 @@ namespace Optosense.Edm.WebUi.Models
 
             CreateMap<Domain.Models.Profile, ProfileViewModel>();
             CreateMap<ProfileViewModel, Domain.Models.Profile>();
+
+            CreateMap<Workbench, WorkbenchViewModel>()
+                .ForMember(d => d.ProcessName, o => o.MapFrom(s =>s.WorkplaceProcess.Process.Name))
+                .ForMember(d => d.WorkplaceId, o => o.MapFrom(s =>s.WorkplaceProcess.WorkplaceId))
+                .ForMember(d => d.WorkplaceName, o => o.MapFrom(s =>s.WorkplaceProcess.Workplace.Name));
+            CreateMap<WorkbenchViewModel, Workbench>();
+
+            CreateMap<WorkbenchWorkplaceHostDevice, WorkbenchDeviceConfigViewModel>()
+                .ForMember(d => d.DeviceId, o => o.MapFrom(s => s.WorkplaceHostDevice.HostDevice.DeviceId))
+                .ForMember(d => d.DeviceName, o => o.MapFrom(s => s.WorkplaceHostDevice.HostDevice.Device.Name))
+                .ForMember(d => d.DeviceType, o => o.MapFrom(s => s.WorkplaceHostDevice.HostDevice.Device.EnvType))
+                .ForMember(d => d.HostName, o => o.MapFrom(s => s.WorkplaceHostDevice.HostDevice.Host.Name));
+            CreateMap<WorkbenchDeviceConfigViewModel, WorkbenchWorkplaceHostDevice>();
         }
     }
 }

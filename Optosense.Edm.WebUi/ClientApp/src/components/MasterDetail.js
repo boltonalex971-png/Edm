@@ -60,8 +60,17 @@ Detail.propTypes = {
     onClose: PropTypes.func,
     onUp: PropTypes.func,
     path: PropTypes.string,
-    api: PropTypes.string
-}
+    api: PropTypes.string,
+    editable: PropTypes.bool,
+    copyable: PropTypes.bool,
+    deletable: PropTypes.bool
+};
+
+Detail.defaultProps = {
+    editable: true,
+    copyable: true,
+    deletable: true,
+};
 
 export function Detail(props) {
     const history = useHistory();
@@ -80,43 +89,45 @@ export function Detail(props) {
                                 <CardSubtitle>{props.data.description}</CardSubtitle>
                             </div>
                             <div style={{ display: 'flex', flexWrap: 'nowrap' }}>
-                                <ButtonGroup>
-                                    <Button
-                                        title={editMode ? 'View mode' : 'Edit mode'}
-                                        icon={editMode ? "eye" : "edit"}
-                                        look='clear'
-                                        onClick={() => setEditMode(!editMode)}
-                                    />
-                                    <Button
-                                        title='Copy'
-                                        look='clear'
-                                        icon='copy'
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            let data = { ...props.data, id: 0, name: `${props.data.name} (Copy)` };
-                                            axios.post(`${props.api}`, data)
-                                                .then((response) => {
-                                                    props.onChange();
-                                                    history.push(`${props.path}/${response.data.id}`);
-                                                });
-                                        }}
-                                    />
-                                    <Button
-                                        title='Delete'
-                                        look='clear'
-                                        icon='delete'
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            if (window.confirm('Confirm deleting entity')) {
-                                                axios.delete(`${props.api}/${props.data.id}`)
-                                                    .then(() => {
+                                {props.editor &&
+                                    <ButtonGroup>
+                                        <Button
+                                            title={editMode ? 'View mode' : 'Edit mode'}
+                                            icon={editMode ? "eye" : "edit"}
+                                            look='clear'
+                                            onClick={() => setEditMode(!editMode)}
+                                        />
+                                        <Button
+                                            title='Copy'
+                                            look='clear'
+                                            icon='copy'
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                let data = { ...props.data, id: 0, name: `${props.data.name} (Copy)` };
+                                                axios.post(`${props.api}`, data)
+                                                    .then((response) => {
                                                         props.onChange();
-                                                        history.push(props.path);
+                                                        history.push(`${props.path}/${response.data.id}`);
                                                     });
-                                            }
-                                        }}
-                                    />
-                                </ButtonGroup>
+                                            }}
+                                        />
+                                        <Button
+                                            title='Delete'
+                                            look='clear'
+                                            icon='delete'
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                if (window.confirm('Confirm deleting entity')) {
+                                                    axios.delete(`${props.api}/${props.data.id}`)
+                                                        .then(() => {
+                                                            props.onChange();
+                                                            history.push(props.path);
+                                                        });
+                                                }
+                                            }}
+                                        />
+                                    </ButtonGroup>
+                                }
                                 {(props.onUp || props.onClose) && <div className='mx-2'></div>}
                                 <ButtonGroup>
                                     {props.onUp && <Button title='Move Up' look='clear' icon='arrow-up' onClick={props.onUp} />}

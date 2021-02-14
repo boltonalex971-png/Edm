@@ -44,7 +44,7 @@ export function dropDownCell({ getData, key, text, fieldName, fieldId, onClick, 
     }
 }
 
-export function linkTextCell({ fieldId, onClick, editable = true }) {
+export function linkTextCell({ fieldId, onClick, template, editable = true }) {
     return class extends GridCell {
         handleChange = (e) => {
             this.props.onChange({
@@ -58,7 +58,7 @@ export function linkTextCell({ fieldId, onClick, editable = true }) {
         render() {
             let content;
             const { dataItem, field } = this.props;
-            const value = dataItem[field];
+            const value = template || dataItem[field];
             if (dataItem.inEdit && editable) {
                 content = <Input onChange={this.handleChange} value={value} />;
             } else {

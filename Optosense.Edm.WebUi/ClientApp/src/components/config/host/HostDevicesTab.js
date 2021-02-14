@@ -34,7 +34,7 @@ export function HostDevicesTab({ id, api, onDetailSelected }) {
                                 path={path}
                                 onClose={() => onDetailSelected()}
                                 onUp={() => history.push(`${path}/${deviceId}`)}
-/>
+                            />
                         ) 
                     })}
                 />

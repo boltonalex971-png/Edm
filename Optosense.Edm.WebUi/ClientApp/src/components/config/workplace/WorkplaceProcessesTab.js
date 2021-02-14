@@ -3,10 +3,11 @@ import Api from '../../api';
 import PropTypes from 'prop-types';
 import { GridColumn } from '@progress/kendo-react-grid';
 import { RelationTable } from '../../RelationTable';
-import { dropDownCell } from '../../DropDownCell';
+import { dropDownCell, linkTextCell } from '../../DropDownCell';
 import { useGet } from '../../hooks/hooks';
 import { ProcessDetail } from '../Processes';
 import { useHistory } from 'react-router-dom';
+import { ProcessWorkbenchesDetail } from './ProcessWorkbenches';
 
 WorkplaceProcessesTab.propTypes = {
     id: PropTypes.number,
@@ -29,6 +30,15 @@ export function WorkplaceProcessesTab({ id, api, onDetailSelected }) {
             />
         );
     };
+    const workbenchesClick = (wsPrId) => {
+        onDetailSelected(
+            <ProcessWorkbenchesDetail
+                workplaceProcessId={wsPrId}
+                api={`${api}/processes`}
+                onClose={() => onDetailSelected()}
+            />
+        );
+    };
     return (
         <RelationTable api={`${api}/${id}/processes`} removable >
             {data &&
@@ -45,6 +55,15 @@ export function WorkplaceProcessesTab({ id, api, onDetailSelected }) {
                     })}
                 />
             }
+            <GridColumn
+                width={100}
+                field='workplaceProcessId'
+                title='Workbenches' //{<span className='k-icon k-i-cogs' title='Workbench lists' ></span>}
+                cell={linkTextCell({
+                    onClick: workbenchesClick,
+                    template: <span title='Configure workbenches for the process' >Configure&hellip;</span>
+                })}
+            />
             <GridColumn title='Description' field='processDescription' editable={false} />
         </RelationTable>
     );

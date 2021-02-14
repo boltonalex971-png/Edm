@@ -15,5 +15,6 @@ namespace Optosense.Edm.Domain.Models
         /// List of processes, allowed to run on this workplace
         /// </summary>
         public Process Process { get; set; }
+        public ICollection<Workbench> Workbenches { get; set; } = new HashSet<Workbench>();
     }
 }

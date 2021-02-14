@@ -92,6 +92,76 @@ namespace Optosense.Edm.Core.Services
             return processes;
         }
 
+        public async Task<IEnumerable<Workbench>> GetWorkbenches(int workplaceProcessId)
+        {
+            var workbenches = await Db.Workbenches
+                .Include(w => w.WorkplaceProcess.Process)
+                .Include(w => w.WorkplaceProcess.Workplace)
+                .Where(w => w.WorkplaceProcessId == workplaceProcessId && w.IsActive)
+                .ToListAsync();
+            return workbenches;
+        }
+
+        public async Task<WorkplaceProcess> GetWorkplaceProcess(int workplaceProcessId)
+        {
+            var result = await Db.WorkplaceProcesses
+                .Include(p => p.Process)
+                .Include(p => p.Workplace)
+                .FirstOrDefaultAsync(p => p.Id == workplaceProcessId) ?? throw new ArgumentException("No workspace process found");
+            return result;
+        }
+
+        public async Task<Workbench> SaveWorkbench(Workbench workbench)
+        {
+            var result = await Save(workbench);
+            return result;
+        }
+
+        public async Task<Workbench> GetWorkbench(int workbenchId)
+        {
+            var result = await Db.Workbenches
+                .Include(w => w.WorkplaceProcess.Process)
+                .Include(w => w.WorkplaceProcess.Workplace)
+                .FirstOrDefaultAsync(w => w.Id == workbenchId) ?? throw new ArgumentException("Workbench not found");
+            return result;
+        }
+
+        public async Task<Workbench> DeleteWorkbench(int id)
+        {
+            var result = await Delete<Workbench>(id);
+            return result;
+        }
+
+        public async Task<IEnumerable<WorkbenchWorkplaceHostDevice>> GetWorkbenchDevices(int workbenchId)
+        {
+            var result = await Db.WorkbenchDeviceConfigurations
+                .Include(d => d.WorkplaceHostDevice.HostDevice.Device)
+                .Include(d => d.WorkplaceHostDevice.HostDevice.Host)
+                .Where(d => d.WorkbenchId == workbenchId)
+                .ToListAsync();
+            return result;
+        }
+        public async Task<WorkbenchWorkplaceHostDevice> GetWorkbenchDevice(int id)
+        {
+            var result = await Db.WorkbenchDeviceConfigurations
+                .Include(d => d.WorkplaceHostDevice.HostDevice.Device)
+                .Include(d => d.WorkplaceHostDevice.HostDevice.Host)
+                .FirstOrDefaultAsync(d => d.Id == id) ?? throw new ArgumentException("Workbench device configuration not found");
+            return result;
+        }
+
+        public async Task<WorkbenchWorkplaceHostDevice> SaveWorkbenchDevice(WorkbenchWorkplaceHostDevice device)
+        {
+            var result = await Save(device);
+            return result;
+        }
+
+        public async Task<WorkbenchWorkplaceHostDevice> DeleteWorkbenchDevice(int id)
+        {
+            var result = await Delete<WorkbenchWorkplaceHostDevice>(id);
+            return result;
+        }
+
         #endregion
 
     }

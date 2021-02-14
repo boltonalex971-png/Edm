@@ -10,5 +10,7 @@ namespace Optosense.Edm.Webui.Models
 
         public string ProcessName { get; set; }
         public string ProcessDescription { get; set; }
+        public string WorkplaceName { get; set; }
+        public string WorkplaceDescription { get; set; }
     }
 }

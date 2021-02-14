@@ -21,6 +21,8 @@ namespace Optosense.Edm.Core.Persistance
         DbSet<Process> Processes { get; set; }
         DbSet<Profile> Profiles { get; set; }
         DbSet<Record> Records { get; set; }
+        DbSet<Workbench> Workbenches { get; set; }
+        DbSet<WorkbenchWorkplaceHostDevice> WorkbenchDeviceConfigurations { get; set; }
         DbSet<Workplace> Workplaces { get; set; }
         DbSet<WorkplaceHostDevice> WorkplaceHostDevices { get; set; }
         DbSet<WorkplaceProcess> WorkplaceProcesses{ get; set; }

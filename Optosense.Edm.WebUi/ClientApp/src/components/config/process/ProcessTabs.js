@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { TabStrip, TabStripTab } from '@progress/kendo-react-layout';
-import { ProcessProfilesTab } from './ProcessDevicesTab';
+import { ProcessProfilesTab } from './ProcessProfilesTab';
 
 ProcessTabs.propTypes = {
     api: PropTypes.string,

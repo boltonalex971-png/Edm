@@ -142,6 +142,90 @@ namespace Optosense.Edm.WebUi.Controllers
             var processes = await _workplaceService.GetAvailableProcesses();
             return _mapper.Map<IEnumerable<IdNameModel>>(processes);
         }
+
+        [HttpGet("processes/{wpProcId:int}")]
+        public async Task<WorkplaceProcessModel> GetWorplaceProcess(int wpProcId)
+        {
+            var process = await _workplaceService.GetWorkplaceProcess(wpProcId);
+            return _mapper.Map<WorkplaceProcessModel>(process);
+        }
+
+        [HttpGet("processes/{wpProcId:int}/workbenches")]
+        public async Task<IEnumerable<WorkbenchViewModel>> GetWorkbenches(int wpProcId)
+        {
+            var wbs = await _workplaceService.GetWorkbenches(wpProcId);
+            var result = _mapper.Map<IEnumerable<WorkbenchViewModel>>(wbs);
+            return result;
+        }
+
+        [HttpPost("processes/{wpProcId:int}/workbenches")]
+        public async Task<WorkbenchViewModel> AddWorkbench(int wpProcId, WorkbenchViewModel model)
+        {
+            var wb = _mapper.Map<Workbench>(model);
+            wb.Id = 0;
+            wb.WorkplaceProcessId = wpProcId;
+            wb = await _workplaceService.SaveWorkbench(wb);
+            var result = _mapper.Map<WorkbenchViewModel>(wb);
+            return result;
+        }
+
+        [HttpGet("processes/workbenches/{id:int}")]
+        public async Task<WorkbenchViewModel> GetWorkbench(int id)
+        {
+            var result = await _workplaceService.GetWorkbench(id);
+            return _mapper.Map<WorkbenchViewModel>(result);
+        }
+
+        [HttpPut("processes/workbenches/{id:int}")]
+        public async Task<WorkbenchViewModel> SaveWorkbench(int id, WorkbenchViewModel model)
+        {
+            var wb = _mapper.Map<Workbench>(model);
+            var result = await _workplaceService.SaveWorkbench(wb);
+            return _mapper.Map<WorkbenchViewModel>(result);
+        }
+
+        [HttpDelete("processes/{procId:int}/workbenches/{id:int}")]
+        public async Task<WorkbenchViewModel> DeleteWorkbench(int id)
+        {
+            var wb = await _workplaceService.DeleteWorkbench(id);
+            var result = _mapper.Map<WorkbenchViewModel>(wb);
+            return result;
+        }
+
+        [HttpGet("processes/workbenches/{id:int}/devices")]
+        public async Task<IEnumerable<WorkbenchDeviceConfigViewModel>> GetWorkbenchDevices(int id)
+        {
+            var devices = await _workplaceService.GetWorkbenchDevices(id);
+            var result = _mapper.Map<IEnumerable<WorkbenchDeviceConfigViewModel>>(devices);
+            return result;
+        }
+
+        [HttpPost("processes/workbenches/{id:int}/devices")]
+        public async Task<WorkbenchDeviceConfigViewModel> GetWorkbenchDevices(int id, WorkbenchDeviceConfigViewModel model)
+        {
+            var device = _mapper.Map<WorkbenchWorkplaceHostDevice>(model);
+            device.Id = 0;
+            device.WorkbenchId = id;
+            var result = await _workplaceService.SaveWorkbenchDevice(device);
+            return _mapper.Map<WorkbenchDeviceConfigViewModel>(result);
+        }
+
+        [HttpDelete("processes/workbenches/{wbId:int}/devices/{id:int}")]
+        public async Task<WorkbenchDeviceConfigViewModel> DeleteWorkbenchDevice(int id)
+        {
+            var device = await _workplaceService.DeleteWorkbenchDevice(id);
+            var result = _mapper.Map<WorkbenchDeviceConfigViewModel>(device);
+            return result;
+        }
+
+        [HttpGet("processes/workbenches/devices/{id:int}")]
+        public async Task<WorkbenchDeviceConfigViewModel> GetWorkbenchDevice(int id)
+        {
+            var device = await _workplaceService.GetWorkbenchDevice(id);
+            var result = _mapper.Map<WorkbenchDeviceConfigViewModel>(device);
+            return result;
+        }
+
         #endregion
     }
 }

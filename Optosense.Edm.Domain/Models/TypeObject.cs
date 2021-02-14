@@ -9,7 +9,7 @@ namespace Optosense.Edm.Domain.Models
         /// <summary>
         /// Indicates if the revision is the latest one
         /// </summary>
-        public bool IsActive { get; set; }
+        public bool IsActive { get; set; } = true;
 
 
     }

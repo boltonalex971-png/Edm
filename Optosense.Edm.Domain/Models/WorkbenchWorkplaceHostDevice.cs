@@ -1,0 +1,19 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Optosense.Edm.Domain.Models
+{
+    public class WorkbenchWorkplaceHostDevice : DomainObject
+    {
+        public int WorkbenchId { get; set; }
+        public int WorkplaceHostDeviceId { get; set; }
+
+        public string Configuration { get; set; }
+
+        public Workbench Workbench { get; set; }
+        public WorkplaceHostDevice WorkplaceHostDevice { get; set; }
+    }
+}

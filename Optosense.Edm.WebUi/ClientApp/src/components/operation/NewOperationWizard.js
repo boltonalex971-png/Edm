@@ -87,7 +87,7 @@ export function NewOperationWizard() {
                                     onChange={onProcessChange}
                                     style={{ minWidth: '300px' }}
                                 />
-                                {process && <Button onClick={openProcess} icon='info' className='text-info' look='bare' style={{ outline: 'none' }}></Button>}
+                                {process && <Button onClick={openProcess} icon='info' className='text-info' look='clear' style={{ outline: 'none' }}></Button>}
                             </div>
                         </Step>
                         <Step
@@ -290,7 +290,7 @@ function DeviceDropDown({ api, type, details, onChange }) {
                     onChange={onDeviceChanged}
                     style={{ minWidth: '300px' }}
                 />
-                {id && <Button onClick={() => history.push(`${details}/${id}`)} icon='info' className='text-info' look='bare' style={{ outline: 'none' }}></Button>}
+                {id && <Button onClick={() => history.push(`${details}/${id}`)} icon='info' className='text-info' look='clear' style={{ outline: 'none' }}></Button>}
             </div>
         </div>
     );
@@ -324,8 +324,8 @@ function DeviceDetails({ onOptionsChanged }) {
                                         <div className='d-flex justify-content-between align-items-center' style={{ maxWidth: '400px' }}>
                                             <h6 className='mb-0'>Options</h6>
                                             <div>
-                                                <Button icon='reset' disabled={!formProps.allowSubmit} onClick={formProps.onFormReset} look='bare' className='text-secondary'></Button>
-                                                <Button icon='save' disabled={!formProps.allowSubmit} onClick={formProps.onSubmit} look='bare' ></Button>
+                                                <Button icon='reset' disabled={!formProps.allowSubmit} onClick={formProps.onFormReset} look='clear' className='text-secondary'></Button>
+                                                <Button icon='save' disabled={!formProps.allowSubmit} onClick={formProps.onSubmit} look='clear' ></Button>
                                             </div>
                                         </div>
                                         <hr className='mt-0' />

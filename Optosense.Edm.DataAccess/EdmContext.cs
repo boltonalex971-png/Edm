@@ -22,6 +22,8 @@ namespace Optosense.Edm.DataAccess
         public DbSet<Process> Processes { get; set; }
         public DbSet<Profile> Profiles { get; set; }
         public DbSet<Record> Records { get; set; }
+        public DbSet<Workbench> Workbenches { get; set; }
+        public DbSet<WorkbenchWorkplaceHostDevice> WorkbenchDeviceConfigurations { get; set; }
         public DbSet<Workplace> Workplaces { get; set; }
         public DbSet<WorkplaceHostDevice> WorkplaceHostDevices { get; set; }
         public DbSet<WorkplaceProcess> WorkplaceProcesses{ get; set; }
