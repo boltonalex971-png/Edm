@@ -54,6 +54,14 @@ namespace Optosense.Edm.Core.Services
             return profiles;
         }
 
+        public async Task<IEnumerable<string>> GetProfileParams(int id)
+        {
+            var profile = await Get(id);
+            var plugin = _plugins.GetProfile(profile.ProfilerGuid);
+            var parameters = plugin.GetParameters(profile.TextJson);
+            return parameters;
+        }
+
         public async Task<IEnumerable<Audit>> GetAudits(int id)
         {
             var audits = await Db.Audits

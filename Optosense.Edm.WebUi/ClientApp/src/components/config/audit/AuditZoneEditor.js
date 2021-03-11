@@ -55,6 +55,7 @@ export function ZoneEditor(props) {
 CriterionEditor.propTypes = {
     data: PropTypes.object,
     functions: PropTypes.array,
+    params: PropTypes.array,
     onSave: PropTypes.func,
     onDelete: PropTypes.func,
     onClose: PropTypes.func
@@ -76,7 +77,7 @@ export function CriterionEditor(props) {
                 <input type='hidden' readOnly name='zoneId' value={props.data.zoneId} />
                 <input type='hidden' readOnly name='id' value={props.data.id} />
                 <ComboBox label="Parameter" value={fields.param}
-                    data={['S0', 'Conc']}
+                    data={props.params}
                     onChange={(e) => setFields({ ...fields, param: e.value })}
                 />
                 <ComboBox label="Function" value={fields.function}

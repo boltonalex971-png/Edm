@@ -6,6 +6,7 @@ import { AuditEditorTab } from './AuditEditorTab';
 AuditTabs.propTypes = {
     api: PropTypes.string,
     id: PropTypes.number,
+    params: PropTypes.array,
     onDetailSelected: PropTypes.func
 }
 

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Domain.Models;
+using Optosense.Edm.Plugins;
 using Optosense.Edm.Webui.Models;
 
 namespace Optosense.Edm.WebUi.Controllers
@@ -73,6 +74,13 @@ namespace Optosense.Edm.WebUi.Controllers
             profile.Id = 0;
             var result = await _profileService.Save(profile);
             return result;
+        }
+
+        [HttpGet("{id:int}/params")]
+        public async Task<IEnumerable<string>> GetParams(int id)
+        {
+            var parameters = await _profileService.GetProfileParams(id);
+            return parameters;
         }
 
         [HttpGet("devices/{id:int}")]

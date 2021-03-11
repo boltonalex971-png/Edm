@@ -8,5 +8,6 @@ namespace Optosense.Edm.Plugins
 {
     public interface IProfilePlugin : IPlugin
     {
+        IEnumerable<string> GetParameters(string profileJson);
     }
 }

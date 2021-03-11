@@ -16,10 +16,11 @@ ProfileAuditsTab.propTypes = {
 }
 
 export function ProfileAuditsTab({ id, api, onDetailSelected }) {
-    const history = useHistory();
+    const [[params]] = useGet(`${api}/${id}/params`, [id]);
     const auditClick = (auditId) => {
         onDetailSelected(
             <AuditDetail
+                params={params}
                 auditId={auditId}
                 api={Api.audits}
                 onClose={() => onDetailSelected()}

@@ -1,8 +1,10 @@
-﻿using Optosense.Edm.Plugins;
+﻿using Newtonsoft.Json;
+using Optosense.Edm.Plugins;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Optosense.Edm.Profiles.Board
@@ -25,5 +27,19 @@ namespace Optosense.Edm.Profiles.Board
             };
             return result;
         }
+
+        public override IEnumerable<string> GetParameters(string profileJson)
+        {
+            var profile = JsonConvert.DeserializeObject<BoardProfile>(profileJson);
+            var parameters = profile
+                .SelectMany(c => c.Instructions
+                    .SelectMany(i => Regex.Matches(i.Instruction?.Syntax ?? string.Empty, @"\?<(\w+?)>")
+                        .Select(m => m.Groups[1].Value)))
+                .Distinct()
+                .OrderBy(p => p)
+                .ToList();
+            return parameters;
+        }
+
     }
 }

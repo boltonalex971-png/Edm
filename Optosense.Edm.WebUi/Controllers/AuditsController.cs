@@ -86,29 +86,6 @@ namespace Optosense.Edm.WebUi.Controllers
         public async Task<IEnumerable<AuditZone>> GetZones(int id)
         {
             return await _auditService.GetZones(id);
-            //Task.FromResult(new AuditZone[] 
-            //{ 
-            //    new AuditZone 
-            //    { Id = 1, No = 1, Offset = 0, Duration = 20, Criteria = new List<AuditCriterion> 
-            //        {
-            //            new AuditCriterion { Id = 1, Param = "S0", Function = "Dev", Args = "10" },
-            //            new AuditCriterion { Id = 2, Param = "Conc", Function = "Dev", Args = "10" },
-            //            new AuditCriterion { Id = 3, Param = "S0", Function = "Int", Args = "10" },
-            //        } 
-            //    },
-            //    new AuditZone
-            //    { Id = 2, No = 2, Offset = 30, Duration = 20, Criteria = new List<AuditCriterion>
-            //        {
-            //            new AuditCriterion { Id = 1, Param = "S0", Function = "Dev", Args = "10" },
-            //        }
-            //    },
-            //    new AuditZone
-            //    { Id = 3, No = 3, Offset = 60, Duration = 20, Criteria = new List<AuditCriterion>
-            //        {
-            //            new AuditCriterion { Id = 2, Param = "Stz", Function = "Dev", Args = "10" },
-            //        }
-            //    },
-            //}); 
         }
 
         [HttpPost("{id:int}/zones")]

@@ -12,7 +12,8 @@ AuditDetail.propTypes = {
     onChange: PropTypes.func,
     path: PropTypes.string,
     api: PropTypes.string,
-    auditId: PropTypes.number
+    auditId: PropTypes.number,
+    params: PropTypes.array
 }
 
 export function AuditDetail({ auditId, ...props }) {
@@ -59,7 +60,7 @@ export function AuditDetail({ auditId, ...props }) {
                 />
             }
             relations={
-                <AuditTabs id={parseInt(id)} api={props.api} onDetailSelected={setSub} />
+                <AuditTabs id={parseInt(id)} params={props.params} api={props.api} onDetailSelected={setSub} />
             }
         />
     );

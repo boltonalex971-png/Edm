@@ -8,6 +8,7 @@ namespace Optosense.Edm.Core.Contracts
 {
     public interface IProfileService : IGenericService<Profile>
     {
+        Task<IEnumerable<string>> GetProfileParams(int id);
         Task<IEnumerable<Profile>> GetByDevice(int deviceId);
         Task<IEnumerable<Audit>> GetAudits(int id);
         Task<Audit> AddAudit(int id, Audit audit);

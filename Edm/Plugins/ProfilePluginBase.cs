@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace Optosense.Edm.Plugins
 {
-    public class ProfilePluginBase : PluginBase, IProfilePlugin
+    public abstract class ProfilePluginBase : PluginBase, IProfilePlugin
     {
+        public abstract IEnumerable<string> GetParameters(string profileJson);
     }
 }

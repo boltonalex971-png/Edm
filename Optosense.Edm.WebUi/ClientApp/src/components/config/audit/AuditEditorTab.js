@@ -18,10 +18,11 @@ import { param } from 'jquery';
 AuditEditorTab.propTypes = {
     id: PropTypes.number,
     api: PropTypes.string,
-    zones: PropTypes.object
+    zones: PropTypes.object,
+    params: PropTypes.array
 }
 
-export function AuditEditorTab({ id, api }) {
+export function AuditEditorTab({ id, api, params }) {
     const [[functions]] = useGet(`${api}/functions`, []);
     const [[zones, setZones], loading, error] = useGet(`${api}/${id}/zones`, [id]);
     const [active, setActive] = useState({});
@@ -110,7 +111,7 @@ export function AuditEditorTab({ id, api }) {
     return (
         <div>
             {showCriterionEditor &&
-                <CriterionEditor data={showCriterionEditor} functions={functions}
+                <CriterionEditor data={showCriterionEditor} functions={functions} params={params}
                     onClose={() => toggleCriterionEditor()}
                     onSave={addCriterion}
                     onDelete={deleteCriterion}
