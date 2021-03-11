@@ -20,7 +20,8 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using Optosense.Edm.Attributes;
+using Optosense.Edm.Commands;
+using Optosense.Edm.Core.AspNet;
 using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Core.Infrastructure;
 using Optosense.Edm.Core.Infrastructure.Mapper;
@@ -77,14 +78,23 @@ namespace Optosense.Edm.WebUi
                 options.UseSqlServer(Configuration.GetConnectionString("Edm"));
             });
 
-            EdmConfig.Configure(c => c.SetPluginAssemblies(typeof(RemoteCommands).Assembly)
+            services.AddEdmCommands(c => c
+                .SetPluginAssemblies(typeof(RemoteCommands).Assembly, typeof(StartDeviceCommand).Assembly)
                 .SetLoadContext(typeof(OptosenseLoadContext))
-                .SetDefaultLogger(new ConsoleLogger()));
+                .SetDefaultLogger(new ConsoleLogger())
+            );
+
 
             services.InjectDeps();
-            services.AddOperationPlugins(config =>
+            services.AddPlugins(config =>
             {
-                config.PluginsPath = AppContext.BaseDirectory;
+                config.BaseDirectory = AppContext.BaseDirectory;
+                config.PluginsPath = new[]
+                {
+                    ".\\Optosense.Edm.Drivers.Null.dll",
+                    ".\\Optosense.Edm.Profiles.Board.dll",
+                    ".\\Optosense.Edm.Operations.Test.dll"
+                }; //AppContext.BaseDirectory;
                 Console.WriteLine($"Edm plugins base directory is '{config.PluginsPath}'");
             });
 
@@ -115,7 +125,7 @@ namespace Optosense.Edm.WebUi
 
             //app.UseAuthorization();
             //app.UseMvc();
-
+            app.ApplicationServices.GetService<ICommandContainer>();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
@@ -146,80 +156,12 @@ namespace Optosense.Edm.WebUi
 
     static class Extensions
     {
-        private static IEnumerable<Type> Plugins { get; set; }
-        internal class OperationPluginsConfig
-        {
-            public string PluginsPath { get; set; }
-        }
-
-        private static IEnumerable<Type> CollectOperationPlugins(string path)
-        {
-            var p = new NullDriver();
-            var plugins = AppDomain.CurrentDomain.GetAssemblies()
-                .SelectMany(a => a.GetTypes().Where(t => t.GetCustomAttribute<PluginAttribute>() != null));
-            return plugins;
-        }
-
-        public static void AddOperationPlugins(this IServiceCollection service, Action<OperationPluginsConfig> config)
-        {
-            if (config == null)
-            {
-                throw new EdmException("Startup: Configuration action must be provided");
-            }
-            var conf = new OperationPluginsConfig();
-            config.Invoke(conf);
-            if (conf.PluginsPath == null)
-            {
-                throw new EdmException("Startup: 'PluginsPath' option must be specified");
-            }
-            Plugins = CollectOperationPlugins(conf.PluginsPath);
-        }
-
-        public static void MapSpaPlugins(this IApplicationBuilder builder)
-        {
-            if (Plugins == null)
-            {
-                throw new EdmException("Startup: Operation plugins must be located by 'IServiceCollection.AddOperationPlugins' method");
-            }
-            foreach (var plugin in Plugins)
-            {
-                builder.MapSpa(plugin);
-            }
-        }
-
-        public static void MapSpa(this IApplicationBuilder builder, Type plugin)
-        {
-            var attr = plugin.GetCustomAttribute<PluginAttribute>();
-            var name = plugin.Assembly.GetName().Name;
-            var packageName = name.Substring(name.LastIndexOf('.') + 1);
-            var pluginPath = $"/{attr.UiRoot}/{packageName.ToLower()}";
-            var fileProvider = new ManifestEmbeddedFileProvider(plugin.Assembly, attr.UiPath);
-            builder.Use((context, next) =>
-            {
-                if (context.Request.Path.StartsWithSegments(pluginPath, out var remain))
-                {
-                    var fileInfo = fileProvider.GetFileInfo(remain);
-                    if (!fileInfo.Exists)
-                    {
-                        context.Request.Path = new PathString($"{pluginPath}/index.html");
-                    }
-                }
-                return next();
-            });
-
-            builder.UseStaticFiles(new StaticFileOptions
-            {
-                FileProvider = fileProvider,
-                RequestPath = new PathString(pluginPath)
-            });
-        }
 
         public static IServiceCollection InjectDeps(this IServiceCollection services)
         {
             services.AddScoped<IEdmContext>(provider => provider.GetService<EdmContext>());
 
             services.AddTransient<IRemoteCommands, RemoteCommands>();
-            services.AddSingleton<ICommandContainer>(CommandManager.GetInstance());
 
             services.AddTransient<IAuditService, AuditService>();
             services.AddTransient<IProcessService, ProcessService>();
@@ -228,6 +170,7 @@ namespace Optosense.Edm.WebUi
             services.AddTransient<IWorkplaceService, WorkplaceService>();
             services.AddTransient<IProfileService, ProfileService>();
             services.AddTransient<IOperationService, OperationService>();
+            services.AddTransient<ISettingService, SettingService>();
 
             return services;
         }

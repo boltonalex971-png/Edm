@@ -39,8 +39,8 @@ export function HostDevicesTab({ id, api, onDetailSelected }) {
                     })}
                 />
             }
-            <GridColumn field='deviceModel' title='Model' editable={false} />
-            <GridColumn field='deviceEnvType' title='Type' editable={false} />
+            <GridColumn field='driverName' title='Driver' editable={false} />
+            <GridColumn field='profilerName' title='Profiler' editable={false} />
         </RelationTable>
     );
 }

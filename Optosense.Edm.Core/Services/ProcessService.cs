@@ -28,8 +28,7 @@ namespace Optosense.Edm.Core.Services
         public override async Task<Process> Delete(int id)
         {
             var process = await Get(id);
-            var used = await Db.Operations.AnyAsync(o => o.ProcessId == id);
-            return await Delete(process, used);
+            return await Delete(process);
         }
 
         public async Task<IEnumerable<Profile>> GetProfiles(int id)

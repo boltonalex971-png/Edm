@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Domain.Models;
+using Optosense.Edm.Plugins;
 using Optosense.Edm.Webui.Models;
 
 namespace Optosense.Edm.WebUi.Controllers
@@ -18,12 +19,14 @@ namespace Optosense.Edm.WebUi.Controllers
         private readonly ILogger<ProcessesController> _logger;
         private readonly IMapper _mapper;
         private readonly IProcessService _processService;
+        private readonly IPluginContainer _plugins;
 
-        public ProcessesController(ILogger<ProcessesController> logger, IMapper mapper, IProcessService processService)
+        public ProcessesController(ILogger<ProcessesController> logger, IMapper mapper, IProcessService processService, IPluginContainer plugins)
         {
             _logger = logger;
             _mapper = mapper;
             _processService = processService;
+            _plugins = plugins;
         }
 
         [HttpGet]
@@ -82,7 +85,14 @@ namespace Optosense.Edm.WebUi.Controllers
         public async Task<IEnumerable<ProfileViewModel>> GetProfiles(int id)
         {
             var profiles = await _processService.GetProfiles(id);
-            return _mapper.Map<IEnumerable<ProfileViewModel>>(profiles);
+            var result = _mapper.Map<IEnumerable<ProfileViewModel>>(profiles);
+            foreach (var profile in result)
+            {
+                var profiler = _plugins.GetProfile(profile.ProfilerGuid);
+                profile.ProfilerName = profiler?.Name;
+            }
+
+            return result;
         }
 
         [HttpPost("{id:int}/profiles")]

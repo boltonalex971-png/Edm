@@ -7,6 +7,7 @@ using System.Reactive.Threading.Tasks;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microprojects.Edm.Drivers;
 using Microprojects.Edm.Log;
 using Microprojects.Edm.Utils;
 using Optosense.Edm.Domain.Models;
@@ -53,9 +54,9 @@ namespace Optosense.Edm.Utils
                     onError: errorAction ?? ((e) => { }));
         }
 
-        public static Task Launch(this IEnumerable<ProfilePoint> plan,
+        public static Task Launch(this IEnumerable<DriverRequest> plan,
             IDeviceDriver driver,
-            Action<IDeviceDriver, string> action, 
+            Action<IDeviceDriver, DriverRequest> action, 
             CancellationToken? cancellationToken = null)
         {
             var token = cancellationToken ?? CancellationToken.None;
@@ -64,7 +65,7 @@ namespace Optosense.Edm.Utils
                 .Pace(p => TimeSpan.FromMilliseconds(p.Offset))
                 .ObserveOn(NewThreadScheduler.Default)
                 .Do(
-                    onNext: p => action(driver, p.Operation),
+                    onNext: p => action(driver, p),
                     onError: e => 
                     {
                         Logger.Error($"Plan for driver {driver.GetType().Name} was cancelled with exception: {e.GetFullInfo()}");

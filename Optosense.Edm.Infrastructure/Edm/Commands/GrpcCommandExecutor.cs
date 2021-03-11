@@ -20,14 +20,41 @@ namespace Optosense.Edm.Infrastructure.Edm.Commands
 
             using (var channel = GrpcChannel.ForAddress(host))
             {
-                var client = new CommandExecutor.CommandExecutorClient(channel); 
-                var response = await client.ExecuteCommandAsync(new CommandParams 
-                { 
-                    Command = command.Name, 
-                    Params = JsonConvert.SerializeObject(parameters ?? command.CommandParameters) 
+                var client = new CommandExecutor.CommandExecutorClient(channel);
+                var response = await client.ExecuteCommandAsync(new CommandParams
+                {
+                    Command = command.Name,
+                    Params = JsonConvert.SerializeObject(parameters ?? command.CommandParameters)
                 });
                 return response;
             }
+        }
+
+        public static async Task<CommandResponse> LocalExecute(this ICommandContainer container, ICommand command, object parameters = null)
+        {
+            if (command == null)
+            {
+                throw new Exception("Command cannot be null");
+            }
+            var commandResponse = new CommandResponse();
+            try
+            {
+                var response = await container.Execute(new CommandData
+                {
+                    Command = command.Name,
+                    Params = JsonConvert.SerializeObject(parameters ?? command.CommandParameters)
+                });
+                commandResponse.Message = response.Message;
+                commandResponse.Status = response.Status;
+                commandResponse.Response = response.Response;
+            }
+            catch (Exception e)
+            {
+                commandResponse.Message = e.Message;
+                commandResponse.Status = CommandManager.FAILED_STATUS;
+            }
+
+            return commandResponse;
         }
     }
 }

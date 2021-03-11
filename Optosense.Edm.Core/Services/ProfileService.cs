@@ -2,6 +2,7 @@
 using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Core.Persistance;
 using Optosense.Edm.Domain.Models;
+using Optosense.Edm.Plugins;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,12 +15,25 @@ namespace Optosense.Edm.Core.Services
     public class ProfileService : ServiceBase<Profile>, IProfileService
     {
         #region injected properties
-        //protected IIstpContextFactory ContextFactory { get; set; }
+
         #endregion
+
+        private readonly IPluginContainer _plugins;
 
         public ProfileService() { }
 
-        public ProfileService(IEdmContext db) : base(db) { }
+        public ProfileService(IEdmContext db, IPluginContainer plugins) : base(db) 
+        {
+            _plugins = plugins;
+        }
+
+        public override async Task<Profile> Get(int id)
+        {
+            var result = await base.Get(id);
+            var profiler = _plugins.GetProfile(result.ProfilerGuid);
+            result.ProfilerName = profiler?.Name;
+            return result;
+        }
 
         public override async Task<Profile> Delete(int id)
         {
@@ -30,12 +44,12 @@ namespace Optosense.Edm.Core.Services
 
         public async Task<IEnumerable<Profile>> GetByDevice(int deviceId)
         {
-            var type = (await Db.HostDevices
+            var profiler = (await Db.HostDevices
                 .Include(hd => hd.Device)
-                .FirstOrDefaultAsync(hd => hd.Id == deviceId))?.Device.EnvType ??
+                .FirstOrDefaultAsync(hd => hd.Id == deviceId))?.Device.ProfilerGuid ??
                 throw new Exception($"No device with id {deviceId} found");
             var profiles = await Db.Profiles
-                .Where(p => p.Type == type && p.IsActive)
+                .Where(p => p.ProfilerGuid == profiler && p.IsActive)
                 .ToListAsync();
             return profiles;
         }

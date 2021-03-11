@@ -1,7 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Core.Persistance;
 using Optosense.Edm.Domain.Models;
+using Optosense.Edm.Plugins;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,8 +15,38 @@ namespace Optosense.Edm.Core.Services
 {
     public class DeviceService : ServiceBase<Device>, IDeviceService
     {
+        private IPluginContainer _plugins;
         protected DeviceService() { }
-        public DeviceService(IEdmContext db) : base(db) { }
+        public DeviceService(IEdmContext db, IPluginContainer plugins) : base(db)
+        {
+            _plugins = plugins;
+        }
+
+        public override async Task<Device> Get(int id)
+        {
+            var result = await base.Get(id);
+            var driver = _plugins.GetDriver(result.DriverGuid);
+            result.DriverName = driver?.Name;
+            var profiler = _plugins.GetProfile(driver?.ProfileGuid ?? Guid.Empty);
+            result.ProfilerGuid = profiler?.Guid ?? Guid.Empty;
+            result.ProfilerName = profiler?.Name;
+            return result;
+        }
+
+        public override async Task<IEnumerable<Device>> GetAll()
+        {
+            var devices = await base.GetAll();
+            foreach (var device in devices)
+            {
+                var driver = _plugins.GetDriver(device.DriverGuid);
+                var profiler = _plugins.GetProfile(driver?.ProfileGuid ?? Guid.Empty);
+                device.DriverName = driver?.Name;
+                device.ProfilerGuid = driver?.ProfileGuid ?? Guid.Empty;
+                device.ProfilerName = profiler?.Name;
+            }
+
+            return devices;
+        }
 
         #region hosts
         public async Task<IEnumerable<HostDevice>> GetHosts(int deviceId)

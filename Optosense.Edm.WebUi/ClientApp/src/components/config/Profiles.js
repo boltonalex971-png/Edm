@@ -36,7 +36,7 @@ export function ProfileDetail({ profileId, ...props }) {
                     data={data}
                     content={
                         <div>
-                            <p>{`${data.type}`}</p>
+                            <p>{`${data.profilerName || 'No profiler attached'}`}</p>
                         </div>
                     }
                 />

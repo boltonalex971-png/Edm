@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Domain.Models;
+using Optosense.Edm.Plugins;
 using Optosense.Edm.Webui.Models;
 
 namespace Optosense.Edm.WebUi.Controllers
@@ -17,13 +18,15 @@ namespace Optosense.Edm.WebUi.Controllers
     {
         private readonly ILogger<DevicesController> _logger;
         private readonly IDeviceService _deviceService;
+        private readonly IPluginContainer _plugins;
         private readonly IMapper _mapper;
 
-        public DevicesController(ILogger<DevicesController> logger, IMapper mapper, IDeviceService deviceService)
+        public DevicesController(ILogger<DevicesController> logger, IMapper mapper, IDeviceService deviceService, IPluginContainer pluginContainer)
         {
             _logger = logger;
             _mapper = mapper;
             _deviceService = deviceService;
+            _plugins = pluginContainer;
         }
 
         [HttpGet]
@@ -44,7 +47,6 @@ namespace Optosense.Edm.WebUi.Controllers
                 return new Device { 
                     Name = string.Empty,
                     Description = string.Empty,
-                    Model = DeviceModel.None,
                     IsActive = true
                 };
             }
@@ -76,26 +78,24 @@ namespace Optosense.Edm.WebUi.Controllers
             return result;
         }
 
-        [HttpGet("models")]
-        public IEnumerable<string> GetDeviceModels()
+        [HttpGet("drivers")]
+        public IEnumerable<IDriverPlugin> GetDrivers()
         {
-            var models = ((DeviceModel[])Enum.GetValues(typeof(DeviceModel)))
-                .Select(o => o.ToString());
-            return models;
+            var drivers = _plugins.GetDrivers();
+            return drivers;
         }
 
-        [HttpGet("types")]
-        public IEnumerable<IdNameModel> GetDeviceTypes()
+        [HttpGet("profilers")]
+        public IEnumerable<IProfilePlugin> GetProfilers()
         {
-            var models = ((DeviceType[]) Enum.GetValues(typeof(DeviceType)))
-                .Select(o => new IdNameModel { Id = (int) o, Name = o.ToString() });
-            return models;
+            var profilers = _plugins.GetProfiles();
+            return profilers;
         }
 
-        [HttpGet("{model:alpha}")]
-        public async Task<IEnumerable<Device>> GetByModel(DeviceModel model)
+        [HttpGet("{driverGuid}")]
+        public async Task<IEnumerable<Device>> GetByDriver(string driverGuid)
         {
-            var devices = await _deviceService.Get(d => d.Model == model && d.IsActive);
+            var devices = await _deviceService.Get(d => d.DriverGuid == new Guid(driverGuid) && d.IsActive);
             return devices;
         }
 

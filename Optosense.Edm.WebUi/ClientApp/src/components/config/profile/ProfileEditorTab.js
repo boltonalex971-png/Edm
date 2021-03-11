@@ -20,7 +20,7 @@ export function ProfileEditorTab({ id, api, onDetailSelected }) {
     return (
         <div>
             <LoadingContainer loading={loading}>
-                <iframe src='/app/test' height='300' width='100%' seamless frameBorder='0' onLoad={() => setLoading(false)} />
+                <iframe src={`/profiles/board/profile/${id}`} height='500' width='100%' seamless frameBorder='0' onLoad={() => setLoading(false)} />
             </LoadingContainer>
         </div>
     );

@@ -5,6 +5,7 @@ const api = {
     hosts: '/api/hosts',
     workplaces: '/api/workplaces',
     operations: '/api/operations',
+    plugins: '/api/plugins',
     profiles: '/api/profiles'
 };
 

@@ -24,6 +24,12 @@ namespace Optosense.Edm.Commands
     {
         protected ICache Cache { get; set; } = CacheHelper.GetInstance();
         protected StartOperationCommandParameters Parameters => (StartOperationCommandParameters) CommandParameters;
+        protected ICommandContainer CommandManager { get; set; }
+
+        public StartOperationCommand(ICommandContainer container)
+        {
+            CommandManager = container;
+        }
 
         public override bool Init()
         {
@@ -42,7 +48,7 @@ namespace Optosense.Edm.Commands
                         .Include(d => d.Profile.Points)
                         .Where(p => p.OperationId == Parameters.Operation)
                         .ToListAsync();
-                if (devices.All(d => d.HostDevice.Device.EnvType == DeviceType.None))
+                if (devices.All(d => d.HostDevice.Device.DriverGuid == Guid.Empty))
                 {
                     // Start test operation if all devices of type None
                     var test = new StartTestOperationCommand { CommandParameters = CommandParameters };
@@ -51,21 +57,23 @@ namespace Optosense.Edm.Commands
 
                 foreach (var operationHostDevice in devices)
                 {
-                    var driverOptions = JsonConvert.DeserializeObject<ExpandoObject>(operationHostDevice.HostDevice.Device.Parameters);
-                    JsonConvert.PopulateObject(operationHostDevice.HostDevice.Parameters, driverOptions);
-                    JsonConvert.PopulateObject(operationHostDevice.Options, driverOptions);
+                    var driverOptions = JsonConvert.DeserializeObject<ExpandoObject>(operationHostDevice.HostDevice.Device.Parameters ?? "{}");
+                    JsonConvert.PopulateObject(operationHostDevice.HostDevice.Parameters ?? "{}", driverOptions);
+                    JsonConvert.PopulateObject(operationHostDevice.Options ?? "{}", driverOptions);
                     var deviceParams = new StartDeviceCommandParameters
                     {
-                        Device = operationHostDevice.HostDevice.Device.Model,
+                        Driver = operationHostDevice.HostDevice.Device.DriverGuid,
                         DriverOptions = driverOptions,
                         OperationHostDevice = operationHostDevice.Id,
                         StartAt = Parameters.StartAt,
-                        Profile = operationHostDevice.Profile.Points
+                        Profile = operationHostDevice.Profile.TextJson
                     };
                     var url = $"{operationHostDevice.HostDevice.Host.Url}:{operationHostDevice.HostDevice.Host.Port}";
                     var deviceCommand = new StartDeviceCommand { CommandParameters = deviceParams };
                     running.Add((url, deviceCommand));
-                    var response = await deviceCommand.RemoteExecute(url);
+                    var response = url.Contains("localhost") ?
+                        await CommandManager.LocalExecute(deviceCommand) :
+                        await deviceCommand.RemoteExecute(url);
                     // TODO check response for validity
                 }
             }
@@ -74,16 +82,19 @@ namespace Optosense.Edm.Commands
             do
             {
                 count = 0;
-                await Task.Delay(10000, CancellationToken); 
+                await Task.Delay(10000, CancellationToken);
                 foreach (var dev in running)
                 {
                     var check = new CheckCommand(dev.command);
-                    var response = await check.RemoteExecute(dev.url, new
+                    var parameter = new
                     {
                         Command = dev.command.Name,
                         ((StartDeviceCommandParameters) dev.command.CommandParameters).OperationHostDevice,
-                        ((StartDeviceCommandParameters) dev.command.CommandParameters).Device
-                    });
+                        ((StartDeviceCommandParameters) dev.command.CommandParameters).Driver
+                    };
+                    var response = dev.url.Contains("localhost") ?
+                        await CommandManager.LocalExecute(check, parameter) :
+                        await check.RemoteExecute(dev.url, parameter);
                     if (response.Status == "Ok" && Enum.TryParse(response.Message, out TaskStatus commandStatus))
                     {
                         if (commandStatus == TaskStatus.Running ||
@@ -107,7 +118,7 @@ namespace Optosense.Edm.Commands
                 operation.Completed = DateTime.Now;
                 await db.SaveChangesAsync();
             }
-        
+
             return "Ok";
         }
     }

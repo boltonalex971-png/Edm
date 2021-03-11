@@ -9,6 +9,8 @@ import { MasterDetail, reloadMaster, Detail, Info, Editor } from '../MasterDetai
 import { ProfileTabs } from './profile/ProfileTabs';
 import { WorkbenchDevicesTab } from './workplace/WorkbenchDevicesTab';
 import { Button } from '@progress/kendo-react-buttons';
+import axios from 'axios';
+import api from '../api';
 
 WorkbenchDetail.propTypes = {
     onChange: PropTypes.func,
@@ -26,6 +28,18 @@ export function WorkbenchDetail({ workbenchId, ...props }) {
     if (!data || data.id === 0) {
         data = { ...data, name: '', description: '', url: '' };
     }
+    const onOperationStart = () => {
+        const data = {
+            id: 0,
+            workbenchId: id,
+        };
+        axios.post(api.operations, data)
+            .then((op) => {
+                window.open(`/app/typeone?id=${op.data.id}`, '_blank');
+            })
+            .catch(alert);
+    };
+
     return (
         <Detail {...props}
             id={id}
@@ -39,7 +53,7 @@ export function WorkbenchDetail({ workbenchId, ...props }) {
                 <>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignContent: 'baseline' }}>
                         <h6>Device configurations</h6>
-                        <Button type='button' primary icon='play' className='mb-2' >Start operation</Button>
+                        <Button type='button' primary icon='play' className='mb-2' onClick={onOperationStart} >Start operation</Button>
                     </div>
                     <WorkbenchDevicesTab id={parseInt(id)} workplaceId={data.workplaceId} api={props.api} onDetailSelected={setSub} />
                 </>

@@ -9,7 +9,7 @@ namespace Optosense.Edm.Domain.Models
 {
     public class Operation : TypeObject
     {
-        public int ProcessId { get; set; }
+        public int WorkbenchId { get; set; }
 
         public DateTime Created { get; set; } = DateTime.Now;
         public DateTime? Scheduled { get; set; }
@@ -17,7 +17,7 @@ namespace Optosense.Edm.Domain.Models
         public DateTime? Completed { get; set; }
         public DateTime? Cancelled { get; set; }
         
-        public Process Process { get; set; }
+        public Workbench Workbench { get; set; }
         public ICollection<OperationHostDevice> Devices { get; set; }
     }
 }

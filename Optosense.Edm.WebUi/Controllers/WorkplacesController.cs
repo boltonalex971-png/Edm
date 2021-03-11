@@ -5,8 +5,10 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Domain.Models;
+using Optosense.Edm.Plugins;
 using Optosense.Edm.Webui.Models;
 
 namespace Optosense.Edm.WebUi.Controllers
@@ -18,12 +20,14 @@ namespace Optosense.Edm.WebUi.Controllers
         private readonly ILogger<WorkplacesController> _logger;
         private readonly IMapper _mapper;
         private readonly IWorkplaceService _workplaceService;
+        private readonly IPluginContainer _plugins;
 
-        public WorkplacesController(ILogger<WorkplacesController> logger, IMapper mapper, IWorkplaceService workplaceService)
+        public WorkplacesController(ILogger<WorkplacesController> logger, IMapper mapper, IWorkplaceService workplaceService, IPluginContainer plugins)
         {
             _logger = logger;
             _mapper = mapper;
             _workplaceService = workplaceService;
+            _plugins = plugins;
         }
 
         [HttpGet]
@@ -81,7 +85,16 @@ namespace Optosense.Edm.WebUi.Controllers
         public async Task<IEnumerable<WorkplaceHostDeviceModel>> GetDevices(int id)
         {
             var devices = await _workplaceService.GetDevices(id);
-            return _mapper.Map<IEnumerable<WorkplaceHostDeviceModel>>(devices);
+            var models = _mapper.Map<IEnumerable<WorkplaceHostDeviceModel>>(devices);
+            foreach (var dev in models)
+            {
+                var driver = _plugins.GetDriver(dev.DriverGuid);
+                var profiler = _plugins.GetProfile(driver?.ProfileGuid ?? Guid.Empty);
+                dev.DriverName = driver?.Name;
+                dev.ProfilerGuid = driver?.ProfileGuid ?? Guid.Empty;
+                dev.ProfilerName = profiler?.Name;
+            }
+            return models;
         }
 
         [HttpPost("{id:int}/devices")]
@@ -101,12 +114,18 @@ namespace Optosense.Edm.WebUi.Controllers
         }
 
         [HttpGet("devices")]
-        public async Task<IEnumerable<IdNameModel>> GetAvailableHostDevices(DeviceType? type)
+        public async Task<IEnumerable<IdNameModel>> GetAvailableHostDevices(Guid? profilerGuid)
         {
             var hostDevices = await _workplaceService.GetAvailableHostDevices();
-            if (type != null) {
-                hostDevices = hostDevices.Where(hd => hd.Device.EnvType == type);
+            if (profilerGuid != null)
+            {
+                var guids = _plugins.GetDrivers()
+                    .Where(d => d.ProfileGuid == profilerGuid)
+                    .Select(d => d.Guid)
+                    .ToList();
+                hostDevices = hostDevices.Where(hd => guids.Contains(hd.Device.DriverGuid));
             }
+
             return _mapper.Map<IEnumerable<IdNameModel>>(hostDevices);
         }
 
@@ -197,6 +216,17 @@ namespace Optosense.Edm.WebUi.Controllers
         {
             var devices = await _workplaceService.GetWorkbenchDevices(id);
             var result = _mapper.Map<IEnumerable<WorkbenchDeviceConfigViewModel>>(devices);
+            foreach (var dev in result)
+            {
+                var driver = _plugins.GetDriver(dev.DriverGuid);
+                var profiler = _plugins.GetProfile(driver?.ProfileGuid ?? Guid.Empty);
+                dev.DriverName = driver?.Name;
+                dev.DriverName = driver?.Homepage;
+                dev.ProfilerGuid = driver?.ProfileGuid ?? Guid.Empty;
+                dev.ProfilerName = profiler?.Name;
+                dev.ProfilerHomepage = profiler?.Homepage;
+            }
+
             return result;
         }
 
@@ -223,7 +253,23 @@ namespace Optosense.Edm.WebUi.Controllers
         {
             var device = await _workplaceService.GetWorkbenchDevice(id);
             var result = _mapper.Map<WorkbenchDeviceConfigViewModel>(device);
+            var driver = _plugins.GetDriver(result.DriverGuid);
+            var profiler = _plugins.GetProfile(driver?.ProfileGuid ?? Guid.Empty);
+            result.DriverName = driver?.Name;
+            result.DriverHomepage = driver?.Homepage;
+            result.ProfilerGuid = driver?.ProfileGuid ?? Guid.Empty;
+            result.ProfilerName = profiler?.Name;
+            result.ProfilerHomepage = profiler?.Homepage;
+
             return result;
+        }
+
+        [HttpPut("processes/workbenches/devices/{id:int}")]
+        public async Task<bool> SaveWorkbenchDeviceOptions(int id, [FromBody] object options)
+        {
+            var str = JsonConvert.SerializeObject(options);
+            var result = await _workplaceService.SaveWorkbenchDeviceOptions(id, str);
+            return result != null;
         }
 
         #endregion

@@ -30,6 +30,27 @@ namespace Optosense.Edm.Core.Services
 
         public async Task<Operation> Create(Operation operation)
         {
+            var wb = await Db.Workbenches
+                .Include(wb => wb.DeviceConfigurations)
+                .Include(wb => wb.WorkplaceProcess)
+                .FirstOrDefaultAsync(wb => wb.Id == operation.WorkbenchId)
+                ?? throw new ArgumentException("No workbench found");
+            // TODO Switch using profile guids
+            var profile = await Db.Profiles
+                .FirstOrDefaultAsync(p => p.ProcessId == wb.WorkplaceProcess.ProcessId/* && p.ProfilerGuid == DeviceType.Testing*/)
+                ?? throw new ArgumentException($"{DeviceType.Testing} profile does not exist for process");
+            var devices = await Db.WorkbenchDeviceConfigurations
+                .Include(d => d.WorkplaceHostDevice)
+                .Where(d => wb.DeviceConfigurations.Select(c => c.Id).Contains(d.Id))
+                .ToListAsync();
+            operation.Devices = devices
+                .Select(c => new OperationHostDevice
+                {
+                    HostDeviceId = c.WorkplaceHostDevice.HostDeviceId,
+                    Options = c.Configuration,
+                    ProfileId = profile.Id
+                })
+                .ToList();
             var result = Db.Operations.Add(operation);
             await Db.SaveChangesAsync();
             return result.Entity;
@@ -57,7 +78,7 @@ namespace Optosense.Edm.Core.Services
         public async Task<Operation> Start(int operationId, DateTime startAt)
         {
             var operation = await Db.Operations.FindAsync(operationId);
-            await _commands.StartTestOperation(operationId, startAt);
+            await _commands.StartOperation(operationId, startAt);
 
             //var devices = await Db.OperationHostDevices
             //    .Include(d => d.Profile)

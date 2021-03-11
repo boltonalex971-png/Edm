@@ -9,7 +9,7 @@ import "./custom.css";
 import '@progress/kendo-react-animation';
 import '@progress/kendo-theme-bootstrap/dist/all.css';
 import { NewOperationWizard } from "./components/operation/NewOperationWizard";
-import { Apps } from "./components/apps/Apps";
+import { Plugins } from "./components/plugins/Plugins";
 
 export default class App extends Component {
 
@@ -19,7 +19,7 @@ export default class App extends Component {
                 <Route exact path="/" component={Home} />
                 <Route path="/dashboard" component={Dashboard} />
                 <Route path="/config" component={Config} />
-                <Route path="/apps" component={Apps} />
+                <Route path="/Plugins" component={Plugins} />
                 <Route path="/operation">
                     <MemoryRouter>
                         <NewOperationWizard />

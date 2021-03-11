@@ -13,8 +13,8 @@ namespace Optosense.Edm.Core.Infrastructure
             int linkId,
             string url,
             dynamic options,
-            IEnumerable<ProfilePoint> Profile,
-            DeviceModel model,
+            string Profile,
+            Guid driverGuid,
             DateTime startAt);
         Task<string> StartOperation(int operationId, DateTime startAt);
         Task<string> StartTestOperation(int operationId, DateTime startAt);

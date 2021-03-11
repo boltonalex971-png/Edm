@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Domain.Models;
+using Optosense.Edm.Plugins;
 using Optosense.Edm.Webui.Models;
 
 namespace Optosense.Edm.WebUi.Controllers
@@ -18,12 +19,14 @@ namespace Optosense.Edm.WebUi.Controllers
         private readonly ILogger<HostsController> _logger;
         private readonly IMapper _mapper;
         private readonly IHostService _hostService;
+        private readonly IPluginContainer _plugins;
 
-        public HostsController(ILogger<HostsController> logger, IMapper mapper, IHostService hostService)
+        public HostsController(ILogger<HostsController> logger, IMapper mapper, IHostService hostService, IPluginContainer plugins)
         {
             _logger = logger;
             _mapper = mapper;
             _hostService = hostService;
+            _plugins = plugins;
         }
 
         [HttpGet]
@@ -82,7 +85,17 @@ namespace Optosense.Edm.WebUi.Controllers
         public async Task<IEnumerable<HostDeviceModel>> GetDevices(int id)
         {
             var devices = await _hostService.GetDevices(id);
-            return _mapper.Map<IEnumerable<HostDeviceModel>>(devices);
+            var devModels = _mapper.Map<IEnumerable<HostDeviceModel>>(devices);
+            foreach (var dev in devModels)
+            {
+                var driver = _plugins.GetDriver(dev.DriverGuid);
+                var profiler = _plugins.GetProfile(driver?.ProfileGuid ?? Guid.Empty);
+                dev.DriverName = driver?.Name;
+                dev.ProfilerGuid = driver?.ProfileGuid ?? Guid.Empty;
+                dev.ProfilerName = profiler?.Name;
+            }
+
+            return devModels;
         }
 
         [HttpPost("{id:int}/devices")]

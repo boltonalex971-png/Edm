@@ -24,6 +24,7 @@ namespace Optosense.Edm.Core.Contracts
         Task<WorkbenchWorkplaceHostDevice> GetWorkbenchDevice(int workbenchId);
         Task<IEnumerable<WorkbenchWorkplaceHostDevice>> GetWorkbenchDevices(int workbenchId);
         Task <WorkbenchWorkplaceHostDevice> SaveWorkbenchDevice(WorkbenchWorkplaceHostDevice device);
-        Task <WorkbenchWorkplaceHostDevice> DeleteWorkbenchDevice(int id);
+        Task<WorkbenchWorkplaceHostDevice> SaveWorkbenchDeviceOptions(int id, string options);
+        Task<WorkbenchWorkplaceHostDevice> DeleteWorkbenchDevice(int id);
     }
 }

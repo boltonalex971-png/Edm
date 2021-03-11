@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Optosense.Edm.Utils
@@ -83,6 +84,22 @@ namespace Optosense.Edm.Utils
                 buffer.Append((char)((int)@byte));
             }
             return buffer.ToString();
+        }
+
+        public static string Substitute(this string source, Dictionary<string, object> values, bool asBytes = false)
+        {
+            var matches = Regex.Matches(source, @"\{(?<Key>\w+?)\}");
+            var result = source;
+            foreach (Match match in matches)
+            {
+                var key = match.Groups["Key"].Value;
+                if (values.ContainsKey(key))
+                {
+                    result = result.Replace($"{{{key}}}", asBytes ? values[key].ToString().ToWholeByteString() : values[key].ToString());
+                }
+            }
+
+            return result;
         }
     }
 }

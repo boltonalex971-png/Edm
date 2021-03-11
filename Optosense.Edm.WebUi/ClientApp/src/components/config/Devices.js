@@ -3,10 +3,11 @@ import PropTypes from 'prop-types';
 import { useGet } from '../hooks/hooks';
 import { Field } from '@progress/kendo-react-form';
 import { Input } from '@progress/kendo-react-inputs';
-import { ComboBox } from '@progress/kendo-react-dropdowns';
+import { ComboBox, DropDownList } from '@progress/kendo-react-dropdowns';
 import { useHistory, useParams, useRouteMatch } from 'react-router-dom';
 import { MasterDetail, reloadMaster, Detail, Info, Editor } from '../MasterDetail';
 import { DeviceTabs } from './device/DeviceTabs';
+import { DropDownComp } from '../DropDownCell';
 
 export function Devices() {
     const history = useHistory();
@@ -42,7 +43,15 @@ export function DeviceDetail({ deviceId, ...props }) {
     useEffect(setSub, [id]);
     let [[data, setData], loading, error] = useGet(`${props.api}/${id}`, [id]);
     const [[models]] = useGet(`${props.api}/models`, []);
-    const FormComboBox = useCallback((formProps) => <ComboBox {...formProps} data={models || ['Loading...']} />, []);
+    const [[drivers]] = useGet(`${props.api}/drivers`, []);
+    const FormComboBox = (formProps) => <ComboBox {...formProps} data={models || ['Loading...']} />;
+    const driverComboBox = (compProps) =>
+        <DropDownComp {...compProps}
+            dataItem={data}
+            data={drivers}
+            textField='name'
+            dataItemKey='guid'
+        />;
     data = data || {};
     return (
         <Detail {...props}
@@ -56,7 +65,7 @@ export function DeviceDetail({ deviceId, ...props }) {
                     data={data}
                     content={
                         <div>
-                            <p>{data.model} ({`${data.envType} device`})</p>
+                            <p>{data.driverName} ({`${data.profilerName} device`})</p>
                         </div>
                     }
                 />
@@ -76,6 +85,9 @@ export function DeviceDetail({ deviceId, ...props }) {
                             </div>
                             <div className="mb-3">
                                 <Field name={'model'} component={FormComboBox} label={'Model'} />
+                            </div>
+                            <div className="mb-3" style={{ width: '50%' }}>
+                                <Field name='driverGuid' component={driverComboBox} label='Driver' />
                             </div>
                             <div className="mb-3">
                                 <Field name={'parameters'} component={Input} label={'Parameters'} />

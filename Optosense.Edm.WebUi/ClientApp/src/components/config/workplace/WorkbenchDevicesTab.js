@@ -39,15 +39,16 @@ export function WorkbenchDevicesTab({ id, api, workplaceId, onDetailSelected }) 
             />
         );
     };
+    const path = '/config/devices';
+
     return (
         <RelationTable api={`${api}/${id}/devices`} removable >
-            <GridColumn title='Type' field='deviceType' editable={false} />
+            <GridColumn title='Profiler' field='profilerName' editable={false} />
             {data && data.length &&
                 <GridColumn title='Device' field='workplaceHostDeviceId' editable={true} width={200}
                 cell={dropDownCell({
                     getData: () => data, key: 'id', text: 'device', fieldId: 'deviceId',
                     onClick: (deviceId) => {
-                        const path = '/config/devices';
                         onDetailSelected(
                             <DeviceDetail
                                 deviceId={deviceId}

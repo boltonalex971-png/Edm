@@ -42,13 +42,13 @@ namespace Optosense.Edm.Infrastructure.Edm
             int linkId,
             string url,
             dynamic options,
-            IEnumerable<ProfilePoint> profile,
-            DeviceModel model,
+            string profile,
+            Guid driverGuid,
             DateTime startAt)
         {
             var deviceParams = new StartDeviceCommandParameters
             {
-                Device = model,
+                Driver = driverGuid,
                 DriverOptions = options,
                 OperationHostDevice = linkId,
                 StartAt = startAt,

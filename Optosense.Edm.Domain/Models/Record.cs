@@ -6,8 +6,9 @@ namespace Optosense.Edm.Domain.Models
     public enum ExecutionStatus
     {
         Succeed = 0,
-        Timeout = 1,
-        Failed = 2
+        InvalidResponse = 1,
+        Failed = 2,
+        Timeout = 3
     }
 
     public class Record : DomainObject

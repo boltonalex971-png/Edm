@@ -12,7 +12,9 @@ namespace Optosense.Edm.Webui.Models
         public string HostUrl { get; set; }
         public string HostPort { get; set; }
         public string DeviceName { get; set; }
-        public string DeviceModel { get; set; }
-        public string DeviceEnvType { get; set; }
+        public string DriverName { get; set; }
+        public Guid DriverGuid { get; set; }
+        public string ProfilerName { get; set; }
+        public Guid ProfilerGuid { get; set; }
     }
 }

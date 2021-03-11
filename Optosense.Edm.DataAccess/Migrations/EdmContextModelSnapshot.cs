@@ -116,11 +116,11 @@ namespace Optosense.Edm.DataAccess.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid>("DriverGuid")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
-
-                    b.Property<int>("Model")
-                        .HasColumnType("int");
 
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
@@ -213,18 +213,18 @@ namespace Optosense.Edm.DataAccess.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("ProcessId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime?>("Scheduled")
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("Started")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("WorkbenchId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("ProcessId");
+                    b.HasIndex("WorkbenchId");
 
                     b.ToTable("Operations");
                 });
@@ -299,11 +299,11 @@ namespace Optosense.Edm.DataAccess.Migrations
                     b.Property<int>("ProcessId")
                         .HasColumnType("int");
 
+                    b.Property<Guid>("ProfilerGuid")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("TextJson")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -380,6 +380,27 @@ namespace Optosense.Edm.DataAccess.Migrations
                     b.HasIndex("OperationHostDeviceId");
 
                     b.ToTable("Records");
+                });
+
+            modelBuilder.Entity("Optosense.Edm.Domain.Models.Setting", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .UseIdentityColumn();
+
+                    b.Property<Guid>("Guid")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Settings");
                 });
 
             modelBuilder.Entity("Optosense.Edm.Domain.Models.Workbench", b =>
@@ -552,13 +573,13 @@ namespace Optosense.Edm.DataAccess.Migrations
 
             modelBuilder.Entity("Optosense.Edm.Domain.Models.Operation", b =>
                 {
-                    b.HasOne("Optosense.Edm.Domain.Models.Process", "Process")
+                    b.HasOne("Optosense.Edm.Domain.Models.Workbench", "Workbench")
                         .WithMany()
-                        .HasForeignKey("ProcessId")
+                        .HasForeignKey("WorkbenchId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Process");
+                    b.Navigation("Workbench");
                 });
 
             modelBuilder.Entity("Optosense.Edm.Domain.Models.OperationHostDevice", b =>

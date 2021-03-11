@@ -12,15 +12,29 @@
     <EmbeddedResource Remove="ui\node_modules\**" />
     <None Remove="ui\build\**" />
     <None Remove="ui\node_modules\**" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Remove="ui\*.local" />
     <None Remove="ui\.env.local" />
+    <None Remove="ui\.eslintcache" />
     <None Remove="ui\.gitignore" />
     <None Remove="ui\kendo-ui-license.txt" />
     <None Remove="ui\yarn-error.log" />
     <None Remove="ui\yarn.lock" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="TypeOneUi\build\**" />
+    <Compile Remove="TypeOneUi\node_modules\**" />
+    <EmbeddedResource Include="TypeOneUi\build\**" />
+    <EmbeddedResource Remove="TypeOneUi\node_modules\**" />
+    <None Remove="TypeOneUi\build\**" />
+    <None Remove="TypeOneUi\node_modules\**" />
+    <None Remove="TypeOneUi\*.local" />
+    <None Remove="TypeOneUi\.env.local" />
+    <None Remove="TypeOneUi\.eslintcache" />
+    <None Remove="TypeOneUi.gitignore" />
+    <None Remove="TypeOneUi\kendo-ui-license.txt" />
+    <None Remove="TypeOneUi\yarn-error.log" />
+    <None Remove="TypeOneUi\yarn.lock" />
   </ItemGroup>
 
   <ItemGroup>
@@ -32,6 +46,10 @@
   <ItemGroup>
     <ProjectReference Include="..\Edm\Edm.csproj" />
     <ProjectReference Include="..\Optosense.Edm\Optosense.Edm.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Pages\" />
   </ItemGroup>
 
 </Project>

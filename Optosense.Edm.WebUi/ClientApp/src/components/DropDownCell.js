@@ -3,6 +3,22 @@ import React
 import { DropDownList } from '@progress/kendo-react-dropdowns';
 import { GridCell } from '@progress/kendo-react-grid';
 import { Input } from '@progress/kendo-react-inputs';
+import { post } from 'jquery';
+
+export const DropDownComp = ({ ...props }) => {
+    const handleChange = (e) => {
+        props.onChange({
+            dataItem: props.dataItem,
+            field: props.field,
+            syntheticEvent: e.syntheticEvent,
+            value: e.target.value[props.dataItemKey]
+        });
+    }
+    const value = (props.data || []).find(c => c[props.dataItemKey] === props.value);
+    return (
+        <DropDownList  {...props} onChange={handleChange} value={value} />
+    );
+}
 
 export function dropDownCell({ getData, key, text, fieldName, fieldId, onClick, editable = true }) {
     return class extends GridCell {
@@ -29,10 +45,13 @@ export function dropDownCell({ getData, key, text, fieldName, fieldId, onClick, 
                     textField={text}
                     dataItemKey={key}
                 />;
-            } else {
-                const valueName = fieldName ? dataItem[fieldName] : (value && value[text] || '- DELETED -');
+            } else if (onClick) {
+                const valueName = fieldName ? dataItem[fieldName] : (value && value[text] || dataItem[fieldId]);
                 const valueId = fieldId ? dataItem[fieldId] : value ? value[key] : dataItem[field];
                 content = <button type='button' onClick={() => onClick(valueId)} className='btn btn-link'>{valueName}</button>;
+            } else {
+                const valueName = fieldName ? dataItem[fieldName] : (value && value[text] || dataItem[fieldId]);
+                content = <span>{valueName}</span>;
             }
 
             return (

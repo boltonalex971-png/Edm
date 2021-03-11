@@ -1,5 +1,4 @@
-﻿using Optosense.Edm.Drivers;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,7 +10,8 @@ using Microprojects.Edm.Log;
 using Microprojects.Edm.Utils;
 using Newtonsoft.Json;
 using Optosense.Edm.Utils;
-using System.Diagnostics;
+using Optosense.Edm.Plugins;
+using Microprojects.Edm.Drivers;
 
 namespace Optosense.Edm.Commands
 {
@@ -21,20 +21,34 @@ namespace Optosense.Edm.Commands
         protected ICache Cache { get; set; } = CacheHelper.GetInstance();
         protected StartDeviceCommandParameters Parameters => (StartDeviceCommandParameters) CommandParameters;
 
-
+        private IPluginContainer _plugins;
+        private IDriverPlugin _driverPlugin;
+        private IProfilePlugin _profilePlugin;
+        private IEnumerable<DriverRequest> _executionPlan;
         private IDeviceDriver _driver;
+        private DateTime StartTime;
+
+        public StartDeviceCommand() { }
+
+        public StartDeviceCommand(IPluginContainer plugins)
+        {
+            _plugins = plugins;
+        }
 
         public override bool Init()
         {
             try
             {
-                _driver = DriverUtils.GetDriver(Parameters.Device);
-                var options = DriverUtils.GetDriverOptions(Parameters.Device);
+                _driverPlugin = _plugins.GetDriver(Parameters.Driver) ?? throw new EdmException("Driver plugin not found");
+                _profilePlugin = _plugins.GetProfile(_driverPlugin.ProfileGuid) ?? throw new EdmException("No profiler found");
+                _driver = _driverPlugin.GetDriver();
+                var options = _driver.GetEffectiveOptions(); //DriverUtils.GetDriverOptions(DeviceModel.None); //Parameters.Driver);
                 if (Parameters.DriverOptions != null)
                 {
                     JsonConvert.PopulateObject(JsonConvert.SerializeObject(Parameters.DriverOptions), options);
                 }
 
+                _executionPlan = _driverPlugin.GetPlan(Parameters.Profile, JsonConvert.SerializeObject(options)).ToList();
                 _driver.Options = options;
                 _driver.Init();
             }
@@ -49,36 +63,32 @@ namespace Optosense.Edm.Commands
 
         public override async Task<object> ExecuteAsync()
         {
-            var task = Parameters.Profile.Launch(_driver, (d, x) => ExecuteDeviceInstruction(d, x), CancellationToken);
+            StartTime = DateTime.Now;
+            var task = _executionPlan.Launch(_driver, (d, x) => ExecuteDeviceInstruction(d, x), CancellationToken);
             await Task.WhenAll(task);
-            _driver.Dispose();
+            if (_driver is IDisposable)
+            {
+                ((IDisposable) _driver).Dispose();
+            }
+
             return "Ok";
         }
 
-        private void ExecuteDeviceInstruction(IDeviceDriver driver, string command, bool throwEx = false, int totalRetrials = 0)
+        private void ExecuteDeviceInstruction(IDeviceDriver driver, DriverRequest request, bool throwEx = false, int totalRetrials = 0)
         {
+            var response = driver.Execute(request);
             var rec = new Record
             {
+                ScheduledAt = DateTime.Now,
                 ExecutedAt = DateTime.Now,
-                Request = command,
+                Request = response.Request,
+                Response = response.Response,
+                IsValid = response.State == DriverResponseState.Ok,
+                Message = response.Message,
+                Parameters = response.Parameters,
+                Status = (ExecutionStatus) response.State,
                 OperationHostDeviceId = Parameters.OperationHostDevice,
             };
-            try
-            {
-                var response = driver.Execute(command);
-                rec.Response = response;
-                rec.Status = ExecutionStatus.Succeed;
-                rec.IsValid = true;
-            }
-            catch (Exception e)
-            {
-                rec.IsValid = false;
-                rec.Status = (e.InnerException ?? e) is TimeoutException ? ExecutionStatus.Timeout : ExecutionStatus.Failed;
-                rec.Message = string.Join("\n", rec.Message, $"{rec.Status}: {e.InnerException?.Message ?? e.Message}");
-#if DEBUG
-                Logger.Error($"Instruction \"{rec.Request} {rec.Parameters}\" failed with exception:\n\n{e.GetFullInfo()}");
-#endif
-            }
 
             Cache.Push(rec);
             Logger.Log(rec.Response);
@@ -93,11 +103,11 @@ namespace Optosense.Edm.Commands
     {
         public string CacheConnectionString { get; set; }
         public dynamic DriverOptions { get; set; }
-        public IEnumerable<ProfilePoint> Profile { get; set; }
+        public string Profile { get; set; }
 
         [CommandParameter(Required = true)]
         public int OperationHostDevice { get; set; }
-        public DeviceModel Device { get; set; }
+        public Guid Driver { get; set; }
         public DateTime StartAt { get; set; } = DateTime.Now.AddSeconds(10);
 
     }

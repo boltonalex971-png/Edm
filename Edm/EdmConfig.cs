@@ -1,4 +1,5 @@
 ﻿using Microprojects.Edm.Log;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -13,7 +14,7 @@ namespace Microprojects.Edm
     public static class EdmConfig
     {
         static EdmConfiguration _config;
-        internal static Dictionary<string, IEnumerable<ICommand>> Plugins { get; set; }
+        internal static Dictionary<string, IEnumerable<Type>> Plugins { get; set; }
 
         public static void Configure(Action<EdmConfiguration> configure)    
         {
@@ -22,13 +23,26 @@ namespace Microprojects.Edm
             Plugins = LoadPlugins(_config.PluginPaths);
         }
 
-        private static Dictionary<string, IEnumerable<ICommand>> LoadPlugins(IEnumerable<string> paths)
+        public static void AddEdmCommands(this IServiceCollection services, Action<EdmConfiguration> configure)
         {
-            var dic = new Dictionary<string, IEnumerable<ICommand>>();
+            _config = new EdmConfiguration();
+            configure(_config);
+            Plugins = LoadPlugins(_config.PluginPaths);
+            foreach (var plugin in Plugins.SelectMany(p => p.Value))
+            {
+                services.AddTransient(plugin);
+            }
+
+            services.AddSingleton<ICommandContainer, CommandManager>();
+        }
+
+        private static Dictionary<string, IEnumerable<Type>> LoadPlugins(IEnumerable<string> paths)
+        {
+            var dic = new Dictionary<string, IEnumerable<Type>>();
             // Load plugin commands
             foreach (var path in paths)
             {
-                var context = (AssemblyLoadContext) Activator.CreateInstance(_config.Context, path);
+                var context = AssemblyLoadContext.Default; //(AssemblyLoadContext) Activator.CreateInstance(_config.Context, path);
                 if (!File.Exists(path))
                 {
                     continue;
@@ -39,7 +53,6 @@ namespace Microprojects.Edm
 
                 var commands = assembly.ExportedTypes
                     .Where(t => typeof(ICommand).IsAssignableFrom(t))
-                    .Select(t => (ICommand) Activator.CreateInstance(t))
                     .ToList();
                 dic[assembly.FullName] = commands;
             }

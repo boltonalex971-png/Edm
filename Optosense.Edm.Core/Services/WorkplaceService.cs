@@ -156,6 +156,14 @@ namespace Optosense.Edm.Core.Services
             return result;
         }
 
+        public async Task<WorkbenchWorkplaceHostDevice> SaveWorkbenchDeviceOptions(int id, string options)
+        {
+            var device = await GetWorkbenchDevice(id) ?? throw new ArgumentException("Workbench device not found");
+            device.Configuration = options;
+            var result = await Save(device);
+            return result;
+        }
+
         public async Task<WorkbenchWorkplaceHostDevice> DeleteWorkbenchDevice(int id)
         {
             var result = await Delete<WorkbenchWorkplaceHostDevice>(id);

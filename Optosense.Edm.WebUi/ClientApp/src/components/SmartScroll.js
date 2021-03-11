@@ -16,7 +16,7 @@ export function SmartScroll({ children, offtop }) {
     });
 
     return (
-        <div className="smart-scroll-container row">
+        <div className="smart-scroll-container" style={{ display: 'flex' }}>
             {children}
         </div>
     );

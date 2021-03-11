@@ -79,7 +79,7 @@ namespace Optosense.Edm.Utils
                         ResponseLength = responseLength,
                         SingleLine = singleLine
                     };
-                    throw e;
+                    throw;
                 }
             }
 
@@ -148,14 +148,11 @@ namespace Optosense.Edm.Utils
             });
         }
 
-        public static char[] Request(this SerialPort port, string command, int? address = null, int responseLength = 0, bool singleLine = true, int timeout = 1500)
+        public static char[] Request(this SerialPort port, string command, int? address = null, int responseLength = 0, bool singleLine = true, int timeout = 1500, int retries = 0)
         {
             var fullCommand = $"{(address == null ? string.Empty : $"#{address:X2}")}{command}\r";
             char[] result;
-
-            int timeoutAttempts = 0;
             var obs = port.ToLine(fullCommand, responseLength, singleLine, timeout);
-
             while (true)
             {
                 try
@@ -164,13 +161,14 @@ namespace Optosense.Edm.Utils
                     result = port.Send(fullCommand, responseLength, singleLine, timeout).Result;
                     break;
                 }
-                catch (Exception e)
+                catch (AggregateException e)
                 {
-                    if (timeoutAttempts-- > 0)
+                    if (e.InnerException is TimeoutException && retries-- > 0)
                     {
                         continue;
                     }
-                    throw e;
+
+                    throw;
                 }
             }
 

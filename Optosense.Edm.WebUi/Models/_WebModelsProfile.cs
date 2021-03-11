@@ -18,8 +18,10 @@ namespace Optosense.Edm.WebUi.Models
                 .ForMember(d => d.Url, o => o.MapFrom(s => s.HostDevice.Host.Url))
                 .ForMember(d => d.DeviceId, o => o.MapFrom(s => s.HostDevice.DeviceId))
                 .ForMember(d => d.Device, o => o.MapFrom(s => s.HostDevice.Device.Name))
-                .ForMember(d => d.Model, o => o.MapFrom(s => s.HostDevice.Device.Model.ToString()))
-                .ForMember(d => d.EnvType, o => o.MapFrom(s => s.HostDevice.Device.EnvType.ToString()));
+                .ForMember(d => d.DriverGuid, o => o.MapFrom(s => s.HostDevice.Device.DriverGuid))
+                .ForMember(d => d.DriverName, o => o.Ignore())
+                .ForMember(d => d.ProfilerName, o => o.Ignore())
+                .ForMember(d => d.ProfilerGuid, o => o.Ignore());
             CreateMap<WorkplaceHostDeviceModel, WorkplaceHostDevice>()
                 .ForMember(d => d.Workplace, o => o.Ignore())
                 .ForMember(d => d.HostDevice, o => o.Ignore());
@@ -34,29 +36,40 @@ namespace Optosense.Edm.WebUi.Models
 
             CreateMap<Process, IdNameModel>();
 
-            CreateMap<HostDevice, HostDeviceModel>();
+            CreateMap<HostDevice, HostDeviceModel>()
+                .ForMember(d => d.DriverGuid, o => o.MapFrom(s => s.Device.DriverGuid))
+                .ForMember(d => d.DriverName, o => o.Ignore())
+                .ForMember(d => d.ProfilerName, o => o.Ignore())
+                .ForMember(d => d.ProfilerGuid, o => o.Ignore());
             CreateMap<HostDeviceModel, HostDevice>();
-                //.ForMember(d => d.Host, o => o.Ignore());
+            //.ForMember(d => d.Host, o => o.Ignore());
 
             CreateMap<Device, IdNameModel>();
             CreateMap<Host, IdNameModel>();
 
-            CreateMap<Operation, OperationModel>();
+            CreateMap<Operation, OperationViewModel>()
+                .ForMember(d => d.ProcessId, o => o.MapFrom(s => s.Workbench.WorkplaceProcess.ProcessId))
+                .ForMember(d => d.ProcessName, o => o.MapFrom(s => s.Workbench.WorkplaceProcess.Process.Name));
 
-            CreateMap<Domain.Models.Profile, ProfileViewModel>();
+            CreateMap<Domain.Models.Profile, ProfileViewModel>()
+                .ForMember(d => d.ProfilerGuid, o => o.MapFrom(s => s.ProfilerGuid))
+                .ForMember(d => d.ProfilerName, o => o.Ignore());
             CreateMap<ProfileViewModel, Domain.Models.Profile>();
 
             CreateMap<Workbench, WorkbenchViewModel>()
-                .ForMember(d => d.ProcessName, o => o.MapFrom(s =>s.WorkplaceProcess.Process.Name))
-                .ForMember(d => d.WorkplaceId, o => o.MapFrom(s =>s.WorkplaceProcess.WorkplaceId))
-                .ForMember(d => d.WorkplaceName, o => o.MapFrom(s =>s.WorkplaceProcess.Workplace.Name));
+                .ForMember(d => d.ProcessName, o => o.MapFrom(s => s.WorkplaceProcess.Process.Name))
+                .ForMember(d => d.WorkplaceId, o => o.MapFrom(s => s.WorkplaceProcess.WorkplaceId))
+                .ForMember(d => d.WorkplaceName, o => o.MapFrom(s => s.WorkplaceProcess.Workplace.Name));
             CreateMap<WorkbenchViewModel, Workbench>();
 
             CreateMap<WorkbenchWorkplaceHostDevice, WorkbenchDeviceConfigViewModel>()
                 .ForMember(d => d.DeviceId, o => o.MapFrom(s => s.WorkplaceHostDevice.HostDevice.DeviceId))
                 .ForMember(d => d.DeviceName, o => o.MapFrom(s => s.WorkplaceHostDevice.HostDevice.Device.Name))
-                .ForMember(d => d.DeviceType, o => o.MapFrom(s => s.WorkplaceHostDevice.HostDevice.Device.EnvType))
-                .ForMember(d => d.HostName, o => o.MapFrom(s => s.WorkplaceHostDevice.HostDevice.Host.Name));
+                .ForMember(d => d.HostName, o => o.MapFrom(s => s.WorkplaceHostDevice.HostDevice.Host.Name))
+                .ForMember(d => d.DriverGuid, o => o.MapFrom(s => s.WorkplaceHostDevice.HostDevice.Device.DriverGuid))
+                .ForMember(d => d.DriverName, o => o.Ignore())
+                .ForMember(d => d.ProfilerName, o => o.Ignore())
+                .ForMember(d => d.ProfilerGuid, o => o.Ignore());
             CreateMap<WorkbenchDeviceConfigViewModel, WorkbenchWorkplaceHostDevice>();
         }
     }

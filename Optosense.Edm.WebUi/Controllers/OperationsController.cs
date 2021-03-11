@@ -35,6 +35,14 @@ namespace Optosense.Edm.WebUi.Controllers
             return operation;
         }
 
+        [HttpPost]
+        public async Task<Operation> Create(Operation model)
+        {
+            var operation = await _operationService.Create(_mapper.Map<Operation>(model));
+            //await _operationService.Start(operation.Id);
+            return operation;
+        }
+
         [HttpPost("{id:int}/start")]
         public async Task<Operation> Start(int id, [FromBody] DateTime? startAt)
         {
@@ -77,19 +85,11 @@ namespace Optosense.Edm.WebUi.Controllers
             }));
         }
 
-        [HttpPost]
-        public async Task<Operation> Create(Operation model)
-        {
-            var operation = await _operationService.Create(_mapper.Map<Operation>(model));
-            //await _operationService.Start(operation.Id);
-            return operation;
-        }
-
         [HttpGet("running")]
-        public async Task<IEnumerable<OperationModel>> GetRunningOperations()
+        public async Task<IEnumerable<OperationViewModel>> GetRunningOperations()
         {
-            var ops = await _operationService.Get(o => o.Completed == null, o => o.Process);
-            return _mapper.Map<IEnumerable<OperationModel>>(ops);
+            var ops = await _operationService.Get(o => o.Completed == null, o => o.Workbench.WorkplaceProcess.Process);
+            return _mapper.Map<IEnumerable<OperationViewModel>>(ops);
         }
 
         [HttpGet("{operationId:int}/records")]

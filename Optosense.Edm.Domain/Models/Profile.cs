@@ -21,9 +21,11 @@ namespace Optosense.Edm.Domain.Models
         public int ProcessId { get; set; }
 
         /// <summary>
-        /// The device type to which the profile is targeted
+        /// Reference to effective profiler plugin
         /// </summary>
-        public DeviceType Type { get; set; }
+        public Guid ProfilerGuid { get; set; }
+        [NotMapped]
+        public string ProfilerName { get; set; }
 
         /// <summary>
         /// Profile can be described in Json format as alternative to set of steps

@@ -34,16 +34,14 @@ namespace Optosense.Edm.Domain.Models
 
     public class Device : TypeObject
     {
-        public DeviceModel Model { get; set; }
         public string Parameters { get; set; }
-
+        public Guid DriverGuid { get; set; }
         [NotMapped]
-        public DeviceType EnvType =>
-            ((int) Model & (int) DeviceType.Gas) > 0 ? DeviceType.Gas :
-            ((int) Model & (int) DeviceType.Temperature) > 0 ? DeviceType.Temperature :
-            ((int) Model & (int) DeviceType.Humidity) > 0 ? DeviceType.Humidity :
-            ((int) Model & (int) DeviceType.Testing) > 0 ? DeviceType.Testing :
-            DeviceType.None;
+        public string DriverName { get; set; }
+        [NotMapped]
+        public Guid ProfilerGuid { get; set; }
+        [NotMapped]
+        public string ProfilerName { get; set; }
 
         public ICollection<HostDevice> Hosts { get; set; }
     }

@@ -42,7 +42,6 @@ namespace Optosense.Edm.WebUi.Controllers
                 {
                     Name = string.Empty,
                     Description = string.Empty,
-                    Type = 0,
                     TextJson = string.Empty,
                     IsActive = true
                 }
@@ -82,6 +81,7 @@ namespace Optosense.Edm.WebUi.Controllers
             var profiles = await _profileService.GetByDevice(id);
             return profiles;
         }
+
         #region profiles
 
         [HttpGet("{id:int}/audits")]

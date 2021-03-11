@@ -23,7 +23,7 @@ namespace Optosense.Edm.WebApi
         {
             services.AddGrpc();
             services.AddControllers();
-            EdmConfig.Configure(c => c.SetPluginPaths(@"C:\Projects\2020\Edm\Optosense.Edm\bin\Debug\netcoreapp3.1\Optosense.Edm.dll")
+            EdmConfig.Configure(c => c.SetPluginPaths(@"C:\Projects\2020\Edm\Optosense.Edm\bin\Debug\net5\Optosense.Edm.dll")
                 .SetLoadContext(typeof(OptosenseLoadContext))
                 .SetDefaultLogger(new ConsoleLogger()));
 

@@ -9,6 +9,7 @@ namespace Optosense.Edm.Webui.Models
 
         public string Name { get; set; }
         public string Description { get; set; }
-        public DeviceType Type { get; set; }
+        public Guid ProfilerGuid { get; set; }
+        public string ProfilerName { get; set; }
     }
 }

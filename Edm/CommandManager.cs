@@ -14,14 +14,18 @@ using System.Threading.Tasks;
 using Microprojects.Edm.Log;
 using Microprojects.Edm.Utils;
 using Microprojects.Edm.Utils.Notifications;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 
 namespace Microprojects.Edm
 {
     public class CommandManager : ICommandContainer
     {
-        private static ICommandContainer _commandContainerInstance;
+        public static readonly string FAILED_STATUS = "Failed";
+        public static readonly string SUCCESS_STATUS = "Ok";
 
+        private static ICommandContainer _commandContainerInstance;
+        private IServiceProvider _services;
         public static ICommandContainer GetInstance()
         {
             if (EdmConfig.Plugins == null)
@@ -37,24 +41,35 @@ namespace Microprojects.Edm
 
         //private readonly CompositionContainer _compositionContainer;
 
-        public IList<CancellableTask> RunningTasks { get; }
+        public IList<CancellableTask> RunningTasks { get; } = new List<CancellableTask>();
 
         public CommandManager()
         {
-            RunningTasks = new List<CancellableTask>();
+            RunEverTasks();
+        }
 
+        public CommandManager(IServiceProvider serviceProvider)
+        {
+            _services = serviceProvider;
+            RunEverTasks();
+        }
+
+        private void RunEverTasks()
+        {
             // Launch all "ever"-running commands
-            var everCommands = GetAllCommands().Where(c => c.GetType().GetCustomAttribute<CommandAttribute>()?.Lifetime == CommandType.Permanent);
+            var everCommands = EdmConfig.Plugins
+                .SelectMany(p => p.Value)
+                .Where(c => c.GetCustomAttribute<CommandAttribute>()?.Lifetime == CommandType.Permanent);
             foreach (var command in everCommands)
             {
-                var commandInstance = (ICommand) Activator.CreateInstance(command.GetType());
+                var commandInstance = (ICommand) _services.GetService(command); //(ICommand) Activator.CreateInstance(command.GetType());
                 commandInstance.SetParameters(null);
                 commandInstance.Init();
                 var taskId = RunLongTask(commandInstance);
             }
         }
 
-        private IEnumerable<ICommand> GetAllCommands()
+        private IEnumerable<Type> GetAllCommands()
         {
             return EdmConfig.Plugins.SelectMany(p => p.Value);
         }
@@ -99,27 +114,34 @@ namespace Microprojects.Edm
             {
                 //Logger.Log($"User {ServiceSecurityContext.Current.PrimaryIdentity.Name} calling...");
                 //var sec = OperationContext.Current.ServiceSecurityContext;
-                var response = new ResponseData { Status = "Ok" };
+                var response = new ResponseData { Status = SUCCESS_STATUS, Response = SUCCESS_STATUS };
+
                 if (data.Command == "Stop")
                 {
                     var task = GetTaskByParams(data.Params);
-                    string message;
-                    if (task.Task.Status == TaskStatus.Running ||
-                        task.Task.Status == TaskStatus.WaitingForActivation ||
-                        task.Task.Status == TaskStatus.WaitingToRun ||
-                        task.Task.Status == TaskStatus.WaitingForChildrenToComplete)
+                    if (task != null)
                     {
-                        task.TokenSource.Cancel();
-                        message = $"Task {task.Task.Id} {task.Command.Name} was requested to stop";
-                        Logger.Log(message);
+                        if (task.Task.Status == TaskStatus.Running ||
+                            task.Task.Status == TaskStatus.WaitingForActivation ||
+                            task.Task.Status == TaskStatus.WaitingToRun ||
+                            task.Task.Status == TaskStatus.WaitingForChildrenToComplete)
+                        {
+                            task.TokenSource.Cancel();
+                            response.Message = $"Task {task.Task.Id} {task.Command.Name} was requested to stop";
+                            Logger.Log(response.Message);
+                        }
+                        else
+                        {
+                            response.Message = $"Task {task.Task.Id} {task.Command.Name} was requested to stop but is not running";
+                            response.Status = FAILED_STATUS;
+                            Logger.Error(response.Message);
+                        }
                     }
                     else
                     {
-                        message = $"Task {task.Task.Id} {task.Command.Name} was requested to stop but is not running";
-                        Logger.Error(message);
+                        response.Message = $"Task not found. Parameters: {data.Params}";
+                        response.Status = FAILED_STATUS;
                     }
-
-                    response.Message = message;
                 }
                 else if (data.Command == "Check")
                 {
@@ -139,11 +161,10 @@ namespace Microprojects.Edm
                 else
                 {
                     var command = GetAllCommands()
-                        .FirstOrDefault(c => c.GetType().GetCustomAttribute<CommandAttribute>()?.Name == data.Command) ??
+                        .FirstOrDefault(c => c.GetCustomAttribute<CommandAttribute>()?.Name == data.Command) ??
                         throw new ArgumentException($"Command {data.Command} does not exist");
-
-                    var lifetime = command.GetType().GetCustomAttribute<CommandAttribute>()?.Lifetime;
-                    var commandInstance = (ICommand) Activator.CreateInstance(command.GetType());
+                    var lifetime = command.GetCustomAttribute<CommandAttribute>()?.Lifetime;
+                    var commandInstance = (ICommand) _services.GetService(command);
                     commandInstance.SetParameters(data.Params);
                     commandInstance.Init();
                     switch (lifetime)
@@ -168,7 +189,7 @@ namespace Microprojects.Edm
             catch (Exception e)
             {
                 //Logger.Error(e.GetFullInfo());
-                return new ResponseData { Status = "Failed", Message = e.GetMeaningfulMessage() };
+                return new ResponseData { Status = FAILED_STATUS, Message = e.GetMeaningfulMessage() };
             }
         }
 
@@ -219,8 +240,8 @@ namespace Microprojects.Edm
 
         private CancellableTask GetTaskByPid(int pid)
         {
-            return RunningTasks.FirstOrDefault(t => t.Task.Id == pid)
-                ?? throw new Exception($"Running task with PID {pid} not found");
+            return RunningTasks.FirstOrDefault(t => t.Task.Id == pid);
+                //?? throw new Exception($"Running task with PID {pid} not found");
         }
 
         private CancellableTask GetTaskByParams(string param)
@@ -254,7 +275,11 @@ namespace Microprojects.Edm
 
         private void DisposeTask(int pid)
         {
-            RunningTasks.Remove(GetTaskByPid(pid));
+            var task = GetTaskByPid(pid);
+            if (task != null)
+            {
+                RunningTasks.Remove(task);
+            }
         }
 
     }

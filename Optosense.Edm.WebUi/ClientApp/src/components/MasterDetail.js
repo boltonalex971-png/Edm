@@ -26,12 +26,12 @@ export function MasterDetail(props) {
     let { path } = useRouteMatch();
     return (
         <SmartScroll offtop={10}>
-            <div className="col-4">
+            <div style={{ flex: 1 }}>
                 <SmartScrollContent>
                     <TreeViewMaster api={props.api} />
                 </SmartScrollContent>
             </div>
-            <div className="col-8">
+            <div style={{ flex: 5, marginLeft: '1rem' }}>
                 <SmartScrollContent>
                     <Switch>
                         <Route exact path={path}>

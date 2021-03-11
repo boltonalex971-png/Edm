@@ -1,4 +1,4 @@
-﻿using Optosense.Edm.Domain.Models;
+﻿using Microprojects.Edm.Drivers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Optosense.Edm.Drivers
 {
-    [Driver(DeviceType = DeviceModel.NullTerm, OptionsType = typeof(NullTermOptions))]
+    [Driver(OptionsType = typeof(NullTermOptions))]
     public class NullTermDriver : DriverBase
     {
         public NullTermDriver() 

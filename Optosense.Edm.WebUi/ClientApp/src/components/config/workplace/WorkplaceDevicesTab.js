@@ -64,8 +64,8 @@ export function WorkplaceDevicesTab({ id, api, onDetailSelected }) {
                     onClick: hostClick
                 })}
             />
-            <GridColumn field='model' title='Model' editable={false} />
-            <GridColumn field='envType' title='Type' editable={false} />
+            <GridColumn field='driverName' title='Driver' editable={false} />
+            <GridColumn field='profilerName' title='Profiler' editable={false} />
         </RelationTable>
     );
 }

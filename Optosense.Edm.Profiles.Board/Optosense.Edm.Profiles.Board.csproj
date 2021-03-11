@@ -1,0 +1,49 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5</TargetFramework>
+    <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Optosense.Edm\Optosense.Edm.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis" Version="3.8.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="5.0.2" />
+    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="5.0.0" />
+    <PackageReference Include="Telerik.UI.for.AspNet.Core" Version="2021.1.119" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Models\" />
+    <Folder Include="Ui\build" />
+    <Compile Remove="Ui\build\**" />
+    <Compile Remove="Ui\node_modules\**" />
+    <EmbeddedResource Include="Ui\build/**" />
+    <EmbeddedResource Remove="Ui\node_modules\**" />
+    <None Remove="Ui\build\**" />
+    <None Remove="Ui\node_modules\**" />
+    <None Remove="Ui\.env.development.local" />
+    <None Remove="Ui\yarn-error.log" />
+    <None Remove="Ui\yarn.lock" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="MuxDriverUi\build" />
+    <Compile Remove="MuxDriverUi\build\**" />
+    <Compile Remove="MuxDriverUi\node_modules\**" />
+    <EmbeddedResource Include="MuxDriverUi\build/**" />
+    <EmbeddedResource Remove="MuxDriverUi\node_modules\**" />
+    <None Remove="MuxDriverUi\build\**" />
+    <None Remove="MuxDriverUi\node_modules\**" />
+    <None Remove="MuxDriverUi\yarn.lock" />
+  </ItemGroup>
+
+</Project>
