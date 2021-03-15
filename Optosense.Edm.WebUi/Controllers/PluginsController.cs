@@ -31,6 +31,9 @@ namespace Optosense.Edm.WebUi.Controllers
             _plugins = plugins;
         }
 
+        [HttpGet("{guid}")]
+        public IPlugin GetPlugin(string guid) => _plugins.GetPlugin(Guid.Parse(guid));
+
         [HttpGet("{guid}/{setting}")]
         public async Task<string> GetByGuid(string guid, string setting)
         {
@@ -46,17 +49,7 @@ namespace Optosense.Edm.WebUi.Controllers
         }
 
         [HttpGet("profiles")]
-        public IEnumerable<PluginInfoViewModel> GetProfilePlugins()
-        {
-            var plugins = _plugins.GetProfiles()
-                .Select(p => new PluginInfoViewModel
-                {
-                    Name = p.Name,
-                    Description = p.Description,
-                    Guid = p.Guid.ToString()
-                }).ToList();
-            return plugins;
-        }
+        public IEnumerable<IPlugin> GetProfilePlugins() => _plugins.GetProfiles();
 
         [HttpGet("drivers")]
         public IEnumerable<DriverPluginInfoViewModel> GetDriverPlugins()
@@ -74,17 +67,6 @@ namespace Optosense.Edm.WebUi.Controllers
         }
 
         [HttpGet("operations")]
-        public IEnumerable<IOperationPlugin> GetOperationPlugins()
-        {
-            var plugins = _plugins.GetOperations();
-                //.Select(p => new PluginInfoViewModel
-                //{
-                //    Name = p.Name,
-                //    Description = p.Description,
-                //    Guid = p.Guid.ToString()
-                //})
-                //.ToList();
-            return plugins;
-        }
+        public IEnumerable<IOperationPlugin> GetOperationPlugins() => _plugins.GetOperations();
     }
 }

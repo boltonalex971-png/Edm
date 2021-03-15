@@ -29,13 +29,16 @@ export function WorkbenchDetail({ workbenchId, ...props }) {
         data = { ...data, name: '', description: '', url: '' };
     }
     const onOperationStart = () => {
-        const data = {
+        const opData = {
             id: 0,
             workbenchId: id,
         };
-        axios.post(api.operations, data)
+        axios.post(api.operations, opData)
             .then((op) => {
-                window.open(`/app/typeone?id=${op.data.id}`, '_blank');
+                axios.get(`${api.plugins}/${data.operationGuid}`)
+                    .then((pl) => {
+                        window.open(`${pl.data.homepage}?id=${op.data.id}`, '_blank');
+                    });
             })
             .catch(alert);
     };

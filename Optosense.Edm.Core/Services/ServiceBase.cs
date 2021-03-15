@@ -53,6 +53,14 @@ namespace Optosense.Edm.Core.Services
             return result;
         }
 
+        public async Task<IEnumerable<TEntity>> Get<T1>(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, T1>> include)
+        {
+            var request = Set().Include(include);
+            var whereReq = request.Where(predicate);
+            var result = await whereReq.ToListAsync();
+            return result;
+        }
+
         protected virtual async Task<T> Get<T>(int id) where T : DomainObject
         {
             var result = await Set<T>()

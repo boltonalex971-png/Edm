@@ -11,6 +11,7 @@ namespace Optosense.Edm.Core.Contracts
         Task<IEnumerable<T>> GetAll();
         Task<T> Get(int id);
         Task<IEnumerable<T>> Get(Expression<Func<T, bool>> predicate);
+        Task<IEnumerable<T>> Get<T1>(Expression<Func<T, bool>> predicate, Expression<Func<T, T1>> include);
         Task<T> Save(T device);
         Task<T> Delete(int id);
     }

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Optosense.Edm.Domain.Models;
+using Optosense.Edm.Plugins;
 using Optosense.Edm.Webui.Models;
 using System;
 using System.Collections.Generic;
@@ -58,6 +59,7 @@ namespace Optosense.Edm.WebUi.Models
 
             CreateMap<Workbench, WorkbenchViewModel>()
                 .ForMember(d => d.ProcessName, o => o.MapFrom(s => s.WorkplaceProcess.Process.Name))
+                .ForMember(d => d.OperationGuid, o => o.MapFrom(s => s.WorkplaceProcess.Process.OperationGuid))
                 .ForMember(d => d.WorkplaceId, o => o.MapFrom(s => s.WorkplaceProcess.WorkplaceId))
                 .ForMember(d => d.WorkplaceName, o => o.MapFrom(s => s.WorkplaceProcess.Workplace.Name));
             CreateMap<WorkbenchViewModel, Workbench>();
@@ -71,6 +73,8 @@ namespace Optosense.Edm.WebUi.Models
                 .ForMember(d => d.ProfilerName, o => o.Ignore())
                 .ForMember(d => d.ProfilerGuid, o => o.Ignore());
             CreateMap<WorkbenchDeviceConfigViewModel, WorkbenchWorkplaceHostDevice>();
+
+            CreateMap<IPlugin, PluginInfoViewModel>();
         }
     }
 }

@@ -15,6 +15,8 @@ namespace Optosense.Edm.Plugins
             Plugins = plugins;
         }
 
+        public IPlugin GetPlugin(Guid guid) => Plugins.FirstOrDefault(p => p.Guid == guid);
+
         public IEnumerable<IPlugin> GetAllPlugins()
         {
             return Plugins;

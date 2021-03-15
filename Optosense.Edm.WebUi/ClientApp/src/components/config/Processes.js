@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
+import Api from '../api';
 import { useGet } from '../hooks/hooks';
 import { Field } from '@progress/kendo-react-form';
 import { Input } from '@progress/kendo-react-inputs';
@@ -8,6 +9,7 @@ import { useHistory, useParams } from 'react-router-dom';
 import { useRouteMatch } from 'react-router-dom';
 import { MasterDetail, reloadMaster, Detail, Info, Editor } from '../MasterDetail';
 import { ProcessTabs } from './process/ProcessTabs';
+import { DropDownComp } from '../DropDownCell';
 
 export function Processes() {
     let { path } = useRouteMatch();
@@ -42,6 +44,7 @@ export function ProcessDetail({ processId, ...props }) {
     id = processId || id;
     let [sub, setSub] = useState();
     useEffect(setSub, [id]);
+    const [[ops]] = useGet(`${Api.plugins}/operations`, []);
     let [[data, setData], loading, error] = useGet(`${props.api}/${id}`, [id]);
     if (!data || data.id == 0) {
         data = { ...data, name: '', description: '' };
@@ -76,8 +79,17 @@ export function ProcessDetail({ processId, ...props }) {
                             <div className="mb-3">
                                 <Field name={'description'} component={Input} label={'Description'} />
                             </div>
-                            <div className="mb-3">
-                                <Field name={'deviceTypes'} component={Input} label={'Applicable devices'} />
+                            <div className="mb-3" style={{ width: '400px' }}>
+                                <Field name={'operationGuid'} label={'Operation'}
+                                    component={(compProps) =>
+                                        <DropDownComp {...compProps}
+                                            loading={!ops}
+                                            data={ops}
+                                            textField='name'
+                                            dataItemKey='guid'
+                                        />
+                                    }
+                                />
                             </div>
                         </fieldset>
                     }

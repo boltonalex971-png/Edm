@@ -8,6 +8,7 @@ namespace Optosense.Edm.Domain.Models
 {
     public class Process : TypeObject
     {
+        public Guid OperationGuid { get; set; }
         /// <summary>
         /// Set of recommended device profiles that can be applied on
         /// configuring operation

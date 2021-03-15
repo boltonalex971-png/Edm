@@ -10,5 +10,6 @@ namespace Optosense.Edm.WebUi.Models
         public string Name { get; set; }
         public string Description { get; set; }
         public string Guid { get; set; }
+        public string Homepage { get; set; }
     }
 }

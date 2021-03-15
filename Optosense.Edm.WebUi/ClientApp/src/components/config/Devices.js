@@ -89,9 +89,6 @@ export function DeviceDetail({ deviceId, ...props }) {
                             <div className="mb-3" style={{ width: '50%' }}>
                                 <Field name='driverGuid' component={driverComboBox} label='Driver' />
                             </div>
-                            <div className="mb-3">
-                                <Field name={'parameters'} component={Input} label={'Parameters'} />
-                            </div>
                         </fieldset>
                     }
                 />

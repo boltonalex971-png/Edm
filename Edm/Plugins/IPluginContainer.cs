@@ -8,6 +8,7 @@ namespace Optosense.Edm.Plugins
 {
     public interface IPluginContainer
     {
+        IPlugin GetPlugin(Guid guid);
         IEnumerable<IPlugin> GetAllPlugins();
         IDriverPlugin GetDriver(Guid guid);
         IEnumerable<IDriverPlugin> GetDrivers();

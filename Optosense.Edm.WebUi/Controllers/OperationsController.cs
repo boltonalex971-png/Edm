@@ -105,5 +105,13 @@ namespace Optosense.Edm.WebUi.Controllers
             var devices = await _operationService.GetOperationDevices(id);
             return devices;
         }
+
+        [HttpGet("{id:int}/process")]
+        public async Task<Process> GetProcessByOperationId(int id)
+        {
+            var op = (await _operationService.Get(o => o.Id == id, o => o.Workbench.WorkplaceProcess.Process))
+                .FirstOrDefault();
+            return op.Workbench.WorkplaceProcess.Process;
+        }
     }
 }
