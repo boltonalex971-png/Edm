@@ -1,22 +1,31 @@
 import React, { useEffect, useState } from "react";
-import { ConeStriped } from "react-bootstrap-icons";
 import { useGet } from "./hooks/hooks";
 import { Monitor } from "./Monitor";
 import { Sensor } from "./Sensor";
+import { SmartScroll, SmartScrollContent } from "./SmartScroll";
 
 let monitorInterval;
 
 export const OperationInfo = (props) => {
-    const [sensors, setSensors] = useState([...Array(20)]);
+    const [capacity, setCapacity] = useState(-1);
+    const [sensors, setSensors] = useState();
     const [lastId, setLastId] = useState(0);
     const [refresh, setRefresh] = useState(false);
     const [[data, setData]] = useGet(`${props.apiBase}/api/operations/${props.operationId}/records?lastRecordId=${lastId}`, refresh);
-    if (!sensors[0]) {
-        for (let i = 0; i < 20; i++) {
-            sensors[i] = { addr: i };
+    const [[devices]] = useGet(`${props.apiBase}/api/operations/${props.operationId}/devices`);
+    if (devices && capacity === -1) {
+        const options = JSON.parse(devices[0].options);
+        console.log(options);
+        setCapacity(options?.capacity || 0);
+    }
+    console.log(capacity);
+    if (!sensors && capacity > -1) {
+        const sens = new Array(capacity);
+        for (let i = 0; i < capacity; i++) {
+            sens[i] = { addr: i };
         }
 
-        setSensors([...sensors]);
+        setSensors([...sens]);
     } else if (data && data.length > 0) {
         setLastId(data.reduce((max, el) => el.id > max ? el.id : max, 0));
         const sens = data.filter(d => d.isValid).map(r => JSON.parse(r.parameters || "{}"));
@@ -49,21 +58,27 @@ export const OperationInfo = (props) => {
         return () => clearInterval(monitorInterval);
     }, [props.started]);
     return (
-        <div style={{ display: 'flex', margin: '1rem' }}>
-            <Monitor {...props} sensors={sensors} style={{ flex: 2 }} />
-            <div style={{ flex: 5, marginLeft: '1rem' }}>
-                <h5>Sensor monitor</h5>
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(5, 1fr)',
-                    gridTemplateRows: 'repeat(4, 100px)',
-                    gap: '1rem'
-                }}>
-                    {sensors.map((s, i) =>
-                        <Sensor key={i} addr={i} info={s || {}} />
-                    )}
-                </div>
+        <SmartScroll offtop={10} style={{ display: 'flex', margin: 10 }}>
+            <div style={{ flex: 1 }}>
+                <SmartScrollContent style={{ flex: 1 }}>
+                    <Monitor {...props} sensors={sensors || []} />
+                </SmartScrollContent>
             </div>
-        </div>
+            <div style={{ flex: 4, marginLeft: '1rem' }}>
+                <SmartScrollContent>
+                    <h5>Sensor monitor</h5>
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(5, 1fr)',
+                        gridTemplateRows: 'repeat(auto, 100px)',
+                        gap: '1rem'
+                    }}>
+                        {sensors && sensors.map((s, i) =>
+                            <Sensor key={i} addr={i} info={s || {}} />
+                        )}
+                    </div>
+                </SmartScrollContent>
+            </div>
+        </SmartScroll >
     );
 };

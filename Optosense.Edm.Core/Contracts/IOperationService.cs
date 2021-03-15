@@ -15,7 +15,7 @@ namespace Optosense.Edm.Core.Contracts
             Expression<Func<Operation, T>> include);
         Task<Operation> Start(int operationId, DateTime startAt);
         Task<Operation> Stop(int operationId);
-        Task<string> GetTasks();
         Task<IEnumerable<Record>> GetRecords(int operationId, int lastRecordId);
+        Task<IEnumerable<OperationHostDevice>> GetOperationDevices(int id);
     }
 }

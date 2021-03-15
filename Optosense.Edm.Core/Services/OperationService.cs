@@ -38,7 +38,7 @@ namespace Optosense.Edm.Core.Services
             // TODO Switch using profile guids
             var profile = await Db.Profiles
                 .FirstOrDefaultAsync(p => p.ProcessId == wb.WorkplaceProcess.ProcessId/* && p.ProfilerGuid == DeviceType.Testing*/)
-                ?? throw new ArgumentException($"{DeviceType.Testing} profile does not exist for process");
+                ?? throw new ArgumentException($"Profile does not exist for process");
             var devices = await Db.WorkbenchDeviceConfigurations
                 .Include(d => d.WorkplaceHostDevice)
                 .Where(d => wb.DeviceConfigurations.Select(c => c.Id).Contains(d.Id))
@@ -122,9 +122,13 @@ namespace Optosense.Edm.Core.Services
             return operation;
         }
 
-        public async Task<string> GetTasks()
+        public async Task<IEnumerable<OperationHostDevice>> GetOperationDevices(int id)
         {
-            return await _commands.StartOperation(1, DateTime.Now);
+            var devices = await Db.OperationHostDevices
+                .Include(d => d.HostDevice.Device)
+                .Where(d => d.OperationId == id)
+                .ToListAsync();
+            return devices;
         }
     }
 }

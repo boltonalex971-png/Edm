@@ -18,7 +18,7 @@ export function OperationMenu(props) {
     return (
         <header>
             <Navbar className="navbar-expand-sm navbar-toggleable-sm border-bottom box-shadow mb-3" light>
-                <Container>
+                <Container fluid={true}>
                     <NavbarBrand tag={Link} to="/" className='mr-5'>Type One</NavbarBrand>
                     <NavbarToggler onClick={toggleNavbar} className="mr-2" />
                     <Collapse className="d-sm-inline-flex justify-content-between" isOpen={!collapsed} navbar>

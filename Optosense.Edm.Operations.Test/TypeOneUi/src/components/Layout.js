@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import { Container } from 'reactstrap';
 
 export class Layout extends Component {
   render() {
@@ -12,7 +11,7 @@ export class Layout extends Component {
           </div>
           <footer>
             <hr />
-            <p>&#169; Microprojects 2020</p>
+            <p style={{ marginLeft: '1rem' }}>&#169; Microprojects 2020</p>
           </footer>
         </div>
       </div>

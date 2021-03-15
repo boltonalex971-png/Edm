@@ -10,21 +10,21 @@ SmartScrollContent.propTypes = {
     children: PropTypes.node.isRequired
 }
 
-export function SmartScroll({ children, offtop }) {
+export function SmartScroll({ children, offtop = 0, ...props }) {
     useEffect(() => {
         return smartScroll(offtop);
     });
 
     return (
-        <div className="smart-scroll-container row" style={{ display: 'flex', margin: 10 }}>
+        <div {...props} className="smart-scroll-container" >
             {children}
         </div>
     );
 }
 
-export function SmartScrollContent({ children }) {
+export function SmartScrollContent({ children, ...props }) {
     return (
-        <div className="smart-scroll-content">
+        <div {...props} className="smart-scroll-content">
             {children}
         </div>
     );
@@ -45,7 +45,6 @@ function smartScroll(marginTop) {
     function scrolled() {
         const windowScrollHeight = viewport.scrollTop;
         const windowHeight = viewport.clientHeight;
-
         contents.forEach((element) => {
             // calculate content scroll state
             let state,

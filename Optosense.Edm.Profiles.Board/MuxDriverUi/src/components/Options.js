@@ -1,13 +1,9 @@
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
 import './Options.css';
-import PropTypes from "prop-types";
 import { Input, NumericTextBox } from "@progress/kendo-react-inputs";
-import { Detail, Editor } from "../MasterDetail";
-import { useGet } from "../hooks";
-import { ApiContext } from "../../ApiContext";
 import axios from "axios";
 import { Button } from "@progress/kendo-react-buttons";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { Field, Form, FormElement } from '@progress/kendo-react-form';
 import { DropDownList } from "@progress/kendo-react-dropdowns";
 

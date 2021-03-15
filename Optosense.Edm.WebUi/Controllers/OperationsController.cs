@@ -98,5 +98,12 @@ namespace Optosense.Edm.WebUi.Controllers
             var recs = await _operationService.GetRecords(operationId, lastRecordId ?? 0);
             return recs;
         }
+
+        [HttpGet("{id:int}/devices")]
+        public async Task<IEnumerable<OperationHostDevice>> GetOperationDevices(int id)
+        {
+            var devices = await _operationService.GetOperationDevices(id);
+            return devices;
+        }
     }
 }

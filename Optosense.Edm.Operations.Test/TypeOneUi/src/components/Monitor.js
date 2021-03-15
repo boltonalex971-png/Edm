@@ -36,7 +36,7 @@ export function Monitor({ sensors, started, ...props }) {
         <div style={{ ...props.style }} >
             <h5>{polled || 'No'} sensors polled</h5>
             <div
-                style={{ border: 'solid 1px', padding: '1rem', backgroundColor: 'lightgrey', height: '80vh', overflowY: 'auto' }}
+                style={{ border: 'solid 1px', padding: '1rem', backgroundColor: 'lightgrey', height: '82vh', overflowY: 'auto' }}
                 onScroll={setScroll}
                 ref={inputRef}
             >
@@ -44,4 +44,4 @@ export function Monitor({ sensors, started, ...props }) {
             </div>
         </div >
     );
-}   
+}
