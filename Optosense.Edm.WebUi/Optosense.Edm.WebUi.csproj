@@ -7,6 +7,7 @@
     <IsPackable>false</IsPackable>
     <SpaRoot>ClientApp\</SpaRoot>
     <DefaultItemExcludes>$(DefaultItemExcludes);$(SpaRoot)node_modules\**</DefaultItemExcludes>
+    <UserSecretsId>cc6ed0bc-2323-4573-b0ec-50f0e85e2744</UserSecretsId>
  </PropertyGroup>
 
   <ItemGroup>
@@ -29,7 +30,6 @@
     <ProjectReference Include="..\Optosense.Edm.Infrastructure\Optosense.Edm.Infrastructure.csproj" />
     <ProjectReference Include="..\Optosense.Edm.Operations.Test\Optosense.Edm.Operations.Test.csproj" />
     <ProjectReference Include="..\Optosense.Edm.Profiles.Board\Optosense.Edm.Profiles.Board.csproj" />
-    <ProjectReference Include="..\Optosense.Edm.WebApi\Optosense.Edm.WebApi.csproj" />
     <ProjectReference Include="..\Edm\Edm.csproj" />
     <ProjectReference Include="..\Optosense.Edm.DataAccess\Optosense.Edm.DataAccess.csproj" />
     <ProjectReference Include="..\Optosense.Edm.Domain\Optosense.Edm.Domain.csproj" />
@@ -69,8 +69,8 @@
 
   <Target Name="PublishRunWebpack" AfterTargets="ComputeFilesToPublish">
     <!-- As part of publishing, ensure the JS resources are freshly built in production mode -->
-    <Exec WorkingDirectory="$(SpaRoot)" Command="npm install" />
-    <Exec WorkingDirectory="$(SpaRoot)" Command="npm run build" />
+    <Exec WorkingDirectory="$(SpaRoot)" Command="yarn install" />
+    <Exec WorkingDirectory="$(SpaRoot)" Command="yarn build" />
 
     <!-- Include the newly-built files in the publish output -->
     <ItemGroup>

@@ -4,12 +4,12 @@ using System.Linq;
 using System.Runtime.Loader;
 using System.Threading.Tasks;
 using Microprojects.Edm;
+using Microprojects.Edm.Log;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Optosense.Edm;
 using Optosense.Edm.WebApi.Services;
 using Optosense.Edm.WebApi.Utils;
 

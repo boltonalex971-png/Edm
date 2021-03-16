@@ -8,6 +8,7 @@ using System.Runtime.Loader;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microprojects.Edm;
+using Microprojects.Edm.Log;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Hosting;
@@ -31,7 +32,6 @@ using Optosense.Edm.DataAccess;
 using Optosense.Edm.Domain.Models;
 using Optosense.Edm.Drivers.Null;
 using Optosense.Edm.Infrastructure.Edm;
-using Optosense.Edm.WebApi.Utils;
 
 namespace Optosense.Edm.WebUi
 {
@@ -80,7 +80,6 @@ namespace Optosense.Edm.WebUi
 
             services.AddEdmCommands(c => c
                 .SetPluginAssemblies(typeof(RemoteCommands).Assembly, typeof(StartDeviceCommand).Assembly)
-                .SetLoadContext(typeof(OptosenseLoadContext))
                 .SetDefaultLogger(new ConsoleLogger())
             );
 
@@ -89,12 +88,7 @@ namespace Optosense.Edm.WebUi
             services.AddPlugins(config =>
             {
                 config.BaseDirectory = AppContext.BaseDirectory;
-                config.PluginsPath = new[]
-                {
-                    ".\\Optosense.Edm.Drivers.Null.dll",
-                    ".\\Optosense.Edm.Profiles.Board.dll",
-                    ".\\Optosense.Edm.Operations.Test.dll"
-                }; //AppContext.BaseDirectory;
+                config.PluginsPath = Configuration.GetSection("Edm:Assemblies").GetChildren().Select(c => c.Value);
                 Console.WriteLine($"Edm plugins base directory is '{config.PluginsPath}'");
             });
 
