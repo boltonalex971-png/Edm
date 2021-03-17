@@ -29,7 +29,7 @@ export function Instructions({ guid }) {
     };
     return (
         <div style={{ margin: 10 }}>
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'baseline' }}>
                 <h6>Board Profile Configuration</h6>
                 <Button type='button' onClick={() => history.goBack()}>Go back to editor</Button>
             </div>

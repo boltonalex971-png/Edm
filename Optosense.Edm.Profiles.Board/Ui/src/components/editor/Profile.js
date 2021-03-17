@@ -47,7 +47,7 @@ export const Profile = (props) => {
             {error && <Alert color='red'>{error}</Alert>}
             {profile &&
                 <div style={{ margin: 10 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' , marginBottom: '1rem' }}>
                         <h6>Profile {profile.name}</h6>
                         <Link to='/config' className='btn btn-light'>Configure profile editor</Link>
                     </div>

@@ -30,7 +30,6 @@ using Optosense.Edm.Core.Persistance;
 using Optosense.Edm.Core.Services;
 using Optosense.Edm.DataAccess;
 using Optosense.Edm.Domain.Models;
-using Optosense.Edm.Drivers.Null;
 using Optosense.Edm.Infrastructure.Edm;
 
 namespace Optosense.Edm.WebUi
