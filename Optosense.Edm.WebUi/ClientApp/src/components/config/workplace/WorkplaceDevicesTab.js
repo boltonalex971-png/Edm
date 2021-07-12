@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { GridColumn } from '@progress/kendo-react-grid';
 import { RelationTable } from '../../RelationTable';
-import { dropDownCell } from '../../DropDownCell';
+import { DropDownCell } from '../../DropDownCell';
 import { useGet } from '../../hooks/hooks';
 import { DeviceDetail } from '../Devices';
 import Api from '../../api';
@@ -48,21 +48,24 @@ export function WorkplaceDevicesTab({ id, api, onDetailSelected }) {
                 <GridColumn
                     field='hostDeviceId'
                     title='Device'
-                    cell={dropDownCell({
-                        getData: () => deviceList,
-                        key: 'id',
-                        text: 'name',
-                        fieldId: 'deviceId',
-                        fieldName: 'device',
-                        onClick: deviceClick
-                    })}
+                    cell={(cellProps) =>
+                        <DropDownCell {...cellProps}
+                            getData={() => deviceList}
+                            id='id'
+                            text='name'
+                            fieldId='deviceId'
+                            fieldName='device'
+                        />
+                    }
                 />
             }
             <GridColumn field='hostId' title='Host' editable={false}
-                cell={dropDownCell({
-                    fieldName: 'host',
-                    onClick: hostClick
-                })}
+                cell={(cellProps) =>
+                    <DropDownCell {...cellProps}
+                        fieldName='host'
+                        onClick={hostClick}
+                    />
+                }
             />
             <GridColumn field='driverName' title='Driver' editable={false} />
             <GridColumn field='profilerName' title='Profiler' editable={false} />

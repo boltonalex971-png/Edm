@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Optosense.Edm.DataAccess;
 
 namespace Optosense.Edm.DataAccess.Migrations
 {
     [DbContext(typeof(EdmContext))]
-    partial class EdmContextModelSnapshot : ModelSnapshot
+    [Migration("20210701095139_RecordOperationCriterion")]
+    partial class RecordOperationCriterion
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -246,9 +248,6 @@ namespace Optosense.Edm.DataAccess.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Result")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Selector")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("Valid")

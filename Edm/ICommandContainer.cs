@@ -13,14 +13,11 @@ namespace Microprojects.Edm
     public interface ICommandContainer : IDisposable
     {
         IList<CancellableTask> RunningTasks { get; }
-
         IEnumerable<AvailableTask> GetRunningTasks();
-
         IEnumerable<AvailableTask> GetAvailableTasks();
-
-        Task<ResponseData> Execute(CommandData data);
-
-        //Task<ResponseData> Request();
+        Task<ResponseData> ExecuteAsync<T>(ICommandParameters parameters = null) where T : ICommand;
+        Task<ResponseData> ExecuteAsync(Type commandType, ICommandParameters parameters = null);
+        Task<ResponseData> ExecuteAsync(CommandData data);
     }
 
     public class CommandData

@@ -3,7 +3,7 @@ import Api from '../../api';
 import PropTypes from 'prop-types';
 import { GridColumn } from '@progress/kendo-react-grid';
 import { RelationTable } from '../../RelationTable';
-import { dropDownCell } from '../../DropDownCell';
+import { DropDownCell } from '../../DropDownCell';
 import { useGet } from '../../hooks/hooks';
 import { DeviceDetail } from '../Devices';
 import { useHistory } from 'react-router-dom';
@@ -25,18 +25,20 @@ export function HostDevicesTab({ id, api, onDetailSelected }) {
                     width={200}
                     field='deviceId'
                     title='Device'
-                    cell={dropDownCell({
-                        getData: () => data, key: 'id', text: 'name', fieldName: 'deviceName',
-                        onClick: (deviceId) => onDetailSelected(
-                            <DeviceDetail
-                                deviceId={deviceId}
-                                api={Api.devices}
-                                path={path}
-                                onClose={() => onDetailSelected()}
-                                onUp={() => history.push(`${path}/${deviceId}`)}
-                            />
-                        ) 
-                    })}
+                    cell={(cellProps) =>
+                        <DropDownCell {...cellProps}
+                            getData={() => data} id='id' text='name' fieldName='deviceName'
+                            onClick={(deviceId) => onDetailSelected(
+                                <DeviceDetail
+                                    deviceId={deviceId}
+                                    api={Api.devices}
+                                    path={path}
+                                    onClose={() => onDetailSelected()}
+                                    onUp={() => history.push(`${path}/${deviceId}`)}
+                                />)
+                            }
+                        />
+                    }
                 />
             }
             <GridColumn field='driverName' title='Driver' editable={false} />

@@ -3,16 +3,28 @@ using System.Collections.Generic;
 using System.Composition;
 using System.Linq;
 using System.Net;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using StackExchange.Redis;
 
 namespace Microprojects.Edm.Cache.Redis
 {
-    [Export(typeof(ICache))]
     public class RedisCache : CacheBase
     {
-        private IDatabase Db { get; } = RedisHelper.Database;
+        private readonly Lazy<ConnectionMultiplexer> LazyConnection;
+        private readonly ConnectionMultiplexer Connection;
+        private readonly IDatabase Db;
+
+        public RedisCache() : this("localhost,abortConnect=false") { }
+
+        public RedisCache(string connectionString)
+        {
+            LazyConnection = new Lazy<ConnectionMultiplexer>(() => ConnectionMultiplexer.Connect(connectionString));
+            Connection = LazyConnection.Value;
+            Db = Connection.GetDatabase();
+        }
 
         public override string Get(string key)
         {
@@ -34,48 +46,46 @@ namespace Microprojects.Edm.Cache.Redis
             return record;
         }
 
-        public override T Pop<T>()
+        public override async Task<IEnumerable<T>> GetRangeAsync<T>(string key, int start, int offset, Func<Task<IEnumerable<T>>> locator, TimeSpan expireAt)
         {
             string listName = typeof(T).FullName;
-            string json = Db.ListLeftPop(listName);
+            var result = new List<T>();
+            var list = await Db.ListRangeAsync(listName, start, offset).ConfigureAwait(false);
+            if (list == null && locator != null)
+            {
+                var data = await locator();
+                await Db.ListLeftPushAsync(key, data.Select(d => RedisValue.Unbox(JsonSerializer.Serialize(d))).ToArray(), When.Always, CommandFlags.FireAndForget)
+                    .ConfigureAwait(false);
+                await Db.KeyExpireAsync(key, expireAt, CommandFlags.FireAndForget)
+                    .ConfigureAwait(false);
+                return data.ToList();
+            }
+            else
+            {
+                var data = list.Select(v => JsonSerializer.Deserialize<T>(v));
+                return data;
+            }
+        }
+
+        public override T Pop<T>(string key)
+        {
+            string json = Db.ListLeftPop(key);
             if (json == null)
             {
                 return default;
             }
+
             T value = JsonSerializer.Deserialize<T>(json);
             return value;
         }
 
-        public override bool Push<T>(T record)
+        public override bool Push<T>(string key, T record)
         {
-            string listName = typeof(T).FullName;
             string output = JsonSerializer.Serialize(record);
             RedisValue[] values = { output };
-            Db.ListRightPush(listName, values, flags: CommandFlags.FireAndForget);
+            Db.ListRightPush(key, values, flags: CommandFlags.FireAndForget);
             return true;
         }
-
-        //public override IObservable<T> Subscribe<T>()
-        //{
-        //    return Observable.Create<T>(async (observer, ct) =>
-        //        {
-        //            RedisChannel channel = new RedisChannel("__keyspace@0__:*", RedisChannel.PatternMode.Pattern);
-        //            ISubscriber subscriber = RedisHelper.Connection.GetSubscriber();
-        //            await subscriber.SubscribeAsync(channel, (ch, value) =>
-        //            {
-        //                Logger.Log($"{ch} :: {value}");
-        //                T obj = JsonConvert.DeserializeObject<T>(value);
-        //                observer.OnNext(obj);
-        //            });
-
-        //            return Disposable.Create(() => subscriber.Unsubscribe(channel));
-        //        });
-        //}
-
-        //public override void Unsubscribe()
-        //{
-        //    throw new NotImplementedException();
-        //}
 
         public override bool Remove(string key)
         {
@@ -90,12 +100,50 @@ namespace Microprojects.Edm.Cache.Redis
 
         protected override IEnumerable<string> GetKeys(string pattern)
         {
-            var hostNames = RedisHelper.Connection.GetEndPoints().Cast<DnsEndPoint>();
+            var hostNames = Connection.GetEndPoints().Cast<DnsEndPoint>();
             var host = hostNames.First();
             var hostName = $"{host.Host}:{host.Port}";
-            return RedisHelper.Connection.GetServer(hostName).Keys(pattern: pattern, pageSize: 1000)
+            return Connection.GetServer(hostName).Keys(pattern: pattern, pageSize: 1000)
                 .Select(k => k.ToString())
                 .ToList();
+        }
+
+        public override IDisposable Subscribe<T>(string channel, Action<T> onNext)
+        {
+            var obs = Observable.Create<T>(async observer =>
+            {
+                var obs = await Db.Multiplexer.GetSubscriber().SubscribeAsync(channel).ConfigureAwait(false);
+                obs.OnMessage(message => {
+                    var value = JsonSerializer.Deserialize<T>(message.Message);
+                    observer.OnNext(value);
+                });
+                return Disposable.Create(async () => 
+                {
+                    await obs.UnsubscribeAsync().ConfigureAwait(false);
+                });
+            }).Subscribe(onNext);
+            return obs;
+        }
+
+        public override IDisposable Subscribe(string channel, Action<object> onNext)
+        {
+            var obs = Observable.Create<object>(async observer =>
+            {
+                var obs = await Db.Multiplexer.GetSubscriber().SubscribeAsync(channel).ConfigureAwait(false);
+                obs.OnMessage(message => observer.OnNext(message.Message));
+                return Disposable.Create(async () =>
+                {
+                    await obs.UnsubscribeAsync().ConfigureAwait(false);
+                });
+            }).Subscribe(onNext);
+            return obs;
+        }
+
+        public override async Task<long> Publish<T>(string channel, T message)
+        {
+            var value = RedisValue.Unbox(JsonSerializer.Serialize(message));
+            var listeners = await Db.PublishAsync(channel, value).ConfigureAwait(false);
+            return listeners;
         }
     }
 }

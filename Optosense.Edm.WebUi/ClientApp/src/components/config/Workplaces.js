@@ -7,11 +7,12 @@ import { useHistory, useParams } from 'react-router-dom';
 import { useRouteMatch } from 'react-router-dom';
 import { MasterDetail, reloadMaster, Detail, Info, Editor } from '../MasterDetail';
 import { WorkplaceTabs } from './workplace/WorkplaceTabs';
+import Api from '../api';
 
 export function Workplaces() {
     let { path } = useRouteMatch();
     const history = useHistory();
-    const api = '/api/workplaces';
+    const api = Api.workplaces;
     return (
         <MasterDetail
             api={api}

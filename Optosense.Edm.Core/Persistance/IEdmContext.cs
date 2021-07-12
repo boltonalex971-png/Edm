@@ -17,16 +17,20 @@ namespace Optosense.Edm.Core.Persistance
         DbSet<Host> Hosts { get; set; }
         DbSet<HostDevice> HostDevices { get; set; }
         DbSet<Operation> Operations { get; set; }
+        DbSet<OperationCriterion> OperationCriteria { get; set; }
         DbSet<OperationHostDevice> OperationHostDevices { get; set; }
         DbSet<Process> Processes { get; set; }
         DbSet<Profile> Profiles { get; set; }
         DbSet<Record> Records { get; set; }
+        DbSet<RecordOperationCriterion> RecordOperationCriteria { get; set; }
         DbSet<Setting> Settings { get; set; }
         DbSet<Workbench> Workbenches { get; set; }
         DbSet<WorkbenchWorkplaceHostDevice> WorkbenchDeviceConfigurations { get; set; }
         DbSet<Workplace> Workplaces { get; set; }
         DbSet<WorkplaceHostDevice> WorkplaceHostDevices { get; set; }
         DbSet<WorkplaceProcess> WorkplaceProcesses{ get; set; }
+
+        ChangeTracker ChangeTracker { get; }
 
         int SaveChanges();
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);

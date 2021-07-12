@@ -22,7 +22,6 @@ export function RelationTable({ api, children, ...props }) {
     const [reload, setReload] = useState(false); // used to force fetching table data
     const [editItem, setEditItem] = useState(null);
     const [[data, setData], loading, error] = useGet(`${api}`, [reload]);
-
     const rowClick = (event) => {
         // eslint-disable-next-line no-unused-vars
         const { inEdit, ...item } = event.dataItem;
@@ -112,69 +111,75 @@ export function RelationTable({ api, children, ...props }) {
                     </GridToolbar>
                     {children}
                     <GridColumn title=''
-                        cell={cellWithEditing({
-                            edit: props.editable && ((item) => rowClick({ dataItem: item })),
-                            remove: props.removable && ((item) => removeRecord({ dataItem: item })),
-                            save: (item) => saveEdit({ dataItem: item }),
-                            discard: (item) => discardEdit({ dataItem: item })
-                        })}
+                        cell={(cellProps) =>
+                            <ActionCell {...cellProps}
+                                edit={props.editable && ((item) => rowClick({ dataItem: item }))}
+                                remove={props.removable && ((item) => removeRecord({ dataItem: item }))}
+                                save={(item) => saveEdit({ dataItem: item })}
+                                discard={(item) => discardEdit({ dataItem: item })}
+                            />
+                        }
                     />
                 </Grid>
             }
         </>
     );
 }
-
-function cellWithEditing({ edit, remove, save, discard }) {
-    return class extends GridCell {
-        render() {
-            const inEdit = this.props.dataItem.inEdit;
-            return (
-                <td>
-                    <ButtonGroup>
-                        <Button
-                            hidden={!inEdit}
-                            title='Save record'
-                            style={{ padding: '6px' }}
-                            look='flat'
-                            className='k-button k-grid-save-command'
-                            onClick={() => { save(this.props.dataItem); }}
-                        >
-                            <span className='k-icon k-i-save'></span>
-                        </Button>
-                        <Button
-                            hidden={!inEdit}
-                            title='Discard changes'
-                            style={{ padding: '6px' }}
-                            look='flat'
-                            className="k-button k-grid-close-command"
-                            onClick={() => { discard(this.props.dataItem); }}
-                        >
-                            <span className='k-icon k-i-close'></span>
-                        </Button>
-                        <Button
-                            hidden={!edit || inEdit}
-                            title='Edit record'
-                            style={{ padding: '6px' }}
-                            look='flat'
-                            className='k-button k-grid-edit-command'
-                            onClick={() => { edit(this.props.dataItem); }}
-                        >
-                            <span className='k-icon k-i-edit'></span>
-                        </Button>
-                        <Button
-                            hidden={!remove || inEdit}
-                            title='Delete record'
-                            style={{ padding: '6px' }}
-                            look='flat'
-                            className="k-button k-grid-remove-command"
-                            onClick={() => { remove(this.props.dataItem); }}
-                        >
-                            <span className='k-icon k-i-delete'></span>
-                        </Button>
-                    </ButtonGroup>
-                </td>
-            );
-        }
-    };
+export const ActionCell = ({ edit, remove, save, discard, ...props }) => {
+    const inEdit = props.dataItem.inEdit;
+    return (
+        <td>
+            <ButtonGroup>
+                <Button
+                    hidden={!inEdit}
+                    title='Save record'
+                    style={{ padding: '6px' }}
+                    look='flat'
+                    className='k-button k-grid-save-command'
+                    onClick={() => { save(props.dataItem); }}
+                >
+                    <span className='k-icon k-i-save'></span>
+                </Button>
+                <Button
+                    hidden={!inEdit}
+                    title='Discard changes'
+                    style={{ padding: '6px' }}
+                    look='flat'
+                    className="k-button k-grid-close-command"
+                    onClick={() => { discard(props.dataItem); }}
+                >
+                    <span className='k-icon k-i-close'></span>
+                </Button>
+                <Button
+                    hidden={!edit || inEdit}
+                    title='Edit record'
+                    style={{ padding: '6px' }}
+                    look='flat'
+                    className='k-button k-grid-edit-command'
+                    onClick={() => { edit(props.dataItem); }}
+                >
+                    <span className='k-icon k-i-edit'></span>
+                </Button>
+                <Button
+                    hidden={!remove || inEdit}
+                    title='Delete record'
+                    style={{ padding: '6px' }}
+                    look='flat'
+                    className="k-button k-grid-remove-command"
+                    onClick={() => { remove(props.dataItem); }}
+                >
+                    <span className='k-icon k-i-delete'></span>
+                </Button>
+            </ButtonGroup>
+        </td>
+    );
 }
+
+ActionCell.propTypes = {
+    edit: PropTypes.func,
+    remove: PropTypes.func,
+    save: PropTypes.func,
+    discard: PropTypes.func,
+    inEdit: PropTypes.string,
+    dataItem: PropTypes.object
+};

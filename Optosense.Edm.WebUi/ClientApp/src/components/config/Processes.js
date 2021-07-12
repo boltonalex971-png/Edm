@@ -14,7 +14,7 @@ import { DropDownComp } from '../DropDownCell';
 export function Processes() {
     let { path } = useRouteMatch();
     const history = useHistory();
-    const api = '/api/processes';
+    const api = Api.processes;
     return (
         <MasterDetail
             api={api}

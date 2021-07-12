@@ -25,6 +25,7 @@ namespace Optosense.Edm.Domain.Models
         public bool IsValid { get; set; }
         public string Message { get; set; }
 
-        public virtual OperationHostDevice Device { get; set; }
+        public OperationHostDevice Device { get; set; }
+        public ICollection<RecordOperationCriterion> Criteria { get; set; }
     }
 }

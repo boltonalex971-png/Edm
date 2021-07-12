@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { GridColumn } from '@progress/kendo-react-grid';
 import { RelationTable } from '../../RelationTable';
-import { dropDownCell } from '../../DropDownCell';
+import { DropDownCell } from '../../DropDownCell';
 import { useGet } from '../../hooks/hooks';
 import { HostDetail } from '../Hosts';
 import Api from '../../api';
@@ -34,14 +34,16 @@ export function DeviceHostsTab({ id, api, onDetailSelected }) {
                     width={200}
                     field='hostDeviceId'
                     title='Host'
-                    cell={dropDownCell({
-                        getData: () => data,
-                        key: 'id',
-                        text: 'name',
-                        fieldName: 'hostName',
-                        fieldId: 'hostId',
-                        onClick: hostClick
-                    })}
+                    cell={(cellProps) =>
+                        <DropDownCell {...cellProps}
+                            getData={() => data}
+                            id='id'
+                            text='name'
+                            fieldName='hostName'
+                            fieldId='hostId'
+                            onClick={hostClick}
+                        />
+                    }
                 />
             }
             <GridColumn field={'hostUrl'} title={'Address'} editable={false} />

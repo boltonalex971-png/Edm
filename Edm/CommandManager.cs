@@ -22,6 +22,7 @@ namespace Microprojects.Edm
     public class CommandManager : ICommandContainer
     {
         public static readonly string FAILED_STATUS = "Failed";
+        public static readonly string NOT_FOUND = "Not found";
         public static readonly string SUCCESS_STATUS = "Ok";
 
         private static ICommandContainer _commandContainerInstance;
@@ -62,7 +63,7 @@ namespace Microprojects.Edm
                 .Where(c => c.GetCustomAttribute<CommandAttribute>()?.Lifetime == CommandType.Permanent);
             foreach (var command in everCommands)
             {
-                var commandInstance = (ICommand) _services.GetService(command); //(ICommand) Activator.CreateInstance(command.GetType());
+                var commandInstance = (ICommand)_services.GetService(command); //(ICommand) Activator.CreateInstance(command.GetType());
                 commandInstance.SetParameters(null);
                 commandInstance.Init();
                 var taskId = RunLongTask(commandInstance);
@@ -108,7 +109,52 @@ namespace Microprojects.Edm
         //    return await Execute(new CommandData { Command = "GetPorts" });
         //}
 
-        public async Task<ResponseData> Execute(CommandData data)
+        public Task<ResponseData> ExecuteAsync<T>(ICommandParameters parameters) where T : ICommand
+        {
+            return ExecuteAsync(typeof(T), parameters);
+        }
+
+        public async Task<ResponseData> ExecuteAsync(Type commandType, ICommandParameters parameters = null)
+        {
+            if (GetAllCommands().FirstOrDefault(c => c == commandType) == null)
+            {
+                throw new EdmException($"No command found: {commandType.Name}");
+            }
+
+            var command = (ICommand)_services.GetService(commandType)
+                ?? throw new EdmException($"Command found but not registered as a service: {commandType.Name}");
+            var lifetime = commandType.GetCustomAttribute<CommandAttribute>()?.Lifetime;
+            var paramType = commandType.GetCustomAttribute<CommandAttribute>()?.Parameters;
+            if (parameters != null && parameters.GetType().IsInstanceOfType(paramType))
+            {
+                throw new EdmException($"Command parameters must be instance of {nameof(paramType)}");
+            }
+
+            command.CommandParameters = parameters;
+            command.Init();
+            var response = new ResponseData { Status = SUCCESS_STATUS, Response = SUCCESS_STATUS };
+            // TODO Using async calls make no difference between lifetimes, refactor this to single call
+            switch (lifetime)
+            {
+                case CommandType.ShortRunning:
+                    var result = await command.ExecuteAsync();
+                    response.Response = JsonConvert.SerializeObject(result);
+                    response.Message = $"Command {command.Name} executed succesfully";
+                    //Logger.Log(response.Message);
+                    break;
+                case CommandType.Permanent:
+                case CommandType.LongRunning:
+                    //command = command.GetNewInstance(); // statefull object needed
+                    var taskId = RunLongTask(command);
+                    response.Response = JsonConvert.SerializeObject(taskId);
+                    response.Message = $"Task {taskId} {command.Name} started succesfully";
+                    break;
+            }
+
+            return response;
+        }
+
+        public async Task<ResponseData> ExecuteAsync(CommandData data)
         {
             try
             {
@@ -126,9 +172,9 @@ namespace Microprojects.Edm
                             task.Task.Status == TaskStatus.WaitingToRun ||
                             task.Task.Status == TaskStatus.WaitingForChildrenToComplete)
                         {
-                            task.TokenSource.Cancel();
                             response.Message = $"Task {task.Task.Id} {task.Command.Name} was requested to stop";
                             Logger.Log(response.Message);
+                            task.TokenSource.Cancel();
                         }
                         else
                         {
@@ -160,30 +206,13 @@ namespace Microprojects.Edm
                 }
                 else
                 {
-                    var command = GetAllCommands()
-                        .FirstOrDefault(c => c.GetCustomAttribute<CommandAttribute>()?.Name == data.Command) ??
-                        throw new ArgumentException($"Command {data.Command} does not exist");
-                    var lifetime = command.GetCustomAttribute<CommandAttribute>()?.Lifetime;
-                    var commandInstance = (ICommand) _services.GetService(command);
-                    commandInstance.SetParameters(data.Params);
-                    commandInstance.Init();
-                    switch (lifetime)
-                    {
-                        case CommandType.ShortRunning:
-                            var result = await commandInstance.ExecuteAsync();
-                            response.Response = JsonConvert.SerializeObject(result);
-                            response.Message = $"Command {commandInstance.Name} executed succesfully";
-                            //Logger.Log(response.Message);
-                            break;
-                        case CommandType.Permanent:
-                        case CommandType.LongRunning:
-                            //command = command.GetNewInstance(); // statefull object needed
-                            var taskId = RunLongTask(commandInstance);
-                            response.Response = JsonConvert.SerializeObject(taskId);
-                            response.Message = $"Task {taskId} {commandInstance.Name} started succesfully";
-                            break;
-                    }
+                    var commandType = GetAllCommands()
+                        .FirstOrDefault(c => c.GetCustomAttribute<CommandAttribute>()?.Name == data.Command)
+                            ?? throw new ArgumentException($"Command {data.Command} does not exist");
+                    var parameters = ConvertParameters(commandType, data.Params);
+                    response = await ExecuteAsync(commandType, parameters);
                 }
+
                 return response;
             }
             catch (Exception e)
@@ -215,24 +244,24 @@ namespace Microprojects.Edm
         {
             var tokenSource = new CancellationTokenSource();
             var token = tokenSource.Token;
-            // Must use Task.Run as Task.Factory.StartNew is not supported async delegates
-            var task = Task.Run(async () => await command.ExecuteAsync(token), token);
+            var task = command.ExecuteAsync(token);
             task.ContinueWith(t =>
-            {
-                switch (t.Status)
                 {
-                    case TaskStatus.Canceled:
-                        Logger.Log($"Task {t.Id} {command.Name} was canceled by user");
-                        break;
-                    case TaskStatus.Faulted:
-                        Logger.Error($"Task {t.Id} {command.Name} was canceled with exception: {t.Exception.Flatten().GetFullInfo()}");
-                        break;
-                    case TaskStatus.RanToCompletion:
-                        Logger.Log($"Task {t.Id} {command.Name} completed successfully");
-                        break;
-                }
-                DisposeTask(t.Id);
-            });
+                    switch (t.Status)
+                    {
+                        case TaskStatus.Canceled:
+                            Logger.Log($"Task {t.Id} {command.Name} was canceled by user");
+                            break;
+                        case TaskStatus.Faulted:
+                            Logger.Error($"Task {t.Id} {command.Name} was canceled with exception: {t.Exception.Flatten().GetFullInfo()}");
+                            break;
+                        case TaskStatus.RanToCompletion:
+                            Logger.Log($"Task {t.Id} {command.Name} completed successfully");
+                            break;
+                    }
+
+                    DisposeTask(t.Id);
+                }, TaskScheduler.Default);
             RunningTasks.Add(new CancellableTask { Task = task, Command = command, TokenSource = tokenSource });
             Logger.Log($"Task {task.Id} {command.Name} started succesfully");
             return task.Id;
@@ -241,7 +270,7 @@ namespace Microprojects.Edm
         private CancellableTask GetTaskByPid(int pid)
         {
             return RunningTasks.FirstOrDefault(t => t.Task.Id == pid);
-                //?? throw new Exception($"Running task with PID {pid} not found");
+            //?? throw new Exception($"Running task with PID {pid} not found");
         }
 
         private CancellableTask GetTaskByParams(string param)
@@ -281,6 +310,17 @@ namespace Microprojects.Edm
                 RunningTasks.Remove(task);
             }
         }
+
+        private ICommandParameters ConvertParameters(Type commandType, string data)
+        {
+            data = data ?? "{}";
+            var commandParamsType = commandType.GetCustomAttribute<CommandAttribute>(true)?.Parameters
+                ?? throw new EdmException($"Parameters type for {commandType.Name} is not defined");
+            var param = (ICommandParameters) Activator.CreateInstance(commandParamsType);
+            JsonConvert.PopulateObject(data, param);
+            return param;
+        }
+
 
     }
 

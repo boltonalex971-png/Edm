@@ -1,12 +1,14 @@
+const baseUrl = process.env.REACT_APP_API_URL || window.location.origin;
+
 const api = {
-    audits: '/api/audits',
-    processes: '/api/processes',
-    devices: '/api/devices',
-    hosts: '/api/hosts',
-    workplaces: '/api/workplaces',
-    operations: '/api/operations',
-    plugins: '/api/plugins',
-    profiles: '/api/profiles'
+    audits: `${baseUrl}/api/audits`,
+    processes: `${baseUrl}/api/processes`,
+    devices: `${baseUrl}/api/devices`,
+    hosts: `${baseUrl}/api/hosts`,
+    workplaces: `${baseUrl}/api/workplaces`,
+    operations: `${baseUrl}/api/operations`,
+    plugins: `${baseUrl}/api/plugins`,
+    profiles: `${baseUrl}/api/profiles`
 };
 
 export default api;

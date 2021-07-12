@@ -4,11 +4,11 @@ using Microsoft.EntityFrameworkCore.Query;
 using Newtonsoft.Json;
 using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Core.Infrastructure;
+using Optosense.Edm.Core.Models;
 using Optosense.Edm.Core.Persistance;
 using Optosense.Edm.Domain.Models;
 using System;
 using System.Collections.Generic;
-using System.Dynamic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
@@ -70,9 +70,28 @@ namespace Optosense.Edm.Core.Services
         {
             var recs = await Db.Records
                 .Include(r => r.Device)
+                //.Include(r => r.Criteria).ThenInclude(c => c.OperationCriterion.AuditCriterion.Zone)
                 .Where(r => r.Device.OperationId == operationId && r.Id > lastRecordId)
                 .ToListAsync();
             return recs;
+        }
+
+        public async Task<IEnumerable<OperationCriterion>> GetCriterion(int operationId, int lastId)
+        {
+            var criterion = await Db.OperationCriteria
+                .Include(c => c.AuditCriterion.Zone)
+                .Where(c => c.OperationId == operationId)
+                .ToListAsync();
+            return criterion;
+        }
+
+        public async Task<IEnumerable<OperationCriterion>> GetCriteria(int operationId)
+        {
+            var criteria = await Db.OperationCriteria
+                .Include(c => c.AuditCriterion.Zone)
+                .Where(c => c.OperationId == operationId)
+                .ToListAsync();
+            return criteria;
         }
 
         public async Task<Operation> Start(int operationId, DateTime startAt)
@@ -120,6 +139,30 @@ namespace Optosense.Edm.Core.Services
             // Operation must be cancelled by command; get new status
             operation = await Db.Operations.FindAsync(operationId);
             return operation;
+        }
+
+        public async Task<OperationStatus> Status(int operationId)
+        {
+            var operation = await Db.Operations.FindAsync(operationId)
+                ?? throw new EdmException($"Operation with id {operationId} is not found");
+            var status = new OperationStatus
+            {
+                Id = operationId,
+                State = operation switch
+                {
+                    { Completed: not null }                                 => OperationState.Completed,
+                    { Started: not null, Completed: null, Scheduled: null } => OperationState.InProgress,
+                    { Scheduled: not null, Started: null, Completed: null } => OperationState.Scheduled,
+                    _                                                       => OperationState.New 
+                }
+            };
+            if (status.State == OperationState.InProgress && DateTime.Now - operation.Started > TimeSpan.FromMinutes(10))
+            {
+                // Check if operation is really performing
+                status.State = await _commands.CheckOperationRun(operationId) ? status.State : OperationState.Abandoned;
+            }
+
+            return status;
         }
 
         public async Task<IEnumerable<OperationHostDevice>> GetOperationDevices(int id)

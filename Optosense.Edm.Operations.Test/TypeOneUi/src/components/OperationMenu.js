@@ -59,15 +59,16 @@ let timeout, interval;
 function OperationToolbar({ operationId, apiBase, onStarted, onCompleted, onCancelled }) {
     const [refresh, setRefresh] = useState(false);
     const [[operation, setOperation]] = useGet(`${apiBase}/api/operations/${operationId}`, refresh);
+    const [[status]] = useGet(`${apiBase}/api/operations/${operationId}/status`, refresh);
 
     const startDate = operation && new Date(operation.started).getTime();
     const finishDate = operation && new Date(operation.completed).getTime();
     const defaultDate = startDate || (finishDate || Date.now());
 
-    const scheduled = Date.now() < startDate;
-    const started = !finishDate && !!startDate && !scheduled;
-    const completed = !!finishDate;
-    const created = !scheduled && !started && !completed;
+    const scheduled = status && status.state === 'Scheduled';
+    const started = status && status.state === 'InProgress';
+    const completed = status && status.state === 'Completed';
+    const created = status && status.state === 'New';
 
     const startAtInput = useRef();
     const onStart = () => {
@@ -127,6 +128,9 @@ function OperationToolbar({ operationId, apiBase, onStarted, onCompleted, onCanc
                 {!created &&
                     <Input value={formatDate(new Date(defaultDate), 'dd MMMM HH:mm:ss')} disabled></Input>
                 }
+                <Label className='mx-2'>
+                    {status && status.state}
+                </Label>
             </form>
             <Button icon='play' disabled={!created} className='ml-2' onClick={onStart}>Start</Button>
             <Button icon='stop' disabled={created || completed} className='ml-2' onClick={onStop}>Stop</Button>

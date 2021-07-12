@@ -1,9 +1,8 @@
-import React
-    from 'react';
+import React from 'react';
+import PropTypes from 'prop-types';
 import { DropDownList } from '@progress/kendo-react-dropdowns';
 import { GridCell } from '@progress/kendo-react-grid';
 import { Input } from '@progress/kendo-react-inputs';
-import { post } from 'jquery';
 
 export const DropDownComp = ({ ...props }) => {
     const handleChange = (e) => {
@@ -20,76 +19,105 @@ export const DropDownComp = ({ ...props }) => {
     );
 }
 
-export function dropDownCell({ getData, key, text, fieldName, fieldId, onClick, editable = true }) {
-    return class extends GridCell {
-        handleChange = (e) => {
-            this.props.onChange({
-                dataItem: this.props.dataItem,
-                field: this.props.field,
-                syntheticEvent: e.syntheticEvent,
-                value: e.target.value[key]
-            });
-        }
-
-        render() {
-            let content;
-            const { dataItem, field } = this.props;
-            const dataValue = dataItem[field];
-            const list = getData && getData() || [];
-            let value = list.find(c => c[key] === dataValue);
-            if (getData && dataItem.inEdit && editable) {
-                content = <DropDownList
-                    onChange={this.handleChange}
-                    value={value}
-                    data={list}
-                    textField={text}
-                    dataItemKey={key}
-                />;
-            } else if (onClick) {
-                const valueName = fieldName ? dataItem[fieldName] : (value && value[text] || dataItem[fieldId]);
-                const valueId = fieldId ? dataItem[fieldId] : value ? value[key] : dataItem[field];
-                content = <button type='button' onClick={() => onClick(valueId)} className='btn btn-link'>{valueName}</button>;
-            } else {
-                const valueName = fieldName ? dataItem[fieldName] : (value && value[text] || dataItem[fieldId]);
-                content = <span>{valueName}</span>;
-            }
-
-            return (
-                <td style={{ whiteSpace: 'nowrap' }}>
-                    {content}
-                </td>
-            )
-        }
-    }
+DropDownComp.propTypes = {
+    onChange: PropTypes.func,
+    field: PropTypes.string,
+    dataItem: PropTypes.object,
+    dataItemKey: PropTypes.string,
+    data: PropTypes.array,
+    value: PropTypes.object
 }
 
-export function linkTextCell({ fieldId, onClick, template, editable = true }) {
-    return class extends GridCell {
-        handleChange = (e) => {
-            this.props.onChange({
-                dataItem: this.props.dataItem,
-                field: this.props.field,
-                syntheticEvent: e.syntheticEvent,
-                value: e.target.value
-            });
-        }
-
-        render() {
-            let content;
-            const { dataItem, field } = this.props;
-            const value = template || dataItem[field];
-            if (dataItem.inEdit && editable) {
-                content = <Input onChange={this.handleChange} value={value} />;
-            } else {
-                const id = dataItem[fieldId || "id"];
-                content = <button type='button' onClick={() => onClick(id)} className='btn btn-link'>{value}</button>;
-            }
-
-            return (
-                <td style={{ whiteSpace: 'nowrap' }}>
-                    {content}
-                </td>
-            )
-        }
+export const DropDownCell = ({ getData, id, text, fieldName, fieldId, onClick, editable = true, ...props }) => {
+    const handleChange = (e) => {
+        props.onChange({
+            dataItem: props.dataItem,
+            field: props.field,
+            syntheticEvent: e.syntheticEvent,
+            value: e.target.value[id]
+        });
     }
+    let content;
+    const { dataItem, field } = props;
+    const dataValue = dataItem[field];
+    const list = (getData && getData()) || [];
+    let value = list.find(c => c[id] === dataValue);
+    if (getData && dataItem.inEdit && editable) {
+        content = <DropDownList
+            onChange={handleChange}
+            value={value}
+            data={list}
+            textField={text}
+            dataItemKey={id}
+        />;
+    } else if (onClick) {
+        const valueName = fieldName ? dataItem[fieldName] : ((value && value[text]) || dataItem[fieldId]);
+        const valueId = fieldId ? dataItem[fieldId] : value ? value[id] : dataItem[field];
+        content = <button type='button' onClick={() => onClick(valueId)} className='btn btn-link'>{valueName}</button>;
+    } else {
+        const valueName = fieldName ? dataItem[fieldName] : ((value && value[text]) || dataItem[fieldId]);
+        content = <span>{valueName}</span>;
+    }
+
+    return (
+        <td style={{ whiteSpace: 'nowrap' }}>
+            {content}
+        </td>
+    )
 }
+
+DropDownCell.propTypes = {
+    getData: PropTypes.func,
+    onClick: PropTypes.func,
+    dataItem: PropTypes.object,
+    inEdit: PropTypes.string,
+    field: PropTypes.string,
+    id: PropTypes.string,
+    text: PropTypes.string,
+    fieldName: PropTypes.string,
+    fieldId: PropTypes.string,
+    editable: PropTypes.bool
+}
+
+export const LinkTextCell = ({ fieldId, onClick, template, editable = true, ...props }) => {
+    const handleChange = (e) => {
+        props.onChange({
+            dataItem: props.dataItem,
+            field: props.field,
+            syntheticEvent: e.syntheticEvent,
+            value: e.target.value
+        });
+    }
+
+    let content;
+    const { dataItem, field } = props;
+    const value = template || dataItem[field];
+    if (dataItem.inEdit) {
+        content = editable ?
+            <Input onChange={handleChange} value={value} /> :
+            <span />;
+    } else {
+        const id = dataItem[fieldId || "id"];
+        content = <button type='button' onClick={() => onClick(id)} className='btn btn-link'>{value}</button>;
+    }
+
+    return (
+        <td style={{ whiteSpace: 'nowrap' }}>
+            {content}
+        </td>
+    );
+}
+
+LinkTextCell.propTypes = {
+    getData: PropTypes.func,
+    onClick: PropTypes.func,
+    dataItem: PropTypes.object,
+    inEdit: PropTypes.string,
+    field: PropTypes.string,
+    id: PropTypes.string,
+    text: PropTypes.string,
+    fieldName: PropTypes.string,
+    fieldId: PropTypes.string,
+    editable: PropTypes.bool
+}
+

@@ -64,12 +64,10 @@ namespace Optosense.Edm.Infrastructure.Edm
         {
             var parameters = new StartOperationCommandParameters
             {
-                CacheConnectionString = "localhost;abortConnect=false",
-                DbConnectionString = "Data Source=.\\SQLEXPRESS;MultipleActiveResultSets=true;Initial Catalog=optosense_edm;Integrated Security=SSPI;",
                 Operation = operationId,
                 StartAt = startAt
             };
-            var response = await _commands.Execute(
+            var response = await _commands.ExecuteAsync(
                 new CommandData
                 {
                     Command = "StartOperation",
@@ -82,18 +80,38 @@ namespace Optosense.Edm.Infrastructure.Edm
         {
             var parameters = new StartOperationCommandParameters
             {
-                CacheConnectionString = "localhost;abortConnect=false",
-                DbConnectionString = "Data Source=.\\SQLEXPRESS;MultipleActiveResultSets=true;Initial Catalog=optosense_edm;Integrated Security=SSPI;",
                 Operation = operationId,
                 StartAt = startAt
             };
-            var response = await _commands.Execute(
+            var response = await _commands.ExecuteAsync(
                 new CommandData
                 {
                     Command = "StartOperation",
                     Params = $@"{JsonConvert.SerializeObject(parameters)}"
                 });
             return response.Response;
+        }
+
+        public async Task<bool> CheckOperationRun(int operationId)
+        {
+            var command = new CheckCommand(new StartOperationCommand() 
+            { 
+                CommandParameters = new StartOperationCommandParameters 
+                { 
+                    Operation = operationId
+                }
+            });
+
+            var response = await _commands.LocalExecute(command);
+            if (response.Status == "Ok" && Enum.TryParse(response.Message, out TaskStatus commandStatus))
+            {
+                return commandStatus == TaskStatus.Running ||
+                       commandStatus == TaskStatus.WaitingForActivation ||
+                       commandStatus == TaskStatus.WaitingToRun ||
+                       commandStatus == TaskStatus.WaitingForChildrenToComplete;
+            }
+
+            return false;
         }
 
         public async Task<string> CancelOperation(int operationId)
@@ -108,7 +126,7 @@ namespace Optosense.Edm.Infrastructure.Edm
             //{
             //    CommandParameters = parameters
             //});
-            var response = await _commands.Execute(new CommandData
+            var response = await _commands.ExecuteAsync(new CommandData
             {
                 Command = "Stop",
                 Params = JsonConvert.SerializeObject(new { Command = "StartOperation", Operation = operationId})

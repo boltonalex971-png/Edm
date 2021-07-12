@@ -8,11 +8,12 @@ import { useHistory, useParams, useRouteMatch } from 'react-router-dom';
 import { MasterDetail, reloadMaster, Detail, Info, Editor } from '../MasterDetail';
 import { DeviceTabs } from './device/DeviceTabs';
 import { DropDownComp } from '../DropDownCell';
+import Api from '../api';
 
 export function Devices() {
     const history = useHistory();
     const { path } = useRouteMatch();
-    const api = '/api/devices';
+    const api = Api.devices;
     return (
         <MasterDetail
             api={api}

@@ -11,7 +11,7 @@ namespace Optosense.Edm.Core.Auditing
 {
     public class AuditFunctions
     {
-        public delegate AuditResult AuditFunction(AuditCriterion criterion, IEnumerable<Record> values);
+        public delegate AuditResult AuditFunction(AuditCriterion criterion, IEnumerable<object> values);
 
         public static AuditFunction Function(string name)
         {
@@ -43,9 +43,19 @@ namespace Optosense.Edm.Core.Auditing
         [AuditFunc(Name = "Range", Format = "[{0}..{1}]")]
         [AuditArg("Min value", typeof(double))]
         [AuditArg("Max value", typeof(double))]
-        public static AuditResult IntervalFunction(AuditCriterion criterion, IEnumerable<Record> values)
+        public static AuditResult IntervalFunction(AuditCriterion criterion, IEnumerable<object> values)
         {
-            var result = new AuditResult();
+            var doubles = values.Select(v => double.TryParse(v.ToString(), out var number) ? number : 0).ToList();
+            double.TryParse(criterion.Arg1, out var min);
+            double.TryParse(criterion.Arg2, out var max);
+            var minValue = doubles.Min();
+            var maxValue = doubles.Max();
+            var result = new AuditResult 
+            {
+                Result = string.Format("[{0}..{1}]", minValue, maxValue),
+                Valid = minValue >= min && maxValue <= max
+            };
+            result.Message = !result.Valid ? $"{criterion.Param} is out of bound" : default;
             return result;
         }
 

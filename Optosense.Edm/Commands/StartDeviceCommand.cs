@@ -18,7 +18,7 @@ namespace Optosense.Edm.Commands
     [Command(Name = "StartDevice", Lifetime = CommandType.LongRunning, Parameters = typeof(StartDeviceCommandParameters))]
     public class StartDeviceCommand : BaseCommand
     {
-        protected ICache Cache { get; set; } = CacheHelper.GetInstance();
+        protected ICache Cache { get; init; }
         protected StartDeviceCommandParameters Parameters => (StartDeviceCommandParameters) CommandParameters;
 
         private IPluginContainer _plugins;
@@ -30,9 +30,10 @@ namespace Optosense.Edm.Commands
 
         public StartDeviceCommand() { }
 
-        public StartDeviceCommand(IPluginContainer plugins)
+        public StartDeviceCommand(IPluginContainer plugins, ICache cache)
         {
             _plugins = plugins;
+            Cache = cache;
         }
 
         public override bool Init()
@@ -89,9 +90,9 @@ namespace Optosense.Edm.Commands
                 Status = (ExecutionStatus) response.State,
                 OperationHostDeviceId = Parameters.OperationHostDevice,
             };
-
-            Cache.Push(rec);
-            Logger.Log(rec.Response);
+            Cache.Publish(Parameters.Channel, rec);
+            //Cache.Push(rec);
+            //Logger.Log(rec.Response);
             if (throwEx && !rec.IsValid)
             {
                 throw new EdmException(rec.Message);
@@ -101,7 +102,7 @@ namespace Optosense.Edm.Commands
 
     public class StartDeviceCommandParameters : ICommandParameters
     {
-        public string CacheConnectionString { get; set; }
+        public string Channel { get; set; }
         public dynamic DriverOptions { get; set; }
         public string Profile { get; set; }
 
@@ -109,7 +110,6 @@ namespace Optosense.Edm.Commands
         public int OperationHostDevice { get; set; }
         public Guid Driver { get; set; }
         public DateTime StartAt { get; set; } = DateTime.Now.AddSeconds(10);
-
     }
 
 }

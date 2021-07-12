@@ -34,15 +34,15 @@ namespace Microprojects.Edm.Commands
             return true;
         }
 
-        public virtual async Task<object> ExecuteAsync()
+        public virtual Task<object> ExecuteAsync()
         {
-            return await Task.FromResult("Ok");
+            return Task.FromResult((object) "Ok");
         }
 
-        public virtual async Task<object> ExecuteAsync(CancellationToken cancellationToken)
+        public virtual Task<object> ExecuteAsync(CancellationToken cancellationToken)
         {
             CancellationToken = cancellationToken;
-            return await ExecuteAsync();
+            return ExecuteAsync();
         }
 
         public virtual Dictionary<string, object> GetParameters()

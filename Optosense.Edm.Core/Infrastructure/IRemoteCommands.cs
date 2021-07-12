@@ -18,6 +18,7 @@ namespace Optosense.Edm.Core.Infrastructure
             DateTime startAt);
         Task<string> StartOperation(int operationId, DateTime startAt);
         Task<string> StartTestOperation(int operationId, DateTime startAt);
+        Task<bool> CheckOperationRun(int operationId);
         Task<string> CancelOperation(int operationId);
     }
 }

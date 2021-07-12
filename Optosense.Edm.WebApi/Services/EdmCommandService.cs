@@ -14,16 +14,19 @@ namespace Optosense.Edm.WebApi.Services
     public class EdmCommandService : CommandExecutor.CommandExecutorBase
     {
         private readonly ILogger<EdmCommandService> _logger;
-        public EdmCommandService(ILogger<EdmCommandService> logger)
+        private readonly ICommandContainer _commandManager;
+
+        public EdmCommandService(ILogger<EdmCommandService> logger, ICommandContainer commandManager)
         {
             _logger = logger;
+            _commandManager = commandManager;
         }
 
         public async override Task<CommandResponse> ExecuteCommand(CommandParams request, ServerCallContext context)
         {
             //var param = JsonConvert.DeserializeObject<Params>(request.Params);
             var parameters = new CommandData { Command = request.Command, Params = request.Params };
-            var result = await CommandManager.GetInstance().Execute(parameters);
+            var result = await _commandManager.ExecuteAsync(parameters);
 
             return new CommandResponse
             {
@@ -35,7 +38,7 @@ namespace Optosense.Edm.WebApi.Services
 
         public override Task<AvailableTasks> GetAvailableTasks(AvalableTaskParams request, ServerCallContext context)
         {
-            var result = CommandManager.GetInstance().GetAvailableTasks();
+            var result = _commandManager.GetAvailableTasks();
             var tasks = new AvailableTasks();
             tasks.Tasks.AddRange(result.Select(r => new AvailableTasks.Types.Task { Pid = r.Pid ?? string.Empty, Status = r.Status ?? string.Empty, TaskName = r.TaskName, Type = r.Type }));
             return Task.FromResult(tasks);

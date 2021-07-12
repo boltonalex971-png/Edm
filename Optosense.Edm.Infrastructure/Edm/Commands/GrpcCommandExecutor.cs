@@ -24,7 +24,7 @@ namespace Optosense.Edm.Infrastructure.Edm.Commands
                 var response = await client.ExecuteCommandAsync(new CommandParams
                 {
                     Command = command.Name,
-                    Params = JsonConvert.SerializeObject(parameters ?? command.CommandParameters)
+                    Params = JsonConvert.SerializeObject(parameters ?? command.GetParameters())
                 });
                 return response;
             }
@@ -39,10 +39,10 @@ namespace Optosense.Edm.Infrastructure.Edm.Commands
             var commandResponse = new CommandResponse();
             try
             {
-                var response = await container.Execute(new CommandData
+                var response = await container.ExecuteAsync(new CommandData
                 {
                     Command = command.Name,
-                    Params = JsonConvert.SerializeObject(parameters ?? command.CommandParameters)
+                    Params = JsonConvert.SerializeObject(parameters ?? command.GetParameters())
                 });
                 commandResponse.Message = response.Message;
                 commandResponse.Status = response.Status;

@@ -3,7 +3,7 @@ import Api from '../../api';
 import PropTypes from 'prop-types';
 import { GridColumn } from '@progress/kendo-react-grid';
 import { RelationTable } from '../../RelationTable';
-import { dropDownCell, linkTextCell } from '../../DropDownCell';
+import { DropDownCell, LinkTextCell } from '../../DropDownCell';
 import { useGet } from '../../hooks/hooks';
 import { ProcessDetail } from '../Processes';
 import { useHistory } from 'react-router-dom';
@@ -46,29 +46,31 @@ export function WorkbenchDevicesTab({ id, api, workplaceId, onDetailSelected }) 
             <GridColumn title='Profiler' field='profilerName' editable={false} />
             {data && data.length &&
                 <GridColumn title='Device' field='workplaceHostDeviceId' editable={true} width={200}
-                cell={dropDownCell({
-                    getData: () => data, key: 'id', text: 'device', fieldId: 'deviceId',
-                    onClick: (deviceId) => {
-                        onDetailSelected(
-                            <DeviceDetail
-                                deviceId={deviceId}
-                                api={Api.devices}
-                                path={path}
-                                onClose={() => onDetailSelected()}
-                                onUp={() => history.push(`${path}/${deviceId}`)}
-                            />);
+                    cell={(cellProps) =>
+                        <DropDownCell {...cellProps}
+                            getData={() => data} id='id' text='device' fieldId='deviceId'
+                            onClick={(deviceId) => onDetailSelected(
+                                <DeviceDetail
+                                    deviceId={deviceId}
+                                    api={Api.devices}
+                                    path={path}
+                                    onClose={() => onDetailSelected()}
+                                    onUp={() => history.push(`${path}/${deviceId}`)}
+                                />)
+                            }
+                        />
                     }
-                    })}
                 />
             }
             <GridColumn title='Host' field='hostName' editable={false} />
             <GridColumn title='Configuration' field='configuration' editable={false}
-                cell={linkTextCell({
-                    fieldId: 'id', onClick: configClick,
-                    editable: false,
-                    template:
-                        <span title='Edit device configuration'>Edit&hellip;</span>
-                })}
+                cell={(cellProps) =>
+                    <LinkTextCell {...cellProps}
+                        fieldId='id' onClick={configClick}
+                        editable={false}
+                        template={<span title='Edit device configuration'>Edit&hellip;</span>}
+                    />
+                }
             />
         </RelationTable>
     );

@@ -6,11 +6,11 @@ import { useGet } from './hooks/hooks';
 export function Monitor({ sensors, started, ...props }) {
     const inputRef = useRef();
     const [scrolled, setScrolled] = useState(false);
-    const index = [...sensors].reverse().findIndex(s => s.Serial);
+    const index = [...sensors].reverse().findIndex(s => s.T);
     const signals = ['T', 'S', 'R', 'I'];
     const log = index > -1 && sensors.slice(0, sensors.length - index).map((s, i) =>
         <div key={i}>
-            <span><strong>#{i}</strong> Sn: {s.Serial}</span>
+            <span><strong>#{i}</strong></span>
             <div style={{ padding: '0 0 1rem 3rem', display: 'flex', flexDirection: 'column' }}>
                 {signals.map(r =>
                     s[r] &&

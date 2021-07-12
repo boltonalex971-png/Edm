@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Optosense.Edm.Core.Contracts;
+using Optosense.Edm.Core.Models;
 using Optosense.Edm.Domain.Models;
 using Optosense.Edm.WebUi.Models;
 
@@ -59,16 +60,10 @@ namespace Optosense.Edm.WebUi.Controllers
         }
 
         [HttpGet("{id:int}/status")]
-        public async Task<JsonResult> Status(Guid operationId)
+        public async Task<OperationStatus> Status(int id)
         {
-            return await Task.FromResult(new JsonResult(new
-            {
-                Status = "InProgress",
-                Progress = 28,
-                Estimated = TimeSpan.FromMinutes(72),
-                Elapsed = TimeSpan.FromMinutes(28),
-                Message = $"Operation {operationId} is in progress"
-            }));
+            var status = await _operationService.Status(id);
+            return status;
         }
 
         [HttpGet("{id:int}/result")]
@@ -99,6 +94,21 @@ namespace Optosense.Edm.WebUi.Controllers
             return recs;
         }
 
+        [HttpGet("{operationId:int}/criteria")]
+        public async Task<IEnumerable<OperationCriterionModel>> GetOperationCriteria(int operationId)
+        {
+            var criteria = await _operationService.GetCriteria(operationId);
+            var result = _mapper.Map<IEnumerable<OperationCriterionModel>>(criteria);
+            return result;
+        }
+
+        [HttpGet("{operationId:int}/criterion")]
+        public async Task<IEnumerable<OperationCriterionModel>> GetOperationCriterion(int operationId, [FromQuery] int? lastId)
+        {
+            var criterion = await _operationService.GetCriterion(operationId, lastId ?? 0);
+            var result = _mapper.Map<IEnumerable<OperationCriterionModel>>(criterion);
+            return result;
+        }
         [HttpGet("{id:int}/devices")]
         public async Task<IEnumerable<OperationHostDevice>> GetOperationDevices(int id)
         {

@@ -36,9 +36,8 @@ namespace Microprojects.Edm.Cache
             throw new NotImplementedException();
         }
 
-        public override bool Push<T>(T record)
+        public override bool Push<T>(string key, T record)
         {
-            var key = typeof(T).FullName;
             string output = JsonSerializer.Serialize(record);
             var list = Storage.ContainsKey(key) ? (LinkedList<string>) Storage[key] : null;
             if (list == null)
@@ -50,10 +49,9 @@ namespace Microprojects.Edm.Cache
             return true;
         }
 
-        public override T Pop<T>()
+        public override T Pop<T>(string key)
         {
-            string listName = typeof(T).FullName;
-            LinkedList<string> list = (LinkedList<string>) Storage[listName];
+            LinkedList<string> list = (LinkedList<string>) Storage[key];
             if (list == null || list.Count == 0)
             {
                 return default;
@@ -78,6 +76,11 @@ namespace Microprojects.Edm.Cache
         {
             var pattern = $"^{wildcard.Replace(".", "\\.").Replace("*", ".*").Replace("?", ".")}$";
             return Storage.Keys.Where(k => Regex.IsMatch(k, pattern)).ToList();
+        }
+
+        public override Task<IEnumerable<T>> GetRangeAsync<T>(string key, int start, int offset, Func<Task<IEnumerable<T>>> locator, TimeSpan expireAt)
+        {
+            throw new NotImplementedException();
         }
     }
 }

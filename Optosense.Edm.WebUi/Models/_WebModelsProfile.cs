@@ -52,6 +52,8 @@ namespace Optosense.Edm.WebUi.Models
                 .ForMember(d => d.ProcessId, o => o.MapFrom(s => s.Workbench.WorkplaceProcess.ProcessId))
                 .ForMember(d => d.ProcessName, o => o.MapFrom(s => s.Workbench.WorkplaceProcess.Process.Name));
 
+            CreateMap<OperationCriterion, OperationCriterionModel>();
+
             CreateMap<Domain.Models.Profile, ProfileViewModel>()
                 .ForMember(d => d.ProfilerGuid, o => o.MapFrom(s => s.ProfilerGuid))
                 .ForMember(d => d.ProfilerName, o => o.Ignore());

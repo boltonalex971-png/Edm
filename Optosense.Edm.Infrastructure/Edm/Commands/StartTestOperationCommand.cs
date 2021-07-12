@@ -16,6 +16,7 @@ using Microsoft.EntityFrameworkCore;
 using Optosense.Edm.Infrastructure.Edm;
 using System.Dynamic;
 using Optosense.Edm.Infrastructure.Edm.Commands;
+using Optosense.Edm.Core.Persistance;
 
 namespace Optosense.Edm.Commands
 {
@@ -25,8 +26,16 @@ namespace Optosense.Edm.Commands
         Parameters = typeof(StartOperationCommandParameters))]
     public class StartTestOperationCommand : BaseCommand
     {
-        protected ICache Cache { get; set; } = CacheHelper.GetInstance();
+        protected ICache Cache { get; init; }
+        protected IEdmContextFactory ContextFactory { get; init; }
         protected StartOperationCommandParameters Parameters => (StartOperationCommandParameters) CommandParameters;
+
+        public StartTestOperationCommand() { }
+        public StartTestOperationCommand(ICache cache, IEdmContextFactory contextFactory)
+        {
+            Cache = cache;
+            ContextFactory = contextFactory;
+        }
 
         public override bool Init()
         {
@@ -39,7 +48,7 @@ namespace Optosense.Edm.Commands
             var waitBeforeStart = now > Parameters.StartAt ? TimeSpan.Zero : Parameters.StartAt - now;
             var cancelled = false;
             var opHostDeviceId = 0;
-            using (var db = new EdmContext(Parameters.DbConnectionString))
+            using (var db = ContextFactory.Create())
             {
                 var dev = await db.OperationHostDevices
                     .FirstOrDefaultAsync(o => o.OperationId == Parameters.Operation) ??
@@ -74,7 +83,7 @@ namespace Optosense.Edm.Commands
                 cancelled = true;
             }
 
-            using (var db = new EdmContext(Parameters.DbConnectionString))
+            using (var db = ContextFactory.Create())
             {
                 now = DateTime.Now;
                 var operation = await db.Operations.FindAsync(Parameters.Operation);

@@ -11,14 +11,16 @@ export const OperationInfo = (props) => {
     const [sensors, setSensors] = useState();
     const [lastId, setLastId] = useState(0);
     const [refresh, setRefresh] = useState(false);
-    const [[data, setData]] = useGet(`${props.apiBase}/api/operations/${props.operationId}/records?lastRecordId=${lastId}`, refresh);
+    const [[data, setData]] = useGet(`${props.apiBase}/api/operations/${props.operationId}/criteria`, refresh); //records?lastRecordId=${lastId}`, refresh);
     const [[devices]] = useGet(`${props.apiBase}/api/operations/${props.operationId}/devices`);
+    const [[status]] = useGet(`${props.apiBase}/api/operations/${props.operationId}/status`);
+
+    console.log('props :>> ', data, !!data);
     if (devices && capacity === -1) {
         const options = JSON.parse(devices[0].options);
-        console.log(options);
         setCapacity(options?.capacity || 0);
     }
-    console.log(capacity);
+
     if (!sensors && capacity > -1) {
         const sens = new Array(capacity);
         for (let i = 0; i < capacity; i++) {
@@ -28,20 +30,14 @@ export const OperationInfo = (props) => {
         setSensors([...sens]);
     } else if (data && data.length > 0) {
         setLastId(data.reduce((max, el) => el.id > max ? el.id : max, 0));
-        const sens = data.filter(d => d.isValid).map(r => JSON.parse(r.parameters || "{}"));
-        sens.forEach(d => {
-            const addr = d.ADDR !== undefined && parseInt(`0x${d.ADDR.slice(1)}`);
+        //const sens = data.filter(d => d.isValid).map(r => ({ ...r, parameters: JSON.parse(r.parameters || "{}") }));
+        data.forEach(d => {
+            const addr = d.selector !== undefined && parseInt(`0x${d.selector.slice(1)}`);
             if (addr !== false) {
-                if (d.Sn !== undefined) sensors[addr].Serial = d.Sn;
-                //sensors[addr].Serial = sensors[addr].Serial || d.Sn || null;
-                const T = d.Term0 && parseInt(d.Term0);
-                if (T !== undefined) sensors[addr].T = { value: T, valid: 1200 <= T && T <= 2000 };
-                const S = d.Signal && parseInt(d.Signal);
-                if (S !== undefined) sensors[addr].S = { value: S, valid: 1700 <= S && S <= 10000 };
-                const R = d.Ref && parseInt(d.Ref);
-                if (R !== undefined) sensors[addr].R = { value: R, valid: 1100 <= R && R <= 9600 };
-                const I = d.Icons && parseInt(d.Icons);
-                if (I !== undefined) sensors[addr].I = { value: I, valid: 100 <= I && I <= 360 };
+                //if (d.Sn !== undefined) sensors[addr].Serial = d.Sn;
+                //sensors[addr].Serial = sensors[addr].Serial || d.parameters.Sn || null;
+                const attr = d.auditCriterionParam.slice(0, 1);
+                sensors[addr][attr] = { value: d.result, valid: d.valid };
             }
         });
         setSensors([...sensors]);
@@ -49,14 +45,14 @@ export const OperationInfo = (props) => {
     }
 
     useEffect(() => {
-        if (props.started) {
-            monitorInterval = setInterval(() => setRefresh(r => !r), 1000);
+        if (props.started && data && status && status !== 'Abandoned') {
+            monitorInterval = setInterval(() => setRefresh(r => !r), 10000);
         } else {
             clearInterval(monitorInterval);
         }
 
         return () => clearInterval(monitorInterval);
-    }, [props.started]);
+    }, [props.started, status]);
     return (
         <SmartScroll offtop={10} style={{ display: 'flex', margin: 10 }}>
             <div style={{ flex: 1 }}>

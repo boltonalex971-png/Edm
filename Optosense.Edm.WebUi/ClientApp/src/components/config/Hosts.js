@@ -7,11 +7,12 @@ import { useHistory, useParams } from 'react-router-dom';
 import { useRouteMatch } from 'react-router-dom';
 import { MasterDetail, reloadMaster, Detail, Info, Editor } from '../MasterDetail';
 import { HostTabs } from './host/HostTabs';
+import Api from '../api';
 
 export function Hosts() {
     const history = useHistory();
     const { path } = useRouteMatch();
-    const api = '/api/hosts';
+    const api = Api.hosts;
     return (
         <MasterDetail
             api={api}
@@ -85,7 +86,7 @@ export function HostDetail({ hostId, ...props }) {
                 />
             }
             relations={
-                <HostTabs id={parseInt(id)} api={props.api} onDetailSelected={setSub}/>
+                <HostTabs id={parseInt(id)} api={props.api} onDetailSelected={setSub} />
             }
         />
     );

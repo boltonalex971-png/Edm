@@ -10,9 +10,11 @@ namespace Microprojects.Edm.Cache
 {
     public abstract class CacheBase : ICache
     {
-        protected TimeSpan DefaultExpiry { get; } = TimeSpan.FromMinutes(10);
+        protected TimeSpan DefaultExpiry { get; } = TimeSpan.FromDays(10);
 
         public abstract string Get(string key);
+
+        public abstract Task<IEnumerable<T>> GetRangeAsync<T>(string key, int start, int stop, Func<Task<IEnumerable<T>>> locator, TimeSpan expireAt);
 
         public abstract T Set<T>(string key, T record, TimeSpan expireAt);
 
@@ -20,15 +22,22 @@ namespace Microprojects.Edm.Cache
 
         public abstract long RemoveMany(string wildcard);
 
-        public abstract T Pop<T>();
+        public T Pop<T>() => Pop<T>(typeof(T).FullName);
 
-        public abstract bool Push<T>(T record);
+        public abstract T Pop<T>(string key);
+
+        public bool Push<T>(T record) => Push(record.GetType().FullName, record);
+
+        public abstract bool Push<T>(string key, T record);
 
         //public abstract IObservable<T> Subscribe<T>();
 
         //public abstract void Unsubscribe();
 
         protected abstract IEnumerable<string> GetKeys(string wildcard);
+
+        public Task<IEnumerable<T>> GetRangeAsync<T>(string key, Func<Task<IEnumerable<T>>> locator, TimeSpan expireAt) =>
+            GetRangeAsync<T>(key, 0, -1, locator, expireAt);
 
         public T Get<T>(string key)
         {
@@ -84,6 +93,21 @@ namespace Microprojects.Edm.Cache
             var keys = GetKeys(wildcard);
             var result = keys.Select(k => Get(k.ToString())).ToList();
             return result;
+        }
+
+        public virtual IDisposable Subscribe<T>(string channel, Action<T> onNext)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual IDisposable Subscribe(string channel, Action<object> onNext)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual Task<long> Publish<T>(string channel, T message)
+        {
+            throw new NotImplementedException();
         }
     }
 }

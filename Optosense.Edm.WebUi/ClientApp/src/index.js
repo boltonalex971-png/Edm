@@ -11,11 +11,9 @@ const rootElement = document.getElementById('root');
 
 ReactDOM.render(
     <BrowserRouter basename={baseUrl}>
-        <ApiContext.Provider value={window.location.origin}>
-            <App />
-        </ApiContext.Provider>
-  </BrowserRouter>,
-  rootElement);
+        <App />
+    </BrowserRouter>,
+    rootElement);
 
 registerServiceWorker();
 

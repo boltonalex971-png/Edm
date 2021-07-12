@@ -8,6 +8,8 @@ using System.Runtime.Loader;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microprojects.Edm;
+using Microprojects.Edm.Cache;
+using Microprojects.Edm.Cache.Redis;
 using Microprojects.Edm.Log;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Cors.Infrastructure;
@@ -77,20 +79,17 @@ namespace Optosense.Edm.WebUi
                 options.UseSqlServer(Configuration.GetConnectionString("Edm"));
             });
 
+            services.InjectDeps(Configuration);
             services.AddEdmCommands(c => c
                 .SetPluginAssemblies(typeof(RemoteCommands).Assembly, typeof(StartDeviceCommand).Assembly)
                 .SetDefaultLogger(new ConsoleLogger())
             );
-
-
-            services.InjectDeps();
             services.AddPlugins(config =>
             {
                 config.BaseDirectory = AppContext.BaseDirectory;
                 config.PluginsPath = Configuration.GetSection("Edm:Assemblies").GetChildren().Select(c => c.Value);
                 Console.WriteLine($"Edm plugins base directory is '{config.PluginsPath}'");
             });
-
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -144,15 +143,18 @@ namespace Optosense.Edm.WebUi
                 }
             });
         }
-
     }
 
     static class Extensions
     {
 
-        public static IServiceCollection InjectDeps(this IServiceCollection services)
+        public static IServiceCollection InjectDeps(this IServiceCollection services, IConfiguration configuration)
         {
+            services.AddSingleton<ICache>(new RedisCache(configuration["Edm:Cache:Default:ConnectionString"]));
+
+            services.AddSingleton<IEdmContextFactory>(new EdmContextFactory(configuration.GetConnectionString("Edm")));
             services.AddScoped<IEdmContext>(provider => provider.GetService<EdmContext>());
+            services.AddTransient<IOwnedEdmContext>(provider => provider.GetService<EdmContext>());
 
             services.AddTransient<IRemoteCommands, RemoteCommands>();
 

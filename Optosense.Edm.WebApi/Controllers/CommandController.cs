@@ -13,10 +13,17 @@ namespace Optosense.WebApi.Controllers
     [Route("[controller]")]
     public class CommandController : ControllerBase
     {
+        private ICommandContainer CommandManager { get; }
+
+        public CommandController(ICommandContainer container) 
+        {
+            CommandManager = container;
+        }
+
         [HttpPost]
         public async Task<ResponseData> Post(CommandData parameters)
         {
-            var result = await CommandManager.GetInstance().Execute(parameters);
+            var result = await CommandManager.ExecuteAsync(parameters);
             return result;
         }
     }
