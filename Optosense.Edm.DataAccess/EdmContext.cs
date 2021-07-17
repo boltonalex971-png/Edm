@@ -15,6 +15,7 @@ namespace Optosense.Edm.DataAccess
         public DbSet<AuditZone> AuditZones { get; set; }
         public DbSet<AuditCriterion> AuditCriteria { get; set; }
         public DbSet<Device> Devices { get; set; }
+        public DbSet<Hierarchy> Hierarchies { get; set; }
         public DbSet<Host> Hosts { get; set; }
         public DbSet<HostDevice> HostDevices { get; set; }
         public DbSet<Operation> Operations { get; set; }

@@ -9,6 +9,8 @@ using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Domain.Models;
 using Optosense.Edm.Plugins;
 using Optosense.Edm.Webui.Models;
+using Optosense.Edm.WebUi.Models;
+using Optosense.Edm.WebUi.Utils;
 
 namespace Optosense.Edm.WebUi.Controllers
 {
@@ -19,13 +21,15 @@ namespace Optosense.Edm.WebUi.Controllers
         private readonly ILogger<ProcessesController> _logger;
         private readonly IMapper _mapper;
         private readonly IProcessService _processService;
+        private readonly IHierarchyService _hierarchyService;
         private readonly IPluginContainer _plugins;
 
-        public ProcessesController(ILogger<ProcessesController> logger, IMapper mapper, IProcessService processService, IPluginContainer plugins)
+        public ProcessesController(ILogger<ProcessesController> logger, IMapper mapper, IProcessService processService, IHierarchyService hierarchyService, IPluginContainer plugins)
         {
             _logger = logger;
             _mapper = mapper;
             _processService = processService;
+            _hierarchyService = hierarchyService;
             _plugins = plugins;
         }
 
@@ -75,8 +79,38 @@ namespace Optosense.Edm.WebUi.Controllers
         public async Task<Process> Create([FromBody] Process process)
         {
             process.Id = 0;
+            // If hierarchy is not defined select default root
+            process.HierarchyId = process.HierarchyId == 0 ? (await _hierarchyService.GetRoot(HierarchyType.Process)).Id : process.HierarchyId;
             var result = await _processService.Save(process);
             return result;
+        }
+
+        [HttpPut("{id:int}/parent")]
+        public async Task<Process> ChangeParent(int id, [FromBody] HierarchyItemViewModel parent)
+        {
+            var result = await _processService.ChangeParent(id, parent.Id);
+            return result;
+        }
+
+        [HttpGet("hierarchy")]
+        public async Task<IEnumerable<HierarchyItemViewModel>> GetHierarchy()
+        {
+            var processes = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(await _processService.GetAll());
+            var folders = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(await _hierarchyService.GetTree(HierarchyType.Process));
+            //var expanded = _cache.RestoreMany<TreeExpanedState>(UiCacheHelper.OwnerKey(this), () => HierarchyType.Host);
+            //foreach (var folder in folders)
+            //{
+            //    folder.expanded = expanded?.Any(e => e.Id == folder.Id) ?? false;
+            //}
+
+            var tree = folders.Concat(processes).ToTree().ToList();
+            // always expand root if just one
+            if (tree.Count() == 1)
+            {
+                tree.First().expanded = true;
+            }
+
+            return tree;
         }
 
         #region profiles

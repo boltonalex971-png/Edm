@@ -16,10 +16,28 @@ namespace Optosense.Edm.Core.Services
     public class DeviceService : ServiceBase<Device>, IDeviceService
     {
         private IPluginContainer _plugins;
+        private IHierarchyService _hierarchyService;
+
         protected DeviceService() { }
-        public DeviceService(IEdmContext db, IPluginContainer plugins) : base(db)
+
+        public DeviceService(IEdmContext db, IHierarchyService hierarchyService, IPluginContainer plugins) : base(db)
         {
             _plugins = plugins;
+            _hierarchyService = hierarchyService;
+        }
+
+        public async Task<Device> ChangeParent(int id, int newParentId)
+        {
+            var device = await Db.Devices.FindAsync(id);
+            var folder = await _hierarchyService.Get(newParentId);
+            if (folder == null)
+            {
+                throw new Microprojects.Edm.EdmException($"Hierarchy folder with Id {newParentId} not found");
+            }
+
+            device.HierarchyId = folder.Id;
+            await Db.SaveChangesAsync();
+            return device;
         }
 
         public override async Task<Device> Get(int id)

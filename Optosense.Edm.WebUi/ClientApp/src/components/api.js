@@ -8,7 +8,8 @@ const api = {
     workplaces: `${baseUrl}/api/workplaces`,
     operations: `${baseUrl}/api/operations`,
     plugins: `${baseUrl}/api/plugins`,
-    profiles: `${baseUrl}/api/profiles`
+    profiles: `${baseUrl}/api/profiles`,
+    hierarchies: `${baseUrl}/api/hierarchies`
 };
 
 export default api;

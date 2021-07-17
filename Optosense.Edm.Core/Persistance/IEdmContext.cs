@@ -14,6 +14,7 @@ namespace Optosense.Edm.Core.Persistance
         DbSet<AuditZone> AuditZones { get; set; }
         DbSet<AuditCriterion> AuditCriteria { get; set; }
         DbSet<Device> Devices { get; set; }
+        DbSet<Hierarchy> Hierarchies { get; set; }
         DbSet<Host> Hosts { get; set; }
         DbSet<HostDevice> HostDevices { get; set; }
         DbSet<Operation> Operations { get; set; }

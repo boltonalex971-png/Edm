@@ -18,9 +18,28 @@ namespace Optosense.Edm.Core.Services
         //protected IIstpContextFactory ContextFactory { get; set; }
         #endregion
 
+        private IHierarchyService _hierarchyService;
+
         public WorkplaceService() { }
 
-        public WorkplaceService(IEdmContext db) : base(db) { }
+        public WorkplaceService(IEdmContext db, IHierarchyService hierarchyService) : base(db)
+        {
+            _hierarchyService = hierarchyService;
+        }
+
+        public async Task<Workplace> ChangeParent(int id, int newParentId)
+        {
+            var workplace = await Db.Workplaces.FindAsync(id);
+            var folder = await _hierarchyService.Get(newParentId);
+            if (folder == null)
+            {
+                throw new Microprojects.Edm.EdmException($"Hierarchy folder with Id {newParentId} not found");
+            }
+
+            workplace.HierarchyId = folder.Id;
+            await Db.SaveChangesAsync();
+            return workplace;
+        }
 
         #region devices
         public async Task<IEnumerable<WorkplaceHostDevice>> GetDevices(int workspaceId)

@@ -16,13 +16,29 @@ namespace Optosense.Edm.Core.Services
         #region injected properties
         //protected IIstpContextFactory ContextFactory { get; set; }
         private IProfileService _profileService { get; set; }
+        private IHierarchyService _hierarchyService;
         #endregion
 
         public ProcessService() { }
 
-        public ProcessService(IEdmContext db, IProfileService profileService) : base(db) 
+        public ProcessService(IEdmContext db, IProfileService profileService, IHierarchyService hierarchyService) : base(db) 
         {
             _profileService = profileService;
+            _hierarchyService = hierarchyService;
+        }
+
+        public async Task<Process> ChangeParent(int id, int newParentId)
+        {
+            var process = await Db.Processes.FindAsync(id);
+            var folder = await _hierarchyService.Get(newParentId);
+            if (folder == null)
+            {
+                throw new Microprojects.Edm.EdmException($"Hierarchy folder with Id {newParentId} not found");
+            }
+
+            process.HierarchyId = folder.Id;
+            await Db.SaveChangesAsync();
+            return process;
         }
 
         public override async Task<Process> Delete(int id)

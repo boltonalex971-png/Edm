@@ -3,16 +3,17 @@ import { useHistory, useRouteMatch } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import styled from 'styled-components';
 import { Alert, InputGroup, InputGroupAddon, Input as BootInput, InputGroupText } from 'reactstrap';
-import { TreeView } from '@progress/kendo-react-treeview';
+import { TreeView, TreeViewDragClue, moveTreeViewItem, TreeViewDragAnalyzer } from '@progress/kendo-react-treeview';
 import { useGet } from './hooks/hooks';
 import { Loading } from './utils/Utils';
 import { Button } from '@progress/kendo-react-buttons';
 import { Card, CardBody, CardHeader } from '@progress/kendo-react-layout';
-import './TreeViewMaster.css';
+import axios from 'axios';
+import api from './api';
 
 TreeViewMaster.propTypes = {
     api: PropTypes.string,
-    onItemClick: PropTypes.func
+    onCurrentRootChanged: PropTypes.func
 }
 
 const StyledTreeView = styled(TreeView)`
@@ -25,9 +26,63 @@ export function TreeViewMaster(props) {
     _renderFunc = setRender;
     const history = useHistory();
     const { url } = useRouteMatch();
-    const [[data], loading, error] = useGet(props.api, [render]);
+    const [[data, setData], loading, error] = useGet(`${props.api}/hierarchy`, [render]);
+    const dragClue = React.useRef();
     const [filter, setFilter] = useState('');
     const filteredData = data && data.filter((el) => el.name.toUpperCase().includes(filter.toUpperCase()));
+
+    const onItemSelected = (e) => {
+        props.onCurrentRootChanged && props.onCurrentRootChanged(e.item);
+        if (e.item.isNode) {
+            history.push(`${url}/folder/${e.item.id}`);
+        } else {
+            history.push(`${url}/${e.item.id}`);
+        }
+    };
+
+    const getClueClassName = (event) => {
+        const eventAnalyzer = new TreeViewDragAnalyzer(event).init();
+        const { itemHierarchicalIndex: itemIndex } = eventAnalyzer.destinationMeta;
+        const targetIndexes = itemIndex && itemIndex.split('_').map(i => parseInt(i));
+        const targetItem = targetIndexes && targetIndexes.reduce((acc, curr) => acc.items[curr], { items: data });
+
+        if (eventAnalyzer.isDropAllowed && targetItem.isNode && targetItem.id !== event.item.parentId && targetItem.id !== event.item.id) {
+            return 'k-i-plus';
+        }
+
+        return "k-i-cancel";
+    };
+
+    const onItemDragOver = (event) => {
+        dragClue.current.show(
+            event.pageY - 150,
+            event.pageX,
+            event.item.name,
+            getClueClassName(event)
+        );
+    };
+
+    const onItemDragEnd = (event) => {
+        dragClue.current.hide();
+        const eventAnalyzer = new TreeViewDragAnalyzer(event).init();
+        const { itemHierarchicalIndex: itemIndex } = eventAnalyzer.destinationMeta;
+        const targetIndexes = itemIndex && itemIndex.split('_').map(i => parseInt(i));
+        const targetItem = targetIndexes && targetIndexes.reduce((acc, curr) => acc.items[curr], { items: data });
+
+        if (eventAnalyzer.isDropAllowed && targetItem.isNode && targetItem.id !== event.item.parentId && targetItem.id !== event.item.id) {
+            const updatedTree = moveTreeViewItem(
+                event.itemHierarchicalIndex,
+                data,
+                eventAnalyzer.getDropOperation(),
+                eventAnalyzer.destinationMeta.itemHierarchicalIndex
+            );
+            event.item.parentId = targetItem.id;
+            const link = event.item.isNode ? api.hierarchies : props.api;
+            axios.put(`${link}/${event.item.id}/parent`, targetItem);
+            setData(updatedTree);
+        }
+    };
+
     return (
         <>
             <Card style={{ backgroundColor: 'rgba(248,249,250,1)' }}>
@@ -43,29 +98,69 @@ export function TreeViewMaster(props) {
                             onChange={(e) => setFilter(e.target.value)}
                         />
                     </InputGroup>
-                    <Button icon='add' look='clear' title='Add new' onClick={() => history.push(`${url}/0`)} style={{ justifySelf: 'end' }} />
+                    <Button icon='folder-add' look='clear' title='Add new folder'
+                        onClick={() => history.push(`${url}/folder/0`)} style={{ justifySelf: 'end' }}
+                    />
+                    <Button icon='file-add' look='clear' title='Add new item'
+                        onClick={() => history.push(`${url}/0`)} style={{ justifySelf: 'end' }}
+                    />
                 </CardHeader>
                 <CardBody>
                     {error ?
                         <Alert color='danger' style={{ display: 'flex', justifyContent: 'space-around' }}>{error}</Alert> :
                         loading ?
                             <Loading /> :
-                            <StyledTreeView 
-                                focusIdField='id'
-                                //item={(el) => (<span key={el.item.id} className={el.item.items ? "font-weight-bolder" : ""}>{el.item.name}</span>)}
-                                textField='name'
-                                expandIcons
-                                data={filteredData}
-                                onItemClick={(e) => history.push(`${url}/${e.item.id}`)}
-                                onExpandChange={(e) => {
-                                    e.item.expanded = !e.item.expanded;
-                                }}
-                            />
+                            <>
+                                <StyledTreeView
+                                    item={TreeItem}
+                                    //focusIdField='id'
+                                    //item={(el) => (<span key={el.item.id} className={el.item.items ? "font-weight-bolder" : ""}>{el.item.name}</span>)}
+                                    textField='name'
+                                    expandIcons={true}
+                                    data={filteredData}
+                                    onItemClick={onItemSelected}
+                                    onExpandChange={(e) => {
+                                        e.item.expanded = !e.item.expanded;
+                                    }}
+                                    draggable={true}
+                                    onItemDragOver={onItemDragOver}
+                                    onItemDragEnd={onItemDragEnd}
+                                />
+                                <TreeViewDragClue ref={dragClue} />
+                            </>
                     }
                 </CardBody>
             </Card>
         </>
     );
+}
+
+const TreeItem = (props) => {
+    return (
+        <>
+            <span className={iconClassName(props.item)} />
+            <span className={props.item.isNode ? 'font-weight-bold' : ''}>{props.item.name}</span>
+        </>
+    );
+};
+
+function iconClassName({ isNode }) {
+    if (isNode) {
+        return "k-icon k-i-folder";
+    } else {
+        return "k-icon k-i-file";
+    }
+}
+
+function getSiblings(itemIndex, data) {
+    let result = data;
+    const indices = itemIndex.split('_').map((index) => Number(index));
+
+    for (let i = 0; i < indices.length - 1; i++) {
+        result = result[indices[i]].items;
+    }
+
+    return result;
 }
 
 let _render, _renderFunc;

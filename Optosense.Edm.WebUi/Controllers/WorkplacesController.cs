@@ -10,6 +10,8 @@ using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Domain.Models;
 using Optosense.Edm.Plugins;
 using Optosense.Edm.Webui.Models;
+using Optosense.Edm.WebUi.Models;
+using Optosense.Edm.WebUi.Utils;
 
 namespace Optosense.Edm.WebUi.Controllers
 {
@@ -20,13 +22,15 @@ namespace Optosense.Edm.WebUi.Controllers
         private readonly ILogger<WorkplacesController> _logger;
         private readonly IMapper _mapper;
         private readonly IWorkplaceService _workplaceService;
+        private readonly IHierarchyService _hierarchyService;
         private readonly IPluginContainer _plugins;
 
-        public WorkplacesController(ILogger<WorkplacesController> logger, IMapper mapper, IWorkplaceService workplaceService, IPluginContainer plugins)
+        public WorkplacesController(ILogger<WorkplacesController> logger, IMapper mapper, IWorkplaceService workplaceService, IHierarchyService hierarchyService, IPluginContainer plugins)
         {
             _logger = logger;
             _mapper = mapper;
             _workplaceService = workplaceService;
+            _hierarchyService = hierarchyService;
             _plugins = plugins;
         }
 
@@ -76,8 +80,38 @@ namespace Optosense.Edm.WebUi.Controllers
         public async Task<Workplace> Create([FromBody] Workplace workplace)
         {
             workplace.Id = 0;
+            // If hierarchy is not defined select default root
+            workplace.HierarchyId = workplace.HierarchyId == 0 ? (await _hierarchyService.GetRoot(HierarchyType.Workplace)).Id : workplace.HierarchyId;
             var result = await _workplaceService.Save(workplace);
             return result;
+        }
+
+        [HttpPut("{id:int}/parent")]
+        public async Task<Workplace> ChangeParent(int id, [FromBody] HierarchyItemViewModel parent)
+        {
+            var result = await _workplaceService.ChangeParent(id, parent.Id);
+            return result;
+        }
+
+        [HttpGet("hierarchy")]
+        public async Task<IEnumerable<HierarchyItemViewModel>> GetHierarchy()
+        {
+            var workplaces = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(await _workplaceService.GetAll());
+            var folders = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(await _hierarchyService.GetTree(HierarchyType.Workplace));
+            //var expanded = _cache.RestoreMany<TreeExpanedState>(UiCacheHelper.OwnerKey(this), () => HierarchyType.Host);
+            //foreach (var folder in folders)
+            //{
+            //    folder.expanded = expanded?.Any(e => e.Id == folder.Id) ?? false;
+            //}
+
+            var tree = folders.Concat(workplaces).ToTree().ToList();
+            // always expand root if just one
+            if (tree.Count() == 1)
+            {
+                tree.First().expanded = true;
+            }
+
+            return tree;
         }
 
         #region devices

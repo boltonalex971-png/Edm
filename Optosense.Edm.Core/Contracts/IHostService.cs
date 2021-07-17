@@ -9,6 +9,7 @@ namespace Optosense.Edm.Core.Contracts
 {
     public interface IHostService : IGenericService<Host>
     {
+        Task<Host> ChangeParent(int id, int newParentId);
         Task<IEnumerable<HostDevice>> GetDevices(int hostId);
         Task<HostDevice> AttachDevice(HostDevice hostDevice);
         Task<IEnumerable<Device>> GetAvailableDevices();

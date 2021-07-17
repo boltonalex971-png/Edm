@@ -19,12 +19,28 @@ namespace Optosense.Edm.Core.Services
         #endregion
 
         private IDeviceService _deviceService;
+        private IHierarchyService _hierarchyService;
 
         protected HostService() { }
 
-        public HostService(IEdmContext db, IDeviceService deviceService) : base(db) 
+        public HostService(IEdmContext db, IDeviceService deviceService, IHierarchyService hierarchyService) : base(db) 
         {
             _deviceService = deviceService;
+            _hierarchyService = hierarchyService;
+        }
+
+        public async Task<Host> ChangeParent(int id, int newParentId)
+        {
+            var host = await Db.Hosts.FindAsync(id);
+            var folder = await _hierarchyService.Get(newParentId);
+            if (folder == null)
+            {
+                throw new Microprojects.Edm.EdmException($"Hierarchy folder with Id {newParentId} not found");
+            }
+
+            host.HierarchyId = folder.Id;
+            await Db.SaveChangesAsync();
+            return host;
         }
 
         #region devices

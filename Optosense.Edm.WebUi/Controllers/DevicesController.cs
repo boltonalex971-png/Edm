@@ -9,6 +9,8 @@ using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Domain.Models;
 using Optosense.Edm.Plugins;
 using Optosense.Edm.Webui.Models;
+using Optosense.Edm.WebUi.Models;
+using Optosense.Edm.WebUi.Utils;
 
 namespace Optosense.Edm.WebUi.Controllers
 {
@@ -18,14 +20,16 @@ namespace Optosense.Edm.WebUi.Controllers
     {
         private readonly ILogger<DevicesController> _logger;
         private readonly IDeviceService _deviceService;
+        private readonly IHierarchyService _hierarchyService;
         private readonly IPluginContainer _plugins;
         private readonly IMapper _mapper;
 
-        public DevicesController(ILogger<DevicesController> logger, IMapper mapper, IDeviceService deviceService, IPluginContainer pluginContainer)
+        public DevicesController(ILogger<DevicesController> logger, IMapper mapper, IDeviceService deviceService, IHierarchyService hierarchyService, IPluginContainer pluginContainer)
         {
             _logger = logger;
             _mapper = mapper;
             _deviceService = deviceService;
+            _hierarchyService = hierarchyService;
             _plugins = pluginContainer;
         }
 
@@ -74,8 +78,38 @@ namespace Optosense.Edm.WebUi.Controllers
         public async Task<Device> Create([FromBody] Device device)
         {
             device.Id = 0;
+            // If hierarchy is not defined select default root
+            device.HierarchyId = device.HierarchyId == 0 ? (await _hierarchyService.GetRoot(HierarchyType.Device)).Id : device.HierarchyId;
             var result = await _deviceService.Save(device);
             return result;
+        }
+
+        [HttpPut("{id:int}/parent")]
+        public async Task<Device> ChangeParent(int id, [FromBody] HierarchyItemViewModel parent)
+        {
+            var result = await _deviceService.ChangeParent(id, parent.Id);
+            return result;
+        }
+
+        [HttpGet("hierarchy")]
+        public async Task<IEnumerable<HierarchyItemViewModel>> GetHierarchy()
+        {
+            var devices = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(await _deviceService.GetAll());
+            var folders = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(await _hierarchyService.GetTree(HierarchyType.Device));
+            //var expanded = _cache.RestoreMany<TreeExpanedState>(UiCacheHelper.OwnerKey(this), () => HierarchyType.Host);
+            //foreach (var folder in folders)
+            //{
+            //    folder.expanded = expanded?.Any(e => e.Id == folder.Id) ?? false;
+            //}
+
+            var tree = folders.Concat(devices).ToTree().ToList();
+            // always expand root if just one
+            if (tree.Count() == 1)
+            {
+                tree.First().expanded = true;
+            }
+
+            return tree;
         }
 
         [HttpGet("drivers")]

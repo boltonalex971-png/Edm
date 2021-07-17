@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Optosense.Edm.DataAccess;
 
 namespace Optosense.Edm.DataAccess.Migrations
 {
     [DbContext(typeof(EdmContext))]
-    partial class EdmContextModelSnapshot : ModelSnapshot
+    [Migration("20210716162347_DeviceHierarchy")]
+    partial class DeviceHierarchy
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

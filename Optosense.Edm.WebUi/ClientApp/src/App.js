@@ -7,6 +7,7 @@ import { Config } from "./components/config/Config";
 import "./custom.css";
 import '@progress/kendo-react-animation';
 import '@progress/kendo-theme-bootstrap/dist/all.css';
+import 'react-bootstrap-icons';
 import { NewOperationWizard } from "./components/operation/NewOperationWizard";
 import { Plugins } from "./components/plugins/Plugins";
 import { ApiContext } from './ApiContext';
@@ -18,7 +19,7 @@ export default function App() {
                 <Route exact path="/" component={Home} />
                 <Route path="/dashboard" component={Dashboard} />
                 <Route path="/config" component={Config} />
-                <Route path="/Plugins" component={Plugins} />
+                <Route path="/plugins" component={Plugins} />
                 <Route path="/operation">
                     <MemoryRouter>
                         <NewOperationWizard />

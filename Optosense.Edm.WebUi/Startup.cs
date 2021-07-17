@@ -160,6 +160,7 @@ namespace Optosense.Edm.WebUi
 
             services.AddTransient<IAuditService, AuditService>();
             services.AddTransient<IProcessService, ProcessService>();
+            services.AddTransient<IHierarchyService, HierarchyService>();
             services.AddTransient<IHostService, HostService>();
             services.AddTransient<IDeviceService, DeviceService>();
             services.AddTransient<IWorkplaceService, WorkplaceService>();

@@ -4,7 +4,7 @@ import { DropDownList } from '@progress/kendo-react-dropdowns';
 import { GridCell } from '@progress/kendo-react-grid';
 import { Input } from '@progress/kendo-react-inputs';
 
-export const DropDownComp = ({ ...props }) => {
+export const DropDownComp = (props) => {
     const handleChange = (e) => {
         props.onChange({
             dataItem: props.dataItem,
@@ -13,9 +13,9 @@ export const DropDownComp = ({ ...props }) => {
             value: e.target.value[props.dataItemKey]
         });
     }
-    const value = (props.data || []).find(c => c[props.dataItemKey] === props.value);
+    const value = (props.data || []).find(c => c[props.dataItemKey] === props.value) || {};
     return (
-        <DropDownList  {...props} onChange={handleChange} value={value} />
+        <DropDownList {...props} data={props.data || []} onChange={handleChange} value={value} />
     );
 }
 
@@ -25,7 +25,7 @@ DropDownComp.propTypes = {
     dataItem: PropTypes.object,
     dataItemKey: PropTypes.string,
     data: PropTypes.array,
-    value: PropTypes.object
+    value: PropTypes.any
 }
 
 export const DropDownCell = ({ getData, id, text, fieldName, fieldId, onClick, editable = true, ...props }) => {

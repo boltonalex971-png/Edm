@@ -15,6 +15,7 @@ export function Hosts() {
     const api = Api.hosts;
     return (
         <MasterDetail
+            type='host'
             api={api}
             stubMessage='Please select a host'
             detail={(
@@ -33,12 +34,13 @@ HostDetail.propTypes = {
     onChange: PropTypes.func,
     path: PropTypes.string,
     api: PropTypes.string,
-    hostId: PropTypes.number
+    hostId: PropTypes.number,
+    type: PropTypes.string
 }
 
 export function HostDetail({ hostId, ...props }) {
     let { id } = useParams();
-    id = hostId || id;
+    id = hostId || parseInt(id);
     let [sub, setSub] = useState();
     useEffect(setSub, [id]);
     let [[data, setData], loading, error] = useGet(`${props.api}/${id}`, [id]);
@@ -48,6 +50,7 @@ export function HostDetail({ hostId, ...props }) {
     return (
         <Detail {...props}
             id={id}
+            icon={<span className='k-icon k-i-calculator' title='Host' />}
             loading={loading}
             error={error}
             data={data}
@@ -64,6 +67,7 @@ export function HostDetail({ hostId, ...props }) {
             }
             editor={
                 <Editor {...props}
+                    type='host'
                     data={data}
                     setData={setData}
                     content={

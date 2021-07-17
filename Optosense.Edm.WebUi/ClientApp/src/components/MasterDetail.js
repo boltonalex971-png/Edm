@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useRouteMatch, useHistory, Switch, Route } from "react-router-dom";
+import { useRouteMatch, useHistory, Switch, Route, matchPath } from "react-router-dom";
 import PropTypes from "prop-types";
 import axios from 'axios';
 import { Card, CardHeader, CardBody, CardTitle, CardSubtitle } from '@progress/kendo-react-layout';
@@ -9,13 +9,18 @@ import { Alert } from 'reactstrap';
 import { SmartScroll, SmartScrollContent } from "./SmartScroll";
 import { TreeViewMaster, refresh } from "./TreeViewMaster";
 import { Loading, DetailStub } from "./utils/Utils";
+import api from './api';
+import { Folder } from "./config/Folder";
 
 export function reloadMaster() {
     refresh();
 }
 
+let _selectedItem;
+
 MasterDetail.propTypes = {
     card: PropTypes.func,
+    type: PropTypes.string,
     editor: PropTypes.func,
     api: PropTypes.string,
     detail: PropTypes.element,
@@ -23,12 +28,13 @@ MasterDetail.propTypes = {
 };
 
 export function MasterDetail(props) {
+    const history = useHistory();
     let { path } = useRouteMatch();
     return (
         <SmartScroll offtop={10}>
             <div style={{ flex: 1 }}>
                 <SmartScrollContent>
-                    <TreeViewMaster api={props.api} />
+                    <TreeViewMaster api={props.api} onCurrentRootChanged={(root) => (_selectedItem = root)} />
                 </SmartScrollContent>
             </div>
             <div style={{ flex: 5, marginLeft: '1rem' }}>
@@ -36,6 +42,15 @@ export function MasterDetail(props) {
                     <Switch>
                         <Route exact path={path}>
                             <DetailStub message={props.stubMessage} />
+                        </Route>
+                        <Route path={`${path}/folder/:id`}>
+                            <Folder
+                                api={api.hierarchies}
+                                type={props.type}
+                                path={path}
+                                onChange={() => reloadMaster()}
+                                onClose={() => history.push(path)}
+                            />
                         </Route>
                         <Route path={`${path}/:id`}>
                             {props.detail}
@@ -49,6 +64,7 @@ export function MasterDetail(props) {
 
 Detail.propTypes = {
     card: PropTypes.node,
+    icon: PropTypes.element,
     editor: PropTypes.node,
     relations: PropTypes.node,
     subDetail: PropTypes.element,
@@ -78,73 +94,85 @@ export function Detail(props) {
     editMode = editMode || props.id === 0;
     return (
         props.error ? <Alert color='danger' style={{ display: 'flex', justifyContent: 'space-around' }}>{props.error}</Alert> :
-        <>
+            <>
                 <Card>
                     {(props.loading && props.id) && <CardBody><Loading /></CardBody>}
-                {!(props.loading && props.id) &&
-                    <>
-                        <CardHeader style={{ position: "sticky", top: 0, display: 'flex', justifyContent: "space-between" }}>
-                            <div>
-                                <CardTitle>{props.data.name}</CardTitle>
-                                <CardSubtitle>{props.data.description}</CardSubtitle>
-                            </div>
-                            <div style={{ display: 'flex', flexWrap: 'nowrap' }}>
-                                {props.editor &&
+                    {!(props.loading && props.id) &&
+                        <>
+                            <CardHeader style={{ position: "sticky", top: 0, display: 'flex', justifyContent: "space-between" }}>
+                                <div style={{ display: 'flex' }}>
+                                    <div className='mr-2'>
+                                        {props.icon}
+                                    </div>
+                                    <div>
+
+                                        <CardTitle>{props.data.name}</CardTitle>
+                                        <CardSubtitle>{props.data.description}</CardSubtitle>
+                                    </div>
+                                </div>
+                                <div style={{ display: 'flex', flexWrap: 'nowrap' }}>
+                                    {props.editor &&
+                                        <ButtonGroup>
+                                            {props.editable &&
+                                                <Button
+                                                    title={editMode ? 'View mode' : 'Edit mode'}
+                                                    icon={editMode ? "eye" : "edit"}
+                                                    look='clear'
+                                                    onClick={() => setEditMode(!editMode)}
+                                                />
+                                            }
+                                            {props.copyable &&
+                                                <Button
+                                                    title='Copy'
+                                                    look='clear'
+                                                    icon='copy'
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        let data = { ...props.data, id: 0, name: `${props.data.name} (Copy)` };
+                                                        axios.post(`${props.api}`, data)
+                                                            .then((response) => {
+                                                                props.onChange();
+                                                                history.push(`${props.path}/${response.data.id}`);
+                                                            });
+                                                    }}
+                                                />
+                                            }
+                                            {props.deletable &&
+                                                <Button
+                                                    title='Delete'
+                                                    look='clear'
+                                                    icon='delete'
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        if (window.confirm('Confirm deleting entity')) {
+                                                            axios.delete(`${props.api}/${props.data.id}`)
+                                                                .then(() => {
+                                                                    props.onChange();
+                                                                    history.push(props.path);
+                                                                });
+                                                        }
+                                                    }}
+                                                />
+                                            }
+                                        </ButtonGroup>
+                                    }
+                                    {(props.onUp || props.onClose) && <div className='mx-2'></div>}
                                     <ButtonGroup>
-                                        <Button
-                                            title={editMode ? 'View mode' : 'Edit mode'}
-                                            icon={editMode ? "eye" : "edit"}
-                                            look='clear'
-                                            onClick={() => setEditMode(!editMode)}
-                                        />
-                                        <Button
-                                            title='Copy'
-                                            look='clear'
-                                            icon='copy'
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                let data = { ...props.data, id: 0, name: `${props.data.name} (Copy)` };
-                                                axios.post(`${props.api}`, data)
-                                                    .then((response) => {
-                                                        props.onChange();
-                                                        history.push(`${props.path}/${response.data.id}`);
-                                                    });
-                                            }}
-                                        />
-                                        <Button
-                                            title='Delete'
-                                            look='clear'
-                                            icon='delete'
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                if (window.confirm('Confirm deleting entity')) {
-                                                    axios.delete(`${props.api}/${props.data.id}`)
-                                                        .then(() => {
-                                                            props.onChange();
-                                                            history.push(props.path);
-                                                        });
-                                                }
-                                            }}
-                                        />
+                                        {props.onUp && <Button title='Move Up' look='clear' icon='arrow-up' onClick={props.onUp} />}
+                                        {props.onClose && < Button title='Close' look='clear' icon='close' onClick={props.onClose} />}
                                     </ButtonGroup>
-                                }
-                                {(props.onUp || props.onClose) && <div className='mx-2'></div>}
-                                <ButtonGroup>
-                                    {props.onUp && <Button title='Move Up' look='clear' icon='arrow-up' onClick={props.onUp} />}
-                                    {props.onClose && < Button title='Close' look='clear' icon='close' onClick={props.onClose} />}
-                                </ButtonGroup>
-                            </div>
-                        </CardHeader>
-                        <CardBody>
-                            {(editMode && props.editor) || props.card}
-                            {!editMode && props.relations}
-                        </CardBody>
-                    </>
-                }
-            </Card>
-            <div className="mt-2"></div>
-            {props.subDetail}
-        </>
+                                </div>
+                            </CardHeader>
+                            <CardBody>
+                                {(editMode && props.editor) || props.card}
+                                {!editMode && props.relations}
+                            </CardBody>
+                        </>
+                    }
+                </Card>
+                <div className="mt-2"></div>
+                {props.subDetail}
+            </>
     );
 }
 
@@ -162,29 +190,29 @@ export function Info(props) {
 
 Editor.propTypes = {
     ...Info.propTypes,
-    setData: PropTypes.func
+    setData: PropTypes.func,
+    type: PropTypes.string
 }
 
 export function Editor(props) {
     const history = useHistory();
-    // const handleDelete = () => {
-    //     axios.delete(`${props.api}/${props.data.id}`)
-    //         .then(() => { props.onChange(); history.push(props.path) });
-    // };
     const handleSubmit = (data) => {
-        data.id ?
+
+        if (data.id) {
             axios.put(`${props.api}/${props.data.id}`, data)
                 .then((response) => {
                     props.onChange && props.onChange();
                     props.setData(response.data);
                 })
-            :
-            axios.post(`${props.api}`, data)
+        } else {
+            const parentId = _selectedItem ? (_selectedItem.isNode ? _selectedItem.id : _selectedItem.parentId) : 0;
+            axios.post(`${props.api}`, { ...data, type: props.type, parentId: parentId, hierarchyId: parentId })
                 .then((response) => {
                     props.onChange && props.onChange();
                     props.setData(response.data);
-                    history.push(`${props.path}/${response.data.id}`);
+                    history.push(`${props.path}${response.data.isNode ? '/folder' : ''}/${response.data.id}`);
                 });
+        }
     };
 
     return (
@@ -206,31 +234,6 @@ export function Editor(props) {
                         >
                             Save
                         </Button>
-                        {/* <ButtonToolbar>
-                            <Button
-                                title='Copy'
-                                icon='copy'
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    formRenderProps.onChange('name', { value: `${formRenderProps.valueGetter('name')} (Copy)` });
-                                    formRenderProps.onChange('id', { value: 0 });
-                                    formRenderProps.onSubmit();
-                                }}
-                            >
-                                Copy
-                            </Button>
-                            <Button
-                                title='Delete'
-                                look='bare'
-                                icon='delete'
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    handleDelete();
-                                }}
-                            >
-                                Delete
-                            </Button>
-                        </ButtonToolbar> */}
                     </div>
                 </ FormElement>
             )}

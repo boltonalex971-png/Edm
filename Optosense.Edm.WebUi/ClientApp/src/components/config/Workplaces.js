@@ -10,16 +10,19 @@ import { WorkplaceTabs } from './workplace/WorkplaceTabs';
 import Api from '../api';
 
 export function Workplaces() {
+    const type = 'workplace';
     let { path } = useRouteMatch();
     const history = useHistory();
     const api = Api.workplaces;
     return (
         <MasterDetail
+            type={type}
             api={api}
             path={path}
             stubMessage='Please select a workplace'
             detail={(
                 <WorkplaceDetail
+                    type={type}
                     api={api}
                     path={path}
                     onChange={() => reloadMaster()}
@@ -33,11 +36,14 @@ export function Workplaces() {
 WorkplaceDetail.propTypes = {
     onChange: PropTypes.func,
     path: PropTypes.string,
-    api: PropTypes.string
+    api: PropTypes.string,
+    workplaceId: PropTypes.number,
+    type: PropTypes.string
 }
 
-export function WorkplaceDetail(props) {
+export function WorkplaceDetail({ workplaceId, ...props }) {
     let { id } = useParams();
+    id = workplaceId || parseInt(id);
     let [[data, setData], loading, error] = useGet(`${props.api}/${id}`, [id]);
     let [sub, setSub] = useState();
     useEffect(setSub, [id]);
@@ -47,6 +53,7 @@ export function WorkplaceDetail(props) {
     return (
         <Detail {...props}
             id={id}
+            icon={<span className='k-icon k-i-cogs' title='Workplace' />}
             loading={loading}
             error={error}
             data={data}

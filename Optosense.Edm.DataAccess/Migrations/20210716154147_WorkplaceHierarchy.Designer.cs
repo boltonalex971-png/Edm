@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Optosense.Edm.DataAccess;
 
 namespace Optosense.Edm.DataAccess.Migrations
 {
     [DbContext(typeof(EdmContext))]
-    partial class EdmContextModelSnapshot : ModelSnapshot
+    [Migration("20210716154147_WorkplaceHierarchy")]
+    partial class WorkplaceHierarchy
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -119,9 +121,6 @@ namespace Optosense.Edm.DataAccess.Migrations
                     b.Property<Guid>("DriverGuid")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("HierarchyId")
-                        .HasColumnType("int");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -132,8 +131,6 @@ namespace Optosense.Edm.DataAccess.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("HierarchyId");
 
                     b.ToTable("Devices");
                 });
@@ -667,17 +664,6 @@ namespace Optosense.Edm.DataAccess.Migrations
                         .IsRequired();
 
                     b.Navigation("Audit");
-                });
-
-            modelBuilder.Entity("Optosense.Edm.Domain.Models.Device", b =>
-                {
-                    b.HasOne("Optosense.Edm.Domain.Models.Hierarchy", "Hierarchy")
-                        .WithMany()
-                        .HasForeignKey("HierarchyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Hierarchy");
                 });
 
             modelBuilder.Entity("Optosense.Edm.Domain.Models.Hierarchy", b =>

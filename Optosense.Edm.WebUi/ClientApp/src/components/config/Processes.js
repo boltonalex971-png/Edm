@@ -12,16 +12,19 @@ import { ProcessTabs } from './process/ProcessTabs';
 import { DropDownComp } from '../DropDownCell';
 
 export function Processes() {
+    const type = 'process';
     let { path } = useRouteMatch();
     const history = useHistory();
     const api = Api.processes;
     return (
         <MasterDetail
+            type={type}
             api={api}
             path={path}
             stubMessage='Please select a process'
             detail={
                 <ProcessDetail
+                    type={type}
                     api={api}
                     path={path}
                     onChange={() => reloadMaster()}
@@ -36,23 +39,25 @@ ProcessDetail.propTypes = {
     onChange: PropTypes.func,
     path: PropTypes.string,
     api: PropTypes.string,
-    processId: PropTypes.number
+    processId: PropTypes.number,
+    type: PropTypes.string
 }
 
 export function ProcessDetail({ processId, ...props }) {
     let { id } = useParams();
-    id = processId || id;
+    id = processId || parseInt(id);
     let [sub, setSub] = useState();
     useEffect(setSub, [id]);
     const [[ops]] = useGet(`${Api.plugins}/operations`, []);
     let [[data, setData], loading, error] = useGet(`${props.api}/${id}`, [id]);
-    if (!data || data.id == 0) {
+    if (!data || data.id === 0) {
         data = { ...data, name: '', description: '' };
     }
 
     return (
         <Detail {...props}
             id={id}
+            icon={<span className='k-icon k-i-aggregate-fields' title='Process' />}
             loading={loading}
             error={error}
             data={data}

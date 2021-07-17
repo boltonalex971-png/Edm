@@ -11,15 +11,18 @@ import { DropDownComp } from '../DropDownCell';
 import Api from '../api';
 
 export function Devices() {
+    const type = 'device';
     const history = useHistory();
     const { path } = useRouteMatch();
     const api = Api.devices;
     return (
         <MasterDetail
+            type={type}
             api={api}
             stubMessage='Please select a device'
             detail={(
                 <DeviceDetail
+                    type={type}
                     api={api}
                     path={path}
                     onChange={() => reloadMaster()}
@@ -34,12 +37,13 @@ DeviceDetail.propTypes = {
     onChange: PropTypes.func,
     path: PropTypes.string,
     api: PropTypes.string,
-    deviceId: PropTypes.number
+    deviceId: PropTypes.number,
+    type: PropTypes.string
 }
 
 export function DeviceDetail({ deviceId, ...props }) {
     let { id } = useParams();
-    id = deviceId || id;
+    id = deviceId || parseInt(id);
     let [sub, setSub] = useState();
     useEffect(setSub, [id]);
     let [[data, setData], loading, error] = useGet(`${props.api}/${id}`, [id]);
@@ -57,6 +61,7 @@ export function DeviceDetail({ deviceId, ...props }) {
     return (
         <Detail {...props}
             id={id}
+            icon={<span className='k-icon k-i-cogs' title='Device' />}
             subDetail={sub}
             loading={loading}
             error={error}

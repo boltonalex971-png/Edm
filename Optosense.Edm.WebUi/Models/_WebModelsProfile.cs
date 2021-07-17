@@ -76,6 +76,34 @@ namespace Optosense.Edm.WebUi.Models
                 .ForMember(d => d.ProfilerGuid, o => o.Ignore());
             CreateMap<WorkbenchDeviceConfigViewModel, WorkbenchWorkplaceHostDevice>();
 
+            CreateMap<HierarchyItemViewModel, HierarchyItemViewModel>();
+            CreateMap<Hierarchy, HierarchyViewModel>();
+            CreateMap<Hierarchy, HierarchyItemViewModel>()
+                .ForMember(d => d.IsNode, o => o.MapFrom(s => true))
+                .ForMember(d => d.HierarchyType, o => o.MapFrom(s => s.Type))
+                .ForMember(d => d.expanded, o => o.MapFrom(s => true))
+                .ForMember(d => d.Items, o => o.Ignore());
+            CreateMap<Host, HierarchyItemViewModel>()
+                .ForMember(d => d.IsNode, o => o.MapFrom(s => false))
+                .ForMember(d => d.expanded, o => o.MapFrom(s => false))
+                .ForMember(d => d.ParentId, o => o.MapFrom(s => s.HierarchyId))
+                .ForMember(d => d.Items, o => o.Ignore());
+            CreateMap<Process, HierarchyItemViewModel>()
+                .ForMember(d => d.IsNode, o => o.MapFrom(s => false))
+                .ForMember(d => d.expanded, o => o.MapFrom(s => false))
+                .ForMember(d => d.ParentId, o => o.MapFrom(s => s.HierarchyId))
+                .ForMember(d => d.Items, o => o.Ignore());
+            CreateMap<Workplace, HierarchyItemViewModel>()
+                .ForMember(d => d.IsNode, o => o.MapFrom(s => false))
+                .ForMember(d => d.expanded, o => o.MapFrom(s => false))
+                .ForMember(d => d.ParentId, o => o.MapFrom(s => s.HierarchyId))
+                .ForMember(d => d.Items, o => o.Ignore());
+            CreateMap<Device, HierarchyItemViewModel>()
+                .ForMember(d => d.IsNode, o => o.MapFrom(s => false))
+                .ForMember(d => d.expanded, o => o.MapFrom(s => false))
+                .ForMember(d => d.ParentId, o => o.MapFrom(s => s.HierarchyId))
+                .ForMember(d => d.Items, o => o.Ignore());
+
             CreateMap<IPlugin, PluginInfoViewModel>();
         }
     }

@@ -9,6 +9,8 @@ using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Domain.Models;
 using Optosense.Edm.Plugins;
 using Optosense.Edm.Webui.Models;
+using Optosense.Edm.WebUi.Models;
+using Optosense.Edm.WebUi.Utils;
 
 namespace Optosense.Edm.WebUi.Controllers
 {
@@ -19,13 +21,15 @@ namespace Optosense.Edm.WebUi.Controllers
         private readonly ILogger<HostsController> _logger;
         private readonly IMapper _mapper;
         private readonly IHostService _hostService;
+        private readonly IHierarchyService _hierarchyService;
         private readonly IPluginContainer _plugins;
 
-        public HostsController(ILogger<HostsController> logger, IMapper mapper, IHostService hostService, IPluginContainer plugins)
+        public HostsController(ILogger<HostsController> logger, IMapper mapper, IHostService hostService, IHierarchyService hierarchyService,IPluginContainer plugins)
         {
             _logger = logger;
             _mapper = mapper;
             _hostService = hostService;
+            _hierarchyService = hierarchyService;
             _plugins = plugins;
         }
 
@@ -61,6 +65,7 @@ namespace Optosense.Edm.WebUi.Controllers
             {
                 throw new Exception("Process id is ambiguous");
             }
+
             var result = await _hostService.Save(host);
             return result;
         }
@@ -76,9 +81,40 @@ namespace Optosense.Edm.WebUi.Controllers
         public async Task<Host> Create([FromBody] Host host)
         {
             host.Id = 0;
+            // If hierarchy is not defined select default root
+            host.HierarchyId = host.HierarchyId == 0 ? (await _hierarchyService.GetRoot(HierarchyType.Host)).Id : host.HierarchyId;
             var result = await _hostService.Save(host);
             return result;
         }
+
+        [HttpPut("{id:int}/parent")]
+        public async Task<Host> ChangeParent(int id, [FromBody] HierarchyItemViewModel parent)
+        {
+                var result = await _hostService.ChangeParent(id, parent.Id);
+                return result;
+        }
+
+        [HttpGet("hierarchy")]
+        public async Task<IEnumerable<HierarchyItemViewModel>> GetHostHierarchy()
+        {
+            var hosts = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(await _hostService.GetAll());
+            var folders = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(await _hierarchyService.GetTree(HierarchyType.Host));
+            //var expanded = _cache.RestoreMany<TreeExpanedState>(UiCacheHelper.OwnerKey(this), () => HierarchyType.Host);
+            //foreach (var folder in folders)
+            //{
+            //    folder.expanded = expanded?.Any(e => e.Id == folder.Id) ?? false;
+            //}
+
+            var tree = folders.Concat(hosts).ToTree().ToList();
+            // always expand root if just one
+            if (tree.Count() == 1)
+            {
+                tree.First().expanded = true;
+            }
+
+            return tree;
+        }
+
 
         #region devices
         [HttpGet("{id:int}/devices")]
