@@ -17,7 +17,7 @@ namespace Optosense.Edm.WebUi.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class HierarchiesController : ControllerBase
+    public class HierarchiesController : AuthControllerBase
     {
         private readonly ILogger<HostsController> _logger;
         private readonly IMapper _mapper;
@@ -93,7 +93,7 @@ namespace Optosense.Edm.WebUi.Controllers
         [HttpGet("{type}/tree")]
         public async Task<IEnumerable<HierarchyItemViewModel>> GetHierarchyTree(HierarchyType type)
         {
-            var folders = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(await _hierarchyService.GetTree(type));
+            var folders = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(await _hierarchyService.GetTree(type, UserInfo));
             var tree = folders.ToTree();
             return tree;
         }
@@ -103,6 +103,7 @@ namespace Optosense.Edm.WebUi.Controllers
         {
             // If parent is not defined select default one
             model.ParentId = model.ParentId == 0 ? (await _hierarchyService.GetRoot(model.Type)).Id : model.ParentId;
+            model.Owner = User.Identity.Name;
             var saved = await _hierarchyService.Save(model);
             return _mapper.Map<HierarchyItemViewModel>(saved);
         }

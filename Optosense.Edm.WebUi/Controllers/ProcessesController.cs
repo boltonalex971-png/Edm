@@ -16,7 +16,7 @@ namespace Optosense.Edm.WebUi.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class ProcessesController : ControllerBase
+    public class ProcessesController : AuthControllerBase
     {
         private readonly ILogger<ProcessesController> _logger;
         private readonly IMapper _mapper;
@@ -96,7 +96,7 @@ namespace Optosense.Edm.WebUi.Controllers
         public async Task<IEnumerable<HierarchyItemViewModel>> GetHierarchy()
         {
             var processes = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(await _processService.GetAll());
-            var folders = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(await _hierarchyService.GetTree(HierarchyType.Process));
+            var folders = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(await _hierarchyService.GetTree(HierarchyType.Process, UserInfo));
             //var expanded = _cache.RestoreMany<TreeExpanedState>(UiCacheHelper.OwnerKey(this), () => HierarchyType.Host);
             //foreach (var folder in folders)
             //{

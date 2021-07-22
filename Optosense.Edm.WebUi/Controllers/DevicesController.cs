@@ -16,7 +16,7 @@ namespace Optosense.Edm.WebUi.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class DevicesController : ControllerBase
+    public class DevicesController : AuthControllerBase
     {
         private readonly ILogger<DevicesController> _logger;
         private readonly IDeviceService _deviceService;
@@ -94,8 +94,10 @@ namespace Optosense.Edm.WebUi.Controllers
         [HttpGet("hierarchy")]
         public async Task<IEnumerable<HierarchyItemViewModel>> GetHierarchy()
         {
-            var devices = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(await _deviceService.GetAll());
-            var folders = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(await _hierarchyService.GetTree(HierarchyType.Device));
+            var devices = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(
+                await _deviceService.GetAll());
+            var folders = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(
+                await _hierarchyService.GetTree(HierarchyType.Device, UserInfo));
             //var expanded = _cache.RestoreMany<TreeExpanedState>(UiCacheHelper.OwnerKey(this), () => HierarchyType.Host);
             //foreach (var folder in folders)
             //{

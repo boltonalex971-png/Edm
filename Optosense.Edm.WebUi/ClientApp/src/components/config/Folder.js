@@ -5,6 +5,8 @@ import { Field } from '@progress/kendo-react-form';
 import { Input } from '@progress/kendo-react-inputs';
 import { Detail, Info, Editor } from '../MasterDetail';
 import { useParams } from 'react-router-dom';
+import { DropDownComp } from '../DropDownCell';
+import { UserContext } from '../../ApiContext';
 
 Folder.propTypes = {
     onChange: PropTypes.func,
@@ -52,6 +54,22 @@ export function Folder(props) {
                             </div>
                             <div className="mb-3">
                                 <Field name={'description'} component={Input} label={'Description'} />
+                            </div>
+                            <div className="mb-3" style={{ width: '400px' }}>
+                                <UserContext.Consumer>
+                                    {user =>
+                                        <Field name={'group'} label={'Division'}
+                                            component={(compProps) =>
+                                                <DropDownComp {...compProps}
+                                                    loading={!user}
+                                                    data={user && user.claims}
+                                                    textField='name'
+                                                    dataItemKey='sid'
+                                                />
+                                            }
+                                        />
+                                    }
+                                </UserContext.Consumer>
                             </div>
                         </fieldset>
                     }

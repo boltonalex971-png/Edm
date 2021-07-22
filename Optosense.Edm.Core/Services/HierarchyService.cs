@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Optosense.Edm.Core.Contracts;
+using Optosense.Edm.Core.Models;
 using Optosense.Edm.Core.Persistance;
 using Optosense.Edm.Domain.Models;
 
@@ -41,9 +42,14 @@ namespace Optosense.Edm.Core.Services
             return folder;
         }
 
-        public async Task<IEnumerable<Hierarchy>> GetTree(HierarchyType type)
+        public async Task<IEnumerable<Hierarchy>> GetTree(HierarchyType type, UserInfo user)
         {
-            var folder = await Db.Hierarchies.Where(h => h.IsActive && h.Type == type).ToListAsync();
+            var groups = user.Claims.Select(c => c.Name).ToList();
+            var folder = await Db.Hierarchies
+                .Where(h => h.IsActive && 
+                    h.Type == type &&
+                    (h.Group == null || user.Role == "Admin" || groups.Contains(h.Group))
+            ).ToListAsync();
             return folder;
         }
 

@@ -1,6 +1,7 @@
 const baseUrl = process.env.REACT_APP_API_URL || window.location.origin;
 
 const api = {
+    auth: `${baseUrl}/api/auth`,
     audits: `${baseUrl}/api/audits`,
     processes: `${baseUrl}/api/processes`,
     devices: `${baseUrl}/api/devices`,

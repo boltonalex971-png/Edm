@@ -5,12 +5,15 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
+using System.Security.Principal;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microprojects.Edm;
 using Microprojects.Edm.Cache;
 using Microprojects.Edm.Cache.Redis;
 using Microprojects.Edm.Log;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Hosting;
@@ -28,6 +31,7 @@ using Optosense.Edm.Core.AspNet;
 using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Core.Infrastructure;
 using Optosense.Edm.Core.Infrastructure.Mapper;
+using Optosense.Edm.Core.Models;
 using Optosense.Edm.Core.Persistance;
 using Optosense.Edm.Core.Services;
 using Optosense.Edm.DataAccess;
@@ -59,6 +63,7 @@ namespace Optosense.Edm.WebUi
                     builder.AllowAnyMethod();
                 });
             });
+            services.AddDistributedMemoryCache().AddSession();
             services.AddControllers(options =>
             {
                 options.RespectBrowserAcceptHeader = true;
@@ -88,8 +93,11 @@ namespace Optosense.Edm.WebUi
             {
                 config.BaseDirectory = AppContext.BaseDirectory;
                 config.PluginsPath = Configuration.GetSection("Edm:Assemblies").GetChildren().Select(c => c.Value);
-                Console.WriteLine($"Edm plugins base directory is '{config.PluginsPath}'");
             });
+            services.AddSingleton<ValidateAuthentication>();
+                services.AddAuthentication(NegotiateDefaults.AuthenticationScheme)
+                .AddNegotiate();
+            services.AddRazorPages();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -106,18 +114,48 @@ namespace Optosense.Edm.WebUi
                 app.UseHsts();
             }
 
-            if (env.IsProduction())
-            {
-                app.UseHttpsRedirection();
-            }
+            app.UseHttpsRedirection();
             app.UseCors("DevCorsPolicy");
+            app.UseRouting();
+            app.UseSession();
+            app.UseAuthentication();
+            app.UseAuthorization();
+            app.UseMiddleware<ValidateAuthentication>(); // To enable Windows authentication, it doesn't work without this call 
+            app.Use((context, next) =>
+            {
+                if (!context.Session.Keys.Contains("UserInfo"))
+                {
+                    var identity = (WindowsIdentity)context.User.Identity;
+                    var claims = identity.Groups.Select(g => new UserClaim
+                    {
+                        Sid = g.Value,
+                        Name = g.Translate(typeof(NTAccount)).Value
+                    }).ToList();
+                    var roles = Configuration.GetSection("Edm:Auth:Roles").GetChildren()
+                        .Where(c => claims.Any(l => l.Name.Contains(c.Value)))
+                        .Select(c => c.Key).ToList();
+                    var root = Configuration.GetSection("Edm:Auth").GetValue<string>("DivisionsRoot");
+                    var divisions = claims
+                        .Where(c => c.Name.Contains(root))
+                        .Select(c => c.Name).ToList();
+                    var userInfo = new UserInfo
+                    {
+                        Name = identity.Name,
+                        Claims = claims,
+                        Roles = roles,
+                        Role = roles.FirstOrDefault(),
+                        Divisions = divisions,
+                    };
+                    context.Session.SetString("UserInfo", JsonConvert.SerializeObject(userInfo));
+                }
+
+                return next();
+            });
             app.UseStaticFiles();
             app.UseSpaStaticFiles();
-            app.UseRouting();
 
-            //app.UseAuthorization();
             //app.UseMvc();
-            app.ApplicationServices.GetService<ICommandContainer>();
+            //app.ApplicationServices.GetService<ICommandContainer>();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
@@ -142,6 +180,17 @@ namespace Optosense.Edm.WebUi
                     spa.UseReactDevelopmentServer(npmScript: "start");
                 }
             });
+        }
+    }
+    
+    internal class ValidateAuthentication : IMiddleware
+    {
+        public async Task InvokeAsync(HttpContext context, RequestDelegate next)
+        {
+            if (context.User.Identity.IsAuthenticated)
+                await next(context);
+            else
+                await context.ChallengeAsync();
         }
     }
 
