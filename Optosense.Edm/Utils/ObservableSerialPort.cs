@@ -152,7 +152,7 @@ namespace Optosense.Edm.Utils
         {
             var fullCommand = $"{(address == null ? string.Empty : $"#{address:X2}")}{command}\r";
             char[] result;
-            var obs = port.ToLine(fullCommand, responseLength, singleLine, timeout);
+            //var obs = port.ToLine(fullCommand, responseLength, singleLine, timeout);
             while (true)
             {
                 try
