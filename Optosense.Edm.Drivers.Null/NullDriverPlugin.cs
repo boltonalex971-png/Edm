@@ -12,8 +12,8 @@ namespace Optosense.Edm.Drivers.Null
         Name = "Null", 
         Description = "Just do nothing",
         SpaPath = "ui/build", 
-        UiRoot = "driver")]
-    public class NullDriver : DriverPluginBase
+        UiRoot = "drivers/null")]
+    public class NullDriverPlugin : DriverPluginBase
     {
         public override IDeviceDriver GetDriver() => new DriverBase();
 

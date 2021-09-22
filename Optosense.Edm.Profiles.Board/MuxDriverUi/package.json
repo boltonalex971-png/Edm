@@ -1,6 +1,6 @@
 {
   "name": "mux",
-  "homepage": "/driver/mux",
+  "homepage": "/drivers/mux",
   "version": "0.1.0",
   "private": true,
   "dependencies": {

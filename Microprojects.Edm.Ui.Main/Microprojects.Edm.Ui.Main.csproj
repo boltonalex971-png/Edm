@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net5.0</TargetFramework>
+		<GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="AutoMapper" Version="10.1.1" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.RazorPages" Version="2.2.5" />
+		<PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="5.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Optosense.Edm.Core\Optosense.Edm.Core.csproj" />
+		<ProjectReference Include="..\Optosense.Edm.Domain\Optosense.Edm.Domain.csproj" />
+		<ProjectReference Include="..\Optosense.Edm.Infrastructure\Optosense.Edm.Infrastructure.csproj" />
+		<ProjectReference Include="..\Optosense.Edm\Optosense.Edm.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Remove="ClientApp\build\**" />
+		<Compile Remove="ClientApp\node_modules\**" />
+		<Folder Include="ClientApp\build" />
+		<EmbeddedResource Include="ClientApp\build/**" />
+		<None Remove="ClientApp\build\**" />
+		<None Remove="ClientApp\node_modules\**" />
+		<None Remove="ClientApp\*.local" />
+		<None Remove="ClientApp\.env.local" />
+		<None Remove="ClientApp\.eslintcache" />
+		<None Remove="ClientApp\.gitignore" />
+		<None Remove="ClientApp\kendo-ui-license.txt" />
+		<None Remove="ClientApp\yarn-error.log" />
+		<None Remove="ClientApp\yarn.lock" />
+	</ItemGroup>
+
+</Project>

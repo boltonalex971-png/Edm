@@ -10,8 +10,8 @@ namespace Optosense.Edm.Operations.TypeOne
         Description = "Check sensor current consumption",
         Guid = "{8A00F2CD-CBA9-4A17-9B5E-2447B4ABFB14}",
         SpaPath = "TypeOneUi/build",
-        UiRoot = "app")]
-    public class TypeOneOperation : PluginBase, IOperationPlugin
+        UiRoot = "apps/typeone")]
+    public class TypeOneOperationPlugin : PluginBase, IOperationPlugin
     {
     }
 }

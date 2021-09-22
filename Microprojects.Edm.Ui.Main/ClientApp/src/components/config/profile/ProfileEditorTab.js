@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import PropTypes from 'prop-types';
 import { GridColumn } from '@progress/kendo-react-grid';
 import { RelationTable } from '../../RelationTable';
@@ -8,6 +8,7 @@ import { DeviceDetail } from '../Devices';
 import Api from '../../api';
 import { useHistory } from 'react-router-dom';
 import { Loading, LoadingContainer } from '../../utils/Utils';
+import { ApiContext } from '../../../ApiContext';
 
 ProfileEditorTab.propTypes = {
     id: PropTypes.number,
@@ -17,10 +18,11 @@ ProfileEditorTab.propTypes = {
 
 export function ProfileEditorTab({ id, api, onDetailSelected }) {
     const [loading, setLoading] = useState(true);
+    const location = useContext(ApiContext);
     return (
         <div>
             <LoadingContainer loading={loading}>
-                <iframe src={`/profiles/board/profile/${id}`} height='500' width='100%' seamless frameBorder='0' onLoad={() => setLoading(false)} />
+                <iframe src={`${location}/profiles/board/profile/${id}`} height='500' width='100%' seamless frameBorder='0' onLoad={() => setLoading(false)} />
             </LoadingContainer>
         </div>
     );

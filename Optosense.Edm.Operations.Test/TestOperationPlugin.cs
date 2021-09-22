@@ -10,8 +10,8 @@ namespace Optosense.Edm.Operations.Test
         Description = "Using for general testing purpose",
         Guid = "0741B118-5659-4727-9948-EFA885D0577D",
         SpaPath = "ui/build",
-        UiRoot = "app")]
-    public class TestOperation : PluginBase, IOperationPlugin
+        UiRoot = "apps/test")]
+    public class TestOperationPlugin : PluginBase, IOperationPlugin
     {
     }
 }

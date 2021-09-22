@@ -22,9 +22,8 @@ export function DeviceConfigEditor({ id, ...props }) {
     const location = useContext(ApiContext);
     let [[data, setData], loading, error] = useGet(`${props.api}/${id}`, [id]);
     data = data && data.id ?
-        { ...data, name: `${data.deviceName} configuration`, description: `${data.deviceType} device on ${data.hostName}` } :
+        { ...data, name: `${data.deviceName} configuration`, description: `${data.driverName} device on ${data.hostName}` } :
         { name: ' ', description: ' ' };
-    //console.log(`${props.api}/${id}`, data.configuration);
     const arg = btoa(JSON.stringify({ api: `${props.api}/${id}`, options: data.configuration || '{}' }));
     const [iframeLoading, setIframeLoading] = useState(true);
     return (
@@ -34,7 +33,7 @@ export function DeviceConfigEditor({ id, ...props }) {
                 <div>
                     <LoadingContainer loading={iframeLoading && loading}>
                         <iframe id='config-iframe' height='300' width='100%' seamless frameBorder='0'
-                            src={`${location}${data.driverHomepage}/options?a=${arg}`}
+                            src={`${location}/${data.driverHomepage}/options?a=${arg}`}
                             onLoad={() => setIframeLoading(false)}
                         />
                     </LoadingContainer>

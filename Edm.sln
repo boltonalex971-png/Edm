@@ -42,7 +42,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Profiles", "Profiles", "{20
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Optosense.Edm.Profiles.Board", "Optosense.Edm.Profiles.Board\Optosense.Edm.Profiles.Board.csproj", "{77ACC26B-7405-4396-95CB-380AC7629B0C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Optosense.Edm.Core.AspNet", "Optosense.Edm.Core.AspNet\Optosense.Edm.Core.AspNet.csproj", "{55FE11FB-97C1-4EA5-9450-F52DE7DA9C16}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Optosense.Edm.Core.AspNet", "Optosense.Edm.Core.AspNet\Optosense.Edm.Core.AspNet.csproj", "{55FE11FB-97C1-4EA5-9450-F52DE7DA9C16}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Ui", "Ui", "{81AF2D89-E19A-41C7-8BAD-4E67FDD65E79}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microprojects.Edm.Ui.Main", "Microprojects.Edm.Ui.Main\Microprojects.Edm.Ui.Main.csproj", "{0A4647EE-4E84-4D9F-B96B-659081E07392}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -110,6 +114,10 @@ Global
 		{55FE11FB-97C1-4EA5-9450-F52DE7DA9C16}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{55FE11FB-97C1-4EA5-9450-F52DE7DA9C16}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{55FE11FB-97C1-4EA5-9450-F52DE7DA9C16}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A4647EE-4E84-4D9F-B96B-659081E07392}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A4647EE-4E84-4D9F-B96B-659081E07392}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A4647EE-4E84-4D9F-B96B-659081E07392}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A4647EE-4E84-4D9F-B96B-659081E07392}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -118,6 +126,7 @@ Global
 		{9C8C2129-0F74-4581-86D2-B43D951525FA} = {89B8BDA7-EE19-4878-AA00-E0C5A18A87D5}
 		{93E03E99-03CB-484F-9D41-D01626FAC82C} = {E5A45074-EE72-494C-B46C-475675E3E80E}
 		{77ACC26B-7405-4396-95CB-380AC7629B0C} = {202E1D1E-AE87-4945-94A8-61763DEA56B1}
+		{0A4647EE-4E84-4D9F-B96B-659081E07392} = {81AF2D89-E19A-41C7-8BAD-4E67FDD65E79}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F93F8111-60F8-4D4C-994F-1A46CE7F76FA}

@@ -53,7 +53,16 @@ namespace Optosense.Edm.WebUi
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddAutoMapper(typeof(AutoMapperProfile), typeof(Startup));
+            services.AddEdmCommands(c => c
+                .SetPluginAssemblies(typeof(RemoteCommands).Assembly, typeof(StartDeviceCommand).Assembly)
+                .SetDefaultLogger(new ConsoleLogger())
+            );
+            services.AddPlugins(config =>
+            {
+                config.BaseDirectory = AppContext.BaseDirectory;
+                config.PluginsPath = Configuration.GetSection("Edm:Assemblies").GetChildren().Select(c => c.Value);
+                config.Configuration = Configuration;
+            });
             services.AddCors(options =>
             {
                 options.AddPolicy("DevCorsPolicy", builder =>
@@ -64,40 +73,13 @@ namespace Optosense.Edm.WebUi
                 });
             });
             services.AddDistributedMemoryCache().AddSession();
-            services.AddControllers(options =>
-            {
-                options.RespectBrowserAcceptHeader = true;
-            }).AddNewtonsoftJson(options =>
-            {
-                options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
-                options.SerializerSettings.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore;
-                options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
-            });
-            //services.AddControllersWithViews();
-            //services.AddSpaStaticFiles();
-            services.AddSpaStaticFiles(configuration =>
-            {
-                configuration.RootPath = "ClientApp/build";
-            });
             services.AddDbContext<EdmContext>(options =>
             {
                 options.UseSqlServer(Configuration.GetConnectionString("Edm"));
             });
 
-            services.InjectDeps(Configuration);
-            services.AddEdmCommands(c => c
-                .SetPluginAssemblies(typeof(RemoteCommands).Assembly, typeof(StartDeviceCommand).Assembly)
-                .SetDefaultLogger(new ConsoleLogger())
-            );
-            services.AddPlugins(config =>
-            {
-                config.BaseDirectory = AppContext.BaseDirectory;
-                config.PluginsPath = Configuration.GetSection("Edm:Assemblies").GetChildren().Select(c => c.Value);
-            });
-            services.AddSingleton<ValidateAuthentication>();
-                services.AddAuthentication(NegotiateDefaults.AuthenticationScheme)
+            services.AddAuthentication(NegotiateDefaults.AuthenticationScheme)
                 .AddNegotiate();
-            services.AddRazorPages();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -120,131 +102,8 @@ namespace Optosense.Edm.WebUi
             app.UseSession();
             app.UseAuthentication();
             app.UseAuthorization();
-            app.UseMiddleware<ValidateAuthentication>(); // To enable Windows authentication, it doesn't work without this call 
-            app.Use((context, next) =>
-            {
-                if (!context.Session.Keys.Contains("UserInfo"))
-                {
-                    var identity = (WindowsIdentity)context.User.Identity;
-                    var claims = identity.Groups.Select(g => new UserClaim
-                    {
-                        Sid = g.Value,
-                        Name = g.Translate(typeof(NTAccount)).Value
-                    }).ToList();
-                    var roles = Configuration.GetSection("Edm:Auth:Roles").GetChildren()
-                        .Where(c => claims.Any(l => l.Name.Contains(c.Value)))
-                        .Select(c => c.Key).ToList();
-                    var root = Configuration.GetSection("Edm:Auth").GetValue<string>("DivisionsRoot");
-                    var divisions = claims
-                        .Where(c => c.Name.Contains(root))
-                        .Select(c => c.Name).ToList();
-                    var userInfo = new UserInfo
-                    {
-                        Name = identity.Name,
-                        Claims = claims,
-                        Roles = roles,
-                        Role = roles.FirstOrDefault(),
-                        Divisions = divisions,
-                    };
-                    context.Session.SetString("UserInfo", JsonConvert.SerializeObject(userInfo));
-                }
-
-                return next();
-            });
-            app.UseStaticFiles();
-            app.UseSpaStaticFiles();
-
-            //app.UseMvc();
-            //app.ApplicationServices.GetService<ICommandContainer>();
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-            });
-
-            //if (env.IsProduction())
-            //{
+            app.UseAuthenticatedUserInfo();
             app.MapSpaPlugins();
-            //}
-            //else
-            //{
-            //    app.MapSpa();
-            //}
-
-            // This part is for EDM central
-            app.UseSpa(spa =>
-            {
-                spa.Options.SourcePath = "ClientApp";
-
-                if (env.IsDevelopment())
-                {
-                    spa.UseReactDevelopmentServer(npmScript: "start");
-                }
-            });
-        }
-    }
-    
-    internal class ValidateAuthentication : IMiddleware
-    {
-        public async Task InvokeAsync(HttpContext context, RequestDelegate next)
-        {
-            if (context.User.Identity.IsAuthenticated)
-                await next(context);
-            else
-                await context.ChallengeAsync();
-        }
-    }
-
-    static class Extensions
-    {
-
-        public static IServiceCollection InjectDeps(this IServiceCollection services, IConfiguration configuration)
-        {
-            services.AddSingleton<ICache>(new RedisCache(configuration["Edm:Cache:Default:ConnectionString"]));
-
-            services.AddSingleton<IEdmContextFactory>(new EdmContextFactory(configuration.GetConnectionString("Edm")));
-            services.AddScoped<IEdmContext>(provider => provider.GetService<EdmContext>());
-            services.AddTransient<IOwnedEdmContext>(provider => provider.GetService<EdmContext>());
-
-            services.AddTransient<IRemoteCommands, RemoteCommands>();
-
-            services.AddTransient<IAuditService, AuditService>();
-            services.AddTransient<IProcessService, ProcessService>();
-            services.AddTransient<IHierarchyService, HierarchyService>();
-            services.AddTransient<IHostService, HostService>();
-            services.AddTransient<IDeviceService, DeviceService>();
-            services.AddTransient<IWorkplaceService, WorkplaceService>();
-            services.AddTransient<IProfileService, ProfileService>();
-            services.AddTransient<IOperationService, OperationService>();
-            services.AddTransient<ISettingService, SettingService>();
-
-            return services;
-        }
-
-        public static void JsonConfigure(this IApplicationBuilder app)
-        {
-            JsonConvert.DefaultSettings = () => new JsonSerializerSettings
-            {
-                //ContractResolver = new CustomResolver(),
-                //PreserveReferencesHandling = PreserveReferencesHandling.None,
-                ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-                Formatting = Formatting.None,
-                NullValueHandling = NullValueHandling.Ignore
-            };
-        }
-
-        class CustomResolver : DefaultContractResolver
-        {
-            protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization)
-            {
-                JsonProperty prop = base.CreateProperty(member, memberSerialization);
-
-                if (prop.PropertyType.IsClass && prop.PropertyType.IsInstanceOfType(typeof(DomainObject)))
-                {
-                    prop.ShouldSerialize = obj => false;
-                }
-
-                return prop;
-            }
         }
     }
 }

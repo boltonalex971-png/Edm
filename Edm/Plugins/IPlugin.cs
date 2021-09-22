@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,5 +14,6 @@ namespace Optosense.Edm.Plugins
         string Name { get; }
         string Description { get; }
         string Homepage { get; }
+        void InjectDependencies(IServiceCollection services, IConfiguration configuration);
     }
 }

@@ -1,6 +1,6 @@
 {
   "name": "test",
-  "homepage": "/app/test",
+  "homepage": "/apps/test",
   "version": "0.1.0",
   "private": true,
   "dependencies": {

@@ -16,13 +16,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Optosense.Edm.Infrastructure\Optosense.Edm.Infrastructure.csproj" />
     <ProjectReference Include="..\Optosense.Edm\Optosense.Edm.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Protobuf Include="..\Optosense.Edm.WebApi\Protos\command.proto" GrpcServices="Client">
-      <Link>Protos\command.proto</Link>
-    </Protobuf>
   </ItemGroup>
 
 </Project>

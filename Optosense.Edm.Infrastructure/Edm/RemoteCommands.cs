@@ -12,7 +12,6 @@ using Optosense.Edm.Core.Infrastructure;
 using Optosense.Edm.Core.Persistance;
 using Optosense.Edm.Domain.Models;
 using Optosense.Edm.Infrastructure.Edm.Commands;
-using Optosense.Edm.WebApi;
 
 namespace Optosense.Edm.Infrastructure.Edm
 {

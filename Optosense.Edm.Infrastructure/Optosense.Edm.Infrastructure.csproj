@@ -5,6 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Edm\Protos\command.proto" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Google.Protobuf" Version="3.14.0" />
     <PackageReference Include="Grpc.Net.Client" Version="2.33.1" />
     <PackageReference Include="Grpc.Net.ClientFactory" Version="2.33.1" />
@@ -15,10 +19,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Edm\Protos\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Edm\Edm.csproj" />
     <ProjectReference Include="..\Optosense.Edm.Core\Optosense.Edm.Core.csproj" />
     <ProjectReference Include="..\Optosense.Edm.Domain\Optosense.Edm.Domain.csproj" />
@@ -26,9 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Protobuf Include="..\Optosense.Edm.WebApi\Protos\command.proto" GrpcServices="Client">
-      <Link>Edm\Protos\command.proto</Link>
-    </Protobuf>
+    <Protobuf Include="Edm\Protos\command.proto" />
   </ItemGroup>
 
 </Project>

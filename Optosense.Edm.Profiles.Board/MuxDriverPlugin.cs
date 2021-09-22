@@ -13,7 +13,7 @@ namespace Optosense.Edm.Drivers.Mux
         Name = "Mux board", 
         Description = "Controls 20-sockets MUX board",
         SpaPath = "MuxDriverUi/build", 
-        UiRoot = "driver")]
+        UiRoot = "drivers/mux")]
     public class MuxDriverPlugin : DriverPluginBase
     {
         public override IDeviceDriver GetDriver() => new BoardDriverBase();

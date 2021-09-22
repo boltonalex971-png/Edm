@@ -13,7 +13,7 @@ namespace Optosense.Edm.Profiles.Board
         Guid = "8E33F54D-D817-44C4-B2ED-1F8FD957CCD6",
         Name = "Board", 
         SpaPath = "Ui/build",
-        UiRoot = "profiles")]
+        UiRoot = "profiles/board")]
     public class BoardProfilePlugin : ProfilePluginBase
     {
         private const string INSTRUCTION_SETTING = "instructions";

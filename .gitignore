@@ -349,6 +349,6 @@ healthchecksdb
 /Optosense.Edm.Operations.Test/ui/yarn.lock
 Optosense.Edm.Profiles.Board/Ui/yarn.lock
 /Optosense.Edm.WebUi/ClientApp/package-lock.json
-/Optosense.Edm.WebUi/appsettings.**.json
+/**/appsettings.**.json
 /Optosense.Edm.WebUi/Properties/launchSettings.json
 

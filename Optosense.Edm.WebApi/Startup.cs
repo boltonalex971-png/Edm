@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Microprojects.Edm;
 using Microprojects.Edm.Cache;
 using Microprojects.Edm.Cache.Redis;
-using Microprojects.Edm.Log;
+using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -36,20 +36,33 @@ namespace Optosense.Edm.WebApi
         {
             services.AddSingleton<ICache>(new RedisCache(Configuration["Edm:Cache:Default:ConnectionString"]));
             services.AddGrpc();
-            services.AddControllers();
 
-            services.AddEdmCommands(c => c
-                .SetPluginAssemblies(typeof(RemoteCommands).Assembly, typeof(StartDeviceCommand).Assembly)
-                .SetDefaultLogger(new ConsoleLogger())
-            );
+            services.AddEdmCommands(c =>
+                c.SetPluginAssemblies(
+                    typeof(RemoteCommands).Assembly, 
+                    typeof(StartDeviceCommand).Assembly));
 
             services.AddPlugins(config =>
             {
                 config.BaseDirectory = AppContext.BaseDirectory;
                 config.PluginsPath = Configuration.GetSection("Edm:Assemblies").GetChildren().Select(c => c.Value);
+                config.Configuration = Configuration;
             });
 
+            services.AddCors(options =>
+            {
+                options.AddPolicy("DevCorsPolicy", builder =>
+                {
+                    builder.AllowAnyOrigin();
+                    builder.AllowAnyHeader();
+                    builder.AllowAnyMethod();
+                });
+            });
 
+            services.AddDistributedMemoryCache()
+                .AddSession( session => session.IdleTimeout = TimeSpan.FromDays(30));
+
+            services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -62,16 +75,15 @@ namespace Optosense.Edm.WebApi
 
             app.JsonConfigure();
             app.UseRouting();
-            //app.UseHttpsRedirection();
-            //app.UseAuthorization();
+            app.UseHttpsRedirection();
+            app.UseCors("DevCorsPolicy");
+            app.UseSession();
+            app.UseAuthentication();
+            app.UseAuthorization();
+            app.UseAuthenticatedUserInfo();
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapControllers();
                 endpoints.MapGrpcService<EdmCommandService>();
-                endpoints.MapGet("/", async context =>
-                {
-                    await context.Response.WriteAsync("Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909");
-                });
             });
             app.MapSpaPlugins();
         }

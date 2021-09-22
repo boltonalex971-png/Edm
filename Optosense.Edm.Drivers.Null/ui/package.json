@@ -1,6 +1,6 @@
 {
   "name": "null",
-  "homepage": "/driver/null",
+  "homepage": "/drivers/null",
   "version": "0.1.0",
   "private": true,
   "dependencies": {

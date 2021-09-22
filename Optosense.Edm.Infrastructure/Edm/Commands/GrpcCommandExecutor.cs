@@ -1,7 +1,7 @@
 ﻿using Grpc.Net.Client;
 using Microprojects.Edm;
 using Newtonsoft.Json;
-using Optosense.Edm.WebApi;
+using Optosense.Edm.Infrastructure.Protos;
 using System;
 using System.Collections.Generic;
 using System.Text;

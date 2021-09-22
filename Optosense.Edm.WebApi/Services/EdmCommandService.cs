@@ -1,17 +1,20 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 //using System.Text.Json;
 using System.Threading.Tasks;
 using AutoMapper;
 using Grpc.Core;
 using Microprojects.Edm;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Optosense.Edm.Infrastructure.Protos;
 
 namespace Optosense.Edm.WebApi.Services
 {
-    public class EdmCommandService : CommandExecutor.CommandExecutorBase
+    public class EdmCommandService : CommandExecutor.CommandExecutorBase, IHostedService
     {
         private readonly ILogger<EdmCommandService> _logger;
         private readonly ICommandContainer _commandManager;
@@ -42,6 +45,16 @@ namespace Optosense.Edm.WebApi.Services
             var tasks = new AvailableTasks();
             tasks.Tasks.AddRange(result.Select(r => new AvailableTasks.Types.Task { Pid = r.Pid ?? string.Empty, Status = r.Status ?? string.Empty, TaskName = r.TaskName, Type = r.Type }));
             return Task.FromResult(tasks);
+        }
+
+        public Task StartAsync(CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task StopAsync(CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -13,15 +15,9 @@ namespace Optosense.Edm.Plugins
         public Guid Guid { get => new Guid(pluginAttribute?.Guid ?? Guid.Empty.ToString()); }
         public string Name { get => pluginAttribute?.Name; }
         public string Description { get => pluginAttribute?.Description; }
-        public string Homepage 
-        { 
-            get
-            {
-                var name = GetType().Namespace;
-                var packageName = name.Substring(name.LastIndexOf('.') + 1);
-                var homepage = $"/{pluginAttribute.UiRoot}/{packageName.ToLower(CultureInfo.CurrentCulture)}";
-                return homepage;
-            }
+        public virtual string Homepage { get => pluginAttribute?.UiRoot; }
+        public virtual void InjectDependencies(IServiceCollection services, IConfiguration configuration)
+        {
         }
     }
 }

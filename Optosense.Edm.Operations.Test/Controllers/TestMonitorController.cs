@@ -9,7 +9,7 @@ using Optosense.Edm.Operations.Test;
 namespace Optosense.Edm.Operations.Test.Controllers
 {
     [ApiController]
-    [Route("/apps/[controller]")]
+    [Route("[controller]")]
     public class TestMonitorController : ControllerBase
     {
         private static readonly string[] Summaries = new[]
