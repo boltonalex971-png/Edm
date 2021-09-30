@@ -46,7 +46,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Optosense.Edm.Core.AspNet",
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Ui", "Ui", "{81AF2D89-E19A-41C7-8BAD-4E67FDD65E79}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microprojects.Edm.Ui.Main", "Microprojects.Edm.Ui.Main\Microprojects.Edm.Ui.Main.csproj", "{0A4647EE-4E84-4D9F-B96B-659081E07392}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microprojects.Edm.Ui.Main", "Microprojects.Edm.Ui.Main\Microprojects.Edm.Ui.Main.csproj", "{0A4647EE-4E84-4D9F-B96B-659081E07392}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Optosense.Edm.Setup", "Optosense.Edm.Setup\Optosense.Edm.Setup.vdproj", "{DD444BA5-2CD3-41E4-BB54-115DDE716C34}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microprojects.Edm.Installer", "Microprojects.Edm.Installer\Microprojects.Edm.Installer.csproj", "{37BFFE19-D51F-48B6-9BB4-5168D4F819D5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -67,7 +71,6 @@ Global
 		{0298716A-B1CC-444B-B7C5-31AB6CCD2502}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0298716A-B1CC-444B-B7C5-31AB6CCD2502}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D0ADA77C-1F57-4AEA-8FB9-586D1AD289E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D0ADA77C-1F57-4AEA-8FB9-586D1AD289E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D0ADA77C-1F57-4AEA-8FB9-586D1AD289E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D0ADA77C-1F57-4AEA-8FB9-586D1AD289E2}.Release|Any CPU.Build.0 = Release|Any CPU
 		{232801E6-6E20-4B0E-A0C5-A2D5E3E0D822}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -87,7 +90,6 @@ Global
 		{D856FD7C-F414-49F9-869F-36485B92B1FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D856FD7C-F414-49F9-869F-36485B92B1FC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D7874D37-D757-41A2-9023-B3482AF52661}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D7874D37-D757-41A2-9023-B3482AF52661}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D7874D37-D757-41A2-9023-B3482AF52661}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D7874D37-D757-41A2-9023-B3482AF52661}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C0CD8238-4992-4AE2-ABC9-A0E1100412BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -118,6 +120,13 @@ Global
 		{0A4647EE-4E84-4D9F-B96B-659081E07392}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0A4647EE-4E84-4D9F-B96B-659081E07392}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0A4647EE-4E84-4D9F-B96B-659081E07392}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DD444BA5-2CD3-41E4-BB54-115DDE716C34}.Debug|Any CPU.ActiveCfg = Debug
+		{DD444BA5-2CD3-41E4-BB54-115DDE716C34}.Release|Any CPU.ActiveCfg = Release
+		{DD444BA5-2CD3-41E4-BB54-115DDE716C34}.Release|Any CPU.Build.0 = Release
+		{37BFFE19-D51F-48B6-9BB4-5168D4F819D5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{37BFFE19-D51F-48B6-9BB4-5168D4F819D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{37BFFE19-D51F-48B6-9BB4-5168D4F819D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{37BFFE19-D51F-48B6-9BB4-5168D4F819D5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

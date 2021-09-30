@@ -77,6 +77,39 @@ namespace Optosense.Edm.Core.AspNet
             return builder;
         }
 
+        public static IApplicationBuilder UseFakeUserInfo(this IApplicationBuilder builder)
+        {
+            builder.Use((context, next) =>
+            {
+                if (!context.Session.Keys.Contains("UserInfo"))
+                {
+                    var configuration = builder.ApplicationServices.GetRequiredService<IConfiguration>();
+                    var claims = new[] {
+                                new UserClaim { Sid = "1", Name = "Group 1" },
+                                new UserClaim { Sid = "2", Name = "Group 2" },
+                                new UserClaim { Sid = "3", Name = "Group 3" },
+                            };
+                    var roles = configuration.GetSection("Edm:Auth:Roles").GetChildren()
+                        .Select(c => c.Key).ToList();
+                    var divisions = claims
+                        .Select(c => c.Name).ToList();
+                    var userInfo = new UserInfo
+                    {
+                        Name = "User",
+                        Claims = claims,
+                        Roles = roles,
+                        Role = roles.FirstOrDefault(),
+                        Divisions = divisions,
+                    };
+                    context.Session.SetString("UserInfo", JsonConvert.SerializeObject(userInfo));
+                }
+
+                return next();
+            });
+
+            return builder;
+        }
+
         public static void AddPlugins(this IServiceCollection services, Action<PluginsConfig> config)
         {
             if (config == null)
@@ -221,15 +254,17 @@ namespace Optosense.Edm.Core.AspNet
         public void Apply(ControllerModel controller)
         {
             var plugin = controller.ControllerType.Assembly
-                .GetTypes().Where(t => t.GetCustomAttribute(typeof(PluginAttribute)) != null 
-                    && controller.ControllerType.Namespace.Contains(t.Namespace)).FirstOrDefault() ?? 
+                .GetTypes().Where(t => t.GetCustomAttribute(typeof(PluginAttribute)) != null
+                    && controller.ControllerType.Namespace.Contains(t.Namespace)).FirstOrDefault() ??
                         throw new EdmException($"No corresponding plugin found for controller {controller.ControllerType.FullName}. Beggining of controller namespace must must match plugin namespace.");
             var root = plugin.GetCustomAttribute<PluginAttribute>().UiRoot;
             var homepage = root != null ? $"{root}/" : string.Empty;
             var routeAttributes = controller.Selectors.Where(selector =>
                                                     selector.AttributeRouteModel != null);
-            if (routeAttributes.Any()) {
-                foreach (var attr in routeAttributes) {
+            if (routeAttributes.Any())
+            {
+                foreach (var attr in routeAttributes)
+                {
                     attr.AttributeRouteModel.Template = $"{homepage}{attr.AttributeRouteModel.Template}";
                 }
             }

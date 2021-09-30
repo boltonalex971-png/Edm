@@ -105,8 +105,8 @@ namespace Optosense.Edm.Commands
                     running.Add((url, deviceCommand));
                     // TODO check response for validity
                     var response = //url.Contains("localhost") ?
-                        await CommandManager.LocalExecute(deviceCommand);
-                        //await deviceCommand.RemoteExecute(url);
+                                   //await CommandManager.LocalExecute(deviceCommand);
+                        await deviceCommand.RemoteExecute(url);
 
                 }
             }

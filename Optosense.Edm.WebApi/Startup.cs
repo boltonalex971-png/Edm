@@ -39,7 +39,7 @@ namespace Optosense.Edm.WebApi
 
             services.AddEdmCommands(c =>
                 c.SetPluginAssemblies(
-                    typeof(RemoteCommands).Assembly, 
+                    typeof(RemoteCommands).Assembly,
                     typeof(StartDeviceCommand).Assembly));
 
             services.AddPlugins(config =>
@@ -60,8 +60,7 @@ namespace Optosense.Edm.WebApi
             });
 
             services.AddDistributedMemoryCache()
-                .AddSession( session => session.IdleTimeout = TimeSpan.FromDays(30));
-
+                .AddSession(session => session.IdleTimeout = TimeSpan.FromMinutes(10));
             services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
         }
 
@@ -74,18 +73,29 @@ namespace Optosense.Edm.WebApi
             }
 
             app.JsonConfigure();
-            app.UseRouting();
-            app.UseHttpsRedirection();
             app.UseCors("DevCorsPolicy");
             app.UseSession();
-            app.UseAuthentication();
-            app.UseAuthorization();
-            app.UseAuthenticatedUserInfo();
+            app.UseRouting();
+            if (env.IsProduction())
+            {
+                app.UseHttpsRedirection();
+                app.UseHsts();
+                app.UseAuthentication();
+                app.UseAuthorization();
+                app.UseAuthenticatedUserInfo();
+            }
+            else
+            {
+                app.UseFakeUserInfo();
+            }
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapGrpcService<EdmCommandService>();
             });
             app.MapSpaPlugins();
+            // Run command container
+            var container = app.ApplicationServices.GetService<ICommandContainer>();
         }
     }
 }
