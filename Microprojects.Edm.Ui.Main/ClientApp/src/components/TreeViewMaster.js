@@ -13,7 +13,8 @@ import api from './api';
 
 TreeViewMaster.propTypes = {
     api: PropTypes.string,
-    onCurrentRootChanged: PropTypes.func
+    onCurrentRootChanged: PropTypes.func,
+    item: PropTypes.func
 }
 
 const StyledTreeView = styled(TreeView)`
@@ -90,7 +91,7 @@ export function TreeViewMaster(props) {
                     <InputGroup>
                         <InputGroupAddon addonType='prepend'>
                             <InputGroupText>
-                                <span className='k-icon k-i-search' style={{ alignSelf: 'center' }}></span>
+                                <span className='k-icon bi-search' style={{ alignSelf: 'center' }}></span>
                             </InputGroupText>
                         </InputGroupAddon>
                         <BootInput
@@ -98,12 +99,16 @@ export function TreeViewMaster(props) {
                             onChange={(e) => setFilter(e.target.value)}
                         />
                     </InputGroup>
-                    <Button icon='folder-add' look='clear' title='Add new folder'
+                    <Button look='clear' title='Add new folder'
                         onClick={() => history.push(`${url}/folder/0`)} style={{ justifySelf: 'end' }}
-                    />
-                    <Button icon='file-add' look='clear' title='Add new item'
+                    >
+                        <span className="bi bi-folder-plus"></span>
+                    </Button>
+                    <Button look='clear' title='Add new item'
                         onClick={() => history.push(`${url}/0`)} style={{ justifySelf: 'end' }}
-                    />
+                    >
+                        <span className="bi bi-file-earmark-plus"></span>
+                    </Button>
                 </CardHeader>
                 <CardBody>
                     {error ?
@@ -112,7 +117,7 @@ export function TreeViewMaster(props) {
                             <Loading /> :
                             <>
                                 <StyledTreeView
-                                    item={TreeItem}
+                                    item={props.item || TreeItem}
                                     //focusIdField='id'
                                     //item={(el) => (<span key={el.item.id} className={el.item.items ? "font-weight-bolder" : ""}>{el.item.name}</span>)}
                                     textField='name'
@@ -138,17 +143,17 @@ export function TreeViewMaster(props) {
 const TreeItem = (props) => {
     return (
         <>
-            <span className={iconClassName(props.item)} />
+            <span className={iconClassName(props.item)}>&nbsp;</span>
             <span className={props.item.isNode ? 'font-weight-bold' : ''}>{props.item.name}</span>
         </>
     );
 };
 
-function iconClassName({ isNode }) {
+function iconClassName({ isNode, isActive, ...item }) {
     if (isNode) {
-        return "k-icon k-i-folder";
+        return item.expanded ? "bi bi-folder2-open" : "bi bi-folder";
     } else {
-        return "k-icon k-i-file";
+        return "bi bi-file-code";
     }
 }
 

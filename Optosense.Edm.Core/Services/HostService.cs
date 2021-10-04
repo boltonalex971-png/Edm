@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microprojects.Edm;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Core.Persistance;
@@ -20,13 +21,26 @@ namespace Optosense.Edm.Core.Services
 
         private IDeviceService _deviceService;
         private IHierarchyService _hierarchyService;
+        private ICommandContainer _container;
 
         protected HostService() { }
 
-        public HostService(IEdmContext db, IDeviceService deviceService, IHierarchyService hierarchyService) : base(db) 
+        public HostService(IEdmContext db, ICommandContainer container, IDeviceService deviceService, IHierarchyService hierarchyService) : base(db) 
         {
             _deviceService = deviceService;
             _hierarchyService = hierarchyService;
+            _container = container;
+        }
+
+        public override async Task<IEnumerable<Host>> GetAll()
+        {
+            var savedHosts = await base.GetAll();
+            foreach (var host in savedHosts)
+            {
+                host.IsActive = _container.Hive.Any(h => h.Host == host.Url);
+            }
+
+            return savedHosts;
         }
 
         public async Task<Host> ChangeParent(int id, int newParentId)

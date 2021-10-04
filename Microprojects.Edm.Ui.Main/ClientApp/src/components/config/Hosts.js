@@ -18,6 +18,15 @@ export function Hosts() {
             type='host'
             api={api}
             stubMessage='Please select a host'
+            item={(props) =>
+                <>
+                    <span className={`bi bi-${!props.item.isNode ? "diagram-2" : props.item.expanded ? "folder2-open" : "folder"}`}>&nbsp;</span>
+                    {!props.item.isNode &&
+                        <span className={`small bi bi-circle-fill text-${props.item.isActive ? "success" : "danger"}`}>&nbsp;</span>
+                    }
+                    <span>{props.item.name}</span>
+                </>
+            }
             detail={(
                 <HostDetail
                     api={api}
@@ -50,7 +59,7 @@ export function HostDetail({ hostId, ...props }) {
     return (
         <Detail {...props}
             id={id}
-            icon={<span className='k-icon k-i-calculator' title='Host' />}
+            icon={<span className='bi bi-diagram-2' title='Host' />}
             loading={loading}
             error={error}
             data={data}

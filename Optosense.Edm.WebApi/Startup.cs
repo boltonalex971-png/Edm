@@ -24,10 +24,12 @@ namespace Optosense.Edm.WebApi
     public class Startup
     {
         public IConfiguration Configuration { get; }
+        public IWebHostEnvironment Env { get; }
 
-        public Startup(IConfiguration configuration)
+        public Startup(IConfiguration configuration, IWebHostEnvironment env)
         {
             Configuration = configuration;
+            Env = env;
         }
 
         // This method gets called by the runtime. Use this method to add services to the container.
@@ -61,13 +63,16 @@ namespace Optosense.Edm.WebApi
 
             services.AddDistributedMemoryCache()
                 .AddSession(session => session.IdleTimeout = TimeSpan.FromMinutes(10));
-            services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
+            if (Env.IsProduction())
+            {
+                services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
+            }
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app)
         {
-            if (env.IsDevelopment())
+            if (Env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
@@ -76,7 +81,7 @@ namespace Optosense.Edm.WebApi
             app.UseCors("DevCorsPolicy");
             app.UseSession();
             app.UseRouting();
-            if (env.IsProduction())
+            if (Env.IsProduction())
             {
                 app.UseHttpsRedirection();
                 app.UseHsts();
@@ -95,7 +100,7 @@ namespace Optosense.Edm.WebApi
             });
             app.MapSpaPlugins();
             // Run command container
-            var container = app.ApplicationServices.GetService<ICommandContainer>();
+            app.ApplicationServices.GetService<ICommandContainer>().Start();
         }
     }
 }

@@ -25,6 +25,7 @@ namespace Microprojects.Edm
 
         public static void AddEdmCommands(this IServiceCollection services, Action<EdmConfiguration> configure)
         {
+            services.AddSingleton<ICommandContainer, CommandManager>();
             _config = new EdmConfiguration();
             configure(_config);
             Plugins = LoadPlugins(_config.PluginPaths);
@@ -32,8 +33,6 @@ namespace Microprojects.Edm
             {
                 services.AddTransient(plugin);
             }
-
-            services.AddSingleton<ICommandContainer, CommandManager>();
         }
 
         private static Dictionary<string, IEnumerable<Type>> LoadPlugins(IEnumerable<string> paths)
@@ -52,7 +51,7 @@ namespace Microprojects.Edm
                 var assembly = context.LoadFromAssemblyName(name);
 
                 var commands = assembly.ExportedTypes
-                    .Where(t => typeof(ICommand).IsAssignableFrom(t))
+                    .Where(t => typeof(ICommand).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract)
                     .ToList();
                 dic[assembly.FullName] = commands;
             }

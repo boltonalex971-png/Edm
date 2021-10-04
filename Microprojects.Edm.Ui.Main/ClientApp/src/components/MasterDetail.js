@@ -24,6 +24,7 @@ MasterDetail.propTypes = {
     editor: PropTypes.func,
     api: PropTypes.string,
     detail: PropTypes.element,
+    item: PropTypes.func,
     stubMessage: PropTypes.string
 };
 
@@ -34,7 +35,10 @@ export function MasterDetail(props) {
         <SmartScroll offtop={10}>
             <div style={{ flex: 1 }}>
                 <SmartScrollContent>
-                    <TreeViewMaster api={props.api} onCurrentRootChanged={(root) => (_selectedItem = root)} />
+                    <TreeViewMaster api={props.api}
+                        onCurrentRootChanged={(root) => (_selectedItem = root)}
+                        item={props.item}
+                    />
                 </SmartScrollContent>
             </div>
             <div style={{ flex: 5, marginLeft: '1rem' }}>

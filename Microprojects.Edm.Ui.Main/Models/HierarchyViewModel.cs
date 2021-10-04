@@ -28,6 +28,7 @@ namespace Optosense.Edm.WebUi.Models
         public string Name { get; set; }
         public string Description { get; set; }
         public bool IsNode { get; set; }
+        public bool IsActive { get; set; }
         public HierarchyType HierarchyType { get; set; }
         public bool HasChildren { get => Items?.Count() > 0; }
         public IEnumerable<HierarchyItemViewModel> Items { get; set; }

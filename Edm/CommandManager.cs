@@ -26,6 +26,7 @@ namespace Microprojects.Edm
         public static readonly string SUCCESS_STATUS = "Ok";
 
         private static ICommandContainer _commandContainerInstance;
+
         private IServiceProvider _services;
         public static ICommandContainer GetInstance()
         {
@@ -35,6 +36,7 @@ namespace Microprojects.Edm
             }
 
             _commandContainerInstance = _commandContainerInstance ?? new CommandManager();
+
             return _commandContainerInstance;
         }
 
@@ -42,32 +44,27 @@ namespace Microprojects.Edm
 
         //private readonly CompositionContainer _compositionContainer;
 
-        public IList<CancellableTask> RunningTasks { get; } = new List<CancellableTask>();
+        public ICollection<CancellableTask> RunningTasks { get; } = new List<CancellableTask>();
+        public ICollection<EdmHost> Hive { get; } = new List<EdmHost>();
 
         public CommandManager()
         {
-            RunEverTasks();
         }
 
         public CommandManager(IServiceProvider serviceProvider)
         {
             _services = serviceProvider;
+            //RunEverTasks();
+        }
+
+        public void Start()
+        {
             RunEverTasks();
         }
 
-        private void RunEverTasks()
+        public void Stop()
         {
-            // Launch all "ever"-running commands
-            var everCommands = EdmConfig.Plugins
-                .SelectMany(p => p.Value)
-                .Where(c => c.GetCustomAttribute<CommandAttribute>()?.Lifetime == CommandType.Permanent);
-            foreach (var command in everCommands)
-            {
-                var commandInstance = (ICommand)_services.GetService(command); //(ICommand) Activator.CreateInstance(command.GetType());
-                commandInstance.SetParameters(null);
-                commandInstance.Init();
-                var taskId = RunLongTask(commandInstance);
-            }
+            Dispose();
         }
 
         private IEnumerable<Type> GetAllCommands()
@@ -96,19 +93,6 @@ namespace Microprojects.Edm
             }).ToList();
         }
 
-        //public async Task<ResponseData> Request()
-        //{
-        //    var sec = OperationContext.Current.ServiceSecurityContext;
-        //    var types = sec.AuthorizationContext.ClaimSets.Select(cs => cs.Select(c => c.ClaimType));
-        //    WindowsIdentity winCaller = ServiceSecurityContext.Current.WindowsIdentity;
-        //    Logger.Log($"User {winCaller.Name} called GetPorts command");
-        //    //foreach (var group in winCaller.Groups)
-        //    //{
-        //    //Console.WriteLine(group.Translate(typeof(NTAccount)).Value);
-        //    //}
-        //    return await Execute(new CommandData { Command = "GetPorts" });
-        //}
-
         public Task<ResponseData> ExecuteAsync<T>(ICommandParameters parameters) where T : ICommand
         {
             return ExecuteAsync(typeof(T), parameters);
@@ -121,8 +105,8 @@ namespace Microprojects.Edm
                 throw new EdmException($"No command found: {commandType.Name}");
             }
 
-            var command = (ICommand)_services.GetService(commandType)
-                ?? throw new EdmException($"Command found but not registered as a service: {commandType.Name}");
+            var command = (ICommand)_services?.GetService(commandType) ??
+                throw new EdmException($"Command found but not registered as a service: {commandType.Name}");
             var lifetime = commandType.GetCustomAttribute<CommandAttribute>()?.Lifetime;
             var paramType = commandType.GetCustomAttribute<CommandAttribute>()?.Parameters;
             if (parameters != null && parameters.GetType().IsInstanceOfType(paramType))
@@ -238,6 +222,21 @@ namespace Microprojects.Edm
                     return false;
                 }
             });
+        }
+
+        private void RunEverTasks()
+        {
+            // Launch all "ever"-running commands
+            var everCommands = EdmConfig.Plugins
+                .SelectMany(p => p.Value)
+                .Where(c => c.GetCustomAttribute<CommandAttribute>()?.Lifetime == CommandType.Permanent);
+            foreach (var command in everCommands)
+            {
+                var commandInstance = (ICommand)_services.GetService(command); //(ICommand) Activator.CreateInstance(command.GetType());
+                commandInstance.SetParameters(null);
+                commandInstance.Init();
+                var taskId = RunLongTask(commandInstance);
+            }
         }
 
         private int RunLongTask(ICommand command)

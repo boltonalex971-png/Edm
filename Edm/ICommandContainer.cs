@@ -12,12 +12,15 @@ namespace Microprojects.Edm
 {
     public interface ICommandContainer : IDisposable
     {
-        IList<CancellableTask> RunningTasks { get; }
+        ICollection<EdmHost> Hive { get; }
+        ICollection<CancellableTask> RunningTasks { get; }
         IEnumerable<AvailableTask> GetRunningTasks();
         IEnumerable<AvailableTask> GetAvailableTasks();
         Task<ResponseData> ExecuteAsync<T>(ICommandParameters parameters = null) where T : ICommand;
         Task<ResponseData> ExecuteAsync(Type commandType, ICommandParameters parameters = null);
         Task<ResponseData> ExecuteAsync(CommandData data);
+        void Start();
+        void Stop();
     }
 
     public class CommandData
