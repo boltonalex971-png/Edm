@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration.Install;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.ServiceProcess;
 using System.Threading.Tasks;
@@ -45,6 +46,17 @@ namespace Microprojects.Edm.Installer
                 WindowStyle = ProcessWindowStyle.Hidden
             };
             cmd.Start();
+
+            // Fix appsettings.json according choosen installation options
+            var settingsPath = $"{_targetDir}\\appsettings.json";
+            var settings = File.ReadAllText(settingsPath);
+            settings = settings.Replace("[CACHECONNECTIONSTRING]", Context.Parameters["cache"].ToString());
+            settings = settings.Replace("[DBCONNECTIONSTRING]", Context.Parameters["db"].ToString().Replace("\\", "\\\\"));
+            settings = settings.Replace("[CONSOLEURL]", Context.Parameters["consoleUrl"].ToString());
+            settings = settings.Replace("[GRPCURL]", Context.Parameters["grpcUrl"].ToString());
+            File.WriteAllText(settingsPath, settings);
+            File.Delete($"{_targetDir}\\appsettings.Production.json");
+            File.Delete($"{_targetDir}\\appsettings.Development.json");
 
             // Install EDM as service
             cmd.StartInfo = new ProcessStartInfo("cmd.exe", 
