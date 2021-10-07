@@ -8,11 +8,11 @@ using Microsoft.Extensions.Logging;
 using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Domain.Models;
 using Optosense.Edm.Plugins;
-using Optosense.Edm.Webui.Models;
-using Optosense.Edm.WebUi.Models;
-using Optosense.Edm.WebUi.Utils;
+using Microprojects.Edm.Ui.Main.Models;
+using Microprojects.Edm.Ui.Main.Models;
+using Microprojects.Edm.Ui.Main.Utils;
 
-namespace Optosense.Edm.WebUi.Controllers
+namespace Microprojects.Edm.Ui.Main.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
@@ -132,7 +132,7 @@ namespace Optosense.Edm.WebUi.Controllers
         [HttpPost("{id:int}/profiles")]
         public async Task<ProfileViewModel> AddProfile(int id, ProfileViewModel model)
         {
-            var profile = _mapper.Map<Domain.Models.Profile>(model);
+            var profile = _mapper.Map<Optosense.Edm.Domain.Models.Profile>(model);
             profile = await _processService.AddProfile(id, profile);
             return _mapper.Map<ProfileViewModel>(profile);
         }

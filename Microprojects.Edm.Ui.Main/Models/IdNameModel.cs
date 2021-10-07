@@ -1,6 +1,6 @@
 using System;
 
-namespace Optosense.Edm.Webui.Models
+namespace Microprojects.Edm.Ui.Main.Models
 {
     public class IdNameModel
     {

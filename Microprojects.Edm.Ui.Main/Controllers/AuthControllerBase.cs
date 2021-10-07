@@ -11,9 +11,9 @@ using Optosense.Edm.Core.Auditing;
 using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Core.Models;
 using Optosense.Edm.Domain.Models;
-using Optosense.Edm.Webui.Models;
+using Microprojects.Edm.Ui.Main.Models;
 
-namespace Optosense.Edm.WebUi.Controllers
+namespace Microprojects.Edm.Ui.Main.Controllers
 {
     public class AuthControllerBase : ControllerBase
     {

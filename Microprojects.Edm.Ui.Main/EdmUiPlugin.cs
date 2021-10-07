@@ -14,7 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Optosense.Edm.WebUi
+namespace Microprojects.Edm.Ui.Main
 {
     [OperationPlugin(
         Name = "EDM",

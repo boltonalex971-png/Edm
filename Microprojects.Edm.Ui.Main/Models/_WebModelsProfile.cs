@@ -1,14 +1,13 @@
 ﻿using AutoMapper;
-using Microprojects.Edm.Ui.Main.Models;
 using Optosense.Edm.Domain.Models;
 using Optosense.Edm.Plugins;
-using Optosense.Edm.Webui.Models;
+using Microprojects.Edm.Ui.Main.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Optosense.Edm.WebUi.Models
+namespace Microprojects.Edm.Ui.Main.Models
 {
     public class WebModelsProfile : AutoMapper.Profile
     {
@@ -55,10 +54,10 @@ namespace Optosense.Edm.WebUi.Models
 
             CreateMap<OperationCriterion, OperationCriterionModel>();
 
-            CreateMap<Domain.Models.Profile, ProfileViewModel>()
+            CreateMap<Optosense.Edm.Domain.Models.Profile, ProfileViewModel>()
                 .ForMember(d => d.ProfilerGuid, o => o.MapFrom(s => s.ProfilerGuid))
                 .ForMember(d => d.ProfilerName, o => o.Ignore());
-            CreateMap<ProfileViewModel, Domain.Models.Profile>();
+            CreateMap<ProfileViewModel, Optosense.Edm.Domain.Models.Profile>();
 
             CreateMap<Workbench, WorkbenchViewModel>()
                 .ForMember(d => d.ProcessName, o => o.MapFrom(s => s.WorkplaceProcess.Process.Name))

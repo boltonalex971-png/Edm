@@ -1,13 +1,13 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Optosense.Edm.Domain.Models;
-using Optosense.Edm.WebUi.Models;
+using Microprojects.Edm.Ui.Main.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 
-namespace Optosense.Edm.WebUi.Utils
+namespace Microprojects.Edm.Ui.Main.Utils
 {
     public static class HierarchyHelper
     {

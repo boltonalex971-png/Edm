@@ -10,9 +10,9 @@ using Microsoft.Extensions.Logging;
 using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Core.Models;
 using Optosense.Edm.Domain.Models;
-using Optosense.Edm.WebUi.Models;
+using Microprojects.Edm.Ui.Main.Models;
 
-namespace Optosense.Edm.WebUi.Controllers
+namespace Microprojects.Edm.Ui.Main.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

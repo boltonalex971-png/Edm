@@ -9,9 +9,9 @@ using Microsoft.Extensions.Logging;
 using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Domain.Models;
 using Optosense.Edm.Plugins;
-using Optosense.Edm.Webui.Models;
+using Microprojects.Edm.Ui.Main.Models;
 
-namespace Optosense.Edm.WebUi.Controllers
+namespace Microprojects.Edm.Ui.Main.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
@@ -29,17 +29,17 @@ namespace Optosense.Edm.WebUi.Controllers
         }
 
         [HttpGet]
-        public async Task<IEnumerable<Domain.Models.Profile>> Get()
+        public async Task<IEnumerable<Optosense.Edm.Domain.Models.Profile>> Get()
         {
             return await _profileService.GetAll();
         }
 
         [HttpGet("{id:int}")]
-        public async Task<Domain.Models.Profile> GetById(int id)
+        public async Task<Optosense.Edm.Domain.Models.Profile> GetById(int id)
         {
             var profile = id switch {
                 not 0 => await _profileService.Get(id),
-                0 => new Domain.Models.Profile
+                0 => new Optosense.Edm.Domain.Models.Profile
                 {
                     Name = string.Empty,
                     Description = string.Empty,
@@ -51,7 +51,7 @@ namespace Optosense.Edm.WebUi.Controllers
         }
 
         [HttpPut("{id:int}")]
-        public async Task<Domain.Models.Profile> Save(int id, [FromBody] Domain.Models.Profile profile)
+        public async Task<Optosense.Edm.Domain.Models.Profile> Save(int id, [FromBody] Optosense.Edm.Domain.Models.Profile profile)
         {
             if (id != profile.Id)
             {
@@ -62,14 +62,14 @@ namespace Optosense.Edm.WebUi.Controllers
         }
 
         [HttpDelete("{id:int}")]
-        public async Task<Domain.Models.Profile> DeleteProfile(int id)
+        public async Task<Optosense.Edm.Domain.Models.Profile> DeleteProfile(int id)
         {
             var profile = await _profileService.Delete(id);
             return profile;
         }
 
         [HttpPost]
-        public async Task<Domain.Models.Profile> Create([FromBody] Domain.Models.Profile profile)
+        public async Task<Optosense.Edm.Domain.Models.Profile> Create([FromBody] Optosense.Edm.Domain.Models.Profile profile)
         {
             profile.Id = 0;
             var result = await _profileService.Save(profile);
@@ -84,7 +84,7 @@ namespace Optosense.Edm.WebUi.Controllers
         }
 
         [HttpGet("devices/{id:int}")]
-        public async Task<IEnumerable<Domain.Models.Profile>> GetProfilesByDeviceId(int id)
+        public async Task<IEnumerable<Optosense.Edm.Domain.Models.Profile>> GetProfilesByDeviceId(int id)
         {
             var profiles = await _profileService.GetByDevice(id);
             return profiles;
