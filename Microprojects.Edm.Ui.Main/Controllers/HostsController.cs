@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
+using Microprojects.Edm.Ui.Main.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Domain.Models;
 using Optosense.Edm.Plugins;
-using Optosense.Edm.Webui.Models;
 using Optosense.Edm.WebUi.Models;
 using Optosense.Edm.WebUi.Utils;
 
@@ -40,22 +40,25 @@ namespace Optosense.Edm.WebUi.Controllers
         }
 
         [HttpGet("{id:int}")]
-        public async Task<Host> GetById(int id)
+        public async Task<HostModel> GetById(int id)
         {
+            Host host;
             if (id > 0)
             {
-                return await _hostService.Get(id);
+                host = await _hostService.Get(id);
             }
             else
             {
-                return new Host
+                host = new HostModel
                 {
                     Name = string.Empty,
                     Description = string.Empty,
-                    Port = 4333,
+                    Port = 16333,
                     Url = string.Empty
                 };
             }
+
+            return _mapper.Map<HostModel>(host);
         }
 
         [HttpPut("{id:int}")]

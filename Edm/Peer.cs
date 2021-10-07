@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace Microprojects.Edm
 {
-    public class EdmHost
+    public class Peer
     {
         public string Host { get; set; }
-        public int UiPortl { get; set; }
+        public int UiPort { get; set; }
         public int GrpcPort { get; set; }
         public string Version { get; set; }
         public DateTime Timestamp { get; set; }

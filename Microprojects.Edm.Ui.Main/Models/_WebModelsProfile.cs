@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microprojects.Edm.Ui.Main.Models;
 using Optosense.Edm.Domain.Models;
 using Optosense.Edm.Plugins;
 using Optosense.Edm.Webui.Models;
@@ -108,6 +109,9 @@ namespace Optosense.Edm.WebUi.Models
                 .ForMember(d => d.ParentId, o => o.MapFrom(s => s.HierarchyId))
                 .ForMember(d => d.IsActive, o => o.MapFrom(s => true))
                 .ForMember(d => d.Items, o => o.Ignore());
+            CreateMap<Host, HostModel>()
+                .ForMember(d => d.Active, o => o.MapFrom(s => false))
+                .ForMember(d => d.Version, o => o.MapFrom(s => "1.0.0"));
 
             CreateMap<IPlugin, PluginInfoViewModel>();
         }

@@ -43,7 +43,7 @@ namespace Optosense.Edm.WebApi.Services
         {
             var result = _commandManager.GetAvailableTasks();
             var tasks = new AvailableTasks();
-            tasks.Tasks.AddRange(result.Select(r => new AvailableTasks.Types.Task { Pid = r.Pid ?? string.Empty, Status = r.Status ?? string.Empty, TaskName = r.TaskName, Type = r.Type }));
+            tasks.Tasks.AddRange(result.Select(r => new AvailableTasks.Types.Task { Pid = r.Pid ?? string.Empty, Status = r.Status ?? string.Empty, TaskName = r.Name, Type = r.Type }));
             return Task.FromResult(tasks);
         }
 

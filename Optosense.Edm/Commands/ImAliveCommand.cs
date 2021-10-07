@@ -26,32 +26,24 @@ namespace Optosense.Edm.Commands
         public override async Task<object> ExecuteAsync()
         {
             // Listen "ImAlive" messages
-            var listener = Cache.Subscribe<EdmHost>(Parameters.Channel,
+            var listener = Cache.Subscribe<Peer>(Parameters.Channel,
                 onNext: h =>
                 {
                     //Logger.Log($"Got imalive message: {h.Host} {h.Version} {h.Timestamp}");
-                    var host = Container.Hive.FirstOrDefault(s => s.Host == h.Host);
-                    if (host is null)
-                    {
-                        Container.Hive.Add(h);
-                    }
-                    else
-                    {
-                        host.Timestamp = h.Timestamp;
-                    }
+                    var host = Container.Hive.TouchPeer(h);
                 });
-            var host = new EdmHost
+            var host = new Peer
             {
                 Host = "http://mp-bolotin",
                 GrpcPort = 16333,
-                UiPortl = 16331,
+                UiPort = 16331,
                 Version = GetType().Assembly.GetName().Version.ToString()
             };
             var issuer = new Timer((state) =>
             {
                 host.Timestamp = DateTime.Now;
                 Cache.Publish(Parameters.Channel, host);
-            }, null, 0, 10000);
+            }, null, 0, (int)Container.Hive.Alive.TotalMilliseconds);
             try
             {
                 await Task.Delay(-1, CancellationToken);

@@ -17,17 +17,24 @@ namespace Microprojects.Edm.Commands
 {
     public class BaseCommand : ICommand
     {
+        protected CancellationToken CancellationToken { get; set; } = CancellationToken.None;
         public virtual ICommandParameters CommandParameters { get; set; }
 
         public virtual string Name
         {
-            get
-            {
-                var name = GetType().Name.Replace("Command", string.Empty);
-                return name;
-            }
+            get => GetType().GetCustomAttribute<CommandAttribute>()?.Name ?? 
+                GetType().Name.Replace("Command", string.Empty);
         }
-        protected CancellationToken CancellationToken { get; set; } = CancellationToken.None;
+
+        public virtual string Description
+        {
+            get => GetType().GetCustomAttribute<CommandAttribute>()?.Description;
+        }
+
+        public CommandType Lifetime 
+        {
+            get => GetType().GetCustomAttribute<CommandAttribute>()?.Lifetime ?? CommandType.ShortRunning;
+        }
 
         public virtual bool Init()
         {

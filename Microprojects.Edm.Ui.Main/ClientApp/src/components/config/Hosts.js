@@ -3,11 +3,13 @@ import PropTypes from 'prop-types';
 import { useGet } from '../hooks/hooks';
 import { Field } from '@progress/kendo-react-form';
 import { Input, NumericTextBox } from '@progress/kendo-react-inputs';
+import { Button } from '@progress/kendo-react-buttons';
 import { useHistory, useParams } from 'react-router-dom';
 import { useRouteMatch } from 'react-router-dom';
 import { MasterDetail, reloadMaster, Detail, Info, Editor } from '../MasterDetail';
 import { HostTabs } from './host/HostTabs';
 import Api from '../api';
+import { HostConsole } from './host/HostConsole';
 
 export function Hosts() {
     const history = useHistory();
@@ -65,14 +67,30 @@ export function HostDetail({ hostId, ...props }) {
             data={data}
             subDetail={sub}
             card={
-                <Info {...props}
-                    data={data}
-                    content={
-                        <div>
-                            <p>{`${data.url}:${data.port}`}</p>
-                        </div>
-                    }
-                />
+                <>
+                    <div className="d-flex justify-content-left align-items-baseline" >
+                        <span className={`bi bi-circle-fill text-${data.isActive ? 'success' : 'danger'}`} ></span>
+                        <Info {...props}
+                            data={data}
+                            content={
+                                <div className='ml-2' >
+                                    <p>{`${data.url}:${data.port}`} v{data.version}</p>
+                                </div>
+                            }
+                        />
+                        <Button className='ml-2' disabled={data.isActive === false}
+                            onClick={() => setSub(
+                                <HostConsole
+                                    data={data}
+                                    onClose={() => setSub()}
+                                />)
+                            } >
+                            <span className='bi bi-terminal'>
+                                &nbsp;Console
+                            </span>
+                        </Button>
+                    </div>
+                </>
             }
             editor={
                 <Editor {...props}

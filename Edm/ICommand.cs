@@ -10,6 +10,8 @@ namespace Microprojects.Edm
     public interface ICommand
     {
         string Name { get; }
+        string Description { get; }
+        CommandType Lifetime { get; }
         ICommandParameters CommandParameters { get; set; }
         Task<object> ExecuteAsync();
         Task<object> ExecuteAsync(CancellationToken cancellationToken);
@@ -33,6 +35,7 @@ namespace Microprojects.Edm
     public class CommandAttribute : Attribute
     {
         public string Name { get; set; }
+        public string Description { get; set; }
         public CommandType Lifetime { get; set; }
         public Type Parameters { get; set; }
     }

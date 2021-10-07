@@ -32,12 +32,37 @@ namespace Optosense.Edm.Core.Services
             _container = container;
         }
 
+        public override async Task<Host> Get(int id)
+        {
+            var host = await base.Get(id);
+            host.IsActive = _container.Hive.GetActivePeers()
+                    .Any(h => h.Host == host.Url);
+            return host;
+        }
+
         public override async Task<IEnumerable<Host>> GetAll()
         {
-            var savedHosts = await base.GetAll();
+            var savedHosts = new List<Host>(await base.GetAll());
             foreach (var host in savedHosts)
             {
-                host.IsActive = _container.Hive.Any(h => h.Host == host.Url);
+                host.IsActive = _container.Hive.GetActivePeers()
+                    .Any(h => h.Host == host.Url);
+            }
+
+            var unknownHosts = _container.Hive.GetActivePeers()
+                .Where(h => !savedHosts.Any(s => s.Url.StartsWith($"{h.Host}")));
+            foreach (var newHost in unknownHosts)
+            {
+                var hostUri = new Uri($"{newHost.Host}");
+                var addedHost = await Save(new Host
+                {
+                    HierarchyId = (await _hierarchyService.GetRoot(HierarchyType.Host)).Id,
+                    IsActive = true,
+                    Name = hostUri.Host,
+                    Port = newHost.GrpcPort,
+                    Url = newHost.Host
+                });
+                savedHosts.Add(addedHost);
             }
 
             return savedHosts;

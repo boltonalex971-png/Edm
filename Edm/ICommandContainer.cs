@@ -12,7 +12,7 @@ namespace Microprojects.Edm
 {
     public interface ICommandContainer : IDisposable
     {
-        ICollection<EdmHost> Hive { get; }
+        Hive Hive { get; }
         ICollection<CancellableTask> RunningTasks { get; }
         IEnumerable<AvailableTask> GetRunningTasks();
         IEnumerable<AvailableTask> GetAvailableTasks();
@@ -39,7 +39,8 @@ namespace Microprojects.Edm
 
     public class AvailableTask
     {
-        public string TaskName { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
         public string Status { get; set; }
         public string Type { get; set; }
         public string Pid { get; set; }

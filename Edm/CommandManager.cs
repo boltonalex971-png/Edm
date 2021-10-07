@@ -45,7 +45,7 @@ namespace Microprojects.Edm
         //private readonly CompositionContainer _compositionContainer;
 
         public ICollection<CancellableTask> RunningTasks { get; } = new List<CancellableTask>();
-        public ICollection<EdmHost> Hive { get; } = new List<EdmHost>();
+        public Hive Hive { get; } = new Hive();
 
         public CommandManager()
         {
@@ -76,7 +76,8 @@ namespace Microprojects.Edm
         {
             return RunningTasks.Select(t => new AvailableTask()
             {
-                TaskName = t.Command.Name,
+                Name = t.Command.Name,
+                Description = t.Command.Description,
                 Status = "Executing",
                 Type = t.TokenSource.IsCancellationRequested ? "Canceling" : t.Task.Status.ToString(),
                 Pid = t.Task.Id.ToString()
@@ -88,8 +89,9 @@ namespace Microprojects.Edm
         {
             return GetAllCommands().Select(c => new AvailableTask()
             {
-                TaskName = c.GetType().GetCustomAttribute<CommandAttribute>()?.Name ?? c.GetType().Name.Replace("Command", string.Empty),
-                Type = c.GetType().GetCustomAttribute<CommandAttribute>()?.Lifetime.ToString() ?? CommandType.ShortRunning.ToString()
+                Name = c.GetCustomAttribute<CommandAttribute>()?.Name ?? c.GetType().Name.Replace("Command", string.Empty),
+                Type = c.GetCustomAttribute<CommandAttribute>()?.Lifetime.ToString() ?? CommandType.ShortRunning.ToString(),
+                Description = c.GetCustomAttribute<CommandAttribute>()?.Description
             }).ToList();
         }
 

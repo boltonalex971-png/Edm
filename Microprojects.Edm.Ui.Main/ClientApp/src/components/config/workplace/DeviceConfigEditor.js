@@ -32,7 +32,7 @@ export function DeviceConfigEditor({ id, ...props }) {
             card={
                 <div>
                     <LoadingContainer loading={iframeLoading && loading}>
-                        <iframe id='config-iframe' height='300' width='100%' seamless frameBorder='0'
+                        <iframe title='Device Configuration' id='config-iframe' height='300' width='100%' seamless frameBorder='0'
                             src={`${location}/${data.driverHomepage}/options?a=${arg}`}
                             onLoad={() => setIframeLoading(false)}
                         />
