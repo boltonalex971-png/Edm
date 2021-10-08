@@ -6,6 +6,7 @@ using Microprojects.Edm.Log;
 using System.Linq;
 using Microprojects.Edm;
 using Microprojects.Edm.Commands;
+using Microsoft.Extensions.Options;
 
 namespace Optosense.Edm.Commands
 {
@@ -14,13 +15,15 @@ namespace Optosense.Edm.Commands
     {
         protected ICache Cache { get; init; }
         protected ICommandContainer Container { get; init; }
+        protected IOptions<Peer> PeerOptions { get; init; }
         protected ImAliveCommandParameters Parameters => (ImAliveCommandParameters) CommandParameters;
 
         public ImAliveCommand() { }
-        public ImAliveCommand(ICache cache, ICommandContainer container)
+        public ImAliveCommand(ICache cache, ICommandContainer container, IOptions<Peer> options)
         {
             Cache = cache;
             Container = container;
+            PeerOptions = options;
         }
 
         public override async Task<object> ExecuteAsync()
@@ -32,17 +35,10 @@ namespace Optosense.Edm.Commands
                     //Logger.Log($"Got imalive message: {h.Host} {h.Version} {h.Timestamp}");
                     var host = Container.Hive.TouchPeer(h);
                 });
-            var host = new Peer
-            {
-                Host = "http://mp-bolotin",
-                GrpcPort = 16333,
-                UiPort = 16331,
-                Version = GetType().Assembly.GetName().Version.ToString()
-            };
             var issuer = new Timer((state) =>
             {
-                host.Timestamp = DateTime.Now;
-                Cache.Publish(Parameters.Channel, host);
+                PeerOptions.Value.Timestamp = DateTime.Now;
+                Cache.Publish(Parameters.Channel, PeerOptions.Value);
             }, null, 0, (int)Container.Hive.Alive.TotalMilliseconds);
             try
             {

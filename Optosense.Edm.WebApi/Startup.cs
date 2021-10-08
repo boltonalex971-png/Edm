@@ -51,6 +51,17 @@ namespace Optosense.Edm.WebApi
                 config.Configuration = Configuration;
             });
 
+            services.Configure<Peer>(options =>
+            {
+                var section = Configuration.GetSection("Kestrel:Endpoints").GetChildren();
+                var grpcUri = new Uri(section.First(s => s.Key.StartsWith("Grpc"))["Url"]);
+                var uiUri = new Uri(section.First(s => s.Key.StartsWith("Http"))["Url"]);
+                options.Host = $"{uiUri.Scheme}://{uiUri.Host}";
+                options.GrpcPort = grpcUri.Port;
+                options.UiPort = uiUri.Port;
+                options.Version = GetType().Assembly.GetName().Version.ToString();
+            });
+
             services.AddCors(options =>
             {
                 options.AddPolicy("DevCorsPolicy", builder =>
