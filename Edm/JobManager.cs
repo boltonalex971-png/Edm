@@ -66,7 +66,7 @@ namespace Microprojects.Edm
                 Name = t.Job.Name,
                 Description = t.Job.Description,
                 Status = "Executing",
-                Type = t.TokenSource.IsCancellationRequested ? "Canceling" : t.Task.Status.ToString(),
+                Type = t.TokenSource.IsCancellationRequested ? "Cancelling" : t.Task.Status.ToString(),
                 Pid = t.Task.Id.ToString()
             });
 

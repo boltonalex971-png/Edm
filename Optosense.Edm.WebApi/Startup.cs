@@ -84,11 +84,6 @@ namespace Optosense.Edm.WebApi
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app)
         {
-            if (Env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
-
             app.JsonConfigure();
             app.UseCors("DevCorsPolicy");
             app.UseSession();

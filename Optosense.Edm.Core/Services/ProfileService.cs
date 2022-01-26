@@ -58,7 +58,7 @@ namespace Optosense.Edm.Core.Services
         {
             var profile = await Get(id);
             var plugin = _plugins.GetProfile(profile.ProfilerGuid);
-            var parameters = plugin.GetParameters(profile.TextJson);
+            var parameters = plugin?.GetParameters(profile.TextJson);
             return parameters;
         }
 
