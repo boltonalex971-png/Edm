@@ -1,11 +1,5 @@
-﻿using AutoMapper;
-using Optosense.Edm.Domain.Models;
+﻿using Optosense.Edm.Domain.Models;
 using Optosense.Edm.Plugins;
-using Microprojects.Edm.Ui.Main.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Microprojects.Edm.Ui.Main.Models
 {

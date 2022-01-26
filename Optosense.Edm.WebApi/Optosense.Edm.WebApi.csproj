@@ -2,17 +2,17 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net5</TargetFramework>
+    <TargetFramework>net6</TargetFramework>
     <UserSecretsId>9b0669d6-06a8-4311-8191-62a51321fd0c</UserSecretsId>
     <StartupObject>Optosense.Edm.WebApi.Program</StartupObject>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="10.1.1" />
-    <PackageReference Include="Grpc.AspNetCore" Version="2.33.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="5.0.8" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="5.0.1" />
+    <PackageReference Include="Grpc.AspNetCore" Version="2.42.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="6.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="6.0.0" />
   </ItemGroup>
 
   <ItemGroup>

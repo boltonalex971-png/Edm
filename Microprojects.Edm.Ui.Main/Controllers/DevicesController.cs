@@ -9,7 +9,6 @@ using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Domain.Models;
 using Optosense.Edm.Plugins;
 using Microprojects.Edm.Ui.Main.Models;
-using Microprojects.Edm.Ui.Main.Models;
 using Microprojects.Edm.Ui.Main.Utils;
 
 namespace Microprojects.Edm.Ui.Main.Controllers
