@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microprojects.Edm;
-using Microprojects.Edm.Commands;
 using Microprojects.Edm.Cache;
 using Optosense.Edm.Domain.Models;
 using Microprojects.Edm.Log;
@@ -15,23 +14,24 @@ using Optosense.Edm.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Optosense.Edm.Infrastructure.Edm;
 using System.Dynamic;
-using Optosense.Edm.Infrastructure.Edm.Commands;
 using Optosense.Edm.Core.Persistance;
+using Microprojects.Edm.Jobs;
+using Optosense.Edm.Infrastructure.Edm.Jobs;
 
-namespace Optosense.Edm.Commands
+namespace Optosense.Edm.Jobs
 {
-    [Command(Name = "StartOperation", Lifetime = CommandType.LongRunning, Parameters = typeof(StartOperationCommandParameters))]
-    public class StartOperationCommand : BaseCommand
+    [Job(Name = "StartOperation", Lifetime = JobLifetime.LongRunning, Parameters = typeof(StartOperationJobParameters))]
+    public class StartOperationJob : BaseJob
     {
-        protected StartOperationCommandParameters Parameters => (StartOperationCommandParameters) CommandParameters;
-        protected ICommandContainer CommandManager { get; init; }
+        protected StartOperationJobParameters Parameters => (StartOperationJobParameters) JobParameters;
+        protected IJobContainer JobManager { get; init; }
         protected ICache Cache { get; init; }
         protected IEdmContextFactory ContextFactory { get; init; }
 
-        public StartOperationCommand() { }
-        public StartOperationCommand(ICommandContainer container, ICache cache, IEdmContextFactory contextFactory)
+        public StartOperationJob() { }
+        public StartOperationJob(IJobContainer container, ICache cache, IEdmContextFactory contextFactory)
         {
-            CommandManager = container;
+            JobManager = container;
             ContextFactory = contextFactory;
             Cache = cache;
         }
@@ -43,16 +43,16 @@ namespace Optosense.Edm.Commands
 
         public override async Task<object> ExecuteAsync()
         {
-            var running = new List<(string url, ICommand command)>();
-            var audits = new List<ICommand>();
+            var running = new List<(string url, IJob job)>();
+            var audits = new List<IJob>();
             // Launch execution result storage
             var storeChannel = $"Operation-{Parameters.Operation}";
             var auditChannel = $"{storeChannel}-audit";
-            var storageCommand = new StoreOperationRecordsCommand
+            var storageJob = new StoreOperationRecordsJob
             {
-                CommandParameters = new StoreOperationRecordsCommandParameters { Channel = storeChannel, AuditChannel = auditChannel }
+                JobParameters = new StoreOperationRecordsJobParameters { Channel = storeChannel, AuditChannel = auditChannel }
             };
-            await CommandManager.LocalExecute(storageCommand);
+            await JobManager.Execute(storageJob);
 
             // Launch devices
             using (var db = ContextFactory.Create())
@@ -66,7 +66,7 @@ namespace Optosense.Edm.Commands
                 if (devices.All(d => d.HostDevice.Device.DriverGuid == Guid.Empty))
                 {
                     // Start test operation if all devices of type None
-                    var test = new StartTestOperationCommand { CommandParameters = CommandParameters };
+                    var test = new StartTestOperationJob { JobParameters = JobParameters };
                     return await test.ExecuteAsync(CancellationToken);
                 }
 
@@ -75,23 +75,23 @@ namespace Optosense.Edm.Commands
                     // Launch audits
                     foreach (var audit in operationHostDevice.Profile.Audits)
                     {
-                        var auditParams = new StartAuditCommandParameters
+                        var auditParams = new StartAuditJobParameters
                         {
                             Audit = audit.Id,
                             Operation = Parameters.Operation,
                             Channel = auditChannel,
                             StartAt = Parameters.StartAt
                         };
-                        var auditCommand = new StartAuditCommand { CommandParameters = auditParams };
-                        await CommandManager.LocalExecute(auditCommand);
-                        audits.Add(auditCommand);
+                        var auditJob = new StartAuditJob { JobParameters = auditParams };
+                        await JobManager.Execute(auditJob);
+                        audits.Add(auditJob);
                     }
 
                     // Launch devices
                     var driverOptions = JsonConvert.DeserializeObject<ExpandoObject>(operationHostDevice.HostDevice.Device.Parameters ?? "{}");
                     JsonConvert.PopulateObject(operationHostDevice.HostDevice.Parameters ?? "{}", driverOptions);
                     JsonConvert.PopulateObject(operationHostDevice.Options ?? "{}", driverOptions);
-                    var deviceParams = new StartDeviceCommandParameters
+                    var deviceParams = new StartDeviceJobParameters
                     {
                         Driver = operationHostDevice.HostDevice.Device.DriverGuid,
                         DriverOptions = driverOptions,
@@ -101,12 +101,10 @@ namespace Optosense.Edm.Commands
                         Channel = storeChannel
                     };
                     var url = $"{operationHostDevice.HostDevice.Host.Url}:{operationHostDevice.HostDevice.Host.Port}";
-                    var deviceCommand = new StartDeviceCommand { CommandParameters = deviceParams };
-                    running.Add((url, deviceCommand));
+                    var deviceJob = new StartDeviceJob { JobParameters = deviceParams };
+                    running.Add((url, deviceJob));
                     // TODO check response for validity
-                    var response = //url.Contains("localhost") ?
-                                   //await CommandManager.LocalExecute(deviceCommand);
-                        await deviceCommand.RemoteExecute(url);
+                    var response = await deviceJob.Execute(url);
 
                 }
             }
@@ -118,22 +116,22 @@ namespace Optosense.Edm.Commands
                 await Task.Delay(10000, CancellationToken);
                 foreach (var dev in running)
                 {
-                    var check = new CheckCommand(dev.command);
+                    var check = new CheckJob(dev.job);
                     var parameter = new
                     {
-                        Command = dev.command.Name,
-                        ((StartDeviceCommandParameters) dev.command.CommandParameters).OperationHostDevice,
-                        ((StartDeviceCommandParameters) dev.command.CommandParameters).Driver
+                        Job = dev.job.Name,
+                        ((StartDeviceJobParameters) dev.job.JobParameters).OperationHostDevice,
+                        ((StartDeviceJobParameters) dev.job.JobParameters).Driver
                     };
                     var response = //dev.url.Contains("localhost") ?
-                        await CommandManager.LocalExecute(check, parameter);
+                        await JobManager.Execute(check, parameter);
                         //await check.RemoteExecute(dev.url, parameter);
-                    if (response.Status == "Ok" && Enum.TryParse(response.Message, out TaskStatus commandStatus))
+                    if (response.Status == "Ok" && Enum.TryParse(response.Message, out TaskStatus jobStatus))
                     {
-                        if (commandStatus == TaskStatus.Running ||
-                                commandStatus == TaskStatus.WaitingForActivation ||
-                                commandStatus == TaskStatus.WaitingToRun ||
-                                commandStatus == TaskStatus.WaitingForChildrenToComplete)
+                        if (jobStatus == TaskStatus.Running ||
+                                jobStatus == TaskStatus.WaitingForActivation ||
+                                jobStatus == TaskStatus.WaitingToRun ||
+                                jobStatus == TaskStatus.WaitingForChildrenToComplete)
                         {
                             continue;
                         }
@@ -148,11 +146,11 @@ namespace Optosense.Edm.Commands
             // Stop audits
             foreach (var audit in audits)
             {
-                await CommandManager.LocalExecute(new StopCommand(audit));
+                await JobManager.Execute(new StopJob(audit));
             }
 
             // Stop storage
-            await CommandManager.LocalExecute(new StopCommand(storageCommand));
+            await JobManager.Execute(new StopJob(storageJob));
 
             using (var db = ContextFactory.Create())
             {
@@ -165,9 +163,9 @@ namespace Optosense.Edm.Commands
         }
     }
 
-    public class StartOperationCommandParameters : ICommandParameters
+    public class StartOperationJobParameters : IJobParameters
     {
-        [CommandParameter(Required = true)]
+        [JobParameter(Required = true)]
         public int Operation { get; set; }
         public DateTime StartAt { get; set; } = DateTime.Now.AddSeconds(10);
 

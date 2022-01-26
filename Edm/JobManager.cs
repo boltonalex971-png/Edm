@@ -15,46 +15,33 @@ using Microprojects.Edm.Log;
 using Microprojects.Edm.Utils;
 using Microprojects.Edm.Utils.Notifications;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 
 namespace Microprojects.Edm
 {
-    public class CommandManager : ICommandContainer
+    public class JobManager : IJobContainer
     {
         public static readonly string FAILED_STATUS = "Failed";
         public static readonly string NOT_FOUND = "Not found";
         public static readonly string SUCCESS_STATUS = "Ok";
 
-        private static ICommandContainer _commandContainerInstance;
+        private static IJobContainer _jobContainerInstance;
 
+        private EdmConfiguration _config;
         private IServiceProvider _services;
-        public static ICommandContainer GetInstance()
-        {
-            if (EdmConfig.Plugins == null)
-            {
-                throw new NullReferenceException("Edm is not yet configured");
-            }
-
-            _commandContainerInstance = _commandContainerInstance ?? new CommandManager();
-
-            return _commandContainerInstance;
-        }
-
-        //public IEnumerable<Lazy<ICommand, ICommandMetadata>> Commands;
-
-        //private readonly CompositionContainer _compositionContainer;
-
+        
         public ICollection<CancellableTask> RunningTasks { get; } = new List<CancellableTask>();
-        public Hive Hive { get; } = new Hive();
+        public JobHive Hive { get; } = new JobHive();
 
-        public CommandManager()
+        public JobManager()
         {
         }
 
-        public CommandManager(IServiceProvider serviceProvider)
+        public JobManager(IServiceProvider serviceProvider, IOptions<EdmConfiguration> config)
         {
             _services = serviceProvider;
-            //RunEverTasks();
+            _config = config.Value;
         }
 
         public void Start()
@@ -67,17 +54,17 @@ namespace Microprojects.Edm
             Dispose();
         }
 
-        private IEnumerable<Type> GetAllCommands()
+        private IEnumerable<Type> GetAllJobs()
         {
-            return EdmConfig.Plugins.SelectMany(p => p.Value);
+            return _config.NamedJobs.Select(p => p.Value);
         }
 
         public IEnumerable<AvailableTask> GetRunningTasks()
         {
             return RunningTasks.Select(t => new AvailableTask()
             {
-                Name = t.Command.Name,
-                Description = t.Command.Description,
+                Name = t.Job.Name,
+                Description = t.Job.Description,
                 Status = "Executing",
                 Type = t.TokenSource.IsCancellationRequested ? "Canceling" : t.Task.Status.ToString(),
                 Pid = t.Task.Id.ToString()
@@ -87,60 +74,70 @@ namespace Microprojects.Edm
 
         public IEnumerable<AvailableTask> GetAvailableTasks()
         {
-            return GetAllCommands().Select(c => new AvailableTask()
+            return GetAllJobs().Select(c => new AvailableTask()
             {
-                Name = c.GetCustomAttribute<CommandAttribute>()?.Name ?? c.GetType().Name.Replace("Command", string.Empty),
-                Type = c.GetCustomAttribute<CommandAttribute>()?.Lifetime.ToString() ?? CommandType.ShortRunning.ToString(),
-                Description = c.GetCustomAttribute<CommandAttribute>()?.Description
+                Name = c.GetCustomAttribute<JobAttribute>()?.Name ?? c.GetType().Name.Replace("Job", string.Empty),
+                Type = c.GetCustomAttribute<JobAttribute>()?.Lifetime.ToString() ?? JobLifetime.ShortRunning.ToString(),
+                Description = c.GetCustomAttribute<JobAttribute>()?.Description
             }).ToList();
         }
 
-        public Task<ResponseData> ExecuteAsync<T>(ICommandParameters parameters) where T : ICommand
+        public Task<ResponseData> ExecuteAsync<T>(IJobParameters parameters) where T : IJob
         {
             return ExecuteAsync(typeof(T), parameters);
         }
 
-        public async Task<ResponseData> ExecuteAsync(Type commandType, ICommandParameters parameters = null)
+        public async Task<ResponseData> ExecuteAsync(Type jobType, IJobParameters parameters = null)
         {
-            if (GetAllCommands().FirstOrDefault(c => c == commandType) == null)
+            if (GetAllJobs().FirstOrDefault(c => c == jobType) == null)
             {
-                throw new EdmException($"No command found: {commandType.Name}");
+                throw new EdmException($"No job found: {jobType.Name}");
             }
 
-            var command = (ICommand)_services?.GetService(commandType) ??
-                throw new EdmException($"Command found but not registered as a service: {commandType.Name}");
-            var lifetime = commandType.GetCustomAttribute<CommandAttribute>()?.Lifetime;
-            var paramType = commandType.GetCustomAttribute<CommandAttribute>()?.Parameters;
-            if (parameters != null && parameters.GetType().IsInstanceOfType(paramType))
+            var job = (IJob)_services?.GetService(jobType) ??
+                throw new EdmException($"Job found but not registered as a service: {jobType.Name}");
+            if (parameters != null && parameters.GetType().IsInstanceOfType(jobType.GetJobParameters()))
             {
-                throw new EdmException($"Command parameters must be instance of {nameof(paramType)}");
+                throw new EdmException($"Job parameters must be instance of {jobType.GetJobParameters().Name}");
             }
 
-            command.CommandParameters = parameters;
-            command.Init();
+            job.JobParameters = parameters;
+            var response = await ExecuteAsync(job);
+            return response;
+        }
+
+        public Task<ResponseData> ExecuteAsync(Action job)
+        {
+            Task.Run(job).ConfigureAwait(false);
+            return Task.FromResult(new ResponseData { Status = SUCCESS_STATUS });
+        }
+
+        public async Task<ResponseData> ExecuteAsync(IJob job)
+        {
+
+            job.Init();
             var response = new ResponseData { Status = SUCCESS_STATUS, Response = SUCCESS_STATUS };
             // TODO Using async calls make no difference between lifetimes, refactor this to single call
-            switch (lifetime)
+            switch (job.Lifetime)
             {
-                case CommandType.ShortRunning:
-                    var result = await command.ExecuteAsync();
+                case JobLifetime.ShortRunning:
+                    var result = await job.ExecuteAsync();
                     response.Response = JsonConvert.SerializeObject(result);
-                    response.Message = $"Command {command.Name} executed succesfully";
+                    response.Message = $"Job {job.Name} executed succesfully";
                     //Logger.Log(response.Message);
                     break;
-                case CommandType.Permanent:
-                case CommandType.LongRunning:
-                    //command = command.GetNewInstance(); // statefull object needed
-                    var taskId = RunLongTask(command);
+                case JobLifetime.Permanent:
+                case JobLifetime.LongRunning:
+                    var taskId = RunLongTask(job);
                     response.Response = JsonConvert.SerializeObject(taskId);
-                    response.Message = $"Task {taskId} {command.Name} started succesfully";
+                    response.Message = $"Task {taskId} {job.Name} started succesfully";
                     break;
             }
 
             return response;
         }
 
-        public async Task<ResponseData> ExecuteAsync(CommandData data)
+        public async Task<ResponseData> ExecuteAsync(JobData data)
         {
             try
             {
@@ -148,7 +145,7 @@ namespace Microprojects.Edm
                 //var sec = OperationContext.Current.ServiceSecurityContext;
                 var response = new ResponseData { Status = SUCCESS_STATUS, Response = SUCCESS_STATUS };
 
-                if (data.Command == "Stop")
+                if (data.Job == "Stop")
                 {
                     var task = GetTaskByParams(data.Params);
                     if (task != null)
@@ -158,13 +155,13 @@ namespace Microprojects.Edm
                             task.Task.Status == TaskStatus.WaitingToRun ||
                             task.Task.Status == TaskStatus.WaitingForChildrenToComplete)
                         {
-                            response.Message = $"Task {task.Task.Id} {task.Command.Name} was requested to stop";
+                            response.Message = $"Task {task.Task.Id} {task.Job.Name} was requested to stop";
                             Logger.Log(response.Message);
                             task.TokenSource.Cancel();
                         }
                         else
                         {
-                            response.Message = $"Task {task.Task.Id} {task.Command.Name} was requested to stop but is not running";
+                            response.Message = $"Task {task.Task.Id} {task.Job.Name} was requested to stop but is not running";
                             response.Status = FAILED_STATUS;
                             Logger.Error(response.Message);
                         }
@@ -175,7 +172,7 @@ namespace Microprojects.Edm
                         response.Status = FAILED_STATUS;
                     }
                 }
-                else if (data.Command == "Check")
+                else if (data.Job == "Check")
                 {
                     try
                     {
@@ -192,11 +189,11 @@ namespace Microprojects.Edm
                 }
                 else
                 {
-                    var commandType = GetAllCommands()
-                        .FirstOrDefault(c => c.GetCustomAttribute<CommandAttribute>()?.Name == data.Command)
-                            ?? throw new ArgumentException($"Command {data.Command} does not exist");
-                    var parameters = ConvertParameters(commandType, data.Params);
-                    response = await ExecuteAsync(commandType, parameters);
+                    var jobType = GetAllJobs()
+                        .FirstOrDefault(c => c.GetCustomAttribute<JobAttribute>()?.Name == data.Job)
+                            ?? throw new ArgumentException($"Job {data.Job} does not exist");
+                    var parameters = ConvertParameters(jobType, data.Params);
+                    response = await ExecuteAsync(jobType, parameters);
                 }
 
                 return response;
@@ -215,12 +212,12 @@ namespace Microprojects.Edm
                 try
                 {
                     t.TokenSource.Cancel();
-                    Logger.Log($"Container stopping: task {t.Task.Id} {t.Command.Name} cancelled");
+                    Logger.Log($"Container stopping: task {t.Task.Id} {t.Job.Name} cancelled");
                     return true;
                 }
                 catch (Exception e)
                 {
-                    Logger.Error($"Container stopping: task {t.Task.Id} {t.Command.Name} failed to cancell with exception: {e.GetFullInfo()}");
+                    Logger.Error($"Container stopping: task {t.Task.Id} {t.Job.Name} failed to cancell with exception: {e.GetFullInfo()}");
                     return false;
                 }
             });
@@ -228,43 +225,43 @@ namespace Microprojects.Edm
 
         private void RunEverTasks()
         {
-            // Launch all "ever"-running commands
-            var everCommands = EdmConfig.Plugins
-                .SelectMany(p => p.Value)
-                .Where(c => c.GetCustomAttribute<CommandAttribute>()?.Lifetime == CommandType.Permanent);
-            foreach (var command in everCommands)
+            // Launch all "ever"-running jobs
+            var everJobs = _config.NamedJobs
+                .Select(p => p.Value)
+                .Where(c => c.GetCustomAttribute<JobAttribute>()?.Lifetime == JobLifetime.Permanent);
+            foreach (var job in everJobs)
             {
-                var commandInstance = (ICommand)_services.GetService(command); //(ICommand) Activator.CreateInstance(command.GetType());
-                commandInstance.SetParameters(null);
-                commandInstance.Init();
-                var taskId = RunLongTask(commandInstance);
+                var jobInstance = (IJob)_services.GetService(job);
+                jobInstance.SetParameters(null);
+                jobInstance.Init();
+                var taskId = RunLongTask(jobInstance);
             }
         }
 
-        private int RunLongTask(ICommand command)
+        private int RunLongTask(IJob job)
         {
             var tokenSource = new CancellationTokenSource();
             var token = tokenSource.Token;
-            var task = command.ExecuteAsync(token);
+            var task = job.ExecuteAsync(token);
             task.ContinueWith(t =>
                 {
                     switch (t.Status)
                     {
                         case TaskStatus.Canceled:
-                            Logger.Log($"Task {t.Id} {command.Name} was canceled by user");
+                            Logger.Log($"Task {t.Id} {job.Name} was canceled by user");
                             break;
                         case TaskStatus.Faulted:
-                            Logger.Error($"Task {t.Id} {command.Name} was canceled with exception: {t.Exception.Flatten().GetFullInfo()}");
+                            Logger.Error($"Task {t.Id} {job.Name} was canceled with exception: {t.Exception.Flatten().GetFullInfo()}");
                             break;
                         case TaskStatus.RanToCompletion:
-                            Logger.Log($"Task {t.Id} {command.Name} completed successfully");
+                            Logger.Log($"Task {t.Id} {job.Name} completed successfully");
                             break;
                     }
 
                     DisposeTask(t.Id);
                 }, TaskScheduler.Default);
-            RunningTasks.Add(new CancellableTask { Task = task, Command = command, TokenSource = tokenSource });
-            Logger.Log($"Task {task.Id} {command.Name} started succesfully");
+            RunningTasks.Add(new CancellableTask { Task = task, Job = job, TokenSource = tokenSource });
+            Logger.Log($"Task {task.Id} {job.Name} started succesfully");
             return task.Id;
         }
 
@@ -287,17 +284,20 @@ namespace Microprojects.Edm
             }
             else
             {
-                var commandName = parameters.ContainsKey("Command") ? parameters["Command"].ToString() :
-                    throw new Exception($"Stop command: parameter \"Command\" is mandatory");
-                var command = RunningTasks
+                if (!parameters.TryGetValue("Job", out var jobName))
+                {
+                    throw new Exception($"Stop job: parameter \"Job\" is mandatory");
+                }
+
+                var job = RunningTasks
                     .FirstOrDefault(t =>
-                        commandName == t.Command.Name &&
+                        jobName.ToString() == t.Job.Name &&
                         parameters.All(p =>
-                            p.Key == "Command" ||
-                            t.Command.GetParameters().ContainsKey(p.Key) &&
+                            p.Key == "Job" ||
+                            t.Job.GetParameters().ContainsKey(p.Key) &&
                             parameters[p.Key] == p.Value))
-                    ?? throw new EdmException($"Running command with parameters {JsonConvert.SerializeObject(parameters)} cannot be found");
-                pid = command.Task.Id;
+                    ?? throw new EdmException($"Job, executing with parameters {JsonConvert.SerializeObject(parameters)} cannot be found");
+                pid = job.Task.Id;
             }
             var task = GetTaskByPid(pid);
             return task;
@@ -312,12 +312,12 @@ namespace Microprojects.Edm
             }
         }
 
-        private ICommandParameters ConvertParameters(Type commandType, string data)
+        private IJobParameters ConvertParameters(Type jobType, string data)
         {
             data = data ?? "{}";
-            var commandParamsType = commandType.GetCustomAttribute<CommandAttribute>(true)?.Parameters
-                ?? throw new EdmException($"Parameters type for {commandType.Name} is not defined");
-            var param = (ICommandParameters) Activator.CreateInstance(commandParamsType);
+            var jobParamsType = jobType.GetCustomAttribute<JobAttribute>(true)?.Parameters
+                ?? throw new EdmException($"Parameters type for {jobType.Name} is not defined");
+            var param = (IJobParameters) Activator.CreateInstance(jobParamsType);
             JsonConvert.PopulateObject(data, param);
             return param;
         }

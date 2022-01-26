@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microprojects.Edm;
-using Microprojects.Edm.Commands;
 using Microprojects.Edm.Cache;
 using Optosense.Edm.Domain.Models;
 using Microprojects.Edm.Log;
@@ -15,23 +14,23 @@ using Optosense.Edm.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Optosense.Edm.Infrastructure.Edm;
 using System.Dynamic;
-using Optosense.Edm.Infrastructure.Edm.Commands;
 using Optosense.Edm.Core.Persistance;
+using Microprojects.Edm.Jobs;
 
-namespace Optosense.Edm.Commands
+namespace Optosense.Edm.Jobs
 {
-    [Command(
+    [Job(
         Name = "StartTestOperation", 
-        Lifetime = CommandType.LongRunning, 
-        Parameters = typeof(StartOperationCommandParameters))]
-    public class StartTestOperationCommand : BaseCommand
+        Lifetime = JobLifetime.LongRunning, 
+        Parameters = typeof(StartOperationJobParameters))]
+    public class StartTestOperationJob : BaseJob
     {
         protected ICache Cache { get; init; }
         protected IEdmContextFactory ContextFactory { get; init; }
-        protected StartOperationCommandParameters Parameters => (StartOperationCommandParameters) CommandParameters;
+        protected StartOperationJobParameters Parameters => (StartOperationJobParameters) JobParameters;
 
-        public StartTestOperationCommand() { }
-        public StartTestOperationCommand(ICache cache, IEdmContextFactory contextFactory)
+        public StartTestOperationJob() { }
+        public StartTestOperationJob(ICache cache, IEdmContextFactory contextFactory)
         {
             Cache = cache;
             ContextFactory = contextFactory;

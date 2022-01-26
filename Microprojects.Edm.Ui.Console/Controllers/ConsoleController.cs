@@ -16,13 +16,13 @@ namespace Microprojects.Edm.Ui.Console.Controllers
     [Route("api")]
     public class ConsoleController : ControllerBase
     {
-        private ICommandContainer _commands;
+        private IJobContainer _jobs;
         private IPluginContainer _plugins;
         private IOptions<EventLogSettings> _logSettings;
 
-        public ConsoleController(ICommandContainer commands, IPluginContainer plugins, IOptions<EventLogSettings> logSettings)
+        public ConsoleController(IJobContainer jobs, IPluginContainer plugins, IOptions<EventLogSettings> logSettings)
         {
-            _commands = commands;
+            _jobs = jobs;
             _plugins = plugins;
             _logSettings = logSettings;
         }
@@ -30,14 +30,14 @@ namespace Microprojects.Edm.Ui.Console.Controllers
         [HttpGet("tasks/available")]
         public IEnumerable<AvailableTask> GetAvailableTasks()
         {
-            var tasks = _commands.GetAvailableTasks();
+            var tasks = _jobs.GetAvailableTasks();
             return tasks;
         }
 
         [HttpGet("tasks/running")]
         public IEnumerable<AvailableTask> GetRunningTasks()
         {
-            var tasks = _commands.GetRunningTasks();
+            var tasks = _jobs.GetRunningTasks();
             return tasks;
         }
 

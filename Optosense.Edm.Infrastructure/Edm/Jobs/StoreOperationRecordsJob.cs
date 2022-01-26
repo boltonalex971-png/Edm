@@ -1,6 +1,5 @@
 ﻿using Microprojects.Edm;
 using Microprojects.Edm.Cache;
-using Microprojects.Edm.Commands;
 using Microprojects.Edm.Log;
 using Optosense.Edm.DataAccess;
 using Optosense.Edm.Domain.Models;
@@ -9,18 +8,19 @@ using System;
 using System.Threading.Tasks;
 using Optosense.Edm.Core.Persistance;
 using System.Threading;
+using Microprojects.Edm.Jobs;
 
-namespace Optosense.Edm.Commands
+namespace Optosense.Edm.Jobs
 {
-    [Command(Name = "StoreOperationRecords", Lifetime = CommandType.LongRunning, Parameters = typeof(StoreOperationRecordsCommandParameters))]
-    public class StoreOperationRecordsCommand : BaseCommand
+    [Job(Name = "StoreOperationRecords", Lifetime = JobLifetime.LongRunning, Parameters = typeof(StoreOperationRecordsJobParameters))]
+    public class StoreOperationRecordsJob : BaseJob
     {
         protected ICache Cache { get; init; }
         protected IEdmContextFactory ContextFactory { get; init; }
-        protected StoreOperationRecordsCommandParameters Parameters => (StoreOperationRecordsCommandParameters) CommandParameters;
+        protected StoreOperationRecordsJobParameters Parameters => (StoreOperationRecordsJobParameters) JobParameters;
 
-        public StoreOperationRecordsCommand() { }
-        public StoreOperationRecordsCommand(ICache cache, IEdmContextFactory factory)
+        public StoreOperationRecordsJob() { }
+        public StoreOperationRecordsJob(ICache cache, IEdmContextFactory factory)
         {
             Cache = cache;
             ContextFactory = factory;
@@ -51,7 +51,7 @@ namespace Optosense.Edm.Commands
         }
     }
 
-    public class StoreOperationRecordsCommandParameters : ICommandParameters
+    public class StoreOperationRecordsJobParameters : IJobParameters
     {
         public string Channel { get; set; }
         public string AuditChannel { get; set; }

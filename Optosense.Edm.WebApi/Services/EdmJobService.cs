@@ -14,24 +14,24 @@ using Optosense.Edm.Infrastructure.Protos;
 
 namespace Optosense.Edm.WebApi.Services
 {
-    public class EdmCommandService : CommandExecutor.CommandExecutorBase, IHostedService
+    public class EdmJobService : JobExecutor.JobExecutorBase, IHostedService
     {
-        private readonly ILogger<EdmCommandService> _logger;
-        private readonly ICommandContainer _commandManager;
+        private readonly ILogger<EdmJobService> _logger;
+        private readonly IJobContainer _jobManager;
 
-        public EdmCommandService(ILogger<EdmCommandService> logger, ICommandContainer commandManager)
+        public EdmJobService(ILogger<EdmJobService> logger, IJobContainer commandManager)
         {
             _logger = logger;
-            _commandManager = commandManager;
+            _jobManager = commandManager;
         }
 
-        public async override Task<CommandResponse> ExecuteCommand(CommandParams request, ServerCallContext context)
+        public async override Task<JobResponse> ExecuteJob(JobParams request, ServerCallContext context)
         {
             //var param = JsonConvert.DeserializeObject<Params>(request.Params);
-            var parameters = new CommandData { Command = request.Command, Params = request.Params };
-            var result = await _commandManager.ExecuteAsync(parameters);
+            var parameters = new JobData { Job = request.Job, Params = request.Params };
+            var result = await _jobManager.ExecuteAsync(parameters);
 
-            return new CommandResponse
+            return new JobResponse
             {
                 Status = result.Status ?? string.Empty,
                 Message = result.Message ?? string.Empty,
@@ -41,7 +41,7 @@ namespace Optosense.Edm.WebApi.Services
 
         public override Task<AvailableTasks> GetAvailableTasks(AvalableTaskParams request, ServerCallContext context)
         {
-            var result = _commandManager.GetAvailableTasks();
+            var result = _jobManager.GetAvailableTasks();
             var tasks = new AvailableTasks();
             tasks.Tasks.AddRange(result.Select(r => new AvailableTasks.Types.Task { Pid = r.Pid ?? string.Empty, Status = r.Status ?? string.Empty, TaskName = r.Name, Type = r.Type }));
             return Task.FromResult(tasks);

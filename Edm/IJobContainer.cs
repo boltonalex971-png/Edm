@@ -10,22 +10,22 @@ using System.Threading.Tasks;
 
 namespace Microprojects.Edm
 {
-    public interface ICommandContainer : IDisposable
+    public interface IJobContainer : IDisposable
     {
-        Hive Hive { get; }
+        JobHive Hive { get; }
         ICollection<CancellableTask> RunningTasks { get; }
         IEnumerable<AvailableTask> GetRunningTasks();
         IEnumerable<AvailableTask> GetAvailableTasks();
-        Task<ResponseData> ExecuteAsync<T>(ICommandParameters parameters = null) where T : ICommand;
-        Task<ResponseData> ExecuteAsync(Type commandType, ICommandParameters parameters = null);
-        Task<ResponseData> ExecuteAsync(CommandData data);
+        Task<ResponseData> ExecuteAsync<T>(IJobParameters parameters = null) where T : IJob;
+        Task<ResponseData> ExecuteAsync(Type jobType, IJobParameters parameters = null);
+        Task<ResponseData> ExecuteAsync(JobData data);
         void Start();
         void Stop();
     }
 
-    public class CommandData
+    public class JobData
     {
-        public string Command { get; set; }
+        public string Job { get; set; }
         public string Params { get; set; }
     }
 
@@ -49,7 +49,7 @@ namespace Microprojects.Edm
     public class CancellableTask
     {
         public Task Task { get; set; }
-        public ICommand Command { get; set; }
+        public IJob Job { get; set; }
         public CancellationTokenSource TokenSource { get; set; }
     }
 }

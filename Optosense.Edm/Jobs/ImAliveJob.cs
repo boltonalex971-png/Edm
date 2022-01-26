@@ -5,21 +5,21 @@ using Microprojects.Edm.Cache;
 using Microprojects.Edm.Log;
 using System.Linq;
 using Microprojects.Edm;
-using Microprojects.Edm.Commands;
 using Microsoft.Extensions.Options;
+using Microprojects.Edm.Jobs;
 
-namespace Optosense.Edm.Commands
+namespace Optosense.Edm.Jobs
 {
-    [Command(Name = "ImAlive", Lifetime = CommandType.Permanent, Parameters = typeof(ImAliveCommandParameters))]
-    public class ImAliveCommand : BaseCommand
+    [Job(Name = "ImAlive", Lifetime = JobLifetime.Permanent, Parameters = typeof(ImAliveJobParameters))]
+    public class ImAliveJob : BaseJob
     {
         protected ICache Cache { get; init; }
-        protected ICommandContainer Container { get; init; }
+        protected IJobContainer Container { get; init; }
         protected IOptions<Peer> PeerOptions { get; init; }
-        protected ImAliveCommandParameters Parameters => (ImAliveCommandParameters) CommandParameters;
+        protected ImAliveJobParameters Parameters => (ImAliveJobParameters) JobParameters;
 
-        public ImAliveCommand() { }
-        public ImAliveCommand(ICache cache, ICommandContainer container, IOptions<Peer> options)
+        public ImAliveJob() { }
+        public ImAliveJob(ICache cache, IJobContainer container, IOptions<Peer> options)
         {
             Cache = cache;
             Container = container;
@@ -54,7 +54,7 @@ namespace Optosense.Edm.Commands
         }
     }
 
-    public class ImAliveCommandParameters : ICommandParameters
+    public class ImAliveJobParameters : IJobParameters
     {
         public string Channel { get; set; } = "Edm-Lifecicle";
     }

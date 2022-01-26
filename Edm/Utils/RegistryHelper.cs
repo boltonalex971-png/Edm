@@ -187,23 +187,23 @@ namespace Microprojects.Edm.Utils
             return GetSettingFromRegistry(GetBaseRegistryPath(), key, true, hostName);
         }
 
-        public static string GetCommandSetting(string hostName, ICommand command, string key)
+        public static string GetJobSetting(string hostName, IJob job, string key)
         {
-            return GetSettingFromRegistry(GetCommandBasePath(command), key, true, hostName);
+            return GetSettingFromRegistry(GetJobBasePath(job), key, true, hostName);
         }
 
-        public static string GetCommandSetting(this ICommand command, string setting)
+        public static string GetJobSetting(this IJob job, string setting)
         {
-            return GetSettingFromRegistry(GetCommandBasePath(command), setting);
+            return GetSettingFromRegistry(GetJobBasePath(job), setting);
         }
-        public static string GetCommandSetting(string commandName, string setting)
+        public static string GetJobSetting(string job, string setting)
         {
-            return GetSettingFromRegistry(GetCommandBasePath(commandName), setting);
+            return GetSettingFromRegistry(GetJobBasePath(job), setting);
         }
 
-        public static void SetCommandSetting(string hostName, ICommand command, string key, string value)
+        public static void SetJobSetting(string hostName, IJob job, string key, string value)
         {
-            SetSettingToRegistry(GetCommandBasePath(command), key, value, true, hostName);
+            SetSettingToRegistry(GetJobBasePath(job), key, value, true, hostName);
         }
 
         public static Dictionary<string, string> GetListFromRegistry(string hostName, string path, string key)
@@ -251,13 +251,13 @@ namespace Microprojects.Edm.Utils
 
         #endregion End of Registry related stuff
 
-        private static string GetCommandBasePath(ICommand command)
+        private static string GetJobBasePath(IJob job)
         {
-            return GetCommandBasePath(command.Name);
+            return GetJobBasePath(job.Name);
         }
-        private static string GetCommandBasePath(string commandName)
+        private static string GetJobBasePath(string jobName)
         {
-            return $"{GetBaseRegistryPath()}\\{commandName}\\";
+            return $"{GetBaseRegistryPath()}\\{jobName}\\";
         }
 
         private static Attribute GetCustomAttributeFromExecutingAssembly(Type attributeType)

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microprojects.Edm;
 using Microprojects.Edm.Cache;
 using Microprojects.Edm.Cache.Redis;
+using Microprojects.Edm.Jobs;
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -13,9 +14,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Optosense.Edm.Commands;
 using Optosense.Edm.Core.AspNet;
-using Optosense.Edm.Infrastructure.Edm;
+using Optosense.Edm.Jobs;
 using Optosense.Edm.WebApi.Services;
 using Optosense.Edm.WebApi.Utils;
 
@@ -39,10 +39,11 @@ namespace Optosense.Edm.WebApi
             services.AddSingleton<ICache>(new RedisCache(Configuration["Edm:Cache:Default:ConnectionString"]));
             services.AddGrpc();
 
-            services.AddEdmCommands(c =>
-                c.SetPluginAssemblies(
-                    typeof(RemoteCommands).Assembly,
-                    typeof(StartDeviceCommand).Assembly));
+            services.AddSingleton<IJobContainer, JobManager>();
+            services.Configure<EdmConfiguration>(c =>
+                c.Register<StartDeviceJob>()
+                .Register<CheckJob>()
+                .Register<StopJob>());
 
             services.AddPlugins(config =>
             {
@@ -107,11 +108,11 @@ namespace Optosense.Edm.WebApi
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapGrpcService<EdmCommandService>();
+                endpoints.MapGrpcService<EdmJobService>();
             });
             app.MapSpaPlugins();
             // Run command container
-            app.ApplicationServices.GetService<ICommandContainer>().Start();
+            app.ApplicationServices.GetService<IJobContainer>().Start();
         }
     }
 }

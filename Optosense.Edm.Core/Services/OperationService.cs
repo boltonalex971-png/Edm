@@ -18,12 +18,12 @@ namespace Optosense.Edm.Core.Services
 {
     public class OperationService : ServiceBase<Operation>, IOperationService
     {
-        private IRemoteCommands _commands;
+        private IRemoteJobs _commands;
         public OperationService()
         {
         }
 
-        public OperationService(IEdmContext db, IRemoteCommands commands): base(db)
+        public OperationService(IEdmContext db, IRemoteJobs commands): base(db)
         {
             _commands = commands;
         }

@@ -10,12 +10,12 @@ namespace Edm.Test
         [TestMethod]
         public async Task LoadPluginTest()
         {
-            EdmConfig.Configure(c => c.SetPluginPaths(
-                @"C:\Projects\2020\Edm\Edm.Test\bin\Debug\netcoreapp3.0\Edm.Test.dll",
-                @"C:\Projects\2020\Edm\Edm.Test\bin\Debug\netcoreapp3.0\Microprojects.Edm.dll"
-            ));
-            var tasks = CommandManager.GetInstance().GetAvailableTasks();
-            var result = await CommandManager.GetInstance().ExecuteAsync(new CommandData { Command = "Test", Params = "{Profile: \"[{Millis: 100, Value: 0.5}]\"}" });
+            //EdmConfig.Configure(c => c.SetPluginPaths(
+            //    @"C:\Projects\2020\Edm\Edm.Test\bin\Debug\netcoreapp3.0\Edm.Test.dll",
+            //    @"C:\Projects\2020\Edm\Edm.Test\bin\Debug\netcoreapp3.0\Microprojects.Edm.dll"
+            //));
+            //var tasks = CommandManager.GetInstance().GetAvailableTasks();
+            //var result = await CommandManager.GetInstance().ExecuteAsync(new CommandData { Command = "Test", Params = "{Profile: \"[{Millis: 100, Value: 0.5}]\"}" });
         }
     }
 }

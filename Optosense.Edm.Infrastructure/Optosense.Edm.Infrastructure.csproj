@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Edm\Protos\command.proto" />
+    <None Remove="Edm\Protos\job.proto" />
   </ItemGroup>
 
   <ItemGroup>
@@ -26,7 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Protobuf Include="Edm\Protos\command.proto" />
+    <Protobuf Include="Edm\Protos\job.proto" />
   </ItemGroup>
 
 </Project>

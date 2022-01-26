@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microprojects.Edm;
-using Microprojects.Edm.Commands;
 using Microprojects.Edm.Cache;
 using Optosense.Edm.Domain.Models;
 using Microprojects.Edm.Log;
@@ -15,19 +14,19 @@ using Optosense.Edm.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Optosense.Edm.Infrastructure.Edm;
 using System.Dynamic;
-using Optosense.Edm.Infrastructure.Edm.Commands;
 using Optosense.Edm.Core.Persistance;
 using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Core.Services;
 using Optosense.Edm.Core.Auditing;
+using Microprojects.Edm.Jobs;
 
-namespace Optosense.Edm.Commands
+namespace Optosense.Edm.Jobs
 {
-    [Command(Name = "StartAudit", Lifetime = CommandType.LongRunning, Parameters = typeof(StartAuditCommandParameters))]
-    public class StartAuditCommand : BaseCommand
+    [Job(Name = "StartAudit", Lifetime = JobLifetime.LongRunning, Parameters = typeof(StartAuditJobParameters))]
+    public class StartAuditJob : BaseJob
     {
-        protected StartAuditCommandParameters Parameters => (StartAuditCommandParameters) CommandParameters;
-        protected ICommandContainer CommandManager { get; init; }
+        protected StartAuditJobParameters Parameters => (StartAuditJobParameters) JobParameters;
+        protected IJobContainer JobManager { get; init; }
         protected ICache Cache { get; init; }
         protected ILogger Logger { get; init; }
         protected IEdmContextFactory ContextFactory { get; init; }
@@ -35,10 +34,10 @@ namespace Optosense.Edm.Commands
         private Func<int, int, string, string> CacheKey = (opId, opCritId, addr) => 
             $"{nameof(Operation)}:{opId}:{nameof(OperationCriterion)}:{opCritId}:{addr}";
 
-        public StartAuditCommand() { }
-        public StartAuditCommand(ICommandContainer container, ICache cache, IEdmContextFactory contextFactory)
+        public StartAuditJob() { }
+        public StartAuditJob(IJobContainer container, ICache cache, IEdmContextFactory contextFactory)
         {
-            CommandManager = container;
+            JobManager = container;
             Cache = cache;
             ContextFactory = contextFactory;
         }
@@ -126,18 +125,18 @@ namespace Optosense.Edm.Commands
         }
     }
 
-    public class StartAuditCommandParameters : ICommandParameters
+    public class StartAuditJobParameters : IJobParameters
     {
         /// <summary>
         /// Running operation id
         /// </summary>
-        [CommandParameter(Required = true)]
+        [JobParameter(Required = true)]
         public int Operation { get; set; }
 
         /// <summary>
         /// Id of running profile to get associated audits
         /// </summary>
-        [CommandParameter(Required = true)]
+        [JobParameter(Required = true)]
         public int Audit { get; set; }
         public DateTime StartAt { get; set; } = DateTime.Now;
         public string Channel { get; set; }

@@ -5,35 +5,35 @@ using System.Text;
 using System.Threading.Tasks;
 using Grpc.Net.Client;
 using Microprojects.Edm;
-using Microprojects.Edm.Commands;
+using Microprojects.Edm.Jobs;
 using Newtonsoft.Json;
-using Optosense.Edm.Commands;
 using Optosense.Edm.Core.Infrastructure;
 using Optosense.Edm.Core.Persistance;
 using Optosense.Edm.Domain.Models;
-using Optosense.Edm.Infrastructure.Edm.Commands;
+using Optosense.Edm.Infrastructure.Edm.Jobs;
+using Optosense.Edm.Jobs;
 
 namespace Optosense.Edm.Infrastructure.Edm
 {
-    public class RemoteCommands : IRemoteCommands
+    public class RemoteJobs : IRemoteJobs
     {
         private IEdmContext _context;
-        private ICommandContainer _commands;
+        private IJobContainer _jobs;
 
-        public RemoteCommands(IEdmContext context, ICommandContainer commands)
+        public RemoteJobs(IEdmContext context, IJobContainer jobs)
         {
             _context = context;
-            _commands = commands;
+            _jobs = jobs;
         }
 
-        public async Task<string> Execute(string host, ICommand command)
+        public async Task<string> Execute(string host, IJob job)
         {
-            if (command == null)
+            if (job == null)
             {
-                throw new Exception("Command name and parameters cannot be null");
+                throw new Exception("Job name and parameters cannot be null");
             }
 
-            var response = await command.RemoteExecute(host);
+            var response = await job.Execute(host);
             return response.Response;
         }
 
@@ -45,7 +45,7 @@ namespace Optosense.Edm.Infrastructure.Edm
             Guid driverGuid,
             DateTime startAt)
         {
-            var deviceParams = new StartDeviceCommandParameters
+            var deviceParams = new StartDeviceJobParameters
             {
                 Driver = driverGuid,
                 DriverOptions = options,
@@ -53,23 +53,23 @@ namespace Optosense.Edm.Infrastructure.Edm
                 StartAt = startAt,
                 Profile = profile
             };
-            var deviceCommand = new StartDeviceCommand { CommandParameters = deviceParams };
-            var response = await deviceCommand.RemoteExecute(url);
+            var deviceJob = new StartDeviceJob { JobParameters = deviceParams };
+            var response = await deviceJob.Execute(url);
 
             return response.Response;
         }
 
         public async Task<string> StartOperation(int operationId, DateTime startAt)
         {
-            var parameters = new StartOperationCommandParameters
+            var parameters = new StartOperationJobParameters
             {
                 Operation = operationId,
                 StartAt = startAt
             };
-            var response = await _commands.ExecuteAsync(
-                new CommandData
+            var response = await _jobs.ExecuteAsync(
+                new JobData
                 {
-                    Command = "StartOperation",
+                    Job = "StartOperation",
                     Params = $@"{JsonConvert.SerializeObject(parameters)}"
                 });
             return response.Response;
@@ -77,15 +77,15 @@ namespace Optosense.Edm.Infrastructure.Edm
 
         public async Task<string> StartTestOperation(int operationId, DateTime startAt)
         {
-            var parameters = new StartOperationCommandParameters
+            var parameters = new StartOperationJobParameters
             {
                 Operation = operationId,
                 StartAt = startAt
             };
-            var response = await _commands.ExecuteAsync(
-                new CommandData
+            var response = await _jobs.ExecuteAsync(
+                new JobData
                 {
-                    Command = "StartOperation",
+                    Job = "StartOperation",
                     Params = $@"{JsonConvert.SerializeObject(parameters)}"
                 });
             return response.Response;
@@ -93,21 +93,21 @@ namespace Optosense.Edm.Infrastructure.Edm
 
         public async Task<bool> CheckOperationRun(int operationId)
         {
-            var command = new CheckCommand(new StartOperationCommand() 
+            var job = new CheckJob(new StartOperationJob() 
             { 
-                CommandParameters = new StartOperationCommandParameters 
+                JobParameters = new StartOperationJobParameters 
                 { 
                     Operation = operationId
                 }
             });
 
-            var response = await _commands.LocalExecute(command);
-            if (response.Status == "Ok" && Enum.TryParse(response.Message, out TaskStatus commandStatus))
+            var response = await _jobs.Execute(job);
+            if (response.Status == "Ok" && Enum.TryParse(response.Message, out TaskStatus jobStatus))
             {
-                return commandStatus == TaskStatus.Running ||
-                       commandStatus == TaskStatus.WaitingForActivation ||
-                       commandStatus == TaskStatus.WaitingToRun ||
-                       commandStatus == TaskStatus.WaitingForChildrenToComplete;
+                return jobStatus == TaskStatus.Running ||
+                       jobStatus == TaskStatus.WaitingForActivation ||
+                       jobStatus == TaskStatus.WaitingToRun ||
+                       jobStatus == TaskStatus.WaitingForChildrenToComplete;
             }
 
             return false;
@@ -115,7 +115,7 @@ namespace Optosense.Edm.Infrastructure.Edm
 
         public async Task<string> CancelOperation(int operationId)
         {
-            // TODO make _command.Execute with ICommand as parameter
+            // TODO make _job.Execute with IJob as parameter
 
             //var parameters = new StartOperationCommandParameters
             //{
@@ -125,10 +125,10 @@ namespace Optosense.Edm.Infrastructure.Edm
             //{
             //    CommandParameters = parameters
             //});
-            var response = await _commands.ExecuteAsync(new CommandData
+            var response = await _jobs.ExecuteAsync(new JobData
             {
-                Command = "Stop",
-                Params = JsonConvert.SerializeObject(new { Command = "StartOperation", Operation = operationId})
+                Job = "Stop",
+                Params = JsonConvert.SerializeObject(new { Job = "StartOperation", Operation = operationId})
             });
             if (response.Status != "Ok")
             {

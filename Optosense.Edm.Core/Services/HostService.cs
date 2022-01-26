@@ -21,11 +21,11 @@ namespace Optosense.Edm.Core.Services
 
         private IDeviceService _deviceService;
         private IHierarchyService _hierarchyService;
-        private ICommandContainer _container;
+        private IJobContainer _container;
 
         protected HostService() { }
 
-        public HostService(IEdmContext db, ICommandContainer container, IDeviceService deviceService, IHierarchyService hierarchyService) : base(db) 
+        public HostService(IEdmContext db, IJobContainer container, IDeviceService deviceService, IHierarchyService hierarchyService) : base(db) 
         {
             _deviceService = deviceService;
             _hierarchyService = hierarchyService;

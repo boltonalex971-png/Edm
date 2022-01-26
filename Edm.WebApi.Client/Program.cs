@@ -3,7 +3,6 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Grpc.Net.Client;
 using Newtonsoft.Json;
-using Optosense.Edm.Commands;
 using Optosense.Edm.Infrastructure.Protos;
 
 namespace Edm.WebApi.Client
@@ -15,7 +14,7 @@ namespace Edm.WebApi.Client
             //AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
             // The port number(5001) must match the port of the gRPC server.
             var channel = GrpcChannel.ForAddress("https://localhost:16334");
-            var client = new CommandExecutor.CommandExecutorClient(channel);
+            var client = new JobExecutor.JobExecutorClient(channel);
             var tasks = await client.GetAvailableTasksAsync(new AvalableTaskParams());
             foreach (var t in tasks.Tasks)
             {

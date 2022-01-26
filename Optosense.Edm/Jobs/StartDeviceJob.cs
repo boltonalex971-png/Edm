@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microprojects.Edm;
-using Microprojects.Edm.Commands;
 using Microprojects.Edm.Cache;
 using Optosense.Edm.Domain.Models;
 using Microprojects.Edm.Log;
@@ -12,14 +11,15 @@ using Newtonsoft.Json;
 using Optosense.Edm.Utils;
 using Optosense.Edm.Plugins;
 using Microprojects.Edm.Drivers;
+using Microprojects.Edm.Jobs;
 
-namespace Optosense.Edm.Commands
+namespace Optosense.Edm.Jobs
 {
-    [Command(Name = "StartDevice", Lifetime = CommandType.LongRunning, Parameters = typeof(StartDeviceCommandParameters))]
-    public class StartDeviceCommand : BaseCommand
+    [Job(Name = "StartDevice", Lifetime = JobLifetime.LongRunning, Parameters = typeof(StartDeviceJobParameters))]
+    public class StartDeviceJob : BaseJob
     {
         protected ICache Cache { get; init; }
-        protected StartDeviceCommandParameters Parameters => (StartDeviceCommandParameters) CommandParameters;
+        protected StartDeviceJobParameters Parameters => (StartDeviceJobParameters) JobParameters;
 
         private IPluginContainer _plugins;
         private IDriverPlugin _driverPlugin;
@@ -28,9 +28,9 @@ namespace Optosense.Edm.Commands
         private IDeviceDriver _driver;
         private DateTime StartTime;
 
-        public StartDeviceCommand() { }
+        public StartDeviceJob() { }
 
-        public StartDeviceCommand(IPluginContainer plugins, ICache cache)
+        public StartDeviceJob(IPluginContainer plugins, ICache cache)
         {
             _plugins = plugins;
             Cache = cache;
@@ -100,13 +100,13 @@ namespace Optosense.Edm.Commands
         }
     }
 
-    public class StartDeviceCommandParameters : ICommandParameters
+    public class StartDeviceJobParameters : IJobParameters
     {
         public string Channel { get; set; }
         public dynamic DriverOptions { get; set; }
         public string Profile { get; set; }
 
-        [CommandParameter(Required = true)]
+        [JobParameter(Required = true)]
         public int OperationHostDevice { get; set; }
         public Guid Driver { get; set; }
         public DateTime StartAt { get; set; } = DateTime.Now.AddSeconds(10);

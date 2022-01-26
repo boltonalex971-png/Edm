@@ -99,7 +99,7 @@ export function Detail(props) {
     return (
         props.error ? <Alert color='danger' style={{ display: 'flex', justifyContent: 'space-around' }}>{props.error}</Alert> :
             <>
-                <Card>
+                <Card className='animated'>
                     {(props.loading && props.id) && <CardBody><Loading /></CardBody>}
                     {!(props.loading && props.id) &&
                         <>

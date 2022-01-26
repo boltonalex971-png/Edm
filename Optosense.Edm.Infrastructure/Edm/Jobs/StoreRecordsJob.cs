@@ -1,6 +1,5 @@
 ﻿using Microprojects.Edm;
 using Microprojects.Edm.Cache;
-using Microprojects.Edm.Commands;
 using Microprojects.Edm.Log;
 using Optosense.Edm.DataAccess;
 using Optosense.Edm.Domain.Models;
@@ -8,18 +7,19 @@ using Microprojects.Edm.Utils;
 using System;
 using System.Threading.Tasks;
 using Optosense.Edm.Core.Persistance;
+using Microprojects.Edm.Jobs;
 
-namespace Optosense.Edm.Commands
+namespace Optosense.Edm.Jobs
 {
     // TODO This functionality can be a part of StartOperation command to avoid using resources when no stages started
-    [Command(Name = "StoreRecords", Lifetime = CommandType.LongRunning)]
-    public class StoreRecordsCommand : BaseCommand
+    [Job(Name = "StoreRecords", Lifetime = JobLifetime.LongRunning)]
+    public class StoreRecordsJob : BaseJob
     {
         protected ICache Cache { get; init; }
         protected IEdmContextFactory ContextFactory { get; init; }
 
-        public StoreRecordsCommand() { }
-        public StoreRecordsCommand(ICache cache, IEdmContextFactory factory)
+        public StoreRecordsJob() { }
+        public StoreRecordsJob(ICache cache, IEdmContextFactory factory)
         {
             Cache = cache;
             ContextFactory = factory;

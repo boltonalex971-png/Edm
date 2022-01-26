@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace Optosense.Edm.Core.Infrastructure
 {
-    public interface IRemoteCommands 
+    public interface IRemoteJobs 
     {
-        Task<string> Execute(string host, ICommand command);
+        Task<string> Execute(string host, IJob job);
         Task<string> StartDevice(
             int linkId,
             string url,

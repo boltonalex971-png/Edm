@@ -13,27 +13,27 @@ using Microprojects.Edm.Utils;
 using Newtonsoft.Json;
 using Testcalibur.Utils;
 
-namespace Microprojects.Edm.Commands
+namespace Microprojects.Edm.Jobs
 {
-    public class BaseCommand : ICommand
+    public class BaseJob : IJob
     {
         protected CancellationToken CancellationToken { get; set; } = CancellationToken.None;
-        public virtual ICommandParameters CommandParameters { get; set; }
+        public virtual IJobParameters JobParameters { get; set; }
 
         public virtual string Name
         {
-            get => GetType().GetCustomAttribute<CommandAttribute>()?.Name ?? 
-                GetType().Name.Replace("Command", string.Empty);
+            get => GetType().GetCustomAttribute<JobAttribute>()?.Name ?? 
+                GetType().Name.Replace("Job", string.Empty);
         }
 
         public virtual string Description
         {
-            get => GetType().GetCustomAttribute<CommandAttribute>()?.Description;
+            get => GetType().GetCustomAttribute<JobAttribute>()?.Description;
         }
 
-        public CommandType Lifetime 
+        public JobLifetime Lifetime 
         {
-            get => GetType().GetCustomAttribute<CommandAttribute>()?.Lifetime ?? CommandType.ShortRunning;
+            get => GetType().GetCustomAttribute<JobAttribute>()?.Lifetime ?? JobLifetime.ShortRunning;
         }
 
         public virtual bool Init()
@@ -54,19 +54,19 @@ namespace Microprojects.Edm.Commands
 
         public virtual Dictionary<string, object> GetParameters()
         {
-            var paramStr = JsonConvert.SerializeObject((object)CommandParameters ?? this);
+            var paramStr = JsonConvert.SerializeObject((object)JobParameters ?? this);
             return JsonConvert.DeserializeObject<Dictionary<string, object>>(paramStr);
         }
 
         public void SetParameters(string data)
         {
             data = data ?? "{}";
-            var commandParamsType = GetType().GetCustomAttribute<CommandAttribute>(true)?.Parameters;
-            if (commandParamsType != null)
+            var jobParamsType = GetType().GetCustomAttribute<JobAttribute>(true)?.Parameters;
+            if (jobParamsType != null)
             {
-                var param = Activator.CreateInstance(commandParamsType);
+                var param = Activator.CreateInstance(jobParamsType);
                 JsonConvert.PopulateObject(data, param);
-                CommandParameters = param as ICommandParameters;
+                JobParameters = param as IJobParameters;
             }
             else
             {
@@ -75,14 +75,14 @@ namespace Microprojects.Edm.Commands
         }
     }
 
-    public class CommandParameters : ICommandParameters
+    public class JobParameters : IJobParameters
     {
         public string CacheConnectionString { get; set; }
         public int CacheDbNumber { get; set; }
     }
 
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
-    public class CommandParameterAttribute : Attribute
+    public class JobParameterAttribute : Attribute
     {
         public string Name { get; set; }
         public bool Required { get; set; } = false;

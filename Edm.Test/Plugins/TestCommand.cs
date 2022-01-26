@@ -1,5 +1,5 @@
 ﻿using Microprojects.Edm;
-using Microprojects.Edm.Commands;
+using Microprojects.Edm.Jobs;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -7,23 +7,23 @@ using System.Threading.Tasks;
 
 namespace Edm.Test.Plugins
 {
-    [Command(Name = "Test", Lifetime = CommandType.ShortRunning, Parameters = typeof(TestCommandParameters))]
-    class TestCommand : BaseCommand
+    [Job(Name = "Test", Lifetime = JobLifetime.ShortRunning, Parameters = typeof(TestCommandParameters))]
+    class TestCommand : BaseJob
     {
-        protected TestCommandParameters TestCommandParameters => (TestCommandParameters) CommandParameters;
+        protected TestCommandParameters TestCommandParameters => (TestCommandParameters) JobParameters;
 
         public async override Task<object> ExecuteAsync()
         {
-            return await Task.FromResult(this.CommandParameters);
+            return await Task.FromResult(this.JobParameters);
         }
     }
 
-    public class TestCommandParameters : ICommandParameters
+    public class TestCommandParameters : IJobParameters
     {
         public string CacheConnectionString { get; set; }
         public string Port { get; set; }
         public string Command { get; set; }
-        [CommandParameter(Name = "Address")]
+        [JobParameter(Name = "Address")]
         public int? SensorAddress { get; set; }
         public bool SingleLine { get; set; } = false;
         public int BaudRate { get; set; } = 57600;

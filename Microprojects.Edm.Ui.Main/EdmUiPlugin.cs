@@ -9,6 +9,7 @@ using Optosense.Edm.Core.Persistance;
 using Optosense.Edm.Core.Services;
 using Optosense.Edm.DataAccess;
 using Optosense.Edm.Infrastructure.Edm;
+using Optosense.Edm.Jobs;
 using Optosense.Edm.Plugins;
 using System;
 using System.Collections.Generic;
@@ -35,7 +36,7 @@ namespace Microprojects.Edm.Ui.Main
             services.AddScoped<IEdmContext>(provider => provider.GetService<EdmContext>());
             services.AddTransient<IOwnedEdmContext>(provider => provider.GetService<EdmContext>());
 
-            services.AddTransient<IRemoteCommands, RemoteCommands>();
+            services.AddTransient<IRemoteJobs, RemoteJobs>();
 
             services.AddTransient<IAuditService, AuditService>();
             services.AddTransient<IProcessService, ProcessService>();
@@ -46,6 +47,12 @@ namespace Microprojects.Edm.Ui.Main
             services.AddTransient<IProfileService, ProfileService>();
             services.AddTransient<IOperationService, OperationService>();
             services.AddTransient<ISettingService, SettingService>();
+
+            services.Configure<EdmConfiguration>(config => config
+                .Register<StartOperationJob>()
+                .Register<StartAuditJob>()
+                .Register<StoreOperationRecordsJob>()
+            );
         }
     }
 }
