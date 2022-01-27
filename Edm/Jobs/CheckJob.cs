@@ -3,7 +3,6 @@ using System.Collections.Generic;
 
 namespace Microprojects.Edm.Jobs
 {
-    [Job(Name = "Check", Lifetime = JobLifetime.ShortRunning)]
     public class CheckJob : BaseJob
     {
         private IJob Job { get; }

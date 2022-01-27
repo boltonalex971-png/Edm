@@ -38,21 +38,15 @@ namespace Microprojects.Edm.Ui.Main
 
             services.AddTransient<IRemoteJobs, RemoteJobs>();
 
-            services.AddTransient<IAuditService, AuditService>();
-            services.AddTransient<IProcessService, ProcessService>();
-            services.AddTransient<IHierarchyService, HierarchyService>();
-            services.AddTransient<IHostService, HostService>();
-            services.AddTransient<IDeviceService, DeviceService>();
-            services.AddTransient<IWorkplaceService, WorkplaceService>();
-            services.AddTransient<IProfileService, ProfileService>();
-            services.AddTransient<IOperationService, OperationService>();
-            services.AddTransient<ISettingService, SettingService>();
-
-            services.Configure<EdmConfiguration>(config => config
-                .Register<StartOperationJob>()
-                .Register<StartAuditJob>()
-                .Register<StoreOperationRecordsJob>()
-            );
+            services.AddScoped<IAuditService, AuditService>();
+            services.AddScoped<IProcessService, ProcessService>();
+            services.AddScoped<IHierarchyService, HierarchyService>();
+            services.AddScoped<IHostService, HostService>();
+            services.AddScoped<IDeviceService, DeviceService>();
+            services.AddScoped<IWorkplaceService, WorkplaceService>();
+            services.AddScoped<IProfileService, ProfileService>();
+            services.AddScoped<IOperationService, OperationService>();
+            services.AddScoped<ISettingService, SettingService>();
         }
     }
 }

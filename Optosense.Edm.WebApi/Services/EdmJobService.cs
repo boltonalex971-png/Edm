@@ -2,14 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-//using System.Text.Json;
 using System.Threading.Tasks;
-using AutoMapper;
 using Grpc.Core;
-using Microprojects.Edm;
+using Microprojects.Edm.Jobs;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using Optosense.Edm.Infrastructure.Protos;
 
 namespace Optosense.Edm.WebApi.Services

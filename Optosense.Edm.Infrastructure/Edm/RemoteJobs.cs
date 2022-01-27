@@ -4,12 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Grpc.Net.Client;
-using Microprojects.Edm;
 using Microprojects.Edm.Jobs;
 using Newtonsoft.Json;
 using Optosense.Edm.Core.Infrastructure;
 using Optosense.Edm.Core.Persistance;
-using Optosense.Edm.Domain.Models;
 using Optosense.Edm.Infrastructure.Edm.Jobs;
 using Optosense.Edm.Jobs;
 

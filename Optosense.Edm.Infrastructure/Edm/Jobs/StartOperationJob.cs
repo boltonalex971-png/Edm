@@ -2,17 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microprojects.Edm;
 using Microprojects.Edm.Cache;
-using Optosense.Edm.Domain.Models;
-using Microprojects.Edm.Log;
-using Microprojects.Edm.Utils;
 using Newtonsoft.Json;
 using Optosense.Edm.Utils;
-using System.Diagnostics;
-using Optosense.Edm.DataAccess;
 using Microsoft.EntityFrameworkCore;
-using Optosense.Edm.Infrastructure.Edm;
 using System.Dynamic;
 using Optosense.Edm.Core.Persistance;
 using Microprojects.Edm.Jobs;

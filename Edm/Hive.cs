@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Microprojects.Edm
 {
-    public class JobHive
+    public class Hive
     {
         private List<Peer> _peers = new List<Peer>();
         public TimeSpan Alive { get; } = TimeSpan.FromSeconds(10);

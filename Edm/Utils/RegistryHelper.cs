@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Win32;
+using Microprojects.Edm.Jobs;
 
 namespace Microprojects.Edm.Utils
 {

@@ -1,4 +1,5 @@
 ﻿using Microprojects.Edm;
+using Microprojects.Edm.Jobs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using Optosense.Edm.Core.Contracts;

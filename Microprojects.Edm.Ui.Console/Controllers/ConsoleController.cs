@@ -9,6 +9,7 @@ using System.Text;
 using System.Collections;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
+using Microprojects.Edm.Jobs;
 
 namespace Microprojects.Edm.Ui.Console.Controllers
 {

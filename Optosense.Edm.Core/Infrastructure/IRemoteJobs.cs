@@ -1,7 +1,5 @@
-﻿using Microprojects.Edm;
-using Optosense.Edm.Domain.Models;
+﻿using Microprojects.Edm.Jobs;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Optosense.Edm.Core.Infrastructure

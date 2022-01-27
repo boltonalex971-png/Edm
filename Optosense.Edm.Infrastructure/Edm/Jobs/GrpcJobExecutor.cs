@@ -1,5 +1,5 @@
 ﻿using Grpc.Net.Client;
-using Microprojects.Edm;
+using Microprojects.Edm.Jobs;
 using Newtonsoft.Json;
 using Optosense.Edm.Infrastructure.Protos;
 using System;
@@ -51,7 +51,7 @@ namespace Optosense.Edm.Infrastructure.Edm.Jobs
             catch (Exception e)
             {
                 jobResponse.Message = e.Message;
-                jobResponse.Status = JobManager.FAILED_STATUS;
+                jobResponse.Status = JobContainer.FAILED_STATUS;
             }
 
             return jobResponse;

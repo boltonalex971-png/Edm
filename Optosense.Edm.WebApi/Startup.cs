@@ -39,12 +39,6 @@ namespace Optosense.Edm.WebApi
             services.AddSingleton<ICache>(new RedisCache(Configuration["Edm:Cache:Default:ConnectionString"]));
             services.AddGrpc();
 
-            services.AddSingleton<IJobContainer, JobManager>();
-            services.Configure<EdmConfiguration>(c =>
-                c.Register<StartDeviceJob>()
-                .Register<CheckJob>()
-                .Register<StopJob>());
-
             services.AddPlugins(config =>
             {
                 config.BaseDirectory = AppContext.BaseDirectory;
@@ -52,6 +46,8 @@ namespace Optosense.Edm.WebApi
                 config.Configuration = Configuration;
             });
 
+            services.AddJobs();
+            
             services.Configure<Peer>(options =>
             {
                 var section = Configuration.GetSection("Kestrel:Endpoints").GetChildren();
@@ -79,11 +75,15 @@ namespace Optosense.Edm.WebApi
             {
                 services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
             }
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app)
+        public void Configure(IApplicationBuilder app, IJobContainer jobContainer)
         {
+            // Run job container
+            jobContainer.Start();
+
             app.JsonConfigure();
             app.UseCors("DevCorsPolicy");
             app.UseSession();
@@ -106,8 +106,6 @@ namespace Optosense.Edm.WebApi
                 endpoints.MapGrpcService<EdmJobService>();
             });
             app.MapSpaPlugins();
-            // Run command container
-            app.ApplicationServices.GetService<IJobContainer>().Start();
         }
     }
 }
