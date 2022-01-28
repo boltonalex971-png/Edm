@@ -77,7 +77,7 @@ namespace Optosense.Edm.Jobs
                     await Task.Delay(1000, CancellationToken);
                 }
             }
-            catch (TaskCanceledException e)
+            catch (TaskCanceledException)
             {
                 cancelled = true;
             }

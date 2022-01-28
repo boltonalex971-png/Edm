@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Loader;
+using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using Microprojects.Edm;
 using Microprojects.Edm.Cache;
@@ -47,7 +48,7 @@ namespace Optosense.Edm.WebApi
             });
 
             services.AddJobs();
-            
+
             services.Configure<Peer>(options =>
             {
                 var section = Configuration.GetSection("Kestrel:Endpoints").GetChildren();
@@ -79,6 +80,7 @@ namespace Optosense.Edm.WebApi
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        [SupportedOSPlatform("windows")]
         public void Configure(IApplicationBuilder app, IJobContainer jobContainer)
         {
             // Run job container

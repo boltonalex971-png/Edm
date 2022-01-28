@@ -18,6 +18,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
+using System.Runtime.Versioning;
 using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
@@ -33,6 +34,7 @@ namespace Optosense.Edm.Core.AspNet
             public IConfiguration Configuration { get; set; }
         }
 
+        [SupportedOSPlatform("windows")]
         public static IApplicationBuilder UseAuthenticatedUserInfo(this IApplicationBuilder builder)
         {
             builder.Use(async (context, next) =>

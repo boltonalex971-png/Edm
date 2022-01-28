@@ -7,9 +7,11 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Win32;
 using Microprojects.Edm.Jobs;
+using System.Runtime.Versioning;
 
 namespace Microprojects.Edm.Utils
 {
+    [SupportedOSPlatform("windows")]
     public static class RegistryHelper
     {
         public static readonly string ApplicationRegistryPathKey = "ApplicationRegistryPath";

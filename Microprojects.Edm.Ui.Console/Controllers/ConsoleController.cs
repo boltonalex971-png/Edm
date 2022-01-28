@@ -10,6 +10,7 @@ using System.Collections;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using Microprojects.Edm.Jobs;
+using System.Runtime.Versioning;
 
 namespace Microprojects.Edm.Ui.Console.Controllers
 {
@@ -43,6 +44,7 @@ namespace Microprojects.Edm.Ui.Console.Controllers
         }
 
         [HttpGet("log")]
+        [SupportedOSPlatform("windows")]
         public IEnumerable<object> GetLogMessages(int startFrom, int amount)
         {
             var log = EventLog.GetEventLogs().FirstOrDefault(l => l.Log == _logSettings.Value.LogName);

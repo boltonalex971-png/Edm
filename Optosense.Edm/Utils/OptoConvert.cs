@@ -23,7 +23,7 @@ namespace Optosense.Edm.Utils
             //        buffer.Append(Convert.ToChar(@byte));
             //    }
             //}
-            var ascii = Encoding.UTF7.GetChars(bytes);
+            var ascii = Encoding.UTF8.GetChars(bytes);
             buffer.Append(ascii);
             return buffer.ToString();
         }

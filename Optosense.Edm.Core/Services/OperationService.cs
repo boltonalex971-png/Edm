@@ -56,15 +56,15 @@ namespace Optosense.Edm.Core.Services
             return result.Entity;
         }
 
-        public async Task<IEnumerable<Operation>> Get<T>(
-            Expression<Func<Operation, bool>> predicate, 
-            Expression<Func<Operation, T>> include)
-        {
-            var request = Db.Operations.Include(include);
-            var whereReq = request.Where(predicate);
-            var result = await whereReq.ToListAsync();
-            return result;
-        }
+        //public async Task<IEnumerable<Operation>> Get<T>(
+        //    Expression<Func<Operation, bool>> predicate, 
+        //    Expression<Func<Operation, T>> include)
+        //{
+        //    var request = Db.Operations.Include(include);
+        //    var whereReq = request.Where(predicate);
+        //    var result = await whereReq.ToListAsync();
+        //    return result;
+        //}
 
         public async Task<IEnumerable<Record>> GetRecords(int operationId, int lastRecordId)
         {
