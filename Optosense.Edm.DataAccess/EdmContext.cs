@@ -7,7 +7,7 @@ using System.Text;
 
 namespace Optosense.Edm.DataAccess
 {
-    public class EdmContext : DbContext, IEdmContext, IOwnedEdmContext
+    public class EdmContext : DbContext, IEdmContext
     {
         private string _connectionString;
 
