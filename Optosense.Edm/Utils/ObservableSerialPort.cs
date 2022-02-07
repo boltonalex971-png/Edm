@@ -68,11 +68,11 @@ namespace Optosense.Edm.Utils
             }
             catch (TimeoutException e)
             {
-                if (singleLine || result.Count() == 0)
+                if (singleLine || result.Count == 0)
                 {
                     var ex = new SerialPortException(e)
                     {
-                        Buffer = buffer.Count() > 0 ? (new string(result.ToArray())).ToByteString() : null,
+                        Buffer = totalRead > 0 ? new string(result.ToArray()).ToByteString() : null,
                         Port = port.PortName,
                         Command = command,
                         Timeout = timeout,
@@ -123,7 +123,7 @@ namespace Optosense.Edm.Utils
                     },
                     onError: e =>
                     {
-                        if (e is TimeoutException && !singleLine && buffer.Count() > 0)
+                        if (e is TimeoutException && !singleLine && buffer.Count > 0)
                         {
                             observer.OnNext(buffer.ToArray());
                         }
@@ -132,7 +132,7 @@ namespace Optosense.Edm.Utils
                             //Logger.Log($"Timeout for '{command}' on port {port.PortName}. Buffer='{new string(buffer.ToArray())}'");
                             observer.OnError(new SerialPortException(e)
                             {
-                                Buffer = buffer.Count() > 0 ? (new string(buffer.ToArray())).ToByteString() : null,
+                                Buffer = buffer.Count > 0 ? new string(buffer.ToArray()).ToByteString() : null,
                                 Port = port.PortName,
                                 Command = command,
                                 Timeout = timeout,

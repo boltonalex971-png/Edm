@@ -1,17 +1,16 @@
-﻿using System;
+﻿using Microprojects.Edm.Cache;
+using Microprojects.Edm.Drivers;
+using Microprojects.Edm.Jobs;
+using Microprojects.Edm.Utils;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using Optosense.Edm.Domain.Models;
+using Optosense.Edm.Plugins;
+using Optosense.Edm.Utils;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microprojects.Edm;
-using Microprojects.Edm.Cache;
-using Optosense.Edm.Domain.Models;
-using Microprojects.Edm.Log;
-using Microprojects.Edm.Utils;
-using Newtonsoft.Json;
-using Optosense.Edm.Utils;
-using Optosense.Edm.Plugins;
-using Microprojects.Edm.Drivers;
-using Microprojects.Edm.Jobs;
 
 namespace Optosense.Edm.Jobs
 {
@@ -19,8 +18,9 @@ namespace Optosense.Edm.Jobs
     public class StartDeviceJob : BaseJob
     {
         protected ICache Cache { get; init; }
-        protected StartDeviceJobParameters Parameters => (StartDeviceJobParameters) JobParameters;
+        protected StartDeviceJobParameters Parameters => (StartDeviceJobParameters)JobParameters;
 
+        private readonly ILogger<StartDeviceJob> _logger;
         private IPluginContainer _plugins;
         private IDriverPlugin _driverPlugin;
         private IProfilePlugin _profilePlugin;
@@ -30,8 +30,9 @@ namespace Optosense.Edm.Jobs
 
         public StartDeviceJob() { }
 
-        public StartDeviceJob(IPluginContainer plugins, ICache cache)
+        public StartDeviceJob(ILogger<StartDeviceJob> logger, IPluginContainer plugins, ICache cache)
         {
+            _logger = logger;
             _plugins = plugins;
             Cache = cache;
         }
@@ -55,7 +56,7 @@ namespace Optosense.Edm.Jobs
             }
             catch (Exception e)
             {
-                Logger.Error($"Cannot init device with exception: \n\n{e.GetFullInfo()}");
+                _logger.LogError("Cannot init device with exception: \n{Exception}", e.GetFullInfo());
                 throw new EdmException($"Cannot init device: {e.Message}");
             }
 
@@ -65,11 +66,12 @@ namespace Optosense.Edm.Jobs
         public override async Task<object> ExecuteAsync()
         {
             StartTime = DateTime.Now;
-            var task = _executionPlan.Launch(_driver, (d, x) => ExecuteDeviceInstruction(d, x), CancellationToken);
+            var task = _executionPlan.Launch(_driver, (d, x) => ExecuteDeviceInstruction(d, x),
+                _logger, CancellationToken);
             await Task.WhenAll(task);
             if (_driver is IDisposable)
             {
-                ((IDisposable) _driver).Dispose();
+                ((IDisposable)_driver).Dispose();
             }
 
             return "Ok";
@@ -87,7 +89,7 @@ namespace Optosense.Edm.Jobs
                 IsValid = response.State == DriverResponseState.Ok,
                 Message = response.Message,
                 Parameters = response.Parameters,
-                Status = (ExecutionStatus) response.State,
+                Status = (ExecutionStatus)response.State,
                 OperationHostDeviceId = Parameters.OperationHostDevice,
             };
             Cache.Publish(Parameters.Channel, rec);

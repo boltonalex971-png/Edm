@@ -15,12 +15,10 @@ namespace Optosense.Edm.Infrastructure.Edm
 {
     public class RemoteJobs : IRemoteJobs
     {
-        private IEdmContext _context;
-        private IJobContainer _jobs;
+        private readonly IJobContainer _jobs;
 
-        public RemoteJobs(IEdmContext context, IJobContainer jobs)
+        public RemoteJobs(IJobContainer jobs)
         {
-            _context = context;
             _jobs = jobs;
         }
 

@@ -110,30 +110,26 @@ namespace Microprojects.Edm.Utils
         public static void SetSettingToRegistry(string settingBaseRegistryPath, string keyName, string keyValue, bool localMachine = false, string hostName = null)
         {
             // Only into HKCU save could be performed
-            using (var baseKey = localMachine ? GetLocalMachineBaseKey(hostName) : GetCurrentUserBaseKey(hostName))
+            using var baseKey = localMachine ? GetLocalMachineBaseKey(hostName) : GetCurrentUserBaseKey(hostName);
             // TODO: Version specific handling
-            using (var applicationSubKey = baseKey.CreateSubKey(settingBaseRegistryPath))
+            using var applicationSubKey = baseKey.CreateSubKey(settingBaseRegistryPath);
+            if (applicationSubKey != null)
             {
-                if (applicationSubKey != null)
-                {
-                    applicationSubKey.SetValue(keyName, keyValue);    
-                }
+                applicationSubKey.SetValue(keyName, keyValue);
             }
         }
 
         public static void SetSettingsToRegistry(string settingSubKey, Dictionary<string, string> settings, bool localMachine = true, string hostName = null)
         {
             // Only into HKCU save could be performed
-            using (var baseKey = localMachine ? GetLocalMachineBaseKey(hostName) : GetCurrentUserBaseKey(hostName))
+            using var baseKey = localMachine ? GetLocalMachineBaseKey(hostName) : GetCurrentUserBaseKey(hostName);
             // TODO: Version specific handling
-            using (var applicationSubKey = baseKey.CreateSubKey($"{GetBaseRegistryPath()}\\{settingSubKey ?? string.Empty}"))
+            using var applicationSubKey = baseKey.CreateSubKey($"{GetBaseRegistryPath()}\\{settingSubKey ?? string.Empty}");
+            if (applicationSubKey != null)
             {
-                if (applicationSubKey != null)
+                foreach (var entry in settings)
                 {
-                    foreach (var entry in settings)
-                    {
-                        applicationSubKey.SetValue(entry.Key, entry.Value);
-                    }
+                    applicationSubKey.SetValue(entry.Key, entry.Value);
                 }
             }
         }
@@ -228,27 +224,21 @@ namespace Microprojects.Edm.Utils
 
         public static void SetListToRegistry(string hostName, string path, string key, Dictionary<string, string> values)
         {
-            using (var baseKey = GetLocalMachineBaseKey(hostName))
+            using var baseKey = GetLocalMachineBaseKey(hostName);
+            DeleteListFromRegistry(hostName, path, key);
+            using var appSubKey = baseKey.CreateSubKey($"{path}\\{key}");
+            foreach (var item in values)
             {
-                DeleteListFromRegistry(hostName, path, key);
-                using (var appSubKey = baseKey.CreateSubKey($"{path}\\{key}"))
-                {
-                    foreach (var item in values)
-                    {
-                        appSubKey.SetValue(item.Key, item.Value);
-                    }
-                }
+                appSubKey.SetValue(item.Key, item.Value);
             }
         }
 
         public static void DeleteListFromRegistry(string hostName, string path, string key)
         {
-            using (var baseKey = GetLocalMachineBaseKey(hostName))
+            using var baseKey = GetLocalMachineBaseKey(hostName);
+            if (baseKey.OpenSubKey($"{path}\\{key}") != null)
             {
-                if (baseKey.OpenSubKey($"{path}\\{key}") != null)
-                {
-                    baseKey.DeleteSubKeyTree($"{path}\\{key}");
-                }
+                baseKey.DeleteSubKeyTree($"{path}\\{key}");
             }
         }
 

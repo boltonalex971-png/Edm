@@ -105,7 +105,7 @@ namespace Microprojects.Edm.Ui.Main.Controllers
 
             var tree = folders.Concat(devices).ToTree().ToList();
             // always expand root if just one
-            if (tree.Count() == 1)
+            if (tree.Count == 1)
             {
                 tree.First().expanded = true;
             }

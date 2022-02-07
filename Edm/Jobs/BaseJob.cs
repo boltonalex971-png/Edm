@@ -1,17 +1,9 @@
-﻿using System;
-using System.Collections;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microprojects.Edm;
-using Microprojects.Edm.Log;
-using Microprojects.Edm.Utils;
-using Newtonsoft.Json;
-using Testcalibur.Utils;
 
 namespace Microprojects.Edm.Jobs
 {
@@ -22,7 +14,7 @@ namespace Microprojects.Edm.Jobs
 
         public virtual string Name
         {
-            get => GetType().GetCustomAttribute<JobAttribute>()?.Name ?? 
+            get => GetType().GetCustomAttribute<JobAttribute>()?.Name ??
                 GetType().Name.Replace("Job", string.Empty);
         }
 
@@ -31,7 +23,7 @@ namespace Microprojects.Edm.Jobs
             get => GetType().GetCustomAttribute<JobAttribute>()?.Description;
         }
 
-        public JobLifetime Lifetime 
+        public JobLifetime Lifetime
         {
             get => GetType().GetCustomAttribute<JobAttribute>()?.Lifetime ?? JobLifetime.ShortRunning;
         }
@@ -43,7 +35,7 @@ namespace Microprojects.Edm.Jobs
 
         public virtual Task<object> ExecuteAsync()
         {
-            return Task.FromResult((object) "Ok");
+            return Task.FromResult((object)"Ok");
         }
 
         public virtual Task<object> ExecuteAsync(CancellationToken cancellationToken)

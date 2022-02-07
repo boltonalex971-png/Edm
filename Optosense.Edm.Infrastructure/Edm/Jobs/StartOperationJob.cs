@@ -107,14 +107,14 @@ namespace Optosense.Edm.Jobs
             {
                 count = 0;
                 await Task.Delay(10000, CancellationToken);
-                foreach (var dev in running)
+                foreach (var (url, job) in running)
                 {
-                    var check = new CheckJob(dev.job);
+                    var check = new CheckJob(job);
                     var parameter = new
                     {
-                        Job = dev.job.Name,
-                        ((StartDeviceJobParameters) dev.job.JobParameters).OperationHostDevice,
-                        ((StartDeviceJobParameters) dev.job.JobParameters).Driver
+                        Job = job.Name,
+                        ((StartDeviceJobParameters) job.JobParameters).OperationHostDevice,
+                        ((StartDeviceJobParameters) job.JobParameters).Driver
                     };
                     var response = //dev.url.Contains("localhost") ?
                         await JobManager.Execute(check, parameter);

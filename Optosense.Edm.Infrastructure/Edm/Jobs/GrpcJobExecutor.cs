@@ -18,16 +18,14 @@ namespace Optosense.Edm.Infrastructure.Edm.Jobs
                 throw new Exception("Job cannot be null");
             }
 
-            using (var channel = GrpcChannel.ForAddress(host))
+            using var channel = GrpcChannel.ForAddress(host);
+            var client = new JobExecutor.JobExecutorClient(channel);
+            var response = await client.ExecuteJobAsync(new JobParams
             {
-                var client = new JobExecutor.JobExecutorClient(channel);
-                var response = await client.ExecuteJobAsync(new JobParams
-                {
-                    Job = job.Name,
-                    Params = JsonConvert.SerializeObject(parameters ?? job.GetParameters())
-                });
-                return response;
-            }
+                Job = job.Name,
+                Params = JsonConvert.SerializeObject(parameters ?? job.GetParameters())
+            });
+            return response;
         }
 
         public static async Task<JobResponse> Execute(this IJobContainer container, IJob job, object parameters = null)

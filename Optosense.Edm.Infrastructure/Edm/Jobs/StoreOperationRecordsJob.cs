@@ -1,7 +1,4 @@
-﻿using Microprojects.Edm;
-using Microprojects.Edm.Cache;
-using Microprojects.Edm.Log;
-using Optosense.Edm.DataAccess;
+﻿using Microprojects.Edm.Cache;
 using Optosense.Edm.Domain.Models;
 using Microprojects.Edm.Utils;
 using System;
@@ -9,6 +6,7 @@ using System.Threading.Tasks;
 using Optosense.Edm.Core.Persistance;
 using System.Threading;
 using Microprojects.Edm.Jobs;
+using Microsoft.Extensions.Logging;
 
 namespace Optosense.Edm.Jobs
 {
@@ -18,12 +16,14 @@ namespace Optosense.Edm.Jobs
         protected ICache Cache { get; init; }
         protected IEdmContextFactory ContextFactory { get; init; }
         protected StoreOperationRecordsJobParameters Parameters => (StoreOperationRecordsJobParameters) JobParameters;
+        private readonly ILogger<StoreOperationRecordsJob> _logger;
 
         public StoreOperationRecordsJob() { }
-        public StoreOperationRecordsJob(ICache cache, IEdmContextFactory factory)
+        public StoreOperationRecordsJob(ILogger<StoreOperationRecordsJob> logger, ICache cache, IEdmContextFactory factory)
         {
             Cache = cache;
             ContextFactory = factory;
+            _logger = logger;
         }
 
         public override async Task<object> ExecuteAsync()
@@ -43,7 +43,7 @@ namespace Optosense.Edm.Jobs
                         //TODO Check what was saved in the context (and publish it)
                         //     and store the records that weren't
                         // Swallow the exception not to breaking up storing process
-                        Logger.Log($"Some InstructionExecutions lost: {e.GetFullInfo()}");
+                        _logger.LogWarning("Some InstructionExecutions lost: {Exception}", e.GetFullInfo());
                     }
                 });
             await Task.Delay(-1, CancellationToken);

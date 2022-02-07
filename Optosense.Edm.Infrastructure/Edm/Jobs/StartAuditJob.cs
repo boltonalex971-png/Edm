@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Microprojects.Edm;
 using Microprojects.Edm.Cache;
 using Optosense.Edm.Domain.Models;
-using Microprojects.Edm.Log;
 using Microprojects.Edm.Utils;
 using Newtonsoft.Json;
 using Optosense.Edm.Utils;
@@ -19,6 +18,7 @@ using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Core.Services;
 using Optosense.Edm.Core.Auditing;
 using Microprojects.Edm.Jobs;
+using Microsoft.Extensions.Logging;
 
 namespace Optosense.Edm.Jobs
 {
@@ -28,17 +28,18 @@ namespace Optosense.Edm.Jobs
         protected StartAuditJobParameters Parameters => (StartAuditJobParameters) JobParameters;
         protected IJobContainer JobManager { get; init; }
         protected ICache Cache { get; init; }
-        protected ILogger Logger { get; init; }
+        protected ILogger<StartAuditJob> Logger { get; init; }
         protected IEdmContextFactory ContextFactory { get; init; }
 
         private Func<int, int, string, string> CacheKey = (opId, opCritId, addr) => 
             $"{nameof(Operation)}:{opId}:{nameof(OperationCriterion)}:{opCritId}:{addr}";
 
         public StartAuditJob() { }
-        public StartAuditJob(IJobContainer container, ICache cache, IEdmContextFactory contextFactory)
+        public StartAuditJob(IJobContainer container, ICache cache, ILogger<StartAuditJob> logger, IEdmContextFactory contextFactory)
         {
             JobManager = container;
             Cache = cache;
+            Logger = logger;
             ContextFactory = contextFactory;
         }
 

@@ -1,22 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Composition;
-using System.Composition.Hosting;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.Serialization;
-using System.Security.Permissions;
-using System.Security.Principal;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Microprojects.Edm.Utils;
-using Microprojects.Edm.Utils.Notifications;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microprojects.Edm.Utils;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Microprojects.Edm.Jobs;
 
@@ -26,9 +17,9 @@ public class JobContainer : IJobContainer
     public static readonly string NOT_FOUND = "Not found";
     public static readonly string SUCCESS_STATUS = "Ok";
 
-    private JobConfiguration _config;
-    private IServiceProvider _services;
-    private ILogger<JobContainer> _logger;
+    private readonly JobConfiguration _config;
+    private readonly IServiceProvider _services;
+    private readonly ILogger<JobContainer> _logger;
 
     public ICollection<CancellableTask> RunningTasks { get; } = new List<CancellableTask>();
     public Hive Hive { get; } = new Hive();
@@ -151,14 +142,14 @@ public class JobContainer : IJobContainer
                         task.Task.Status == TaskStatus.WaitingForChildrenToComplete)
                     {
                         response.Message = $"Task {task.Task.Id} {task.Job.Name} was requested to stop";
-                        _logger.LogInformation(response.Message);
+                        _logger.LogInformation("Task {Id} {JobName} was requested to stop", task.Task.Id, task.Job.Name);
                         task.TokenSource.Cancel();
                     }
                     else
                     {
                         response.Message = $"Task {task.Task.Id} {task.Job.Name} was requested to stop but is not running";
                         response.Status = FAILED_STATUS;
-                        _logger.LogError(response.Message);
+                        _logger.LogError("Task {Id} {JobName} was requested to stop but is not running", task.Task.Id, task.Job.Name);
                     }
                 }
                 else
@@ -202,20 +193,29 @@ public class JobContainer : IJobContainer
 
     public void Dispose()
     {
-        var ok = RunningTasks.All(t =>
+        Dispose(true);
+        //GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
         {
-            try
+            RunningTasks.AsParallel().ForAll(async t =>
             {
-                t.TokenSource.Cancel();
-                _logger.LogInformation($"Container stopping: task {t.Task.Id} {t.Job.Name} cancelled");
-                return true;
-            }
-            catch (Exception e)
-            {
-                _logger.LogError($"Container stopping: task {t.Task.Id} {t.Job.Name} failed to cancell with exception: {e.GetFullInfo()}");
-                return false;
-            }
-        });
+                try
+                {
+                    t.TokenSource.Cancel();
+                    await t.Task;
+                    _logger.LogInformation("Container stopping: task {Id} {Name} cancelled", t.Task.Id, t.Job.Name);
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError("Container stopping: task {Id} {Name} failed to cancel with exception: {Exception}", t.Task.Id, t.Job.Name, e.GetFullInfo());
+                }
+            });
+            RunningTasks.Clear();
+        }
     }
 
     private void RunEverTasks()
@@ -243,20 +243,21 @@ public class JobContainer : IJobContainer
                 switch (t.Status)
                 {
                     case TaskStatus.Canceled:
-                        _logger.LogInformation($"Task {t.Id} {job.Name} was canceled by user");
+                        _logger.LogInformation("Task {Id} {Name} was canceled by user", t.Id, job.Name);
                         break;
                     case TaskStatus.Faulted:
-                        _logger.LogError($"Task {t.Id} {job.Name} was canceled with exception: {t.Exception.Flatten().GetFullInfo()}");
+                        _logger.LogError("Task {Id} {Name} was canceled with exception: {Exception}", t.Id, job.Name, t.Exception.Flatten().GetFullInfo());
                         break;
                     case TaskStatus.RanToCompletion:
-                        _logger.LogInformation($"Task {t.Id} {job.Name} completed successfully");
+                        _logger.LogInformation("Task {Id} {Name} completed successfully", t.Id, job.Name);
                         break;
                 }
 
                 DisposeTask(t.Id);
             }, TaskScheduler.Default);
         RunningTasks.Add(new CancellableTask { Task = task, Job = job, TokenSource = tokenSource });
-        _logger.LogInformation($"Task {task.Id} {job.Name} started succesfully");
+        _logger.LogInformation("Task {Id} {Name} started succesfully", task.Id, job.Name);
+
         return task.Id;
     }
 
@@ -307,13 +308,12 @@ public class JobContainer : IJobContainer
         }
     }
 
-    private IJobParameters ConvertParameters(Type jobType, string data)
+    private static IJobParameters ConvertParameters(Type jobType, string data)
     {
-        data = data ?? "{}";
         var jobParamsType = jobType.GetCustomAttribute<JobAttribute>(true)?.Parameters
             ?? throw new EdmException($"Parameters type for {jobType.Name} is not defined");
         var param = (IJobParameters)Activator.CreateInstance(jobParamsType);
-        JsonConvert.PopulateObject(data, param);
+        JsonConvert.PopulateObject(data ?? "{}", param);
         return param;
     }
 }

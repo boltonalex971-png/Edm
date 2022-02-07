@@ -1,13 +1,6 @@
-﻿using Microprojects.Edm.Log;
-using Microsoft.Extensions.DependencyInjection;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Runtime.Loader;
-using System.Text;
 
 namespace Microprojects.Edm.Jobs;
 

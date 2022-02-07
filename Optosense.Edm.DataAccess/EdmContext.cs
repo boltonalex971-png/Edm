@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.SqlServer.Infrastructure.Internal;
 using Optosense.Edm.Core.Persistance;
 using Optosense.Edm.Domain.Models;
 using System;
@@ -9,7 +10,7 @@ namespace Optosense.Edm.DataAccess
 {
     public class EdmContext : DbContext, IEdmContext
     {
-        private string _connectionString;
+        private readonly string _connectionString;
 
         public DbSet<Audit> Audits { get; set; }
         public DbSet<AuditZone> AuditZones { get; set; }
@@ -32,11 +33,7 @@ namespace Optosense.Edm.DataAccess
         public DbSet<WorkplaceHostDevice> WorkplaceHostDevices { get; set; }
         public DbSet<WorkplaceProcess> WorkplaceProcesses{ get; set; }
 
-        public EdmContext()
-        {
-        }
-
-        public EdmContext(DbContextOptions options) : base(options)
+        public EdmContext(DbContextOptions<EdmContext> options) : base(options)
         {
         }
 

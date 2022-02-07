@@ -1,33 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microprojects.Edm;
-using Microprojects.Edm.Cache;
-using Optosense.Edm.Domain.Models;
-using Microprojects.Edm.Log;
-using Microprojects.Edm.Utils;
-using Newtonsoft.Json;
-using Optosense.Edm.Utils;
-using System.Diagnostics;
-using Optosense.Edm.DataAccess;
-using Microsoft.EntityFrameworkCore;
-using Optosense.Edm.Infrastructure.Edm;
-using System.Dynamic;
-using Optosense.Edm.Core.Persistance;
+﻿using Microprojects.Edm.Cache;
 using Microprojects.Edm.Jobs;
+using Microsoft.EntityFrameworkCore;
+using Optosense.Edm.Core.Persistance;
+using Optosense.Edm.Domain.Models;
+using System;
+using System.Threading.Tasks;
 
 namespace Optosense.Edm.Jobs
 {
     [Job(
-        Name = "StartTestOperation", 
-        Lifetime = JobLifetime.LongRunning, 
+        Name = "StartTestOperation",
+        Lifetime = JobLifetime.LongRunning,
         Parameters = typeof(StartOperationJobParameters))]
     public class StartTestOperationJob : BaseJob
     {
         protected ICache Cache { get; init; }
         protected IEdmContextFactory ContextFactory { get; init; }
-        protected StartOperationJobParameters Parameters => (StartOperationJobParameters) JobParameters;
+        protected StartOperationJobParameters Parameters => (StartOperationJobParameters)JobParameters;
 
         public StartTestOperationJob() { }
         public StartTestOperationJob(ICache cache, IEdmContextFactory contextFactory)
@@ -90,11 +79,11 @@ namespace Optosense.Edm.Jobs
                 {
                     operation.Cancelled = now;
                 }
-                
+
                 operation.Completed = now;
                 await db.SaveChangesAsync();
             }
-        
+
             return "Ok";
         }
     }

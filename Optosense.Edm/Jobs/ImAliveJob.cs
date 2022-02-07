@@ -1,12 +1,10 @@
-﻿using System;
-using System.Threading.Tasks;
-using System.Threading;
+﻿using Microprojects.Edm;
 using Microprojects.Edm.Cache;
-using Microprojects.Edm.Log;
-using System.Linq;
-using Microprojects.Edm;
-using Microsoft.Extensions.Options;
 using Microprojects.Edm.Jobs;
+using Microsoft.Extensions.Options;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Optosense.Edm.Jobs
 {
@@ -16,7 +14,7 @@ namespace Optosense.Edm.Jobs
         protected ICache Cache { get; init; }
         protected IJobContainer Container { get; init; }
         protected IOptions<Peer> PeerOptions { get; init; }
-        protected ImAliveJobParameters Parameters => (ImAliveJobParameters) JobParameters;
+        protected ImAliveJobParameters Parameters => (ImAliveJobParameters)JobParameters;
 
         public ImAliveJob() { }
         public ImAliveJob(ICache cache, IJobContainer container, IOptions<Peer> options)
