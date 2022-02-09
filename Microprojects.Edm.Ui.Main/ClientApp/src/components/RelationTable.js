@@ -134,7 +134,7 @@ export const ActionCell = ({ edit, remove, save, discard, ...props }) => {
                     hidden={!inEdit}
                     title='Save record'
                     style={{ padding: '6px' }}
-                    look='flat'
+                    fillMode='flat'
                     className='k-button k-grid-save-command'
                     onClick={() => { save(props.dataItem); }}
                 >
@@ -144,7 +144,7 @@ export const ActionCell = ({ edit, remove, save, discard, ...props }) => {
                     hidden={!inEdit}
                     title='Discard changes'
                     style={{ padding: '6px' }}
-                    look='flat'
+                    fillMode='flat'
                     className="k-button k-grid-close-command"
                     onClick={() => { discard(props.dataItem); }}
                 >
@@ -154,7 +154,7 @@ export const ActionCell = ({ edit, remove, save, discard, ...props }) => {
                     hidden={!edit || inEdit}
                     title='Edit record'
                     style={{ padding: '6px' }}
-                    look='flat'
+                    fillMode='flat'
                     className='k-button k-grid-edit-command'
                     onClick={() => { edit(props.dataItem); }}
                 >
@@ -164,7 +164,7 @@ export const ActionCell = ({ edit, remove, save, discard, ...props }) => {
                     hidden={!remove || inEdit}
                     title='Delete record'
                     style={{ padding: '6px' }}
-                    look='flat'
+                    fillMode='flat'
                     className="k-button k-grid-remove-command"
                     onClick={() => { remove(props.dataItem); }}
                 >

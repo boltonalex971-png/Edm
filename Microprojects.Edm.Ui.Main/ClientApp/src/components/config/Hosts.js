@@ -22,9 +22,9 @@ export function Hosts() {
             stubMessage='Please select a host'
             item={(props) =>
                 <>
-                    <span className={`bi bi-${!props.item.isNode ? "diagram-2" : props.item.expanded ? "folder2-open" : "folder"}`}>&nbsp;</span>
+                    <span className={`k-icon k-i-${!props.item.isNode ? "inherited" : props.item.expanded ? "folder-open" : "folder"}`}>&nbsp;</span>
                     {!props.item.isNode &&
-                        <span className={`small bi bi-circle-fill text-${props.item.isActive ? "success" : "danger"}`}>&nbsp;</span>
+                        <span className={`k-icon k-i-circle text-${props.item.isActive ? "success" : "danger"}`}>&nbsp;</span>
                     }
                     <span>{props.item.name}</span>
                 </>
@@ -61,7 +61,7 @@ export function HostDetail({ hostId, ...props }) {
     return (
         <Detail {...props}
             id={id}
-            icon={<span className='bi bi-diagram-2' title='Host' />}
+            icon={<span className='k-icon k-i-inherited' title='Host' />}
             loading={loading}
             error={error}
             data={data}
@@ -69,24 +69,25 @@ export function HostDetail({ hostId, ...props }) {
             card={
                 <>
                     <div className="d-flex justify-content-left align-items-baseline" >
-                        <span className={`bi bi-circle-fill text-${data.isActive ? 'success' : 'danger'}`} ></span>
+                        <span className={`me-2 k-icon k-i-circle text-${data.isActive ? 'success' : 'danger'}`} ></span>
                         <Info {...props}
                             data={data}
                             content={
-                                <div className='ml-2' >
+                                <div className='me-2' >
                                     <p>{`${data.url}:${data.port}`} v{data.version}</p>
                                 </div>
                             }
                         />
-                        <Button className='ml-2' disabled={data.isActive === false}
+                        <Button className='me-2' disabled={data.isActive === false}
                             onClick={() => setSub(
                                 <HostConsole
                                     data={data}
                                     onClose={() => setSub()}
                                 />)
                             } >
-                            <span className='bi bi-terminal'>
-                                &nbsp;Console
+                            <span className='k-icon k-i-toggle-full-screen-mode me-2'></span>
+                            <span>
+                                Console
                             </span>
                         </Button>
                     </div>

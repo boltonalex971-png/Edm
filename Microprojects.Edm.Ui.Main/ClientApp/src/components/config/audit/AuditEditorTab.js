@@ -3,17 +3,11 @@ import axios from 'axios';
 import PropTypes from 'prop-types';
 import { Grid, GridCell, GridColumn, GridToolbar } from '@progress/kendo-react-grid';
 import { FloatingActionButton } from '@progress/kendo-react-buttons';
-import { RelationTable } from '../../RelationTable';
-import { dropDownCell } from '../../DropDownCell';
 import { useGet } from '../../hooks/hooks';
-import Api from '../../api';
-import { useHistory } from 'react-router-dom';
 import { Alert } from 'bootstrap';
 import { Loading } from '../../utils/Utils';
 import { Button } from 'reactstrap';
-import { Popup } from '@progress/kendo-react-popup';
 import { CriterionEditor, ZoneEditor } from './AuditZoneEditor';
-import { param } from 'jquery';
 
 AuditEditorTab.propTypes = {
     id: PropTypes.number,
@@ -53,8 +47,8 @@ export function AuditEditorTab({ id, api, params }) {
     const saveZone = (data) => {
         axios.put(`${api}/zones/${data.id}`, data).then((response) => {
             const zone = zones.filter(z => z.id === response.data.id)[0];
-            zone.no = response.data.no; 
-            zone.offset = response.data.offset; 
+            zone.no = response.data.no;
+            zone.offset = response.data.offset;
             zone.duration = response.data.duration;
             toggleZoneEditor();
             setZones([...zones]);
@@ -134,7 +128,7 @@ export function AuditEditorTab({ id, api, params }) {
                         </Button>
                     </GridToolbar>
                     <GridColumn title='Zone'>
-                    <GridColumn field='no' title='#' width={40} 
+                        <GridColumn field='no' title='#' width={40}
                             cell={(cellProps) =>
                                 <td onClick={() => toggleZoneEditor(cellProps.dataItem)}>
                                     <a type='button'>
@@ -142,16 +136,16 @@ export function AuditEditorTab({ id, api, params }) {
                                     </a>
                                 </td>
                             }
-                    />
-                    <GridColumn title='Interval'
-                        cell={(cellProps) =>
-                            <td onClick={() => toggleZoneEditor(cellProps.dataItem)}>
-                                <a type='button'>
-                                    {`${cellProps.dataItem.offset} : ${cellProps.dataItem.offset + cellProps.dataItem.duration}`}
-                                </a>
-                            </td>
-                        }
-                    />
+                        />
+                        <GridColumn title='Interval'
+                            cell={(cellProps) =>
+                                <td onClick={() => toggleZoneEditor(cellProps.dataItem)}>
+                                    <a type='button'>
+                                        {`${cellProps.dataItem.offset} : ${cellProps.dataItem.offset + cellProps.dataItem.duration}`}
+                                    </a>
+                                </td>
+                            }
+                        />
                     </GridColumn>
                     <GridColumn title='Parameters' >
                         {parameters.map(p =>

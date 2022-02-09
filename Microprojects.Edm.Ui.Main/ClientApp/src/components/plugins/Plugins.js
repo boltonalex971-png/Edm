@@ -12,7 +12,7 @@ export function Plugins() {
     return (
         <>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <PageTitle title="Configurations" />
+                <PageTitle title="Plugins" />
                 <PluginsMenu />
             </div>
             <hr />

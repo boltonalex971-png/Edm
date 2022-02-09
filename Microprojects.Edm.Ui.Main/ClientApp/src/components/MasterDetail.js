@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 import axios from 'axios';
 import { Card, CardHeader, CardBody, CardTitle, CardSubtitle } from '@progress/kendo-react-layout';
 import { Form, FormElement } from '@progress/kendo-react-form';
-import { Button, ButtonGroup } from '@progress/kendo-react-buttons';
+import { Button, ButtonGroup, Toolbar, ToolbarItem } from '@progress/kendo-react-buttons';
 import { Alert } from 'reactstrap';
 import { SmartScroll, SmartScrollContent } from "./SmartScroll";
 import { TreeViewMaster, refresh } from "./TreeViewMaster";
@@ -105,7 +105,7 @@ export function Detail(props) {
                         <>
                             <CardHeader style={{ position: "sticky", top: 0, display: 'flex', justifyContent: "space-between" }}>
                                 <div style={{ display: 'flex' }}>
-                                    <div className='mr-2'>
+                                    <div className='me-2'>
                                         {props.icon}
                                     </div>
                                     <div>
@@ -114,58 +114,62 @@ export function Detail(props) {
                                         <CardSubtitle>{props.data.description}</CardSubtitle>
                                     </div>
                                 </div>
-                                <div style={{ display: 'flex', flexWrap: 'nowrap' }}>
-                                    {props.editor &&
-                                        <ButtonGroup>
-                                            {props.editable &&
-                                                <Button
-                                                    title={editMode ? 'View mode' : 'Edit mode'}
-                                                    icon={editMode ? "eye" : "edit"}
-                                                    look='clear'
-                                                    onClick={() => setEditMode(!editMode)}
-                                                />
-                                            }
-                                            {props.copyable &&
-                                                <Button
-                                                    title='Copy'
-                                                    look='clear'
-                                                    icon='copy'
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        let data = { ...props.data, id: 0, name: `${props.data.name} (Copy)` };
-                                                        axios.post(`${props.api}`, data)
-                                                            .then((response) => {
-                                                                props.onChange();
-                                                                history.push(`${props.path}/${response.data.id}`);
-                                                            });
-                                                    }}
-                                                />
-                                            }
-                                            {props.deletable &&
-                                                <Button
-                                                    title='Delete'
-                                                    look='clear'
-                                                    icon='delete'
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        if (window.confirm('Confirm deleting entity')) {
-                                                            axios.delete(`${props.api}/${props.data.id}`)
-                                                                .then(() => {
+                                <Toolbar style={{ padding: '0', borderStyle: 'none' }}>
+                                    <ToolbarItem>
+                                        {props.editor &&
+                                            <ButtonGroup>
+                                                {props.editable &&
+                                                    <Button
+
+                                                        title={editMode ? 'View mode' : 'Edit mode'}
+                                                        icon={editMode ? "eye" : "edit"}
+                                                        fillMode='flat'
+                                                        onClick={() => setEditMode(!editMode)}
+                                                    />
+                                                }
+                                                {props.copyable &&
+                                                    <Button
+                                                        title='Copy'
+                                                        fillMode='flat'
+                                                        icon='copy'
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            let data = { ...props.data, id: 0, name: `${props.data.name} (Copy)` };
+                                                            axios.post(`${props.api}`, data)
+                                                                .then((response) => {
                                                                     props.onChange();
-                                                                    history.push(props.path);
+                                                                    history.push(`${props.path}/${response.data.id}`);
                                                                 });
-                                                        }
-                                                    }}
-                                                />
-                                            }
+                                                        }}
+                                                    />
+                                                }
+                                                {props.deletable &&
+                                                    <Button
+                                                        title='Delete'
+                                                        fillMode='flat'
+                                                        icon='delete'
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            if (window.confirm('Confirm deleting entity')) {
+                                                                axios.delete(`${props.api}/${props.data.id}`)
+                                                                    .then(() => {
+                                                                        props.onChange();
+                                                                        history.push(props.path);
+                                                                    });
+                                                            }
+                                                        }}
+                                                    />
+                                                }
+                                            </ButtonGroup>
+                                        }
+                                    </ToolbarItem>
+                                    <ToolbarItem>
+                                        <ButtonGroup >
+                                            {props.onUp && <Button title='Move Up' fillMode='flat' icon='arrow-up' onClick={props.onUp} />}
+                                            {props.onClose && < Button title='Close' fillMode='flat' icon='close' onClick={props.onClose} />}
                                         </ButtonGroup>
-                                    }
-                                    {(props.onUp || props.onClose) && <div className='mx-2'></div>}
-                                    <ButtonGroup>
-                                        {props.onUp && <Button title='Move Up' look='clear' icon='arrow-up' onClick={props.onUp} />}
-                                        {props.onClose && < Button title='Close' look='clear' icon='close' onClick={props.onClose} />}
-                                    </ButtonGroup>
-                                </div>
+                                    </ToolbarItem>
+                                </Toolbar>
                             </CardHeader>
                             <CardBody>
                                 {(editMode && props.editor) || props.card}

@@ -52,13 +52,13 @@ export class NavMenu extends Component {
                                             }
                                         </ul>
                                     </Collapse>
-                                    <NavbarText>
+                                    <NavbarText className='me-2'>
                                         <div>
                                             {user.name}
                                         </div>
                                     </NavbarText>
                                     <DropDownList
-                                        style={{ width: '150px', paddingLeft: '1rem' }}
+                                        style={{ width: '150px' }}
                                         data={user.roles}
                                         value={user.role}
                                         onChange={(e) => user.setRole(e.value)}

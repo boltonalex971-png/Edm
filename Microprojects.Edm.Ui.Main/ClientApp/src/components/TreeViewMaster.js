@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useHistory, useRouteMatch } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import styled from 'styled-components';
-import { Alert, InputGroup, InputGroupAddon, Input as BootInput, InputGroupText } from 'reactstrap';
+import { Alert, InputGroup, Input as BootInput, InputGroupText } from 'reactstrap';
 import { TreeView, TreeViewDragClue, moveTreeViewItem, TreeViewDragAnalyzer } from '@progress/kendo-react-treeview';
 import { useGet } from './hooks/hooks';
 import { Loading } from './utils/Utils';
@@ -89,25 +89,23 @@ export function TreeViewMaster(props) {
             <Card style={{ backgroundColor: 'rgba(248,249,250,1)' }}>
                 <CardHeader style={{ display: 'inline-flex', alignItems: 'center', width: '100%', paddingLeft: '10px' }}>
                     <InputGroup>
-                        <InputGroupAddon addonType='prepend'>
-                            <InputGroupText>
-                                <span className='k-icon bi-search' style={{ alignSelf: 'center' }}></span>
-                            </InputGroupText>
-                        </InputGroupAddon>
+                        <InputGroupText>
+                            <span className='k-icon k-i-search' style={{ alignSelf: 'center' }}></span>
+                        </InputGroupText>
                         <BootInput
                             bsSize='sm'
                             onChange={(e) => setFilter(e.target.value)}
                         />
                     </InputGroup>
-                    <Button look='clear' title='Add new folder'
+                    <Button fillMode='flat' title='Add new folder'
                         onClick={() => history.push(`${url}/folder/0`)} style={{ justifySelf: 'end' }}
                     >
-                        <span className="bi bi-folder-plus"></span>
+                        <span className="k-icon k-i-folder-add"></span>
                     </Button>
-                    <Button look='clear' title='Add new item'
+                    <Button fillMode='flat' title='Add new item'
                         onClick={() => history.push(`${url}/0`)} style={{ justifySelf: 'end' }}
                     >
-                        <span className="bi bi-file-earmark-plus"></span>
+                        <span className="k-icon k-i-file-add"></span>
                     </Button>
                 </CardHeader>
                 <CardBody>
@@ -144,16 +142,16 @@ const TreeItem = (props) => {
     return (
         <>
             <span className={iconClassName(props.item)}>&nbsp;</span>
-            <span className={props.item.isNode ? 'font-weight-bold' : ''}>{props.item.name}</span>
+            <span className={props.item.isNode ? 'fw-bolder' : ''}>{props.item.name}</span>
         </>
     );
 };
 
 function iconClassName({ isNode, isActive, ...item }) {
     if (isNode) {
-        return item.expanded ? "bi bi-folder2-open" : "bi bi-folder";
+        return item.expanded ? "k-icon k-i-folder-open" : "k-icon k-i-folder";
     } else {
-        return "bi bi-file-code";
+        return "k-icon k-i-file-txt";
     }
 }
 

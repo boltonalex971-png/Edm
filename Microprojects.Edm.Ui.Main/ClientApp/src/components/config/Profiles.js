@@ -42,7 +42,7 @@ export function ProfileDetail({ profileId, ...props }) {
                             <p>
                                 <ChipList data={[{ text: "qqq", value: 'qqq' }, { text: "qwqwerqw", value: 'qwqwerqw' }]}
                                     chip={(chipProps) =>
-                                        <Chip size='large' fillMode='solid' rounded='medium' />
+                                        <Chip {...chipProps} rounded={'small'} />
                                     }
                                 />
                             </p>
