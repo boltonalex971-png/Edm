@@ -7,6 +7,8 @@ import { useHistory, useParams } from 'react-router-dom';
 import { useRouteMatch } from 'react-router-dom';
 import { MasterDetail, reloadMaster, Detail, Info, Editor } from '../MasterDetail';
 import { ProfileTabs } from './profile/ProfileTabs';
+import { MultiSelect } from '@progress/kendo-react-dropdowns';
+import { Chip, ChipList } from '@progress/kendo-react-buttons';
 
 ProfileDetail.propTypes = {
     onChange: PropTypes.func,
@@ -37,6 +39,14 @@ export function ProfileDetail({ profileId, ...props }) {
                     content={
                         <div>
                             <p>{`${data.profilerName || 'No profiler attached'}`}</p>
+                            <p>
+                                <ChipList data={[{ text: "qqq", value: 'qqq' }, { text: "qwqwerqw", value: 'qwqwerqw' }]}
+                                    chip={(chipProps) =>
+                                        <Chip size='large' fillMode='solid' rounded='medium' />
+                                    }
+                                />
+                            </p>
+                            <p></p>
                         </div>
                     }
                 />
@@ -53,6 +63,12 @@ export function ProfileDetail({ profileId, ...props }) {
                             </div>
                             <div className="mb-3">
                                 <Field name={'description'} component={Input} label={'Description'} />
+                            </div>
+                            <div className="mb-3">
+                                <Field name={'input'} component={() => <MultiSelect label='Input Parameters' allowCustom={true} />} label={'Input Parameters'} />
+                            </div>
+                            <div className="mb-3">
+                                <Field name={'output'} component={() => <MultiSelect label='Output Parameters' allowCustom={true} />} label={'Output Parameters'} />
                             </div>
                         </fieldset>
                     }

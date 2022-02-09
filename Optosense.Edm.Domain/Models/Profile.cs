@@ -28,6 +28,30 @@ namespace Optosense.Edm.Domain.Models
         public string ProfilerName { get; set; }
 
         /// <summary>
+        /// Input parameters required by the profile to specify points or for any internal needs.
+        /// Comma-separated list of parameter names.
+        /// </summary>
+        public string Input { get; set; }
+
+        public IEnumerable<string> InParameterNames
+        {
+            get => Input?.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries) ??
+                Enumerable.Empty<string>();
+        }
+
+        /// <summary>
+        /// Output parameters required by devices implementing the profile.
+        /// Comma-separated list of parameter names.
+        /// </summary>
+        public string Output { get; set; }
+
+        public IEnumerable<string> OutParameterNames
+        {
+            get => Output?.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries) ??
+                Enumerable.Empty<string>();
+        }
+
+        /// <summary>
         /// Profile can be described in Json format as alternative to set of steps
         /// </summary>
         public string TextJson { get; set; }
