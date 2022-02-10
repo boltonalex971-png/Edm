@@ -26,6 +26,7 @@ export function ProfileDetail({ profileId, ...props }) {
     if (!data || data.id === 0) {
         data = { ...data, name: '', description: '', url: '' };
     }
+
     return (
         <Detail {...props}
             id={id}
@@ -39,14 +40,26 @@ export function ProfileDetail({ profileId, ...props }) {
                     content={
                         <div>
                             <p>{`${data.profilerName || 'No profiler attached'}`}</p>
-                            <p>
-                                <ChipList data={[{ text: "qqq", value: 'qqq' }, { text: "qwqwerqw", value: 'qwqwerqw' }]}
-                                    chip={(chipProps) =>
-                                        <Chip {...chipProps} rounded={'small'} />
-                                    }
-                                />
-                            </p>
-                            <p></p>
+                            {data.input &&
+                                <div className='my-2'>
+                                    <span className='me-2'>Input parameters:</span>
+                                    <ChipList data={JSON.parse(data.input || '[]').map((el => ({ text: el, value: el })))}
+                                        chip={(chipProps) =>
+                                            <Chip {...chipProps} rounded={'small'} />
+                                        }
+                                    />
+                                </div>
+                            }
+                            {data.output &&
+                                <div className='my-2'>
+                                    <span className='me-2'>Output parameters:</span>
+                                    <ChipList data={JSON.parse(data.output || '[]').map((el => ({ text: el, value: el })))}
+                                        chip={(chipProps) =>
+                                            <Chip {...chipProps} rounded={'small'} />
+                                        }
+                                    />
+                                </div>
+                            }
                         </div>
                     }
                 />
@@ -65,10 +78,36 @@ export function ProfileDetail({ profileId, ...props }) {
                                 <Field name={'description'} component={Input} label={'Description'} />
                             </div>
                             <div className="mb-3">
-                                <Field name={'input'} component={() => <MultiSelect label='Input Parameters' allowCustom={true} />} label={'Input Parameters'} />
+                                <Field name={'input'}
+                                    component={(fieldProps) =>
+                                        <MultiSelect {...fieldProps}
+                                            allowCustom={true}
+                                            value={JSON.parse(fieldProps.value || '[]')}
+                                            onChange={(e) => fieldProps.onChange({
+                                                dataItem: fieldProps.dataItem,
+                                                field: fieldProps.field,
+                                                syntheticEvent: e.syntheticEvent,
+                                                value: JSON.stringify(e.value)
+                                            })}
+                                        />
+                                    }
+                                    label={'Input Parameters'} />
                             </div>
                             <div className="mb-3">
-                                <Field name={'output'} component={() => <MultiSelect label='Output Parameters' allowCustom={true} />} label={'Output Parameters'} />
+                                <Field name={'output'}
+                                    component={(fieldProps) =>
+                                        <MultiSelect {...fieldProps}
+                                            allowCustom={true}
+                                            value={JSON.parse(fieldProps.value || '[]')}
+                                            onChange={(e) => fieldProps.onChange({
+                                                dataItem: fieldProps.dataItem,
+                                                field: fieldProps.field,
+                                                syntheticEvent: e.syntheticEvent,
+                                                value: JSON.stringify(e.value)
+                                            })}
+                                        />
+                                    }
+                                    label={'Output Parameters'} />
                             </div>
                         </fieldset>
                     }

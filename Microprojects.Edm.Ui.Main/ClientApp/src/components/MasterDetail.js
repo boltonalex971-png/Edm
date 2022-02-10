@@ -75,6 +75,7 @@ Detail.propTypes = {
     id: PropTypes.any,
     loading: PropTypes.any,
     error: PropTypes.any,
+    validation: PropTypes.string,
     data: PropTypes.object,
     onChange: PropTypes.func,
     onClose: PropTypes.func,
@@ -172,6 +173,7 @@ export function Detail(props) {
                                 </Toolbar>
                             </CardHeader>
                             <CardBody>
+                                {props.validation && <Alert color='warning' style={{ display: 'flex', justifyContent: 'space-around' }}>{props.validation}</Alert>}
                                 {(editMode && props.editor) || props.card}
                                 {!editMode && props.relations}
                             </CardBody>
@@ -235,7 +237,7 @@ export function Editor(props) {
                         <Button
                             title='Save'
                             name='save'
-                            primary
+                            primary='true'
                             icon='save'
                             type={'submit'}
                             disabled={!formRenderProps.allowSubmit}

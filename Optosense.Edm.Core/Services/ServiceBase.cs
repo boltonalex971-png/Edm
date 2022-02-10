@@ -53,6 +53,13 @@ namespace Optosense.Edm.Core.Services
             return result;
         }
 
+        public virtual async Task<TEntity> Get<TInclude>(int id, Expression<Func<TEntity, TInclude>> include)
+        {
+            var result = await Set().Include(include)
+                .FirstOrDefaultAsync(p => id == p.Id);
+            return result;
+        }
+
         public async Task<IEnumerable<TEntity>> Get<T1>(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, T1>> include)
         {
             var request = Set().Include(include);

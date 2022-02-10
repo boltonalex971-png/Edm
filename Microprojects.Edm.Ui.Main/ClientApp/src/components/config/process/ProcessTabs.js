@@ -6,6 +6,7 @@ import { ProcessProfilesTab } from './ProcessProfilesTab';
 ProcessTabs.propTypes = {
     api: PropTypes.string,
     id: PropTypes.number,
+    missedInputs: PropTypes.arrayOf(PropTypes.string),
     onDetailSelected: PropTypes.func
 }
 

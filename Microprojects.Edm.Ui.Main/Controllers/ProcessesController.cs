@@ -10,6 +10,7 @@ using Optosense.Edm.Domain.Models;
 using Optosense.Edm.Plugins;
 using Microprojects.Edm.Ui.Main.Models;
 using Microprojects.Edm.Ui.Main.Utils;
+using Newtonsoft.Json;
 
 namespace Microprojects.Edm.Ui.Main.Controllers
 {
@@ -39,15 +40,24 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         }
 
         [HttpGet("{id:int}")]
-        public async Task<Process> GetById(int id)
+        public async Task<ProcessViewModel> GetById(int id)
         {
             if (id > 0)
             {
-                return await _processService.Get(id);
+                var process = await _processService.Get(id, p => p.Profiles);
+                var model = _mapper.Map<ProcessViewModel>(process);
+                //var inputs = process.Profiles
+                //    .SelectMany(p => JsonConvert.DeserializeObject<string[]>(p.Input ?? "[]"))
+                //    .Distinct();
+                //var outputs = process.Profiles
+                //    .SelectMany(p => JsonConvert.DeserializeObject<string[]>(p.Output ?? "[]"))
+                //    .Distinct();
+                //var absent = inputs.Except(outputs);
+                return model;
             }
             else
             {
-                return new Process
+                return new ProcessViewModel
                 {
                     Name = string.Empty,
                     Description = string.Empty,

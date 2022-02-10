@@ -1,5 +1,7 @@
-﻿using Optosense.Edm.Domain.Models;
+﻿using Newtonsoft.Json;
+using Optosense.Edm.Domain.Models;
 using Optosense.Edm.Plugins;
+using System.Linq;
 
 namespace Microprojects.Edm.Ui.Main.Models
 {
@@ -30,6 +32,15 @@ namespace Microprojects.Edm.Ui.Main.Models
                 .ForMember(d => d.Workplace, o => o.Ignore());
 
             CreateMap<Process, IdNameModel>();
+            CreateMap<Process, ProcessViewModel>()
+                .ForMember(d => d.Message,
+                    o => o. MapFrom(s => JsonConvert.SerializeObject(s.Profiles
+                            .SelectMany(p => JsonConvert.DeserializeObject<string[]>(p.Input ?? "[]"))
+                            .Distinct()
+                            .Except(s.Profiles
+                                .SelectMany(p => JsonConvert.DeserializeObject<string[]>(p.Output ?? "[]"))
+                                .Distinct())
+                            )));
 
             CreateMap<HostDevice, HostDeviceModel>()
                 .ForMember(d => d.DriverGuid, o => o.MapFrom(s => s.Device.DriverGuid))

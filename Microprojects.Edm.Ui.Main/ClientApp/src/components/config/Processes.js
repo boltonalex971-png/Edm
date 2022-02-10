@@ -54,12 +54,15 @@ export function ProcessDetail({ processId, ...props }) {
         data = { ...data, name: '', description: '' };
     }
 
+    const missedInputs = JSON.parse(data.message || '[]');
+
     return (
         <Detail {...props}
             id={id}
             icon={<span className='k-icon k-i-aggregate-fields' title='Process' />}
             loading={loading}
             error={error}
+            validation={missedInputs.length && `Parameters ${missedInputs.join(', ')} are not available as output parameters`}
             data={data}
             subDetail={sub}
             card={
@@ -101,7 +104,7 @@ export function ProcessDetail({ processId, ...props }) {
                 />
             }
             relations={
-                <ProcessTabs id={parseInt(id)} api={props.api} onDetailSelected={setSub} />
+                <ProcessTabs id={parseInt(id)} api={props.api} missedInputs={missedInputs} onDetailSelected={setSub} />
             }
         />
     );
