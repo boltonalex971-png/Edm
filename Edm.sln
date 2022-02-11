@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29728.190
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32126.317
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Edm", "Edm\Edm.csproj", "{D69C7C74-BB92-4C17-A4AD-E2DA641BD2E3}"
 EndProject
@@ -52,7 +52,9 @@ Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Optosense.Edm.Setup", "Opto
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microprojects.Edm.Installer", "Microprojects.Edm.Installer\Microprojects.Edm.Installer.csproj", "{37BFFE19-D51F-48B6-9BB4-5168D4F819D5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microprojects.Edm.Ui.Console", "Microprojects.Edm.Ui.Console\Microprojects.Edm.Ui.Console.csproj", "{FFD127A1-674B-46B6-A5EE-A14644C0C6A1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microprojects.Edm.Ui.Console", "Microprojects.Edm.Ui.Console\Microprojects.Edm.Ui.Console.csproj", "{FFD127A1-674B-46B6-A5EE-A14644C0C6A1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Optosense.Edm.Drivers.Operator", "..\Optosense.Edm.Drivers.Operator\Optosense.Edm.Drivers.Operator.csproj", "{B2BF7A6D-0D2F-406E-BA96-3540FE2F8577}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -133,6 +135,10 @@ Global
 		{FFD127A1-674B-46B6-A5EE-A14644C0C6A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FFD127A1-674B-46B6-A5EE-A14644C0C6A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FFD127A1-674B-46B6-A5EE-A14644C0C6A1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B2BF7A6D-0D2F-406E-BA96-3540FE2F8577}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B2BF7A6D-0D2F-406E-BA96-3540FE2F8577}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B2BF7A6D-0D2F-406E-BA96-3540FE2F8577}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B2BF7A6D-0D2F-406E-BA96-3540FE2F8577}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -143,6 +149,7 @@ Global
 		{77ACC26B-7405-4396-95CB-380AC7629B0C} = {202E1D1E-AE87-4945-94A8-61763DEA56B1}
 		{0A4647EE-4E84-4D9F-B96B-659081E07392} = {81AF2D89-E19A-41C7-8BAD-4E67FDD65E79}
 		{FFD127A1-674B-46B6-A5EE-A14644C0C6A1} = {81AF2D89-E19A-41C7-8BAD-4E67FDD65E79}
+		{B2BF7A6D-0D2F-406E-BA96-3540FE2F8577} = {E5A45074-EE72-494C-B46C-475675E3E80E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F93F8111-60F8-4D4C-994F-1A46CE7F76FA}
