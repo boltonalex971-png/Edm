@@ -56,7 +56,7 @@ export function WorkbenchDetail({ workbenchId, ...props }) {
                 <>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignContent: 'baseline' }}>
                         <h6>Device configurations</h6>
-                        <Button type='button' primary icon='play' className='mb-2' onClick={onOperationStart} >Start operation</Button>
+                        <Button type='button' themeColor='primary' icon='play' className='mb-2' onClick={onOperationStart} >Start operation</Button>
                     </div>
                     <WorkbenchDevicesTab id={parseInt(id)} workplaceId={data.workplaceId} api={props.api} onDetailSelected={setSub} />
                 </>

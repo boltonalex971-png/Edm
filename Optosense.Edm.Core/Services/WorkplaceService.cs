@@ -160,6 +160,7 @@ namespace Optosense.Edm.Core.Services
                 .ToListAsync();
             return result;
         }
+
         public async Task<WorkbenchWorkplaceHostDevice> GetWorkbenchDevice(int id)
         {
             var result = await Db.WorkbenchDeviceConfigurations

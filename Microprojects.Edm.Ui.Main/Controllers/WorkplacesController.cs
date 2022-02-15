@@ -21,14 +21,22 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         private readonly ILogger<WorkplacesController> _logger;
         private readonly IMapper _mapper;
         private readonly IWorkplaceService _workplaceService;
+        private readonly IProcessService _processService;
         private readonly IHierarchyService _hierarchyService;
         private readonly IPluginContainer _plugins;
 
-        public WorkplacesController(ILogger<WorkplacesController> logger, IMapper mapper, IWorkplaceService workplaceService, IHierarchyService hierarchyService, IPluginContainer plugins)
+        public WorkplacesController(
+            ILogger<WorkplacesController> logger, 
+            IMapper mapper, 
+            IWorkplaceService workplaceService,
+            IProcessService processService, 
+            IHierarchyService hierarchyService, 
+            IPluginContainer plugins)
         {
             _logger = logger;
             _mapper = mapper;
             _workplaceService = workplaceService;
+            _processService = processService;
             _hierarchyService = hierarchyService;
             _plugins = plugins;
         }
@@ -263,6 +271,35 @@ namespace Microprojects.Edm.Ui.Main.Controllers
             }
 
             return result;
+        }
+
+        [HttpGet("processes/workbenches/{id:int}/requireddevices")]
+        public async Task<IEnumerable<WorkplaceHostDeviceModel>> GetWorkbenchRequiredDevices(int id)
+        {
+            var workbench = await _workplaceService.GetWorkbench(id);
+            var profiles = (await _processService.GetProfiles(workbench.WorkplaceProcess.ProcessId))
+                .Select(p => p.ProfilerGuid);
+            var devices = (await _workplaceService.GetDevices(workbench.WorkplaceProcess.WorkplaceId))
+                .Where(d =>
+                {
+                    var driver = _plugins.GetDriver(d.HostDevice.Device.DriverGuid);
+                    if (driver == null)
+                    {
+                        return false;
+                    }
+
+                    return driver.ProfileGuid == Guid.Empty || profiles.Contains(driver.ProfileGuid);
+                });
+            var models = _mapper.Map<IEnumerable<WorkplaceHostDeviceModel>>(devices);
+            foreach (var dev in models)
+            {
+                var driver = _plugins.GetDriver(dev.DriverGuid);
+                var profiler = _plugins.GetProfile(driver?.ProfileGuid ?? Guid.Empty);
+                dev.DriverName = driver?.Name;
+                dev.ProfilerGuid = driver?.ProfileGuid ?? Guid.Empty;
+                dev.ProfilerName = profiler?.Name;
+            }
+            return models;
         }
 
         [HttpPost("processes/workbenches/{id:int}/devices")]

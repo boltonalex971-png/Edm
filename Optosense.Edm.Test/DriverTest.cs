@@ -1,5 +1,4 @@
 using Microprojects.Edm;
-using Microprojects.Edm.Log;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using Optosense.Edm.Domain.Models;
@@ -44,19 +43,6 @@ namespace Optosense.Edm.Test
 
 
             Assert.IsTrue(true);
-        }
-    }
-
-    public class DebugLogger : ILogger
-    {
-        public void Log(string message, LogType type)
-        {
-            Debug.WriteLine($"{DateTime.Now} {type}: {message}");
-        }
-
-        public void Error(string message)
-        {
-            Log(message, LogType.Error);
         }
     }
 }

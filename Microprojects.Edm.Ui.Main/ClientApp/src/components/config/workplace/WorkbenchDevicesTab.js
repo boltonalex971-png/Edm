@@ -19,7 +19,7 @@ WorkbenchDevicesTab.propTypes = {
 
 export function WorkbenchDevicesTab({ id, api, workplaceId, onDetailSelected }) {
     const history = useHistory();
-    const [[data]] = useGet(`${Api.workplaces}/${workplaceId}/devices`, [workplaceId]);
+    const [[data]] = useGet(`${Api.workplaces}/processes/workbenches/${id}/requireddevices`, [id]);
     const wbClick = (wbId) => {
         alert(wbId);
         //onDetailSelected(
