@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Api from '../../api';
 import PropTypes from 'prop-types';
 import { GridColumn } from '@progress/kendo-react-grid';
@@ -9,27 +9,21 @@ import { ProcessDetail } from '../Processes';
 import { useHistory } from 'react-router-dom';
 import { DeviceDetail } from '../Devices';
 import { DeviceConfigEditor } from './DeviceConfigEditor';
+import { ProfileDetail } from '../Profiles';
 
 WorkbenchDevicesTab.propTypes = {
     id: PropTypes.number,
-    workplaceId: PropTypes.number,
+    processId: PropTypes.number,
     api: PropTypes.string,
     onDetailSelected: PropTypes.func
 }
 
-export function WorkbenchDevicesTab({ id, api, workplaceId, onDetailSelected }) {
+export function WorkbenchDevicesTab({ id, api, processId, onDetailSelected }) {
     const history = useHistory();
-    const [[data]] = useGet(`${Api.workplaces}/processes/workbenches/${id}/requireddevices`, [id]);
-    const wbClick = (wbId) => {
-        alert(wbId);
-        //onDetailSelected(
-        //    <WorkbenchDetail
-        //        workbenchId={wbId}
-        //        api={Api.workbenches}
-        //        onClose={() => onDetailSelected()}
-        //    />
-        //);
-    };
+    const [[devices]] = useGet(`${Api.workplaces}/processes/workbenches/${id}/requireddevices`, [id]);
+    const [[profiles]] = useGet(`${Api.processes}/${processId}/profiles`, [processId]);
+    const devicesPath = '/config/devices';
+    let profilers = profiles;
     const configClick = (id) => {
         onDetailSelected(
             <DeviceConfigEditor
@@ -39,23 +33,41 @@ export function WorkbenchDevicesTab({ id, api, workplaceId, onDetailSelected }) 
             />
         );
     };
-    const path = '/config/devices';
+    const handleDeviceChange = (e, onChange) => {
+        onChange(e);
+        const device = devices.find(d => d.id === e.value);
+        profilers = profiles.filter(p => device.profilerGuid === '00000000-0000-0000-0000-000000000000' || p.profilerGuid === device.profilerGuid);
+    };
 
     return (
         <RelationTable api={`${api}/${id}/devices`} removable >
-            <GridColumn title='Profiler' field='profilerName' editable={false} />
-            {data && data.length &&
+            <GridColumn title='Profile' field='profileId' editable={true} width={200}
+                cell={(cellProps) =>
+                    <DropDownCell {...cellProps}
+                        getData={() => profilers} id='id' text='name' fieldId='profileId'
+                        onClick={(profileId) => onDetailSelected(
+                            <ProfileDetail
+                                profileId={profileId}
+                                api={Api.profiles}
+                                deletable={false}
+                            />)
+                        }
+                    />
+                }
+            />
+            {devices && devices.length &&
                 <GridColumn title='Device' field='workplaceHostDeviceId' editable={true} width={200}
                     cell={(cellProps) =>
                         <DropDownCell {...cellProps}
-                            getData={() => data} id='id' text='device' fieldId='deviceId'
+                            getData={() => devices} id='id' text='device' fieldId='deviceId'
+                            onChange={(e) => handleDeviceChange(e, cellProps.onChange)}
                             onClick={(deviceId) => onDetailSelected(
                                 <DeviceDetail
                                     deviceId={deviceId}
                                     api={Api.devices}
-                                    path={path}
+                                    path={devicesPath}
                                     onClose={() => onDetailSelected()}
-                                    onUp={() => history.push(`${path}/${deviceId}`)}
+                                    onUp={() => history.push(`${devicesPath}/${deviceId}`)}
                                 />)
                             }
                         />

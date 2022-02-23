@@ -71,7 +71,7 @@ export function DeviceDetail({ deviceId, ...props }) {
                     data={data}
                     content={
                         <div>
-                            <p>{data.driverName} ({`${data.profilerName} device`})</p>
+                            <p>{data.driverName} ({`${data.profilerName || 'Any'} device type`})</p>
                         </div>
                     }
                 />

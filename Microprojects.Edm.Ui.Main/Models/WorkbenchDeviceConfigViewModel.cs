@@ -8,6 +8,7 @@ namespace Microprojects.Edm.Ui.Main.Models
         public int Id { get; set; }
         public int WorkbenchId { get; set; }
         public int WorkplaceHostDeviceId { get; set; }
+        public int ProfileId { get; set; }
         public int DeviceId { get; set; }
         public string DeviceName { get; set; }
         public string HostName { get; set; }

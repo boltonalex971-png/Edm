@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Core.Persistance;
 using Optosense.Edm.Domain.Models;
@@ -57,9 +58,10 @@ namespace Optosense.Edm.Core.Services
         public async Task<IEnumerable<string>> GetProfileParams(int id)
         {
             var profile = await Get(id);
+            var outputParams = JsonConvert.DeserializeObject<IEnumerable<string>>(profile.Output ?? "[]");
             var plugin = _plugins.GetProfile(profile.ProfilerGuid);
             var parameters = plugin?.GetParameters(profile.TextJson);
-            return parameters;
+            return outputParams.Concat(parameters);
         }
 
         public async Task<IEnumerable<Audit>> GetAudits(int id)

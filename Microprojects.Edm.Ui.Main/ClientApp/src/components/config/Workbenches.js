@@ -58,7 +58,7 @@ export function WorkbenchDetail({ workbenchId, ...props }) {
                         <h6>Device configurations</h6>
                         <Button type='button' themeColor='primary' icon='play' className='mb-2' onClick={onOperationStart} >Start operation</Button>
                     </div>
-                    <WorkbenchDevicesTab id={parseInt(id)} workplaceId={data.workplaceId} api={props.api} onDetailSelected={setSub} />
+                    <WorkbenchDevicesTab id={parseInt(id)} processId={data.processId} api={props.api} onDetailSelected={setSub} />
                 </>
             }
             editor={

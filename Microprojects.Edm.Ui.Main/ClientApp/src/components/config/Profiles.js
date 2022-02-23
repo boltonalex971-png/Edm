@@ -12,12 +12,12 @@ import { Chip, ChipList } from '@progress/kendo-react-buttons';
 
 ProfileDetail.propTypes = {
     onChange: PropTypes.func,
-    path: PropTypes.string,
+    deletable: PropTypes.bool,
     api: PropTypes.string,
     profileId: PropTypes.number
 }
 
-export function ProfileDetail({ profileId, ...props }) {
+export function ProfileDetail({ profileId, deletable = true, ...props }) {
     let { id } = useParams();
     id = profileId || id;
     let [sub, setSub] = useState();
@@ -34,6 +34,7 @@ export function ProfileDetail({ profileId, ...props }) {
             error={error}
             data={data}
             subDetail={sub}
+            deletable={deletable}
             card={
                 <Info {...props}
                     data={data}
@@ -114,7 +115,7 @@ export function ProfileDetail({ profileId, ...props }) {
                 />
             }
             relations={
-                <ProfileTabs id={parseInt(id)} api={props.api} onDetailSelected={setSub} />
+                <ProfileTabs id={parseInt(id)} api={props.api} onDetailSelected={setSub} profiler={data.profilerName} />
             }
         />
     );

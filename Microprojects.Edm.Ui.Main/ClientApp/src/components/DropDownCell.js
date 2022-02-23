@@ -30,12 +30,13 @@ DropDownComp.propTypes = {
 
 export const DropDownCell = ({ getData, id, text, fieldName, fieldId, onClick, editable = true, ...props }) => {
     const handleChange = (e) => {
-        props.onChange({
-            dataItem: props.dataItem,
+        const event = {
+            dataItem: props.dataItem, //e.value,
             field: props.field,
             syntheticEvent: e.syntheticEvent,
             value: e.target.value[id]
-        });
+        };
+        props.onChange(event);
     }
     let content;
     const { dataItem, field } = props;
@@ -55,7 +56,7 @@ export const DropDownCell = ({ getData, id, text, fieldName, fieldId, onClick, e
         const valueId = fieldId ? dataItem[fieldId] : value ? value[id] : dataItem[field];
         content = <button type='button' onClick={() => onClick(valueId)} className='btn btn-link'>{valueName}</button>;
     } else {
-        const valueName = fieldName ? dataItem[fieldName] : ((value && value[text]) || dataItem[fieldId]);
+        const valueName = fieldName ? dataItem[fieldName] : ((value && value[text]) || '');
         content = <span>{valueName}</span>;
     }
 

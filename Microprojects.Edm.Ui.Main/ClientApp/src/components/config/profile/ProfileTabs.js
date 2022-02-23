@@ -6,6 +6,7 @@ import { ProfileAuditsTab } from './ProfileAuditsTab';
 
 ProfileTabs.propTypes = {
     api: PropTypes.string,
+    profiler: PropTypes.string,
     id: PropTypes.number,
     onDetailSelected: PropTypes.func
 }

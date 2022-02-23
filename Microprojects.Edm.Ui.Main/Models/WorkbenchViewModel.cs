@@ -10,6 +10,7 @@ namespace Microprojects.Edm.Ui.Main.Models
         public int WorkplaceProcessId { get; set; }
         public string Name { get; set; }
         public string WorkplaceName { get; set; }
+        public int ProcessId { get; set; }
         public string ProcessName { get; set; }
         public Guid OperationGuid { get; set; }
         public string Description { get; set; }
