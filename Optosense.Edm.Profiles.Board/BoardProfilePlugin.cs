@@ -22,7 +22,7 @@ namespace Optosense.Edm.Profiles.Board
         {
             var result = name switch
             {
-                "instructions" => typeof(IEnumerable<Instruction>),
+                INSTRUCTION_SETTING => typeof(IEnumerable<Instruction>),
                 _ => throw new ArgumentException("No such setting")
             };
             return result;

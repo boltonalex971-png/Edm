@@ -11,6 +11,7 @@ namespace Optosense.Edm.Plugins
     {
         Guid ProfileGuid { get; }
         IDeviceDriver GetDriver();
+        // TODO execution plan must be created by profile plugin as it should know the format of profile
         IEnumerable<DriverRequest> GetPlan(string profile, string parameters);
     }
 }

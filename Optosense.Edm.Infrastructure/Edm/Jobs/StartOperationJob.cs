@@ -41,6 +41,7 @@ namespace Optosense.Edm.Jobs
             // Launch execution result storage
             var storeChannel = $"Operation-{Parameters.Operation}";
             var auditChannel = $"{storeChannel}-audit";
+            var parametersChannel = $"{storeChannel}-parameters";
             var storageJob = new StoreOperationRecordsJob
             {
                 JobParameters = new StoreOperationRecordsJobParameters { Channel = storeChannel, AuditChannel = auditChannel }
@@ -91,7 +92,10 @@ namespace Optosense.Edm.Jobs
                         OperationHostDevice = operationHostDevice.Id,
                         StartAt = Parameters.StartAt,
                         Profile = operationHostDevice.Profile.TextJson,
-                        Channel = storeChannel
+                        StoreChannel = storeChannel,
+                        ParametersChannel = parametersChannel,
+                        InputParameters = operationHostDevice.Profile.Input,
+                        OutputParameters = operationHostDevice.Profile.Output
                     };
                     var url = $"{operationHostDevice.HostDevice.Host.Url}:{operationHostDevice.HostDevice.Host.Port}";
                     var deviceJob = new StartDeviceJob { JobParameters = deviceParams };

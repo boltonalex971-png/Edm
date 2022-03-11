@@ -38,7 +38,7 @@ namespace Microprojects.Edm.Drivers
         public virtual string Stop() => "Stop";
         public virtual string Ping() => "Ping";
 
-        public virtual DriverResponse Execute(DriverRequest request)
+        public virtual Task<DriverResponse> Execute(DriverRequest request)
         {
             var response = new DriverResponse { Planned = request.Offset, Executed = request.Offset, Parameters = request.Parameters };
             var split = request.Command.Split(' ');
@@ -53,7 +53,7 @@ namespace Microprojects.Edm.Drivers
                 _ => throw new NotImplementedException($"The driver {GetType().Name} does not contain \"{split[0]}\" method")
             };
             
-            return response;
+            return Task.FromResult(response);
         }
     }
 }

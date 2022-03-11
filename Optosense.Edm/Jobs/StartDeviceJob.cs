@@ -23,10 +23,12 @@ namespace Optosense.Edm.Jobs
         private readonly ILogger<StartDeviceJob> _logger;
         private IPluginContainer _plugins;
         private IDriverPlugin _driverPlugin;
-        private IProfilePlugin _profilePlugin;
+        //private IProfilePlugin _profilePlugin;
         private IEnumerable<DriverRequest> _executionPlan;
         private IDeviceDriver _driver;
-        private DateTime StartTime;
+        private DateTime _startTime;
+        private Dictionary<string, object> _inputParams;
+        private Dictionary<string, object> _outputParams;
 
         public StartDeviceJob() { }
 
@@ -42,7 +44,7 @@ namespace Optosense.Edm.Jobs
             try
             {
                 _driverPlugin = _plugins.GetDriver(Parameters.Driver) ?? throw new EdmException("Driver plugin not found");
-                _profilePlugin = _plugins.GetProfile(_driverPlugin.ProfileGuid) ?? throw new EdmException("No profiler found");
+                //_profilePlugin = _plugins.GetProfile(_driverPlugin.ProfileGuid) ?? throw new EdmException("No profiler found");
                 _driver = _driverPlugin.GetDriver();
                 var options = _driver.GetEffectiveOptions(); //DriverUtils.GetDriverOptions(DeviceModel.None); //Parameters.Driver);
                 if (Parameters.DriverOptions != null)
@@ -53,6 +55,11 @@ namespace Optosense.Edm.Jobs
                 _executionPlan = _driverPlugin.GetPlan(Parameters.Profile, JsonConvert.SerializeObject(options)).ToList();
                 _driver.Options = options;
                 _driver.Init();
+
+                _inputParams = JsonConvert.DeserializeObject<IEnumerable<string>>(Parameters.InputParameters ?? string.Empty)
+                    .ToDictionary(k => k, e => default(object));
+                _outputParams = JsonConvert.DeserializeObject<IEnumerable<string>>(Parameters.OutputParameters ?? string.Empty)
+                    .ToDictionary(k => k, e => default(object));
             }
             catch (Exception e)
             {
@@ -65,10 +72,20 @@ namespace Optosense.Edm.Jobs
 
         public override async Task<object> ExecuteAsync()
         {
-            StartTime = DateTime.Now;
-            var task = _executionPlan.Launch(_driver, (d, x) => ExecuteDeviceInstruction(d, x),
+            _startTime = DateTime.Now;
+            var subscriber = Cache.Subscribe<KeyValuePair<string, object>>(Parameters.ParametersChannel,
+                onNext: param =>
+                {
+                    Console.WriteLine(param);
+                    if (_inputParams.ContainsKey(param.Key))
+                    {
+                        _inputParams[param.Key] = param.Value;
+                    }
+                });
+            var task = _executionPlan.Launch(_driver, async (d, x) => await ExecuteDeviceInstruction(d, x),
                 _logger, CancellationToken);
             await Task.WhenAll(task);
+            subscriber.Dispose();
             if (_driver is IDisposable)
             {
                 ((IDisposable)_driver).Dispose();
@@ -77,9 +94,9 @@ namespace Optosense.Edm.Jobs
             return "Ok";
         }
 
-        private void ExecuteDeviceInstruction(IDeviceDriver driver, DriverRequest request, bool throwEx = false, int totalRetrials = 0)
+        private async Task ExecuteDeviceInstruction(IDeviceDriver driver, DriverRequest request, bool throwEx = false, int totalRetrials = 0)
         {
-            var response = driver.Execute(request);
+            var response = await driver.Execute(request);
             var rec = new Record
             {
                 ScheduledAt = DateTime.Now,
@@ -92,21 +109,37 @@ namespace Optosense.Edm.Jobs
                 Status = (ExecutionStatus)response.State,
                 OperationHostDeviceId = Parameters.OperationHostDevice,
             };
-            Cache.Publish(Parameters.Channel, rec);
-            //Cache.Push(rec);
-            //Logger.Log(rec.Response);
+            await Cache.Publish(Parameters.StoreChannel, rec);
+            var output = JsonConvert.DeserializeObject<Dictionary<string, object>>(rec.Parameters ?? "[]");
+            foreach (var outParam in _outputParams)
+            {
+                if (output.ContainsKey(outParam.Key))
+                {
+                    _outputParams[outParam.Key] = outParam.Value;
+                    await Cache.Publish(Parameters.ParametersChannel, outParam);
+                }
+            }
+
             if (throwEx && !rec.IsValid)
             {
                 throw new EdmException(rec.Message);
             }
         }
+
+        private async Task AwaitEvent(string condition)
+        {
+
+        }
     }
 
     public class StartDeviceJobParameters : IJobParameters
     {
-        public string Channel { get; set; }
+        public string StoreChannel { get; set; }
+        public string ParametersChannel { get; set; }
         public dynamic DriverOptions { get; set; }
         public string Profile { get; set; }
+        public string InputParameters { get; set; }
+        public string OutputParameters { get; set; }
 
         [JobParameter(Required = true)]
         public int OperationHostDevice { get; set; }

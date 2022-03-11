@@ -73,7 +73,7 @@ namespace Optosense.Edm.Jobs
                         {
                             var auditFunc = AuditFunctions.Function(criterion.Function);
                             // take cached zone values list
-                            var selector = (string)recordParams["ADDR"];
+                            var selector = (string)recordParams["ADDR"] ?? string.Empty;
                             var key = CacheKey(Parameters.Operation, criterion.Id, selector);
                             var values = (await Cache.GetRangeAsync<string>(key,
                                     async () =>

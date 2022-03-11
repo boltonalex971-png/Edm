@@ -16,7 +16,7 @@ namespace Microprojects.Edm.Drivers
         string Set(object param);
         string Get();
         string Ping();
-        DriverResponse Execute(DriverRequest request);
+        Task<DriverResponse> Execute(DriverRequest request);
         DriverOptions GetEffectiveOptions();
     }
 

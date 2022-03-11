@@ -11,7 +11,8 @@ namespace Microprojects.Edm.Drivers
         Ok = 0,
         InvalidResponse = 1,
         Failed = 2,
-        Timeout = 3
+        Timeout = 3,
+        NotCompleted = 4
     }
 
     public class DriverResponse

@@ -5,6 +5,7 @@ using System.IO.Ports;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Microprojects.Edm.Drivers;
 using Newtonsoft.Json;
 using Optosense.Edm.Utils;
@@ -31,7 +32,7 @@ namespace Optosense.Edm.Drivers.Mux
             return OK;
         }
 
-        public override DriverResponse Execute(DriverRequest req)
+        public override Task<DriverResponse> Execute(DriverRequest req)
         {
             if (req is not BoardDriverRequest)
             {
@@ -87,7 +88,7 @@ namespace Optosense.Edm.Drivers.Mux
                 };
             }
 
-            return response;
+            return Task.FromResult(response);
         }
 
         private string SubstituteParameters(string command, ExpandoObject parameters)
