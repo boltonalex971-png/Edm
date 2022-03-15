@@ -35,6 +35,9 @@ namespace Optosense.Edm.DataAccess
 
         public EdmContext(DbContextOptions<EdmContext> options) : base(options)
         {
+            _connectionString = options
+                .FindExtension<SqlServerOptionsExtension>()?
+                .ConnectionString;
         }
 
         public EdmContext(string conn)
@@ -44,7 +47,7 @@ namespace Optosense.Edm.DataAccess
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlServer(_connectionString ?? "Data Source=.\\SQLEXPRESS;MultipleActiveResultSets=true;Initial Catalog=optosense_edm;Integrated Security=SSPI;");
+            optionsBuilder.UseSqlServer(_connectionString);
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -1,14 +1,10 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Configuration.Install;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.ServiceProcess;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace Microprojects.Edm.Installer
 {
@@ -19,6 +15,7 @@ namespace Microprojects.Edm.Installer
         private bool _versionNT64 = false;
         private int _versionNT;
         private string _targetDir;
+        private string _serviceName = "edm";
 
         public EdmInstaller()
         {
@@ -29,7 +26,7 @@ namespace Microprojects.Edm.Installer
         protected override void OnAfterInstall(IDictionary savedState)
         {
 #if DEBUG
-            System.Diagnostics.Debugger.Launch();
+            //System.Diagnostics.Debugger.Launch();
 #endif
             base.OnAfterInstall(savedState);
 
@@ -60,7 +57,7 @@ namespace Microprojects.Edm.Installer
 
             // Install EDM as service
             cmd.StartInfo = new ProcessStartInfo("cmd.exe", 
-                $"/C sc create edm start= auto DisplayName= \"EDM Service\" binPath= \"{_targetDir}Optosense.Edm.WebApi.exe\"")
+                $"/C sc create {_serviceName} start= auto DisplayName= \"EDM Service\" binPath= \"{_targetDir}Optosense.Edm.WebApi.exe\"")
             {
                 WindowStyle = ProcessWindowStyle.Hidden,
             };
@@ -69,18 +66,24 @@ namespace Microprojects.Edm.Installer
             // Wait to give time to start service
             Task.Delay(1000).Wait();
 
-            var sc = new ServiceController("edm");
-            if (sc != null && sc.Status == ServiceControllerStatus.Stopped)
+            cmd.StartInfo = new ProcessStartInfo("cmd.exe", $"/C sc start {_serviceName}")
             {
-                sc.Start();
-            }
+                WindowStyle = ProcessWindowStyle.Hidden,
+            };
+            cmd.Start();
+
+            //var sc = new ServiceController("edm");
+            //if (sc != null && sc.Status == ServiceControllerStatus.Stopped)
+            //{
+            //    sc.Start();
+            //}
         }
 
         [System.Security.Permissions.SecurityPermission(System.Security.Permissions.SecurityAction.Demand)]
         protected override void OnBeforeUninstall(IDictionary savedState)
         {
 #if DEBUG
-            System.Diagnostics.Debugger.Launch();
+            //System.Diagnostics.Debugger.Launch();
 #endif
             base.OnBeforeUninstall(savedState);
 
@@ -95,11 +98,17 @@ namespace Microprojects.Edm.Installer
             cmd.Start();
 
             // Uninstall EDM as service
-            var sc = new ServiceController("edm");
-            if (sc != null && sc.Status == ServiceControllerStatus.Running)
+            //var sc = new ServiceController("edm");
+            //if (sc != null && sc.Status == ServiceControllerStatus.Running)
+            //{
+            //    sc.Stop();
+            //}
+
+            cmd.StartInfo = new ProcessStartInfo("cmd.exe", $"/C sc stop {_serviceName}")
             {
-                sc.Stop();
-            }
+                WindowStyle = ProcessWindowStyle.Hidden,
+            };
+            cmd.Start();
 
             // Wait to give time to stop service
             Task.Delay(1000).Wait();

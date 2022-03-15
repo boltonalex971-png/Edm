@@ -22,8 +22,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Optosense.Edm.DataAccess", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Optosense.Edm.Domain", "Optosense.Edm.Domain\Optosense.Edm.Domain.csproj", "{506F9A54-39E1-4A24-B072-E014272A45F4}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Optosense.Edm.WebUi", "Optosense.Edm.WebUi\Optosense.Edm.WebUi.csproj", "{D856FD7C-F414-49F9-869F-36485B92B1FC}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Optosense.Edm.Test", "Optosense.Edm.Test\Optosense.Edm.Test.csproj", "{D7874D37-D757-41A2-9023-B3482AF52661}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Optosense.Edm.Infrastructure", "Optosense.Edm.Infrastructure\Optosense.Edm.Infrastructure.csproj", "{C0CD8238-4992-4AE2-ABC9-A0E1100412BA}"
@@ -54,7 +52,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microprojects.Edm.Installer
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microprojects.Edm.Ui.Console", "Microprojects.Edm.Ui.Console\Microprojects.Edm.Ui.Console.csproj", "{FFD127A1-674B-46B6-A5EE-A14644C0C6A1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Optosense.Edm.Drivers.Operator", "..\Optosense.Edm.Drivers.Operator\Optosense.Edm.Drivers.Operator.csproj", "{B2BF7A6D-0D2F-406E-BA96-3540FE2F8577}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Optosense.Edm.Drivers.Operator", "..\Optosense.Edm.Drivers.Operator\Optosense.Edm.Drivers.Operator.csproj", "{B2BF7A6D-0D2F-406E-BA96-3540FE2F8577}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -89,10 +87,6 @@ Global
 		{506F9A54-39E1-4A24-B072-E014272A45F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{506F9A54-39E1-4A24-B072-E014272A45F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{506F9A54-39E1-4A24-B072-E014272A45F4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D856FD7C-F414-49F9-869F-36485B92B1FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D856FD7C-F414-49F9-869F-36485B92B1FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D856FD7C-F414-49F9-869F-36485B92B1FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D856FD7C-F414-49F9-869F-36485B92B1FC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D7874D37-D757-41A2-9023-B3482AF52661}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D7874D37-D757-41A2-9023-B3482AF52661}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D7874D37-D757-41A2-9023-B3482AF52661}.Release|Any CPU.Build.0 = Release|Any CPU

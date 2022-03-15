@@ -26,13 +26,6 @@ namespace Microprojects.Edm.Ui.Main
     {
         public override void InjectDependencies(IServiceCollection services, IConfiguration configuration)
         {
-            //services.AddSingleton<ICache>(new RedisCache(configuration["Edm:Cache:Default:ConnectionString"]));
-            services.AddDbContext<IEdmContext, EdmContext>(options =>
-            {
-                options.UseSqlServer(configuration.GetConnectionString("Edm"));
-            });
-            services.AddSingleton<IEdmContextFactory>(new EdmContextFactory(configuration.GetConnectionString("Edm")));
-
             services.AddScoped<IRemoteJobs, RemoteJobs>();
             services.AddScoped<IAuditService, AuditService>();
             services.AddScoped<IProcessService, ProcessService>();

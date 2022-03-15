@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
   </PropertyGroup>
@@ -15,8 +15,8 @@
   </ItemGroup>
 
   <ItemGroup>
-	  <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.0.1" />
-	  <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="6.0.1" />
+	  <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.1.0" />
+	  <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="6.0.3" />
   </ItemGroup>
 
   <ItemGroup>
