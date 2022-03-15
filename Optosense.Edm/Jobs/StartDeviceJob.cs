@@ -56,9 +56,9 @@ namespace Optosense.Edm.Jobs
                 _driver.Options = options;
                 _driver.Init();
 
-                _inputParams = JsonConvert.DeserializeObject<IEnumerable<string>>(Parameters.InputParameters ?? string.Empty)
+                _inputParams = JsonConvert.DeserializeObject<IEnumerable<string>>(Parameters.InputParameters ?? "[]")
                     .ToDictionary(k => k, e => default(object));
-                _outputParams = JsonConvert.DeserializeObject<IEnumerable<string>>(Parameters.OutputParameters ?? string.Empty)
+                _outputParams = JsonConvert.DeserializeObject<IEnumerable<string>>(Parameters.OutputParameters ?? "[]")
                     .ToDictionary(k => k, e => default(object));
             }
             catch (Exception e)
