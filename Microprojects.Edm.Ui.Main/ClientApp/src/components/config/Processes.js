@@ -62,7 +62,10 @@ export function ProcessDetail({ processId, ...props }) {
             icon={<span className='k-icon k-i-aggregate-fields' title='Process' />}
             loading={loading}
             error={error}
-            validation={missedInputs.length && `Parameters ${missedInputs.join(', ')} are not available as output parameters`}
+            validation={
+                missedInputs.length > 0 ?
+                    `Parameter${missedInputs.length > 1 ? 's' : ''} ${missedInputs.join(', ')} ${missedInputs.length > 1 ? 'are' : 'is'} not available as output parameters` : ''
+            }
             data={data}
             subDetail={sub}
             card={
