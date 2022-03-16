@@ -22,7 +22,7 @@ namespace Optosense.Edm.Profiles.Operator
             var parameters = profile
                 .SelectMany(p => JsonConvert.DeserializeObject<IEnumerable<string>>(p.Parameters ?? "[]"))
                 .Distinct(); 
-            return parameters;
+            return parameters.Prepend("ResponseTime");
         }
 
     }
