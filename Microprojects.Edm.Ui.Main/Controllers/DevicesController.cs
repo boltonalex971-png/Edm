@@ -127,7 +127,7 @@ namespace Microprojects.Edm.Ui.Main.Controllers
             return profilers;
         }
 
-        [HttpGet("{driverGuid}")]
+        [HttpGet("driver/{driverGuid}")]
         public async Task<IEnumerable<Device>> GetByDriver(string driverGuid)
         {
             var devices = await _deviceService.Get(d => d.DriverGuid == new Guid(driverGuid) && d.IsActive);
@@ -143,21 +143,21 @@ namespace Microprojects.Edm.Ui.Main.Controllers
             return _mapper.Map<IEnumerable<HostDeviceModel>>(hosts);
         }
 
-        //[HttpPost("{id:int}/devices")]
-        //public async Task<HostDeviceModel> AttachHostDevice(int id, HostDeviceModel model)
-        //{
-        //    var hostDevice = _mapper.Map<HostDevice>(model);
-        //    hostDevice.HostId = id;
-        //    var device = await _hostService.AttachDevice(hostDevice);
-        //    return _mapper.Map<HostDeviceModel>(device);
-        //}
+        [HttpPost("{id:int}/hosts")]
+        public async Task<HostDeviceModel> AttachHostDevice(int id, HostDeviceModel model)
+        {
+            var hostDevice = _mapper.Map<HostDevice>(model);
+            hostDevice.DeviceId = id;
+            var host = await _deviceService.AttachHost(hostDevice);
+            return _mapper.Map<HostDeviceModel>(host);
+        }
 
-        //[HttpDelete("{id:int}/devices/{devId:int}")]
-        //public async Task<bool> DetachDevice(int id, int devId)
-        //{
-        //    var wasDetached = await _hostService.DetachDevice(id, devId);
-        //    return wasDetached;
-        //}
+        [HttpDelete("{id:int}/hosts/{hostId:int}")]
+        public async Task<bool> DetachDevice(int id, int hostId)
+        {
+            var wasDetached = await _deviceService.DetachHost(id, hostId);
+            return wasDetached;
+        }
 
         [HttpGet("hosts")]
         public async Task<IEnumerable<IdNameModel>> GetAvailableDevices()

@@ -41,7 +41,6 @@ export function RelationTable({ api, children, ...props }) {
         setData(newData);
     };
     const saveEdit = (event) => {
-        console.log(event);
         const promise = event.dataItem.id === 0 ? axios.post(`${api}`, event.dataItem) : axios.put(`${api}`, event.dataItem);
         // Force fetch
         // TODO think about inserting row in data w/o fetching data

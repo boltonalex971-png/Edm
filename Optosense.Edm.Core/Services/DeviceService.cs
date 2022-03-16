@@ -76,6 +76,21 @@ namespace Optosense.Edm.Core.Services
             return devices;
         }
 
+        public async Task<HostDevice> AttachHost(HostDevice hostDevice)
+        {
+            var result = Db.HostDevices.Add(hostDevice);
+            await Db.SaveChangesAsync();
+            return result.Entity;
+        }
+
+        public async Task<bool> DetachHost(int id, int hostDeviceId)
+        {
+            var host = await Db.HostDevices.FindAsync(hostDeviceId);
+            Db.HostDevices.Remove(host);
+            await Db.SaveChangesAsync();
+            return true;
+        }
+
         public async Task<IEnumerable<Host>> GetAvailableHosts()
         {
             // TODO implement repository pattern to avoid duplicating code

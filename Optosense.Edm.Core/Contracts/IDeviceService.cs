@@ -10,6 +10,8 @@ namespace Optosense.Edm.Core.Contracts
     {
         Task<Device> ChangeParent(int id, int newParentId);
         Task<IEnumerable<HostDevice>> GetHosts(int id);
+        Task<HostDevice> AttachHost(HostDevice hostDevice);
+        Task<bool> DetachHost(int id, int hostDeviceId);
         Task<IEnumerable<Host>> GetAvailableHosts();
         Task<HostDevice> GetHostDevice(int id);
     }

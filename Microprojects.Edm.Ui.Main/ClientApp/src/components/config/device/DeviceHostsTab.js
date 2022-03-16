@@ -32,7 +32,7 @@ export function DeviceHostsTab({ id, api, onDetailSelected }) {
             {data &&
                 <GridColumn
                     width={200}
-                    field='hostDeviceId'
+                    field='hostId'
                     title='Host'
                     cell={(cellProps) =>
                         <DropDownCell {...cellProps}
