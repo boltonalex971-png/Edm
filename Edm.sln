@@ -52,7 +52,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microprojects.Edm.Installer
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microprojects.Edm.Ui.Console", "Microprojects.Edm.Ui.Console\Microprojects.Edm.Ui.Console.csproj", "{FFD127A1-674B-46B6-A5EE-A14644C0C6A1}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Optosense.Edm.Drivers.Operator", "..\Optosense.Edm.Drivers.Operator\Optosense.Edm.Drivers.Operator.csproj", "{B2BF7A6D-0D2F-406E-BA96-3540FE2F8577}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Plugins", "Plugins", "{5DE79CDF-469D-46D8-B365-BE9D4DB8BBD3}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Optosense.Edm.Plugins.Operator", "Optosense.Edm.Plugins.Operator\Optosense.Edm.Plugins.Operator.csproj", "{19F6D337-5FC0-4503-AD10-3BEF2EB4B1AC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -129,10 +131,10 @@ Global
 		{FFD127A1-674B-46B6-A5EE-A14644C0C6A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FFD127A1-674B-46B6-A5EE-A14644C0C6A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FFD127A1-674B-46B6-A5EE-A14644C0C6A1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B2BF7A6D-0D2F-406E-BA96-3540FE2F8577}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B2BF7A6D-0D2F-406E-BA96-3540FE2F8577}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B2BF7A6D-0D2F-406E-BA96-3540FE2F8577}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B2BF7A6D-0D2F-406E-BA96-3540FE2F8577}.Release|Any CPU.Build.0 = Release|Any CPU
+		{19F6D337-5FC0-4503-AD10-3BEF2EB4B1AC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{19F6D337-5FC0-4503-AD10-3BEF2EB4B1AC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{19F6D337-5FC0-4503-AD10-3BEF2EB4B1AC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{19F6D337-5FC0-4503-AD10-3BEF2EB4B1AC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -143,7 +145,7 @@ Global
 		{77ACC26B-7405-4396-95CB-380AC7629B0C} = {202E1D1E-AE87-4945-94A8-61763DEA56B1}
 		{0A4647EE-4E84-4D9F-B96B-659081E07392} = {81AF2D89-E19A-41C7-8BAD-4E67FDD65E79}
 		{FFD127A1-674B-46B6-A5EE-A14644C0C6A1} = {81AF2D89-E19A-41C7-8BAD-4E67FDD65E79}
-		{B2BF7A6D-0D2F-406E-BA96-3540FE2F8577} = {E5A45074-EE72-494C-B46C-475675E3E80E}
+		{19F6D337-5FC0-4503-AD10-3BEF2EB4B1AC} = {5DE79CDF-469D-46D8-B365-BE9D4DB8BBD3}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F93F8111-60F8-4D4C-994F-1A46CE7F76FA}
