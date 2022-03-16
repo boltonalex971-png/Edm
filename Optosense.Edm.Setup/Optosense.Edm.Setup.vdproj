@@ -21,7 +21,7 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_63B0802607C24258BDA95575F799DBC7"
+        "MsmKey" = "8:_45C3698F3DE349299378CF56C43604D7"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -51,20 +51,8 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_B76EFEB552B2361A5B2EB489CA1950EF"
-        "OwnerKey" = "8:_63B0802607C24258BDA95575F799DBC7"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_63B0802607C24258BDA95575F799DBC7"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_B76EFEB552B2361A5B2EB489CA1950EF"
+        "OwnerKey" = "8:_45C3698F3DE349299378CF56C43604D7"
         "MsmSig" = "8:_UNDEFINED"
         }
     }
@@ -144,47 +132,47 @@
     {
         "CustomAction"
         {
-            "{4AA51A2D-7D85-4A59-BA75-B0809FC8B380}:_581AD0E1801D40F5AA49191FF710D9C8"
+            "{4AA51A2D-7D85-4A59-BA75-B0809FC8B380}:_1F27A16E974C4802BF3F31909FBC4387"
             {
             "Name" = "8:Primary output from Microprojects.Edm.Installer (Active)"
             "Condition" = "8:"
-            "Object" = "8:_63B0802607C24258BDA95575F799DBC7"
+            "Object" = "8:_45C3698F3DE349299378CF56C43604D7"
             "FileType" = "3:1"
-            "InstallAction" = "3:1"
+            "InstallAction" = "3:3"
             "Arguments" = "8:"
             "EntryPoint" = "8:"
             "Sequence" = "3:1"
-            "Identifier" = "8:_F7AE9CBC_54C0_4A2C_A66B_E51D1B12160F"
-            "InstallerClass" = "11:TRUE"
-            "CustomActionData" = "8:/targetDir=\"[TARGETDIR]\\\" /db=\"[DBCONNECTIONSTRING]\" /cache=\"[CACHECONNECTIONSTRING]\" /consoleUrl=\"[CONSOLEURL]\" /grpcUrl=\"[GRPCURL]\""
-            }
-            "{4AA51A2D-7D85-4A59-BA75-B0809FC8B380}:_5FF1A49F27FB4616A89AA15DC977451C"
-            {
-            "Name" = "8:Primary output from Microprojects.Edm.Installer (Active)"
-            "Condition" = "8:"
-            "Object" = "8:_63B0802607C24258BDA95575F799DBC7"
-            "FileType" = "3:1"
-            "InstallAction" = "3:2"
-            "Arguments" = "8:"
-            "EntryPoint" = "8:"
-            "Sequence" = "3:1"
-            "Identifier" = "8:_A3EB0327_743D_4E77_BE10_6E96C399117E"
+            "Identifier" = "8:_9F52652A_EAA7_475D_8493_8D4A8F67CB77"
             "InstallerClass" = "11:TRUE"
             "CustomActionData" = "8:"
             }
-            "{4AA51A2D-7D85-4A59-BA75-B0809FC8B380}:_902CCA3F77DB415388E1AC0D3FC2F315"
+            "{4AA51A2D-7D85-4A59-BA75-B0809FC8B380}:_2752845D012A4F17A35581854654FA13"
             {
             "Name" = "8:Primary output from Microprojects.Edm.Installer (Active)"
             "Condition" = "8:"
-            "Object" = "8:_63B0802607C24258BDA95575F799DBC7"
+            "Object" = "8:_45C3698F3DE349299378CF56C43604D7"
             "FileType" = "3:1"
             "InstallAction" = "3:4"
             "Arguments" = "8:"
             "EntryPoint" = "8:"
             "Sequence" = "3:1"
-            "Identifier" = "8:_7FD11E13_8AB2_4CAF_B388_55D33531C19B"
+            "Identifier" = "8:_2444E9A8_0786_47ED_95EC_1CB812A8FF7A"
             "InstallerClass" = "11:TRUE"
-            "CustomActionData" = "8:/targetDir=\"[TARGETDIR]\\\""
+            "CustomActionData" = "8:"
+            }
+            "{4AA51A2D-7D85-4A59-BA75-B0809FC8B380}:_9E005EDB67704711B0ECD21E81CA7A12"
+            {
+            "Name" = "8:Primary output from Microprojects.Edm.Installer (Active)"
+            "Condition" = "8:"
+            "Object" = "8:_45C3698F3DE349299378CF56C43604D7"
+            "FileType" = "3:1"
+            "InstallAction" = "3:1"
+            "Arguments" = "8:"
+            "EntryPoint" = "8:"
+            "Sequence" = "3:1"
+            "Identifier" = "8:_AE4892FF_D732_4238_930E_91CA637B0FBA"
+            "InstallerClass" = "11:TRUE"
+            "CustomActionData" = "8:/targetDir=\"[TARGETDIR]\\\" /db=\"[DBCONNECTIONSTRING]\" /cache=\"[CACHECONNECTIONSTRING]\" /consoleUrl=\"[CONSOLEURL]\" /grpcUrl=\"[GRPCURL]\""
             }
         }
         "DefaultFeature"
@@ -297,37 +285,6 @@
             "Register" = "3:1"
             "Exclude" = "11:FALSE"
             "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_B76EFEB552B2361A5B2EB489CA1950EF"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:System.Net.Http, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"
-                "ScatterAssemblies"
-                {
-                    "_B76EFEB552B2361A5B2EB489CA1950EF"
-                    {
-                    "Name" = "8:System.Net.Http.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:System.Net.Http.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_AE4052A7CE5F48FF84E7825B278F4895"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
         }
@@ -1366,6 +1323,34 @@
                 {
                 }
             }
+            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_45C3698F3DE349299378CF56C43604D7"
+            {
+            "SourcePath" = "8:..\\Microprojects.Edm.Installer\\obj\\Debug\\Microprojects.Edm.Installer.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_AE4052A7CE5F48FF84E7825B278F4895"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            "ProjectOutputGroupRegister" = "3:1"
+            "OutputConfiguration" = "8:"
+            "OutputGroupCanonicalName" = "8:Built"
+            "OutputProjectGuid" = "8:{37BFFE19-D51F-48B6-9BB4-5168D4F819D5}"
+            "ShowKeyOutput" = "11:TRUE"
+                "ExcludeFilters"
+                {
+                }
+            }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_4AF417BBE8EF4166BB71AB0A11002B75"
             {
             "SourcePath" = "8:"
@@ -1417,34 +1402,6 @@
             "OutputConfiguration" = "8:"
             "OutputGroupCanonicalName" = "8:PublishItems"
             "OutputProjectGuid" = "8:{19F6D337-5FC0-4503-AD10-3BEF2EB4B1AC}"
-            "ShowKeyOutput" = "11:TRUE"
-                "ExcludeFilters"
-                {
-                }
-            }
-            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_63B0802607C24258BDA95575F799DBC7"
-            {
-            "SourcePath" = "8:..\\Microprojects.Edm.Installer\\obj\\Debug\\Microprojects.Edm.Installer.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_AE4052A7CE5F48FF84E7825B278F4895"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            "ProjectOutputGroupRegister" = "3:1"
-            "OutputConfiguration" = "8:"
-            "OutputGroupCanonicalName" = "8:Built"
-            "OutputProjectGuid" = "8:{37BFFE19-D51F-48B6-9BB4-5168D4F819D5}"
             "ShowKeyOutput" = "11:TRUE"
                 "ExcludeFilters"
                 {
