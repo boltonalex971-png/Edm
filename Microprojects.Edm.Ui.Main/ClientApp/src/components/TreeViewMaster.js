@@ -108,7 +108,7 @@ export function TreeViewMaster(props) {
                         <span className="k-icon k-i-file-add"></span>
                     </Button>
                 </CardHeader>
-                <CardBody>
+                <CardBody className='disable-select'>
                     {error ?
                         <Alert color='danger' style={{ display: 'flex', justifyContent: 'space-around' }}>{error}</Alert> :
                         loading ?
