@@ -13,12 +13,12 @@ using Optosense.Edm.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Optosense.Edm.Infrastructure.Edm;
 using System.Dynamic;
-using Optosense.Edm.Core.Persistance;
 using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Core.Services;
 using Optosense.Edm.Core.Auditing;
 using Microprojects.Edm.Jobs;
 using Microsoft.Extensions.Logging;
+using Optosense.Edm.Persistence;
 
 namespace Optosense.Edm.Jobs
 {
@@ -29,13 +29,13 @@ namespace Optosense.Edm.Jobs
         protected IJobContainer JobManager { get; init; }
         protected ICache Cache { get; init; }
         protected ILogger<StartAuditJob> Logger { get; init; }
-        protected IEdmContextFactory ContextFactory { get; init; }
+        protected IDbContextFactory<EdmContext> ContextFactory { get; init; }
 
         private Func<int, int, string, string> CacheKey = (opId, opCritId, addr) => 
             $"{nameof(Operation)}:{opId}:{nameof(OperationCriterion)}:{opCritId}:{addr}";
 
         public StartAuditJob() { }
-        public StartAuditJob(IJobContainer container, ICache cache, ILogger<StartAuditJob> logger, IEdmContextFactory contextFactory)
+        public StartAuditJob(IJobContainer container, ICache cache, ILogger<StartAuditJob> logger, IDbContextFactory<EdmContext> contextFactory)
         {
             JobManager = container;
             Cache = cache;
@@ -51,7 +51,7 @@ namespace Optosense.Edm.Jobs
         public override async Task<object> ExecuteAsync()
         {
             IEnumerable<AuditZone> audit = default;
-            using (var db = ContextFactory.Create()) 
+            using (var db = await ContextFactory.CreateDbContextAsync()) 
             {
                 var service = new AuditService(db);
                 audit = await service.GetZones(Parameters.Audit);
@@ -61,7 +61,7 @@ namespace Optosense.Edm.Jobs
                 onNext: async rec =>
                 {
                     // TODO move all db activity to corresponding core service
-                    using IEdmContext db = ContextFactory.Create();
+                    using EdmContext db = await ContextFactory.CreateDbContextAsync();
                     var currentOffset = (rec.ExecutedAt - Parameters.StartAt).TotalMinutes;
                     Console.WriteLine(rec.Parameters);
                     var effectiveZones = audit.Where(z => currentOffset >= z.Offset);

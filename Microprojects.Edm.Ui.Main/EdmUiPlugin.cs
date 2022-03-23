@@ -5,7 +5,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Core.Infrastructure;
-using Optosense.Edm.Core.Persistance;
 using Optosense.Edm.Core.Services;
 using Optosense.Edm.DataAccess;
 using Optosense.Edm.Infrastructure.Edm;

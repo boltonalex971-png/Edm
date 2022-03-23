@@ -1,8 +1,8 @@
 ﻿using Microprojects.Edm.Cache;
 using Microprojects.Edm.Jobs;
 using Microsoft.EntityFrameworkCore;
-using Optosense.Edm.Core.Persistance;
 using Optosense.Edm.Domain.Models;
+using Optosense.Edm.Persistence;
 using System;
 using System.Threading.Tasks;
 
@@ -15,11 +15,11 @@ namespace Optosense.Edm.Jobs
     public class StartTestOperationJob : BaseJob
     {
         protected ICache Cache { get; init; }
-        protected IEdmContextFactory ContextFactory { get; init; }
+        protected IDbContextFactory<EdmContext> ContextFactory { get; init; }
         protected StartOperationJobParameters Parameters => (StartOperationJobParameters)JobParameters;
 
         public StartTestOperationJob() { }
-        public StartTestOperationJob(ICache cache, IEdmContextFactory contextFactory)
+        public StartTestOperationJob(ICache cache, IDbContextFactory<EdmContext> contextFactory)
         {
             Cache = cache;
             ContextFactory = contextFactory;
@@ -36,7 +36,7 @@ namespace Optosense.Edm.Jobs
             var waitBeforeStart = now > Parameters.StartAt ? TimeSpan.Zero : Parameters.StartAt - now;
             var cancelled = false;
             var opHostDeviceId = 0;
-            using (var db = ContextFactory.Create())
+            using (var db = await ContextFactory.CreateDbContextAsync())
             {
                 var dev = await db.OperationHostDevices
                     .FirstOrDefaultAsync(o => o.OperationId == Parameters.Operation) ??
@@ -71,7 +71,7 @@ namespace Optosense.Edm.Jobs
                 cancelled = true;
             }
 
-            using (var db = ContextFactory.Create())
+            using (var db = await ContextFactory.CreateDbContextAsync())
             {
                 now = DateTime.Now;
                 var operation = await db.Operations.FindAsync(Parameters.Operation);

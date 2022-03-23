@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Optosense.Edm.DataAccess;
+using Optosense.Edm.Persistence;
 
 namespace Optosense.Edm.DataAccess.Migrations
 {

@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Optosense.Edm.Core.Contracts;
-using Optosense.Edm.Core.Persistance;
 using Optosense.Edm.Domain.Models;
+using Optosense.Edm.Persistence;
 using Optosense.Edm.Plugins;
 using System;
 using System.Collections.Generic;
@@ -23,7 +23,7 @@ namespace Optosense.Edm.Core.Services
 
         public ProfileService() { }
 
-        public ProfileService(IEdmContext db, IPluginContainer plugins) : base(db) 
+        public ProfileService(EdmContext db, IPluginContainer plugins) : base(db) 
         {
             _plugins = plugins;
         }

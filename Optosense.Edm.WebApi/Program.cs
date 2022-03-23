@@ -18,8 +18,8 @@ using Microsoft.Extensions.Hosting.WindowsServices;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.EventLog;
 using Optosense.Edm.Core.AspNet;
-using Optosense.Edm.Core.Persistance;
 using Optosense.Edm.DataAccess;
+using Optosense.Edm.Persistence;
 using Optosense.Edm.WebApi;
 using Optosense.Edm.WebApi.Services;
 using Optosense.Edm.WebApi.Utils;
@@ -33,12 +33,18 @@ using Optosense.Edm.WebApi.Utils;
 
     var builder = WebApplication.CreateBuilder(options);
     builder.WebHost.ConfigureLogging(configureLogging => configureLogging.AddFilter<EventLogLoggerProvider>(level => level >= LogLevel.Warning));
-    builder.Services.AddDbContext<IEdmContext, EdmContext>(options =>
-    {
+
+    builder.Services.AddDbContextPool<EdmContext>(options =>
         options.UseSqlServer(
-            builder.Configuration.GetConnectionString("Edm"));
-    });
-    builder.Services.AddSingleton<IEdmContextFactory>(new EdmContextFactory(builder.Configuration.GetConnectionString("Edm")));
+            builder.Configuration.GetConnectionString("Edm"),
+            sqlOptions => sqlOptions.MigrationsAssembly("Optosense.Edm.DataAccess")),
+        poolSize: 128);
+    builder.Services.AddPooledDbContextFactory<EdmContext>(options =>
+        options.UseSqlServer(
+            builder.Configuration.GetConnectionString("Edm"),
+            sqlOptions => sqlOptions.MigrationsAssembly("Optosense.Edm.DataAccess")),
+        poolSize: 16);
+
     builder.Services.AddSingleton<ICache>(new RedisCache(builder.Configuration["Edm:Cache:Default:ConnectionString"]));
     builder.Services.AddGrpc();
     builder.Services.AddPlugins(config =>

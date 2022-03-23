@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Optosense.Edm.Core.Contracts;
-using Optosense.Edm.Core.Persistance;
 using Optosense.Edm.Domain.Models;
+using Optosense.Edm.Persistence;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,10 +13,10 @@ namespace Optosense.Edm.Core.Services
 {
     public class SettingService : ISettingService
     {
-        private IEdmContext _db;
+        private EdmContext _db;
         public SettingService() { }
 
-        public SettingService(IEdmContext db) 
+        public SettingService(EdmContext db) 
         {
             _db = db;
         }

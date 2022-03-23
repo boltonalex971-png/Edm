@@ -5,8 +5,8 @@ using Newtonsoft.Json;
 using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Core.Infrastructure;
 using Optosense.Edm.Core.Models;
-using Optosense.Edm.Core.Persistance;
 using Optosense.Edm.Domain.Models;
+using Optosense.Edm.Persistence;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,7 +23,7 @@ namespace Optosense.Edm.Core.Services
         {
         }
 
-        public OperationService(IEdmContext db, IRemoteJobs commands): base(db)
+        public OperationService(EdmContext db, IRemoteJobs commands): base(db)
         {
             _commands = commands;
         }

@@ -1,17 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.SqlServer.Infrastructure.Internal;
-using Optosense.Edm.Core.Persistance;
 using Optosense.Edm.Domain.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Optosense.Edm.DataAccess
+namespace Optosense.Edm.Persistence
 {
-    public class EdmContext : DbContext, IEdmContext
+    public class EdmContext : DbContext
     {
-        private readonly string _connectionString;
-
         public DbSet<Audit> Audits { get; set; }
         public DbSet<AuditZone> AuditZones { get; set; }
         public DbSet<AuditCriterion> AuditCriteria { get; set; }
@@ -35,33 +31,10 @@ namespace Optosense.Edm.DataAccess
 
         public EdmContext(DbContextOptions<EdmContext> options) : base(options)
         {
-            _connectionString = options
-                .FindExtension<SqlServerOptionsExtension>()?
-                .ConnectionString;
-        }
-
-        public EdmContext(string conn)
-        {
-            _connectionString = conn;
-        }
-
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            optionsBuilder.UseSqlServer(_connectionString);
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            //modelBuilder.Entity<HostDevice>()
-            //    .HasKey(hd => new { hd.HostId, hd.DeviceId});
-            //modelBuilder.Entity<HostDevice>()
-            //    .HasOne(hd => hd.Host)
-            //    .WithMany(h => h.Devices)
-            //    .HasForeignKey(hd => hd.HostId);
-            //modelBuilder.Entity<HostDevice>()
-            //    .HasOne(hd => hd.Device)
-            //    .WithMany(d => d.Hosts)
-            //    .HasForeignKey(hd => hd.DeviceId);
         }
     }
 }

@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Optosense.Edm.Core.Contracts;
-using Optosense.Edm.Core.Persistance;
 using Optosense.Edm.Domain.Models;
+using Optosense.Edm.Persistence;
 using Optosense.Edm.Plugins;
 using System;
 using System.Collections.Generic;
@@ -20,7 +20,7 @@ namespace Optosense.Edm.Core.Services
 
         protected DeviceService() { }
 
-        public DeviceService(IEdmContext db, IHierarchyService hierarchyService, IPluginContainer plugins) : base(db)
+        public DeviceService(EdmContext db, IHierarchyService hierarchyService, IPluginContainer plugins) : base(db)
         {
             _plugins = plugins;
             _hierarchyService = hierarchyService;

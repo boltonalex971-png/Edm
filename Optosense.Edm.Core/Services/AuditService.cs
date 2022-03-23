@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Optosense.Edm.Core.Auditing;
 using Optosense.Edm.Core.Contracts;
-using Optosense.Edm.Core.Persistance;
 using Optosense.Edm.Domain.Models;
+using Optosense.Edm.Persistence;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,7 +20,7 @@ namespace Optosense.Edm.Core.Services
 
         public AuditService() { }
 
-        public AuditService(IEdmContext db) : base(db) { }
+        public AuditService(EdmContext db) : base(db) { }
 
         public async Task<IEnumerable<Audit>> GetByProfile(int profileId)
         {

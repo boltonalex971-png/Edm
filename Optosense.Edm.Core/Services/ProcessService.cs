@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Optosense.Edm.Core.Contracts;
-using Optosense.Edm.Core.Persistance;
 using Optosense.Edm.Domain.Models;
+using Optosense.Edm.Persistence;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,7 +21,7 @@ namespace Optosense.Edm.Core.Services
 
         public ProcessService() { }
 
-        public ProcessService(IEdmContext db, IProfileService profileService, IHierarchyService hierarchyService) : base(db) 
+        public ProcessService(EdmContext db, IProfileService profileService, IHierarchyService hierarchyService) : base(db) 
         {
             _profileService = profileService;
             _hierarchyService = hierarchyService;

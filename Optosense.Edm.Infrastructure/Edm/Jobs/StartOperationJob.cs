@@ -7,9 +7,9 @@ using Newtonsoft.Json;
 using Optosense.Edm.Utils;
 using Microsoft.EntityFrameworkCore;
 using System.Dynamic;
-using Optosense.Edm.Core.Persistance;
 using Microprojects.Edm.Jobs;
 using Optosense.Edm.Infrastructure.Edm.Jobs;
+using Optosense.Edm.Persistence;
 
 namespace Optosense.Edm.Jobs
 {
@@ -19,10 +19,10 @@ namespace Optosense.Edm.Jobs
         protected StartOperationJobParameters Parameters => (StartOperationJobParameters) JobParameters;
         protected IJobContainer JobManager { get; init; }
         protected ICache Cache { get; init; }
-        protected IEdmContextFactory ContextFactory { get; init; }
+        protected IDbContextFactory<EdmContext> ContextFactory { get; init; }
 
         public StartOperationJob() { }
-        public StartOperationJob(IJobContainer container, ICache cache, IEdmContextFactory contextFactory)
+        public StartOperationJob(IJobContainer container, ICache cache, IDbContextFactory<EdmContext> contextFactory)
         {
             JobManager = container;
             ContextFactory = contextFactory;
@@ -49,7 +49,7 @@ namespace Optosense.Edm.Jobs
             await JobManager.Execute(storageJob);
 
             // Launch devices
-            using (var db = ContextFactory.Create())
+            using (var db = await ContextFactory.CreateDbContextAsync())
             {
                 var devices = await db.OperationHostDevices
                         .Include(d => d.Profile.Audits)
@@ -149,7 +149,7 @@ namespace Optosense.Edm.Jobs
             // Stop storage
             await JobManager.Execute(new StopJob(storageJob));
 
-            using (var db = ContextFactory.Create())
+            using (var db = await ContextFactory.CreateDbContextAsync())
             {
                 var operation = await db.Operations.FindAsync(Parameters.Operation);
                 if (CancellationToken.IsCancellationRequested)

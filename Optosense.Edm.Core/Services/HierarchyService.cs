@@ -7,14 +7,14 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Core.Models;
-using Optosense.Edm.Core.Persistance;
 using Optosense.Edm.Domain.Models;
+using Optosense.Edm.Persistence;
 
 namespace Optosense.Edm.Core.Services
 {
     public class HierarchyService : ServiceBase<Hierarchy>, IHierarchyService
     {
-        public HierarchyService(IEdmContext db) : base(db)
+        public HierarchyService(EdmContext db) : base(db)
         {
         }
 

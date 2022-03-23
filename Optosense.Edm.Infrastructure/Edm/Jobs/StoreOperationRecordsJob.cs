@@ -3,10 +3,11 @@ using Optosense.Edm.Domain.Models;
 using Microprojects.Edm.Utils;
 using System;
 using System.Threading.Tasks;
-using Optosense.Edm.Core.Persistance;
 using System.Threading;
 using Microprojects.Edm.Jobs;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
+using Optosense.Edm.Persistence;
 
 namespace Optosense.Edm.Jobs
 {
@@ -14,12 +15,12 @@ namespace Optosense.Edm.Jobs
     public class StoreOperationRecordsJob : BaseJob
     {
         protected ICache Cache { get; init; }
-        protected IEdmContextFactory ContextFactory { get; init; }
+        protected IDbContextFactory<EdmContext> ContextFactory { get; init; }
         protected StoreOperationRecordsJobParameters Parameters => (StoreOperationRecordsJobParameters) JobParameters;
         private readonly ILogger<StoreOperationRecordsJob> _logger;
 
         public StoreOperationRecordsJob() { }
-        public StoreOperationRecordsJob(ILogger<StoreOperationRecordsJob> logger, ICache cache, IEdmContextFactory factory)
+        public StoreOperationRecordsJob(ILogger<StoreOperationRecordsJob> logger, ICache cache, IDbContextFactory<EdmContext> factory)
         {
             Cache = cache;
             ContextFactory = factory;
@@ -31,7 +32,7 @@ namespace Optosense.Edm.Jobs
             var subscription = Cache.Subscribe<Record>(Parameters.Channel,
                 onNext: async r =>
                 {
-                    using var context = ContextFactory.Create();
+                    using var context = await ContextFactory.CreateDbContextAsync();
                     try
                     {
                         context.Records.Add(r);

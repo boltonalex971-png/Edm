@@ -3,8 +3,8 @@ using Microprojects.Edm.Jobs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using Optosense.Edm.Core.Contracts;
-using Optosense.Edm.Core.Persistance;
 using Optosense.Edm.Domain.Models;
+using Optosense.Edm.Persistence;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,7 +26,7 @@ namespace Optosense.Edm.Core.Services
 
         protected HostService() { }
 
-        public HostService(IEdmContext db, IJobContainer container, IDeviceService deviceService, IHierarchyService hierarchyService) : base(db) 
+        public HostService(EdmContext db, IJobContainer container, IDeviceService deviceService, IHierarchyService hierarchyService) : base(db) 
         {
             _deviceService = deviceService;
             _hierarchyService = hierarchyService;

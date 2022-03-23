@@ -7,7 +7,6 @@ using Grpc.Net.Client;
 using Microprojects.Edm.Jobs;
 using Newtonsoft.Json;
 using Optosense.Edm.Core.Infrastructure;
-using Optosense.Edm.Core.Persistance;
 using Optosense.Edm.Infrastructure.Edm.Jobs;
 using Optosense.Edm.Jobs;
 
