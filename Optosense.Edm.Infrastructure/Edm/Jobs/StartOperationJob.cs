@@ -110,19 +110,19 @@ namespace Optosense.Edm.Jobs
             do
             {
                 count = 0;
-                await Task.Delay(10000, CancellationToken);
+                await Task.Delay(10000, CancellationToken)
+                    .ContinueWith(t => { }); // Avoid Cancelled exception
                 foreach (var (url, job) in running)
                 {
-                    var check = new CheckJob(job);
+                    IJob check = CancellationToken.IsCancellationRequested ? new StopJob(job) : new CheckJob(job);
                     var parameter = new
                     {
                         Job = job.Name,
                         ((StartDeviceJobParameters) job.JobParameters).OperationHostDevice,
                         ((StartDeviceJobParameters) job.JobParameters).Driver
                     };
-                    var response = //dev.url.Contains("localhost") ?
-                        await JobManager.Execute(check, parameter);
-                        //await check.RemoteExecute(dev.url, parameter);
+                    var response = //await JobManager.Execute(check, parameter);
+                        await check.Execute(url, parameter);
                     if (response.Status == "Ok" && Enum.TryParse(response.Message, out TaskStatus jobStatus))
                     {
                         if (jobStatus == TaskStatus.Running ||
@@ -138,7 +138,7 @@ namespace Optosense.Edm.Jobs
                         }
                     }
                 }
-            } while (count < running.Count);
+            } while (count < running.Count && !CancellationToken.IsCancellationRequested);
 
             // Stop audits
             foreach (var audit in audits)
@@ -152,7 +152,15 @@ namespace Optosense.Edm.Jobs
             using (var db = ContextFactory.Create())
             {
                 var operation = await db.Operations.FindAsync(Parameters.Operation);
-                operation.Completed = DateTime.Now;
+                if (CancellationToken.IsCancellationRequested)
+                {
+                    operation.Cancelled = DateTime.Now;
+                }
+                else
+                {
+                    operation.Completed = DateTime.Now;
+                }
+                
                 await db.SaveChangesAsync();
             }
 

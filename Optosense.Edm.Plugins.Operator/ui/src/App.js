@@ -16,7 +16,6 @@ function App(props) {
     const location = useLocation();
     const query = queryString.parse(location.search);
     const [operationId] = useState(query.id || 0);
-    console.log(operationId);
     const [started, setStarted] = useState(false);
     const onStarted = useCallback(() => setStarted(true), [])
     const onFinished = useCallback(() => setStarted(false), [])

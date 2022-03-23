@@ -28,7 +28,7 @@ namespace Optosense.Edm.Jobs
 
         public override async Task<object> ExecuteAsync()
         {
-            var subscript = Cache.Subscribe<Record>(Parameters.Channel,
+            var subscription = Cache.Subscribe<Record>(Parameters.Channel,
                 onNext: async r =>
                 {
                     using var context = ContextFactory.Create();
@@ -46,7 +46,9 @@ namespace Optosense.Edm.Jobs
                         _logger.LogWarning("Some InstructionExecutions lost: {Exception}", e.GetFullInfo());
                     }
                 });
-            await Task.Delay(-1, CancellationToken);
+            await Task.Delay(-1, CancellationToken)
+                .ContinueWith(t => { });
+            subscription.Dispose();
             return "Ok";
         }
     }

@@ -149,6 +149,7 @@ namespace Optosense.Edm.Core.Services
                 State = operation switch
                 {
                     { Completed: not null }                                 => OperationState.Completed,
+                    { Cancelled: not null }                                 => OperationState.Cancelled,
                     { Started: not null, Completed: null, Scheduled: null } => OperationState.InProgress,
                     { Scheduled: not null, Started: null, Completed: null } => OperationState.Scheduled,
                     _                                                       => OperationState.New 

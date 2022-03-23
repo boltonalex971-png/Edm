@@ -12,7 +12,7 @@ namespace Optosense.Edm.Core.Models
         Scheduled,
         InProgress,
         Completed,
-        Canceled,
+        Cancelled,
         Abandoned
     }
 

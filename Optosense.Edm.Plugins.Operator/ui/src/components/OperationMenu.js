@@ -58,19 +58,26 @@ function OperationToolbar({ operationId, apiBase, onStarted, onCompleted, onCanc
     const [refresh, setRefresh] = useState(false);
     const [[operation, setOperation]] = useGet(`${apiBase}/api/operations/${operationId}`, refresh);
     const [[status]] = useGet(`${apiBase}/api/operations/${operationId}/status`, refresh);
+    const stopBtn = useRef(null);
+    const startBtn = useRef(null);
+    const statusLbl = useRef(null);
 
     const startDate = operation && new Date(operation.started).getTime();
     const finishDate = operation && new Date(operation.completed).getTime();
+    const cancelDate = operation && new Date(operation.cancelled).getTime();
     const defaultDate = startDate || (finishDate || Date.now());
 
     const scheduled = Date.now() < startDate;
-    const started = !finishDate && !!startDate && !scheduled;
+    const started = !finishDate && !cancelDate && !!startDate && !scheduled;
     const completed = !!finishDate;
-    const created = !scheduled && !started && !completed;
+    const cancelled = !!cancelDate;
+    const created = !scheduled && !started && !completed && !cancelled;
 
     const startAtInput = useRef();
     const onStart = () => {
         const startAt = startAtInput.current.value;
+        startBtn.current.element.setAttribute('disabled', 'disabled');
+        statusLbl.current.textContent = 'Starting...';
         Axios.post(`${apiBase}/api/operations/${operationId}/start`, startAt)
             .then((response) => {
                 setOperation(response.data);
@@ -79,13 +86,18 @@ function OperationToolbar({ operationId, apiBase, onStarted, onCompleted, onCanc
             .catch((error) => alert(error));
     };
     const onStop = () => {
-        Axios.post(`${apiBase}/api/operations/${operationId}/stop`)
-            .then((response) => {
-                setOperation(response.data);
-                setRefresh(!refresh);
-                onCancelled();
-            })
-            .catch((error) => alert(error));
+        if (window.confirm('Confirm operation cancelling')) {
+            stopBtn.current.element.setAttribute('disabled', 'disabled');
+            statusLbl.current.textContent = 'Cancelling...';
+
+            Axios.post(`${apiBase}/api/operations/${operationId}/stop`)
+                .then((response) => {
+                    setOperation(response.data);
+                    setRefresh(!refresh);
+                    onCancelled();
+                })
+                .catch((error) => alert(error));
+        }
     };
     useEffect(() => {
         const finalize = () => {
@@ -104,6 +116,7 @@ function OperationToolbar({ operationId, apiBase, onStarted, onCompleted, onCanc
         }
         return finalize;
     }, [scheduled, started, completed, onStarted, onCompleted, startDate]);
+
     return (
         operation &&
         <div style={{ display: 'flex', flexWrap: 'nowrap', alignItems: 'baseline' }} >
@@ -114,6 +127,7 @@ function OperationToolbar({ operationId, apiBase, onStarted, onCompleted, onCanc
                         {scheduled && 'Will start at'}
                         {started && 'Started at '}
                         {completed && 'Completed at '}
+                        {cancelled && 'Cancelled at '}
                     </span>
                 </Label>
                 {created &&
@@ -127,12 +141,12 @@ function OperationToolbar({ operationId, apiBase, onStarted, onCompleted, onCanc
                 {!created &&
                     <Input value={formatDate(new Date(defaultDate), 'dd MMMM HH:mm:ss')} disabled></Input>
                 }
-                <Label className='mx-2'>
+                <span ref={statusLbl} className='mx-2'>
                     {status && status.state}
-                </Label>
+                </span>
             </form>
-            <Button icon='play' disabled={!created} className='ms-2' onClick={onStart}>Start</Button>
-            <Button icon='stop' disabled={created || completed} className='ms-2' onClick={onStop}>Stop</Button>
+            <Button icon='play' ref={startBtn} disabled={!created} className='ms-2' onClick={onStart}>Start</Button>
+            <Button icon='stop' ref={stopBtn} disabled={created || completed || cancelled} className='ms-2' onClick={onStop}>Stop</Button>
         </div>
     );
 }

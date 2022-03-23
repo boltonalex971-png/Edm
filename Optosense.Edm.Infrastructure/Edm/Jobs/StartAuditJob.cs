@@ -120,7 +120,8 @@ namespace Optosense.Edm.Jobs
                         }
                     }
                 });
-            await Task.Delay(-1, CancellationToken);
+            await Task.Delay(-1, CancellationToken)
+                .ContinueWith(t => { });
             subscriber.Dispose();
             return "Ok";
         }
