@@ -19,7 +19,7 @@ export const EasyGrid = (props) => {
         setData([...data]);
     };
     const addNew = () => {
-        const newDataItem = { edit: true };
+        const newDataItem = { [editField]: true };
         setData([newDataItem, ...data]);
     };
     const itemChange = e => {
