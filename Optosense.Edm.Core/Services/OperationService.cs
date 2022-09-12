@@ -126,16 +126,25 @@ namespace Optosense.Edm.Core.Services
 
         public async Task<Operation> Stop(int operationId)
         {
-            var operation = await Db.Operations.FindAsync(operationId)
-                ?? throw new EdmException($"Operation with id {operationId} is not found");
-            if (operation.Completed != null || operation.Started == null)
+            //var operation = await Db.Operations.FindAsync(operationId)
+            //    ?? throw new EdmException($"Operation with id {operationId} is not found");
+            var status = await Status(operationId);
+            if (status.State != OperationState.InProgress && status.State != OperationState.Abandoned)
             {
                 throw new EdmException($"Operation with id {operationId} is not running");
             }
 
-            var result = await _commands.CancelOperation(operationId);
+            if (status.State == OperationState.InProgress)
+            {
+                await _commands.CancelOperation(operationId);
+            }
+            else
+            {
+                await StopOperation(operationId);
+            }
+
             // Operation must be cancelled by command; get new status
-            operation = await Db.Operations.FindAsync(operationId);
+            var operation = await Db.Operations.FindAsync(operationId);
             return operation;
         }
 
@@ -143,22 +152,28 @@ namespace Optosense.Edm.Core.Services
         {
             var operation = await Db.Operations.FindAsync(operationId)
                 ?? throw new EdmException($"Operation with id {operationId} is not found");
+
+            return await GetStatus(operation);
+        }
+
+        protected async Task<OperationStatus> GetStatus(Operation operation)
+        {
             var status = new OperationStatus
             {
-                Id = operationId,
+                Id = operation.Id,
                 State = operation switch
                 {
-                    { Completed: not null }                                 => OperationState.Completed,
-                    { Cancelled: not null }                                 => OperationState.Cancelled,
+                    { Completed: not null } => OperationState.Completed,
+                    { Cancelled: not null } => OperationState.Cancelled,
                     { Started: not null, Completed: null, Scheduled: null } => OperationState.InProgress,
                     { Scheduled: not null, Started: null, Completed: null } => OperationState.Scheduled,
-                    _                                                       => OperationState.New 
+                    _ => OperationState.New
                 }
             };
             if (status.State == OperationState.InProgress && DateTime.Now - operation.Started > TimeSpan.FromMinutes(10))
             {
                 // Check if operation is really performing
-                status.State = await _commands.CheckOperationRun(operationId) ? status.State : OperationState.Abandoned;
+                status.State = await _commands.CheckOperationRun(operation.Id) ? status.State : OperationState.Abandoned;
             }
 
             return status;
@@ -168,9 +183,29 @@ namespace Optosense.Edm.Core.Services
         {
             var devices = await Db.OperationHostDevices
                 .Include(d => d.HostDevice.Device)
+                .Include(d => d.HostDevice.Host)
+                .Include(d => d.Profile)
                 .Where(d => d.OperationId == id)
                 .ToListAsync();
             return devices;
+        }
+
+        public async Task<Operation> StopOperation(int operationId)
+        {
+            var result = await Get(operationId);
+            result.Cancelled = DateTime.Now;
+            await Db.SaveChangesAsync();
+            Db.Entry(result).State = EntityState.Detached;
+            return result;
+        }
+
+        public async Task<Operation> CompleteOperation(int operationId)
+        {
+            var result = await Get(operationId);
+            result.Completed = DateTime.Now;
+            await Db.SaveChangesAsync();
+            Db.Entry(result).State = EntityState.Detached;
+            return result;
         }
     }
 }

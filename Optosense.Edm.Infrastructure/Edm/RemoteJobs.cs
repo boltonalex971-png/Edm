@@ -110,16 +110,6 @@ namespace Optosense.Edm.Infrastructure.Edm
 
         public async Task<string> CancelOperation(int operationId)
         {
-            // TODO make _job.Execute with IJob as parameter
-
-            //var parameters = new StartOperationCommandParameters
-            //{
-            //    Operation = operationId
-            //};
-            //var command = new StopCommand(new StartOperationCommand
-            //{
-            //    CommandParameters = parameters
-            //});
             var response = await _jobs.ExecuteAsync(new JobData
             {
                 Job = "Stop",

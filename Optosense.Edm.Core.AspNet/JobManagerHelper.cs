@@ -18,7 +18,7 @@ public static class JobContainerHelper
                 continue;
 
             services.Configure<JobConfiguration>(c => c.Register(jobType));
-            services.AddTransient(jobType);
+            services.AddScoped(jobType);
         }
 
         services.AddSingleton<IJobContainer, JobContainer>();

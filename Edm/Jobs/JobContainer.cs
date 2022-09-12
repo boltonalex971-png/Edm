@@ -1,4 +1,5 @@
 ﻿using Microprojects.Edm.Utils;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
@@ -80,16 +81,53 @@ public class JobContainer : IJobContainer
 
     public async Task<ResponseData> ExecuteAsync(Type jobType, IJobParameters parameters = null)
     {
-        var job = (IJob)_services?.GetService(jobType) ??
-            throw new EdmException($"Job is not a registered service: {jobType.Name}");
-        if (parameters != null && parameters.GetType().IsInstanceOfType(jobType.GetJobParameters()))
+        var response = new ResponseData { Status = SUCCESS_STATUS, Response = SUCCESS_STATUS };
+        // TODO Using async calls make no difference between lifetimes, refactor this to single call
+        switch (jobType.GetJobLifetime())
         {
-            throw new EdmException($"Job parameters must be instance of {jobType.GetJobParameters().Name}");
+            case JobLifetime.ShortRunning:
+                using (var scope = _services.CreateScope())
+                {
+                    var job = GetScopedJob(scope, jobType, parameters);
+                    var result = await job.ExecuteAsync();
+                    response.Response = JsonConvert.SerializeObject(result);
+                    response.Message = $"Job {job.Name} executed succesfully";
+                    //Logger.Log(response.Message);
+                }
+                break;
+            case JobLifetime.Permanent:
+            case JobLifetime.LongRunning:
+                var taskId = RunLongTask(jobType, parameters);
+                response.Response = JsonConvert.SerializeObject(taskId);
+                response.Message = $"Job {jobType.GetJobName} {taskId} started";
+                break;
         }
 
-        job.JobParameters = parameters;
-        var response = await ExecuteAsync(job);
         return response;
+    }
+
+    private IJob GetScopedJob(IServiceScope scope, Type jobType, IJobParameters parameters = null)
+    {
+        var job = (IJob)scope.ServiceProvider.GetService(jobType) ??
+            throw new EdmException($"Job is not a registered service: {jobType.Name}");
+
+        if (parameters != null)
+        {
+            if (!parameters.GetType().IsAssignableTo(jobType.GetJobParameters()))
+            {
+                throw new EdmException($"Job parameters must be instance of {jobType.GetJobParameters().Name}");
+            }
+
+            job.JobParameters = parameters;
+        }
+        else
+        {
+            job.SetParameters(null);
+        }
+
+        job.Init();
+
+        return job;
     }
 
     public Task<ResponseData> ExecuteAsync(Action job)
@@ -98,29 +136,29 @@ public class JobContainer : IJobContainer
         return Task.FromResult(new ResponseData { Status = SUCCESS_STATUS });
     }
 
-    public async Task<ResponseData> ExecuteAsync(IJob job)
+    public Task<ResponseData> ExecuteAsync(IJob job)
     {
 
         job.Init();
         var response = new ResponseData { Status = SUCCESS_STATUS, Response = SUCCESS_STATUS };
         // TODO Using async calls make no difference between lifetimes, refactor this to single call
-        switch (job.Lifetime)
-        {
-            case JobLifetime.ShortRunning:
-                var result = await job.ExecuteAsync();
-                response.Response = JsonConvert.SerializeObject(result);
-                response.Message = $"Job {job.Name} executed succesfully";
-                //Logger.Log(response.Message);
-                break;
-            case JobLifetime.Permanent:
-            case JobLifetime.LongRunning:
-                var taskId = RunLongTask(job);
-                response.Response = JsonConvert.SerializeObject(taskId);
-                response.Message = $"Task {taskId} {job.Name} started succesfully";
-                break;
-        }
+        //switch (job.Lifetime)
+        //{
+        //    case JobLifetime.ShortRunning:
+        //        var result = await job.ExecuteAsync();
+        //        response.Response = JsonConvert.SerializeObject(result);
+        //        response.Message = $"Job {job.Name} executed succesfully";
+        //        //Logger.Log(response.Message);
+        //        break;
+        //    case JobLifetime.Permanent:
+        //    case JobLifetime.LongRunning:
+        //        var taskId = RunLongTask(job);
+        //        response.Response = JsonConvert.SerializeObject(taskId);
+        //        response.Message = $"Task {taskId} {job.Name} started succesfully";
+        //        break;
+        //}
 
-        return response;
+        return Task.FromResult(response);
     }
 
     public async Task<ResponseData> ExecuteAsync(JobData data)
@@ -206,8 +244,8 @@ public class JobContainer : IJobContainer
                 try
                 {
                     t.TokenSource.Cancel();
-                    await t.Task;
-                    _logger.LogInformation("Container stopping: task {Id} {Name} cancelled", t.Task.Id, t.Job.Name);
+                    await t.Task.ContinueWith(t => { });
+                    _logger.LogInformation("Container stopping: task {Id} {Name} canceled", t.Task.Id, t.Job.Name);
                 }
                 catch (Exception e)
                 {
@@ -224,39 +262,45 @@ public class JobContainer : IJobContainer
         var everJobs = _config.NamedJobs
             .Select(p => p.Value)
             .Where(c => c.GetCustomAttribute<JobAttribute>()?.Lifetime == JobLifetime.Permanent);
-        foreach (var job in everJobs)
+        foreach (var jobType in everJobs)
         {
-            var jobInstance = (IJob)_services.GetService(job);
-            jobInstance.SetParameters(null);
-            jobInstance.Init();
-            var taskId = RunLongTask(jobInstance);
+            ExecuteAsync(jobType);
         }
     }
 
-    private int RunLongTask(IJob job)
+    private int RunLongTask(Type jobType, IJobParameters parameters = null)
     {
         var tokenSource = new CancellationTokenSource();
         var token = tokenSource.Token;
-        var task = job.ExecuteAsync(token);
-        task.ContinueWith(t =>
-            {
-                switch (t.Status)
-                {
-                    case TaskStatus.Canceled:
-                        _logger.LogInformation("Task {Id} {Name} was canceled by user", t.Id, job.Name);
-                        break;
-                    case TaskStatus.Faulted:
-                        _logger.LogError("Task {Id} {Name} was canceled with exception: {Exception}", t.Id, job.Name, t.Exception.Flatten().GetFullInfo());
-                        break;
-                    case TaskStatus.RanToCompletion:
-                        _logger.LogInformation("Task {Id} {Name} completed successfully", t.Id, job.Name);
-                        break;
-                }
+        //var task = job.ExecuteAsync(token);
+        var longTask = new CancellableTask { TokenSource = tokenSource };
+        RunningTasks.Add(longTask);
+        var task = Task.Run(async () =>
+        {
+            using var scope = _services.CreateScope();
+            var job = GetScopedJob(scope, jobType, parameters);
+            longTask.Job = job;
+            await job.ExecuteAsync(token);
+        });
+        longTask.Task = task;
 
-                DisposeTask(t.Id);
-            }, TaskScheduler.Default);
-        RunningTasks.Add(new CancellableTask { Task = task, Job = job, TokenSource = tokenSource });
-        _logger.LogInformation("Task {Id} {Name} started succesfully", task.Id, job.Name);
+        task.ContinueWith(t =>
+        {
+            switch (t.Status)
+            {
+                case TaskStatus.Canceled:
+                    _logger.LogInformation("Job {Name} {Id} canceled by user", longTask.Job.Name, t.Id);
+                    break;
+                case TaskStatus.Faulted:
+                    _logger.LogError("Job {Name} {Id} failed with exception: {Exception}", longTask.Job.Name, t.Id, t.Exception.Flatten().GetFullInfo());
+                    break;
+                case TaskStatus.RanToCompletion:
+                    _logger.LogInformation("Job {Name} {Id} completed successfully", longTask.Job.Name, t.Id);
+                    break;
+            }
+
+            DisposeTask(t.Id);
+        }, TaskScheduler.Default);
 
         return task.Id;
     }
@@ -287,7 +331,7 @@ public class JobContainer : IJobContainer
 
             var job = RunningTasks
                 .FirstOrDefault(t =>
-                    jobName.ToString() == t.Job.Name &&
+                    jobName.ToString() == t.Job?.Name &&
                     parameters.All(p =>
                         p.Key == "Job" ||
                         t.Job.GetParameters().ContainsKey(p.Key) &&

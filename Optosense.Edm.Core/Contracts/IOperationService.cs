@@ -18,5 +18,7 @@ namespace Optosense.Edm.Core.Contracts
         Task<IEnumerable<OperationCriterion>> GetCriteria(int operationId);
         Task<IEnumerable<OperationHostDevice>> GetOperationDevices(int id);
         Task<OperationStatus> Status(int operationId);
+        Task<Operation> StopOperation(int operationId);
+        Task<Operation> CompleteOperation(int operationId);
     }
 }

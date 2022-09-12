@@ -82,9 +82,9 @@ namespace Optosense.Edm.Jobs
                         _inputParams[param.Key] = param.Value;
                     }
                 });
-            var task = _executionPlan.Launch(_driver, async (d, x) => await ExecuteDeviceInstruction(d, x),
-                _logger, CancellationToken);
-            await Task.WhenAll(task);
+            await _executionPlan.Launch(_driver, async (d, x) => await ExecuteDeviceInstruction(d, x),
+                _logger, CancellationToken)
+                .ContinueWith(t => { }); // To ignore cancel exception
             subscriber.Dispose();
             if (_driver is IDisposable)
             {

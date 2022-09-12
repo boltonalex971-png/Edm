@@ -83,7 +83,7 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         [HttpGet("running")]
         public async Task<IEnumerable<OperationViewModel>> GetRunningOperations()
         {
-            var ops = await _operationService.Get(o => o.Completed == null, o => o.Workbench.WorkplaceProcess.Process);
+            var ops = await _operationService.Get(o => o.Completed == null && o.Cancelled == null, o => o.Workbench.WorkplaceProcess.Process);
             return _mapper.Map<IEnumerable<OperationViewModel>>(ops);
         }
 

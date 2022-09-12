@@ -10,22 +10,32 @@ using System.Dynamic;
 using Microprojects.Edm.Jobs;
 using Optosense.Edm.Infrastructure.Edm.Jobs;
 using Optosense.Edm.Persistence;
+using Optosense.Edm.Core.Contracts;
 
 namespace Optosense.Edm.Jobs
 {
     [Job(Name = "StartOperation", Lifetime = JobLifetime.LongRunning, Parameters = typeof(StartOperationJobParameters))]
     public class StartOperationJob : BaseJob
     {
-        protected StartOperationJobParameters Parameters => (StartOperationJobParameters) JobParameters;
+        protected StartOperationJobParameters Parameters => (StartOperationJobParameters)JobParameters;
+        protected IOperationService OperationService { get; init; }
+        protected IProfileService ProfileService { get; init; }
         protected IJobContainer JobManager { get; init; }
         protected ICache Cache { get; init; }
-        protected IDbContextFactory<EdmContext> ContextFactory { get; init; }
+        //protected IDbContextFactory<EdmContext> ContextFactory { get; init; }
 
         public StartOperationJob() { }
-        public StartOperationJob(IJobContainer container, ICache cache, IDbContextFactory<EdmContext> contextFactory)
+        public StartOperationJob(
+            IOperationService operationService,
+            IProfileService profileService,
+            IJobContainer container,
+            ICache cache)
+        //IDbContextFactory<EdmContext> contextFactory)
         {
+            OperationService = operationService;
+            ProfileService = profileService;
             JobManager = container;
-            ContextFactory = contextFactory;
+            //ContextFactory = contextFactory;
             Cache = cache;
         }
 
@@ -49,61 +59,54 @@ namespace Optosense.Edm.Jobs
             await JobManager.Execute(storageJob);
 
             // Launch devices
-            using (var db = await ContextFactory.CreateDbContextAsync())
+            var devices = await OperationService.GetOperationDevices(Parameters.Operation);
+            if (devices.All(d => d.HostDevice.Device.DriverGuid == Guid.Empty))
             {
-                var devices = await db.OperationHostDevices
-                        .Include(d => d.Profile.Audits)
-                        .Include(d => d.HostDevice.Device)
-                        .Include(d => d.HostDevice.Host)
-                        .Where(p => p.OperationId == Parameters.Operation)
-                        .ToListAsync();
-                if (devices.All(d => d.HostDevice.Device.DriverGuid == Guid.Empty))
-                {
-                    // Start test operation if all devices of type None
-                    var test = new StartTestOperationJob { JobParameters = JobParameters };
-                    return await test.ExecuteAsync(CancellationToken);
-                }
+                // Start test operation if all devices of type None
+                var test = new StartTestOperationJob { JobParameters = JobParameters };
+                return await test.ExecuteAsync(CancellationToken);
+            }
 
-                foreach (var operationHostDevice in devices)
+            foreach (var operationHostDevice in devices)
+            {
+                // Launch audits
+                var deviceAudits = await ProfileService.GetAudits(operationHostDevice.ProfileId);
+                foreach (var audit in deviceAudits)
                 {
-                    // Launch audits
-                    foreach (var audit in operationHostDevice.Profile.Audits)
+                    var auditParams = new StartAuditJobParameters
                     {
-                        var auditParams = new StartAuditJobParameters
-                        {
-                            Audit = audit.Id,
-                            Operation = Parameters.Operation,
-                            Channel = auditChannel,
-                            StartAt = Parameters.StartAt
-                        };
-                        var auditJob = new StartAuditJob { JobParameters = auditParams };
-                        await JobManager.Execute(auditJob);
-                        audits.Add(auditJob);
-                    }
-
-                    // Launch devices
-                    var driverOptions = JsonConvert.DeserializeObject<ExpandoObject>(operationHostDevice.HostDevice.Device.Parameters ?? "{}");
-                    JsonConvert.PopulateObject(operationHostDevice.HostDevice.Parameters ?? "{}", driverOptions);
-                    JsonConvert.PopulateObject(operationHostDevice.Options ?? "{}", driverOptions);
-                    var deviceParams = new StartDeviceJobParameters
-                    {
-                        Driver = operationHostDevice.HostDevice.Device.DriverGuid,
-                        DriverOptions = driverOptions,
-                        OperationHostDevice = operationHostDevice.Id,
-                        StartAt = Parameters.StartAt,
-                        Profile = operationHostDevice.Profile.TextJson,
-                        StoreChannel = storeChannel,
-                        ParametersChannel = parametersChannel,
-                        InputParameters = operationHostDevice.Profile.Input,
-                        OutputParameters = operationHostDevice.Profile.Output
+                        Audit = audit.Id,
+                        Operation = Parameters.Operation,
+                        Channel = auditChannel,
+                        StartAt = Parameters.StartAt
                     };
-                    var url = $"{operationHostDevice.HostDevice.Host.Url}:{operationHostDevice.HostDevice.Host.Port}";
-                    var deviceJob = new StartDeviceJob { JobParameters = deviceParams };
-                    running.Add((url, deviceJob));
-                    // TODO check response for validity
-                    var response = await deviceJob.Execute(url);
-
+                    var auditJob = new StartAuditJob { JobParameters = auditParams };
+                    await JobManager.Execute(auditJob);
+                    audits.Add(auditJob);
                 }
+
+                // Launch devices
+                var driverOptions = JsonConvert.DeserializeObject<ExpandoObject>(operationHostDevice.HostDevice.Device.Parameters ?? "{}");
+                JsonConvert.PopulateObject(operationHostDevice.HostDevice.Parameters ?? "{}", driverOptions);
+                JsonConvert.PopulateObject(operationHostDevice.Options ?? "{}", driverOptions);
+                var deviceParams = new StartDeviceJobParameters
+                {
+                    Driver = operationHostDevice.HostDevice.Device.DriverGuid,
+                    DriverOptions = driverOptions,
+                    OperationHostDevice = operationHostDevice.Id,
+                    StartAt = Parameters.StartAt,
+                    Profile = operationHostDevice.Profile.TextJson,
+                    StoreChannel = storeChannel,
+                    ParametersChannel = parametersChannel,
+                    InputParameters = operationHostDevice.Profile.Input,
+                    OutputParameters = operationHostDevice.Profile.Output
+                };
+                var url = $"{operationHostDevice.HostDevice.Host.Url}:{operationHostDevice.HostDevice.Host.Port}";
+                var deviceJob = new StartDeviceJob { JobParameters = deviceParams };
+                running.Add((url, deviceJob));
+                // TODO check response for validity
+                var response = await deviceJob.Execute(url);
+
             }
 
             int count;
@@ -118,8 +121,8 @@ namespace Optosense.Edm.Jobs
                     var parameter = new
                     {
                         Job = job.Name,
-                        ((StartDeviceJobParameters) job.JobParameters).OperationHostDevice,
-                        ((StartDeviceJobParameters) job.JobParameters).Driver
+                        ((StartDeviceJobParameters)job.JobParameters).OperationHostDevice,
+                        ((StartDeviceJobParameters)job.JobParameters).Driver
                     };
                     var response = //await JobManager.Execute(check, parameter);
                         await check.Execute(url, parameter);
@@ -149,19 +152,13 @@ namespace Optosense.Edm.Jobs
             // Stop storage
             await JobManager.Execute(new StopJob(storageJob));
 
-            using (var db = await ContextFactory.CreateDbContextAsync())
+            if (CancellationToken.IsCancellationRequested)
             {
-                var operation = await db.Operations.FindAsync(Parameters.Operation);
-                if (CancellationToken.IsCancellationRequested)
-                {
-                    operation.Cancelled = DateTime.Now;
-                }
-                else
-                {
-                    operation.Completed = DateTime.Now;
-                }
-                
-                await db.SaveChangesAsync();
+                await OperationService.StopOperation(Parameters.Operation);
+            }
+            else
+            {
+                await OperationService.CompleteOperation(Parameters.Operation);
             }
 
             return "Ok";
