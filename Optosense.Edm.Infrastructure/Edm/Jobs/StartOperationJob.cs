@@ -67,9 +67,11 @@ namespace Optosense.Edm.Jobs
                 return await test.ExecuteAsync(CancellationToken);
             }
 
+            // TODO refactor starting device in parallel
             foreach (var operationHostDevice in devices)
             {
                 // Launch audits
+                // TODO Launch audits in parallel
                 var deviceAudits = await ProfileService.GetAudits(operationHostDevice.ProfileId);
                 foreach (var audit in deviceAudits)
                 {

@@ -10,20 +10,20 @@
 	  <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.1.0" />
 	  <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.1.0" />
 	  <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="4.1.0" />
-	  <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.0.0" />
-    <PackageReference Include="MSTest.TestAdapter" Version="2.2.8" />
-    <PackageReference Include="MSTest.TestFramework" Version="2.2.8" />
+	  <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.1" />
+    <PackageReference Include="MSTest.TestAdapter" Version="2.2.10" />
+    <PackageReference Include="MSTest.TestFramework" Version="2.2.10" />
     <PackageReference Include="coverlet.collector" Version="3.1.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="OPCFoundation.NetStandard.Opc.Ua.Client" Version="1.4.371.41" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Edm\Edm.csproj" />
     <ProjectReference Include="..\Optosense.Edm.Domain\Optosense.Edm.Domain.csproj" />
+    <ProjectReference Include="..\Optosense.Edm.Plugins.OpcUa\Optosense.Edm.Plugins.OpcUa.csproj" />
     <ProjectReference Include="..\Optosense.Edm.Profiles.Board\Optosense.Edm.Profiles.Board.csproj" />
-    <ProjectReference Include="..\Optosense.Edm\Optosense.Edm.csproj" />
   </ItemGroup>
 
 </Project>

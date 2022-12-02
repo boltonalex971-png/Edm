@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using Optosense.Edm.Domain.Models;
 using Optosense.Edm.Drivers.Mux;
+using Optosense.Edm.Drivers.OpcUa;
 using Optosense.Edm.Profiles.Board;
 using System;
 using System.Diagnostics;
@@ -43,6 +44,22 @@ namespace Optosense.Edm.Test
 
 
             Assert.IsTrue(true);
+        }
+
+        [TestMethod]
+        public async Task OpcUaDriverTest()
+        {
+            var options = new OpcUaDriverOptions { Endpoint = "opc.tcp://localhost:51210/UA/SampleServer" };
+            var driver = new OpcUaDriver(options);
+            driver.Init();
+            //var node = await driver.GetNode("ns=4;i=1241");
+            var nodes = driver.GetChildNodes("ns=4;i=1240"); 
+//            Console.WriteLine(node.DisplayName);
+            //driver.Start();
+            //await Task.Delay(3000);
+            driver.Stop();
+
+//            Assert.AreEqual(node.DisplayName, "Boiler #1");
         }
     }
 }

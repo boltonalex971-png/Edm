@@ -352,3 +352,5 @@ Optosense.Edm.Profiles.Board/Ui/yarn.lock
 /Microprojects.Edm.Ui.Console/ui/kendo-ui-license.txt
 Microprojects.Edm.Ui.Main/ClientApp/kendo-ui-license.txt
 /Microprojects.Edm.Ui.Main/ClientApp/package-lock.json
+/Optosense.Edm.Profiles.Board/MuxDriverUi/package-lock.json
+/Optosense.Edm.Profiles.Board/MuxDriverUi/yarn.lock

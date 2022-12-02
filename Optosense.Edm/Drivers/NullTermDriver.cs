@@ -15,7 +15,7 @@ namespace Optosense.Edm.Drivers
             Options = new NullTermOptions();
         }
 
-        public class NullTermOptions : DriverOptions
+        public class NullTermOptions : IDriverOptions
         {
         }
     }

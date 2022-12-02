@@ -166,6 +166,7 @@ namespace Optosense.Edm.Core.Services
             var result = await Db.WorkbenchDeviceConfigurations
                 .Include(d => d.WorkplaceHostDevice.HostDevice.Device)
                 .Include(d => d.WorkplaceHostDevice.HostDevice.Host)
+                .Include(d => d.Profile)
                 .FirstOrDefaultAsync(d => d.Id == id) ?? throw new ArgumentException("Workbench device configuration not found");
             return result;
         }

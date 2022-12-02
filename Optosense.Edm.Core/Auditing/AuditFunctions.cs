@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Optosense.Edm.Core.Infrastructure.Mapper;
 using Optosense.Edm.Domain.Models;
 
 namespace Optosense.Edm.Core.Auditing
@@ -61,42 +62,67 @@ namespace Optosense.Edm.Core.Auditing
 
         [AuditFunc(Name = "Failure", Format = "Failures<{0}")]
         [AuditArg("Max amount", typeof(double))]
-        public static AuditResult FailureFunction(AuditCriterion criterion, IEnumerable<Record> measures)
+        public static AuditResult FailureFunction(AuditCriterion criterion, IEnumerable<object> values)
         {
-            var result = new AuditResult();
+            var result = new AuditResult
+            {
+                Result = "Failures<{0}",
+                Valid = true,
+                Message = "Not implemented"
+            };
             return result;
         }
 
         [AuditFunc(Name = "Tolerance", Format = "{0}±{1}%")]
         [AuditArg("Value, integer", typeof(int))]
         [AuditArg("Tolerance, in %", typeof(double))]
-        public static AuditResult AccuracyFunction(AuditCriterion criterion, IEnumerable<Record> measures)
+        public static AuditResult AccuracyFunction(AuditCriterion criterion, IEnumerable<object> values)
         {
-            var result = new AuditResult();
+            var result = new AuditResult
+            {
+                Result = "{0}±{1}%",
+                Valid = true,
+                Message = "Not implemented"
+            };
             return result;
         }
 
         [AuditFunc(Name = "Deviation", Format = "σ<{0}%")]
         [AuditArg("Max deviation, in %", typeof(double))]
-        public static AuditResult DeviationFunction(AuditCriterion criterion, IEnumerable<Record> measures)
+        public static AuditResult DeviationFunction(AuditCriterion criterion, IEnumerable<object> values)
         {
-            var result = new AuditResult();
+            var result = new AuditResult
+            {
+                Result = "σ<{0}%",
+                Valid = true,
+                Message = "Not implemented"
+            };
             return result;
         }
 
         [AuditFunc(Name = "Noise", Format = "Noise<{0}%")]
         [AuditArg("Max noise, in %", typeof(double))]
-        public static AuditResult NoiseFunction(AuditCriterion criterion, IEnumerable<Record> measures)
+        public static AuditResult NoiseFunction(AuditCriterion criterion, IEnumerable<object> values)
         {
-            var result = new AuditResult { Valid = true, Message = string.Empty };
+            var result = new AuditResult
+            {
+                Result = "Noise<{0}%",
+                Valid = true,
+                Message = "Not implemented"
+            };
             return result;
         }
 
         [AuditFunc(Name = "Drift", Format = "Drift<{0}%")]
         [AuditArg("Max drift, in %", typeof(double))]
-        public static AuditResult DriftFunction(AuditCriterion criterion, IEnumerable<Record > measures)
+        public static AuditResult DriftFunction(AuditCriterion criterion, IEnumerable<object> values)
         {
-            var result = new AuditResult();
+            var result = new AuditResult
+            {
+                Result = "Drift<{0}%",
+                Valid = true,
+                Message = "Not implemented"
+            };
             return result;
         }
     }

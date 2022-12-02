@@ -185,7 +185,7 @@ public static class PluginManagerHelper
         var builder = services.AddControllers(options =>
         {
             options.RespectBrowserAcceptHeader = true;
-            options.Conventions.Add(new PluginRoutingConvention());
+            //options.Conventions.Add(new PluginRoutingConvention());
         }).AddNewtonsoftJson(options =>
         {
             options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
@@ -226,7 +226,7 @@ class PluginRoutingConvention : Attribute, IControllerModelConvention
         var plugin = controller.ControllerType.Assembly
             .GetTypes().Where(t => t.GetCustomAttribute(typeof(PluginAttribute)) != null
                 && controller.ControllerType.Namespace.Contains(t.Namespace)).FirstOrDefault() ??
-                    throw new EdmException($"No corresponding plugin found for controller {controller.ControllerType.FullName}. Beggining of controller namespace must must match plugin namespace.");
+                    throw new EdmException($"No corresponding plugin found for controller {controller.ControllerType.FullName}. Beginning of controller namespace must must match plugin namespace.");
         var root = plugin.GetCustomAttribute<PluginAttribute>().UiRoot;
         var homepage = root != null ? $"{root}/" : string.Empty;
         var routeAttributes = controller.Selectors.Where(selector =>

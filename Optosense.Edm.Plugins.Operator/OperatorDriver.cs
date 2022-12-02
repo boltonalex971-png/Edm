@@ -73,7 +73,7 @@ namespace Optosense.Edm.Drivers.Operator
         }
     }
 
-    public class OperatorDriverOptions : DriverOptions
+    public class OperatorDriverOptions : IDriverOptions
     {
         public int Input { get; set; }
         public int Response { get; set; }

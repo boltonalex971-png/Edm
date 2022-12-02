@@ -24,7 +24,8 @@ export function DeviceConfigEditor({ id, ...props }) {
     data = data && data.id ?
         { ...data, name: `${data.deviceName} configuration`, description: `${data.driverName} device on ${data.hostName}` } :
         { name: ' ', description: ' ' };
-    const arg = btoa(JSON.stringify({ api: `${props.api}/${id}`, options: data.configuration || '{}' }));
+    const options = JSON.parse(data.configuration || '{}');
+    const arg = data && JSON.stringify({ api: `${props.api}/${id}`, options, output: JSON.parse(data.profileOutput || '[]') });
     const [iframeLoading, setIframeLoading] = useState(true);
     return (
         <Detail {...props}
@@ -33,7 +34,7 @@ export function DeviceConfigEditor({ id, ...props }) {
                 <div>
                     <LoadingContainer loading={iframeLoading && loading}>
                         <iframe title='Device Configuration' id='config-iframe' height='300' width='100%' seamless frameBorder='0'
-                            src={`${location}/${data.driverHomepage}/options?a=${arg}`}
+                            src={`${location}/${data.driverHomepage}/options?${new URLSearchParams({ a: arg })}`}
                             onLoad={() => setIframeLoading(false)}
                         />
                     </LoadingContainer>

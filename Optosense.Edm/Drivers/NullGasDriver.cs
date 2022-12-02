@@ -15,7 +15,7 @@ namespace Optosense.Edm.Drivers
             Options = new NullGasOptions();
         }
         
-        public class NullGasOptions : DriverOptions
+        public class NullGasOptions : IDriverOptions
         {
         }
     }

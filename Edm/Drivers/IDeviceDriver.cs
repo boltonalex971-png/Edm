@@ -8,7 +8,7 @@ namespace Microprojects.Edm.Drivers
 {
     public interface IDeviceDriver
     {
-        DriverOptions Options { get; set; }
+        IDriverOptions Options { get; set; }
 
         string Init();
         string Start();
@@ -17,7 +17,7 @@ namespace Microprojects.Edm.Drivers
         string Get();
         string Ping();
         Task<DriverResponse> Execute(DriverRequest request);
-        DriverOptions GetEffectiveOptions();
+        IDriverOptions GetEffectiveOptions();
     }
 
     public interface IProfilable
@@ -25,9 +25,11 @@ namespace Microprojects.Edm.Drivers
         IEnumerable<(double Value, TimeSpan Offset)> Profile { get; set; }
     }
 
-    public class DriverOptions
+    public interface IDriverOptions
     {
     }
 
-
+    public class DriverOptions : IDriverOptions
+    { 
+    }
 }

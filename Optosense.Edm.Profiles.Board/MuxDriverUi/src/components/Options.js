@@ -10,7 +10,7 @@ import { DropDownList } from "@progress/kendo-react-dropdowns";
 export const Options = ({ guid }) => {
     const location = useLocation();
     const search = new URLSearchParams(location.search);
-    const [param] = useState(JSON.parse(atob(search.get('a'))), [location.search]);
+    const [param] = useState(JSON.parse(search.get('a')), [location.search]);
     const optionsChange = (o) => {
         axios.put(`${param.api}`, o);
     };
@@ -18,7 +18,7 @@ export const Options = ({ guid }) => {
     return (
         <Form
             key={1}
-            initialValues={JSON.parse(param.options)}
+            initialValues={param.options}
             onSubmit={optionsChange}
             render={(formRenderProps) => (
                 <FormElement>

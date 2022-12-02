@@ -327,6 +327,7 @@ namespace Microprojects.Edm.Ui.Main.Controllers
             var result = _mapper.Map<WorkbenchDeviceConfigViewModel>(device);
             var driver = _plugins.GetDriver(result.DriverGuid);
             var profiler = _plugins.GetProfile(driver?.ProfileGuid ?? Guid.Empty);
+            result.ProfileOutput = device.Profile.Output;
             result.DriverName = driver?.Name;
             result.DriverHomepage = driver?.Homepage;
             result.ProfilerGuid = driver?.ProfileGuid ?? Guid.Empty;

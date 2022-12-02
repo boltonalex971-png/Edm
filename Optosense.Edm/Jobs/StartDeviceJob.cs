@@ -46,6 +46,11 @@ namespace Optosense.Edm.Jobs
                 _driverPlugin = _plugins.GetDriver(Parameters.Driver) ?? throw new EdmException("Driver plugin not found");
                 //_profilePlugin = _plugins.GetProfile(_driverPlugin.ProfileGuid) ?? throw new EdmException("No profiler found");
                 _driver = _driverPlugin.GetDriver();
+                if (_driver is IReactiveDriver reactiveDriver)
+                {
+                    reactiveDriver.PushResponse = PushResponse; 
+                }
+
                 var options = _driver.GetEffectiveOptions(); //DriverUtils.GetDriverOptions(DeviceModel.None); //Parameters.Driver);
                 if (Parameters.DriverOptions != null)
                 {
@@ -97,6 +102,11 @@ namespace Optosense.Edm.Jobs
         private async Task ExecuteDeviceInstruction(IDeviceDriver driver, DriverRequest request, bool throwEx = false, int totalRetrials = 0)
         {
             var response = await driver.Execute(request);
+            await PushResponse(response);
+        }
+
+        private async Task PushResponse(DriverResponse response, bool throwEx = false)
+        {
             var rec = new Record
             {
                 ScheduledAt = DateTime.Now,
@@ -110,7 +120,7 @@ namespace Optosense.Edm.Jobs
                 OperationHostDeviceId = Parameters.OperationHostDevice,
             };
             await Cache.Publish(Parameters.StoreChannel, rec);
-            var output = JsonConvert.DeserializeObject<Dictionary<string, object>>(rec.Parameters ?? "[]");
+            var output = JsonConvert.DeserializeObject<Dictionary<string, object>>(rec.Parameters ?? "{}");
             foreach (var outParam in _outputParams)
             {
                 if (output.ContainsKey(outParam.Key))

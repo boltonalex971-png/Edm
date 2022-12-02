@@ -109,7 +109,7 @@ namespace Optosense.Edm.Drivers.Mux
         }
     }
 
-    public class BoardDriverOptions : DriverOptions
+    public class BoardDriverOptions : IDriverOptions
     {
         public string Port { get; set; }
         public int Baudrate { get; set; } = 9600;

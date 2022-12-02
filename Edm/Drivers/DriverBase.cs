@@ -15,16 +15,16 @@ namespace Microprojects.Edm.Drivers
 
         public static double PingIntervalInSec { get; } = 10.0;
 
-        public DriverOptions Options { get; set; }
+        public IDriverOptions Options { get; set; }
 
-        public virtual DriverOptions GetEffectiveOptions()
+        public virtual IDriverOptions GetEffectiveOptions()
         {
             var options = Options;
             if (options is null)
             {
                 var optionsType = GetType().GetCustomAttribute<DriverAttribute>(true)?.OptionsType;
                 options = optionsType is not null ? 
-                    (DriverOptions) Activator.CreateInstance(optionsType) :
+                    (IDriverOptions) Activator.CreateInstance(optionsType) :
                     new DriverOptions();
             }
 
@@ -42,7 +42,8 @@ namespace Microprojects.Edm.Drivers
         {
             var response = new DriverResponse { Planned = request.Offset, Executed = request.Offset, Parameters = request.Parameters };
             var split = request.Command.Split(' ');
-            response.Response = split[0] switch
+            response.Request = split[0];
+            response.Response = response.Request switch
             {
                 nameof(this.Init) => Init(),
                 nameof(this.Start) => Start(),

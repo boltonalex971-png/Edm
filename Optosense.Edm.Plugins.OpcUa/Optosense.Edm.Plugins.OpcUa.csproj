@@ -1,0 +1,44 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+	  <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
+	  <!--<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>-->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="OPCFoundation.NetStandard.Opc.Ua.Client" Version="1.4.371.41" GeneratePathProperty="yes" IncludeAssets="all" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Edm\Edm.csproj" />
+  </ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.Formatters.Json" Version="2.2.0" />
+		<PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="6.0.3" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Remove="ui-driver\build\**" />
+		<Compile Remove="ui-driver\node_modules\**" />
+		<EmbeddedResource Include="ui-driver\build/**" />
+		<EmbeddedResource Remove="ui-driver\node_modules\**" />
+		<None Remove="ui-driver\build\**" />
+		<None Remove="ui-driver\node_modules\**" />
+		<None Remove="ui-driver\*.local" />
+		<None Remove="ui-driver\.env.local" />
+		<None Remove="ui-driver\.eslintcache" />
+		<None Remove="ui-driver\.gitignore" />
+		<None Remove="ui-driver\kendo-ui-license.txt" />
+		<None Remove="ui-driver\yarn-error.log" />
+		<None Remove="ui-driver\yarn.lock" />
+		<None Remove="ui-driver\package-lock.json" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Include="ui-profile\build/**" />
+	</ItemGroup>
+	
+</Project>
