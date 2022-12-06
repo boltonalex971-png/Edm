@@ -147,9 +147,21 @@ namespace Optosense.Edm.Drivers.OpcUa
 
         public async Task<object> GetNode(NodeId id)
         {
+            Node node = new();
+            DataValue value = default;
+            try
+            {
+                node = id.IsNullNodeId ? node : await Session.ReadNodeAsync(id);
+                if (node.NodeClass == NodeClass.Variable)
+                {
+                    value = id.IsNullNodeId || node.NodeClass != NodeClass.Variable ? null : await Session.ReadValueAsync(id);
+                }
+            }
+            catch
+            {
+                // Just swallow exception as most likely we can't read a value of the node
+            }
 
-            var node = id.IsNullNodeId ? new Node() : await Session.ReadNodeAsync(id);
-            var value = id.IsNullNodeId ? null : await Session.ReadValueAsync(id);
             return new { value, node.TypeId, node.Description, node.DisplayName, node.NodeId, node.NodeClass };
         }
 

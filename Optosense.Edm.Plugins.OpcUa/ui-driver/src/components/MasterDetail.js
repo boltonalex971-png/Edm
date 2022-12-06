@@ -77,7 +77,7 @@ export function Detail(props) {
                                 <CardHeader style={{ position: "sticky", top: 0, display: 'flex', justifyContent: "space-between" }}>
                                     <div>
                                         <CardTitle>{(props.data && props.data.displayName.Text) || ' '}</CardTitle>
-                                        <CardSubtitle>{(props.data && props.data.description) || ' '}</CardSubtitle>
+                                        <CardSubtitle>{(props.data && props.data.description?.Text) || ' '}</CardSubtitle>
                                     </div>
                                 </CardHeader>
                                 <CardBody>

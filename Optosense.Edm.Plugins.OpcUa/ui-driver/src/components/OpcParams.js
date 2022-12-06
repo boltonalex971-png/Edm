@@ -65,28 +65,29 @@ export function ParamDetail({ param, output, onBind }) {
                                     <p>
                                         <strong>Node ID: </strong>{data.nodeId.Identifier}<br />
                                         <strong>Class: </strong>{data.nodeClass}
-                                        <strong> of </strong>{type}
-                                        <strong> at </strong>{data.value.sourceTimestamp}<br />
-                                        <strong>Value: </strong>({type}) {JSON.stringify(value, null, ' ')}
+                                        {data.value &&
+                                            <>
+                                                <strong> of </strong>{type}
+                                                <span><strong> at </strong>{data.value.sourceTimestamp}<br /></span>
+                                                <strong>Value: </strong>({type}) {JSON.stringify(value, null, ' ')}
+                                            </>
+                                        }
                                     </p>
-                                    <p>
-                                        Profile parameter to bind:
-                                        <DropDownList data={output}
-                                            style={{ width: '200px', marginLeft: '2rem' }}
-                                            value={param?.param || selected}
-                                            onChange={outputSelect} />
-                                        <Button icon='link' type={'button'}
-                                            title='Bind to output parameter'
-                                            style={{ marginLeft: '2rem' }}
-                                            themeColor='primary'
-                                            onClick={() => onBind({ text: selected, value: data.nodeId.Identifier })}>Bind</Button>
-                                        {/* <Button icon='unlink' type={'button'}
-                                    disabled={output.find(el => el.value === data.name)}
-                                    title='Unbind parameter'
-                                    style={{ marginLeft: '0.5rem' }}
-                                    themeColor='base'
-                                    onClick={() => onBind({ text: null, value: data.name })}>Unbind</Button> */}
-                                    </p>
+                                    {data.value &&
+                                        <p>
+                                            Profile parameter to bind:
+                                            <DropDownList data={output}
+                                                style={{ width: '200px', marginLeft: '2rem' }}
+                                                value={param?.param || selected}
+                                                onChange={outputSelect} />
+                                            <Button icon='link' type={'button'}
+                                                title='Bind to output parameter'
+                                                style={{ marginLeft: '2rem' }}
+                                                themeColor='primary'
+                                                onClick={() => onBind({ text: selected, value: data.nodeId.Identifier })}
+                                            >Bind</Button>
+                                        </p>
+                                    }
                                 </>
                             }
                         />
