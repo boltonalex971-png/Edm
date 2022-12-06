@@ -29,6 +29,7 @@ namespace Optosense.Edm.Jobs
 
         public override async Task<object> ExecuteAsync()
         {
+            bool completed = false;
             var subscription = Cache.Subscribe<Record>(Parameters.Channel,
                 onNext: async r =>
                 {
@@ -38,6 +39,7 @@ namespace Optosense.Edm.Jobs
                         context.Records.Add(r);
                         await context.SaveChangesAsync();
                         await Cache.Publish(Parameters.AuditChannel, r);
+                        completed = completed || r.Request.StartsWith("Stop");
                     }
                     catch (Exception e)
                     {
@@ -47,9 +49,14 @@ namespace Optosense.Edm.Jobs
                         _logger.LogWarning("Some InstructionExecutions lost: {Exception}", e.GetFullInfo());
                     }
                 });
-            await Task.Delay(-1, CancellationToken)
-                .ContinueWith(t => { });
+            while (!completed && !CancellationToken.IsCancellationRequested)
+            {
+                await Task.Delay(1000, CancellationToken)
+                    .ContinueWith(t => { });
+            }
+
             subscription.Dispose();
+            _logger.LogDebug("{Command} {Action}", Name, completed ? "completed" : "cancelled");
             return "Ok";
         }
     }

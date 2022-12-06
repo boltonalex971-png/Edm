@@ -31,6 +31,15 @@ namespace Optosense.Edm.Utils
             return source.Select(i => Observable.Return<T>(i).Delay(selector(i))).Concat(); //.Merge()
         }
 
+        public static IObservable<T> Pace<T>(this IObservable<T> source, Func<T, Task<bool>> delay)
+        {
+            return source.Select(i => Observable.Create<T>(async (obs, token) =>
+            {
+                var ok = await delay(i);
+                obs.OnNext(i);
+            })).Concat(); 
+        }
+
         public static IObservable<T> Execute<T>(this IObservable<T> instructions, IObserver<T> observer)
         {
             return Observable.Create<T>(o =>
@@ -91,5 +100,48 @@ namespace Optosense.Edm.Utils
             return task;
         }
 
+        public static Task Launch(this IEnumerable<DriverRequest> plan,
+            IDeviceDriver driver, 
+            Func<DriverRequest, Task<bool>> condition, 
+            Action<IDeviceDriver, DriverRequest> action,
+            ILogger logger,
+            CancellationToken? cancellationToken = null)
+        {
+            var token = cancellationToken ?? CancellationToken.None;
+            var startedAt = DateTime.Now;
+            var task = plan.ToObservable()
+                .Pace(condition)
+                .ObserveOn(NewThreadScheduler.Default)
+                .Do(
+                    onNext: p =>
+                    {
+                        action(driver, p);
+                    },
+                    onError: e =>
+                    {
+                        logger.LogError($"Plan for driver {driver.GetType().Name} was cancelled with exception: {e.GetFullInfo()}");
+                    },
+                    onCompleted: () =>
+                    {
+                        logger.LogInformation($"Plan for driver {driver.GetType().Name} completed successfully");
+                    }
+                ).ToTask(token, driver as object);
+            task.ContinueWith(t =>
+            {
+                switch (t.Status)
+                {
+                    case TaskStatus.Canceled:
+                        logger.LogInformation($"Driver {t.Id} {t.AsyncState.GetType().Name} was cancelled by user");
+                        break;
+                    case TaskStatus.Faulted:
+                        logger.LogError($"Driver {t.Id} {t.AsyncState.GetType().Name} was cancelled with exception: {t.Exception.Flatten().GetFullInfo()}");
+                        break;
+                    case TaskStatus.RanToCompletion:
+                        logger.LogInformation($"Driver {t.Id} {t.AsyncState.GetType().Name} completed successfully");
+                        break;
+                }
+            });
+            return task;
+        }
     }
 }

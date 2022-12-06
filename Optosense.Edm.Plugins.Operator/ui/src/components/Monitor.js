@@ -14,18 +14,38 @@ export function Monitor({ operationId, apiBase, started }) {
     const [refresh, setRefresh] = useState(false);
     const [current, setCurrent] = useState();
     const [[data, setData]] = useGet(`${apiBase}/api/operations/${operationId}/records?lastRecordId=${lastId}`, refresh);
+    const [params, setParams] = useState({});
     if (data && data.length > 0) {
         setLastId(data.reduce((max, el) => el.id > max ? el.id : max, 0));
-        setCache([...cache, ...data.map(r => {
+        const operator = data.filter(r => r.request === 'Set' || r.request === 'Get');
+        if (operator.length > 0) {
+            const newCache = [...cache, ...operator.map(r => {
+                const parameters = JSON.parse(r.parameters || '{}');
+                return `${parameters.Command} ${parameters.Condition || ''} (${r.status})`;
+            })];
+            setCache(newCache);
+
+            const step = operator[operator.length - 1] || {};
+            const stepParams = JSON.parse(step.parameters || '{}');
+            const stepParameters = stepParams.Parameters && JSON.parse(stepParams.Parameters);
+            const currStep = { params: { parameters: stepParameters, ...stepParams }, ...step };
+            setCurrent(currStep);
+        }
+
+        let paramsChanged = false;
+        data.filter(r => r.request !== 'Set' && r.request !== 'Get').forEach(r => {
             const parameters = JSON.parse(r.parameters || '{}');
-            return `${parameters.Command} ${parameters.Condition || ''} (${r.status})`;
-        })]);
+            Object.keys(parameters).forEach(k => {
+                paramsChanged = true;
+                const currValue = Math.round(parameters[k] * 100) / 100;
+                params[k] = { value: currValue, min: Math.min(params[k]?.min || currValue, currValue), max: Math.max(params[k]?.max || currValue, currValue) };
+            });
+        });
+        if (paramsChanged) {
+            setParams({ ...params });
+        }
+
         setData([]);
-        const step = data[data.length - 1];
-        const params = JSON.parse(step.parameters || '{}');
-        const parameters = params.Parameters && JSON.parse(params.Parameters);
-        const currStep = { params: { parameters: parameters, ...params }, ...step };
-        setCurrent(currStep);
     }
 
     useEffect(() => {
@@ -62,11 +82,11 @@ export function Monitor({ operationId, apiBase, started }) {
                     value={cache.join('\n')}
                 />
             </div>
-            <div>
+            <div style={{ display: 'flex', flexDirection: 'column', width: '30%', marginRight: '2rem' }}>
                 <h3>Current step</h3>
                 {current &&
                     <>
-                        <div>
+                        <div style={{ marginBottom: '2rem' }}>
                             <p>
                                 {current.params.Command}
                             </p>
@@ -82,9 +102,13 @@ export function Monitor({ operationId, apiBase, started }) {
                                 />
                             </p>
                         )}
-                        <Button title='Completed' icon='folder' themeColor='primary' style={{ marginTop: '2rem' }}>Completed</Button>
+                        <Button title='Completed' icon='check-outline' themeColor='primary' style={{ marginTop: '2rem' }}>Completed</Button>
                     </>
                 }
+            </div>
+            <div>
+                <h3>Parameters</h3>
+                {Object.keys(params).map(k => <p key={k}>{k}: {params[k].value} (min: {params[k].min} max: {params[k].max})</p>)}
             </div>
         </div>
     );

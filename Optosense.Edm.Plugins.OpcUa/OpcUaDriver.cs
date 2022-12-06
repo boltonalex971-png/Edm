@@ -125,11 +125,13 @@ namespace Optosense.Edm.Drivers.OpcUa
             {
                 if (PushResponse is not null)
                 {
+                    var param = new ExpandoObject();
+                    param.TryAdd(outputName, value.Value);
                     var response = new DriverResponse
                     {
                         Executed = (long)(value.SourceTimestamp - StartTimestamp).TotalMilliseconds,
                         Planned = (long)(value.SourceTimestamp - StartTimestamp).TotalMilliseconds,
-                        Parameters = $"{{\"{ outputName }\": \"{ value.Value }\"}}",
+                        Parameters = JsonConvert.SerializeObject(param),
                         State = DriverResponseState.Ok,
                         Request = item.DisplayName,
                         Response = $"{outputName} = \"{value.Value}\""

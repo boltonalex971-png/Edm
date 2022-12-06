@@ -1,3 +1,4 @@
+using AdaptiveExpressions;
 using Microprojects.Edm;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
@@ -6,8 +7,10 @@ using Optosense.Edm.Drivers.Mux;
 using Optosense.Edm.Drivers.OpcUa;
 using Optosense.Edm.Profiles.Board;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -60,6 +63,30 @@ namespace Optosense.Edm.Test
             driver.Stop();
 
 //            Assert.AreEqual(node.DisplayName, "Boiler #1");
+        }
+
+        [TestMethod]
+        public void ParseExpressionTest()
+        {
+            var expOffset = "100";
+            var expBool = "Param";
+            var exprCondition = "Temp>10";
+            var state = new Dictionary<string, object>
+            {
+                {"Param", true },
+                {"Temp", 5 }
+            };
+
+            var exp1 = AdaptiveExpressions.Expression.Parse(expOffset);
+            var exp2 = AdaptiveExpressions.Expression.Parse(expBool);
+            var exp3 = AdaptiveExpressions.Expression.Parse(exprCondition);
+
+            var (value1, error1) = exp1.TryEvaluate(state);
+            var (value2, error2) = exp2.TryEvaluate<bool>(state);
+            var (value3, error3) = exp3.TryEvaluate<bool>(state);
+            Assert.AreEqual(value1, 100);
+            Assert.IsTrue(value2);
+            Assert.AreEqual(value3, false);
         }
     }
 }

@@ -31,24 +31,18 @@ namespace Optosense.Edm.Drivers.Operator
 
         public override async Task<DriverResponse> Execute(DriverRequest req)
         {
-            if (req is not OperatorRequest)
-            {
-                throw new EdmException($"{GetType().Name} driver parameters must be of type {typeof(OperatorRequest).Name}");
-            }
-
-            var request = (OperatorRequest) req;
-            var command = request.Command;
+            var command = req.Command;
             Step? parameters = default;
-            if (!string.IsNullOrEmpty(request.Parameters)) {
-                parameters = JsonConvert.DeserializeObject<Step>(request.Parameters);
+            if (!string.IsNullOrEmpty(req.Parameters)) {
+                parameters = JsonConvert.DeserializeObject<Step>(req.Parameters);
                 await StepTrigger(parameters.Condition);
             }
 
             var response = new DriverResponse
             {
-                Parameters = request.Parameters,
-                Planned = request.Offset,
-                Request = request.Command,
+                Parameters = req.Parameters,
+                Planned = req.Offset,
+                Request = req.Command,
                 State = DriverResponseState.NotCompleted
             };
 
@@ -57,7 +51,6 @@ namespace Optosense.Edm.Drivers.Operator
 
         private Task StepTrigger(string? condition)
         {
-            Console.WriteLine(condition);
             return Task.CompletedTask;
         }
 

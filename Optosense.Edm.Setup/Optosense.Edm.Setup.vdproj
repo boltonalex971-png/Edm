@@ -366,7 +366,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:Edm"
         "ProductCode" = "8:{BAC82683-7560-4371-AC0B-53712C377BE7}"
-        "PackageCode" = "8:{29BAC5AA-EE16-4D58-9FA6-5E0F201631D4}"
+        "PackageCode" = "8:{5ECE6C06-CF68-4C1C-B799-5EE136F20AF7}"
         "UpgradeCode" = "8:{0B59587D-B902-4F08-AFAE-4BB253F5EFE8}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
@@ -1297,7 +1297,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_350F4382074B469ABAE7BFBA34F49C2D"
             {
-            "SourcePath" = "8:..\\Optosense.Edm.WebApi\\obj\\Debug\\net6.0\\apphost.exe"
+            "SourcePath" = "8:..\\Optosense.Edm.WebApi\\obj\\Release\\net6.0\\apphost.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_AE4052A7CE5F48FF84E7825B278F4895"
@@ -1325,7 +1325,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_45C3698F3DE349299378CF56C43604D7"
             {
-            "SourcePath" = "8:..\\Microprojects.Edm.Installer\\obj\\Debug\\Microprojects.Edm.Installer.dll"
+            "SourcePath" = "8:..\\Microprojects.Edm.Installer\\obj\\Release\\Microprojects.Edm.Installer.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_AE4052A7CE5F48FF84E7825B278F4895"
@@ -1486,6 +1486,34 @@
             "OutputConfiguration" = "8:"
             "OutputGroupCanonicalName" = "8:PublishItems"
             "OutputProjectGuid" = "8:{77ACC26B-7405-4396-95CB-380AC7629B0C}"
+            "ShowKeyOutput" = "11:TRUE"
+                "ExcludeFilters"
+                {
+                }
+            }
+            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_F1FDBC19088E4BB0A1F71727CD097A46"
+            {
+            "SourcePath" = "8:"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_AEE31518259E4CFDABF559E3A191152E"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            "ProjectOutputGroupRegister" = "3:1"
+            "OutputConfiguration" = "8:"
+            "OutputGroupCanonicalName" = "8:PublishItems"
+            "OutputProjectGuid" = "8:{64DD102C-E20D-4E59-BBDF-EA68A8A920AE}"
             "ShowKeyOutput" = "11:TRUE"
                 "ExcludeFilters"
                 {

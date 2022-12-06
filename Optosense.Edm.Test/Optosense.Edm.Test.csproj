@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+	  <PackageReference Include="AdaptiveExpressions" Version="4.18.1" />
 	  <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.1.0" />
 	  <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.1.0" />
 	  <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="4.1.0" />

@@ -24,10 +24,10 @@ namespace Optosense.Edm.Drivers.Operator
             var profile = JsonConvert.DeserializeObject<OperatorProfile>(profileJson);
             return profile
                 .OrderBy(p => p.Order)
-                .Select((p, i) => new OperatorRequest
+                .Select((p, i) => new DriverRequest
                 {
                     Command = p.Action.ToString(),
-                    Offset = int.TryParse(p.Condition, out int offset) ? offset * 1000 : 15000,
+                    Condition = p.Condition,
                     Parameters = JsonConvert.SerializeObject(p)
                 }).ToList();
         }

@@ -50,6 +50,7 @@ namespace Optosense.Edm.Jobs
 
         public override async Task<object> ExecuteAsync()
         {
+            bool completed = false;
             IEnumerable<AuditZone> audit = default;
             using (var db = await ContextFactory.CreateDbContextAsync()) 
             {
@@ -60,10 +61,10 @@ namespace Optosense.Edm.Jobs
             var subscriber = Cache.Subscribe<Record>(Parameters.Channel,
                 onNext: async rec =>
                 {
+                    completed = completed || rec.Request.StartsWith("Stop");
                     // TODO move all db activity to corresponding core service
                     using EdmContext db = await ContextFactory.CreateDbContextAsync();
                     var currentOffset = (rec.ExecutedAt - Parameters.StartAt).TotalMinutes;
-                    Console.WriteLine(rec.Parameters);
                     var effectiveZones = audit.Where(z => currentOffset >= z.Offset);
                     foreach (var zone in effectiveZones)
                     {
@@ -120,9 +121,14 @@ namespace Optosense.Edm.Jobs
                         }
                     }
                 });
-            await Task.Delay(-1, CancellationToken)
-                .ContinueWith(t => { });
+            while (!completed && !CancellationToken.IsCancellationRequested)
+            {
+                await Task.Delay(1000, CancellationToken)
+                    .ContinueWith(t => { });
+            }
+
             subscriber.Dispose();
+            Logger.LogDebug("{Command} {Action}", Name, completed ? "completed" : "cancelled");
             return "Ok";
         }
     }

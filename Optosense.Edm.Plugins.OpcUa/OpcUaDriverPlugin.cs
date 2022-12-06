@@ -23,8 +23,8 @@ namespace Optosense.Edm.Drivers.OpcUa
         {
             var plan = new List<DriverRequest>
             {
-                new() {Offset = 0, Command="Start"},
-                new() {Offset = 10000, Command="Stop"}
+                new() { Condition = "0", Command="Start" },
+                new() { Condition = "OperationCompleted", Command="Stop" }
             };
             return plan;
         }

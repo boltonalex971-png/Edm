@@ -1,4 +1,5 @@
-﻿using Microprojects.Edm.Cache;
+﻿using AdaptiveExpressions;
+using Microprojects.Edm.Cache;
 using Microprojects.Edm.Drivers;
 using Microprojects.Edm.Jobs;
 using Microprojects.Edm.Utils;
@@ -9,7 +10,9 @@ using Optosense.Edm.Plugins;
 using Optosense.Edm.Utils;
 using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Optosense.Edm.Jobs
@@ -17,6 +20,8 @@ namespace Optosense.Edm.Jobs
     [Job(Name = "StartDevice", Lifetime = JobLifetime.LongRunning, Parameters = typeof(StartDeviceJobParameters))]
     public class StartDeviceJob : BaseJob
     {
+        public event EventHandler<InputParamArrivedEventArgs> InputParamArrived;
+
         protected ICache Cache { get; init; }
         protected StartDeviceJobParameters Parameters => (StartDeviceJobParameters)JobParameters;
 
@@ -27,8 +32,9 @@ namespace Optosense.Edm.Jobs
         private IEnumerable<DriverRequest> _executionPlan;
         private IDeviceDriver _driver;
         private DateTime _startTime;
-        private Dictionary<string, object> _inputParams;
+        private Dictionary<string, object> _inputParams = new();
         private Dictionary<string, object> _outputParams;
+        private IDisposable _subscriber;
 
         public StartDeviceJob() { }
 
@@ -48,7 +54,7 @@ namespace Optosense.Edm.Jobs
                 _driver = _driverPlugin.GetDriver();
                 if (_driver is IReactiveDriver reactiveDriver)
                 {
-                    reactiveDriver.PushResponse = PushResponse; 
+                    reactiveDriver.PushResponse = PushResponse;
                 }
 
                 var options = _driver.GetEffectiveOptions(); //DriverUtils.GetDriverOptions(DeviceModel.None); //Parameters.Driver);
@@ -61,10 +67,20 @@ namespace Optosense.Edm.Jobs
                 _driver.Options = options;
                 _driver.Init();
 
-                _inputParams = JsonConvert.DeserializeObject<IEnumerable<string>>(Parameters.InputParameters ?? "[]")
-                    .ToDictionary(k => k, e => default(object));
                 _outputParams = JsonConvert.DeserializeObject<IEnumerable<string>>(Parameters.OutputParameters ?? "[]")
                     .ToDictionary(k => k, e => default(object));
+                _subscriber = Cache.Subscribe(Parameters.ParametersChannel,
+                    onNext: json =>
+                    {
+                        var param = JsonConvert.DeserializeObject<KeyValuePair<string, object>>(json.ToString());
+                        _inputParams[param.Key] = param.Value; //double.Parse(param.Value.ToString()); //param.Value.IsNumber() ? double.Parse(param.Value.ToString()) : param.Value.ToString();
+                        InputParamArrived?.Invoke(this, new InputParamArrivedEventArgs
+                        {
+                            Param = param.Key,
+                            Value = _inputParams[param.Key],
+                            ArrivedAt = DateTime.Now
+                        });
+                    });
             }
             catch (Exception e)
             {
@@ -78,19 +94,19 @@ namespace Optosense.Edm.Jobs
         public override async Task<object> ExecuteAsync()
         {
             _startTime = DateTime.Now;
-            var subscriber = Cache.Subscribe<KeyValuePair<string, object>>(Parameters.ParametersChannel,
-                onNext: param =>
-                {
-                    Console.WriteLine(param);
-                    if (_inputParams.ContainsKey(param.Key))
-                    {
-                        _inputParams[param.Key] = param.Value;
-                    }
-                });
-            await _executionPlan.Launch(_driver, async (d, x) => await ExecuteDeviceInstruction(d, x),
+            await _executionPlan.Launch(
+                _driver,
+                MeetCondition,
+                async (d, x) => await ExecuteDeviceInstruction(d, x),
                 _logger, CancellationToken)
                 .ContinueWith(t => { }); // To ignore cancel exception
-            subscriber.Dispose();
+            if (CancellationToken.IsCancellationRequested)
+            {
+                // Release related audits and store jobs
+                await ExecuteDeviceInstruction(_driver, DriverRequests.Stop);
+            }
+
+            _subscriber.Dispose();
             if (_driver is IDisposable)
             {
                 ((IDisposable)_driver).Dispose();
@@ -120,13 +136,13 @@ namespace Optosense.Edm.Jobs
                 OperationHostDeviceId = Parameters.OperationHostDevice,
             };
             await Cache.Publish(Parameters.StoreChannel, rec);
-            var output = JsonConvert.DeserializeObject<Dictionary<string, object>>(rec.Parameters ?? "{}");
+            IDictionary<string, object> output = JsonConvert.DeserializeObject<ExpandoObject>(rec.Parameters ?? "{}");
             foreach (var outParam in _outputParams)
             {
                 if (output.ContainsKey(outParam.Key))
                 {
                     _outputParams[outParam.Key] = outParam.Value;
-                    await Cache.Publish(Parameters.ParametersChannel, outParam);
+                    await Cache.Publish(Parameters.ParametersChannel, output.First(p => p.Key == outParam.Key));
                 }
             }
 
@@ -136,9 +152,45 @@ namespace Optosense.Edm.Jobs
             }
         }
 
-        private async Task AwaitEvent(string condition)
+        private Task<bool> MeetCondition(DriverRequest req)
         {
+            return MeetCondition(req.Condition);
+        }
 
+        private async Task<bool> MeetCondition(string condition)
+        {
+            var expr = Expression.Parse(condition);
+            if (expr.Type == ExpressionType.Constant)
+            {
+                var (offset, error) = expr.TryEvaluate<int>(_inputParams);
+                await Task.Delay(offset, CancellationToken);
+            }
+            else
+            {
+                var cancellationSource = new CancellationTokenSource();
+                EventHandler<InputParamArrivedEventArgs> handler = (source, args) =>
+                {
+                    var (confirmed, error) = expr.TryEvaluate<bool>(_inputParams);
+                    if (error is not null)
+                    {
+                        _logger.LogError("Cannot evaluate profile condition <{condition}>: {error}", condition, error);
+                    }
+
+                    if (confirmed || CancellationToken.IsCancellationRequested)
+                    {
+                        cancellationSource.Cancel();
+                    }
+                };
+                InputParamArrived += handler;
+                await Task.Delay(-1, cancellationSource.Token).ContinueWith(t => { });
+                InputParamArrived -= handler;
+                if (CancellationToken.IsCancellationRequested)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 
@@ -157,5 +209,11 @@ namespace Optosense.Edm.Jobs
         public DateTime StartAt { get; set; } = DateTime.Now.AddSeconds(10);
     }
 
+    public class InputParamArrivedEventArgs : EventArgs
+    {
+        public string Param { get; set; }
+        public object Value { get; set; }
+        public DateTime ArrivedAt { get; set; }
+    }
 }
 
