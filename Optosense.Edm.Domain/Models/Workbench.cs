@@ -9,6 +9,8 @@ namespace Optosense.Edm.Domain.Models
     public class Workbench : TypeObject
     {
         public int WorkplaceProcessId { get; set; }
+        public string CommonUid { get; set; }
+
         public WorkplaceProcess WorkplaceProcess { get; set; }
         public ICollection<WorkbenchWorkplaceHostDevice> DeviceConfigurations { get; set; } = new HashSet<WorkbenchWorkplaceHostDevice>();
     }

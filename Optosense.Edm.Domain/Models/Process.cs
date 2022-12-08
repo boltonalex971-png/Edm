@@ -10,8 +10,8 @@ namespace Optosense.Edm.Domain.Models
     {
         public HierarchyType HierarchyType => HierarchyType.Process;
         public int HierarchyId { get; set; }
-
         public Guid OperationGuid { get; set; }
+        public string CommonUid { get; set; }
 
         public Hierarchy Hierarchy { get; set; }
         /// <summary>

@@ -11,9 +11,11 @@ namespace Optosense.Edm.Core.Contracts
     public interface IOperationService : IGenericService<Operation> 
     {
         Task<Operation> Create(Operation operation);
+        Task<(Operation, Process)> Launch(string processUid, string workbenchUid);
         Task<Operation> Start(int operationId, DateTime startAt);
         Task<Operation> Stop(int operationId);
         Task<IEnumerable<Record>> GetRecords(int operationId, int lastRecordId);
+        Task<bool> GetResult(int operationId);
         Task<IEnumerable<OperationCriterion>> GetCriterion(int operationId, int lastId);
         Task<IEnumerable<OperationCriterion>> GetCriteria(int operationId);
         Task<IEnumerable<OperationHostDevice>> GetOperationDevices(int id);

@@ -66,7 +66,7 @@ namespace Optosense.Edm.Core.Services
 
         public async Task<IEnumerable<Record>> GetRecords(int operationId, int lastRecordId)
         {
-            var recs = await Db.Records
+            var recs = await Db.Records.AsNoTracking()
                 .Include(r => r.Device)
                 //.Include(r => r.Criteria).ThenInclude(c => c.OperationCriterion.AuditCriterion.Zone)
                 .Where(r => r.Device.OperationId == operationId && r.Id > lastRecordId)
@@ -76,7 +76,7 @@ namespace Optosense.Edm.Core.Services
 
         public async Task<IEnumerable<OperationCriterion>> GetCriterion(int operationId, int lastId)
         {
-            var criterion = await Db.OperationCriteria
+            var criterion = await Db.OperationCriteria.AsNoTracking()
                 .Include(c => c.AuditCriterion.Zone)
                 .Where(c => c.OperationId == operationId)
                 .ToListAsync();
@@ -85,7 +85,7 @@ namespace Optosense.Edm.Core.Services
 
         public async Task<IEnumerable<OperationCriterion>> GetCriteria(int operationId)
         {
-            var criteria = await Db.OperationCriteria
+            var criteria = await Db.OperationCriteria.AsNoTracking()
                 .Include(c => c.AuditCriterion.Zone)
                 .Where(c => c.OperationId == operationId)
                 .ToListAsync();
@@ -129,7 +129,7 @@ namespace Optosense.Edm.Core.Services
             //var operation = await Db.Operations.FindAsync(operationId)
             //    ?? throw new EdmException($"Operation with id {operationId} is not found");
             var status = await Status(operationId);
-            if (status.State != OperationState.InProgress && status.State != OperationState.Abandoned)
+            if (status.State != OperationState.InProgress && status.State != OperationState.Faulted)
             {
                 throw new EdmException($"Operation with id {operationId} is not running");
             }
@@ -167,13 +167,13 @@ namespace Optosense.Edm.Core.Services
                     { Cancelled: not null } => OperationState.Cancelled,
                     { Started: not null, Completed: null, Scheduled: null } => OperationState.InProgress,
                     { Scheduled: not null, Started: null, Completed: null } => OperationState.Scheduled,
-                    _ => OperationState.New
+                    _ => OperationState.Idle
                 }
             };
             if (status.State == OperationState.InProgress && DateTime.Now - operation.Started > TimeSpan.FromMinutes(10))
             {
                 // Check if operation is really performing
-                status.State = await _commands.CheckOperationRun(operation.Id) ? status.State : OperationState.Abandoned;
+                status.State = await _commands.CheckOperationRun(operation.Id) ? status.State : OperationState.Faulted;
             }
 
             return status;
@@ -181,7 +181,7 @@ namespace Optosense.Edm.Core.Services
 
         public async Task<IEnumerable<OperationHostDevice>> GetOperationDevices(int id)
         {
-            var devices = await Db.OperationHostDevices
+            var devices = await Db.OperationHostDevices.AsNoTracking()
                 .Include(d => d.HostDevice.Device)
                 .Include(d => d.HostDevice.Host)
                 .Include(d => d.Profile)
@@ -206,6 +206,24 @@ namespace Optosense.Edm.Core.Services
             await Db.SaveChangesAsync();
             Db.Entry(result).State = EntityState.Detached;
             return result;
+        }
+
+        public async Task<(Operation, Process)> Launch(string processUid, string workbenchUid)
+        {
+            var workbench = await Db.Workbenches.AsNoTracking()
+                .Include(w => w.WorkplaceProcess.Process)
+                .FirstOrDefaultAsync(w => w.CommonUid == workbenchUid && w.WorkplaceProcess.Process.CommonUid == processUid) ??
+                throw new EdmException("Workbench for the specified process cannot be found");
+            var operation = await Create(new Operation() { WorkbenchId = workbench.Id });
+
+            return (operation, workbench.WorkplaceProcess.Process);
+        }
+
+        public async Task<bool> GetResult(int operationId)
+        {
+            var invalid = await Db.OperationCriteria.AsNoTracking()
+                .AnyAsync(c => c.OperationId == operationId && !c.Valid);
+            return invalid;
         }
     }
 }

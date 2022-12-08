@@ -6,6 +6,7 @@ namespace Microprojects.Edm.Ui.Main.Models
     public class ProcessViewModel 
     {
         public int Id { get; set; }
+        public string CommonUid { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
         public bool IsActive { get; set; }

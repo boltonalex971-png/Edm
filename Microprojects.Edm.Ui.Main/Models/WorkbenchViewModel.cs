@@ -6,6 +6,7 @@ namespace Microprojects.Edm.Ui.Main.Models
     public class WorkbenchViewModel
     {
         public int Id { get; set; }
+        public string CommonUid { get; set; }
         public int WorkplaceId { get; set; }
         public int WorkplaceProcessId { get; set; }
         public string Name { get; set; }

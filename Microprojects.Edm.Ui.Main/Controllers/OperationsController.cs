@@ -11,6 +11,7 @@ using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Core.Models;
 using Optosense.Edm.Domain.Models;
 using Microprojects.Edm.Ui.Main.Models;
+using Optosense.Edm.Plugins;
 
 namespace Microprojects.Edm.Ui.Main.Controllers
 {
@@ -21,12 +22,14 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         private ILogger<OperationsController> _logger;
         private readonly IMapper _mapper;
         private IOperationService _operationService;
+        private readonly IPluginContainer _plugins;
 
-        public OperationsController(ILogger<OperationsController> logger, IMapper mapper, IOperationService operationService)
+        public OperationsController(ILogger<OperationsController> logger, IMapper mapper, IOperationService operationService, IPluginContainer plugins)
         {
             _logger = logger;
             _mapper = mapper;
             _operationService = operationService;
+            _plugins = plugins;
         }
 
         [HttpGet("{id:int}")]
@@ -44,10 +47,38 @@ namespace Microprojects.Edm.Ui.Main.Controllers
             return operation;
         }
 
+        /// <summary>
+        /// Used to define an appropriate workbench for selected process to create an operation. Required 
+        /// for outer systems integrations.
+        /// </summary>
+        /// <param name="processUid">string representing process UID, common for integrated systems</param>
+        /// <param name="workbechUid">string representing workbench UID, common for integrated systems</param>
+        /// <returns></returns>
+        [HttpGet("launch")]
+        public async Task<OperationLaunchResponse> Launch([FromQuery] string processUid, [FromQuery] string workbenchUid)
+        {
+            var response = new OperationLaunchResponse();
+            try { 
+            var (operation, process) = await _operationService.Launch(processUid, workbenchUid);
+            var basePath = $"{Request.Scheme}://{Request.Host}";
+            var apiPath = $"{basePath}/{Request.PathBase}api/operations";
+            var appPath = _plugins.GetMonitor(process.OperationGuid).Homepage;
+                response.Id = operation.Id;
+                response.UiUrl = $"{basePath}/{appPath}?id={operation.Id}";
+                response.StatusUrl = $"{apiPath}/{operation.Id}/status";
+                response.ValidityUrl = $"{apiPath}/{operation.Id}/result";
+            }
+            catch (Exception e)
+            {
+                response.Error = e.Message;
+            }
+
+           return response;
+        }
+
         [HttpPost("{id:int}/start")]
         public async Task<Operation> Start(int id, [FromBody] DateTime? startAt)
         {
-            
             var operation = await _operationService.Start(id, (startAt ?? DateTime.Now).ToLocalTime());
             return operation;
         }
@@ -67,24 +98,24 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         }
 
         [HttpGet("{id:int}/result")]
-        public async Task<JsonResult> Result(Guid operationId)
+        public async Task<OperationResult> Result(int operationId)
         {
-            return await Task.FromResult(new JsonResult(new[]
+            var invalid = await _operationService.GetResult(operationId);
+            var result = new OperationResult
             {
-                new { Id = Guid.NewGuid(), Status = "Ok" },
-                new { Id = Guid.NewGuid(), Status = "Ok" },
-                new { Id = Guid.NewGuid(), Status = "Broken" },
-                new { Id = Guid.NewGuid(), Status = "Failed" },
-                new { Id = Guid.NewGuid(), Status = "Failed" },
-                new { Id = Guid.NewGuid(), Status = "Ok" }
-            }));
+                IsValid = !invalid,
+            };
+
+            return result;
         }
 
         [HttpGet("running")]
         public async Task<IEnumerable<OperationViewModel>> GetRunningOperations()
         {
-            var ops = await _operationService.Get(o => o.Completed == null && o.Cancelled == null, o => o.Workbench.WorkplaceProcess.Process);
-            return _mapper.Map<IEnumerable<OperationViewModel>>(ops);
+            var ops = await _operationService.Get(
+                o => o.Completed == null && o.Cancelled == null, 
+                o => o.Workbench.WorkplaceProcess.Process);
+            return _mapper.Map<IEnumerable<OperationViewModel>>(ops).OrderByDescending(o => o.Created);
         }
 
         [HttpGet("{operationId:int}/records")]

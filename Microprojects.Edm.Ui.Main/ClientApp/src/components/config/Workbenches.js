@@ -58,6 +58,7 @@ export function WorkbenchDetail({ workbenchId, ...props }) {
                         <h6>Device configurations</h6>
                         <Button type='button' themeColor='primary' icon='play' className='mb-2' onClick={onOperationStart} >Start operation</Button>
                     </div>
+                    {data.commonUid && <p>Common UID: {data.commonUid}</p>}
                     <WorkbenchDevicesTab id={parseInt(id)} processId={data.processId} api={props.api} onDetailSelected={setSub} />
                 </>
             }
@@ -73,6 +74,9 @@ export function WorkbenchDetail({ workbenchId, ...props }) {
                             </div>
                             <div className="mb-3">
                                 <Field name={'description'} component={Input} label={'Description'} />
+                            </div>
+                            <div className="mb-3">
+                                <Field name={'commonUid'} component={Input} label={'Common UID'} />
                             </div>
                         </fieldset>
                     }

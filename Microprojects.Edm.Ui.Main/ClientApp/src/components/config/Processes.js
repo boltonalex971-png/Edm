@@ -73,6 +73,7 @@ export function ProcessDetail({ processId, ...props }) {
                     data={data}
                     content={
                         <div>
+                            {data.commonUid && <p>Common UID: {data.commonUid}</p>}
                         </div>
                     }
                 />
@@ -89,6 +90,9 @@ export function ProcessDetail({ processId, ...props }) {
                             </div>
                             <div className="mb-3">
                                 <Field name={'description'} component={Input} label={'Description'} />
+                            </div>
+                            <div className="mb-3">
+                                <Field name={'commonUid'} component={Input} label={'Common UID'} />
                             </div>
                             <div className="mb-3" style={{ width: '400px' }}>
                                 <Field name={'operationGuid'} label={'Operation'}

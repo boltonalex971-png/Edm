@@ -8,12 +8,12 @@ namespace Optosense.Edm.Core.Models
 {
     public enum OperationState
     {
-        New,
+        Idle,
         Scheduled,
         InProgress,
         Completed,
         Cancelled,
-        Abandoned
+        Faulted
     }
 
     public class OperationStatus
@@ -25,7 +25,7 @@ namespace Optosense.Edm.Core.Models
         /// </summary>
         public double Progress { get; set; }
         /// <summary>
-        /// Estimated operation duration in minutes, usually equals to longest profile
+        /// Estimated operation duration in minutes, usually equals to the longest profile
         /// </summary>
         public int Estimated { get; set; }
         /// <summary>
@@ -33,5 +33,9 @@ namespace Optosense.Edm.Core.Models
         /// </summary>
         public int Elapsed { get; set; }
         public string Message { get; set; }
+        public string Error { get; set; }
+        public DateTime Timestamp { get; set; } = DateTime.Now;
+        public DateTime StateTimestamp { get; set; } = DateTime.Now;
+
     }
 }
