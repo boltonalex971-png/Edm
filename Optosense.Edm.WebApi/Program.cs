@@ -49,7 +49,7 @@ using Optosense.Edm.WebApi.Utils;
 
     builder.Services.AddSingleton<ICache>(new RedisCache(builder.Configuration["Edm:Cache:Default:ConnectionString"]));
     builder.Services.AddGrpc();
-    builder.Services.AddSignalR();
+    //builder.Services.AddSignalR();
     builder.Services.AddPlugins(config =>
     {
         config.BaseDirectory = AppContext.BaseDirectory;
@@ -118,7 +118,7 @@ using Optosense.Edm.WebApi.Utils;
     //{
         app.UseFakeUserInfo();
     //}
-    app.MapHub<OperationHub>("/hubs/operations");
+    //app.MapHub<OperationHub>("/hubs/operations");
     app.UseEndpoints(endpoints =>
     {
         endpoints.MapGrpcService<EdmJobService>();

@@ -1,7 +1,7 @@
 import { Button } from '@progress/kendo-react-buttons';
 import React, { useEffect, useRef } from 'react';
 import { useState } from 'react';
-import { Input } from '@progress/kendo-react-inputs';
+import { Input, NumericTextBox } from '@progress/kendo-react-inputs';
 import { useGet } from './hooks/hooks';
 import { Field, Form, FormElement } from '@progress/kendo-react-form';
 import axios from 'axios';
@@ -129,7 +129,7 @@ export function Monitor({ operationId, apiBase, started }) {
                                 {current.params && current.params.map(p =>
                                     <p key={p} >
                                         <label>{p}</label>
-                                        <Field name={p} component={Input} />
+                                        <Field name={p} component={NumericTextBox} />
                                     </p>
                                 )}
                                 <Button

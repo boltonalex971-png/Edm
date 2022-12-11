@@ -140,7 +140,7 @@ namespace Optosense.Edm.Jobs
                 OperationHostDeviceId = Parameters.OperationHostDevice,
             };
             await Cache.Publish(Parameters.StoreChannel, rec);
-            IDictionary<string, object> output = JsonConvert.DeserializeObject<ExpandoObject>(rec.Parameters ?? "{}");
+            var output = JsonConvert.DeserializeObject<IDictionary<string, object>>(rec.Parameters ?? "{}");
             foreach (var outParam in _outputParams)
             {
                 if (output.ContainsKey(outParam.Key))
@@ -167,9 +167,10 @@ namespace Optosense.Edm.Jobs
             if (expr.Type == ExpressionType.Constant)
             {
                 var (offset, error) = expr.TryEvaluate<int>(_inputParams);
-                await Task.Delay(offset, CancellationToken);
+                // Offset in seconds
+                await Task.Delay(offset * 1000, CancellationToken);
             }
-            else
+            else if (!expr.TryEvaluate<bool>(_inputParams).value)
             {
                 var cancellationSource = new CancellationTokenSource();
                 EventHandler<InputParamArrivedEventArgs> handler = (source, args) =>
@@ -186,6 +187,7 @@ namespace Optosense.Edm.Jobs
                     }
                 };
                 InputParamArrived += handler;
+                // TODO Get task awake to check if the notification missed
                 await Task.Delay(-1, cancellationSource.Token).ContinueWith(t => { });
                 InputParamArrived -= handler;
                 if (CancellationToken.IsCancellationRequested)
