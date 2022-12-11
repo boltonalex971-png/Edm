@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Optosense.Edm.Domain.Models;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
@@ -31,11 +32,16 @@ namespace Optosense.Edm.Utils
             return source.Select(i => Observable.Return<T>(i).Delay(selector(i))).Concat(); //.Merge()
         }
 
-        public static IObservable<T> Pace<T>(this IObservable<T> source, Func<T, Task<bool>> delay)
+        public static IObservable<T> Pace<T>(
+            this IObservable<T> source, 
+            IDeviceDriver driver,
+            Func<T, Task<bool>> delay,
+            Func<IDeviceDriver, T, Task> action)
         {
             return source.Select(i => Observable.Create<T>(async (obs, token) =>
             {
                 var ok = await delay(i);
+                await action(driver, i);
                 obs.OnNext(i);
             })).Concat(); 
         }
@@ -103,19 +109,19 @@ namespace Optosense.Edm.Utils
         public static Task Launch(this IEnumerable<DriverRequest> plan,
             IDeviceDriver driver, 
             Func<DriverRequest, Task<bool>> condition, 
-            Action<IDeviceDriver, DriverRequest> action,
+            Func<IDeviceDriver, DriverRequest, Task> action,
             ILogger logger,
             CancellationToken? cancellationToken = null)
         {
             var token = cancellationToken ?? CancellationToken.None;
             var startedAt = DateTime.Now;
             var task = plan.ToObservable()
-                .Pace(condition)
+                .Pace(driver, condition, action)
                 .ObserveOn(NewThreadScheduler.Default)
                 .Do(
                     onNext: p =>
                     {
-                        action(driver, p);
+                        //await action(driver, p);
                     },
                     onError: e =>
                     {

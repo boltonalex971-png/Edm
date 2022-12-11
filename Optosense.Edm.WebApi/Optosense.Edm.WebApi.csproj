@@ -13,6 +13,7 @@
     <PackageReference Include="Grpc.AspNetCore" Version="2.42.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="6.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.Hosting.WindowsServices" Version="6.0.3" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.Json" Version="7.0.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.1.0" />
     <PackageReference Include="Microsoft.Data.SqlClient.SNI.runtime" Version="4.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.3">
@@ -28,6 +29,7 @@
     <ProjectReference Include="..\Edm\Edm.csproj" />
     <ProjectReference Include="..\Optosense.Edm.Core.AspNet\Optosense.Edm.Core.AspNet.csproj" />
     <ProjectReference Include="..\Optosense.Edm.Infrastructure\Optosense.Edm.Infrastructure.csproj" />
+    <ProjectReference Include="..\Optosense.Edm.Plugins.Operator\Optosense.Edm.Plugins.Operator.csproj" />
   </ItemGroup>
 
   <ItemGroup>

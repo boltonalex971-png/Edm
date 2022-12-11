@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.IO.Ports;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microprojects.Edm;
@@ -13,9 +14,16 @@ using Optosense.Edm.Profiles.Operator;
 namespace Optosense.Edm.Drivers.Operator
 {
     [Driver(OptionsType = typeof(OperatorDriverOptions))]
-    public class OperatorDriver : DriverBase
+    public class OperatorDriver : DriverBase, IDriverWithState, IReactiveDriver
     {
         protected OperatorDriverOptions BoardOptions => (OperatorDriverOptions) Options;
+
+        public Func<DriverResponse, bool, Task>? PushResponse { get; set; }
+
+        private OperatorState? _state;
+        private DateTime _startTs = DateTime.Now;
+        private CancellationTokenSource tokenSource;
+        private DriverResponse _response;
 
         public OperatorDriver() { }
 
@@ -26,32 +34,35 @@ namespace Optosense.Edm.Drivers.Operator
 
         public override string Init()
         {
+            // TODO has to get SignalR channel and create a operator group for the operation
             return OK;
         }
 
         public override async Task<DriverResponse> Execute(DriverRequest req)
         {
-            var command = req.Command;
-            Step? parameters = default;
-            if (!string.IsNullOrEmpty(req.Parameters)) {
-                parameters = JsonConvert.DeserializeObject<Step>(req.Parameters);
-                await StepTrigger(parameters.Condition);
+            // TODO Send the request by SignalR channel
+            if (req != null && req.Parameters != null)
+            {
+                SetState(JsonConvert.DeserializeObject<OperatorState>(req.Parameters));
+                // Wait for response
+                tokenSource = new();
+                await Task.Delay(-1, tokenSource.Token).ContinueWith((t) => { });
+                ClearState();
+                return _response;
             }
 
-            var response = new DriverResponse
-            {
-                Parameters = req.Parameters,
-                Planned = req.Offset,
-                Request = req.Command,
-                State = DriverResponseState.NotCompleted
-            };
-
-            return response;
+            return null;
         }
 
-        private Task StepTrigger(string? condition)
+        private void ClearState()
         {
-            return Task.CompletedTask;
+            _state = null;
+        }
+
+        private void SetState(OperatorState state) 
+        {
+            _state = state;
+            _state.Scheduled = DateTime.Now;
         }
 
         private string SubstituteParameters(string command, ExpandoObject parameters)
@@ -64,6 +75,57 @@ namespace Optosense.Edm.Drivers.Operator
 
             return result;
         }
+
+        public IDriverState GetState()
+        {
+            return _state;
+        }
+
+        public Task HandleResponse(Dictionary<string, object> parameters)
+        {
+            var response = new DriverResponse
+            {
+                Executed = (long)(DateTime.Now - _startTs).TotalMilliseconds,
+                State = DriverResponseState.Ok
+            };
+
+            if (_state == null)
+            {
+                response.Message = "Driver is not expecting any operator action";
+                response.State = DriverResponseState.InvalidResponse;
+            }
+            else
+            {
+                response.Planned = (long)(_state.Scheduled - _startTs).TotalMilliseconds;
+                response.Request = _state.Command;
+                response.Response = DriverResponseState.Ok.ToString();
+                if (response.Executed - response.Planned > _state.ResponseTime * 1000)
+                {
+                    response.State = DriverResponseState.Timeout;
+                }
+            }
+
+            if (parameters != null)
+            {
+                response.Parameters = JsonConvert.SerializeObject(parameters ?? new());
+            }
+
+            //if (PushResponse == null)
+            //{
+            //    throw new EdmException("Driver cannot push the response");
+            //}
+
+            //await PushResponse(response, false);
+            _response = response;
+            tokenSource.Cancel();
+
+            return Task.CompletedTask;
+        }
+    }
+
+    public class OperatorState : Step, IDriverState 
+    { 
+        public DateTime Scheduled { get; set; }
     }
 
     public class OperatorDriverOptions : IDriverOptions

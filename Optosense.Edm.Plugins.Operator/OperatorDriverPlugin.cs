@@ -31,5 +31,12 @@ namespace Optosense.Edm.Drivers.Operator
                     Parameters = JsonConvert.SerializeObject(p)
                 }).ToList();
         }
+
+        public static Guid GetGuid() 
+        {
+            var attr = (DriverPluginAttribute)Attribute
+                .GetCustomAttribute(typeof(OperatorDriverPlugin), typeof(DriverPluginAttribute));
+            return new Guid(attr.Guid); 
+        }
     }
 }

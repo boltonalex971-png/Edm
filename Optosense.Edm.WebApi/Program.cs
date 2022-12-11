@@ -10,6 +10,7 @@ using Microprojects.Edm.Jobs;
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,6 +20,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.EventLog;
 using Optosense.Edm.Core.AspNet;
 using Optosense.Edm.DataAccess;
+using Optosense.Edm.Drivers.Operator;
 using Optosense.Edm.Persistence;
 using Optosense.Edm.WebApi;
 using Optosense.Edm.WebApi.Services;
@@ -47,6 +49,7 @@ using Optosense.Edm.WebApi.Utils;
 
     builder.Services.AddSingleton<ICache>(new RedisCache(builder.Configuration["Edm:Cache:Default:ConnectionString"]));
     builder.Services.AddGrpc();
+    builder.Services.AddSignalR();
     builder.Services.AddPlugins(config =>
     {
         config.BaseDirectory = AppContext.BaseDirectory;
@@ -115,7 +118,7 @@ using Optosense.Edm.WebApi.Utils;
     //{
         app.UseFakeUserInfo();
     //}
-
+    app.MapHub<OperationHub>("/hubs/operations");
     app.UseEndpoints(endpoints =>
     {
         endpoints.MapGrpcService<EdmJobService>();

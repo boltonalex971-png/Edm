@@ -12,6 +12,7 @@ using Optosense.Edm.Core.Models;
 using Optosense.Edm.Domain.Models;
 using Microprojects.Edm.Ui.Main.Models;
 using Optosense.Edm.Plugins;
+using Microprojects.Edm.Jobs;
 
 namespace Microprojects.Edm.Ui.Main.Controllers
 {
@@ -24,7 +25,11 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         private IOperationService _operationService;
         private readonly IPluginContainer _plugins;
 
-        public OperationsController(ILogger<OperationsController> logger, IMapper mapper, IOperationService operationService, IPluginContainer plugins)
+        public OperationsController(
+            ILogger<OperationsController> logger, 
+            IMapper mapper, 
+            IOperationService operationService, 
+            IPluginContainer plugins)
         {
             _logger = logger;
             _mapper = mapper;

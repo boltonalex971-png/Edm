@@ -64,6 +64,8 @@ public class JobContainer : IJobContainer
 
     }
 
+    public IEnumerable<IJob> GetRunningJobs() => RunningTasks.Select(t => t.Job);
+
     public IEnumerable<AvailableTask> GetAvailableTasks()
     {
         return GetAllJobs().Select(c => new AvailableTask()

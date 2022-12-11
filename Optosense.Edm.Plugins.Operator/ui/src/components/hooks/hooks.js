@@ -42,8 +42,8 @@ function useFetch(url, deps, type = requestType.get, data = null) {
                 }
             }
         }
-        /*// Uncomment next line to make reloading visible
-        setState({ loading: true, data: null, error: null })*/
+        // Uncomment next line to make reloading visible
+        setState({ loading: true, data: null, error: null })
         fetchUrl();
         return () => { controller.abort(); }
     }, [url, type, data, deps]);

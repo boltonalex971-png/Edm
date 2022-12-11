@@ -15,7 +15,7 @@ using Optosense.Edm.Core.Contracts;
 namespace Optosense.Edm.Jobs
 {
     [Job(Name = "StartOperation", Lifetime = JobLifetime.LongRunning, Parameters = typeof(StartOperationJobParameters))]
-    public class StartOperationJob : BaseJob
+    public class StartOperationJob : BaseJob, IKnowOperation
     {
         protected StartOperationJobParameters Parameters => (StartOperationJobParameters)JobParameters;
         protected IOperationService OperationService { get; init; }
@@ -95,6 +95,7 @@ namespace Optosense.Edm.Jobs
                 {
                     Driver = operationHostDevice.HostDevice.Device.DriverGuid,
                     DriverOptions = driverOptions,
+                    Operation = Parameters.Operation,
                     OperationHostDevice = operationHostDevice.Id,
                     StartAt = Parameters.StartAt,
                     Profile = operationHostDevice.Profile.TextJson,
@@ -167,6 +168,8 @@ namespace Optosense.Edm.Jobs
 
             return "Ok";
         }
+
+        public int GetOperationId() => Parameters.Operation;
     }
 
     public class StartOperationJobParameters : IJobParameters

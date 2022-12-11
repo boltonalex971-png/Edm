@@ -12,13 +12,14 @@ using System;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Optosense.Edm.Jobs
 {
     [Job(Name = "StartDevice", Lifetime = JobLifetime.LongRunning, Parameters = typeof(StartDeviceJobParameters))]
-    public class StartDeviceJob : BaseJob
+    public class StartDeviceJob : BaseJob, IContainDriver
     {
         public event EventHandler<InputParamArrivedEventArgs> InputParamArrived;
 
@@ -97,7 +98,7 @@ namespace Optosense.Edm.Jobs
             await _executionPlan.Launch(
                 _driver,
                 MeetCondition,
-                async (d, x) => await ExecuteDeviceInstruction(d, x),
+                (d, x) => ExecuteDeviceInstruction(d, x),
                 _logger, CancellationToken)
                 .ContinueWith(t => { }); // To ignore cancel exception
             if (CancellationToken.IsCancellationRequested)
@@ -118,15 +119,18 @@ namespace Optosense.Edm.Jobs
         private async Task ExecuteDeviceInstruction(IDeviceDriver driver, DriverRequest request, bool throwEx = false, int totalRetrials = 0)
         {
             var response = await driver.Execute(request);
-            await PushResponse(response);
+            if (response != null)
+            {
+                await PushResponse(response);
+            }
         }
 
         private async Task PushResponse(DriverResponse response, bool throwEx = false)
         {
             var rec = new Record
             {
-                ScheduledAt = DateTime.Now,
-                ExecutedAt = DateTime.Now,
+                ScheduledAt = _startTime + TimeSpan.FromMilliseconds(response.Planned),
+                ExecutedAt = _startTime + TimeSpan.FromMilliseconds(response.Executed),
                 Request = response.Request,
                 Response = response.Response,
                 IsValid = response.State == DriverResponseState.Ok,
@@ -192,19 +196,26 @@ namespace Optosense.Edm.Jobs
 
             return true;
         }
+
+        public Guid GetDriverGuid() => Parameters.Driver;
+
+        public IDeviceDriver GetDriver() => _driver;
+
+        public int GetOperationId() => Parameters.Operation;
     }
 
     public class StartDeviceJobParameters : IJobParameters
     {
+        [JobParameter(Required = true)]
+        public int OperationHostDevice { get; set; }
+        [JobParameter(Required = true)]
+        public int Operation { get; set; }
         public string StoreChannel { get; set; }
         public string ParametersChannel { get; set; }
         public dynamic DriverOptions { get; set; }
         public string Profile { get; set; }
         public string InputParameters { get; set; }
         public string OutputParameters { get; set; }
-
-        [JobParameter(Required = true)]
-        public int OperationHostDevice { get; set; }
         public Guid Driver { get; set; }
         public DateTime StartAt { get; set; } = DateTime.Now.AddSeconds(10);
     }

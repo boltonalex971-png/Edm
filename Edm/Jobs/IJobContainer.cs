@@ -16,6 +16,7 @@ public interface IJobContainer : IDisposable
     ICollection<CancellableTask> RunningTasks { get; }
     IEnumerable<AvailableTask> GetRunningTasks();
     IEnumerable<AvailableTask> GetAvailableTasks();
+    IEnumerable<IJob> GetRunningJobs();
     Task<ResponseData> ExecuteAsync<T>(IJobParameters parameters = null) where T : IJob;
     Task<ResponseData> ExecuteAsync(Type jobType, IJobParameters parameters = null);
     Task<ResponseData> ExecuteAsync(JobData data);
