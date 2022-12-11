@@ -5,11 +5,14 @@ import { Input } from '@progress/kendo-react-inputs';
 import { useGet } from './hooks/hooks';
 import { Field, Form, FormElement } from '@progress/kendo-react-form';
 import axios from 'axios';
+import { Countdown } from './Countdown';
 
 let monitorInterval, stepInterval;
 
 export function Monitor({ operationId, apiBase, started }) {
     const inputRef = useRef();
+    const [warn, setWarn] = useState(false);
+    const [elapsed, setElapsed] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const [lastId, setLastId] = useState(0);
     const [cache, setCache] = useState([]);
@@ -79,6 +82,8 @@ export function Monitor({ operationId, apiBase, started }) {
             .then((response) => {
                 setCurrent(null);
                 setStep(null);
+                setElapsed(false);
+                setWarn(false);
             })
     };
 
@@ -101,7 +106,12 @@ export function Monitor({ operationId, apiBase, started }) {
                     value={cache.join('\n')}
                 />
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', width: '30%', marginRight: '2rem' }}>
+            <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                width: '30%',
+                marginRight: '2rem'
+            }}>
                 <h3>Current step</h3>
                 {current &&
                     <Form
@@ -115,13 +125,19 @@ export function Monitor({ operationId, apiBase, started }) {
                                     </p>
                                     <small>{current.description}</small>
                                 </div>
+                                <Countdown start={current.responseTime} />
                                 {current.params && current.params.map(p =>
                                     <p key={p} >
                                         <label>{p}</label>
                                         <Field name={p} component={Input} />
                                     </p>
                                 )}
-                                <Button type='submit' title='Completed' icon='check-outline' themeColor='primary' style={{ marginTop: '2rem' }}>Completed</Button>
+                                <Button
+                                    type='submit'
+                                    title='Completed'
+                                    icon='check-outline'
+                                    themeColor='primary'
+                                    style={{ marginTop: '2rem', width: '100%' }}>Completed</Button>
                             </FormElement>
                         )}
                     />
