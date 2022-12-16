@@ -13,6 +13,9 @@ using Optosense.Edm.Domain.Models;
 using Microprojects.Edm.Ui.Main.Models;
 using Optosense.Edm.Plugins;
 using Microprojects.Edm.Jobs;
+using Newtonsoft.Json;
+using Google.Protobuf.WellKnownTypes;
+using System.Reflection;
 
 namespace Microprojects.Edm.Ui.Main.Controllers
 {
@@ -23,17 +26,22 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         private ILogger<OperationsController> _logger;
         private readonly IMapper _mapper;
         private IOperationService _operationService;
+        private ISettingService _settingService;
         private readonly IPluginContainer _plugins;
 
+        private Func<int, string> OperationProcessSettingName = (processId) => $"{nameof(Process).ToLower()}-{processId}";
+
         public OperationsController(
-            ILogger<OperationsController> logger, 
-            IMapper mapper, 
-            IOperationService operationService, 
+            ILogger<OperationsController> logger,
+            IMapper mapper,
+            IOperationService operationService,
+            ISettingService settingService,
             IPluginContainer plugins)
         {
             _logger = logger;
             _mapper = mapper;
             _operationService = operationService;
+            _settingService = settingService;
             _plugins = plugins;
         }
 
@@ -63,11 +71,12 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         public async Task<OperationLaunchResponse> Launch([FromQuery] string processUid, [FromQuery] string workbenchUid)
         {
             var response = new OperationLaunchResponse();
-            try { 
-            var (operation, process) = await _operationService.Launch(processUid, workbenchUid);
-            var basePath = $"{Request.Scheme}://{Request.Host}";
-            var apiPath = $"{basePath}/{Request.PathBase}api/operations";
-            var appPath = _plugins.GetMonitor(process.OperationGuid).Homepage;
+            try
+            {
+                var (operation, process) = await _operationService.Launch(processUid, workbenchUid);
+                var basePath = $"{Request.Scheme}://{Request.Host}";
+                var apiPath = $"{basePath}/{Request.PathBase}api/operations";
+                var appPath = _plugins.GetMonitor(process.OperationGuid).Homepage;
                 response.Id = operation.Id;
                 response.UiUrl = $"{basePath}/{appPath}?id={operation.Id}";
                 response.StatusUrl = $"{apiPath}/{operation.Id}/status";
@@ -78,7 +87,7 @@ namespace Microprojects.Edm.Ui.Main.Controllers
                 response.Error = e.Message;
             }
 
-           return response;
+            return response;
         }
 
         [HttpPost("{id:int}/start")]
@@ -103,12 +112,13 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         }
 
         [HttpGet("{id:int}/result")]
-        public async Task<OperationResult> Result(int operationId)
+        public async Task<OperationResult> Result(int id)
         {
-            var invalid = await _operationService.GetResult(operationId);
+            var status = await _operationService.Status(id);
             var result = new OperationResult
             {
-                IsValid = !invalid,
+                IsValid = status.IsValid,
+                Message = status.Message,
             };
 
             return result;
@@ -118,7 +128,7 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         public async Task<IEnumerable<OperationViewModel>> GetRunningOperations()
         {
             var ops = await _operationService.Get(
-                o => o.Completed == null && o.Cancelled == null, 
+                o => o.Completed == null && o.Cancelled == null,
                 o => o.Workbench.WorkplaceProcess.Process);
             return _mapper.Map<IEnumerable<OperationViewModel>>(ops).OrderByDescending(o => o.Created);
         }
@@ -158,6 +168,41 @@ namespace Microprojects.Edm.Ui.Main.Controllers
             var op = (await _operationService.Get(o => o.Id == id, o => o.Workbench.WorkplaceProcess.Process))
                 .FirstOrDefault();
             return op.Workbench.WorkplaceProcess.Process;
+        }
+
+        [HttpGet("{id:int}/processInfo")]
+        public async Task<ProcessInfo> GetProcessInfo(int id)
+        {
+            var operation = await _operationService
+                .Get(id, o => o.Workbench.WorkplaceProcess.Process);
+            var devices = await _operationService.GetOperationDevices(id);
+            var parameters = devices
+                .SelectMany(d => JsonConvert.DeserializeObject<IEnumerable<string>>(d.Profile.Output ?? "[]"));
+            var settings = await _settingService.Get(
+                operation.Workbench.WorkplaceProcess.Process.OperationGuid,
+                OperationProcessSettingName(operation.Workbench.WorkplaceProcess.ProcessId));
+            var processInfo = new ProcessInfo
+            {
+                Id = operation.Workbench.WorkplaceProcess.ProcessId,
+                Name = operation.Workbench.WorkplaceProcess.Process.Name,
+                Description = operation.Workbench.WorkplaceProcess.Process.Description,
+                Parameters = parameters,
+                Settings = settings
+            };
+
+            return processInfo;
+        }
+
+        [HttpPut("{id:int}/settings")]
+        public async Task<object> SaveOperationSettings(int id, [FromBody] object settings)
+        {
+            var operation = await _operationService
+                .Get(id, o => o.Workbench.WorkplaceProcess.Process);
+            var result = await _settingService.Set(
+                operation.Workbench.WorkplaceProcess.Process.OperationGuid,
+                OperationProcessSettingName(operation.Workbench.WorkplaceProcess.ProcessId),
+                JsonConvert.SerializeObject(settings));
+             return result;
         }
     }
 }

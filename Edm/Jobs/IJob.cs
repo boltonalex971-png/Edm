@@ -11,12 +11,12 @@ namespace Microprojects.Edm.Jobs;
 
 public interface IJob
 {
+    CancellationTokenSource CancellationTokenSource { get; }
     string Name { get; }
     string Description { get; }
     JobLifetime Lifetime { get; }
     IJobParameters JobParameters { get; set; }
     Task<object> ExecuteAsync();
-    Task<object> ExecuteAsync(CancellationToken cancellationToken);
     Dictionary<string, object> GetParameters();
     void SetParameters(string data);
     bool Init();

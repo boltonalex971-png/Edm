@@ -1,0 +1,59 @@
+{
+  "name": "optogen",
+  "homepage": "/apps/optogen",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@popperjs/core": "^2.10.2",
+    "@progress/kendo-date-math": "^1.5.5",
+    "@progress/kendo-drawing": "^1.16.2",
+    "@progress/kendo-licensing": "^1.2.0",
+    "@progress/kendo-data-query": "^1.5.5",
+    "@progress/kendo-react-grid": "~5.8.0",
+    "@progress/kendo-react-dialogs": "~5.8.0",
+    "@progress/kendo-react-animation": "~5.8.0",
+    "@progress/kendo-react-buttons": "~5.8.0",
+    "@progress/kendo-react-dateinputs": "~5.8.0",
+    "@progress/kendo-react-dropdowns": "~5.8.0",
+    "@progress/kendo-react-form": "~5.8.0",
+    "@progress/kendo-react-inputs": "~5.8.0",
+    "@progress/kendo-react-intl": "~5.8.0",
+    "@progress/kendo-react-treeview": "~5.8.0",
+    "@progress/kendo-theme-bootstrap": "^5.12.0",
+    "@telerik/kendo-intl": "^2.3.0",
+    "axios": "^1.2.0",
+    "query-string": "^7.1.1",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "react-router-dom": "^6.2.1",
+    "react-scripts": "5.0.0",
+    "reactstrap": "^9.1.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "sass": "^1.49.7"
+  }
+}

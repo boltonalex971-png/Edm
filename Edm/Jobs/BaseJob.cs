@@ -9,7 +9,8 @@ namespace Microprojects.Edm.Jobs
 {
     public class BaseJob : IJob
     {
-        protected CancellationToken CancellationToken { get; set; } = CancellationToken.None;
+        public CancellationTokenSource CancellationTokenSource { get; } = new CancellationTokenSource();
+        public CancellationToken CancellationToken { get => CancellationTokenSource.Token; }
         public virtual IJobParameters JobParameters { get; set; }
 
         public virtual string Name
@@ -36,12 +37,6 @@ namespace Microprojects.Edm.Jobs
         public virtual Task<object> ExecuteAsync()
         {
             return Task.FromResult((object)"Ok");
-        }
-
-        public virtual Task<object> ExecuteAsync(CancellationToken cancellationToken)
-        {
-            CancellationToken = cancellationToken;
-            return ExecuteAsync();
         }
 
         public virtual Dictionary<string, object> GetParameters()

@@ -60,12 +60,6 @@ namespace Optosense.Edm.Jobs
 
             // Launch devices
             var devices = await OperationService.GetOperationDevices(Parameters.Operation);
-            if (devices.All(d => d.HostDevice.Device.DriverGuid == Guid.Empty))
-            {
-                // Start test operation if all devices of type None
-                var test = new StartTestOperationJob { JobParameters = JobParameters };
-                return await test.ExecuteAsync(CancellationToken);
-            }
 
             // TODO refactor starting device in parallel
             foreach (var operationHostDevice in devices)

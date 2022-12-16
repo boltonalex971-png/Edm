@@ -24,6 +24,7 @@ namespace Optosense.Edm.Core.Models
         /// Operation progress in percents
         /// </summary>
         public double Progress { get; set; }
+        public bool IsValid { get; set; }
         /// <summary>
         /// Estimated operation duration in minutes, usually equals to the longest profile
         /// </summary>

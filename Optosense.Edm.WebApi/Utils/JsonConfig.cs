@@ -16,8 +16,9 @@ namespace Optosense.Edm.WebApi.Utils
         {
             JsonConvert.DefaultSettings = () => new JsonSerializerSettings
             {
-                //ContractResolver = new CustomResolver(),
+                ContractResolver = new CustomResolver(),
                 //PreserveReferencesHandling = PreserveReferencesHandling.None,
+                
                 ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
                 Formatting = Formatting.None,
                 NullValueHandling = NullValueHandling.Ignore
@@ -26,17 +27,22 @@ namespace Optosense.Edm.WebApi.Utils
 
         class CustomResolver : DefaultContractResolver
         {
-            protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization)
-            {
-                JsonProperty prop = base.CreateProperty(member, memberSerialization);
-
-                if (prop.PropertyType.IsClass && prop.PropertyType.IsInstanceOfType(typeof(DomainObject)))
-                {
-                    prop.ShouldSerialize = obj => false;
-                }
-
-                return prop;
+            public CustomResolver() 
+            { 
+                //NamingStrategy = new CamelCaseNamingStrategy();
             }
+            
+            //protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization)
+            //{
+            //    JsonProperty prop = base.CreateProperty(member, memberSerialization);
+
+            //    if (prop.PropertyType.IsClass && prop.PropertyType.IsInstanceOfType(typeof(DomainObject)))
+            //    {
+            //        prop.ShouldSerialize = obj => false;
+            //    }
+
+            //    return prop;
+            //}
         }
     }
 }

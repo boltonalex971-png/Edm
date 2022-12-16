@@ -272,17 +272,15 @@ public class JobContainer : IJobContainer
 
     private int RunLongTask(Type jobType, IJobParameters parameters = null)
     {
-        var tokenSource = new CancellationTokenSource();
-        var token = tokenSource.Token;
-        //var task = job.ExecuteAsync(token);
-        var longTask = new CancellableTask { TokenSource = tokenSource };
+        var longTask = new CancellableTask();
         RunningTasks.Add(longTask);
         var task = Task.Run(async () =>
         {
             using var scope = _services.CreateScope();
             var job = GetScopedJob(scope, jobType, parameters);
             longTask.Job = job;
-            await job.ExecuteAsync(token);
+            longTask.TokenSource = job.CancellationTokenSource;
+            await job.ExecuteAsync();
         });
         longTask.Task = task;
 

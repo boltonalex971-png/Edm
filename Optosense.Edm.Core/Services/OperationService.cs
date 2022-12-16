@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -150,7 +151,7 @@ namespace Optosense.Edm.Core.Services
 
         public async Task<OperationStatus> Status(int operationId)
         {
-            var operation = await Db.Operations.FindAsync(operationId)
+            var operation = await Db.Operations.FirstOrDefaultAsync(o => o.Id == operationId)
                 ?? throw new EdmException($"Operation with id {operationId} is not found");
 
             return await GetStatus(operation);
@@ -173,8 +174,30 @@ namespace Optosense.Edm.Core.Services
             if (status.State == OperationState.InProgress && DateTime.Now - operation.Started > TimeSpan.FromMinutes(10))
             {
                 // Check if operation is really performing
-                status.State = await _commands.CheckOperationRun(operation.Id) ? status.State : OperationState.Faulted;
+                try
+                {
+                    status.State = await _commands.CheckOperationRun(operation.Id) ? status.State : OperationState.Faulted;
+                }
+                catch (Exception ex)
+                {
+                    status.State = OperationState.Faulted;
+                    status.Error = ex.Message;
+                }
             }
+
+            status.StateTimestamp = status.State switch
+            {
+                OperationState.Completed => operation.Completed.Value,
+                OperationState.Cancelled => operation.Cancelled.Value,
+                OperationState.InProgress => operation.Started.Value,
+                OperationState.Scheduled => operation.Scheduled.Value,
+                OperationState.Idle => operation.Created,
+                OperationState.Faulted => DateTime.Now
+            };
+
+            var (valid, message) = await GetResult(operation.Id);
+            status.IsValid = valid && status.State != OperationState.Faulted && status.State != OperationState.Cancelled;
+            status.Message= message;
 
             return status;
         }
@@ -219,11 +242,11 @@ namespace Optosense.Edm.Core.Services
             return (operation, workbench.WorkplaceProcess.Process);
         }
 
-        public async Task<bool> GetResult(int operationId)
+        public async Task<(bool, string)> GetResult(int operationId)
         {
             var invalid = await Db.OperationCriteria.AsNoTracking()
-                .AnyAsync(c => c.OperationId == operationId && !c.Valid);
-            return invalid;
+                .FirstOrDefaultAsync(c => c.OperationId == operationId && !c.Valid);
+            return (invalid?.Valid ?? true, invalid?.Message);
         }
     }
 }

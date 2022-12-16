@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="ui\build\**" />
+    <Compile Remove="ui\node_modules\**" />
+    <EmbeddedResource Include="ui\build\**" />
+    <EmbeddedResource Remove="ui\node_modules\**" />
+    <None Remove="ui\build\**" />
+    <None Remove="ui\node_modules\**" />
+    <None Remove="ui\*.local" />
+    <None Remove="ui\.env.local" />
+    <None Remove="ui\.eslintcache" />
+    <None Remove="ui\.gitignore" />
+    <None Remove="ui\kendo-ui-license.txt" />
+    <None Remove="ui\yarn-error.log" />
+    <None Remove="ui\yarn.lock" />
+    <None Remove="ui\package-lock.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Formatters.Json" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="6.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Edm\Edm.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -11,5 +11,6 @@ namespace Microprojects.Edm.Drivers
     {
         Guid GetDriverGuid();
         IDeviceDriver GetDriver();
+        string GetProfile();
     }
 }

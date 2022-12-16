@@ -74,6 +74,12 @@ namespace Optosense.Edm.Jobs
                     onNext: json =>
                     {
                         var param = JsonConvert.DeserializeObject<KeyValuePair<string, object>>(json.ToString());
+                        if (param.Key == "Stop" && (bool)param.Value) 
+                        { 
+                            CancellationTokenSource.Cancel();
+                            return;
+                        }
+
                         _inputParams[param.Key] = param.Value; //double.Parse(param.Value.ToString()); //param.Value.IsNumber() ? double.Parse(param.Value.ToString()) : param.Value.ToString();
                         InputParamArrived?.Invoke(this, new InputParamArrivedEventArgs
                         {
@@ -150,6 +156,12 @@ namespace Optosense.Edm.Jobs
                 }
             }
 
+            // Complete operation if command "Stop" arrived
+            if (rec.Request == "Stop" && rec.Response == "Ok")
+            {
+                await Cache.Publish(Parameters.ParametersChannel, KeyValuePair.Create(rec.Request, true));
+            }
+
             if (throwEx && !rec.IsValid)
             {
                 throw new EdmException(rec.Message);
@@ -202,6 +214,8 @@ namespace Optosense.Edm.Jobs
         public Guid GetDriverGuid() => Parameters.Driver;
 
         public IDeviceDriver GetDriver() => _driver;
+
+        public string GetProfile() => Parameters.Profile;
 
         public int GetOperationId() => Parameters.Operation;
     }

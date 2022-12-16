@@ -1,0 +1,140 @@
+.desktop {
+    flex: 1;
+    display: flex;
+    align-items: stretch;
+    gap: 0.2rem;
+    min-height: 100%;
+    background-color: darkslategrey;
+    padding: 0.2rem;
+}
+
+.wrapper {
+    display: flex;
+    flex-flow: row wrap;
+    align-items: stretch;
+    gap: 0.2rem;
+    flex-flow: row wrap;
+}
+
+/* We tell all items to be 100% width, via flex-basis */
+/* .wrapper>* {
+    flex: 1 100%;
+} */
+
+@media all and (min-width: 800px) {
+
+    /* We invert order of first sidebar and main
+   * And tell the main element to take twice as much width as the other two sidebars 
+   */
+    .header {
+        flex: 3 0px;
+    }
+
+    .aside-1 {
+        order: 1;
+    }
+
+    .main {
+        order: 2;
+    }
+
+    .aside-2 {
+        order: 3;
+    }
+
+    .footer {
+        order: 4;
+    }
+}
+
+.right {
+    flex: 1;
+
+}
+
+.left {
+    flex: 1;
+    display: flex;
+}
+
+.profile {
+    flex: 3 0 100%;
+    order: 1;
+    background-color: aqua;
+    /* max-height: 60%; */
+    /* overflow-y: auto; */
+}
+
+.param {
+    flex: 1 1;
+    order: 2;
+    display: flex;
+    flex-flow: column;
+    justify-content: center;
+    align-items: center;
+    align-content: center;
+    padding: 0.5rem;
+}
+
+.main-param {
+    @extend .param;
+    background-color: bisque;
+}
+
+.env-param {
+    @extend .param;
+    background-color: rgb(232, 215, 242);
+    min-width: 30%;
+}
+
+.other-param {
+    @extend .param;
+    background-color: cornsilk;
+    min-width: 30%;
+}
+
+.param>p {
+    white-space: nowrap;
+    text-align: center;
+}
+
+.action-window {
+    height: 70vh;
+    width: 70vw;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+
+    .form {
+        flex: 1 1 auto;
+        display: flex;
+        flex-flow: column;
+        justify-content: center;
+        align-items: center;
+        align-content: center;
+
+        p {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        span.value {
+            width: 30vw;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+    }
+
+    .button {
+        //flex: 0.1;
+        //margin-top: 1rem;
+        //height: 4rem;
+
+        button {
+            //width: 50%;
+            height: 5rem;
+            margin-top: 1rem;
+        }
+    }
+}

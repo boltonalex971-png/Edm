@@ -3,7 +3,9 @@ using Microprojects.Edm.Drivers;
 using Microprojects.Edm.Jobs;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Drivers.Operator;
+using Optosense.Edm.Profiles.Operator;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,10 +19,12 @@ namespace Optosense.Edm.Drivers.OpcUa.Controllers
     public class OperatorController : ControllerBase
     {
         private IJobContainer _jobs;
+        private IOperationService _operationService;
 
-        public OperatorController(IJobContainer jobs)
+        public OperatorController(IJobContainer jobs, IOperationService operationService)
         {
             _jobs = jobs;
+            _operationService = operationService;
         }
 
         [HttpGet("steps")]
@@ -45,16 +49,28 @@ namespace Optosense.Edm.Drivers.OpcUa.Controllers
             return true;
         }
 
-        private OperatorDriver? GetDriver(int operationId)
+        [HttpGet("{operationId:int}/profile")]
+        public async Task<IEnumerable<Step>> GetProfile(int operationId)
+        {
+            var devices = await _operationService.GetOperationDevices(operationId);
+            var operatorDevice = devices?.FirstOrDefault(d => d.HostDevice.Device.DriverGuid == OperatorDriverPlugin.GetGuid())
+                ?? throw new EdmException("Operator device cannot be found");
+            var profile = JsonConvert.DeserializeObject<OperatorProfile>(operatorDevice.Profile?.TextJson ?? "[]");
+
+            return profile.OrderBy(p => p.Order);
+        }
+
+        private IContainDriver? GetDeviceJob(int operationId)
         {
             var job = (IContainDriver?)_jobs.GetRunningJobs()
                 .FirstOrDefault(j =>
                     j is IContainDriver jd &&
                     jd.GetDriverGuid() == OperatorDriverPlugin.GetGuid() &&
                     jd.GetOperationId() == operationId);
-                //?? throw new EdmException("Operator driver not found");
-
-            return (OperatorDriver?)job?.GetDriver();
+            //?? throw new EdmException("Operator driver not found");
+            return job;
         }
+
+        private OperatorDriver? GetDriver(int operationId) => (OperatorDriver?)GetDeviceJob(operationId)?.GetDriver();
     }
 }

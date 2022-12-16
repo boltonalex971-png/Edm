@@ -21,11 +21,14 @@ namespace Optosense.Edm.Drivers.OpcUa
 
         public override IEnumerable<DriverRequest> GetPlan(string profileJson, string parameters)
         {
-            var plan = new List<DriverRequest>
-            {
-                new() { Condition = "0", Command="Start" },
-                new() { Condition = "OperationCompleted", Command="Stop" }
-            };
+
+            IEnumerable<DriverRequest> plan = profileJson == null ?
+                new List<DriverRequest>
+                {
+                    new() { Condition = "0", Command="Start" },
+                    new() { Condition = "OperationCompleted", Command="Stop" }
+                } : JsonConvert.DeserializeObject<IEnumerable<DriverRequest>>(profileJson);
+
             return plan;
         }
     }
