@@ -123,6 +123,7 @@ using Optosense.Edm.WebApi.Utils;
     {
         endpoints.MapGrpcService<EdmJobService>();
     });
+    app.MapGet("/status", () => "I AM ALIVE!");
     app.MapSpaPlugins();
 
     await app.RunAsync();
