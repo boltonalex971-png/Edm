@@ -21,7 +21,7 @@ function App({ apiBase }) {
 
     useEffect(() => {
         if (processInfo && !settings) {
-            setSettings(JSON.parse(processInfo.settings));
+            setSettings(JSON.parse(processInfo.settings || '{}'));
         }
     }, [processInfo, settings]);
 
