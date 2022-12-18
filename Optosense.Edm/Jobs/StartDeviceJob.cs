@@ -32,7 +32,10 @@ namespace Optosense.Edm.Jobs
         //private IProfilePlugin _profilePlugin;
         private IEnumerable<DriverRequest> _executionPlan;
         private IDeviceDriver _driver;
+        private IProfilePlugin _profilerPlugin;
         private DateTime _startTime;
+        // List of profile parameters for internal use
+        private Dictionary<string, object> _internalParams = new();
         private Dictionary<string, object> _inputParams = new();
         private Dictionary<string, object> _outputParams;
         private IDisposable _subscriber;
@@ -50,6 +53,7 @@ namespace Optosense.Edm.Jobs
         {
             try
             {
+                _profilerPlugin = _plugins.GetProfile(Parameters.Profiler) ?? throw new EdmException("Profiler plugin not found");
                 _driverPlugin = _plugins.GetDriver(Parameters.Driver) ?? throw new EdmException("Driver plugin not found");
                 //_profilePlugin = _plugins.GetProfile(_driverPlugin.ProfileGuid) ?? throw new EdmException("No profiler found");
                 _driver = _driverPlugin.GetDriver();
@@ -70,6 +74,8 @@ namespace Optosense.Edm.Jobs
 
                 _outputParams = JsonConvert.DeserializeObject<IEnumerable<string>>(Parameters.OutputParameters ?? "[]")
                     .ToDictionary(k => k, e => default(object));
+                _internalParams = _profilerPlugin.GetParameters(Parameters.Profile)
+                    .ToDictionary(k => k, e => default(object));
                 _subscriber = Cache.Subscribe(Parameters.ParametersChannel,
                     onNext: json =>
                     {
@@ -80,13 +86,7 @@ namespace Optosense.Edm.Jobs
                             return;
                         }
 
-                        _inputParams[param.Key] = param.Value; //double.Parse(param.Value.ToString()); //param.Value.IsNumber() ? double.Parse(param.Value.ToString()) : param.Value.ToString();
-                        InputParamArrived?.Invoke(this, new InputParamArrivedEventArgs
-                        {
-                            Param = param.Key,
-                            Value = _inputParams[param.Key],
-                            ArrivedAt = DateTime.Now
-                        });
+                        PushInputParameter(param);
                     });
             }
             catch (Exception e)
@@ -171,12 +171,16 @@ namespace Optosense.Edm.Jobs
             };
             await Cache.Publish(Parameters.StoreChannel, rec);
             var output = JsonConvert.DeserializeObject<IDictionary<string, object>>(rec.Parameters ?? "{}");
-            foreach (var outParam in _outputParams)
+            foreach (var param in output)
             {
-                if (output.ContainsKey(outParam.Key))
+                if (_outputParams.ContainsKey(param.Key))
                 {
-                    _outputParams[outParam.Key] = outParam.Value;
-                    await Cache.Publish(Parameters.ParametersChannel, output.First(p => p.Key == outParam.Key));
+                    // Do not wait pushing parameters
+                    PushOutputParameterAsync(param);
+                }
+                else if(_internalParams.ContainsKey(param.Key))
+                {
+                    PushInputParameter(param);
                 }
             }
 
@@ -190,6 +194,23 @@ namespace Optosense.Edm.Jobs
             {
                 throw new EdmException(rec.Message);
             }
+        }
+
+        private void PushInputParameter(KeyValuePair<string, object> param)
+        {
+            _inputParams[param.Key] = param.Value;
+            InputParamArrived?.Invoke(this, new InputParamArrivedEventArgs
+            {
+                Param = param.Key,
+                Value = _inputParams[param.Key],
+                ArrivedAt = DateTime.Now
+            });
+        }
+
+        private async Task PushOutputParameterAsync(KeyValuePair<string, object> param)
+        {
+            _outputParams[param.Key] = param.Value;
+            await Cache.Publish(Parameters.ParametersChannel, param);
         }
 
         private Task<bool> MeetCondition(DriverRequest req)
@@ -254,6 +275,7 @@ namespace Optosense.Edm.Jobs
         public string ParametersChannel { get; set; }
         public dynamic DriverOptions { get; set; }
         public string Profile { get; set; }
+        public Guid Profiler { get; set; }
         public string InputParameters { get; set; }
         public string OutputParameters { get; set; }
         public Guid Driver { get; set; }

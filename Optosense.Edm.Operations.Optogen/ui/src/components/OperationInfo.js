@@ -48,7 +48,7 @@ export const OperationInfo = ({ settings, started }) => {
                 const stepView = step.command;
                 setSteps(cache => [...cache, stepView]);
             } else if (!stepLoading) {
-                stepInterval = setInterval(() => setStepRefresh(r => !r), 5000);
+                stepInterval = setInterval(() => setStepRefresh(r => !r), 1000);
             }
         }
 

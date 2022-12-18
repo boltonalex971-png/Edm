@@ -93,6 +93,7 @@ namespace Optosense.Edm.Jobs
                     OperationHostDevice = operationHostDevice.Id,
                     StartAt = Parameters.StartAt,
                     Profile = operationHostDevice.Profile.TextJson,
+                    Profiler = operationHostDevice.Profile.ProfilerGuid,
                     StoreChannel = storeChannel,
                     ParametersChannel = parametersChannel,
                     InputParameters = operationHostDevice.Profile.Input,
