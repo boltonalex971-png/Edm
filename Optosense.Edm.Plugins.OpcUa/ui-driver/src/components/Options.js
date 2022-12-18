@@ -4,7 +4,6 @@ import axios from "axios";
 import { Button, Chip, ChipList } from "@progress/kendo-react-buttons";
 import { useLocation } from "react-router-dom";
 import { Field, Form, FormElement } from '@progress/kendo-react-form';
-import { TreeView } from "@progress/kendo-react-treeview";
 import { MultiSelect } from "@progress/kendo-react-dropdowns";
 import { OpcParams } from "./OpcParams";
 import { EndpointContext } from "../Contexts";
@@ -21,7 +20,7 @@ export const Options = ({ guid }) => {
         [location.search]);
     const [endpoint, setEndpoint] = useState(param.options?.endpoint);
     const handleSubmit = (o) => {
-        axios.put(`${param.api}`, { ...o, output });
+        axios.put(`${param.api}`, o);
     };
     const onOutputBind = (bound) => {
         const outParam = output.find(p => p.text === bound.text);
@@ -48,16 +47,32 @@ export const Options = ({ guid }) => {
                             />
                         </div>
                         <div className="mb-1" >
-                            <p>Profile Output Parameters:</p>
-                            <ChipList data={output}
-                                valueField='text'
-                                chip={(chipProps) =>
-                                    <Chip {...chipProps}
-                                        rounded={'small'}
-                                        themeColor={chipProps.dataItem.value ? 'success' : 'base'}
-                                        onClick={() => setCard(chipProps.dataItem.value ? { id: chipProps.dataItem.value, param: chipProps.text } : null)}
+                            <Field name={'output'}
+                                component={(fieldProps) =>
+                                    <MultiSelect {...fieldProps}
+                                        data={param.options.output}
+                                        onChange={(e) => {
+                                            setOutput(e.value);
+                                            fieldProps.onChange(e);
+                                        }}
+                                        textField='text'
+                                        allowCustom={true}
+                                        value={fieldProps.value}//{JSON.parse(fieldProps.value || '[]')}
+                                        tagRender={(tagProps, li) =>
+                                            React.cloneElement(li, { ...li.props, themeColor: tagProps.data[0].value ? 'success' : 'base' }, [
+                                                <span key={tagProps.text}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        e.preventDefault();
+                                                        setCard(tagProps.data[0].value ? { id: tagProps.data[0].value, param: tagProps.text } : null);
+                                                    }}
+                                                >{tagProps.text}</span>,
+                                                li.props.children
+                                            ])
+                                        }
                                     />
                                 }
+                                label='Output Parameters'
                             />
                         </div>
                     </fieldset>
