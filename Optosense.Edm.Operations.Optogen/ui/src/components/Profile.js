@@ -8,14 +8,24 @@ import axios from 'axios';
 import { Countdown } from './Countdown';
 import { useOutletContext } from 'react-router-dom';
 
-export function Profile({ steps }) {
+export function Profile({ steps, params }) {
     const { operationId, apiBase } = useOutletContext();
     const [[profile]] = useGet(`${apiBase}/api/operator/${operationId}/profile`, []);
     return (
-        <div style={{ padding: '0.5rem', fontWeight: 'normal', fontSize: '1rem', color: 'gray' }}>
-            {profile && profile.map((s, i) =>
-                <p key={i} style={{ fontWeight: steps.some(c => c === s.command) ? 'bold' : 'normal' }}>{i + 1}). {s.command}: {s.description}</p>
-            )}
+        <div style={{ padding: '0.5rem', fontSize: '1rem' }}>
+            {profile && profile.map((s, i) => {
+                const isOffset = !isNaN(parseInt(s.condition));
+                const style = steps.some(c => c === s.command) || params[s.command] ?
+                    { fontWeight: 'bold', color: 'black' } :
+                    { fontWeight: 'normal', color: 'gray' };
+                return (
+                    <p key={i} style={style}>
+                        {i + 1}).&nbsp;
+                        ({isOffset ? (s.condition === '0' ? 'immediately' : `in ${s.condition} s`) : `when ${s.condition}`})&nbsp;
+                        {s.command}: {s.description} {s.repeat && `(every ${s.repeat} s)`}
+                    </p>
+                );
+            })}
         </div>
     );
 }

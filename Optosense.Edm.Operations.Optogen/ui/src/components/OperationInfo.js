@@ -81,7 +81,7 @@ export const OperationInfo = ({ settings, started }) => {
             {step && <Step step={step} onSubmit={handleSubmit} />}
             <div className="left wrapper">
                 <div className="profile" style={{ backgroundColor: settings.panels.profile.color }}>
-                    <Profile steps={steps} />
+                    <Profile steps={steps} params={params} />
                 </div>
                 {settings.params.filter(p => p.panel === 'mainParams').map(p =>
                     <Parameter key={p.name} className='main-param' settings={p}

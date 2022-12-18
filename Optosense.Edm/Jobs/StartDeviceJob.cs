@@ -124,10 +124,34 @@ namespace Optosense.Edm.Jobs
 
         private async Task ExecuteDeviceInstruction(IDeviceDriver driver, DriverRequest request, bool throwEx = false, int totalRetrials = 0)
         {
-            var response = await driver.Execute(request);
-            if (response != null)
+            // cyclic commands here: add repeat interval and stop condition to DriverRequest
+            if (request.Repeat != null && request.Repeat > 0)
             {
-                await PushResponse(response);
+                var tokenSource = new CancellationTokenSource();
+                var task = Task.Factory.StartNew(async () =>
+                {
+                    do
+                    {
+                        var response = await driver.Execute(request);
+                        if (response != null)
+                        {
+                            await PushResponse(response);
+                        }
+
+                        await Task.Delay(request.Repeat.Value * 1000, tokenSource.Token);
+                    } while (!tokenSource.Token.IsCancellationRequested);
+                });
+                await MeetCondition(request.Until);
+                tokenSource.Cancel();
+                await task.ContinueWith((t) => { });
+            }
+            else
+            {
+                var response = await driver.Execute(request);
+                if (response != null)
+                {
+                    await PushResponse(response);
+                }
             }
         }
 

@@ -6,12 +6,6 @@ using System.Threading.Tasks;
 
 namespace Optosense.Edm.Profiles.Operator
 {
-    public enum OperatorAction
-    {
-        Get,
-        Set
-    }
-    
     public class OperatorProfile : List<Step>
     {
     }
@@ -19,10 +13,6 @@ namespace Optosense.Edm.Profiles.Operator
     public class Step
     {
         public int Order { get; set; }
-        /// <summary>
-        /// Define what kind of operator's action required. Can be a parameter request or instructions
-        /// </summary>
-        public OperatorAction Action { get; set; }
         /// <summary>
         /// If the action is a parameter request, specifies the list of required parameters in JSON array format
         /// </summary>
@@ -36,6 +26,7 @@ namespace Optosense.Edm.Profiles.Operator
         public string Command { get; set; }
         public string Description { get; set; }
         public int ResponseTime { get; set; }
+        public int? Repeat { get; set; }
     }
 }
 

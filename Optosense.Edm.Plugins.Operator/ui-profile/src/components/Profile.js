@@ -33,8 +33,9 @@ export const Profile = (props) => {
                         <GridColumn field='condition' title='Condition' width={150} />
                         <GridColumn field='command' title='Command' />
                         <GridColumn field='description' title='Description' />
-                        <GridColumn field='responseTime' title='Response Time (sec)' editor='numeric' width={150} />
-                        <GridColumn field='action' title='Operator Action' width={150} editable={true}
+                        <GridColumn field='responseTime' title='Response Time, s' editor='numeric' width={150} />
+                        <GridColumn field='repeat' title='Repeat every, s' editor='numeric' width={150} />
+                        {/* <GridColumn field='action' title='Operator Action' width={150} editable={true}
                             cell={(cellProps) =>
                                 <DropDownCell {...cellProps}
                                     getData={() => actions}
@@ -44,7 +45,7 @@ export const Profile = (props) => {
                                     fieldId='action'
                                 />
                             }
-                        />
+                        /> */}
                         <GridColumn field='parameters' title='Output params' width={200}
                             cell={(cellProps) =>
                                 <>

@@ -21,15 +21,25 @@ namespace Optosense.Edm.Drivers.Operator
 
         public override IEnumerable<DriverRequest> GetPlan(string profileJson, string parameters)
         {
-            var profile = JsonConvert.DeserializeObject<OperatorProfile>(profileJson);
-            return profile
+            var profile = JsonConvert.DeserializeObject<OperatorProfile>(profileJson)?
                 .OrderBy(p => p.Order)
-                .Select((p, i) => new DriverRequest
+                .ToList() ?? new OperatorProfile();
+
+            for (int i = 0; i < profile.Count; i++)
+            {
+                var request = new DriverRequest
                 {
-                    Command = p.Action.ToString(),
-                    Condition = p.Condition,
-                    Parameters = JsonConvert.SerializeObject(p)
-                }).ToList();
+                    Command = profile[i].Command,
+                    // if previous step is repeatable, start this step write after the previous one completes
+                    Condition =  i > 0 && profile[i - 1].Repeat != null ? "0" : profile[i].Condition,
+                    Parameters = JsonConvert.SerializeObject(profile[i]),
+                    Repeat = profile[i].Repeat,
+                    // Take until condition from the next step or continue until operation stops
+                    Until = i < profile.Count - 1 ? profile[i + 1].Condition : "Stop"
+                };
+
+                yield return request;
+            }
         }
 
         public static Guid GetGuid() 

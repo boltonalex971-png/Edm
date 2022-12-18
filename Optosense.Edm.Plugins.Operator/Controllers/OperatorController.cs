@@ -27,13 +27,6 @@ namespace Optosense.Edm.Drivers.OpcUa.Controllers
             _operationService = operationService;
         }
 
-        [HttpGet("steps")]
-        public async Task<IEnumerable<object>> GetNodes([FromQuery]string token)
-        {
-            var result = _jobs.GetRunningTasks();
-            return await Task.FromResult(result);
-        }
-
         [HttpGet("{operationId:int}/state")]
         public OperatorState? GetOperatorState(int operationId)
         {

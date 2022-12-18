@@ -17,7 +17,7 @@ export const Options = ({ guid }) => {
     const [param] = useState(JSON.parse(search.get('a')), [location.search]);
     const [output, setOutput] = useState(
         (param.output || [])
-            .map(el => ({ text: el, value: param.options?.output ? param.options.output.find(p => p.text === el).value : null })),
+            .map(el => ({ text: el, value: param.options?.output ? param.options.output.find(p => p.text === el)?.value : null })),
         [location.search]);
     const [endpoint, setEndpoint] = useState(param.options?.endpoint);
     const handleSubmit = (o) => {

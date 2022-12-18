@@ -22,7 +22,7 @@ namespace Optosense.Edm.Drivers.Operator
 
         private OperatorState? _state;
         private DateTime _startTs = DateTime.Now;
-        private CancellationTokenSource tokenSource;
+        private CancellationTokenSource _tokenSource;
         private DriverResponse _response;
 
         public OperatorDriver() { }
@@ -45,8 +45,8 @@ namespace Optosense.Edm.Drivers.Operator
             {
                 SetState(JsonConvert.DeserializeObject<OperatorState>(req.Parameters));
                 // Wait for response
-                tokenSource = new();
-                await Task.Delay(-1, tokenSource.Token).ContinueWith((t) => { });
+                _tokenSource = new();
+                await Task.Delay(-1, _tokenSource.Token).ContinueWith((t) => { });
                 ClearState();
                 return _response;
             }
@@ -99,25 +99,17 @@ namespace Optosense.Edm.Drivers.Operator
                 response.Planned = (long)(_state.Scheduled - _startTs).TotalMilliseconds;
                 response.Request = _state.Command;
                 response.Response = DriverResponseState.Ok.ToString();
+                var extendedParameters = parameters ?? new Dictionary<string, object>();
+                extendedParameters[_state.Command] = true;
+                response.Parameters = JsonConvert.SerializeObject(extendedParameters);
                 if (response.Executed - response.Planned > _state.ResponseTime * 1000)
                 {
                     response.State = DriverResponseState.Timeout;
                 }
             }
 
-            if (parameters != null)
-            {
-                response.Parameters = JsonConvert.SerializeObject(parameters ?? new());
-            }
-
-            //if (PushResponse == null)
-            //{
-            //    throw new EdmException("Driver cannot push the response");
-            //}
-
-            //await PushResponse(response, false);
             _response = response;
-            tokenSource.Cancel();
+            _tokenSource.Cancel();
 
             return Task.CompletedTask;
         }
