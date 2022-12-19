@@ -10,6 +10,7 @@ import { OperationMenu } from "./components/OperationMenu";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Config } from "./components/Config";
 import { useGet } from "./components/hooks/hooks";
+import { defaultOptions } from "./components/DefaultOptions";
 
 function App({ apiBase }) {
     // const location = useLocation();
@@ -21,7 +22,7 @@ function App({ apiBase }) {
 
     useEffect(() => {
         if (processInfo && !settings) {
-            setSettings(JSON.parse(processInfo.settings || '{}'));
+            setSettings(processInfo.settings && JSON.parse(processInfo.settings) || defaultOptions);
         }
     }, [processInfo, settings]);
 

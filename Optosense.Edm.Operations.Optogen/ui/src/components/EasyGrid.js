@@ -3,18 +3,25 @@ import PropTypes from 'prop-types';
 import { Grid, GridColumn, GridToolbar } from '@progress/kendo-react-grid';
 import { Button, ButtonGroup } from '@progress/kendo-react-buttons';
 
+const getId = () => Math.floor(Math.random() * 1000000);
+const editField = '_inEdit';
+const expandedField = '_expanded';
+const idField = '_id';
+
 export const EasyGrid = (props) => {
-    const editField = 'inEdit';
-    const expandedField = 'expanded';
-    const [data, setData] = useState(props.data.sort((a, b) => (a.order || 0) - (b.order || 0)));
+    const [data, setData] = useState(props.data
+        .map(d => ({ [idField]: getId(), ...d }))
+        .sort((a, b) => (a.order || 0) - (b.order || 0)));
     const [origin, setOrigin] = useState();
-    const dataChange = (d) =>
+    const dataChange = (d) => {
+        setData(d);
         props.dataChange(d.map(i => {
-            const { inEdit, expanded, ...item } = i;
+            const { [editField]: _1, [expandedField]: _2, [idField]: _3, ...item } = i;
             return item;
         }));
+    };
     const expandChange = e => {
-        data.find(i => i.id === e.dataItem.id).expanded = e.value;
+        data.find(i => i[idField] === e.dataItem[idField])[expandedField] = e.value;
         setData([...data]);
     };
     const addNew = () => {
@@ -22,43 +29,43 @@ export const EasyGrid = (props) => {
         setData([newDataItem, ...data]);
     };
     const itemChange = e => {
-        data.find(i => i.id === e.dataItem.id)[e.field] = e.value;
+        data.find(i => i[idField] === e.dataItem[idField])[e.field] = e.value;
         setData([...data]);
     };
     const remove = dataItem => {
-        const upd = data.filter(i => i.id !== dataItem.id);
-        setData(upd);
+        const upd = data.filter(i => i[idField] !== dataItem[idField]);
+        //setData(upd);
         dataChange(upd);
     };
     const add = dataItem => {
-        dataItem[editField] = null;
-        dataItem.id = Math.round(Math.random() * 1000000);
-        setData([...data])
-        dataChange(data);
+        dataItem[editField] = false;
+        dataItem[idField] = getId();
+        //setData([...data])
+        dataChange([...data]);
     };
     const update = dataItem => {
         dataItem[editField] = null;
         const sorted = data.sort((a, b) => (a.order || 0) - (b.order || 0));
-        setData([...sorted]);
-        dataChange(data);
+        //setData([...sorted]);
+        dataChange([...sorted]);
     };
     const discard = dataItem => {
-        setData(data.filter(i => i.id !== dataItem.id));
+        setData(data.filter(i => i[idField] !== dataItem[idField]));
     };
     const cancel = dataItem => {
-        const index = data.findIndex(i => i.id === dataItem.id);
+        const index = data.findIndex(i => i[idField] === dataItem[idField]);
         data[index] = origin;
         setData([...data]);
     };
     const enterEdit = dataItem => {
         setOrigin({ ...dataItem, [editField]: null });
-        setData(data.map(i => ({ ...i, [editField]: i.id === dataItem.id })));
+        setData(data.map(i => ({ ...i, [editField]: i[idField] === dataItem[idField] })));
     };
     const detailsChanged = (dataItem) => {
-        const index = data.findIndex(i => i.id === dataItem.id);
+        const index = data.findIndex(i => i[idField] === dataItem[idField]);
         data[index] = dataItem;
-        setData([...data]);
-        dataChange(data);
+        //setData([...data]);
+        dataChange([...data]);
     };
     const commandCell = props => (
         <CommandCell
@@ -78,7 +85,7 @@ export const EasyGrid = (props) => {
             {data &&
                 <Grid data={data}
                     detail={props.details && ((detailProps) => props.details({ dataChanged: detailsChanged, ...detailProps }))}
-                    editField={editField} expandField={expandedField}
+                    id={idField} editField={editField} expandField={expandedField}
                     onExpandChange={expandChange}
                     onItemChange={itemChange}
                     scrollable='none'
@@ -105,8 +112,8 @@ EasyGrid.propTypes = {
 
 const CommandCell = props => {
     const { dataItem } = props;
-    const inEdit = dataItem[props.editField];
-    const isNewItem = dataItem.id === undefined;
+    const inEdit = dataItem[editField];
+    const isNewItem = dataItem[idField] === undefined;
 
     return inEdit ? (
         <td className="k-command-cell" width={100}>
