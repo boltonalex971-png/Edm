@@ -19,7 +19,8 @@ export const TabGrid = (props) => {
                 `}
             </style>
 
-            <Grid scrollable='none' {...props} >
+            <Grid scrollable='none' {...props}
+                headerCellRender={(_, headerProps) => <td style={{ fontWeight: 'bolder' }}>{headerProps.title}</td>}>
             </Grid>
         </>
     );

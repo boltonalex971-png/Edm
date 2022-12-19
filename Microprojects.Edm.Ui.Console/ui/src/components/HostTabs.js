@@ -12,11 +12,11 @@ HostTabs.propTypes = {
 }
 
 export function HostTabs(props) {
-    const [href] = useState(process.env.REACT_APP_API_URL || window.location.href, []);
+    const [href] = useState(process.env.REACT_APP_API_URL || window.location.origin);
     const [selected, setSelected] = useState(0);
     return (
         <TabStrip selected={selected} onSelect={(e) => setSelected(e.selected)}>
-            <TabStripTab title={'Tasks'} >
+            <TabStripTab title={'Jobs'} >
                 <TasksTab href={href} />
             </TabStripTab>
             <TabStripTab title={'Drivers'} >

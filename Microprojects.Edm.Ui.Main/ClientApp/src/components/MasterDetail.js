@@ -57,7 +57,10 @@ export function MasterDetail(props) {
                             />
                         </Route>
                         <Route path={`${path}/:id`}>
-                            {props.detail}
+                            <>
+                                {props.detail}
+                                <div style={{ height: '40vh' }}>{ /*div to avoid ui jerking when switching cards at bottom*/}</div>
+                            </>
                         </Route>
                     </Switch>
                 </SmartScrollContent>
