@@ -101,7 +101,7 @@ namespace Optosense.Edm.Drivers.OpcUa
             Subscription.AddItems(list);
 
             Session.AddSubscription(Subscription);
-            Subscription.Create();
+            Subscription. Create();
 
             return OK;
         }
@@ -110,10 +110,16 @@ namespace Optosense.Edm.Drivers.OpcUa
         {
             if (Subscription != null)
             {
+                Subscription.Delete(true);
                 Session.RemoveSubscription(Subscription);
             }
 
             Session.Close();
+            if (!Session.Disposed) 
+            {
+                Session.Dispose();
+            }
+
             return OK;
         }
 
