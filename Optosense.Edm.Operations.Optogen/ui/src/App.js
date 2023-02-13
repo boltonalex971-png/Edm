@@ -51,7 +51,7 @@ function App({ apiBase }) {
                     settings && <OperationInfo settings={settings} started={started} /> || 'Loading...'
                 } />
                 <Route path='config' element={
-                    settings && <Config settings={settings} setSettings={setSettings} /> || 'Loading...'
+                    settings && <Config settings={settings} setSettings={setSettings} outputs={processInfo.parameters} /> || 'Loading...'
                 } />
             </Route>
         </Routes>

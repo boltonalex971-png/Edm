@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { DropDownList } from '@progress/kendo-react-dropdowns';
+import { ComboBox, DropDownList } from '@progress/kendo-react-dropdowns';
 import { GridCell } from '@progress/kendo-react-grid';
 import { Input } from '@progress/kendo-react-inputs';
 
@@ -43,7 +43,7 @@ export const DropDownCell = ({ getData, id, text, fieldName, fieldId, onClick, e
     const dataValue = dataItem[field];
     const list = (getData && getData()) || [];
     let value = list.find(c => c[id] === dataValue);
-    if (getData && dataItem.inEdit && editable) {
+    if (getData && dataItem._inEdit && editable) {
         content = <DropDownList
             onChange={handleChange}
             value={value}
@@ -93,7 +93,7 @@ export const LinkTextCell = ({ fieldId, onClick, template, editable = true, ...p
     let content;
     const { dataItem, field } = props;
     const value = template || dataItem[field];
-    if (dataItem.inEdit) {
+    if (dataItem._inEdit) {
         content = editable ?
             <Input onChange={handleChange} value={value} /> :
             <span />;
@@ -122,3 +122,33 @@ LinkTextCell.propTypes = {
     editable: PropTypes.bool
 }
 
+export const ComboBoxCell = ({ data, editable = true, ...props }) => {
+    const handleChange = (e) => {
+        const event = {
+            dataItem: props.dataItem, //e.value,
+            field: props.field,
+            syntheticEvent: e.syntheticEvent,
+            value: e.target.value
+        };
+        props.onChange(event);
+    }
+    let content;
+    const { dataItem, field } = props;
+    const value = dataItem[field];
+    console.log('props :>> ', props);
+    if (dataItem._inEdit && editable) {
+        content = <ComboBox
+            onChange={handleChange}
+            value={value}
+            data={data}
+        />;
+    } else {
+        content = <span>{value}</span>;
+    }
+
+    return (
+        <td style={{ whiteSpace: 'nowrap' }}>
+            {content}
+        </td>
+    )
+}

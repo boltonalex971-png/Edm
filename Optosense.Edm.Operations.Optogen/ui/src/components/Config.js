@@ -2,11 +2,11 @@ import React from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { GridColumn } from '@progress/kendo-react-grid';
 import { EasyGrid } from './EasyGrid';
-import { ColorPicker, NumericTextBox } from '@progress/kendo-react-inputs';
-import { DropDownCell } from './DropDownCell';
+import { ColorPicker } from '@progress/kendo-react-inputs';
+import { ComboBoxCell, DropDownCell } from './DropDownCell';
 import axios from 'axios';
 
-export function Config({ settings, setSettings }) {
+export function Config({ settings, setSettings, outputs }) {
     const { apiBase, operationId } = useOutletContext();
     const saveSettings = (s) => {
         axios.put(`${apiBase}/api/operations/${operationId}/settings`, s);
@@ -61,7 +61,11 @@ export function Config({ settings, setSettings }) {
                 dataChange={paramsChanged}
             >
                 <GridColumn field='order' title='Order' width={120} editor='numeric' />
-                <GridColumn field='name' title='Name' />
+                <GridColumn field='name' title='Name'
+                    cell={(cellProps) =>
+                        <ComboBoxCell {...cellProps} data={outputs} value={cellProps.dataItem.value} />
+                    }
+                />
                 <GridColumn field='title' title='Title' />
                 <GridColumn field='prefix' title='Prefix' />
                 <GridColumn field='units' title='Units' />
