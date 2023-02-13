@@ -16,7 +16,7 @@ export const Options = ({ guid }) => {
     const [param] = useState(JSON.parse(search.get('a')), [location.search]);
     const [output, setOutput] = useState(
         (param.output || [])
-            .map(el => ({ text: el, value: param.options?.output ? param.options.output.find(p => p.text === el)?.value : null })),
+            .map(el => ({ text: el, value: (param.options || []).output.find(p => p.text === el)?.value || null })),
         [location.search]);
     const [endpoint, setEndpoint] = useState(param.options?.endpoint);
     const handleSubmit = (o) => {
@@ -31,7 +31,7 @@ export const Options = ({ guid }) => {
     return (
         <Form
             key={1}
-            initialValues={param.options}
+            initialValues={{ output: output, endpoint: param.options.endpoint }}
             onSubmit={handleSubmit}
             render={(formRenderProps) => (
                 <FormElement>
@@ -50,14 +50,14 @@ export const Options = ({ guid }) => {
                             <Field name={'output'}
                                 component={(fieldProps) =>
                                     <MultiSelect {...fieldProps}
-                                        data={param.options.output}
+                                        data={param.output.filter(o => !output.some(a => a.text === o)).map(el => ({ text: el }))}
                                         onChange={(e) => {
                                             setOutput(e.value);
                                             fieldProps.onChange(e);
                                         }}
                                         textField='text'
                                         allowCustom={true}
-                                        value={fieldProps.value}//{JSON.parse(fieldProps.value || '[]')}
+                                        value={output}//{JSON.parse(fieldProps.value || '[]')}
                                         tagRender={(tagProps, li) =>
                                             React.cloneElement(li, { ...li.props, themeColor: tagProps.data[0].value ? 'success' : 'base' }, [
                                                 <span key={tagProps.text}
