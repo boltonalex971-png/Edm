@@ -30,8 +30,8 @@ export const OperationInfo = ({ settings, started }) => {
             const parameters = JSON.parse(r.parameters || '{}');
             Object.keys(parameters).forEach(k => {
                 paramsChanged = true;
-                const currValue = Math.round(parameters[k] * 100) / 100;
-                params[k] = currValue;
+                // const currValue = Math.round(parameters[k] * 100) / 100;
+                params[k] = parameters[k]; //currValue;
             });
         });
         if (paramsChanged) {
