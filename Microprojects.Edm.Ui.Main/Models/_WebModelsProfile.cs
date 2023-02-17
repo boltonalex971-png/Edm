@@ -75,11 +75,12 @@ namespace Microprojects.Edm.Ui.Main.Models
             CreateMap<WorkbenchWorkplaceHostDevice, WorkbenchDeviceConfigViewModel>()
                 .ForMember(d => d.DeviceId, o => o.MapFrom(s => s.WorkplaceHostDevice.HostDevice.DeviceId))
                 .ForMember(d => d.DeviceName, o => o.MapFrom(s => s.WorkplaceHostDevice.HostDevice.Device.Name))
+                .ForMember(d => d.ProfileName, o => o.MapFrom(s => s.Profile.Name))
                 .ForMember(d => d.HostName, o => o.MapFrom(s => s.WorkplaceHostDevice.HostDevice.Host.Name))
                 .ForMember(d => d.DriverGuid, o => o.MapFrom(s => s.WorkplaceHostDevice.HostDevice.Device.DriverGuid))
+                .ForMember(d => d.ProfilerGuid, o => o.MapFrom(s => s.Profile.ProfilerGuid))
                 .ForMember(d => d.DriverName, o => o.Ignore())
-                .ForMember(d => d.ProfilerName, o => o.Ignore())
-                .ForMember(d => d.ProfilerGuid, o => o.Ignore());
+                .ForMember(d => d.ProfilerName, o => o.Ignore());
             CreateMap<WorkbenchDeviceConfigViewModel, WorkbenchWorkplaceHostDevice>();
 
             CreateMap<HierarchyItemViewModel, HierarchyItemViewModel>();

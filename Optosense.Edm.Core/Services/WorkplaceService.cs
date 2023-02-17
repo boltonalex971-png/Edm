@@ -156,6 +156,7 @@ namespace Optosense.Edm.Core.Services
             var result = await Db.WorkbenchDeviceConfigurations
                 .Include(d => d.WorkplaceHostDevice.HostDevice.Device)
                 .Include(d => d.WorkplaceHostDevice.HostDevice.Host)
+                .Include(d => d.Profile)
                 .Where(d => d.WorkbenchId == workbenchId)
                 .ToListAsync();
             return result;

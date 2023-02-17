@@ -262,10 +262,9 @@ namespace Microprojects.Edm.Ui.Main.Controllers
             foreach (var dev in result)
             {
                 var driver = _plugins.GetDriver(dev.DriverGuid);
-                var profiler = _plugins.GetProfile(driver?.ProfileGuid ?? Guid.Empty);
+                var profiler = _plugins.GetProfile(dev.ProfilerGuid);
                 dev.DriverName = driver?.Name;
-                dev.DriverName = driver?.Homepage;
-                dev.ProfilerGuid = driver?.ProfileGuid ?? Guid.Empty;
+                dev.DriverHomepage = driver?.Homepage;
                 dev.ProfilerName = profiler?.Name;
                 dev.ProfilerHomepage = profiler?.Homepage;
             }

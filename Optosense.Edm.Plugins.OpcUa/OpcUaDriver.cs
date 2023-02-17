@@ -125,14 +125,14 @@ namespace Optosense.Edm.Drivers.OpcUa
 
         private void OnNotification(MonitoredItem item, MonitoredItemNotificationEventArgs e)
         {
-            var outputName = OpcUaOptions.Output.FirstOrDefault(o => o.Value == item.StartNodeId.ToString())?.Text ??
-                throw new ArgumentException("Cannot translate to output parameter", item.DisplayName);
+            //var outputName = OpcUaOptions.Output.FirstOrDefault(o => o.Value == item.StartNodeId.ToString())?.Text ??
+            //    throw new ArgumentException("Cannot translate to output parameter", item.DisplayName);
             foreach (var value in item.DequeueValues())
             {
                 if (PushResponse is not null)
                 {
                     var param = new ExpandoObject();
-                    param.TryAdd(outputName, value.Value);
+                    param.TryAdd(item.DisplayName, value.Value);
                     var response = new DriverResponse
                     {
                         Executed = (long)(value.SourceTimestamp - StartTimestamp).TotalMilliseconds,
@@ -140,7 +140,7 @@ namespace Optosense.Edm.Drivers.OpcUa
                         Parameters = JsonConvert.SerializeObject(param),
                         State = DriverResponseState.Ok,
                         Request = item.DisplayName,
-                        Response = $"{outputName} = \"{value.Value}\""
+                        Response = $"{item.DisplayName} = \"{value.Value}\""
                     };
                     PushResponse(response, false);
                 }

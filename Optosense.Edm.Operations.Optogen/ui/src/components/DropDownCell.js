@@ -135,7 +135,6 @@ export const ComboBoxCell = ({ data, editable = true, ...props }) => {
     let content;
     const { dataItem, field } = props;
     const value = dataItem[field];
-    console.log('props :>> ', props);
     if (dataItem._inEdit && editable) {
         content = <ComboBox
             onChange={handleChange}

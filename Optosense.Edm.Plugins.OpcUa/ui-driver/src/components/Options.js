@@ -16,11 +16,11 @@ export const Options = ({ guid }) => {
     const [param] = useState(JSON.parse(search.get('a')), [location.search]);
     const [output, setOutput] = useState(
         (param.output || [])
-            .map(el => ({ text: el, value: (param.options || []).output.find(p => p.text === el)?.value || null })),
+            .map(el => ({ text: el, value: param.options?.output?.find(p => p.text === el)?.value || null })),
         [location.search]);
     const [endpoint, setEndpoint] = useState(param.options?.endpoint);
     const handleSubmit = (o) => {
-        axios.put(`${param.api}`, o);
+        axios.put(`${param.api}`, { ...o, output });
     };
     const onOutputBind = (bound) => {
         const outParam = output.find(p => p.text === bound.text);
@@ -33,6 +33,7 @@ export const Options = ({ guid }) => {
             key={1}
             initialValues={{ output: output, endpoint: param.options.endpoint }}
             onSubmit={handleSubmit}
+            ignoreModified={true}
             render={(formRenderProps) => (
                 <FormElement>
                     <fieldset className={"k-form-fieldset"}>
@@ -56,7 +57,7 @@ export const Options = ({ guid }) => {
                                             fieldProps.onChange(e);
                                         }}
                                         textField='text'
-                                        allowCustom={true}
+                                        //allowCustom={true}
                                         value={output}//{JSON.parse(fieldProps.value || '[]')}
                                         tagRender={(tagProps, li) =>
                                             React.cloneElement(li, { ...li.props, themeColor: tagProps.data[0].value ? 'success' : 'base' }, [

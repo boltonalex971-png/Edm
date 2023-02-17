@@ -44,7 +44,7 @@ export function WorkbenchDevicesTab({ id, api, processId, onDetailSelected }) {
             <GridColumn title='Profile' field='profileId' editable={true} width={200}
                 cell={(cellProps) =>
                     <DropDownCell {...cellProps}
-                        getData={() => profilers} id='id' text='name' fieldId='profileId'
+                        getData={() => profilers} id='id' text='name' fieldId='profileId' fieldName='profileName'
                         onClick={(profileId) => onDetailSelected(
                             <ProfileDetail
                                 profileId={profileId}
@@ -59,7 +59,7 @@ export function WorkbenchDevicesTab({ id, api, processId, onDetailSelected }) {
                 <GridColumn title='Device' field='workplaceHostDeviceId' editable={true} width={200}
                     cell={(cellProps) =>
                         <DropDownCell {...cellProps}
-                            getData={() => devices} id='id' text='device' fieldId='deviceId'
+                            getData={() => devices} id='id' text='device' fieldId='deviceId' fieldName='deviceName'
                             onChange={(e) => handleDeviceChange(e, cellProps.onChange)}
                             onClick={(deviceId) => onDetailSelected(
                                 <DeviceDetail
