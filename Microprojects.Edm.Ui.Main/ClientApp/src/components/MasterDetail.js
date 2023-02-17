@@ -122,55 +122,51 @@ export function Detail(props) {
                                     <ToolbarItem>
                                         {props.editor &&
                                             <ButtonGroup>
-                                                {props.editable &&
-                                                    <Button
-
-                                                        title={editMode ? 'View mode' : 'Edit mode'}
-                                                        icon={editMode ? "eye" : "edit"}
-                                                        fillMode='flat'
-                                                        onClick={() => setEditMode(!editMode)}
-                                                    />
-                                                }
-                                                {props.copyable &&
-                                                    <Button
-                                                        title='Copy'
-                                                        fillMode='flat'
-                                                        icon='copy'
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            let data = { ...props.data, id: 0, name: `${props.data.name} (Copy)` };
-                                                            axios.post(`${props.api}`, data)
-                                                                .then((response) => {
+                                                <ToolbarButton
+                                                    visible={props.editable}
+                                                    title={editMode ? 'View mode' : 'Edit mode'}
+                                                    icon={editMode ? "eye" : "edit"}
+                                                    fillMode='flat'
+                                                    onClick={() => setEditMode(!editMode)}
+                                                />
+                                                <ToolbarButton
+                                                    visible={props.copyable}
+                                                    title='Copy'
+                                                    fillMode='flat'
+                                                    icon='copy'
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        let data = { ...props.data, id: 0, name: `${props.data.name} (Copy)` };
+                                                        axios.post(`${props.api}`, data)
+                                                            .then((response) => {
+                                                                props.onChange();
+                                                                history.push(`${props.path}/${response.data.id}`);
+                                                            });
+                                                    }}
+                                                />
+                                                <ToolbarButton
+                                                    visible={props.deletable}
+                                                    title='Delete'
+                                                    fillMode='flat'
+                                                    icon='delete'
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        if (window.confirm('Confirm deleting entity')) {
+                                                            axios.delete(`${props.api}/${props.data.id}`)
+                                                                .then(() => {
                                                                     props.onChange();
-                                                                    history.push(`${props.path}/${response.data.id}`);
+                                                                    history.push(props.path);
                                                                 });
-                                                        }}
-                                                    />
-                                                }
-                                                {props.deletable &&
-                                                    <Button
-                                                        title='Delete'
-                                                        fillMode='flat'
-                                                        icon='delete'
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            if (window.confirm('Confirm deleting entity')) {
-                                                                axios.delete(`${props.api}/${props.data.id}`)
-                                                                    .then(() => {
-                                                                        props.onChange();
-                                                                        history.push(props.path);
-                                                                    });
-                                                            }
-                                                        }}
-                                                    />
-                                                }
+                                                        }
+                                                    }}
+                                                />
                                             </ButtonGroup>
                                         }
                                     </ToolbarItem>
                                     <ToolbarItem>
-                                        <ButtonGroup >
-                                            {props.onUp && <Button title='Move Up' fillMode='flat' icon='arrow-up' onClick={props.onUp} />}
-                                            {props.onClose && < Button title='Close' fillMode='flat' icon='close' onClick={props.onClose} />}
+                                        <ButtonGroup>
+                                            <ToolbarButton visible={props.onUp} title='Move Up' fillMode='flat' icon='arrow-up' onClick={props.onUp} />
+                                            <ToolbarButton visible={props.onClose} title='Close' fillMode='flat' icon='close' onClick={props.onClose} />
                                         </ButtonGroup>
                                     </ToolbarItem>
                                 </Toolbar>
@@ -187,6 +183,10 @@ export function Detail(props) {
                 {props.subDetail}
             </>
     );
+}
+
+function ToolbarButton({ visible, ...props }) {
+    return visible ? <Button {...props} /> : null;
 }
 
 Info.propTypes = {
