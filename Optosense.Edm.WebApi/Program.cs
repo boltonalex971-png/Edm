@@ -108,7 +108,13 @@ jobContainer.Start();
 
 app.JsonConfigure();
 app.UseCors("DevCorsPolicy");
+
 app.UseSession();
+if (app.Environment.IsDevelopment())
+{
+    app.UseFakeUserInfo();
+}
+
 app.UseRouting();
 app.UseEndpoints(endpoints =>
 {
@@ -121,10 +127,6 @@ if (app.Environment.IsProduction())
     app.UseAuthentication();
     app.UseAuthorization();
     app.UseAuthenticatedUserInfo();
-}
-else
-{
-    app.UseFakeUserInfo();
 }
 
 //app.MapHub<OperationHub>("/hubs/operations");
