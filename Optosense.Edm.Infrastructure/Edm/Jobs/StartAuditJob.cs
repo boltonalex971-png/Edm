@@ -61,6 +61,12 @@ namespace Optosense.Edm.Jobs
             var subscriber = Cache.Subscribe<Record>(Parameters.Channel,
                 onNext: async rec =>
                 {
+                    // TODO Use RX to filter records
+                    if (rec.OperationHostDeviceId != Parameters.Device)
+                    {
+                        return;
+                    }
+
                     completed = completed || rec.Request.StartsWith("Stop");
                     // TODO move all db activity to corresponding core service
                     using EdmContext db = await ContextFactory.CreateDbContextAsync();
@@ -146,6 +152,10 @@ namespace Optosense.Edm.Jobs
         /// </summary>
         [JobParameter(Required = true)]
         public int Audit { get; set; }
+        /// <summary>
+        /// Id of <code>Optosense.Edm.Domain.Models.OperationHostDevice</code> which Audit belongs to.
+        /// </summary>
+        public int Device { get; set; }
         public DateTime StartAt { get; set; } = DateTime.Now;
         public string Channel { get; set; }
 
