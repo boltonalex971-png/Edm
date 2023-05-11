@@ -39,7 +39,7 @@ namespace Optosense.Edm.Jobs
                         context.Records.Add(r);
                         await context.SaveChangesAsync();
                         await Cache.Publish(Parameters.AuditChannel, r);
-                        completed = completed || r.Request.StartsWith("Stop");
+                        completed = completed || r.Request == "Stop";
                     }
                     catch (Exception e)
                     {

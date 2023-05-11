@@ -184,12 +184,6 @@ namespace Optosense.Edm.Jobs
                 }
             }
 
-            // Complete operation if command "Stop" arrived
-            if (rec.Request == "Stop" && rec.Response == "Ok")
-            {
-                await Cache.Publish(Parameters.ParametersChannel, KeyValuePair.Create(rec.Request, true));
-            }
-
             if (throwEx && !rec.IsValid)
             {
                 throw new EdmException(rec.Message);

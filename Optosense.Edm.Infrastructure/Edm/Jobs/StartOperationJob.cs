@@ -142,16 +142,9 @@ namespace Optosense.Edm.Jobs
                 }
             } while (count < running.Count && !CancellationToken.IsCancellationRequested);
 
-            // Stop audits
-            //foreach (var audit in audits)
-            //{
-            //    // TODO make audits self-stoppable after signal "Stop"
-            //    await JobManager.Execute(new StopJob(audit));
-            //}
+            // Stop audits and storage
+            await Cache.Publish(parametersChannel, KeyValuePair.Create("Stop", true));
 
-            // Stop storage
-            // TODO Check if the job is completed after "Stop" signal from device
-            //await JobManager.Execute(new StopJob(storageJob));
 
             if (CancellationToken.IsCancellationRequested)
             {
