@@ -4,8 +4,10 @@ import { Options } from './Options';
 import '@progress/kendo-theme-bootstrap/dist/all.scss';
 import "bootstrap/scss/bootstrap.scss";
 import { ApiContext } from './ApiContext';
+import { useHeightEffect } from '@microprojects/react-utils';
 
 function App(props) {
+    useHeightEffect();
     return (
         <ApiContext.Provider value={`${process.env.REACT_APP_API_URL || window.location.origin}`}>
             <Routes>

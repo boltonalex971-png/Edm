@@ -4,8 +4,11 @@ import { Options } from './components/Options';
 import '@progress/kendo-theme-bootstrap/dist/all.scss';
 //import "bootstrap/scss/bootstrap.scss";
 import { ApiContext } from './Contexts';
+import { useHeightEffect } from './components/IFrame';
 
 function App(props) {
+    useHeightEffect();
+
     return (
         <ApiContext.Provider value={`${process.env.REACT_APP_API_URL || window.location.origin}/api/opcua`}>
             <Routes>

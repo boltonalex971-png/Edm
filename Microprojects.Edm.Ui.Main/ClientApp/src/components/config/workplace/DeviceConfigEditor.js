@@ -10,6 +10,7 @@ import { TabStrip, TabStripTab } from '@progress/kendo-react-layout';
 import { ProcessWorkbenchesTab } from './ProcessWorkbenchesTab';
 import { LoadingContainer } from '../../utils/Utils';
 import { ApiContext } from '../../../ApiContext';
+import { IFrame } from '@microprojects/react-utils';
 
 DeviceConfigEditor.propTypes = {
     onChange: PropTypes.func,
@@ -27,16 +28,26 @@ export function DeviceConfigEditor({ id, ...props }) {
     const options = JSON.parse(data.configuration || '{}');
     const arg = data && JSON.stringify({ api: `${props.api}/${id}`, options, output: JSON.parse(data.profileOutput || '[]') });
     const [iframeLoading, setIframeLoading] = useState(true);
+    if (!iframeLoading && loading) setIframeLoading(true);
+    const onLoad = () => {
+        setIframeLoading(false)
+        // Auto-adjust is not working in debug mode, causing to browser cross-origin exception
+        //setHeight(ref.current.contentWindow.document.body.scrollHeight + "px");
+    };
+
     return (
         <Detail {...props}
             data={data}
             card={
                 <div>
-                    <LoadingContainer loading={iframeLoading && loading}>
-                        <iframe title='Device Configuration' id='config-iframe' height='300' width='100%' seamless frameBorder='0'
-                            src={`${location}/${data.driverHomepage}/options?${new URLSearchParams({ a: arg })}`}
-                            onLoad={() => setIframeLoading(false)}
-                        />
+                    <LoadingContainer loading={iframeLoading || loading}>
+                        {!loading &&
+                            <IFrame title='Device Configuration'
+                                width='100%'
+                                src={`${location}/${data.driverHomepage}/options?${new URLSearchParams({ a: arg })}`}
+                                onLoad={onLoad}
+                            />
+                        }
                     </LoadingContainer>
                 </div>
             }
