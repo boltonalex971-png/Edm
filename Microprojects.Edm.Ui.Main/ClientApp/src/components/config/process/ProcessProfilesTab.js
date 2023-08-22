@@ -2,7 +2,7 @@ import React from 'react';
 import Api from '../../api';
 import PropTypes from 'prop-types';
 import { GridColumn } from '@progress/kendo-react-grid';
-import { RelationTable } from '../../RelationTable';
+import { RelationTable, SubDetailColumn } from '../../RelationTable';
 import { DropDownCell, LinkTextCell } from '../../DropDownCell';
 import { useGet } from '../../hooks/hooks';
 import { ProfileDetail } from '../Profiles';
@@ -19,19 +19,17 @@ export function ProcessProfilesTab({ id, api, missedInputs, onDetailSelected }) 
     const [[data]] = useGet(`${Api.devices}/profilers`);
     return (
         <RelationTable api={`${api}/${id}/profiles`} removable >
-            {data &&
-                <GridColumn
-                    width={200}
-                    field='profilerGuid'
-                    title='Profiler'
-                    cell={(cellProps) =>
-                        <DropDownCell {...cellProps}
-                            getData={() => data} id='guid' text='name' fieldId='guid'
-                        />
-                    }
-                />
-            }
-            <GridColumn field='name' title='Name'
+            <GridColumn
+                width={200}
+                field='profilerGuid'
+                title='Profiler'
+                cell={(cellProps) => data &&
+                    <DropDownCell {...cellProps}
+                        getData={() => data} id='guid' text='name' fieldId='guid'
+                    />
+                }
+            />
+            <SubDetailColumn field='name' title='Name'
                 cell={(cellProps) =>
                     <LinkTextCell {...cellProps}
                         fieldId='id'
@@ -40,6 +38,7 @@ export function ProcessProfilesTab({ id, api, missedInputs, onDetailSelected }) 
                                 profileId={profileId}
                                 api={Api.profiles}
                                 onClose={() => onDetailSelected()}
+                                onUpdate={cellProps.itemUpdate}
                             />
                         )}
                     />
@@ -63,7 +62,8 @@ export function ProcessProfilesTab({ id, api, missedInputs, onDetailSelected }) 
             <GridColumn field='output' title='Ouput params' cell={(cellProps) =>
                 <td>
                     <ChipList {...cellProps} data={JSON.parse(cellProps.dataItem[cellProps.field] || '[]').map((el => ({ text: el, value: el })))} />
-                </td>} />
+                </td>}
+            />
         </RelationTable>
     );
 }

@@ -46,7 +46,8 @@ HostDetail.propTypes = {
     path: PropTypes.string,
     api: PropTypes.string,
     hostId: PropTypes.number,
-    type: PropTypes.string
+    type: PropTypes.string,
+    onUpdate: PropTypes.func
 }
 
 export function HostDetail({ hostId, ...props }) {
@@ -98,6 +99,7 @@ export function HostDetail({ hostId, ...props }) {
                     type='host'
                     data={data}
                     setData={setData}
+                    onUpdate={props.onUpdate}
                     content={
                         <fieldset className={'k-form-fieldset'}>
                             <legend className={'k-form-legend'}>Edit host data</legend>

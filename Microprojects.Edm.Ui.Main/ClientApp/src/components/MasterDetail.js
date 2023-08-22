@@ -14,9 +14,11 @@ import { Folder } from "./config/Folder";
 
 export function reloadMaster() {
     refresh();
+    _renderFunc(++_render);
+    console.log(_render);
 }
 
-let _selectedItem;
+let _selectedItem, _render, _renderFunc;
 
 MasterDetail.propTypes = {
     card: PropTypes.func,
@@ -98,6 +100,8 @@ Detail.defaultProps = {
 
 export function Detail(props) {
     const history = useHistory();
+    let [_, setRefresh] = useState(0, _render);
+    _renderFunc = setRefresh;
     let [editMode, setEditMode] = useState(false);
     editMode = editMode || props.id === 0;
     return (
@@ -204,7 +208,8 @@ export function Info(props) {
 Editor.propTypes = {
     ...Info.propTypes,
     setData: PropTypes.func,
-    type: PropTypes.string
+    type: PropTypes.string,
+    onUpdate: PropTypes.func
 }
 
 export function Editor(props) {
@@ -214,14 +219,14 @@ export function Editor(props) {
         if (data.id) {
             axios.put(`${props.api}/${props.data.id}`, data)
                 .then((response) => {
-                    props.onChange && props.onChange();
+                    props.onUpdate && props.onUpdate(response.data);
                     props.setData(response.data);
                 })
         } else {
             const parentId = _selectedItem ? (_selectedItem.isNode ? _selectedItem.id : _selectedItem.parentId) : 0;
             axios.post(`${props.api}`, { ...data, type: props.type, parentId: parentId, hierarchyId: parentId })
                 .then((response) => {
-                    props.onChange && props.onChange();
+                    props.onUpdate && props.onUpdate(response.data);
                     props.setData(response.data);
                     history.push(`${props.path}${response.data.isNode ? '/folder' : ''}/${response.data.id}`);
                 });
@@ -240,7 +245,7 @@ export function Editor(props) {
                         <Button
                             title='Save'
                             name='save'
-                            primary='true'
+                            themeColor="primary"
                             icon='save'
                             type={'submit'}
                             disabled={!formRenderProps.allowSubmit}

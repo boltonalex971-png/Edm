@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { Children, cloneElement, useState } from 'react';
 import PropTypes from 'prop-types';
 import axios from 'axios';
 import { isEqual } from 'lodash';
@@ -11,7 +11,6 @@ import { ButtonGroup, Button } from '@progress/kendo-react-buttons';
 RelationTable.propTypes = {
     id: PropTypes.number,
     api: PropTypes.string,
-    columns: PropTypes.node,
     editable: PropTypes.bool,
     removable: PropTypes.bool,
     onRowSelected: PropTypes.func,
@@ -33,6 +32,12 @@ export function RelationTable({ api, children, ...props }) {
             props.onRowSelected(item);
         }
     };
+    const itemUpdate = (item) => {
+        setReload(r => !r)
+        //// Update grid method below is faster but item and data format can be different
+        // const newData = data.map(i => i.id === item.Id ? { ...item } : item)
+        // setData(newData)
+    }
     const itemChange = (event) => {
         const inEditID = event.dataItem.id;
         const newData = data.map(item =>
@@ -68,7 +73,7 @@ export function RelationTable({ api, children, ...props }) {
         if (isEqual(editItem, item) || window.confirm('Confirm discarding changed data')) {
             let discardedData = data;
             if (editItem.id === 0) {
-                discardedData = data.filter((el) => el.id != 0);
+                discardedData = data.filter((el) => el.id !== 0);
             } else {
                 const index = data.findIndex((el) => el.id === editItem.id);
                 data[index] = editItem;
@@ -109,7 +114,9 @@ export function RelationTable({ api, children, ...props }) {
                             <span className="k-icon k-i-add"></span>
                         </Button>
                     </GridToolbar>
-                    {children}
+                    {Children.map(children, c => c?.type?.name === 'SubDetailColumn' ?
+                        <GridColumn {...c.props} cell={(cellProps) => c.props.cell({ itemUpdate, ...cellProps })} /> : c)
+                    }
                     <GridColumn title=''
                         cell={(cellProps) =>
                             <ActionCell {...cellProps}
@@ -125,6 +132,10 @@ export function RelationTable({ api, children, ...props }) {
         </>
     );
 }
+
+// Fake component to provide <code>itemUpdate</code> prop to cell
+export const SubDetailColumn = (props) => <></>
+
 export const ActionCell = ({ edit, remove, save, discard, ...props }) => {
     const inEdit = props.dataItem.inEdit;
     return (

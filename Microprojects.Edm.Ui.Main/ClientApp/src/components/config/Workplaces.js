@@ -38,7 +38,8 @@ WorkplaceDetail.propTypes = {
     path: PropTypes.string,
     api: PropTypes.string,
     workplaceId: PropTypes.number,
-    type: PropTypes.string
+    type: PropTypes.string,
+    onUpdate: PropTypes.func
 }
 
 export function WorkplaceDetail({ workplaceId, ...props }) {
@@ -72,6 +73,7 @@ export function WorkplaceDetail({ workplaceId, ...props }) {
                 <Editor {...props}
                     data={data}
                     setData={setData}
+                    onUpdate={props.onUpdate}
                     content={
                         <fieldset className={'k-form-fieldset'}>
                             <legend className={'k-form-legend'}>Edit workplace data</legend>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Api from '../../api';
 import PropTypes from 'prop-types';
 import { GridColumn } from '@progress/kendo-react-grid';
-import { RelationTable } from '../../RelationTable';
+import { RelationTable, SubDetailColumn } from '../../RelationTable';
 import { DropDownCell, LinkTextCell } from '../../DropDownCell';
 import { useGet } from '../../hooks/hooks';
 import { ProcessDetail } from '../Processes';
@@ -41,7 +41,7 @@ export function WorkbenchDevicesTab({ id, api, processId, onDetailSelected }) {
 
     return (
         <RelationTable api={`${api}/${id}/devices`} removable >
-            <GridColumn title='Profile' field='profileId' editable={true} width={200}
+            <SubDetailColumn title='Profile' field='profileId' editable={true} width={200}
                 cell={(cellProps) =>
                     <DropDownCell {...cellProps}
                         getData={() => profilers} id='id' text='name' fieldId='profileId' fieldName='profileName'
@@ -50,30 +50,31 @@ export function WorkbenchDevicesTab({ id, api, processId, onDetailSelected }) {
                                 profileId={profileId}
                                 api={Api.profiles}
                                 deletable={false}
+                                onUpdate={cellProps.itemUpdate}
                             />)
                         }
                     />
                 }
             />
-            {devices && devices.length &&
-                <GridColumn title='Device' field='workplaceHostDeviceId' editable={true} width={200}
-                    cell={(cellProps) =>
-                        <DropDownCell {...cellProps}
-                            getData={() => devices} id='id' text='device' fieldId='deviceId' fieldName='deviceName'
-                            onChange={(e) => handleDeviceChange(e, cellProps.onChange)}
-                            onClick={(deviceId) => onDetailSelected(
+            <SubDetailColumn title='Device' field='workplaceHostDeviceId' editable={true} width={200}
+                cell={(cellProps) =>
+                    <DropDownCell {...cellProps}
+                        getData={() => devices} id='id' text='device' fieldId='deviceId' fieldName='deviceName'
+                        onChange={(e) => handleDeviceChange(e, cellProps.onChange)}
+                        onClick={(deviceId) => devices && devices.length &&
+                            onDetailSelected(
                                 <DeviceDetail
                                     deviceId={deviceId}
                                     api={Api.devices}
                                     path={devicesPath}
                                     onClose={() => onDetailSelected()}
                                     onUp={() => history.push(`${devicesPath}/${deviceId}`)}
+                                    onUpdate={cellProps.itemUpdate}
                                 />)
-                            }
-                        />
-                    }
-                />
-            }
+                        }
+                    />
+                }
+            />
             <GridColumn title='Host' field='hostName' editable={false} />
             <GridColumn title='Configuration' field='configuration' editable={false}
                 cell={(cellProps) =>

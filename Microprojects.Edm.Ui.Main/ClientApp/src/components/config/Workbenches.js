@@ -16,7 +16,8 @@ WorkbenchDetail.propTypes = {
     onChange: PropTypes.func,
     path: PropTypes.string,
     api: PropTypes.string,
-    workbenchId: PropTypes.number
+    workbenchId: PropTypes.number,
+    onUpdate: PropTypes.func
 }
 
 export function WorkbenchDetail({ workbenchId, ...props }) {
@@ -66,6 +67,7 @@ export function WorkbenchDetail({ workbenchId, ...props }) {
                 <Editor {...props}
                     data={data}
                     setData={setData}
+                    onUpdate={props.onUpdate}
                     content={
                         <fieldset className={'k-form-fieldset'}>
                             <legend className={'k-form-legend'}>Edit device data</legend>

@@ -19,6 +19,12 @@ TreeViewMaster.propTypes = {
 
 const StyledTreeView = styled(TreeView)`
     overflow-x: hidden;
+    /* Disable text selection in TreeView to fix drag&drop */
+    user-select: none; /* supported by Chrome and Opera */
+    -webkit-user-select: none; /* Safari */
+    -khtml-user-select: none; /* Konqueror HTML */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
 `
 
 export function TreeViewMaster(props) {
@@ -108,7 +114,7 @@ export function TreeViewMaster(props) {
                         <span className="k-icon k-i-file-add"></span>
                     </Button>
                 </CardHeader>
-                <CardBody className='disable-select'>
+                <CardBody>
                     {error ?
                         <Alert color='danger' style={{ display: 'flex', justifyContent: 'space-around' }}>{error}</Alert> :
                         loading ?

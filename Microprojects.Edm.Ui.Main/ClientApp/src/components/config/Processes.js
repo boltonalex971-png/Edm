@@ -40,7 +40,8 @@ ProcessDetail.propTypes = {
     path: PropTypes.string,
     api: PropTypes.string,
     processId: PropTypes.number,
-    type: PropTypes.string
+    type: PropTypes.string,
+    onUpdate: PropTypes.func
 }
 
 export function ProcessDetail({ processId, ...props }) {
@@ -82,6 +83,7 @@ export function ProcessDetail({ processId, ...props }) {
                 <Editor {...props}
                     data={data}
                     setData={setData}
+                    onUpdate={props.onUpdate}
                     content={
                         <fieldset className={'k-form-fieldset'}>
                             <legend className={'k-form-legend'}>Edit process data</legend>

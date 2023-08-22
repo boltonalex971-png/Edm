@@ -13,7 +13,8 @@ AuditDetail.propTypes = {
     path: PropTypes.string,
     api: PropTypes.string,
     auditId: PropTypes.number,
-    params: PropTypes.array
+    params: PropTypes.array,
+    onUpdate: PropTypes.func
 }
 
 export function AuditDetail({ auditId, ...props }) {
@@ -46,6 +47,7 @@ export function AuditDetail({ auditId, ...props }) {
                 <Editor {...props}
                     data={data}
                     setData={setData}
+                    onUpdate={props.onUpdate}
                     content={
                         <fieldset className={'k-form-fieldset'}>
                             <legend className={'k-form-legend'}>Edit profile data</legend>

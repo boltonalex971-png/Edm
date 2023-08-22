@@ -14,7 +14,8 @@ ProfileDetail.propTypes = {
     onChange: PropTypes.func,
     deletable: PropTypes.bool,
     api: PropTypes.string,
-    profileId: PropTypes.number
+    profileId: PropTypes.number,
+    onUpdate: PropTypes.func
 }
 
 export function ProfileDetail({ profileId, deletable = true, ...props }) {
@@ -69,6 +70,7 @@ export function ProfileDetail({ profileId, deletable = true, ...props }) {
                 <Editor {...props}
                     data={data}
                     setData={setData}
+                    onUpdate={props.onUpdate}
                     content={
                         <fieldset className={'k-form-fieldset'}>
                             <legend className={'k-form-legend'}>Edit profile data</legend>
