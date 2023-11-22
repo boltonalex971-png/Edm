@@ -114,7 +114,7 @@ export function RelationTable({ api, children, ...props }) {
                             <span className="k-icon k-i-add"></span>
                         </Button>
                     </GridToolbar>
-                    {Children.map(children, c => c?.type?.name === 'SubDetailColumn' ?
+                    {Children.map(children, c => c?.type?.displayName === 'SubDetailColumn' ?
                         <GridColumn {...c.props} cell={(cellProps) => c.props.cell({ itemUpdate, ...cellProps })} /> : c)
                     }
                     <GridColumn title=''
@@ -135,6 +135,7 @@ export function RelationTable({ api, children, ...props }) {
 
 // Fake component to provide <code>itemUpdate</code> prop to cell
 export const SubDetailColumn = (props) => <></>
+SubDetailColumn.displayName = 'SubDetailColumn'
 
 export const ActionCell = ({ edit, remove, save, discard, ...props }) => {
     const inEdit = props.dataItem.inEdit;
