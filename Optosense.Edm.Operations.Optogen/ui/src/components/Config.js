@@ -67,8 +67,7 @@ export function Config({ settings, setSettings, outputs }) {
                     }
                 />
                 <GridColumn field='title' title='Title' />
-                <GridColumn field='prefix' title='Prefix' />
-                <GridColumn field='units' title='Units' />
+                <GridColumn field='format' title='Format' />
                 <GridColumn field='panel' title='Panel' width={150} editable={true}
                     cell={(cellProps) =>
                         <DropDownCell {...cellProps}

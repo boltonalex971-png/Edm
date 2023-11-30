@@ -10,6 +10,7 @@ import { useGet } from "./hooks/hooks";
 import { Monitor } from "./Monitor";
 import './OperationInfo.scss';
 import { Profile } from "./Profile";
+import format from 'number-format.js'
 
 
 let monitorInterval, stepInterval;
@@ -109,10 +110,25 @@ export const OperationInfo = ({ settings, started }) => {
 };
 
 const Parameter = ({ settings, value, className, color }) => {
+    const formatNumber = (fmt, num) => {
+        if (!num || Number.isNaN(num)) return '---'
+
+        const [expFormat] = fmt?.match(/[#\d]*E/i) || []
+        if (!expFormat?.length) return format(fmt, num)
+
+        const [mantissa, exp] = num.toExponential().split('e')
+        const expSign = expFormat.slice(-1)
+        const formattedMantissa = mantissa.padEnd(20, '0').substring(0, expFormat.length > 2 ? expFormat.length : mantissa.length)
+        const [zeroEnding] = formattedMantissa.match(/0*$/)
+        const [_, arbitraryEnding] = expFormat.match(/([#1-9]*)E/i)
+        const packedMantissa = formattedMantissa.substring(0, formattedMantissa.length - Math.min(zeroEnding.length, arbitraryEnding.length) || 0)
+        const result = fmt.replace(expFormat, `${packedMantissa} ${expSign}${exp}`)
+        return result
+    }
     return (
         <div className={className} style={{ backgroundColor: color }}>
             <p dangerouslySetInnerHTML={{ __html: settings.title.replace('\\', '<br/>') }} ></p>
-            <p>{settings.prefix} {value || '---'} {settings.units}</p>
+            <p>{formatNumber(settings.format, value)}</p>
         </div>
     );
 }
