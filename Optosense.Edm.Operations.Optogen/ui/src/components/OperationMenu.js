@@ -18,7 +18,7 @@ export function OperationMenu({ process, ...props }) {
     return (
         <header>
             <Navbar color="light" expand="md" light className="d-inline-flex justify-content-between" style={{ width: '100%' }} >
-                <NavbarBrand >{process && process.name}</NavbarBrand>
+                <NavbarBrand >#{props.operationId} {process && process.name}</NavbarBrand>
                 <NavbarToggler onClick={toggleNavbar} className="mr-2" />
                 {/* <Collapse className="d-inline-flex justify-content-between" isOpen={!collapsed} navbar> */}
                 <Nav>

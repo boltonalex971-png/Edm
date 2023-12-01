@@ -111,6 +111,7 @@ export const OperationInfo = ({ settings, started }) => {
 
 const Parameter = ({ settings, value, className, color }) => {
     const formatNumber = (fmt, num) => {
+        if (num === undefined || num == null) return '---'
         if (Number.isNaN(num)) return num
 
         const [expFormat] = fmt?.match(/[#\d]*E/i) || []
