@@ -9,6 +9,7 @@ using Optosense.Edm.Core.Auditing;
 using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Domain.Models;
 using Microprojects.Edm.Ui.Main.Models;
+using Optosense.Edm.Core.Services;
 
 namespace Microprojects.Edm.Ui.Main.Controllers
 {
@@ -143,5 +144,37 @@ namespace Microprojects.Edm.Ui.Main.Controllers
             var result = await _auditService.DeleteCriterion(id);
             return result;
         }
+
+        [HttpGet("{id:int}/qualifiers")]
+        public async Task<IEnumerable<QualifierViewModel>> GetQualifiers(int id)
+        {
+            var qualifiers = await _auditService.GetQualifiers(id);
+            var result = _mapper.Map<IEnumerable<QualifierViewModel>>(qualifiers);
+            return result;
+        }
+
+        [HttpGet("{id:int}/process/qualifiers")]
+        public async Task<IEnumerable<QualifierViewModel>> GetProcessQualifiers(int id)
+        {
+            var qualifiers = await _auditService.GetProcessQualifiers(id);
+            var result = _mapper.Map<IEnumerable<QualifierViewModel>>(qualifiers);
+            return result;
+        }
+
+        [HttpPost("{id:int}/qualifiers")]
+        public async Task<QualifierViewModel> AddQualifier(int id, QualifierViewModel model)
+        {
+            var qualifier = _mapper.Map<Qualifier>(model);
+            qualifier = await _auditService.AddQualifier(id, qualifier);
+            return _mapper.Map<QualifierViewModel>(qualifier);
+        }
+
+        [HttpDelete("{id:int}/qualifiers/{qualifierId:int}")]
+        public async Task<bool> DeleteQualifier(int id, int qualifierId)
+        {
+            var wasDetached = await _auditService.DeleteQualifier(id, qualifierId);
+            return wasDetached;
+        }
+
     }
 }

@@ -20,6 +20,7 @@ namespace Optosense.Edm.Persistence
         public DbSet<OperationHostDevice> OperationHostDevices { get; set; }
         public DbSet<Process> Processes { get; set; }
         public DbSet<Profile> Profiles { get; set; }
+        public DbSet<Qualifier> Qualifiers { get; set; }
         public DbSet<Record> Records { get; set; }
         public DbSet<RecordOperationCriterion> RecordOperationCriteria { get; set; }
         public DbSet<Setting> Settings { get; set; }
@@ -35,6 +36,8 @@ namespace Optosense.Edm.Persistence
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<Audit>().HasMany(a => a.Qualifiers).WithMany();
         }
     }
 }

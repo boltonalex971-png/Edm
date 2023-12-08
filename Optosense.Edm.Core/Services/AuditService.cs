@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microprojects.Edm;
+using Microsoft.EntityFrameworkCore;
 using Optosense.Edm.Core.Auditing;
 using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Domain.Models;
@@ -70,5 +71,41 @@ namespace Optosense.Edm.Core.Services
             var funcs = AuditFunctions.GetAnalysisFunctions();
             return funcs;
         }
+
+        public async Task<IEnumerable<Qualifier>> GetProcessQualifiers(int auditId)
+        {
+            var audit = await Get(auditId, a => a.Profile.Process.Qualifiers) ?? 
+                throw new EdmException("No audit found");
+            return audit.Profile.Process.Qualifiers;
+        }
+
+        public async Task<IEnumerable<Qualifier>> GetQualifiers(int id)
+        {
+            var audit = await Get(id, a => a.Qualifiers) ?? throw new EdmException("No audit found");
+            return audit.Qualifiers;
+        }
+
+        public async Task<Qualifier> AddQualifier(int auditId, Qualifier qualifier)
+        {
+            var audit = await Get(auditId, a => a.Qualifiers) ??
+                throw new EdmException("No audit found");
+            var chosen = (await GetProcessQualifiers(auditId)).FirstOrDefault(q => q.Id == qualifier.Id) ??
+                throw new EdmException("Specified qualifier does not belong to an appropriate process");
+            audit.Qualifiers.Add(chosen);
+            await Db.SaveChangesAsync();
+            return qualifier;
+        }
+
+        public async Task<bool> DeleteQualifier(int auditId, int qualifierId)
+        {
+            var audit = await Get(auditId, a => a.Qualifiers) ??
+                throw new EdmException("No audit found");
+            var chosen = audit.Qualifiers.FirstOrDefault(q => q.Id == qualifierId) ??
+                throw new EdmException("Specified qualifier does not belong to an appropriate process");
+            audit.Qualifiers.Remove(chosen);
+            await Db.SaveChangesAsync();
+            return true;
+        }
+
     }
 }

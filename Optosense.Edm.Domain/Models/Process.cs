@@ -19,5 +19,6 @@ namespace Optosense.Edm.Domain.Models
         /// configuring operation
         /// </summary>
         public ICollection<Profile> Profiles { get; set; }
+        public ICollection<Qualifier> Qualifiers { get; set; }
     }
 }

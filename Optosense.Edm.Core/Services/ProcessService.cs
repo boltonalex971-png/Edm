@@ -77,5 +77,44 @@ namespace Optosense.Edm.Core.Services
             await Db.SaveChangesAsync();
             return true;
         }
+
+        public async Task<IEnumerable<Qualifier>> GetQualifiers(int id)
+        {
+            var qualifier = await Db.Qualifiers
+                .Where(p => p.ProcessId == id)
+                .ToListAsync();
+            return qualifier;
+        }
+
+        public async Task<Qualifier> AddQualifier(int id, Qualifier qualifier)
+        {
+            var process = await Db.Processes
+                .Include(p => p.Qualifiers)
+                .FirstOrDefaultAsync(p => p.Id == id && p.IsActive) ?? throw new ArgumentException("Process not found");
+            qualifier.IsActive = true;
+            process.Qualifiers.Add(qualifier);
+            await Db.SaveChangesAsync();
+            return qualifier;
+        }
+
+        public async Task<bool> DeleteQualifier(int id, int qualifierId)
+        {
+            var process = await Db.Processes
+                .Include(p => p.Qualifiers)
+                .FirstOrDefaultAsync(p => p.Id == id) ?? throw new ArgumentException("Process not found");
+            var qualifier = process.Qualifiers.FirstOrDefault(p => p.Id == qualifierId) ??
+                throw new ArgumentException("Profile not found");
+            process.Qualifiers.Remove(qualifier);
+            await Db.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<Qualifier> SaveQualifier(Qualifier qualifier)
+        {
+            var result = await Save(qualifier);
+            return result;
+        }
+
+
     }
 }

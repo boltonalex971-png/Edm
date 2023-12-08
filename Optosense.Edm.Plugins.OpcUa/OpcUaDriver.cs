@@ -16,8 +16,6 @@ using System.Security.Policy;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Threading;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc.Internal;
 
 namespace Optosense.Edm.Drivers.OpcUa
 {

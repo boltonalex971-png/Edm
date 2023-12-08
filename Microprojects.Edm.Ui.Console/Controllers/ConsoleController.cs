@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging.EventLog;
+﻿using Microsoft.Extensions.Logging.EventLog;
 using Optosense.Edm.Plugins;
 using System;
 using System.Collections.Generic;
@@ -11,6 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using Microprojects.Edm.Jobs;
 using System.Runtime.Versioning;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Microprojects.Edm.Ui.Console.Controllers
 {

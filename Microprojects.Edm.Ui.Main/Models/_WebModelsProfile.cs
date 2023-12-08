@@ -1,6 +1,8 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Optosense.Edm.Domain.Models;
 using Optosense.Edm.Plugins;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Microprojects.Edm.Ui.Main.Models
@@ -41,6 +43,9 @@ namespace Microprojects.Edm.Ui.Main.Models
                                 .SelectMany(p => JsonConvert.DeserializeObject<string[]>(p.Output ?? "[]"))
                                 .Distinct())
                             )));
+
+            CreateMap<Qualifier, QualifierViewModel>();
+            CreateMap<QualifierViewModel, Qualifier>();
 
             CreateMap<HostDevice, HostDeviceModel>()
                 .ForMember(d => d.DriverGuid, o => o.MapFrom(s => s.Device.DriverGuid))

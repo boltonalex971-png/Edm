@@ -11,6 +11,8 @@ using Optosense.Edm.Plugins;
 using Microprojects.Edm.Ui.Main.Models;
 using Microprojects.Edm.Ui.Main.Utils;
 using Newtonsoft.Json;
+using Optosense.Edm.DataAccess.Migrations;
+using Optosense.Edm.Core.Services;
 
 namespace Microprojects.Edm.Ui.Main.Controllers
 {
@@ -44,7 +46,7 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         {
             if (id > 0)
             {
-                var process = await _processService.Get(id, p => p.Profiles);
+                var process = await _processService.Get(id, p => p.Profiles, p => p.Qualifiers);
                 var model = _mapper.Map<ProcessViewModel>(process);
                 //var inputs = process.Profiles
                 //    .SelectMany(p => JsonConvert.DeserializeObject<string[]>(p.Input ?? "[]"))
@@ -151,6 +153,41 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         {
             var wasDetached = await _processService.DeleteProfile(id, profileId);
             return wasDetached;
+        }
+
+        #endregion
+
+        #region qualifiers
+
+        [HttpGet("{id:int}/qualifiers")]
+        public async Task<IEnumerable<QualifierViewModel>> GetQualifiers(int id)
+        {
+            var qualifiers = await _processService.GetQualifiers(id);
+            var result = _mapper.Map<IEnumerable<QualifierViewModel>>(qualifiers);
+            return result;
+        }
+
+        [HttpPost("{id:int}/qualifiers")]
+        public async Task<QualifierViewModel> AddQualifier(int id, QualifierViewModel model)
+        {
+            var qualifier = _mapper.Map<Qualifier>(model);
+            qualifier = await _processService.AddQualifier(id, qualifier);
+            return _mapper.Map<QualifierViewModel>(qualifier);
+        }
+
+        [HttpDelete("{id:int}/qualifiers/{qualifierId:int}")]
+        public async Task<bool> DeleteQualifier(int id, int qualifierId)
+        {
+            var wasDetached = await _processService.DeleteQualifier(id, qualifierId);
+            return wasDetached;
+        }
+        
+        [HttpPut("{processId:int}/qualifiers")]
+        public async Task<QualifierViewModel> SaveQualifier(int processId, QualifierViewModel model)
+        {
+            var qualifier = _mapper.Map<Qualifier>(model, o => o.AfterMap((s, d) => d.ProcessId = processId));
+            var result = await _processService.SaveQualifier(qualifier);
+            return _mapper.Map<QualifierViewModel>(result);
         }
 
         #endregion

@@ -16,6 +16,9 @@ namespace Optosense.Edm.Core.Contracts
         Task<AuditZone> DeleteZone(int zoneId);
         Task<AuditCriterion> DeleteCriterion(int criterionId);
         IEnumerable<AuditFuncMetadata> GetAuditFunctions();
-
+        Task<IEnumerable<Qualifier>> GetQualifiers(int id);
+        Task<IEnumerable<Qualifier>> GetProcessQualifiers(int id);
+        Task<Qualifier> AddQualifier(int auditId, Qualifier qualifier);
+        Task<bool> DeleteQualifier(int auditId, int qualifierId);
     }
 }

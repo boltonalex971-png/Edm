@@ -10,6 +10,8 @@ import { useRouteMatch } from 'react-router-dom';
 import { MasterDetail, reloadMaster, Detail, Info, Editor } from '../MasterDetail';
 import { ProcessTabs } from './process/ProcessTabs';
 import { DropDownComp } from '../DropDownCell';
+import { Chip, ChipList } from '@progress/kendo-react-buttons';
+import { MultiSelect } from '@progress/kendo-react-dropdowns';
 
 export function Processes() {
     const type = 'process';
@@ -56,7 +58,6 @@ export function ProcessDetail({ processId, ...props }) {
     }
 
     const missedInputs = JSON.parse(data.message || '[]');
-
     return (
         <Detail {...props}
             id={id}
@@ -73,9 +74,21 @@ export function ProcessDetail({ processId, ...props }) {
                 <Info {...props}
                     data={data}
                     content={
-                        <div>
-                            {data.commonUid && <p>Common UID: {data.commonUid}</p>}
-                        </div>
+                        <>
+                            <div>
+                                {data.commonUid && <p>Common UID: {data.commonUid}</p>}
+                            </div>
+                            {/* {data.qualifiers &&
+                                <div className='my-2'>
+                                    <span className='me-2'>Qualifiers:</span>
+                                    <ChipList data={data.qualifiers.map((el => ({ text: el.name, value: el.id })))}
+                                        chip={(chipProps) =>
+                                            <Chip {...chipProps} rounded={'small'} />
+                                        }
+                                    />
+                                </div>
+                            } */}
+                        </>
                     }
                 />
             }
@@ -108,6 +121,23 @@ export function ProcessDetail({ processId, ...props }) {
                                     }
                                 />
                             </div>
+                            {/* <div className="mb-3">
+                                <Field name={'qualifiers'}
+                                    component={(fieldProps) =>
+                                        <MultiSelect {...fieldProps}
+                                            allowCustom={true}
+                                            text={fieldProps.name}
+                                            value={fieldProps.}
+                                            onChange={(e) => fieldProps.onChange({
+                                                dataItem: fieldProps.dataItem,
+                                                field: fieldProps.field,
+                                                syntheticEvent: e.syntheticEvent,
+                                                value: JSON.stringify(e.value)
+                                            })}
+                                        />
+                                    }
+                                    label={'Output Parameters'} />
+                            </div> */}
                         </fieldset>
                     }
                 />

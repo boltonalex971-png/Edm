@@ -16,6 +16,7 @@ namespace Optosense.Edm.Domain.Models
         public string Rules { get; set; }
 
         public Profile Profile { get; set; }
+        public ICollection<Qualifier> Qualifiers { get; set; }
         public ICollection<AuditZone> Zones { get; set; }
     }
 }

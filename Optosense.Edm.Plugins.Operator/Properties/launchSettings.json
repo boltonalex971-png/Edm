@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "Optosense.Edm.Plugins.Operator": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:65520;http://localhost:65521"
+    }
+  }
+}

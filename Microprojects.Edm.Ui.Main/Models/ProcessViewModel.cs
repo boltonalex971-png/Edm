@@ -1,5 +1,7 @@
 using Optosense.Edm.Domain.Models;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace Microprojects.Edm.Ui.Main.Models
 {
@@ -14,5 +16,14 @@ namespace Microprojects.Edm.Ui.Main.Models
         public int HierarchyId { get; set; }
         public Guid OperationGuid { get; set; }
         public string Message { get; set; }
+        public IEnumerable<QualifierViewModel> Qualifiers { get; set; }
+    }
+
+    public class QualifierViewModel
+    {
+        public int Id { get; set; }
+        public string Name { set; get; }
+        public string Description { set; get; }
+        public bool IsActive { get; set; }
     }
 }
