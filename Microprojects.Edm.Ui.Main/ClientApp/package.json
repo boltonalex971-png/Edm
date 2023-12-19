@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@microprojects/react-utils": "^1.0.4",
+    "@microprojects/react-utils": "^1.0.13",
     "@progress/kendo-data-query": "^1.5.4",
     "@progress/kendo-drawing": "^1.7.0",
     "@progress/kendo-licensing": "^1.1.0",

@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@microprojects/react-utils": "^1.0.13",
     "@progress/kendo-data-query": "^1.5.5",
     "@progress/kendo-react-buttons": "^5.0.1",
     "@progress/kendo-react-dropdowns": "^5.1.0",

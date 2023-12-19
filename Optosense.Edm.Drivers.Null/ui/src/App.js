@@ -1,10 +1,12 @@
+import { usePluginData } from '@microprojects/react-utils';
 import React, { useCallback } from 'react';
 import { Route, Link } from 'react-router-dom';
 
-function App(props) {
+function App() {
+    //usePluginData()
     return (
         <div>
-            <Route path='/' exact>
+            {/* <Route path='/' exact>
                 <>
                     <h1>Home</h1>
                     <ul>
@@ -16,19 +18,19 @@ function App(props) {
                 </>
             </Route>
             <Route path='/profile'>
-                <Profile {...props} />
+                <Profile />
             </Route>
             <Route path='/options'>
                 <h1>Options</h1>
             </Route>
             <Route path='/terminal'>
                 <h1>Terminal</h1>
-            </Route>
+            </Route> */}
         </div>
     );
 }
 
-const Profile = (props) => {
+const Profile = () => {
     return (
         <div>
             <h6>Selected profile info</h6>

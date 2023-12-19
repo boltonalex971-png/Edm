@@ -4,11 +4,10 @@ import { Options } from './components/Options';
 import '@progress/kendo-theme-bootstrap/dist/all.scss';
 //import "bootstrap/scss/bootstrap.scss";
 import { ApiContext } from './Contexts';
-import { useHeightEffect } from './components/IFrame';
+import { usePluginData } from '@microprojects/react-utils'
 
 function App(props) {
-    useHeightEffect();
-
+    const [data] = usePluginData()
     return (
         <ApiContext.Provider value={`${process.env.REACT_APP_API_URL || window.location.origin}/api/opcua`}>
             <Routes>
@@ -24,7 +23,7 @@ function App(props) {
                 >
                 </Route>
                 <Route path='/plan/:id' element={<></>} />
-                <Route path='/options' element={<Options guid={`${process.env.REACT_APP_GUID}`} />} />
+                <Route path='/options' element={<Options data={data} />} />
                 <Route path='/console' element={<h1>Console is in the development progress...</h1>} />
             </Routes>
         </ApiContext.Provider>

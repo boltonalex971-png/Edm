@@ -3,14 +3,11 @@ import './Options.css';
 import { Input, NumericTextBox } from "@progress/kendo-react-inputs";
 import axios from "axios";
 import { Button } from "@progress/kendo-react-buttons";
-import { useLocation } from "react-router-dom";
 import { Field, Form, FormElement } from '@progress/kendo-react-form';
 import { DropDownList } from "@progress/kendo-react-dropdowns";
 
-export const Options = ({ guid }) => {
-    const location = useLocation();
-    const search = new URLSearchParams(location.search);
-    const [param] = useState(JSON.parse(search.get('a')), [location.search]);
+export const Options = ({ data }) => {
+    const [param] = useState(data);
     const optionsChange = (o) => {
         axios.put(`${param.api}`, o);
     };

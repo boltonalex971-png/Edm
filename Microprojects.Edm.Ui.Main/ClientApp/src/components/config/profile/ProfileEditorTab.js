@@ -1,7 +1,7 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
-import { LoadingContainer } from '../../utils/Utils';
 import { ApiContext } from '../../../ApiContext';
+import { PluginContainer } from '@microprojects/react-utils';
 
 ProfileEditorTab.propTypes = {
     id: PropTypes.number,
@@ -11,13 +11,10 @@ ProfileEditorTab.propTypes = {
 }
 
 export function ProfileEditorTab({ id, profiler }) {
-    const [loading, setLoading] = useState(true);
     const location = useContext(ApiContext);
     return (
         <div>
-            <LoadingContainer loading={loading}>
-                <iframe src={`${location}/profiles/${profiler}/profile/${id}`} height='500' width='100%' seamless frameBorder='0' onLoad={() => setLoading(false)} />
-            </LoadingContainer>
+            <PluginContainer src={`${location}/profiles/${profiler}/profile/${id}`} width='100%' />
         </div>
     );
 }

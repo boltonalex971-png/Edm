@@ -3,8 +3,10 @@ import { Routes, Route, Link } from 'react-router-dom';
 import { Profile } from './components/Profile';
 import '@progress/kendo-theme-bootstrap/dist/all.scss';
 import { ApiContext } from './ApiContext';
+import { usePluginData } from '@microprojects/react-utils';
 
 function App(props) {
+    const [data] = usePluginData()
     return (
         <ApiContext.Provider value={`${process.env.REACT_APP_API_URL || window.location.origin}/api`}>
             <div>

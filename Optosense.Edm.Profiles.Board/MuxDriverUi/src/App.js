@@ -4,11 +4,14 @@ import { Options } from './components/Options';
 import 'bootstrap/scss/bootstrap.scss';
 import '@progress/kendo-theme-bootstrap/dist/all.scss';
 import { ApiContext } from './ApiContext';
+import { usePluginData } from '@microprojects/react-utils';
 
-function App(props) {
+
+function App() {
+    const [data] = usePluginData()
     return (
         <ApiContext.Provider value={`${process.env.REACT_APP_API_URL || window.location.origin}`}>
-            <div>
+            {data && <div>
                 <Route path='/' exact>
                     <>
                         <h1>Home</h1>
@@ -22,12 +25,12 @@ function App(props) {
                 <Route path='/plan/:id'>
                 </Route>
                 <Route path='/options'>
-                    <Options guid={`${process.env.REACT_APP_GUID}`} />
+                    <Options data={data} />
                 </Route>
                 <Route path='/console'>
                     <h1>Console is in the development progress...</h1>
                 </Route>
-            </div>
+            </div>}
         </ApiContext.Provider>
 
     );
