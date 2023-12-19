@@ -1,6 +1,7 @@
 ﻿using AdaptiveExpressions;
 using Microprojects.Edm.Cache;
 using Microprojects.Edm.Drivers;
+using Microprojects.Edm.Intercom;
 using Microprojects.Edm.Jobs;
 using Microprojects.Edm.Utils;
 using Microsoft.Extensions.Logging;
@@ -23,7 +24,7 @@ namespace Optosense.Edm.Jobs
     {
         public event EventHandler<InputParamArrivedEventArgs> InputParamArrived;
 
-        protected ICache Cache { get; init; }
+        protected IIntercom Intercom { get; init; }
         protected StartDeviceJobParameters Parameters => (StartDeviceJobParameters)JobParameters;
 
         private readonly ILogger<StartDeviceJob> _logger;
@@ -42,11 +43,11 @@ namespace Optosense.Edm.Jobs
 
         public StartDeviceJob() { }
 
-        public StartDeviceJob(ILogger<StartDeviceJob> logger, IPluginContainer plugins, ICache cache)
+        public StartDeviceJob(ILogger<StartDeviceJob> logger, IPluginContainer plugins, IIntercom intercom)
         {
             _logger = logger;
             _plugins = plugins;
-            Cache = cache;
+            Intercom = intercom;
         }
 
         public override bool Init()
@@ -76,7 +77,7 @@ namespace Optosense.Edm.Jobs
                     .ToDictionary(k => k, e => default(object));
                 _internalParams = _profilerPlugin.GetParameters(Parameters.Profile)
                     .ToDictionary(k => k, e => default(object));
-                _subscriber = Cache.Subscribe(Parameters.ParametersChannel,
+                _subscriber = Intercom.Subscribe<object>(Parameters.ParametersChannel,
                     onNext: json =>
                     {
                         var param = JsonConvert.DeserializeObject<KeyValuePair<string, object>>(json.ToString());
@@ -169,7 +170,7 @@ namespace Optosense.Edm.Jobs
                 Status = (ExecutionStatus)response.State,
                 OperationHostDeviceId = Parameters.OperationHostDevice,
             };
-            await Cache.Publish(Parameters.StoreChannel, rec);
+            await Intercom.Publish(Parameters.StoreChannel, rec);
             var output = JsonConvert.DeserializeObject<IDictionary<string, object>>(rec.Parameters ?? "{}");
             foreach (var param in output)
             {
@@ -204,7 +205,7 @@ namespace Optosense.Edm.Jobs
         private async Task PushOutputParameterAsync(KeyValuePair<string, object> param)
         {
             _outputParams[param.Key] = param.Value;
-            await Cache.Publish(Parameters.ParametersChannel, param);
+            await Intercom.Publish(Parameters.ParametersChannel, param);
         }
 
         private Task<bool> MeetCondition(DriverRequest req)

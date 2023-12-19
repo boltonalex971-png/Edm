@@ -8,21 +8,22 @@ using Microprojects.Edm.Jobs;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using Optosense.Edm.Persistence;
+using Microprojects.Edm.Intercom;
 
 namespace Optosense.Edm.Jobs
 {
     [Job(Name = "StoreOperationRecords", Lifetime = JobLifetime.LongRunning, Parameters = typeof(StoreOperationRecordsJobParameters))]
     public class StoreOperationRecordsJob : BaseJob
     {
-        protected ICache Cache { get; init; }
+        protected IIntercom Intercom { get; init; }
         protected IDbContextFactory<EdmContext> ContextFactory { get; init; }
         protected StoreOperationRecordsJobParameters Parameters => (StoreOperationRecordsJobParameters) JobParameters;
         private readonly ILogger<StoreOperationRecordsJob> _logger;
 
         public StoreOperationRecordsJob() { }
-        public StoreOperationRecordsJob(ILogger<StoreOperationRecordsJob> logger, ICache cache, IDbContextFactory<EdmContext> factory)
+        public StoreOperationRecordsJob(ILogger<StoreOperationRecordsJob> logger, IIntercom intercom, IDbContextFactory<EdmContext> factory)
         {
-            Cache = cache;
+            Intercom = intercom;
             ContextFactory = factory;
             _logger = logger;
         }
@@ -30,7 +31,7 @@ namespace Optosense.Edm.Jobs
         public override async Task<object> ExecuteAsync()
         {
             bool completed = false;
-            var subscription = Cache.Subscribe<Record>(Parameters.Channel,
+            var subscription = Intercom.Subscribe<Record>(Parameters.Channel,
                 onNext: async r =>
                 {
                     using var context = await ContextFactory.CreateDbContextAsync();
@@ -38,7 +39,7 @@ namespace Optosense.Edm.Jobs
                     {
                         context.Records.Add(r);
                         await context.SaveChangesAsync();
-                        await Cache.Publish(Parameters.AuditChannel, r);
+                        await Intercom.Publish(Parameters.AuditChannel, r);
                         completed = completed || r.Request == "Stop";
                     }
                     catch (Exception e)

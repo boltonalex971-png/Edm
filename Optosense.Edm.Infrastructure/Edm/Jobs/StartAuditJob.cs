@@ -19,6 +19,7 @@ using Optosense.Edm.Core.Auditing;
 using Microprojects.Edm.Jobs;
 using Microsoft.Extensions.Logging;
 using Optosense.Edm.Persistence;
+using Microprojects.Edm.Intercom;
 
 namespace Optosense.Edm.Jobs
 {
@@ -27,6 +28,7 @@ namespace Optosense.Edm.Jobs
     {
         protected StartAuditJobParameters Parameters => (StartAuditJobParameters) JobParameters;
         protected IJobContainer JobManager { get; init; }
+        protected IIntercom Intercom { get; init; }
         protected ICache Cache { get; init; }
         protected ILogger<StartAuditJob> Logger { get; init; }
         protected IDbContextFactory<EdmContext> ContextFactory { get; init; }
@@ -35,9 +37,10 @@ namespace Optosense.Edm.Jobs
             $"{nameof(Operation)}:{opId}:{nameof(OperationCriterion)}:{opCritId}:{addr}";
 
         public StartAuditJob() { }
-        public StartAuditJob(IJobContainer container, ICache cache, ILogger<StartAuditJob> logger, IDbContextFactory<EdmContext> contextFactory)
+        public StartAuditJob(IJobContainer container, ICache cache, IIntercom intercom, ILogger<StartAuditJob> logger, IDbContextFactory<EdmContext> contextFactory)
         {
             JobManager = container;
+            Intercom = intercom;
             Cache = cache;
             Logger = logger;
             ContextFactory = contextFactory;
@@ -58,7 +61,7 @@ namespace Optosense.Edm.Jobs
                 audit = await service.GetZones(Parameters.Audit);
             }
 
-            var subscriber = Cache.Subscribe<Record>(Parameters.Channel,
+            var subscriber = Intercom.Subscribe<Record>(Parameters.Channel,
                 onNext: async rec =>
                 {
                     // TODO Use RX to filter records

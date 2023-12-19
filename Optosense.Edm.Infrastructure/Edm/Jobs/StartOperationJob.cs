@@ -11,6 +11,7 @@ using Microprojects.Edm.Jobs;
 using Optosense.Edm.Infrastructure.Edm.Jobs;
 using Optosense.Edm.Persistence;
 using Optosense.Edm.Core.Contracts;
+using Microprojects.Edm.Intercom;
 
 namespace Optosense.Edm.Jobs
 {
@@ -21,7 +22,7 @@ namespace Optosense.Edm.Jobs
         protected IOperationService OperationService { get; init; }
         protected IProfileService ProfileService { get; init; }
         protected IJobContainer JobManager { get; init; }
-        protected ICache Cache { get; init; }
+        protected IIntercom Intercom { get; init; }
         //protected IDbContextFactory<EdmContext> ContextFactory { get; init; }
 
         public StartOperationJob() { }
@@ -29,14 +30,14 @@ namespace Optosense.Edm.Jobs
             IOperationService operationService,
             IProfileService profileService,
             IJobContainer container,
-            ICache cache)
+            IIntercom intercom)
         //IDbContextFactory<EdmContext> contextFactory)
         {
             OperationService = operationService;
             ProfileService = profileService;
             JobManager = container;
             //ContextFactory = contextFactory;
-            Cache = cache;
+            Intercom = intercom;
         }
 
         public override bool Init()
@@ -143,7 +144,7 @@ namespace Optosense.Edm.Jobs
             } while (count < running.Count && !CancellationToken.IsCancellationRequested);
 
             // Stop audits and storage
-            await Cache.Publish(parametersChannel, KeyValuePair.Create("Stop", true));
+            await Intercom.Publish(parametersChannel, KeyValuePair.Create("Stop", true));
 
 
             if (CancellationToken.IsCancellationRequested)

@@ -1,16 +1,19 @@
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microprojects.Edm;
 using Microprojects.Edm.Cache;
 using Microprojects.Edm.Cache.Redis;
+using Microprojects.Edm.Intercom;
 using Microprojects.Edm.Jobs;
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http.Connections;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,6 +21,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Hosting.WindowsServices;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.EventLog;
+using Microsoft.Extensions.Options;
 using Optosense.Edm.Core.AspNet;
 using Optosense.Edm.DataAccess;
 using Optosense.Edm.Drivers.Operator;
@@ -25,6 +29,7 @@ using Optosense.Edm.Persistence;
 using Optosense.Edm.WebApi;
 using Optosense.Edm.WebApi.Services;
 using Optosense.Edm.WebApi.Utils;
+using static System.Collections.Specialized.BitVector32;
 
 var options = new WebApplicationOptions
 {
@@ -46,16 +51,7 @@ builder.Services.AddPooledDbContextFactory<EdmContext>(options =>
         sqlOptions => sqlOptions.MigrationsAssembly("Optosense.Edm.DataAccess")),
     poolSize: 16);
 
-builder.Services.AddSingleton<ICache>(new RedisCache(builder.Configuration["Edm:Cache:Default:ConnectionString"]));
-builder.Services.AddGrpc();
-//builder.Services.AddSignalR();
-builder.Services.AddPlugins(config =>
-{
-    config.BaseDirectory = AppContext.BaseDirectory;
-    config.PluginsPath = builder.Configuration.GetSection("Edm:Assemblies").GetChildren().Select(c => c.Value);
-    config.Configuration = builder.Configuration;
-});
-builder.Services.AddJobs();
+builder.Services.Configure<IntercomOptions>(builder.Configuration.GetSection("Edm:Intercom"));
 builder.Services.Configure<Peer>(options =>
 {
     var section = builder.Configuration.GetSection("Kestrel:Endpoints").GetChildren();
@@ -70,6 +66,18 @@ builder.Services.Configure<Peer>(options =>
     options.UiPort = uiUri.Port;
     options.Version = typeof(Worker).Assembly.GetName().Version.ToString();
 });
+
+builder.AddCache();
+builder.AddOperationIntercom();
+builder.Services.AddGrpc();
+builder.Services.AddSignalR();
+builder.Services.AddPlugins(config =>
+{
+    config.BaseDirectory = AppContext.BaseDirectory;
+    config.PluginsPath = builder.Configuration.GetSection("Edm:Assemblies").GetChildren().Select(c => c.Value);
+    config.Configuration = builder.Configuration;
+});
+builder.AddJobs();
 
 builder.Services.AddCors(options =>
 {
@@ -129,9 +137,8 @@ if (app.Environment.IsProduction())
     app.UseAuthenticatedUserInfo();
 }
 
-//app.MapHub<OperationHub>("/hubs/operations");
+app.MapHub<IntercomHub>(IntercomHub.Hub);
 app.MapGet("/status", () => "I AM ALIVE!");
 app.MapSpaPlugins();
 
 await app.RunAsync();
-    

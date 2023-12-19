@@ -26,8 +26,5 @@ namespace Microprojects.Edm.Cache
         bool Push<T>(string key, T record);
         T Pop<T>();
         T Pop<T>(string key);
-        IDisposable Subscribe<T>(string channel, Action<T> onNext);
-        IDisposable Subscribe(string channel, Action<object> onNext);
-        Task<long> Publish<T>(string channel, T message);
     }
 }

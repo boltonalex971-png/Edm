@@ -1,5 +1,5 @@
 ﻿using Microprojects.Edm;
-using Microprojects.Edm.Cache;
+using Microprojects.Edm.Intercom;
 using Microprojects.Edm.Jobs;
 using Microsoft.Extensions.Options;
 using System;
@@ -11,15 +11,15 @@ namespace Optosense.Edm.Jobs
     [Job(Name = "ImAlive", Lifetime = JobLifetime.Permanent, Parameters = typeof(ImAliveJobParameters))]
     public class ImAliveJob : BaseJob
     {
-        protected ICache Cache { get; init; }
+        protected IIntercom Intercom { get; init; }
         protected IJobContainer Container { get; init; }
         protected IOptions<Peer> PeerOptions { get; init; }
         protected ImAliveJobParameters Parameters => (ImAliveJobParameters)JobParameters;
 
         public ImAliveJob() { }
-        public ImAliveJob(ICache cache, IJobContainer container, IOptions<Peer> options)
+        public ImAliveJob(IIntercom intercom, IJobContainer container, IOptions<Peer> options)
         {
-            Cache = cache;
+            Intercom = intercom;
             Container = container;
             PeerOptions = options;
         }
@@ -27,7 +27,7 @@ namespace Optosense.Edm.Jobs
         public override async Task<object> ExecuteAsync()
         {
             // Listen "ImAlive" messages
-            var listener = Cache.Subscribe<Peer>(Parameters.Channel,
+            var listener = Intercom.Subscribe<Peer>(Parameters.Channel,
                 onNext: h =>
                 {
                     //Logger.Log($"Got imalive message: {h.Host} {h.Version} {h.Timestamp}");
@@ -36,7 +36,7 @@ namespace Optosense.Edm.Jobs
             var issuer = new Timer((state) =>
             {
                 PeerOptions.Value.Timestamp = DateTime.Now;
-                Cache.Publish(Parameters.Channel, PeerOptions.Value);
+                Intercom.Publish(Parameters.Channel, PeerOptions.Value);
             }, null, 0, (int)Container.Hive.Alive.TotalMilliseconds);
             try
             {
@@ -54,7 +54,7 @@ namespace Optosense.Edm.Jobs
 
     public class ImAliveJobParameters : IJobParameters
     {
-        public string Channel { get; set; } = "Edm-Lifecicle";
+        public string Channel { get; set; } = "Edm-Lifecycle";
     }
 }
 

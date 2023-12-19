@@ -38,39 +38,29 @@ namespace Microprojects.Edm.Cache
 
         public override bool Push<T>(string key, T record)
         {
-            string output = JsonSerializer.Serialize(record);
-            var list = Storage.ContainsKey(key) ? (LinkedList<string>) Storage[key] : null;
+            var list = Storage.ContainsKey(key) ? (List<T>) Storage[key] : null;
             if (list == null)
             {
-                list = new LinkedList<string>();
+                list = new List<T>();
                 Storage[key] = list;
             }
-            list.AddLast(output);
+
+            list.Add(record);
             return true;
         }
 
         public override T Pop<T>(string key)
         {
-            LinkedList<string> list = (LinkedList<string>) Storage[key];
+            List<T> list = (List<T>) Storage[key];
             if (list == null || list.Count == 0)
             {
                 return default;
             }
-            string json = list.First();
-            list.RemoveFirst();
-            T value = JsonSerializer.Deserialize<T>(json);
+
+            T value = list.First();
+            list.RemoveAt(0);
             return value;
         }
-
-        //public override IObservable<T> Subscribe<T>()
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //public override void Unsubscribe()
-        //{
-        //    throw new NotImplementedException();
-        //}
 
         protected override IEnumerable<string> GetKeys(string wildcard)
         {
@@ -78,9 +68,30 @@ namespace Microprojects.Edm.Cache
             return Storage.Keys.Where(k => Regex.IsMatch(k, pattern)).ToList();
         }
 
-        public override Task<IEnumerable<T>> GetRangeAsync<T>(string key, int start, int offset, Func<Task<IEnumerable<T>>> locator, TimeSpan expireAt)
+        public override async Task<IEnumerable<T>> GetRangeAsync<T>(string key, int start, int stop, Func<Task<IEnumerable<T>>> locator, TimeSpan expireAt)
         {
-            throw new NotImplementedException();
+            IEnumerable<T> list = default;
+            if (Storage.ContainsKey(key))
+            {
+                list = Storage[key] as IEnumerable<T>;
+            }
+            else 
+            { 
+                if (locator != null)
+                {
+                    list = await locator();
+                }
+                else
+                {
+                    list = new List<T>();
+                }
+                Storage[key] = list;
+            }
+
+            var skip = start < 0 ? list.Count() + start : start;
+            var take = stop < 0 ? list.Count() + stop - skip : stop;
+            var range = list.Skip(skip).Take(take);
+            return range;
         }
     }
 }

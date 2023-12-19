@@ -46,7 +46,7 @@ namespace Optosense.Edm.Core.Auditing
         [AuditArg("Max value", typeof(double))]
         public static AuditResult IntervalFunction(AuditCriterion criterion, IEnumerable<object> values)
         {
-            var doubles = values.Select(v => double.TryParse(v.ToString(), out var number) ? number : 0).ToList();
+            var doubles = values.Select(v => double.TryParse(v.ToString(), CultureInfo.InvariantCulture, out var number) ? number : 0).ToList();
             double.TryParse(criterion.Arg1, out var min);
             double.TryParse(criterion.Arg2, out var max);
             var minValue = doubles.Min();

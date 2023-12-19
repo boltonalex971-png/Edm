@@ -7,11 +7,12 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microprojects.Edm.Intercom;
 using StackExchange.Redis;
 
 namespace Microprojects.Edm.Cache.Redis
 {
-    public class RedisCache : CacheBase
+    public class RedisCache : CacheBase, IIntercom
     {
         private readonly Lazy<ConnectionMultiplexer> LazyConnection;
         private readonly ConnectionMultiplexer Connection;
@@ -46,11 +47,9 @@ namespace Microprojects.Edm.Cache.Redis
             return record;
         }
 
-        public override async Task<IEnumerable<T>> GetRangeAsync<T>(string key, int start, int offset, Func<Task<IEnumerable<T>>> locator, TimeSpan expireAt)
+        public override async Task<IEnumerable<T>> GetRangeAsync<T>(string key, int start, int stop, Func<Task<IEnumerable<T>>> locator, TimeSpan expireAt)
         {
-            string listName = typeof(T).FullName;
-            var result = new List<T>();
-            var list = await Db.ListRangeAsync(listName, start, offset).ConfigureAwait(false);
+            var list = await Db.ListRangeAsync(key, start, stop).ConfigureAwait(false);
             if (list == null && locator != null)
             {
                 var data = await locator();
@@ -62,7 +61,7 @@ namespace Microprojects.Edm.Cache.Redis
             }
             else
             {
-                var data = list.Select(v => JsonSerializer.Deserialize<T>(v));
+                var data = list.Select(v => JsonSerializer.Deserialize<T>(RedisValue.Unbox(v)));
                 return data;
             }
         }
