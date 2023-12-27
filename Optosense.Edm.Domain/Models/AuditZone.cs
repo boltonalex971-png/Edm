@@ -12,6 +12,7 @@ namespace Optosense.Edm.Domain.Models
         public int? No { get; set; }
         public int Offset { get; set; }
         public int Duration { get; set; }
+        public string ActiveWhen { get; set; }
         public Audit Audit { get; set; }
         public ICollection<AuditCriterion> Criteria { get; set; }
     }

@@ -20,6 +20,8 @@ using Microprojects.Edm.Jobs;
 using Microsoft.Extensions.Logging;
 using Optosense.Edm.Persistence;
 using Microprojects.Edm.Intercom;
+using System.Threading;
+using AdaptiveExpressions;
 
 namespace Optosense.Edm.Jobs
 {
@@ -33,6 +35,9 @@ namespace Optosense.Edm.Jobs
         protected ILogger<StartAuditJob> Logger { get; init; }
         protected IDbContextFactory<EdmContext> ContextFactory { get; init; }
 
+        private readonly string OffsetParamName = "Offset";
+        private IDisposable _paramsSubscriber;
+        private Dictionary<string, object> _inputParams = new();
         private Func<int, int, string, string> CacheKey = (opId, opCritId, addr) => 
             $"{nameof(Operation)}:{opId}:{nameof(OperationCriterion)}:{opCritId}:{addr}";
 
@@ -48,6 +53,18 @@ namespace Optosense.Edm.Jobs
 
         public override bool Init()
         {
+            _paramsSubscriber = Intercom.Subscribe<object>(Parameters.ParametersChannel,
+                onNext: json =>
+                {
+                    var param = JsonConvert.DeserializeObject<KeyValuePair<string, object>>(json.ToString());
+                    if (param.Key == "Stop" && (bool)param.Value)
+                    {
+                        CancellationTokenSource.Cancel();
+                        return;
+                    }
+
+                    PushInputParameter(param);
+                });
             return true;
         }
 
@@ -74,7 +91,7 @@ namespace Optosense.Edm.Jobs
                     // TODO move all db activity to corresponding core service
                     using EdmContext db = await ContextFactory.CreateDbContextAsync();
                     var currentOffset = (rec.ExecutedAt - Parameters.StartAt).TotalMinutes;
-                    var effectiveZones = audit.Where(z => currentOffset >= z.Offset);
+                    var effectiveZones = audit.Where(z => IsActive(z, currentOffset));
                     foreach (var zone in effectiveZones)
                     {
                         var recordParams = JsonConvert.DeserializeObject<dynamic>(rec.Parameters ?? "{}");
@@ -140,6 +157,28 @@ namespace Optosense.Edm.Jobs
             Logger.LogDebug("{Command} {Action}", Name, completed ? "completed" : "cancelled");
             return "Ok";
         }
+
+        private void PushInputParameter(KeyValuePair<string, object> param)
+        {
+            _inputParams[param.Key] = param.Value;
+        }
+
+        private bool IsActive(AuditZone zone, double currentOffset)
+        {
+            if (currentOffset < zone.Offset || currentOffset > zone.Offset + zone.Duration && zone.Offset + zone.Duration > 0)
+            {
+                return false;
+            }
+
+            var activeExpr = Expression.Parse(zone.ActiveWhen ?? bool.TrueString);
+            var (confirmed, activeError) = activeExpr.TryEvaluate<bool>(_inputParams);
+            if (activeError is not null)
+            {
+                Logger.LogError("Cannot evaluate audit zone {zoneNo} activation condition <{condition}>: {error}", zone.No, zone.ActiveWhen, activeError);
+            }
+            
+            return confirmed;
+        }
     }
 
     public class StartAuditJobParameters : IJobParameters
@@ -161,6 +200,7 @@ namespace Optosense.Edm.Jobs
         public int Device { get; set; }
         public DateTime StartAt { get; set; } = DateTime.Now;
         public string Channel { get; set; }
+        public string ParametersChannel { get; set; }
 
     }
 

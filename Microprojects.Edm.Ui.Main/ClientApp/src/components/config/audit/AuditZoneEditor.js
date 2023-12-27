@@ -31,6 +31,11 @@ export function ZoneEditor(props) {
                     value={fields.no}
                     onChange={(e) => setFields({ ...fields, no: e.value })}
                 />
+                <Input
+                    label='Active When'
+                    value={fields.activeWhen}
+                    onChange={(e) => setFields({ ...fields, activeWhen: e.value })}
+                />
                 <NumericTextBox className='k-textbox'
                     label='Offset (min)'
                     value={fields.offset}

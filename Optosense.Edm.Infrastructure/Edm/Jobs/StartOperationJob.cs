@@ -76,6 +76,7 @@ namespace Optosense.Edm.Jobs
                         Device = operationHostDevice.Id,
                         Operation = Parameters.Operation,
                         Channel = auditChannel,
+                        ParametersChannel = parametersChannel,
                         StartAt = Parameters.StartAt
                     };
                     var auditJob = new StartAuditJob { JobParameters = auditParams };

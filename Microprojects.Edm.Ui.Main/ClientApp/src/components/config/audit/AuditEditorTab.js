@@ -50,6 +50,7 @@ export function AuditEditorTab({ id, api, params }) {
             zone.no = response.data.no;
             zone.offset = response.data.offset;
             zone.duration = response.data.duration;
+            zone.activeWhen = response.data.activeWhen;
             toggleZoneEditor();
             setZones([...zones]);
         });
@@ -130,19 +131,23 @@ export function AuditEditorTab({ id, api, params }) {
                     <GridColumn title='Zone'>
                         <GridColumn field='no' title='#' width={40}
                             cell={(cellProps) =>
-                                <td onClick={() => toggleZoneEditor(cellProps.dataItem)}>
-                                    <a type='button'>
-                                        {cellProps.dataItem[cellProps.field]}
-                                    </a>
+                                <td onClick={() => toggleZoneEditor(cellProps.dataItem)} style={{ cursor: 'pointer' }}>
+                                    {cellProps.dataItem[cellProps.field]}
                                 </td>
                             }
                         />
-                        <GridColumn title='Interval'
+                        <GridColumn title='Interval' width={100}
                             cell={(cellProps) =>
-                                <td onClick={() => toggleZoneEditor(cellProps.dataItem)}>
-                                    <a type='button'>
-                                        {`${cellProps.dataItem.offset} : ${cellProps.dataItem.offset + cellProps.dataItem.duration}`}
-                                    </a>
+                                <td onClick={() => toggleZoneEditor(cellProps.dataItem)} style={{ cursor: 'pointer' }}>
+                                    {`${cellProps.dataItem.offset} : ${cellProps.dataItem.offset + cellProps.dataItem.duration}`}
+                                </td>
+                            }
+                        />
+                        <GridColumn title='Active When'
+                            field='activeWhen'
+                            cell={(cellProps) =>
+                                <td onClick={() => toggleZoneEditor(cellProps.dataItem)} style={{ cursor: 'pointer' }}>
+                                    {cellProps.dataItem[cellProps.field]}
                                 </td>
                             }
                         />
