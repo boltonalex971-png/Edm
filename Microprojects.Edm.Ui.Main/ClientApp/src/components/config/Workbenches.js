@@ -36,10 +36,7 @@ export function WorkbenchDetail({ workbenchId, ...props }) {
         };
         axios.post(api.operations, opData)
             .then((op) => {
-                axios.get(`${api.plugins}/${data.operationGuid}`)
-                    .then((pl) => {
-                        window.open(`${pl.data.homepage}?id=${op.data.id}`, '_blank');
-                    });
+                window.open(`${api.baseUrl}/operations/${op.data.id}`, '_blank');
             })
             .catch(alert);
     };

@@ -357,3 +357,6 @@ Microprojects.Edm.Ui.Main/ClientApp/kendo-ui-license.txt
 /Microprojects.Edm.Ui.Console/ui/package-lock.json
 /Optosense.Edm.Profiles.Board/Ui/package-lock.json
 /Optosense.Edm.Drivers.Null/ui/package-lock.json
+/Optosense.Edm.Operations.Test/TypeOneUi/.env.development.local
+/Optosense.Edm.Operations.Test/TypeOneUi/package-lock.json
+/Optosense.Edm.Operations.Test/TypeOneUi/yarn.lock

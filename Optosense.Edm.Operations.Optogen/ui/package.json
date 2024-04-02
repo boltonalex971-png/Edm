@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@microprojects/react-utils": "^1.0.17",
     "@popperjs/core": "^2.10.2",
     "@progress/kendo-data-query": "^1.5.5",
     "@progress/kendo-date-math": "^1.5.5",

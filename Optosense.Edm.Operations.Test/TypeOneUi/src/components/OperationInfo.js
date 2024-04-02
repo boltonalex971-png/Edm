@@ -1,23 +1,25 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react"
 import { useGet } from "./hooks/hooks";
 import { Monitor } from "./Monitor";
 import { Sensor } from "./Sensor";
 import { SmartScroll, SmartScrollContent } from "./SmartScroll";
+import { types, useOperationData } from '@microprojects/react-utils'
 
 let monitorInterval;
 
 export const OperationInfo = (props) => {
     const [capacity, setCapacity] = useState(-1);
     const [sensors, setSensors] = useState();
-    const [lastId, setLastId] = useState(0);
     const [refresh, setRefresh] = useState(false);
     const [[data, setData]] = useGet(`${props.apiBase}/api/operations/${props.operationId}/criteria`, refresh); //records?lastRecordId=${lastId}`, refresh);
     const [[devices]] = useGet(`${props.apiBase}/api/operations/${props.operationId}/devices`);
     const [[status]] = useGet(`${props.apiBase}/api/operations/${props.operationId}/status`);
+    const [params] = useOperationData(types.operationDataType);
+    useEffect(() => {
+    }, [params])
 
-    console.log('props :>> ', data, !!data);
     if (devices && capacity === -1) {
-        const options = JSON.parse(devices[0].options);
+        const options = JSON.parse(devices[0]?.options || 20)
         setCapacity(options?.capacity || 0);
     }
 
@@ -29,8 +31,6 @@ export const OperationInfo = (props) => {
 
         setSensors([...sens]);
     } else if (data && data.length > 0) {
-        setLastId(data.reduce((max, el) => el.id > max ? el.id : max, 0));
-        //const sens = data.filter(d => d.isValid).map(r => ({ ...r, parameters: JSON.parse(r.parameters || "{}") }));
         data.forEach(d => {
             const addr = d.selector !== undefined && parseInt(`0x${d.selector.slice(1)}`);
             if (addr !== false) {

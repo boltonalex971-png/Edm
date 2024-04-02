@@ -11,6 +11,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { Config } from "./components/Config";
 import { useGet } from "./components/hooks/hooks";
 import { defaultOptions } from "./components/DefaultOptions";
+import { useOperationData, types } from '@microprojects/react-utils'
 
 function App({ apiBase }) {
     // const location = useLocation();
@@ -19,33 +20,17 @@ function App({ apiBase }) {
     const [operationId] = useState(searchParams.get('id'));
     const [[processInfo]] = useGet(`${apiBase}/api/operations/${operationId}/processInfo`);
     const [settings, setSettings] = useState();
-
-    useEffect(() => {
-        if (processInfo && !settings) {
-            setSettings(processInfo.settings && JSON.parse(processInfo.settings) || defaultOptions);
-        }
-    }, [processInfo, settings]);
-
     const [started, setStarted] = useState(false);
-    const onStarted = useCallback(() => setStarted(true), [])
-    const onFinished = useCallback(() => setStarted(false), [])
+    const [lifecycle] = useOperationData(types.operationLifecycle, (d) => setStarted(d.Start))
+    useEffect(() => {
+        if (processInfo?.settings) {
+            setSettings(JSON.parse(processInfo.settings))
+        }
+    }, [processInfo])
     return (
         <Routes>
             <Route path="*" element={
-                <Layout
-                    header={
-                        <OperationMenu
-                            apiBase={apiBase}
-                            operationId={operationId}
-                            process={processInfo}
-                            onStarted={onStarted}
-                            onCompleted={onFinished}
-                            onCancelled={onFinished}
-                        />
-                    }
-                >
-                    <Outlet context={{ operationId, apiBase, processInfo }} />
-                </Layout>
+                <Outlet context={{ operationId, apiBase, processInfo }} />
             }>
                 <Route index element={
                     settings && <OperationInfo settings={settings} started={started} /> || 'Loading...'

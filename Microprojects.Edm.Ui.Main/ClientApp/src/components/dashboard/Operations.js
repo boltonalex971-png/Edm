@@ -18,12 +18,6 @@ const Operations = () => {
         interval = setInterval(() => setTime(Date.now), 10000);
         return () => clearInterval(interval);
     }, []);
-    const operationSelected = (opId) => {
-        Axios.get(`${api.operations}/${opId}/process`)
-            .then(r => Axios.get(`${api.plugins}/${r.data.operationGuid}`)
-                .then(p => window.open(`${p.data.homepage}?id=${opId}`, '_blank')))
-            .catch(alert);
-    };
     return (
         <>
             {!operations && <Loading />}
@@ -32,7 +26,7 @@ const Operations = () => {
                     {operations.map((o) =>
                         <Card key={o.id}>
                             <CardBody>
-                                <CardTitle><Link onClick={() => operationSelected(o.id)}><h5>{o.processName}</h5></Link></CardTitle>
+                                <CardTitle><Link to={`/operations/${o.id}`} target='_blank'><h5>{o.processName}</h5></Link></CardTitle>
                                 <CardSubtitle>{o.processDescription}</CardSubtitle>
                                 <CardText>
                                     <span title={dateToSpan(o.created)}>Created {dateToHumanSpan(o.created)} ago</span><br />

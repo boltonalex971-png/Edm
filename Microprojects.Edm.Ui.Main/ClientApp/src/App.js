@@ -1,5 +1,5 @@
-import React, { Component, useState } from "react";
-import { Route, MemoryRouter } from "react-router";
+import React, { useState } from "react";
+import { Route, MemoryRouter, Switch } from "react-router";
 import { Layout } from "./components/Layout";
 import { Home } from "./components/home/Home";
 import { Dashboard } from "./components/dashboard/Dashboard";
@@ -13,6 +13,7 @@ import { ApiContext, appRoles, UserContext } from './ApiContext';
 import api from "./components/api";
 import { useGet } from "./components/hooks/hooks";
 import Operations from "./components/dashboard/Operations";
+import { OperationLayout } from "./components/operation/OperationLayout";
 
 export default function App() {
     const [homebase] = useState(`${process.env.REACT_APP_API_URL || window.location.origin}`);
@@ -24,36 +25,39 @@ export default function App() {
     return (
         <ApiContext.Provider value={homebase}>
             <UserContext.Provider value={userInfo}>
-                <Layout>
-                    <UserContext.Consumer>
-                        {user =>
-                            (user && user.role && user.role !== appRoles.operator &&
-                                <>
-                                    <Route exact path="/" component={Home} />
-                                    <Route path="/dashboard" component={Dashboard} />
-                                    <Route path="/config" component={Config} />
-                                    <Route path="/plugins" component={Plugins} />
-                                    <Route path="/operation">
-                                        <MemoryRouter>
-                                            <NewOperationWizard />
-                                        </MemoryRouter>
-                                    </Route>
-                                </>) ||
-                            (user && user.role === appRoles.operator && <Operations />) ||
-                            (user && !user.role &&
-                                <span>
-                                    As user {user.name} you are not authorized to access ISTP application.
-                                    No role is assigned to your account.
-                                    Please refer to your system administrator.
-                                </span>) ||
-                            (!user &&
-                                <span>
-                                    You are not authenticated to access ISTP application.
-                                    Please refer to your system administrator.
-                                </span>)
-                        }
-                    </UserContext.Consumer>
-                </Layout>
+                <Switch>
+                    <Route path='/operations/:id' component={OperationLayout} />
+                    <Layout>
+                        <UserContext.Consumer>
+                            {user =>
+                                (user && user.role && user.role !== appRoles.operator &&
+                                    <>
+                                        <Route exact path="/" component={Home} />
+                                        <Route path="/dashboard" component={Dashboard} />
+                                        <Route path="/config" component={Config} />
+                                        <Route path="/plugins" component={Plugins} />
+                                        <Route path="/operation">
+                                            <MemoryRouter>
+                                                <NewOperationWizard />
+                                            </MemoryRouter>
+                                        </Route>
+                                    </>) ||
+                                (user && user.role === appRoles.operator && <Operations />) ||
+                                (user && !user.role &&
+                                    <span>
+                                        As user {user.name} you are not authorized to access ISTP application.
+                                        No role is assigned to your account.
+                                        Please refer to your system administrator.
+                                    </span>) ||
+                                (!user &&
+                                    <span>
+                                        You are not authenticated to access ISTP application.
+                                        Please refer to your system administrator.
+                                    </span>)
+                            }
+                        </UserContext.Consumer>
+                    </Layout>
+                </Switch>
             </UserContext.Provider>
         </ApiContext.Provider>
     );

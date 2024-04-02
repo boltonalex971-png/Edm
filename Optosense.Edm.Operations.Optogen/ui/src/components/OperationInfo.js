@@ -78,7 +78,7 @@ export const OperationInfo = ({ settings, started }) => {
     };
 
     return (
-        <div className="desktop">
+        <div className="desktop" style={{ height: '100vh' }}>
             {step && <Step step={step} onSubmit={handleSubmit} />}
             <div className="left wrapper">
                 <div className="profile" style={{ backgroundColor: settings.panels.profile.color }}>
