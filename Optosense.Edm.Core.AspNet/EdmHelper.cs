@@ -10,6 +10,7 @@ using System.Linq;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
 using Optosense.Edm.WebApi.Utils;
+using Newtonsoft.Json;
 
 namespace Optosense.Edm.Core.AspNet
 {
@@ -34,10 +35,9 @@ namespace Optosense.Edm.Core.AspNet
 
         public static void AddCache(this IHostApplicationBuilder builder)
         {
-            var options = builder.Configuration.GetSection("Edm:Cache").Get<CacheOptions>();
-            ICache cache = options?.Default.Kind switch
+            ICache cache = builder.Configuration.GetSection("Edm:Cache:Default:Kind").Value switch
             {
-                CacheOptions.CacheKinds.Redis => new RedisCache(options.Default.ConnectionString),
+                "Redis" => new RedisCache(builder.Configuration.GetSection("Edm:Cache:Default:ConnectionString").Value),
                 _ => new MemCache()
             };
             builder.Services.AddSingleton(cache);
@@ -56,20 +56,21 @@ namespace Optosense.Edm.Core.AspNet
         }
     }
 
+    public enum CacheKinds
+    {
+        Redis,
+        Mem
+    }
+
     public class CacheOptions
     {
-        public enum CacheKinds 
-        { 
-            Redis,
-            Mem
-        }
         public CacheInstance Default { get; set; }
         public CacheInstance Spare { get; set; }
     }
 
     public class CacheInstance
     {
-        public CacheOptions.CacheKinds Kind { get; set; }
+        public CacheKinds Kind { get; set; }
         public string ConnectionString { get; set; }
     }
 }

@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="OPCFoundation.NetStandard.Opc.Ua.Client" Version="1.4.372.76" GeneratePathProperty="yes" IncludeAssets="all" PrivateAssets="all" />
+    <PackageReference Include="OPCFoundation.NetStandard.Opc.Ua.Client" Version="1.5.374.36" GeneratePathProperty="yes" IncludeAssets="all" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
@@ -16,7 +16,7 @@
   </ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="8.0.0" />
+		<PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="8.0.4" />
 	</ItemGroup>
 
 	<ItemGroup>

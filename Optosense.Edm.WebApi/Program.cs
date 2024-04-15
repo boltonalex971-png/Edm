@@ -24,7 +24,6 @@ using Microsoft.Extensions.Logging.EventLog;
 using Microsoft.Extensions.Options;
 using Optosense.Edm.Core.AspNet;
 using Optosense.Edm.DataAccess;
-using Optosense.Edm.Drivers.Operator;
 using Optosense.Edm.Persistence;
 using Optosense.Edm.WebApi;
 using Optosense.Edm.WebApi.Services;
@@ -66,7 +65,7 @@ builder.Services.Configure<Peer>(options =>
     options.UiPort = uiUri.Port;
     options.Version = typeof(Worker).Assembly.GetName().Version.ToString();
 });
-
+//System.Diagnostics.Debugger.Launch();
 builder.AddCache();
 builder.AddOperationIntercom();
 builder.Services.AddGrpc();

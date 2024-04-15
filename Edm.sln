@@ -48,8 +48,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microprojects.Edm.Ui.Main",
 EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Optosense.Edm.Setup", "Optosense.Edm.Setup\Optosense.Edm.Setup.vdproj", "{DD444BA5-2CD3-41E4-BB54-115DDE716C34}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microprojects.Edm.Installer", "Microprojects.Edm.Installer\Microprojects.Edm.Installer.csproj", "{37BFFE19-D51F-48B6-9BB4-5168D4F819D5}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microprojects.Edm.Ui.Console", "Microprojects.Edm.Ui.Console\Microprojects.Edm.Ui.Console.csproj", "{FFD127A1-674B-46B6-A5EE-A14644C0C6A1}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Plugins", "Plugins", "{5DE79CDF-469D-46D8-B365-BE9D4DB8BBD3}"
@@ -58,7 +56,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Optosense.Edm.Plugins.Opera
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Optosense.Edm.Plugins.OpcUa", "Optosense.Edm.Plugins.OpcUa\Optosense.Edm.Plugins.OpcUa.csproj", "{64DD102C-E20D-4E59-BBDF-EA68A8A920AE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Optosense.Edm.Operations.Optogen", "Optosense.Edm.Operations.Optogen\Optosense.Edm.Operations.Optogen.csproj", "{85E00613-E1D8-4908-874D-5F0DF83F1D5F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Optosense.Edm.Operations.Optogen", "Optosense.Edm.Operations.Optogen\Optosense.Edm.Operations.Optogen.csproj", "{85E00613-E1D8-4908-874D-5F0DF83F1D5F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microprojects.Edm.Install", "Microprojects.Edm.Install\Microprojects.Edm.Install.csproj", "{4DE52828-D425-4C0B-9082-064CB88423A1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -124,11 +124,6 @@ Global
 		{0A4647EE-4E84-4D9F-B96B-659081E07392}.Release|Any CPU.Build.0 = Release|Any CPU
 		{DD444BA5-2CD3-41E4-BB54-115DDE716C34}.Debug|Any CPU.ActiveCfg = Debug
 		{DD444BA5-2CD3-41E4-BB54-115DDE716C34}.Release|Any CPU.ActiveCfg = Release
-		{DD444BA5-2CD3-41E4-BB54-115DDE716C34}.Release|Any CPU.Build.0 = Release
-		{37BFFE19-D51F-48B6-9BB4-5168D4F819D5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{37BFFE19-D51F-48B6-9BB4-5168D4F819D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{37BFFE19-D51F-48B6-9BB4-5168D4F819D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{37BFFE19-D51F-48B6-9BB4-5168D4F819D5}.Release|Any CPU.Build.0 = Release|Any CPU
 		{FFD127A1-674B-46B6-A5EE-A14644C0C6A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{FFD127A1-674B-46B6-A5EE-A14644C0C6A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FFD127A1-674B-46B6-A5EE-A14644C0C6A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -145,6 +140,10 @@ Global
 		{85E00613-E1D8-4908-874D-5F0DF83F1D5F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{85E00613-E1D8-4908-874D-5F0DF83F1D5F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{85E00613-E1D8-4908-874D-5F0DF83F1D5F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4DE52828-D425-4C0B-9082-064CB88423A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4DE52828-D425-4C0B-9082-064CB88423A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4DE52828-D425-4C0B-9082-064CB88423A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4DE52828-D425-4C0B-9082-064CB88423A1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
