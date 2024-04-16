@@ -42,12 +42,16 @@ builder.WebHost.ConfigureLogging(configureLogging => configureLogging.AddFilter<
 builder.Services.AddDbContextPool<EdmContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("Edm"),
-        sqlOptions => sqlOptions.MigrationsAssembly("Optosense.Edm.DataAccess")),
+        sqlOptions => sqlOptions
+            .MigrationsAssembly("Optosense.Edm.DataAccess")
+            .UseCompatibilityLevel(120)), // This is workaround for EF 8 and "Contains" problem
     poolSize: 128);
 builder.Services.AddPooledDbContextFactory<EdmContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("Edm"),
-        sqlOptions => sqlOptions.MigrationsAssembly("Optosense.Edm.DataAccess")),
+        sqlOptions => sqlOptions
+        .MigrationsAssembly("Optosense.Edm.DataAccess")
+        .UseCompatibilityLevel(120)),
     poolSize: 16);
 
 builder.Services.Configure<IntercomOptions>(builder.Configuration.GetSection("Edm:Intercom"));
