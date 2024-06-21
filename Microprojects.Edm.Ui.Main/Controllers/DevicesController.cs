@@ -10,6 +10,7 @@ using Optosense.Edm.Domain.Models;
 using Optosense.Edm.Plugins;
 using Microprojects.Edm.Ui.Main.Models;
 using Microprojects.Edm.Ui.Main.Utils;
+using Microsoft.Extensions.Configuration;
 
 namespace Microprojects.Edm.Ui.Main.Controllers
 {
@@ -23,7 +24,8 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         private readonly IPluginContainer _plugins;
         private readonly IMapper _mapper;
 
-        public DevicesController(ILogger<DevicesController> logger, IMapper mapper, IDeviceService deviceService, IHierarchyService hierarchyService, IPluginContainer pluginContainer)
+        public DevicesController(ILogger<DevicesController> logger, IMapper mapper, IDeviceService deviceService, IHierarchyService hierarchyService, IPluginContainer pluginContainer, IConfiguration configuration) :
+            base(configuration)
         {
             _logger = logger;
             _mapper = mapper;
@@ -94,7 +96,8 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         public async Task<IEnumerable<HierarchyItemViewModel>> GetHierarchy()
         {
             var devices = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(
-                await _deviceService.GetAll());
+                await _deviceService.GetAll(),
+                o => o.Items["Type"] = HierarchyType.Device);
             var folders = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(
                 await _hierarchyService.GetTree(HierarchyType.Device, UserInfo));
             //var expanded = _cache.RestoreMany<TreeExpanedState>(UiCacheHelper.OwnerKey(this), () => HierarchyType.Host);

@@ -44,7 +44,7 @@ namespace Optosense.Edm.Plugins
             return result;
         }
 
-        IProfilePlugin IPluginContainer.GetProfile(Guid guid) => GetProfiles().FirstOrDefault(p => p.Guid == guid);
+        public IProfilePlugin GetProfile(Guid guid) => GetProfiles().FirstOrDefault(p => p.Guid == guid);
 
         IEnumerable<IDriverPlugin> IPluginContainer.GetProfileDrivers(Guid profileGuid)
         {
@@ -59,5 +59,7 @@ namespace Optosense.Edm.Plugins
                 .ToList();
             return result;
         }
+
+        public IProfilePlugin GetProfileByDriver(Guid driverGuid) => GetProfile(GetDriver(driverGuid)?.ProfileGuid ?? Guid.Empty);
     }
 }

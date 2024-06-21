@@ -44,11 +44,11 @@ namespace Optosense.Edm.Core.Services
 
         public async Task<IEnumerable<Hierarchy>> GetTree(HierarchyType type, UserInfo user)
         {
-            var groups = user.Claims.Select(c => c.Name).ToList();
+            var groups = user.Claims.Select(c => c.Sid).ToList();
             var folder = await Db.Hierarchies
                 .Where(h => h.IsActive && 
                     h.Type == type &&
-                    (h.Group == null || user.Role == "Admin" || groups.Contains(h.Group))
+                    (h.Group == null || user.Role == "Admin" || h.Group != null && groups.Contains(h.Group))
             ).ToListAsync();
             return folder;
         }

@@ -1,6 +1,7 @@
 ﻿using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
 using Optosense.Edm.Core.Contracts;
+using Optosense.Edm.Core.Models;
 using Optosense.Edm.Domain.Models;
 using Optosense.Edm.Persistence;
 using System;
@@ -52,6 +53,16 @@ namespace Optosense.Edm.Core.Services
             return devices;
         }
 
+        public async Task<WorkplaceHostDevice> GetDevice(int workplaceDeviceId)
+        {
+            var device = await Db.WorkplaceHostDevices
+                .Include(w => w.HostDevice.Device)
+                .Include(w => w.HostDevice.Host)
+                .Where(w => w.Id == workplaceDeviceId)
+                .FirstOrDefaultAsync();
+            return device;
+        }
+
         public async Task<WorkplaceHostDevice> AttachDevice(WorkplaceHostDevice workplaceHostDevice)
         {
             var result = Db.WorkplaceHostDevices.Add(workplaceHostDevice);
@@ -79,6 +90,18 @@ namespace Optosense.Edm.Core.Services
         #endregion
 
         #region processes
+        public async Task<IEnumerable<WorkplaceProcess>> GetAllowedProcesses(UserInfo userInfo)
+        {
+            var tree = await _hierarchyService.GetTree(HierarchyType.Workplace, userInfo);
+            var ids = tree.Select(t => t.Id);
+            var processes = await Db.WorkplaceProcesses
+                .Include(w => w.Workplace)
+                .Include(w => w.Process)
+                .Where(w => ids.Contains(w.Workplace.HierarchyId))
+                .ToListAsync();
+            return processes;
+        }
+
         public async Task<IEnumerable<WorkplaceProcess>> GetProcesses(int workspaceId)
         {
             var devices = await Db.WorkplaceProcesses

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
@@ -18,7 +19,9 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
 using System.Runtime.Versioning;
+using System.Security.Claims;
 using System.Security.Principal;
+using System.Threading.Tasks;
 
 namespace Optosense.Edm.Core.AspNet;
 
@@ -42,33 +45,6 @@ public static class PluginManagerHelper
             }
             else
             {
-                if (!context.Session.Keys.Contains("UserInfo"))
-                {
-                    var configuration = builder.ApplicationServices.GetRequiredService<IConfiguration>();
-                    var identity = (WindowsIdentity)context.User.Identity;
-                    var claims = identity.Groups.Select(g => new UserClaim
-                    {
-                        Sid = g.Value,
-                        Name = g.Translate(typeof(NTAccount)).Value
-                    }).ToList();
-                    var roles = configuration.GetSection("Edm:Auth:Roles").GetChildren()
-                        .Where(c => claims.Any(l => l.Name.Contains(c.Value)))
-                        .Select(c => c.Key).ToList();
-                    var root = configuration.GetSection("Edm:Auth").GetValue<string>("DivisionsRoot");
-                    var divisions = claims
-                        .Where(c => c.Name.Contains(root))
-                        .Select(c => c.Name).ToList();
-                    var userInfo = new UserInfo
-                    {
-                        Name = identity.Name,
-                        Claims = claims,
-                        Roles = roles,
-                        Role = roles.FirstOrDefault(),
-                        Divisions = divisions,
-                    };
-                    context.Session.SetString("UserInfo", JsonConvert.SerializeObject(userInfo));
-                }
-
                 await next();
             }
         });
@@ -78,32 +54,35 @@ public static class PluginManagerHelper
 
     public static IApplicationBuilder UseFakeUserInfo(this IApplicationBuilder builder)
     {
-        builder.Use((context, next) =>
+        builder.Use(async (context, next) =>
         {
-            if (!context.Session.Keys.Contains("UserInfo"))
+            if (!context.User.Identity.IsAuthenticated)
             {
+                var authProperties = new AuthenticationProperties
+                {
+                    //IsPersistent = true
+                };
+                var claimsIdentity = new ClaimsIdentity(
+                    new List<Claim>
+                    {
+                        new Claim(ClaimTypes.Name, "User"),
+                        new Claim(ClaimTypes.Role, "Admin"),
+                        new Claim("Groups", "Group 1"),
+                        new Claim("Groups", "Group 2"),
+                        new Claim("Groups", "Group 3"),
+                    },
+                    CookieAuthenticationDefaults.AuthenticationScheme);
                 var configuration = builder.ApplicationServices.GetRequiredService<IConfiguration>();
-                var claims = new[] {
-                                new UserClaim { Sid = "1", Name = "Group 1" },
-                                new UserClaim { Sid = "2", Name = "Group 2" },
-                                new UserClaim { Sid = "3", Name = "Group 3" },
-                        };
                 var roles = configuration.GetSection("Edm:Auth:Roles").GetChildren()
                     .Select(c => c.Key).ToList();
-                var divisions = claims
-                    .Select(c => c.Name).ToList();
-                var userInfo = new UserInfo
-                {
-                    Name = "User",
-                    Claims = claims,
-                    Roles = roles,
-                    Role = roles.FirstOrDefault(),
-                    Divisions = divisions,
-                };
-                context.Session.SetString("UserInfo", JsonConvert.SerializeObject(userInfo));
+                roles.ForEach(r => claimsIdentity.AddClaim(new Claim("Roles", r)));
+                await context.SignInAsync(
+                    CookieAuthenticationDefaults.AuthenticationScheme,
+                    new ClaimsPrincipal(claimsIdentity),
+                    authProperties);
             }
 
-            return next();
+            await next(context);
         });
 
         return builder;
@@ -167,8 +146,8 @@ public static class PluginManagerHelper
                 {
                     context.Request.Path = new PathString($"{pluginPath}/index.html");
                 }
-                    //return Task.CompletedTask;
-                }
+                //return Task.CompletedTask;
+            }
 
             return next();
         });

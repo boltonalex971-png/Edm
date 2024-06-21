@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using Optosense.Edm.Core.Contracts;
+using Optosense.Edm.Core.Models;
 using Optosense.Edm.Domain.Models;
 using Optosense.Edm.Persistence;
 using System;
@@ -21,10 +23,20 @@ namespace Optosense.Edm.Core.Services
 
         public ProcessService() { }
 
-        public ProcessService(EdmContext db, IProfileService profileService, IHierarchyService hierarchyService) : base(db) 
+        public ProcessService(EdmContext db, IProfileService profileService, IHierarchyService hierarchyService) : base(db)
         {
             _profileService = profileService;
             _hierarchyService = hierarchyService;
+        }
+
+        public async Task<IEnumerable<Process>> GetHierarchy(UserInfo userInfo)
+        {
+            var tree = await _hierarchyService.GetTree(HierarchyType.Process, userInfo);
+            var ids = tree.Select(t => t.Id);
+            var processes = await Db.Processes
+                .Where(p => ids.Contains(p.HierarchyId))
+                .ToListAsync();
+            return processes;
         }
 
         public async Task<Process> ChangeParent(int id, int newParentId)
@@ -55,6 +67,15 @@ namespace Optosense.Edm.Core.Services
             return profiles;
         }
 
+        public async Task<IEnumerable<string>> GetMissingInputs(int id)
+        {
+            var profiles = await GetProfiles(id);
+            var inputs = profiles.SelectMany(p => JsonConvert.DeserializeObject<string[]>(p.Input ?? "[]")).Distinct();
+            var outputs = profiles.SelectMany(p => JsonConvert.DeserializeObject<string[]>(p.Output ?? "[]")).Distinct();
+            var missing = inputs.Except(outputs);
+            return missing;
+        }
+
         public async Task<Profile> AddProfile(int id, Profile profile)
         {
             var process = await Db.Processes
@@ -71,13 +92,15 @@ namespace Optosense.Edm.Core.Services
             var process = await Db.Processes
                 .Include(p => p.Profiles)
                 .FirstOrDefaultAsync(p => p.Id == id) ?? throw new ArgumentException("Process not found");
-            var profile = process.Profiles.FirstOrDefault(p => p.Id == profileId) ?? 
+            var profile = process.Profiles.FirstOrDefault(p => p.Id == profileId) ??
                 throw new ArgumentException("Profile not found");
             process.Profiles.Remove(profile);
             await Db.SaveChangesAsync();
             return true;
         }
 
+
+        #region qualifiers
         public async Task<IEnumerable<Qualifier>> GetQualifiers(int id)
         {
             var qualifier = await Db.Qualifiers
@@ -114,7 +137,7 @@ namespace Optosense.Edm.Core.Services
             var result = await Save(qualifier);
             return result;
         }
-
+        #endregion
 
     }
 }

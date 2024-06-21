@@ -16,6 +16,7 @@ namespace Optosense.Edm.Plugins
         IOperationPlugin GetMonitor(Guid guid);
         IEnumerable<IOperationPlugin> GetOperations();
         IProfilePlugin GetProfile(Guid guid);
+        IProfilePlugin GetProfileByDriver(Guid driverGuid);
         IEnumerable<IProfilePlugin> GetProfiles();
     }
 }

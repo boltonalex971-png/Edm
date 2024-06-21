@@ -10,6 +10,7 @@ using Optosense.Edm.Domain.Models;
 using Optosense.Edm.Plugins;
 using Microprojects.Edm.Ui.Main.Models;
 using Microprojects.Edm.Ui.Main.Utils;
+using Microsoft.Extensions.Configuration;
 
 namespace Microprojects.Edm.Ui.Main.Controllers
 {
@@ -23,7 +24,8 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         private readonly IHierarchyService _hierarchyService;
         private readonly IPluginContainer _plugins;
 
-        public HostsController(ILogger<HostsController> logger, IMapper mapper, IHostService hostService, IHierarchyService hierarchyService,IPluginContainer plugins)
+        public HostsController(ILogger<HostsController> logger, IMapper mapper, IHostService hostService, IHierarchyService hierarchyService,IPluginContainer plugins, IConfiguration configuration) :
+            base(configuration)
         {
             _logger = logger;
             _mapper = mapper;
@@ -100,7 +102,8 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         public async Task<IEnumerable<HierarchyItemViewModel>> GetHostHierarchy()
         {
             var hosts = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(
-                await _hostService.GetAll());
+                await _hostService.GetAll(),
+                o => o.Items["Type"] = HierarchyType.Host);
             var folders = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(
                 await _hierarchyService.GetTree(HierarchyType.Host, UserInfo));
             //var expanded = _cache.RestoreMany<TreeExpanedState>(UiCacheHelper.OwnerKey(this), () => HierarchyType.Host);
@@ -165,7 +168,7 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         public async Task<HostDeviceModel> GetHostDevice(int id)
         {
             var device = await _hostService.GetHostDevice(id);
-            return _mapper.Map<HostDeviceModel>(device);
+            return _mapper.Map<HostDeviceModel>(device, o => o.State = _plugins);
         }
         #endregion
     }

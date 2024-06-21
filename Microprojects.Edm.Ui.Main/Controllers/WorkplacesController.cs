@@ -11,6 +11,7 @@ using Optosense.Edm.Domain.Models;
 using Optosense.Edm.Plugins;
 using Microprojects.Edm.Ui.Main.Models;
 using Microprojects.Edm.Ui.Main.Utils;
+using Microsoft.Extensions.Configuration;
 
 namespace Microprojects.Edm.Ui.Main.Controllers
 {
@@ -26,12 +27,13 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         private readonly IPluginContainer _plugins;
 
         public WorkplacesController(
-            ILogger<WorkplacesController> logger, 
-            IMapper mapper, 
+            ILogger<WorkplacesController> logger,
+            IMapper mapper,
             IWorkplaceService workplaceService,
-            IProcessService processService, 
-            IHierarchyService hierarchyService, 
-            IPluginContainer plugins)
+            IProcessService processService,
+            IHierarchyService hierarchyService,
+            IPluginContainer plugins, IConfiguration configuration) :
+            base(configuration)
         {
             _logger = logger;
             _mapper = mapper;
@@ -103,10 +105,11 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         [HttpGet("hierarchy")]
         public async Task<IEnumerable<HierarchyItemViewModel>> GetHierarchy()
         {
-            var workplaces = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(
-                await _workplaceService.GetAll());
             var folders = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(
                 await _hierarchyService.GetTree(HierarchyType.Workplace, UserInfo));
+            var workplaces = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(
+                await _workplaceService.Get(w => folders.Select(f => f.Id).Contains(w.HierarchyId) && w.IsActive));
+            //o => o.Items["Type"] = HierarchyType.Workplace);
             //var expanded = _cache.RestoreMany<TreeExpanedState>(UiCacheHelper.OwnerKey(this), () => HierarchyType.Host);
             //foreach (var folder in folders)
             //{
@@ -128,16 +131,16 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         public async Task<IEnumerable<WorkplaceHostDeviceModel>> GetDevices(int id)
         {
             var devices = await _workplaceService.GetDevices(id);
-            var models = _mapper.Map<IEnumerable<WorkplaceHostDeviceModel>>(devices);
-            foreach (var dev in models)
-            {
-                var driver = _plugins.GetDriver(dev.DriverGuid);
-                var profiler = _plugins.GetProfile(driver?.ProfileGuid ?? Guid.Empty);
-                dev.DriverName = driver?.Name;
-                dev.ProfilerGuid = driver?.ProfileGuid ?? Guid.Empty;
-                dev.ProfilerName = profiler?.Name;
-            }
+            var models = _mapper.Map<IEnumerable<WorkplaceHostDeviceModel>>(devices, o => o.State = _plugins);
             return models;
+        }
+
+        [HttpGet("devices/{workplaceDeviceId:int}")]
+        public async Task<WorkplaceHostDeviceModel> GetDevice(int workplaceDeviceId)
+        {
+            var device = await _workplaceService.GetDevice(workplaceDeviceId);
+            var model = _mapper.Map<WorkplaceHostDeviceModel>(device, o => o.State = _plugins);
+            return model;
         }
 
         [HttpPost("{id:int}/devices")]
@@ -156,6 +159,38 @@ namespace Microprojects.Edm.Ui.Main.Controllers
             return wasDetached;
         }
 
+        [HttpGet("{id:int}/devices/{profilerGuid:guid}")]
+        public async Task<IEnumerable<WorkplaceHostDeviceModel>> GetProfiledDevices(int id, Guid profilerGuid)
+        {
+            var hostDevices = (await _workplaceService.GetDevices(id))
+                .Where(d => _plugins.GetDriver(d.HostDevice.Device.DriverGuid)?.ProfileGuid == profilerGuid)
+                .AsEnumerable();
+            return _mapper.Map<IEnumerable<WorkplaceHostDeviceModel>>(hostDevices);
+        }
+
+        #endregion
+
+        #region processes
+
+        [HttpGet("processes/allowed")]
+        public async Task<IEnumerable<HierarchyItemViewModel>> GetProcessesHierarchy()
+        {
+            var folders = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(
+                await _hierarchyService.GetTree(HierarchyType.Workplace, UserInfo));
+            var wpProc = await _workplaceService.GetAllowedProcesses(UserInfo);
+            var workplaces = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(
+                wpProc.Select(wp => wp.Workplace).Distinct(new DomainObjectComparer<Workplace>()));
+            var processes = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(wpProc);
+                //.Where(p => workplaces.Select(f => f.Id).Contains(p.ParentId));
+            foreach (var w in workplaces)
+            {
+                w.Items = processes.Where(p => p.ParentId == w.Id).ToList();
+            }
+            var tree = folders.Concat(workplaces).ToDeepTree();
+
+            return tree;
+        }
+
         [HttpGet("devices")]
         public async Task<IEnumerable<IdNameModel>> GetAvailableHostDevices(Guid? profilerGuid)
         {
@@ -172,11 +207,8 @@ namespace Microprojects.Edm.Ui.Main.Controllers
             return _mapper.Map<IEnumerable<IdNameModel>>(hostDevices);
         }
 
-        #endregion
-
-        #region processes
         [HttpGet("{id:int}/processes")]
-        public async Task<IEnumerable<WorkplaceProcessModel>> GetProcess(int id)
+        public async Task<IEnumerable<WorkplaceProcessModel>> GetProcesses(int id)
         {
             var processes = await _workplaceService.GetProcesses(id);
             return _mapper.Map<IEnumerable<WorkplaceProcessModel>>(processes);

@@ -14,11 +14,18 @@ import api from "./components/api";
 import { useGet } from "./components/hooks/hooks";
 import Operations from "./components/dashboard/Operations";
 import { OperationLayout } from "./components/operation/OperationLayout";
+import axios from "axios";
 
 export default function App() {
     const [homebase] = useState(`${process.env.REACT_APP_API_URL || window.location.origin}`);
     const [[userInfo, setUserInfo]] = useGet(`${api.auth}/user/name`, []);
-    const setRole = (role) => setUserInfo({ ...userInfo, role: role });
+    const setRole = (role) =>
+        axios.put(`${api.auth}/user/role`, role, { headers: { 'Content-Type': 'application/json' } })
+        .then(r => {
+            setUserInfo(r.data)
+            window.location.reload()
+        })
+        .catch(r => alert(r))
     if (userInfo) {
         userInfo.setRole = setRole;
     }
@@ -36,11 +43,7 @@ export default function App() {
                                         <Route path="/dashboard" component={Dashboard} />
                                         <Route path="/config" component={Config} />
                                         <Route path="/plugins" component={Plugins} />
-                                        <Route path="/operation">
-                                            <MemoryRouter>
-                                                <NewOperationWizard />
-                                            </MemoryRouter>
-                                        </Route>
+                                        <Route path="/operation" component={NewOperationWizard} />
                                     </>) ||
                                 (user && user.role === appRoles.operator && <Operations />) ||
                                 (user && !user.role &&

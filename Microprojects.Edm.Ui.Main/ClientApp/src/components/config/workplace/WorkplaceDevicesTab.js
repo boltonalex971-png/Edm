@@ -17,7 +17,7 @@ WorkplaceDevicesTab.propTypes = {
 
 export function WorkplaceDevicesTab({ id, api, onDetailSelected }) {
     const history = useHistory();
-    const [[deviceList]] = useGet(`${api}/devices`, []);
+    const [[deviceList]] = useGet(`${api}/devices`);
     return (
         <RelationTable api={`${api}/${id}/devices`} removable>
             <SubDetailColumn

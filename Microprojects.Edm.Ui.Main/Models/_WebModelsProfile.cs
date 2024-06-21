@@ -18,9 +18,14 @@ namespace Microprojects.Edm.Ui.Main.Models
                 .ForMember(d => d.DeviceId, o => o.MapFrom(s => s.HostDevice.DeviceId))
                 .ForMember(d => d.Device, o => o.MapFrom(s => s.HostDevice.Device.Name))
                 .ForMember(d => d.DriverGuid, o => o.MapFrom(s => s.HostDevice.Device.DriverGuid))
-                .ForMember(d => d.DriverName, o => o.Ignore())
-                .ForMember(d => d.ProfilerName, o => o.Ignore())
-                .ForMember(d => d.ProfilerGuid, o => o.Ignore());
+                .ForMember(d => d.DriverName, o => o.MapFrom(
+                    (s, d, m, c) => (c.State as IPluginContainer)?.GetDriver(s.HostDevice.Device.DriverGuid)?.Name))
+                .ForMember(d => d.DriverHomepage, o => o.MapFrom(
+                    (s, d, m, c) => (c.State as IPluginContainer)?.GetDriver(s.HostDevice.Device.DriverGuid)?.Homepage))
+                .ForMember(d => d.ProfilerName, o => o.MapFrom(
+                    (s, d, m, c) => (c.State as IPluginContainer)?.GetProfileByDriver(s.HostDevice.Device.DriverGuid)?.Name))
+                .ForMember(d => d.ProfilerGuid, o => o.MapFrom(
+                    (s, d, m, c) => (c.State as IPluginContainer)?.GetDriver(s.HostDevice.Device.DriverGuid)?.ProfileGuid));
             CreateMap<WorkplaceHostDeviceModel, WorkplaceHostDevice>()
                 .ForMember(d => d.Workplace, o => o.Ignore())
                 .ForMember(d => d.HostDevice, o => o.Ignore());
@@ -36,7 +41,7 @@ namespace Microprojects.Edm.Ui.Main.Models
             CreateMap<Process, IdNameModel>();
             CreateMap<Process, ProcessViewModel>()
                 .ForMember(d => d.Message,
-                    o => o. MapFrom(s => JsonConvert.SerializeObject(s.Profiles
+                    o => o.MapFrom(s => JsonConvert.SerializeObject(s.Profiles
                             .SelectMany(p => JsonConvert.DeserializeObject<string[]>(p.Input ?? "[]"))
                             .Distinct()
                             .Except(s.Profiles
@@ -49,9 +54,14 @@ namespace Microprojects.Edm.Ui.Main.Models
 
             CreateMap<HostDevice, HostDeviceModel>()
                 .ForMember(d => d.DriverGuid, o => o.MapFrom(s => s.Device.DriverGuid))
-                .ForMember(d => d.DriverName, o => o.Ignore())
-                .ForMember(d => d.ProfilerName, o => o.Ignore())
-                .ForMember(d => d.ProfilerGuid, o => o.Ignore());
+                .ForMember(d => d.DriverName, o => o.MapFrom(
+                    (s, d, m, c) => (c.State as IPluginContainer)?.GetDriver(s.Device.DriverGuid)?.Name))
+                .ForMember(d => d.DriverHomepage, o => o.MapFrom(
+                    (s, d, m, c) => (c.State as IPluginContainer)?.GetDriver(s.Device.DriverGuid)?.Homepage))
+                .ForMember(d => d.ProfilerName, o => o.MapFrom(
+                    (s, d, m, c) => (c.State as IPluginContainer)?.GetProfileByDriver(s.Device.DriverGuid)))
+                .ForMember(d => d.ProfilerGuid, o => o.MapFrom(
+                    (s, d, m, c) => (c.State as IPluginContainer)?.GetDriver(s.Device.DriverGuid)?.ProfileGuid));
             CreateMap<HostDeviceModel, HostDevice>();
             //.ForMember(d => d.Host, o => o.Ignore());
 
@@ -59,8 +69,8 @@ namespace Microprojects.Edm.Ui.Main.Models
             CreateMap<Host, IdNameModel>();
 
             CreateMap<Operation, OperationViewModel>()
-                .ForMember(d => d.ProcessId, o => o.MapFrom(s => s.Workbench.WorkplaceProcess.ProcessId))
-                .ForMember(d => d.ProcessName, o => o.MapFrom(s => s.Workbench.WorkplaceProcess.Process.Name));
+                .ForMember(d => d.ProcessId, o => o.MapFrom(s => s.WorkplaceProcess.ProcessId))
+                .ForMember(d => d.ProcessName, o => o.MapFrom(s => s.WorkplaceProcess.Process.Name));
 
             CreateMap<OperationCriterion, OperationCriterionModel>();
 
@@ -94,32 +104,47 @@ namespace Microprojects.Edm.Ui.Main.Models
                 .ForMember(d => d.IsNode, o => o.MapFrom(s => true))
                 .ForMember(d => d.HierarchyType, o => o.MapFrom(s => s.Type))
                 .ForMember(d => d.expanded, o => o.MapFrom(s => true))
-                .ForMember(d => d.IsActive, o => o.MapFrom(s => true))
-                .ForMember(d => d.Items, o => o.Ignore());
-            CreateMap<Host, HierarchyItemViewModel>()
+                .ForMember(d => d.IsActive, o => o.MapFrom(s => true));
+            //.ForMember(d => d.Items, o => o.Ignore());
+            CreateMap<HierarchyObject, HierarchyItemViewModel>()
                 .ForMember(d => d.IsNode, o => o.MapFrom(s => false))
                 .ForMember(d => d.expanded, o => o.MapFrom(s => false))
                 .ForMember(d => d.ParentId, o => o.MapFrom(s => s.HierarchyId))
-                .ForMember(d => d.IsActive, o => o.MapFrom(s => s.IsActive))
+                //.ForMember(d => d.HierarchyType, o => o.MapFrom((s, d, v, c) => c.Items["Type"]))
+                //.ForMember(d => d.IsActive, o => o.MapFrom(s => s.IsActive))
                 .ForMember(d => d.Items, o => o.Ignore());
-            CreateMap<Process, HierarchyItemViewModel>()
+            CreateMap<WorkplaceProcess, HierarchyItemViewModel>()
                 .ForMember(d => d.IsNode, o => o.MapFrom(s => false))
                 .ForMember(d => d.expanded, o => o.MapFrom(s => false))
-                .ForMember(d => d.ParentId, o => o.MapFrom(s => s.HierarchyId))
+                .ForMember(d => d.Name, o => o.MapFrom(s => s.Process.Name))
+                .ForMember(d => d.Id, o => o.MapFrom(s => s.Id)) //ProcessId))
+                .ForMember(d => d.ParentId, o => o.MapFrom(s => s.WorkplaceId))
                 .ForMember(d => d.IsActive, o => o.MapFrom(s => true))
                 .ForMember(d => d.Items, o => o.Ignore());
-            CreateMap<Workplace, HierarchyItemViewModel>()
-                .ForMember(d => d.IsNode, o => o.MapFrom(s => false))
-                .ForMember(d => d.expanded, o => o.MapFrom(s => false))
-                .ForMember(d => d.ParentId, o => o.MapFrom(s => s.HierarchyId))
-                .ForMember(d => d.IsActive, o => o.MapFrom(s => true))
-                .ForMember(d => d.Items, o => o.Ignore());
-            CreateMap<Device, HierarchyItemViewModel>()
-                .ForMember(d => d.IsNode, o => o.MapFrom(s => false))
-                .ForMember(d => d.expanded, o => o.MapFrom(s => false))
-                .ForMember(d => d.ParentId, o => o.MapFrom(s => s.HierarchyId))
-                .ForMember(d => d.IsActive, o => o.MapFrom(s => true))
-                .ForMember(d => d.Items, o => o.Ignore());
+            //CreateMap<Host, HierarchyItemViewModel>()
+            //    .ForMember(d => d.IsNode, o => o.MapFrom(s => false))
+            //    .ForMember(d => d.expanded, o => o.MapFrom(s => false))
+            //    .ForMember(d => d.ParentId, o => o.MapFrom(s => s.HierarchyId))
+            //    .ForMember(d => d.IsActive, o => o.MapFrom(s => s.IsActive))
+            //    .ForMember(d => d.Items, o => o.Ignore());
+            //CreateMap<Process, HierarchyItemViewModel>()
+            //    .ForMember(d => d.IsNode, o => o.MapFrom(s => false))
+            //    .ForMember(d => d.expanded, o => o.MapFrom(s => false))
+            //    .ForMember(d => d.ParentId, o => o.MapFrom(s => s.HierarchyId))
+            //    .ForMember(d => d.IsActive, o => o.MapFrom(s => true))
+            //    .ForMember(d => d.Items, o => o.Ignore());
+            //CreateMap<Workplace, HierarchyItemViewModel>()
+            //    .ForMember(d => d.IsNode, o => o.MapFrom(s => false))
+            //    .ForMember(d => d.expanded, o => o.MapFrom(s => false))
+            //    .ForMember(d => d.ParentId, o => o.MapFrom(s => s.HierarchyId))
+            //    .ForMember(d => d.IsActive, o => o.MapFrom(s => true))
+            //    .ForMember(d => d.Items, o => o.Ignore());
+            //CreateMap<Device, HierarchyItemViewModel>()
+            //    .ForMember(d => d.IsNode, o => o.MapFrom(s => false))
+            //    .ForMember(d => d.expanded, o => o.MapFrom(s => false))
+            //    .ForMember(d => d.ParentId, o => o.MapFrom(s => s.HierarchyId))
+            //    .ForMember(d => d.IsActive, o => o.MapFrom(s => true))
+            //    .ForMember(d => d.Items, o => o.Ignore());
             CreateMap<Host, HostModel>()
                 .ForMember(d => d.Active, o => o.MapFrom(s => false))
                 .ForMember(d => d.Version, o => o.MapFrom(s => "1.0.0"));

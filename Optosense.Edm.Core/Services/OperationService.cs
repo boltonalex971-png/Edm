@@ -31,25 +31,33 @@ namespace Optosense.Edm.Core.Services
 
         public async Task<Operation> Create(Operation operation)
         {
-            var wb = await Db.Workbenches
-                .Include(wb => wb.DeviceConfigurations)
-                .Include(wb => wb.WorkplaceProcess)
-                .FirstOrDefaultAsync(wb => wb.Id == operation.WorkbenchId)
-                ?? throw new ArgumentException("No workbench found");
-            var devices = await Db.WorkbenchDeviceConfigurations
-                .Include(d => d.WorkplaceHostDevice)
-                .Where(d => wb.DeviceConfigurations
-                                        .Select(c => c.Id)
-                                        .Contains(d.Id))
-                .ToListAsync();
-            operation.Devices = devices
-                .Select(c => new OperationHostDevice
-                {
-                    HostDeviceId = c.WorkplaceHostDevice.HostDeviceId,
-                    Options = c.Configuration,
-                    ProfileId = c.ProfileId
-                })
-                .ToList();
+            if (operation == null)
+            {
+                throw new ArgumentNullException(nameof(operation));
+            }
+
+            if (operation.WorkbenchId != null)
+            {
+                var wb = await Db.Workbenches
+                    .Include(wb => wb.DeviceConfigurations)
+                    .Include(wb => wb.WorkplaceProcess)
+                    .FirstOrDefaultAsync(wb => wb.Id == operation.WorkbenchId)
+                    ?? throw new ArgumentException("No workbench found");
+                var devices = await Db.WorkbenchDeviceConfigurations
+                    .Include(d => d.WorkplaceHostDevice)
+                    .Where(d => wb.DeviceConfigurations
+                                            .Select(c => c.Id)
+                                            .Contains(d.Id))
+                    .ToListAsync();
+                operation.Devices = devices
+                    .Select(c => new OperationHostDevice
+                    {
+                        HostDeviceId = c.WorkplaceHostDevice.HostDeviceId,
+                        Options = c.Configuration,
+                        ProfileId = c.ProfileId
+                    })
+                    .ToList();
+            }
             var result = Db.Operations.Add(operation);
             await Db.SaveChangesAsync();
             return result.Entity;

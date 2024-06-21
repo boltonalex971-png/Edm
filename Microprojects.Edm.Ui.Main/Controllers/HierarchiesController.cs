@@ -11,6 +11,7 @@ using Optosense.Edm.Domain.Models;
 using Optosense.Edm.Plugins;
 using Microprojects.Edm.Ui.Main.Models;
 using Microprojects.Edm.Ui.Main.Utils;
+using Microsoft.Extensions.Configuration;
 
 namespace Microprojects.Edm.Ui.Main.Controllers
 {
@@ -23,7 +24,8 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         private readonly IHierarchyService _hierarchyService;
         private readonly ICache _cache;
 
-        public HierarchiesController(ILogger<HostsController> logger, IMapper mapper, ICache cache, IHierarchyService hierarchyService)
+        public HierarchiesController(ILogger<HostsController> logger, IMapper mapper, ICache cache, IHierarchyService hierarchyService, IConfiguration configuration) :
+            base(configuration)
         {
             _logger = logger;
             _mapper = mapper;

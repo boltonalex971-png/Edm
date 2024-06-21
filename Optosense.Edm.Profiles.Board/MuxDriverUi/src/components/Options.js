@@ -6,17 +6,14 @@ import { Button } from "@progress/kendo-react-buttons";
 import { Field, Form, FormElement } from '@progress/kendo-react-form';
 import { DropDownList } from "@progress/kendo-react-dropdowns";
 
-export const Options = ({ data }) => {
+export const Options = ({ data, changeOptions }) => {
     const [param] = useState(data);
-    const optionsChange = (o) => {
-        axios.put(`${param.api}`, o);
-    };
     const BaudrateDropdown = compProps => <DropDownList data={[9600, 57600]} {...compProps} />;
     return (
         <Form
             key={1}
             initialValues={param.options}
-            onSubmit={optionsChange}
+            onSubmit={changeOptions}
             render={(formRenderProps) => (
                 <FormElement>
                     <fieldset className={"k-form-fieldset"}>
@@ -33,13 +30,13 @@ export const Options = ({ data }) => {
                     </fieldset>
                     <div className="k-form-buttons" style={{ position: 'sticky', bottom: 10, display: 'flex', justifyContent: 'flex-start', backgroundColor: 'white' }}>
                         <Button
-                            title='Save'
+                            title='Save options'
                             name='save'
                             primary
                             icon='save'
                             type={'submit'}
                         >
-                            Save
+                            Accept
                         </Button>
                     </div>
                 </FormElement>

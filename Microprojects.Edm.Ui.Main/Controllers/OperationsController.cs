@@ -129,7 +129,7 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         {
             var ops = await _operationService.Get(
                 o => o.Completed == null && o.Cancelled == null,
-                o => o.Workbench.WorkplaceProcess.Process);
+                o => o.WorkplaceProcess.Process);
             return _mapper.Map<IEnumerable<OperationViewModel>>(ops).OrderByDescending(o => o.Created);
         }
 
@@ -165,27 +165,30 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         [HttpGet("{id:int}/process")]
         public async Task<Process> GetProcessByOperationId(int id)
         {
-            var op = (await _operationService.Get(o => o.Id == id, o => o.Workbench.WorkplaceProcess.Process))
-                .FirstOrDefault();
-            return op.Workbench.WorkplaceProcess.Process;
+            var process = 
+                (await _operationService.Get(o => o.Id == id, o => o.WorkplaceProcess.Process))
+                .FirstOrDefault()?.WorkplaceProcess.Process ?? 
+                (await _operationService.Get(o => o.Id == id, o => o.Workbench.WorkplaceProcess.Process))
+                .FirstOrDefault()?.Workbench.WorkplaceProcess.Process;
+            return process;
         }
 
         [HttpGet("{id:int}/processInfo")]
         public async Task<ProcessInfo> GetProcessInfo(int id)
         {
             var operation = await _operationService
-                .Get(id, o => o.Workbench.WorkplaceProcess.Process);
+                .Get(id, o => o.WorkplaceProcess.Process);
             var devices = await _operationService.GetOperationDevices(id);
             var parameters = devices
                 .SelectMany(d => JsonConvert.DeserializeObject<IEnumerable<string>>(d.Profile.Output ?? "[]"));
             var settings = await _settingService.Get(
-                operation.Workbench.WorkplaceProcess.Process.OperationGuid,
-                OperationProcessSettingName(operation.Workbench.WorkplaceProcess.ProcessId));
+                operation.WorkplaceProcess.Process.OperationGuid,
+                OperationProcessSettingName(operation.WorkplaceProcess.ProcessId));
             var processInfo = new ProcessInfo
             {
-                Id = operation.Workbench.WorkplaceProcess.ProcessId,
-                Name = operation.Workbench.WorkplaceProcess.Process.Name,
-                Description = operation.Workbench.WorkplaceProcess.Process.Description,
+                Id = operation.WorkplaceProcess.ProcessId,
+                Name = operation.WorkplaceProcess.Process.Name,
+                Description = operation.WorkplaceProcess.Process.Description,
                 Parameters = parameters,
                 Settings = settings
             };

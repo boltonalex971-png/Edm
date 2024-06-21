@@ -21,6 +21,30 @@ namespace Microprojects.Edm.Ui.Main.Utils
             }
         }
 
+        //public static IEnumerable<HierarchyItemViewModel> ToTree(this IEnumerable<WorkplaceProcess> workplaceProcesses)
+        //{
+        //}
+        
+        public static IEnumerable<HierarchyItemViewModel> ToDeepTree(this IEnumerable<HierarchyItemViewModel> items, int? rootId = null)
+        {
+            var children = items.Where(c => c.ParentId == rootId || rootId == null && !items.Any(i => i.Id == c.ParentId));
+            foreach (var c in children)
+            {
+                yield return new HierarchyItemViewModel
+                {
+                    Id = c.Id,
+                    ParentId = c.ParentId,
+                    Description = c.Description,
+                    HierarchyType = c.HierarchyType,
+                    IsActive = c.IsActive,
+                    IsNode = c.IsNode,
+                    Name = c.Name,
+                    expanded = true,
+                    Items = c.Items ?? items.ToDeepTree(c.Id)
+                };
+            }
+        }
+
         public static HierarchyItemViewModel FillFrom(this HierarchyItemViewModel item, IEnumerable<HierarchyItemViewModel> items)
         {
             var result = item;

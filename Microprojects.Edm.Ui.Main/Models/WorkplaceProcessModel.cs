@@ -12,5 +12,7 @@ namespace Microprojects.Edm.Ui.Main.Models
         public string ProcessDescription { get; set; }
         public string WorkplaceName { get; set; }
         public string WorkplaceDescription { get; set; }
+
+        public ProcessViewModel Process { get; set; }
     }
 }

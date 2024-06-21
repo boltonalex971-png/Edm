@@ -6,12 +6,10 @@ namespace Optosense.Edm.Domain.Models
     /// <summary>
     /// Defines a working place with devices allowed to be used in processes, allowed for the workplace.
     /// </summary>
-    public class Workplace : TypeObject, IHierarchyObject
+    public class Workplace : HierarchyObject
     {
-        public HierarchyType HierarchyType => HierarchyType.Workplace;
-        public int HierarchyId { get; set; }
+        public override HierarchyType HierarchyType => HierarchyType.Workplace;
 
-        public Hierarchy Hierarchy { get; set; }
         /// <summary>
         /// List of attached devices
         /// </summary>

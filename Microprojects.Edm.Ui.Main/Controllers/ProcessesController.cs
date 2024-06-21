@@ -13,6 +13,7 @@ using Microprojects.Edm.Ui.Main.Utils;
 using Newtonsoft.Json;
 using Optosense.Edm.DataAccess.Migrations;
 using Optosense.Edm.Core.Services;
+using Microsoft.Extensions.Configuration;
 
 namespace Microprojects.Edm.Ui.Main.Controllers
 {
@@ -26,7 +27,8 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         private readonly IHierarchyService _hierarchyService;
         private readonly IPluginContainer _plugins;
 
-        public ProcessesController(ILogger<ProcessesController> logger, IMapper mapper, IProcessService processService, IHierarchyService hierarchyService, IPluginContainer plugins)
+        public ProcessesController(ILogger<ProcessesController> logger, IMapper mapper, IProcessService processService, IHierarchyService hierarchyService, IPluginContainer plugins, IConfiguration configuration) :
+            base(configuration)
         {
             _logger = logger;
             _mapper = mapper;
@@ -106,8 +108,11 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         [HttpGet("hierarchy")]
         public async Task<IEnumerable<HierarchyItemViewModel>> GetHierarchy()
         {
-            var processes = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(await _processService.GetAll());
-            var folders = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(await _hierarchyService.GetTree(HierarchyType.Process, UserInfo));
+            var processes = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(
+                await _processService.GetAll(),
+                o => o.Items["Type"] = HierarchyType.Process);
+            var folders = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(
+                await _hierarchyService.GetTree(HierarchyType.Process, UserInfo));
             //var expanded = _cache.RestoreMany<TreeExpanedState>(UiCacheHelper.OwnerKey(this), () => HierarchyType.Host);
             //foreach (var folder in folders)
             //{
@@ -125,6 +130,17 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         }
 
         #region profiles
+        /// <summary>
+        /// Get missing inputs in every profile
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpGet("{id:int}/inputs")]
+        public async Task<IEnumerable<string>> GetMissingInputs(int id)
+        {
+            var missing = await _processService.GetMissingInputs(id);
+            return missing;
+        }
 
         [HttpGet("{id:int}/profiles")]
         public async Task<IEnumerable<ProfileViewModel>> GetProfiles(int id)
@@ -139,6 +155,7 @@ namespace Microprojects.Edm.Ui.Main.Controllers
 
             return result;
         }
+
 
         [HttpPost("{id:int}/profiles")]
         public async Task<ProfileViewModel> AddProfile(int id, ProfileViewModel model)

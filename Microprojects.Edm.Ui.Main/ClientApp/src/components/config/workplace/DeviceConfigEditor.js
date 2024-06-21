@@ -5,6 +5,7 @@ import { Detail } from '../../MasterDetail';
 import { LoadingContainer } from '../../utils/Utils';
 import { ApiContext } from '../../../ApiContext';
 import { PluginContainer } from '@microprojects/react-utils';
+import axios from 'axios';
 
 DeviceConfigEditor.propTypes = {
     onChange: PropTypes.func,
@@ -15,26 +16,28 @@ DeviceConfigEditor.propTypes = {
 
 export function DeviceConfigEditor({ id, ...props }) {
     const location = useContext(ApiContext);
-    let [[data, setData], loading, error] = useGet(`${props.api}/${id}`, [id]);
-    const header = data && data.id ?
-        { ...data, name: `${data.deviceName} configuration`, description: `${data.driverName} device on ${data.hostName}` } :
-        { name: ' ', description: ' ' };
-    const arg = data && {
-        api: `${props.api}/${id}`,
-        options: JSON.parse(data.configuration || '{}'),
-        output: JSON.parse(data.profileOutput || '[]')
-    };
-    console.log(data, arg);
+    let [[data]] = useGet(`${props.api}/${id}`, [id], (o) => ({
+        ...o,
+        name: `${o.deviceName} configuration`,
+        description: `${o.driverName} device on ${o.hostName}`,
+        options: JSON.parse(o.configuration || '{}'),
+        output: JSON.parse(o.profileOutput || '[]')
+    }))
+    const onOptionsChanged = (o) => {
+        axios.put(`${props.api}/${id}`, o)
+    }
+
     return (
         <>
             {data && <Detail {...props}
-                data={header}
+                data={data}
                 card={
                     <div>
                         <PluginContainer title='Device Configuration'
-                            data={arg || {}}
+                            data={data}
                             width='100%'
                             src={`${location}/${data.driverHomepage}/options`}
+                            onDataReceived={onOptionsChanged}
                         />
                     </div>
                 }

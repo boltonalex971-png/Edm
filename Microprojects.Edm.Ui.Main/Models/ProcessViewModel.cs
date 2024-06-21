@@ -17,6 +17,7 @@ namespace Microprojects.Edm.Ui.Main.Models
         public Guid OperationGuid { get; set; }
         public string Message { get; set; }
         public IEnumerable<QualifierViewModel> Qualifiers { get; set; }
+        public IEnumerable<ProfileViewModel> Profiles { get; set; }
     }
 
     public class QualifierViewModel

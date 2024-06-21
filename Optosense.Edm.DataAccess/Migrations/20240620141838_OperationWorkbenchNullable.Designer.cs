@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Optosense.Edm.Persistence;
 
@@ -11,9 +12,11 @@ using Optosense.Edm.Persistence;
 namespace Optosense.Edm.DataAccess.Migrations
 {
     [DbContext(typeof(EdmContext))]
-    partial class EdmContextModelSnapshot : ModelSnapshot
+    [Migration("20240620141838_OperationWorkbenchNullable")]
+    partial class OperationWorkbenchNullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -299,14 +302,9 @@ namespace Optosense.Edm.DataAccess.Migrations
                     b.Property<int?>("WorkbenchId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("WorkplaceProcessId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("WorkbenchId");
-
-                    b.HasIndex("WorkplaceProcessId");
 
                     b.ToTable("Operations");
                 });
@@ -831,13 +829,7 @@ namespace Optosense.Edm.DataAccess.Migrations
                         .WithMany()
                         .HasForeignKey("WorkbenchId");
 
-                    b.HasOne("Optosense.Edm.Domain.Models.WorkplaceProcess", "WorkplaceProcess")
-                        .WithMany()
-                        .HasForeignKey("WorkplaceProcessId");
-
                     b.Navigation("Workbench");
-
-                    b.Navigation("WorkplaceProcess");
                 });
 
             modelBuilder.Entity("Optosense.Edm.Domain.Models.OperationCriterion", b =>

@@ -7,10 +7,9 @@ using System.Threading.Tasks;
 
 namespace Optosense.Edm.Domain.Models
 {
-    public class Device : TypeObject, IHierarchyObject
+    public class Device : HierarchyObject
     {
-        public HierarchyType HierarchyType => HierarchyType.Device;
-        public int HierarchyId { get; set; }
+        public override HierarchyType HierarchyType => HierarchyType.Device;
 
         public string Parameters { get; set; }
         public Guid DriverGuid { get; set; }
@@ -21,7 +20,6 @@ namespace Optosense.Edm.Domain.Models
         [NotMapped]
         public string ProfilerName { get; set; }
 
-        public Hierarchy Hierarchy { get; set; }
         public ICollection<HostDevice> Hosts { get; set; }
     }
 }

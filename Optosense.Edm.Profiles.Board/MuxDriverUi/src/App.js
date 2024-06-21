@@ -8,7 +8,7 @@ import { usePluginData } from '@microprojects/react-utils';
 
 
 function App() {
-    const [data] = usePluginData()
+    const [data, setData] = usePluginData()
     return (
         <ApiContext.Provider value={`${process.env.REACT_APP_API_URL || window.location.origin}`}>
             {data && <div>
@@ -25,7 +25,7 @@ function App() {
                 <Route path='/plan/:id'>
                 </Route>
                 <Route path='/options'>
-                    <Options data={data} />
+                    <Options data={data} changeOptions={setData} />
                 </Route>
                 <Route path='/console'>
                     <h1>Console is in the development progress...</h1>
