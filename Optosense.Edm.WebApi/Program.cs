@@ -9,6 +9,7 @@ using Microprojects.Edm.Cache;
 using Microprojects.Edm.Cache.Redis;
 using Microprojects.Edm.Intercom;
 using Microprojects.Edm.Jobs;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -102,6 +103,9 @@ builder.Services.AddSession(session =>
 if (builder.Environment.IsProduction())
 {
     builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
+} else
+{
+    builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
 }
 
 builder.Services.AddHostedService<Worker>()
@@ -120,25 +124,27 @@ jobContainer.Start();
 app.JsonConfigure();
 app.UseCors("DevCorsPolicy");
 
+
+app.UseRouting();
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseSession();
 if (app.Environment.IsDevelopment())
 {
+    app.UseCookiePolicy(new CookiePolicyOptions { });
     app.UseFakeUserInfo();
 }
-
-app.UseRouting();
+else
+{
+    app.UseHttpsRedirection();
+    //app.UseHsts();
+    app.UseAuthenticatedUserInfo();
+}
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapGrpcService<EdmJobService>();
 });
-if (app.Environment.IsProduction())
-{
-    app.UseHttpsRedirection();
-    //app.UseHsts();
-    app.UseAuthentication();
-    app.UseAuthorization();
-    app.UseAuthenticatedUserInfo();
-}
+
 
 app.MapHub<IntercomHub>(IntercomHub.Hub);
 app.MapGet("/status", () => "I AM ALIVE!");

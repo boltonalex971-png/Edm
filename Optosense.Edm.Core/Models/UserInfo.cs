@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 
 namespace Optosense.Edm.Core.Models
 {
-    public class UserInfo
+    public record UserInfo
     {
-        public string Name { get; set; }
-        public IEnumerable<UserClaim> Claims { get; set; }
-        public string Role { get; set; }
-        public IEnumerable<string> Roles { get; set; }
-        public IEnumerable<string> Divisions { get; set; }
+        public string Name { get; set; } = "User";
+        public IEnumerable<UserClaim> Claims { get; set; } = [ new UserClaim { Sid = "1", Name = "Group 1"} ];
+        public string Role { get; set; } = "Admin";
+        public IEnumerable<string> Roles { get; set; } = ["Admin", "Technologist", "Operator"];
+        public IEnumerable<string> Divisions { get; set; } = ["Group 1"];
     }
 }

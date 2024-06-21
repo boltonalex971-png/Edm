@@ -12,18 +12,76 @@ using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Core.Models;
 using Optosense.Edm.Domain.Models;
 using Microprojects.Edm.Ui.Main.Models;
+using Microsoft.Extensions.Configuration;
+using System.Security.Claims;
+using System.Security.Principal;
+using System.Runtime.Versioning;
 
 namespace Microprojects.Edm.Ui.Main.Controllers
 {
     public class AuthControllerBase : ControllerBase
     {
-        public UserInfo UserInfo { 
-            get 
+        private readonly IConfiguration _configuration;
+        
+        [SupportedOSPlatform("windows")]
+        public UserInfo UserInfo
+        {
+            get
             {
-                var value = HttpContext.Session.GetString("UserInfo");
-                var userInfo = value == null ? new UserInfo() : JsonConvert.DeserializeObject<UserInfo>(value);
+                if (Request.Headers["Host"] != Request.Headers["Origin"])
+                {
+                    return new UserInfo();
+                }
+
+                var userInfo = new UserInfo();
+                if (HttpContext.User.Identity is WindowsIdentity identity)
+                {
+                    var claims = identity.Groups.Select(g => new UserClaim
+                    {
+                        Sid = g.Value,
+                        Name = g.Translate(typeof(NTAccount)).Value
+                    }).ToList();
+                    var roles = _configuration.GetSection("Edm:Auth:Roles").GetChildren()
+                        .Where(c => claims.Any(l => l.Name.Contains(c.Value)))
+                        .Select(c => c.Key).ToList();
+                    var root = _configuration.GetSection("Edm:Auth").GetValue<string>("DivisionsRoot");
+                    var divisions = claims
+                        .Where(c => c.Name.Contains(root))
+                        .Select(c => c.Name).ToList();
+                    userInfo = new UserInfo
+                    {
+                        Name = identity.Name,
+                        Claims = claims,
+                        Roles = roles,
+                        Role = roles.FirstOrDefault(),
+                        Divisions = divisions,
+                    };
+                } 
+                else if (HttpContext.User.Identity is ClaimsIdentity claimsIdentity)
+                {
+                    userInfo = new UserInfo
+                    {
+                        Name = claimsIdentity.Name,
+                        Claims = claimsIdentity.FindAll("Groups")
+                            .Select((g, i) => new UserClaim { Sid = (i + 1).ToString(), Name = g.ToString() })
+                            .ToList(),
+                        Roles = claimsIdentity.FindAll("Roles")
+                            .Select(c => c.Value)
+                            .ToList(),
+                        Role = claimsIdentity.FindFirst(ClaimTypes.Role)?.Value,
+                        Divisions = claimsIdentity.FindAll("Groups")
+                            .Select(g => g.ToString())
+                            .ToList()
+                    };
+                }
+
                 return userInfo;
             }
+        }
+
+        public AuthControllerBase(IConfiguration configuration)
+        {
+            _configuration = configuration;
         }
     }
 }
