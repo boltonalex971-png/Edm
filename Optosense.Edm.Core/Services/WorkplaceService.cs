@@ -90,9 +90,9 @@ namespace Optosense.Edm.Core.Services
         #endregion
 
         #region processes
-        public async Task<IEnumerable<WorkplaceProcess>> GetAllowedProcesses(UserInfo userInfo)
+        public async Task<IEnumerable<WorkplaceProcess>> GetAllowedProcesses(IEnumerable<string> groups)
         {
-            var tree = await _hierarchyService.GetTree(HierarchyType.Workplace, userInfo);
+            var tree = await _hierarchyService.GetTree(HierarchyType.Workplace, groups);
             var ids = tree.Select(t => t.Id);
             var processes = await Db.WorkplaceProcesses
                 .Include(w => w.Workplace)

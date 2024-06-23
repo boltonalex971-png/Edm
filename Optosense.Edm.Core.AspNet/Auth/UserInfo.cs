@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Optosense.Edm.Core.Models
+namespace Optosense.Edm.Core.AspNet.Auth
 {
     public record UserInfo
     {
@@ -13,5 +13,9 @@ namespace Optosense.Edm.Core.Models
         public string Role { get; set; } = "Admin";
         public IEnumerable<string> Roles { get; set; } = ["Admin", "Technologist", "Operator"];
         public IEnumerable<string> Divisions { get; set; } = ["Group 1"];
+        /// <summary>
+        /// Get user group list. Null means User current Admin role
+        /// </summary>
+        public IEnumerable<string> Groups => Role == "Admin" ? null : Claims.Select(c => c.Sid);
     }
 }

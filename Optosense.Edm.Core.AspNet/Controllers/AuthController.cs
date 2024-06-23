@@ -12,14 +12,14 @@ using Optosense.Edm.Core.Auditing;
 using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Core.Models;
 using Optosense.Edm.Domain.Models;
-using Microprojects.Edm.Ui.Main.Models;
 using Microsoft.Extensions.Configuration;
 using System.Security.Principal;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.Extensions.Hosting;
+using Optosense.Edm.Core.AspNet.Auth;
 
-namespace Microprojects.Edm.Ui.Main.Controllers
+namespace Optosense.Edm.Core.AspNet.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

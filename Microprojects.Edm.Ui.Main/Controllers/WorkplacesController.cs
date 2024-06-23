@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Domain.Models;
 using Optosense.Edm.Plugins;
+using Optosense.Edm.Core.AspNet.Controllers;
 using Microprojects.Edm.Ui.Main.Models;
 using Microprojects.Edm.Ui.Main.Utils;
 using Microsoft.Extensions.Configuration;
@@ -106,7 +107,7 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         public async Task<IEnumerable<HierarchyItemViewModel>> GetHierarchy()
         {
             var folders = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(
-                await _hierarchyService.GetTree(HierarchyType.Workplace, UserInfo));
+                await _hierarchyService.GetTree(HierarchyType.Workplace, UserInfo.Groups));
             var workplaces = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(
                 await _workplaceService.Get(w => folders.Select(f => f.Id).Contains(w.HierarchyId) && w.IsActive));
             //o => o.Items["Type"] = HierarchyType.Workplace);
@@ -176,8 +177,8 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         public async Task<IEnumerable<HierarchyItemViewModel>> GetProcessesHierarchy()
         {
             var folders = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(
-                await _hierarchyService.GetTree(HierarchyType.Workplace, UserInfo));
-            var wpProc = await _workplaceService.GetAllowedProcesses(UserInfo);
+                await _hierarchyService.GetTree(HierarchyType.Workplace, UserInfo.Groups));
+            var wpProc = await _workplaceService.GetAllowedProcesses(UserInfo.Groups);
             var workplaces = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(
                 wpProc.Select(wp => wp.Workplace).Distinct(new DomainObjectComparer<Workplace>()));
             var processes = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(wpProc);

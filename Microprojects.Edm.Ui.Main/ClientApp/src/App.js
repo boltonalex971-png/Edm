@@ -21,11 +21,11 @@ export default function App() {
     const [[userInfo, setUserInfo]] = useGet(`${api.auth}/user/name`, []);
     const setRole = (role) =>
         axios.put(`${api.auth}/user/role`, role, { headers: { 'Content-Type': 'application/json' } })
-        .then(r => {
-            setUserInfo(r.data)
-            window.location.reload()
-        })
-        .catch(r => alert(r))
+            .then(r => {
+                setUserInfo(r.data)
+                window.location.reload()
+            })
+            .catch(r => alert(r))
     if (userInfo) {
         userInfo.setRole = setRole;
     }
@@ -37,15 +37,15 @@ export default function App() {
                     <Layout>
                         <UserContext.Consumer>
                             {user =>
-                                (user && user.role && user.role !== appRoles.operator &&
+                                (user && user.role &&
                                     <>
                                         <Route exact path="/" component={Home} />
-                                        <Route path="/dashboard" component={Dashboard} />
-                                        <Route path="/config" component={Config} />
-                                        <Route path="/plugins" component={Plugins} />
+                                        {user.role === appRoles.operator && <Route path="/dashboard/operations" component={Operations} />}
+                                        {user.role !== appRoles.operator && <Route path="/dashboard" component={Dashboard} />}
+                                        {user.role !== appRoles.operator && <Route path="/config" component={Config} />}
+                                        {user.role !== appRoles.operator && <Route path="/plugins" component={Plugins} />}
                                         <Route path="/operation" component={NewOperationWizard} />
                                     </>) ||
-                                (user && user.role === appRoles.operator && <Operations />) ||
                                 (user && !user.role &&
                                     <span>
                                         As user {user.name} you are not authorized to access ISTP application.

@@ -9,6 +9,6 @@ namespace Optosense.Edm.Core.Contracts
     {
         Task<Hierarchy> ChangeParent(int id, int newParentId);
         Task<Hierarchy> GetRoot(HierarchyType type);
-        Task<IEnumerable<Hierarchy>> GetTree(HierarchyType type, UserInfo user);
+        Task<IEnumerable<Hierarchy>> GetTree(HierarchyType type, IEnumerable<string> groups);
     }
 }

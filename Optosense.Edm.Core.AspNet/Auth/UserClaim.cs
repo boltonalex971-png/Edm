@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Optosense.Edm.Core.Models
+namespace Optosense.Edm.Core.AspNet.Auth
 {
     public class UserClaim
     {

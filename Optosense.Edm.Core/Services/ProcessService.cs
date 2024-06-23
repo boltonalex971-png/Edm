@@ -29,9 +29,9 @@ namespace Optosense.Edm.Core.Services
             _hierarchyService = hierarchyService;
         }
 
-        public async Task<IEnumerable<Process>> GetHierarchy(UserInfo userInfo)
+        public async Task<IEnumerable<Process>> GetHierarchy(IEnumerable<string> groups)
         {
-            var tree = await _hierarchyService.GetTree(HierarchyType.Process, userInfo);
+            var tree = await _hierarchyService.GetTree(HierarchyType.Process, groups);
             var ids = tree.Select(t => t.Id);
             var processes = await Db.Processes
                 .Where(p => ids.Contains(p.HierarchyId))

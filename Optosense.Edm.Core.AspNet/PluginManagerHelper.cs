@@ -67,9 +67,9 @@ public static class PluginManagerHelper
                     {
                         new Claim(ClaimTypes.Name, "User"),
                         new Claim(ClaimTypes.Role, "Admin"),
-                        new Claim("Groups", "Group 1"),
-                        new Claim("Groups", "Group 2"),
-                        new Claim("Groups", "Group 3"),
+                        new Claim("Groups", "1"), // Group sid
+                        //new Claim("Groups", "Group 2"),
+                        //new Claim("Groups", "Group 3"),
                     },
                     CookieAuthenticationDefaults.AuthenticationScheme);
                 var configuration = builder.ApplicationServices.GetRequiredService<IConfiguration>();

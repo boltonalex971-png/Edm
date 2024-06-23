@@ -42,13 +42,12 @@ namespace Optosense.Edm.Core.Services
             return folder;
         }
 
-        public async Task<IEnumerable<Hierarchy>> GetTree(HierarchyType type, UserInfo user)
+        public async Task<IEnumerable<Hierarchy>> GetTree(HierarchyType type, IEnumerable<string> groups)
         {
-            var groups = user.Claims.Select(c => c.Sid).ToList();
             var folder = await Db.Hierarchies
                 .Where(h => h.IsActive && 
                     h.Type == type &&
-                    (h.Group == null || user.Role == "Admin" || h.Group != null && groups.Contains(h.Group))
+                    (h.Group == null || groups == null || h.Group != null && groups.Contains(h.Group))
             ).ToListAsync();
             return folder;
         }

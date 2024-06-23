@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Domain.Models;
 using Optosense.Edm.Plugins;
+using Optosense.Edm.Core.AspNet.Controllers;
 using Microprojects.Edm.Ui.Main.Models;
 using Microprojects.Edm.Ui.Main.Utils;
 using Microsoft.Extensions.Configuration;
@@ -105,7 +106,7 @@ namespace Microprojects.Edm.Ui.Main.Controllers
                 await _hostService.GetAll(),
                 o => o.Items["Type"] = HierarchyType.Host);
             var folders = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(
-                await _hierarchyService.GetTree(HierarchyType.Host, UserInfo));
+                await _hierarchyService.GetTree(HierarchyType.Host, UserInfo.Groups));
             //var expanded = _cache.RestoreMany<TreeExpanedState>(UiCacheHelper.OwnerKey(this), () => HierarchyType.Host);
             //foreach (var folder in folders)
             //{

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Domain.Models;
+using Optosense.Edm.Core.AspNet.Controllers;
 using Optosense.Edm.Plugins;
 using Microprojects.Edm.Ui.Main.Models;
 using Microprojects.Edm.Ui.Main.Utils;
@@ -25,7 +26,7 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         private readonly ICache _cache;
 
         public HierarchiesController(ILogger<HostsController> logger, IMapper mapper, ICache cache, IHierarchyService hierarchyService, IConfiguration configuration) :
-            base(configuration)
+            base(configuration) 
         {
             _logger = logger;
             _mapper = mapper;
@@ -94,7 +95,7 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         [HttpGet("{type}/tree")]
         public async Task<IEnumerable<HierarchyItemViewModel>> GetHierarchyTree(HierarchyType type)
         {
-            var folders = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(await _hierarchyService.GetTree(type, UserInfo));
+            var folders = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(await _hierarchyService.GetTree(type, UserInfo.Groups));
             var tree = folders.ToTree();
             return tree;
         }

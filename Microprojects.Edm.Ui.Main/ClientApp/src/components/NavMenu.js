@@ -37,6 +37,13 @@ export class NavMenu extends Component {
                                             <NavItem>
                                                 <NavLink tag={Link} className="text-dark" to="/">Home</NavLink>
                                             </NavItem>
+                                            {user && user.role === appRoles.operator &&
+                                                <>
+                                                    <NavItem>
+                                                        <NavLink tag={Link} className="text-dark" to="/dashboard/operations">Operations</NavLink>
+                                                    </NavItem>
+                                                </>
+                                            }
                                             {user && user.role !== appRoles.operator &&
                                                 <>
                                                     <NavItem>
