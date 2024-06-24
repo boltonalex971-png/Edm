@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.IO.Ports;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -13,10 +16,11 @@ using Optosense.Edm.Utils;
 namespace Optosense.Edm.Drivers.Mux
 {
     [Driver(OptionsType = typeof(BoardDriverOptions))]
-    public class BoardDriverBase : DriverBase, IDisposable
+    public class BoardDriverBase : DriverBase, IParamProvider, IDisposable
     {
         protected BoardDriverOptions BoardOptions => (BoardDriverOptions) Options;
         protected SerialPort Port { get; set; }
+        protected HttpClient HttpClient { get; } = new();
 
         public BoardDriverBase() { }
 
@@ -29,14 +33,28 @@ namespace Optosense.Edm.Drivers.Mux
         {
             Port = new SerialPort(BoardOptions.Port, BoardOptions.Baudrate);
             Port.Open();
+            HttpClient.BaseAddress = new Uri("http://localhost:5000");
+            HttpClient.DefaultRequestHeaders.Accept.Clear();
+            HttpClient.DefaultRequestHeaders.Accept.Add(
+                new MediaTypeWithQualityHeaderValue("application/json"));
             return OK;
         }
 
         public override Task<DriverResponse> Execute(DriverRequest req)
         {
+            var response = new DriverResponse { Planned = req.Offset, Executed = req.Offset, Request = req.Command, State = DriverResponseState.Ok };
             if (req is not BoardDriverRequest)
             {
-                throw new EdmException($"{GetType().Name} driver parameters must be of type {typeof(BoardDriverRequest).Name}");
+                if (req.Command == "Stop")
+                {
+                    Dispose();
+                    response.Response = DriverResponseState.Ok.ToString();
+                    return Task.FromResult(response);
+                }
+                else
+                {
+                    throw new EdmException($"{GetType().Name} driver parameters must be of type {typeof(BoardDriverRequest).Name}");
+                }
             }
 
             var request = (BoardDriverRequest) req;
@@ -47,7 +65,7 @@ namespace Optosense.Edm.Drivers.Mux
             }
 
             command = SubstituteParameters(command, parameters);
-            var response = new DriverResponse { Planned = request.Offset, Executed = request.Offset, Request = command };
+            response.Request = command;
             try
             {
                 response.Response = new string(
@@ -102,10 +120,38 @@ namespace Optosense.Edm.Drivers.Mux
             return result;
         }
 
+        public async Task<DriverResponse> GetParam(string parameterName)
+        {
+            var result = new DriverResponse
+            {
+                Request = parameterName,
+                State = DriverResponseState.Ok
+            };
+            if (parameterName == "Serial")
+            {
+                // TODO Move to REST API Client driver
+                try
+                {
+                    var response = await HttpClient.PostAsJsonAsync("serials", "TST");
+                    response.EnsureSuccessStatusCode();
+                    result.Response = await response.Content.ReadAsStringAsync();
+                    result.Parameters = $"{{\"{parameterName}\": {result.Response}}}";
+                }
+                catch (Exception ex) 
+                { 
+                    result.Message = ex.Message;
+                    result.State = DriverResponseState.Failed;
+                }
+            }
+
+            return result;
+        }
+
         public void Dispose()
         {
             if (Port != null && Port.IsOpen) Port.Close();
             Port.Dispose();
+            HttpClient.Dispose();
         }
     }
 

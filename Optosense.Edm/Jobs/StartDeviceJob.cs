@@ -78,12 +78,26 @@ namespace Optosense.Edm.Jobs
                 _internalParams = _profilerPlugin.GetParameters(Parameters.Profile)
                     .ToDictionary(k => k, e => default(object));
                 _subscriber = Intercom.Subscribe<object>(Parameters.ParametersChannel,
-                    onNext: json =>
+                    onNext: async json =>
                     {
                         var param = JsonConvert.DeserializeObject<KeyValuePair<string, object>>(json.ToString());
                         if (param.Key == "Stop" && (bool)param.Value) 
                         { 
                             CancellationTokenSource.Cancel();
+                            return;
+                        } 
+                        else if (param.Key.StartsWith('?')) 
+                        {
+                            var name = param.Key[1..];
+                            if (Parameters.OutputParameters.Contains(name) && _driver is IParamProvider)
+                            {
+                                var planned = DateTime.Now;
+                                var result = await (_driver as IParamProvider).GetParam(name);
+                                result.Planned = (long)(planned - _startTime).TotalMilliseconds;
+                                result.Executed = (long)(DateTime.Now - _startTime).TotalMilliseconds;
+                                await PushResponse(result);
+                            }
+
                             return;
                         }
 
@@ -125,6 +139,7 @@ namespace Optosense.Edm.Jobs
 
         private async Task ExecuteDeviceInstruction(IDeviceDriver driver, DriverRequest request, bool throwEx = false, int totalRetrials = 0)
         {
+            request.Parameters = SubstituteParameters(request.Parameters);
             // cyclic commands here: add repeat interval and stop condition to DriverRequest
             if (request.Repeat != null && request.Repeat > 0)
             {
@@ -156,6 +171,18 @@ namespace Optosense.Edm.Jobs
             }
         }
 
+        private string SubstituteParameters(string parameters)
+        {
+            var result = parameters ?? string.Empty;
+            foreach (var p in _inputParams)
+            {
+                result = result.Replace($"{{{p.Key}}}", p.Value.ToString());
+            }
+
+            return result;
+        }
+
+
         private async Task PushResponse(DriverResponse response, bool throwEx = false)
         {
             var rec = new Record
@@ -177,7 +204,9 @@ namespace Optosense.Edm.Jobs
                 if (_outputParams.ContainsKey(param.Key))
                 {
                     // Do not wait pushing parameters
+                    #pragma warning disable CS4014 
                     PushOutputParameterAsync(param);
+                    #pragma warning restore CS4014 
                 }
                 else if(_internalParams.ContainsKey(param.Key))
                 {
@@ -222,6 +251,25 @@ namespace Optosense.Edm.Jobs
                 // Offset in seconds
                 await Task.Delay(offset * 1000, CancellationToken);
             }
+            else if (expr.Type == ExpressionType.Accessor)
+            {
+                var cancellationSource = new CancellationTokenSource();
+                EventHandler<InputParamArrivedEventArgs> handler = (source, args) =>
+                {
+                    if (args.Param == condition || CancellationToken.IsCancellationRequested)
+                    {
+                        cancellationSource.Cancel();
+                    }
+                };
+                InputParamArrived += handler;
+                #pragma warning disable CS4014 
+                // Do not need to wait
+                PushOutputParameterAsync(new KeyValuePair<string, object>($"?{condition}", null));
+                #pragma warning restore CS4014 
+                // TODO Cancel task by timeout
+                await Task.Delay(-1, cancellationSource.Token).ContinueWith(t => { });
+                InputParamArrived -= handler;
+            }
             else if (!expr.TryEvaluate<bool>(_inputParams).value)
             {
                 var cancellationSource = new CancellationTokenSource();
@@ -242,13 +290,9 @@ namespace Optosense.Edm.Jobs
                 // TODO Get task awake to check if the notification missed
                 await Task.Delay(-1, cancellationSource.Token).ContinueWith(t => { });
                 InputParamArrived -= handler;
-                if (CancellationToken.IsCancellationRequested)
-                {
-                    return false;
-                }
             }
 
-            return true;
+            return !CancellationToken.IsCancellationRequested;
         }
 
         public Guid GetDriverGuid() => Parameters.Driver;

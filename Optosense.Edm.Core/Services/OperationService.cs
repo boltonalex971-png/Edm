@@ -57,6 +57,7 @@ namespace Optosense.Edm.Core.Services
                         ProfileId = c.ProfileId
                     })
                     .ToList();
+                operation.WorkplaceProcessId = wb.WorkplaceProcessId;
             }
             var result = Db.Operations.Add(operation);
             await Db.SaveChangesAsync();

@@ -25,21 +25,23 @@ namespace Optosense.Edm.Drivers.Mux
             var profile = JsonConvert.DeserializeObject<BoardProfile>(profileJson);
             var availableParams = JsonConvert.DeserializeObject<ExpandoObject>(paramJson ?? "{}");
             var profileRequiredParams = GetRequiredParams(profile);
-            var profileParamSkipped = profileRequiredParams
-                .Where(p => ((IDictionary<string, object>) availableParams)[p] == null)
-                .ToList();
-            if (profileParamSkipped.Any())
-            {
-                throw new EdmException($"Profile parameters [{string.Join(", ", profileParamSkipped)}] must be provided");
-            }
+            
+            // TODO Check if skipped parameter is in instruction args
+            //var profileParamSkipped = profileRequiredParams
+            //    .Where(p => ((IDictionary<string, object>) availableParams)[p] == null)
+            //    .ToList();
+            //if (profileParamSkipped.Any())
+            //{
+            //    throw new EdmException($"Profile parameters [{string.Join(", ", profileParamSkipped)}] must be provided");
+            //}
 
             foreach (var command in profile.OrderBy(c => c.Order))
             {
-                var instructions = command.Instructions
+                var commandInstructions = command.Instructions
                     .OrderBy(i => i.Order)
-                    .Select(i => i.Instruction)
+                    //.Select(i => i.Instruction)
                     .ToList();
-                var requiredParams = GetRequiredParams(instructions);
+                var requiredParams = GetRequiredParams(commandInstructions.Select(ci => ci.Instruction));
                 var iteratedParam = availableParams
                     .FirstOrDefault(p => requiredParams.Contains(p.Key) && p.Value is IEnumerable);
                 var parameters = availableParams
@@ -47,20 +49,27 @@ namespace Optosense.Edm.Drivers.Mux
                 var offset = command.Offset;
                 foreach (var iterParam in iteratedParam.Value as IEnumerable)
                 {
-                    foreach (var inst in instructions)
+                    foreach (var ci in commandInstructions)
                     {
-                        var instParams = GetRequiredParams(inst)
+                        var purifiedArgs = Regex.Replace(ci.Args ?? string.Empty, @"{([\w\d]*)\?{1}}", @"""{$1}""");
+                        var args = JsonConvert.DeserializeObject<ExpandoObject>($"{{{purifiedArgs}}}");
+                        var reqs = Regex.Matches(ci.Args ?? string.Empty, @"{([\w\d]*)\?{1}}").Select(m => m.Groups[1].Value);
+                        var instParams = GetRequiredParams(ci.Instruction)
                             .Select(p => KeyValuePair
-                                .Create(p, p == iteratedParam.Key ? iterParam : ((IDictionary<string, object>) availableParams)[p]))
+                                .Create(p, p == iteratedParam.Key ? iterParam 
+                                    : ((IDictionary<string, object>)availableParams).ContainsKey(p) ? 
+                                        ((IDictionary<string, object>) availableParams)[p] :
+                                        ((IDictionary<string, object>)args)[p]))
                             .ToDictionary(p => p.Key, p => p.Value);
                         yield return new BoardDriverRequest
                         {
                             Offset = offset,
-                            Command = inst.Code,
+                            Command = ci.Instruction.Code,
                             Parameters = JsonConvert.SerializeObject(instParams),
-                            Instruction = inst
+                            Instruction = ci.Instruction,
+                            Condition = string.Join(",", reqs)
                         };
-                        offset = inst.Timeout;
+                        offset = ci.Instruction.Timeout;
                     }
                 }
             }
@@ -87,6 +96,17 @@ namespace Optosense.Edm.Drivers.Mux
         {
             var regex = new Regex(@"{(\w*)}");
             var param = regex.Matches(instruction.Code)
+                .Select(m => m.Groups[1].Value)
+                .Distinct()
+                .ToList();
+            return param;
+        }
+
+        internal IEnumerable<string> GetRequestedParams(CommandInstruction commandInstruction)
+        {
+            
+            var regex = new Regex(@"{(\w*)\?}");
+            var param = regex.Matches(commandInstruction.Args)
                 .Select(m => m.Groups[1].Value)
                 .Distinct()
                 .ToList();

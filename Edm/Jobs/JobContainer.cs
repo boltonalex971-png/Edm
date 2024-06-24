@@ -292,7 +292,8 @@ public class JobContainer : IJobContainer
                     _logger.LogInformation("Job {Name} {Id} canceled by user", longTask.Job.Name, t.Id);
                     break;
                 case TaskStatus.Faulted:
-                    _logger.LogError("Job {Name} {Id} failed with exception: {Exception}", longTask.Job.Name, t.Id, t.Exception.Flatten().GetFullInfo());
+                    // TODO lonTask.Job is always null
+                    _logger.LogError("Job {Name} {Id} failed with exception: {Exception}", longTask.Job?.Name, t.Id, t.Exception.Flatten().GetFullInfo());
                     break;
                 case TaskStatus.RanToCompletion:
                     _logger.LogInformation("Job {Name} {Id} completed successfully", longTask.Job.Name, t.Id);

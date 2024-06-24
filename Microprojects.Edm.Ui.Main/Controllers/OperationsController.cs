@@ -167,9 +167,9 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         {
             var process = 
                 (await _operationService.Get(o => o.Id == id, o => o.WorkplaceProcess.Process))
-                .FirstOrDefault()?.WorkplaceProcess.Process ?? 
+                .FirstOrDefault()?.WorkplaceProcess?.Process ?? 
                 (await _operationService.Get(o => o.Id == id, o => o.Workbench.WorkplaceProcess.Process))
-                .FirstOrDefault()?.Workbench.WorkplaceProcess.Process;
+                .FirstOrDefault()?.Workbench?.WorkplaceProcess.Process;
             return process;
         }
 

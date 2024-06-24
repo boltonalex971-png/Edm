@@ -8,8 +8,8 @@ using System.Linq;
 namespace Optosense.Edm.Drivers.Mux
 {
     [DriverPlugin(
-        Guid = "{91679408-5421-446A-955B-838291DA7502}",
-        Profile = "{8E33F54D-D817-44C4-B2ED-1F8FD957CCD6}",
+        Guid = "91679408-5421-446A-955B-838291DA7502",
+        Profile = "8E33F54D-D817-44C4-B2ED-1F8FD957CCD6",
         Name = "Mux board", 
         Description = "Controls 20-sockets MUX board",
         SpaPath = "MuxDriverUi/build", 

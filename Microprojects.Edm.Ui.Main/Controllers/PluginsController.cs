@@ -30,20 +30,20 @@ namespace Microprojects.Edm.Ui.Main.Controllers
             _plugins = plugins;
         }
 
-        [HttpGet("{guid}")]
-        public IPlugin GetPlugin(string guid) => _plugins.GetPlugin(Guid.Parse(guid));
+        [HttpGet("{guid:guid}")]
+        public IPlugin GetPlugin(Guid guid) => _plugins.GetPlugin(guid);
 
-        [HttpGet("{guid}/{setting}")]
-        public async Task<string> GetByGuid(string guid, string setting)
+        [HttpGet("{guid:guid}/{setting}")]
+        public async Task<string> GetByGuid(Guid  guid, string setting)
         {
-            var result = await _settingService.Get(Guid.Parse(guid), setting);
+            var result = await _settingService.Get(guid, setting);
             return result ?? string.Empty;
         }
 
-        [HttpPut("{guid}/{setting}")]
-        public async Task<string> Save(string guid, string setting, [FromBody] object value)
+        [HttpPut("{guid:guid}/{setting}")]
+        public async Task<string> Save(Guid guid, string setting, [FromBody] object value)
         {
-            var result = await _settingService.Set(Guid.Parse(guid), setting, JsonConvert.SerializeObject(value));
+            var result = await _settingService.Set(guid, setting, JsonConvert.SerializeObject(value));
             return result;
         }
 
