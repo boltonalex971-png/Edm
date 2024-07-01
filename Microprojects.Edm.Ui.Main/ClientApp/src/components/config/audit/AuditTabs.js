@@ -15,11 +15,11 @@ export function AuditTabs(props) {
     const [selected, setSelected] = useState(0);
     return (
         <TabStrip selected={selected} onSelect={(e) => setSelected(e.selected)}>
-            <TabStripTab title={'Qualifiers'} >
-                <AuditQualifiersTab {...props} />
-            </TabStripTab>
             <TabStripTab title={'Zones'} >
                 <AuditEditorTab {...props} />
+            </TabStripTab>
+            <TabStripTab title={'Qualifiers'} >
+                <AuditQualifiersTab {...props} />
             </TabStripTab>
         </TabStrip>
     );
