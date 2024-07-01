@@ -16,7 +16,7 @@
         "Entry"
         {
         "MsmKey" = "8:_1B12C2D465E83093B57A5329FA640551"
-        "OwnerKey" = "8:_3AA6D14B9E3E43EBA540759DB2E76F53"
+        "OwnerKey" = "8:_3E0247198B08ABF31BDC712628ECE8C3"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -33,6 +33,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_1B12C2D465E83093B57A5329FA640551"
+        "OwnerKey" = "8:_3AA6D14B9E3E43EBA540759DB2E76F53"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_2B5427774F3C40FAB0429DAB4784187A"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -41,6 +47,12 @@
         {
         "MsmKey" = "8:_3AA6D14B9E3E43EBA540759DB2E76F53"
         "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_3E0247198B08ABF31BDC712628ECE8C3"
+        "OwnerKey" = "8:_3AA6D14B9E3E43EBA540759DB2E76F53"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -100,13 +112,13 @@
         "Entry"
         {
         "MsmKey" = "8:_7ADF7070F2AF27667A1892FA209ADEF2"
-        "OwnerKey" = "8:_C49A2E9237896F019D1A444656B72770"
+        "OwnerKey" = "8:_3AA6D14B9E3E43EBA540759DB2E76F53"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_7ADF7070F2AF27667A1892FA209ADEF2"
-        "OwnerKey" = "8:_3AA6D14B9E3E43EBA540759DB2E76F53"
+        "OwnerKey" = "8:_C49A2E9237896F019D1A444656B72770"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -142,13 +154,19 @@
         "Entry"
         {
         "MsmKey" = "8:_C49A2E9237896F019D1A444656B72770"
-        "OwnerKey" = "8:_45C855C4E459FA376B2BD4CF642A5284"
+        "OwnerKey" = "8:_3E0247198B08ABF31BDC712628ECE8C3"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_C49A2E9237896F019D1A444656B72770"
         "OwnerKey" = "8:_49EC7734E13541D7B3959C7AEE4E8901"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_C49A2E9237896F019D1A444656B72770"
+        "OwnerKey" = "8:_45C855C4E459FA376B2BD4CF642A5284"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -203,6 +221,12 @@
         {
         "MsmKey" = "8:_D0B890BB702947F2D6FB4ECD91735328"
         "OwnerKey" = "8:_45C855C4E459FA376B2BD4CF642A5284"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_D0B890BB702947F2D6FB4ECD91735328"
+        "OwnerKey" = "8:_3E0247198B08ABF31BDC712628ECE8C3"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -472,6 +496,37 @@
             "Register" = "3:1"
             "Exclude" = "11:FALSE"
             "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_3E0247198B08ABF31BDC712628ECE8C3"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:Optosense.Edm.Core.AspNet, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_3E0247198B08ABF31BDC712628ECE8C3"
+                    {
+                    "Name" = "8:Optosense.Edm.Core.AspNet.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:Optosense.Edm.Core.AspNet.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_AEE31518259E4CFDABF559E3A191152E"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_414DC650980E40EE9DFDD55B313A0646"
@@ -962,15 +1017,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:Edm"
-        "ProductCode" = "8:{BAC82683-7560-4371-AC0B-53712C377BE7}"
-        "PackageCode" = "8:{FDAA82A0-EB9F-4FCD-B733-7F5FB8C55C8D}"
+        "ProductCode" = "8:{909D8C05-16AE-4A2F-9795-D65C84EBA0AB}"
+        "PackageCode" = "8:{879D6F86-D638-44E1-81FB-4C4E4DE62831}"
         "UpgradeCode" = "8:{0B59587D-B902-4F08-AFAE-4BB253F5EFE8}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:TRUE"
-        "ProductVersion" = "8:1.0.0"
+        "ProductVersion" = "8:1.12.0"
         "Manufacturer" = "8:Microprojects"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
