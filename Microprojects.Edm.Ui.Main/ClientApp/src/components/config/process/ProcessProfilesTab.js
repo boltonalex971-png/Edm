@@ -2,7 +2,7 @@ import React from 'react';
 import Api from '../../api';
 import PropTypes from 'prop-types';
 import { GridColumn } from '@progress/kendo-react-grid';
-import { RelationTable, SubDetailColumn } from '../../RelationTable';
+import { RelationTable } from '../../RelationTable';
 import { DropDownCell, LinkTextCell } from '../../DropDownCell';
 import { useGet } from '../../hooks/hooks';
 import { ProfileDetail } from '../Profiles';
@@ -29,16 +29,16 @@ export function ProcessProfilesTab({ id, api, missedInputs, onDetailSelected }) 
                     />
                 }
             />
-            <SubDetailColumn field='name' title='Name'
+            <GridColumn field='name' title='Name'
                 cell={(cellProps) =>
                     <LinkTextCell {...cellProps}
                         fieldId='id'
-                        onClick={(profileId) => onDetailSelected(
+                        onClick={(profileId, itemUpdate) => onDetailSelected(
                             <ProfileDetail
                                 profileId={profileId}
                                 api={Api.profiles}
                                 onClose={() => onDetailSelected()}
-                                onUpdate={cellProps.itemUpdate}
+                                onUpdate={itemUpdate}
                             />
                         )}
                     />

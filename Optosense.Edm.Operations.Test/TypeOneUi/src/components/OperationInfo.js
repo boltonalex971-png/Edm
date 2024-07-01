@@ -9,19 +9,23 @@ let monitorInterval;
 
 export const OperationInfo = (props) => {
     const [capacity, setCapacity] = useState(-1);
+    const [lastId, setLastId] = useState(0)
     const [sensors, setSensors] = useState();
     const [refresh, setRefresh] = useState(false);
-    const [[data, setData]] = useGet(`${props.apiBase}/api/operations/${props.operationId}/criteria`, refresh); //records?lastRecordId=${lastId}`, refresh);
-    const [[devices]] = useGet(`${props.apiBase}/api/operations/${props.operationId}/devices`);
-    const [[status]] = useGet(`${props.apiBase}/api/operations/${props.operationId}/status`);
-    const [params] = useOperationData(types.operationDataType);
-    useEffect(() => {
-    }, [params])
-
-    if (devices && capacity === -1) {
-        const options = JSON.parse(devices[0]?.options || 20)
+    const [[data, setData]] = useGet(`${props.apiBase}/api/operations/${props.operationId}/criteria`, [refresh]);
+    useGet(`${props.apiBase}/api/operations/${props.operationId}/records?lastRecordId=${lastId}`, [refresh], (records) => {
+        setLastId(id => records.at(-1)?.id || id);
+        const serials = records.filter(r => r.parameters?.includes("Sn")).map(r => JSON.parse(r.parameters))
+        setSensors(sens => sens?.map((s, i) => {
+            const f = serials.filter(r => parseInt(`0x${r.ADDR.slice(1)}`) === i).at(-1)
+            return f ? { ...s, serial: f.Sn, handled: true } : s
+        }))
+    })
+    useGet(`${props.apiBase}/api/operations/${props.operationId}/devices`, [], d => {
+        const options = JSON.parse(d[0]?.options)
         setCapacity(options?.capacity || 0);
-    }
+    });
+    const [[status]] = useGet(`${props.apiBase}/api/operations/${props.operationId}/status`);
 
     if (!sensors && capacity > -1) {
         const sens = new Array(capacity);
@@ -30,13 +34,14 @@ export const OperationInfo = (props) => {
         }
 
         setSensors([...sens]);
-    } else if (data && data.length > 0) {
+    } else if (data && data.length > 0 && sensors) {
+        // TODO move this to useGet
         data.forEach(d => {
             const addr = d.selector !== undefined && parseInt(`0x${d.selector.slice(1)}`);
             if (addr !== false) {
                 //if (d.Sn !== undefined) sensors[addr].Serial = d.Sn;
                 //sensors[addr].Serial = sensors[addr].Serial || d.parameters.Sn || null;
-                const attr = d.auditCriterionParam.slice(0, 1);
+                const attr = d.auditCriterionParam
                 sensors[addr][attr] = { value: d.result, valid: d.valid };
             }
         });
@@ -46,18 +51,19 @@ export const OperationInfo = (props) => {
 
     useEffect(() => {
         if (props.started && data && status && status !== 'Abandoned') {
-            monitorInterval = setInterval(() => setRefresh(r => !r), 10000);
+            monitorInterval = setInterval(() => setRefresh(r => !r), 1000);
         } else {
             clearInterval(monitorInterval);
         }
 
         return () => clearInterval(monitorInterval);
     }, [props.started, status]);
+
     return (
         <SmartScroll offtop={10} style={{ display: 'flex', margin: 10 }}>
             <div style={{ flex: 1 }}>
                 <SmartScrollContent style={{ flex: 1 }}>
-                    <Monitor {...props} sensors={sensors || []} />
+                    <Monitor {...props} sensors={sensors || []} indicators={props.settings} />
                 </SmartScrollContent>
             </div>
             <div style={{ flex: 4, marginLeft: '1rem' }}>
@@ -70,7 +76,7 @@ export const OperationInfo = (props) => {
                         gap: '1rem'
                     }}>
                         {sensors && sensors.map((s, i) =>
-                            <Sensor key={i} addr={i} info={s || {}} />
+                            <Sensor key={i} addr={i} info={s || {}} indicators={props.settings} />
                         )}
                     </div>
                 </SmartScrollContent>

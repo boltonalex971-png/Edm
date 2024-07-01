@@ -1,21 +1,32 @@
 import React from 'react';
-import { useGet } from './hooks/hooks';
+import axios from 'axios';
+import { EasyGrid } from './EasyGrid';
+import { ComboBoxCell } from './DropDownCell';
+import { GridColumn } from '@progress/kendo-react-grid';
 
-export function Config({ apiBase }) {
-    const [[data]] = useGet(`${apiBase}/apps/test/WeatherForecast`);
+export function Config({ apiBase, operationId, settings, outputs, onSettingsChanged }) {
+    const saveSettings = (s) => {
+        axios.put(`${apiBase}/api/operations/${operationId}/settings`, s);
+        onSettingsChanged(s)
+    };
+
     return (
         <div>
-            <p>
-                Below you can the result of operation controller call
-            </p>
-            <textarea
-                className='form-control'
-                style={{ width: '100%' }}
-                readOnly
-                type='textarea'
-                rows={10}
-                value={data || "Empty"}
-            />
+            <h6 style={{ margin: '1rem' }}>Sensor indicators</h6>
+            <EasyGrid data={settings || []}
+                orderField='order'
+                dataChange={saveSettings}
+            >
+                <GridColumn field='order' title='Order' width={120} editor='numeric' />
+                <GridColumn field='indicator' title='Indicator' />
+                <GridColumn field='parameter' title='Parameter'
+                    cell={(cellProps) =>
+                        <ComboBoxCell {...cellProps} data={outputs} value={cellProps.dataItem.value} />
+                    }
+                />
+                <GridColumn field='title' title='Title' />
+            </EasyGrid>
+
         </div>
     );
 }

@@ -1,27 +1,34 @@
 import React from 'react';
 
-export const Sensor = ({ info, ...props }) => {
+export const Sensor = ({ info, indicators, ...props }) => {
+    const broken = Object.entries(info).some(e => e[1]['valid'] === false)
+    const good = Object.entries(info).every(e => e[1]['valid'] === true)
+    const completed = Object.entries(info).every(e => e[1]['valid'] !== undefined)
+
     return (
         <div
             {...props}
             style={{
-                border: 'solid 1px lightgray',
+                border: completed ? 'solid 2px darkgray' : 'solid 1px lightgray',
+                backgroundColor: broken ? '#ffe2e2' : good ? '#ddfad9' : 'inherit',
                 display: 'grid',
                 gridTemplateColumns: 'repeat(4, 1fr)',
                 gridTemplateRows: '50px 50px',
                 alignItems: 'center',
                 justifyItems: 'center'
             }}>
-            <span style={{ gridColumn: '1/-1' }}><strong>#{props.addr}</strong> {info.Serial}</span>
-            {['T', 'S', 'R', 'I'].map(i =>
-                <span
-                    key={`${props.key}${i}`}
-                    className={(info[i]?.valid !== undefined && `bg-${(info[i].valid && 'success') || 'danger'} text-white`) || ''}
-                    style={{ display: 'flex', width: '80%', justifyContent: 'center' }}
-                    title={info[i]?.value}
-                >{i}
-                </span>
-            )}
+            <span style={{ gridColumn: '1/-1' }}>#{props.addr + 1} <strong>{info.serial}</strong></span>
+            {indicators
+                .sort((a, b) => a.order - b.order)
+                .map(i =>
+                    <span
+                        key={`${props.key}${i.indicator}`}
+                        className={(info[i.parameter]?.valid !== undefined && `bg-${(info[i.parameter].valid && 'success') || 'danger'} text-white`) || ''}
+                        style={{ display: 'flex', width: '80%', justifyContent: 'center' }}
+                        title={`${i.title} ${info[i.parameter]?.value}`}
+                    >{i.indicator}
+                    </span>
+                )}
         </div>
     );
 }   

@@ -1,4 +1,4 @@
-import React, { Children, cloneElement, useState } from 'react';
+import React, { Children, cloneElement, createContext, useState } from 'react';
 import PropTypes from 'prop-types';
 import axios from 'axios';
 import { isEqual } from 'lodash';
@@ -7,6 +7,7 @@ import { useGet } from './hooks/hooks';
 import { Loading } from './utils/Utils';
 import { Alert } from 'reactstrap';
 import { ButtonGroup, Button } from '@progress/kendo-react-buttons';
+import { ParentContext } from './ParentContext';
 
 RelationTable.propTypes = {
     id: PropTypes.number,
@@ -71,7 +72,6 @@ export function RelationTable({ api, children, ...props }) {
     };
     const discardEdit = (event) => {
         const { inEdit, ...item } = event.dataItem;
-        console.log(editItem, item);
         if (isEqual(editItem, item) || window.confirm('Confirm discarding changed data')) {
             //let discardedData = { ...data };
             if (isEqual(editItem, {})) {
@@ -108,41 +108,40 @@ export function RelationTable({ api, children, ...props }) {
             {error && <Alert color='danger' style={{ display: 'flex', justifyContent: 'space-around' }}>{error}</Alert>}
             {loading && <Loading />}
             {data &&
-                <Grid
-                    data={data}
-                    editField="inEdit"
-                    scrollable='none'
-                    onRowClick={props.editable ? rowClick : undefined}
-                    onItemChange={itemChange}
-                >
-                    <GridToolbar>
-                        <Button title="Add new record" className="k-button k-secondary" onClick={addRecord} disabled={editItem != null}>
-                            <span className="k-icon k-i-add"></span>
-                        </Button>
-                    </GridToolbar>
-                    {Children.map(children, c => c?.type?.displayName === 'SubDetailColumn' ?
+                <ParentContext.Provider value={{ itemUpdate: itemUpdate }}>
+                    <Grid
+                        data={data}
+                        editField="inEdit"
+                        scrollable='none'
+                        onRowClick={props.editable ? rowClick : undefined}
+                        onItemChange={itemChange}
+                    >
+                        <GridToolbar>
+                            <Button title="Add new record" className="k-button k-secondary" onClick={addRecord} disabled={editItem != null}>
+                                <span className="k-icon k-i-add"></span>
+                            </Button>
+                        </GridToolbar>
+                        {children}
+                        {/* {Children.map(children, c => c?.type?.displayName === 'SubDetailColumn' ?
                         <GridColumn {...c.props} cell={(cellProps) => c.props.cell({ itemUpdate, ...cellProps })} /> : c)
-                    }
-                    <GridColumn title=''
-                        width='2rem'
-                        cell={(cellProps) =>
-                            <ActionCell {...cellProps}
-                                edit={props.editable ? ((item) => rowClick({ dataItem: item })) : undefined}
-                                remove={props.removable ? ((item) => removeRecord({ dataItem: item })) : undefined}
-                                save={(item) => saveEdit({ dataItem: item })}
-                                discard={(item) => discardEdit({ dataItem: item })}
-                            />
-                        }
-                    />
-                </Grid>
+                    } */}
+                        <GridColumn title=''
+                            width='2rem'
+                            cell={(cellProps) =>
+                                <ActionCell {...cellProps}
+                                    edit={props.editable ? ((item) => rowClick({ dataItem: item })) : undefined}
+                                    remove={props.removable ? ((item) => removeRecord({ dataItem: item })) : undefined}
+                                    save={(item) => saveEdit({ dataItem: item })}
+                                    discard={(item) => discardEdit({ dataItem: item })}
+                                />
+                            }
+                        />
+                    </Grid>
+                </ParentContext.Provider>
             }
         </>
     );
 }
-
-// Fake component to provide <code>itemUpdate</code> prop to cell
-export const SubDetailColumn = (props) => <></>
-SubDetailColumn.displayName = 'SubDetailColumn'
 
 export const ActionCell = ({ edit, remove, save, discard, ...props }) => {
     const inEdit = props.dataItem.inEdit;

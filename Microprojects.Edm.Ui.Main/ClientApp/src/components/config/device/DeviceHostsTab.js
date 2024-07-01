@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { GridColumn } from '@progress/kendo-react-grid';
-import { RelationTable, SubDetailColumn } from '../../RelationTable';
+import { RelationTable } from '../../RelationTable';
 import { DropDownCell } from '../../DropDownCell';
 import { useGet } from '../../hooks/hooks';
 import { HostDetail } from '../Hosts';
@@ -20,7 +20,7 @@ export function DeviceHostsTab({ id, api, onDetailSelected }) {
     const [[data]] = useGet(`${api}/hosts`);
     return (
         <RelationTable api={`${api}/${id}/hosts`} removable >
-            <SubDetailColumn
+            <GridColumn
                 width={200}
                 field='hostId'
                 title='Host'
@@ -31,7 +31,7 @@ export function DeviceHostsTab({ id, api, onDetailSelected }) {
                         text='name'
                         fieldName='hostName'
                         fieldId='hostId'
-                        onClick={(hostId) => {
+                        onClick={(hostId, itemUpdate) => {
                             const path = '/config/hosts';
                             onDetailSelected(<HostDetail
                                 hostId={hostId}
@@ -39,7 +39,7 @@ export function DeviceHostsTab({ id, api, onDetailSelected }) {
                                 path={path}
                                 onClose={() => onDetailSelected()}
                                 onUp={() => history.push(`${path}/${hostId}`)}
-                                onUpdate={cellProps.itemUpdate}
+                                onUpdate={itemUpdate}
                             />);
                         }}
                     />

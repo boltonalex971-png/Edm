@@ -2,7 +2,7 @@ import React from 'react';
 import Api from '../../api';
 import PropTypes from 'prop-types';
 import { GridColumn } from '@progress/kendo-react-grid';
-import { RelationTable, SubDetailColumn } from '../../RelationTable';
+import { RelationTable } from '../../RelationTable';
 import { DropDownCell, LinkTextCell } from '../../DropDownCell';
 import { useGet } from '../../hooks/hooks';
 import { ProcessDetail } from '../Processes';
@@ -41,7 +41,7 @@ export function WorkplaceProcessesTab({ id, api, onDetailSelected }) {
     };
     return (
         <RelationTable api={`${api}/${id}/processes`} removable >
-            <SubDetailColumn
+            <GridColumn
                 width={200}
                 field='processId'
                 title='Process'
@@ -51,7 +51,7 @@ export function WorkplaceProcessesTab({ id, api, onDetailSelected }) {
                         id='id'
                         text='name'
                         fieldName='processName'
-                        onClick={(processId) => {
+                        onClick={(processId, itemUpdate) => {
                             const path = '/config/processes'
                             onDetailSelected(
                                 <ProcessDetail
@@ -60,7 +60,7 @@ export function WorkplaceProcessesTab({ id, api, onDetailSelected }) {
                                     path={path}
                                     onClose={() => onDetailSelected()}
                                     onUp={() => history.push(`${path}/${processId}`)}
-                                    onUpdate={cellProps.itemUpdate}
+                                    onUpdate={itemUpdate}
                                 />
                             )
                         }}

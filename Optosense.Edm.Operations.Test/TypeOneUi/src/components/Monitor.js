@@ -3,25 +3,24 @@ import { useState } from 'react';
 import { useGet } from './hooks/hooks';
 
 
-export function Monitor({ sensors, started, ...props }) {
+export function Monitor({ sensors, started, indicators, ...props }) {
     const inputRef = useRef();
     const [scrolled, setScrolled] = useState(false);
-    const index = [...sensors].reverse().findIndex(s => s.T);
-    const signals = ['T', 'S', 'R', 'I'];
+    const index = [...sensors].reverse().findIndex(s => s.handled);
     const log = index > -1 && sensors.slice(0, sensors.length - index).map((s, i) =>
         <div key={i}>
-            <span><strong>#{i}</strong></span>
+            <span>#{i + 1} <strong>{s.serial}</strong></span>
             <div style={{ padding: '0 0 1rem 3rem', display: 'flex', flexDirection: 'column' }}>
-                {signals.map(r =>
-                    s[r] &&
-                    <span key={`${i}_${r}`} className={s[r].valid ? '' : 'bg-danger text-white'}>
-                        {r}: {s[r].value} {s[r].valid ? 'Ok' : 'Failed'}
+                {indicators.map(i =>
+                    s[i.parameter] &&
+                    <span key={`${i.indicator}_${i.parameter}`} className={s[i.parameter].valid ? '' : 'bg-danger text-white'}>
+                        {i.indicator}: {s[i.parameter].value} {s[i.parameter].valid ? 'Ok' : 'Failed'}
                     </span>
                 )}
             </div>
         </div>
     );
-    const polled = sensors.filter(s => s && s.Serial).length;
+    const polled = sensors.filter(s => s && s.serial).length;
     const setScroll = (e) => {
         const scroll = e.target.scrollHeight >= e.target.scrollTop + e.target.getBoundingClientRect().y + 10;
         setScrolled(scroll);

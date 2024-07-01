@@ -264,7 +264,7 @@ namespace Optosense.Edm.Jobs
                 InputParamArrived += handler;
                 #pragma warning disable CS4014 
                 // Do not need to wait
-                PushOutputParameterAsync(new KeyValuePair<string, object>($"?{condition}", null));
+                await PushOutputParameterAsync(new KeyValuePair<string, object>($"?{condition}", null));
                 #pragma warning restore CS4014 
                 // TODO Cancel task by timeout
                 await Task.Delay(-1, cancellationSource.Token).ContinueWith(t => { });

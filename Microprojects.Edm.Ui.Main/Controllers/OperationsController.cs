@@ -179,6 +179,8 @@ namespace Microprojects.Edm.Ui.Main.Controllers
             var operation = await _operationService
                 .Get(id, o => o.WorkplaceProcess.Process);
             var devices = await _operationService.GetOperationDevices(id);
+            var profileParams = devices
+                .SelectMany(d => _plugins.GetProfile(d.Profile.ProfilerGuid).GetParameters(d.Profile.TextJson));
             var parameters = devices
                 .SelectMany(d => JsonConvert.DeserializeObject<IEnumerable<string>>(d.Profile.Output ?? "[]"));
             var settings = await _settingService.Get(
@@ -189,7 +191,7 @@ namespace Microprojects.Edm.Ui.Main.Controllers
                 Id = operation.WorkplaceProcess.ProcessId,
                 Name = operation.WorkplaceProcess.Process.Name,
                 Description = operation.WorkplaceProcess.Process.Description,
-                Parameters = parameters,
+                Parameters = parameters.Concat(profileParams).Distinct(),
                 Settings = settings
             };
 
@@ -200,10 +202,10 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         public async Task<object> SaveOperationSettings(int id, [FromBody] object settings)
         {
             var operation = await _operationService
-                .Get(id, o => o.Workbench.WorkplaceProcess.Process);
+                .Get(id, o => o.WorkplaceProcess.Process);
             var result = await _settingService.Set(
-                operation.Workbench.WorkplaceProcess.Process.OperationGuid,
-                OperationProcessSettingName(operation.Workbench.WorkplaceProcess.ProcessId),
+                operation.WorkplaceProcess.Process.OperationGuid,
+                OperationProcessSettingName(operation.WorkplaceProcess.ProcessId),
                 JsonConvert.SerializeObject(settings));
              return result;
         }

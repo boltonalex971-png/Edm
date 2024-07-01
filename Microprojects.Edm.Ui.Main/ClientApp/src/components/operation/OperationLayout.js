@@ -6,12 +6,16 @@ import api from '../api';
 import { OperationPluginContainer } from './OperationPluginContainer';
 import { OperationMenu } from './OperationMenu';
 import { Button } from '@progress/kendo-react-buttons';
+import axios from 'axios';
 
 export function OperationLayout() {
     const { id } = useParams()
     const apiContext = useContext(ApiContext)
-    const [[data]] = useGet(`${api.operations}/${id}/process`, [id])
-    const [[options]] = useGet(`${api.plugins}/${data?.operationGuid}`, [data?.operationGuid])
+    const [options, setOptions] = useState()
+    const [[data]] = useGet(`${api.operations}/${id}/process`, [], p => {
+        axios.get(`${api.plugins}/${p.operationGuid}`).then(d => setOptions(d.data)).catch(alert)
+    })
+    // const [[options]] = useGet(`${api.plugins}/${data?.operationGuid}`)
     const [[processInfo]] = useGet(`${api.operations}/${id}/processInfo`);
     const [settings, setSettings] = useState();
     const [started, setStarted] = useState();

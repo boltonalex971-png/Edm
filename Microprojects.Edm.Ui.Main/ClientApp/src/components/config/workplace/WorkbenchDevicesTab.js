@@ -2,10 +2,9 @@ import React, { useState } from 'react';
 import Api from '../../api';
 import PropTypes from 'prop-types';
 import { GridColumn } from '@progress/kendo-react-grid';
-import { RelationTable, SubDetailColumn } from '../../RelationTable';
+import { RelationTable } from '../../RelationTable';
 import { DropDownCell, LinkTextCell } from '../../DropDownCell';
 import { useGet } from '../../hooks/hooks';
-import { ProcessDetail } from '../Processes';
 import { useHistory } from 'react-router-dom';
 import { DeviceDetail } from '../Devices';
 import { DeviceConfigEditor } from './DeviceConfigEditor';
@@ -41,27 +40,27 @@ export function WorkbenchDevicesTab({ id, api, processId, onDetailSelected }) {
 
     return (
         <RelationTable api={`${api}/${id}/devices`} removable >
-            <SubDetailColumn title='Profile' field='profileId' editable={true} width={200}
+            <GridColumn title='Profile' field='profileId' editable={true} width={200}
                 cell={(cellProps) =>
                     <DropDownCell {...cellProps}
                         getData={() => profilers} id='id' text='name' fieldId='profileId' fieldName='profileName'
-                        onClick={(profileId) => onDetailSelected(
+                        onClick={(profileId, itemUpdate) => onDetailSelected(
                             <ProfileDetail
                                 profileId={profileId}
                                 api={Api.profiles}
                                 deletable={false}
-                                onUpdate={cellProps.itemUpdate}
+                                onUpdate={itemUpdate}
                             />)
                         }
                     />
                 }
             />
-            <SubDetailColumn title='Device' field='workplaceHostDeviceId' editable={true} width={200}
+            <GridColumn title='Device' field='workplaceHostDeviceId' editable={true} width={200}
                 cell={(cellProps) =>
                     <DropDownCell {...cellProps}
                         getData={() => devices} id='id' text='device' fieldId='deviceId' fieldName='deviceName'
                         onChange={(e) => handleDeviceChange(e, cellProps.onChange)}
-                        onClick={(deviceId) => devices && devices.length &&
+                        onClick={(deviceId, itemUpdate) => devices && devices.length &&
                             onDetailSelected(
                                 <DeviceDetail
                                     deviceId={deviceId}
@@ -69,7 +68,7 @@ export function WorkbenchDevicesTab({ id, api, processId, onDetailSelected }) {
                                     path={devicesPath}
                                     onClose={() => onDetailSelected()}
                                     onUp={() => history.push(`${devicesPath}/${deviceId}`)}
-                                    onUpdate={cellProps.itemUpdate}
+                                    onUpdate={itemUpdate}
                                 />)
                         }
                     />

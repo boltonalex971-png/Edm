@@ -1,6 +1,8 @@
 ﻿using Microprojects.Edm.Intercom;
+using Microprojects.Edm.Utils;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Reactive.Disposables;
@@ -28,8 +30,29 @@ namespace Optosense.Edm.WebApi.Utils
             {
                 await HubConnection.StartAsync();
             }
+            for (int i = 3; i > 0; i--)
+            {
+                await HubConnection.InvokeAsync(nameof(IntercomHub.Publish), channel, message)
+                    .ContinueWith(t =>
+                    {
+                        if (t.IsCompletedSuccessfully)
+                        {
+                            i = 0;
+                            //Logger.LogDebug("Message sent:\n{message}\nto channel:\n{channel}", message, channel);
+                        }
+                        else if (t.IsFaulted)
+                        {
+                            var ex = t.Exception;
+                            //Logger.LogError("Message failed:\n{message}\nTo channel:\n{channel}\nError:\n{error}", message, channel, t.Exception.GetFullInfo());
+                        }
+                        else
+                        {
+                            var ex = t.IsCanceled;
+                            //Logger.LogDebug("Message cancelled:\n{message}\nTo channel:\n{channel}", message, channel);
+                        }
+                    });
+            }
 
-            await HubConnection.InvokeAsync(nameof(IntercomHub.Publish), channel, message);
             return 0;
         }
 

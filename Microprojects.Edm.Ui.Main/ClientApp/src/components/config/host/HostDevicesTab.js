@@ -2,7 +2,7 @@ import React from 'react';
 import Api from '../../api';
 import PropTypes from 'prop-types';
 import { GridColumn } from '@progress/kendo-react-grid';
-import { RelationTable, SubDetailColumn } from '../../RelationTable';
+import { RelationTable } from '../../RelationTable';
 import { DropDownCell } from '../../DropDownCell';
 import { useGet } from '../../hooks/hooks';
 import { DeviceDetail } from '../Devices';
@@ -20,21 +20,21 @@ export function HostDevicesTab({ id, api, onDetailSelected }) {
     const path = '/config/devices';
     return (
         <RelationTable api={`${api}/${id}/devices`} removable >
-            <SubDetailColumn
+            <GridColumn
                 width={200}
                 field='deviceId'
                 title='Device'
                 cell={(cellProps) => data &&
                     <DropDownCell {...cellProps}
                         getData={() => data} id='id' text='name' fieldName='deviceName'
-                        onClick={(deviceId) => onDetailSelected(
+                        onClick={(deviceId, itemUpdate) => onDetailSelected(
                             <DeviceDetail
                                 deviceId={deviceId}
                                 api={Api.devices}
                                 path={path}
                                 onClose={() => onDetailSelected()}
                                 onUp={() => history.push(`${path}/${deviceId}`)}
-                                onUpdate={cellProps.itemUpdate}
+                                onUpdate={itemUpdate}
                             />)
                         }
                     />

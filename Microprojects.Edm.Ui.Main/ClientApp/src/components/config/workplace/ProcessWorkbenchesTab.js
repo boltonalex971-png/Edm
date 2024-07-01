@@ -2,7 +2,7 @@ import React from 'react';
 import Api from '../../api';
 import PropTypes from 'prop-types';
 import { GridColumn } from '@progress/kendo-react-grid';
-import { RelationTable, SubDetailColumn } from '../../RelationTable';
+import { RelationTable } from '../../RelationTable';
 import { LinkTextCell } from '../../DropDownCell';
 import { useGet } from '../../hooks/hooks';
 import { ProcessDetail } from '../Processes';
@@ -18,17 +18,17 @@ ProcessWorkbenchesTab.propTypes = {
 export function ProcessWorkbenchesTab({ id, api, onDetailSelected }) {
     return (
         <RelationTable api={`${api}/${id}/workbenches`} removable >
-            <SubDetailColumn title='Name' field='name' editable={true}
+            <GridColumn title='Name' field='name' editable={true}
                 cell={(cellProps) =>
                     <LinkTextCell {...cellProps}
                         fieldId='id'
-                        onClick={(wbId) => {
+                        onClick={(wbId, itemUpdate) => {
                             onDetailSelected(
                                 <WorkbenchDetail
                                     workbenchId={wbId}
                                     api={`${api}/workbenches`}
                                     onClose={() => onDetailSelected()}
-                                    onUpdate={cellProps.itemUpdate}
+                                    onUpdate={itemUpdate}
                                 />
                             );
                         }}

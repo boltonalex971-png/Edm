@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { GridColumn } from '@progress/kendo-react-grid';
-import { RelationTable, SubDetailColumn } from '../../RelationTable';
+import { RelationTable } from '../../RelationTable';
 import { DropDownCell } from '../../DropDownCell';
 import { useGet } from '../../hooks/hooks';
 import { DeviceDetail } from '../Devices';
@@ -20,7 +20,7 @@ export function WorkplaceDevicesTab({ id, api, onDetailSelected }) {
     const [[deviceList]] = useGet(`${api}/devices`);
     return (
         <RelationTable api={`${api}/${id}/devices`} removable>
-            <SubDetailColumn
+            <GridColumn
                 field='hostDeviceId'
                 title='Device'
                 cell={(cellProps) => deviceList &&
@@ -30,7 +30,7 @@ export function WorkplaceDevicesTab({ id, api, onDetailSelected }) {
                         text='name'
                         fieldId='deviceId'
                         fieldName='device'
-                        onClick={(deviceId) => {
+                        onClick={(deviceId, itemUpdate) => {
                             const path = '/config/devices';
                             onDetailSelected(
                                 <DeviceDetail
@@ -39,18 +39,18 @@ export function WorkplaceDevicesTab({ id, api, onDetailSelected }) {
                                     path={path}
                                     onClose={() => onDetailSelected()}
                                     onUp={() => history.push(`${path}/${deviceId}`)}
-                                    onUpdate={cellProps.itemUpdate}
+                                    onUpdate={itemUpdate}
                                 />
                             );
                         }}
                     />
                 }
             />
-            <SubDetailColumn field='hostId' title='Host' editable={false}
+            <GridColumn field='hostId' title='Host' editable={false}
                 cell={(cellProps) =>
                     <DropDownCell {...cellProps}
                         fieldName='host'
-                        onClick={(hostId) => {
+                        onClick={(hostId, itemUpdate) => {
                             const path = '/config/hosts';
                             onDetailSelected(
                                 <HostDetail
@@ -59,7 +59,7 @@ export function WorkplaceDevicesTab({ id, api, onDetailSelected }) {
                                     path={path}
                                     onClose={() => onDetailSelected()}
                                     onUp={() => history.push(`${path}/${hostId}`)}
-                                    onUpdate={cellProps.itemUpdate}
+                                    onUpdate={itemUpdate}
                                 />
                             );
                         }}

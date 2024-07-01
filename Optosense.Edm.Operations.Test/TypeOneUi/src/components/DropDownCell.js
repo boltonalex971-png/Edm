@@ -1,9 +1,8 @@
-import React, { useContext, useRef, useState } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
-import { DropDownList } from '@progress/kendo-react-dropdowns';
+import { ComboBox, DropDownList } from '@progress/kendo-react-dropdowns';
 import { GridCell } from '@progress/kendo-react-grid';
 import { Input } from '@progress/kendo-react-inputs';
-import { ParentContext } from './ParentContext';
 
 export const DropDownComp = (props) => {
     const handleChange = (e) => {
@@ -30,7 +29,6 @@ DropDownComp.propTypes = {
 }
 
 export const DropDownCell = ({ getData, id, text, fieldName, fieldId, onClick, editable = true, ...props }) => {
-    const context = useContext(ParentContext)
     const handleChange = (e) => {
         const event = {
             dataItem: props.dataItem, //e.value,
@@ -45,7 +43,7 @@ export const DropDownCell = ({ getData, id, text, fieldName, fieldId, onClick, e
     const dataValue = dataItem[field];
     const list = (getData && getData()) || [];
     let value = list.find(c => c[id] === dataValue);
-    if (getData && dataItem.inEdit && editable) {
+    if (getData && dataItem._inEdit && editable) {
         content = <DropDownList
             onChange={handleChange}
             value={value}
@@ -56,7 +54,7 @@ export const DropDownCell = ({ getData, id, text, fieldName, fieldId, onClick, e
     } else if (onClick) {
         const valueName = fieldName ? dataItem[fieldName] : ((value && value[text]) || dataItem[fieldId]);
         const valueId = fieldId ? dataItem[fieldId] : value ? value[id] : dataItem[field];
-        content = <button type='button' onClick={() => onClick(valueId, context.itemUpdate)} className='btn btn-link'>{valueName}</button>;
+        content = <button type='button' onClick={() => onClick(valueId)} className='btn btn-link'>{valueName}</button>;
     } else {
         const valueName = fieldName ? dataItem[fieldName] : ((value && value[text]) || '');
         content = <span>{valueName}</span>;
@@ -83,24 +81,25 @@ DropDownCell.propTypes = {
 }
 
 export const LinkTextCell = ({ fieldId, onClick, template, editable = true, ...props }) => {
-    const context = useContext(ParentContext)
     const handleChange = (e) => {
         props.onChange({
             dataItem: props.dataItem,
             field: props.field,
+            syntheticEvent: e.syntheticEvent,
             value: e.target.value
         });
     }
+
     let content;
     const { dataItem, field } = props;
     const value = template || dataItem[field];
-    if (dataItem.inEdit) {
+    if (dataItem._inEdit) {
         content = editable ?
             <Input onChange={handleChange} value={value} /> :
             <span />;
     } else {
         const id = dataItem[fieldId || "id"];
-        content = <button type='button' onClick={() => onClick(id, context.itemUpdate)} className='btn btn-link'>{value}</button>;
+        content = <button type='button' onClick={() => onClick(id)} className='btn btn-link'>{value}</button>;
     }
 
     return (
@@ -123,3 +122,33 @@ LinkTextCell.propTypes = {
     editable: PropTypes.bool
 }
 
+export const ComboBoxCell = ({ data, editable = true, ...props }) => {
+    const handleChange = (e) => {
+        const event = {
+            dataItem: props.dataItem, //e.value,
+            field: props.field,
+            syntheticEvent: e.syntheticEvent,
+            value: e.target.value
+        };
+        props.onChange(event);
+    }
+    let content;
+    const { dataItem, field } = props;
+    const value = dataItem[field];
+    if (dataItem._inEdit && editable) {
+        content = <ComboBox
+            allowCustom
+            onChange={handleChange}
+            value={value}
+            data={data}
+        />;
+    } else {
+        content = <span>{value}</span>;
+    }
+
+    return (
+        <td style={{ whiteSpace: 'nowrap' }}>
+            {content}
+        </td>
+    )
+}

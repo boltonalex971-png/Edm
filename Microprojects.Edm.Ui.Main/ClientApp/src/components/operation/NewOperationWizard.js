@@ -1,5 +1,5 @@
 /* eslint-disable no-mixed-operators */
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useContext } from 'react';
 import PropTypes from 'prop-types';
 import { Input as BSInput, Container, Row, Col, Alert } from 'reactstrap';
 import api from '../api';
@@ -13,6 +13,7 @@ import { Loading } from '../utils/Utils';
 import { Field, FormElement, Form } from '@progress/kendo-react-form';
 import { Input } from '@progress/kendo-react-inputs';
 import { PluginContainer } from '@microprojects/react-utils';
+import { ApiContext } from '../../ApiContext';
 
 export function NewOperationWizard() {
     const [error, setError] = useState();
@@ -360,8 +361,8 @@ DeviceDetail.propTypes = {
 };
 
 function DeviceDetail({ id, profile, onOptionsChanged }) {
+    const apiContext = useContext(ApiContext)
     const [[data]] = useGet(`${api.workplaces}/devices/${id}`);
-    const location = 'http://localhost:16331' // TODO use context
     const arg = data && {
         options: JSON.parse(data.configuration || '{}'),
         output: JSON.parse(profile.output || '[]')
@@ -381,7 +382,7 @@ function DeviceDetail({ id, profile, onOptionsChanged }) {
                         <PluginContainer title='Device Configuration'
                             data={arg || {}}
                             width='100%'
-                            src={`${location}/${data.driverHomepage}/options`}
+                            src={`${apiContext}/${data.driverHomepage}/options`}
                             onDataReceived={onOptionsChanged}
                         />
                     </div>

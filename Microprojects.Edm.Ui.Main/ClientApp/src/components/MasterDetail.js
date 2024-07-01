@@ -18,7 +18,7 @@ export function reloadMaster() {
     console.log(_render);
 }
 
-let _selectedItem, _render, _renderFunc;
+let _selectedItem, _render = 0, _renderFunc;
 
 MasterDetail.propTypes = {
     card: PropTypes.func,
@@ -220,6 +220,7 @@ export function Editor(props) {
             axios.put(`${props.api}/${props.data.id}`, data)
                 .then((response) => {
                     props.onUpdate && props.onUpdate(response.data);
+                    props.onChange && props.onChange(response.data)
                     props.setData(response.data);
                 })
         } else {
@@ -227,6 +228,7 @@ export function Editor(props) {
             axios.post(`${props.api}`, { ...data, type: props.type, parentId: parentId, hierarchyId: parentId })
                 .then((response) => {
                     props.onUpdate && props.onUpdate(response.data);
+                    props.onChange && props.onChange(response.data)
                     props.setData(response.data);
                     history.push(`${props.path}${response.data.isNode ? '/folder' : ''}/${response.data.id}`);
                 });

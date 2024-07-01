@@ -2,7 +2,7 @@ import React from 'react';
 import Api from '../../api';
 import PropTypes from 'prop-types';
 import { GridColumn } from '@progress/kendo-react-grid';
-import { RelationTable, SubDetailColumn } from '../../RelationTable';
+import { RelationTable } from '../../RelationTable';
 import { LinkTextCell } from '../../DropDownCell';
 import { useGet } from '../../hooks/hooks';
 import { AuditDetail } from '../Audits';
@@ -19,17 +19,17 @@ export function ProfileAuditsTab({ id, api, onDetailSelected }) {
     const [[params]] = useGet(`${api}/${id}/params`, [id]);
     return (
         <RelationTable api={`${api}/${id}/audits`} removable >
-            <SubDetailColumn title='Name' field={'name'}
+            <GridColumn title='Name' field={'name'}
                 cell={(cellProps) =>
                     <LinkTextCell {...cellProps}
-                        onClick={(auditId) => {
+                        onClick={(auditId, itemUpdate) => {
                             onDetailSelected(
                                 <AuditDetail
                                     params={params}
                                     auditId={auditId}
                                     api={Api.audits}
                                     onClose={() => onDetailSelected()}
-                                    onUpdate={cellProps.itemUpdate}
+                                    onUpdate={itemUpdate}
                                 />
                             );
                         }}

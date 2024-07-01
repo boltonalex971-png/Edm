@@ -62,7 +62,10 @@ namespace Optosense.Edm.Drivers.Operator
         private void SetState(OperatorState state) 
         {
             _state = state;
-            _state.Scheduled = DateTime.Now;
+            if (_state != null)
+            {
+                _state.Scheduled = DateTime.Now;
+            }
         }
 
         private string SubstituteParameters(string command, ExpandoObject parameters)
