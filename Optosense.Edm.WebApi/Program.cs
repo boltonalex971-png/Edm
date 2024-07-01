@@ -25,6 +25,7 @@ using Microsoft.Extensions.Logging.EventLog;
 using Microsoft.Extensions.Options;
 using Optosense.Edm.Core.AspNet;
 using Optosense.Edm.DataAccess;
+using Optosense.Edm.Domain.Models;
 using Optosense.Edm.Persistence;
 using Optosense.Edm.WebApi;
 using Optosense.Edm.WebApi.Services;
@@ -117,6 +118,15 @@ builder.Services.AddHostedService<Worker>()
 builder.Host.UseWindowsService();
 
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<EdmContext>();
+        db.Database.Migrate();
+    }
+}
 
 var jobContainer = app.Services.GetService<IJobContainer>();
 jobContainer.Start();
