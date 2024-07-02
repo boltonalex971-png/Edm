@@ -32,8 +32,9 @@ void Install(Dictionary<string, string?> options)
     // Fix appsettings.json according choosen installation options
     var settingsPath = $"{_targetDir}\\appsettings.json";
     var settings = File.ReadAllText(settingsPath);
-    settings = settings.Replace("[CACHECONNECTIONSTRING]", options["cache"]);
+    //settings = settings.Replace("[CACHECONNECTIONSTRING]", options["cache"]);
     settings = settings.Replace("[DBCONNECTIONSTRING]", options["db"]?.Replace("\\", "\\\\"));
+    settings = settings.Replace("[PRINCIPALURL]", options["principalUrl"]);
     settings = settings.Replace("[CONSOLEURL]", options["consoleUrl"]);
     settings = settings.Replace("[GRPCURL]", options["grpcUrl"]);
     File.WriteAllText(settingsPath, settings);
