@@ -16,41 +16,53 @@ ZoneEditor.propTypes = {
 export function ZoneEditor(props) {
     const [fields, setFields] = useState(props.data);
     return (
-        <Window title='Zone' style={{ position: "fixed" }}
+        <Window title='Zone' style={{ position: 'fixed', height: 'auto' }}
             width={250}
-            height={360}
             modal={true}
             maximizeButton={() => null}
             minimizeButton={() => null}
             onClose={props.onClose}
         >
-            <form className="k-form">
-                <input type='hidden' readOnly name='id' value={props.data.id} />
-                <Input
-                    label='Zone #'
-                    value={fields.no}
-                    onChange={(e) => setFields({ ...fields, no: e.value })}
-                />
-                <Input
-                    label='Active When'
-                    value={fields.activeWhen}
-                    onChange={(e) => setFields({ ...fields, activeWhen: e.value })}
-                />
-                <NumericTextBox className='k-textbox'
-                    label='Offset (min)'
-                    value={fields.offset}
-                    onChange={(e) => setFields({ ...fields, offset: e.value })}
-                />
-                <NumericTextBox className='k-textbox'
-                    label='Duration (min)'
-                    value={fields.duration}
-                    onChange={(e) => setFields({ ...fields, duration: e.value })}
-                />
-                <div className="text-right mt-4">
-                    {fields.id &&
-                        <Button type='button' onClick={(e) => { e.preventDefault(); props.onDelete(fields); }}>Delete</Button>
-                    }
-                    <Button type='submit' className="k-primary ml-2" onClick={(e) => { e.preventDefault(); props.onSave(fields); }}>Save</Button>
+            <form className="k-form" style={{
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                height: '100%'
+            }}>
+                <div>
+                    <input type='hidden' readOnly name='id' value={props.data.id} />
+                    <Input
+                        label='Zone #'
+                        value={fields.no}
+                        onChange={(e) => setFields({ ...fields, no: e.value })}
+                    />
+                    <Input
+                        label='Active When'
+                        value={fields.activeWhen}
+                        onChange={(e) => setFields({ ...fields, activeWhen: e.value })}
+                    />
+                    <NumericTextBox className='k-textbox'
+                        label='Offset (min)'
+                        value={fields.offset}
+                        onChange={(e) => setFields({ ...fields, offset: e.value })}
+                    />
+                    <NumericTextBox className='k-textbox'
+                        label='Duration (min)'
+                        value={fields.duration}
+                        onChange={(e) => setFields({ ...fields, duration: e.value })}
+                    />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
+                    <Button
+                        style={fields.id ? {} : { visibility: 'hidden' }}
+                        type='button'
+                        onClick={(e) => { e.preventDefault(); props.onDelete(fields); }}
+                    >Delete</Button>
+                    <Button
+                        type='submit'
+                        themeColor="primary"
+                        onClick={(e) => { e.preventDefault(); props.onSave(fields); }}
+                    >Save</Button>
                 </div>
             </form>
         </Window>
@@ -70,47 +82,59 @@ export function CriterionEditor(props) {
     const [fields, setFields] = useState(props.data);
     const selectedFunc = props.functions.filter(f => f.name === fields.function)[0];
     return (
-        <Window title='Criterion' style={{ position: "fixed" }}
+        <Window title='Criterion' style={{ position: "fixed", height: 'auto' }}
             width={250}
-            height={490}
             modal={true}
             maximizeButton={() => null}
             minimizeButton={() => null}
             onClose={props.onClose}
         >
-            <form className="k-form">
-                <input type='hidden' readOnly name='zoneId' value={props.data.zoneId} />
-                <input type='hidden' readOnly name='id' value={props.data.id} />
-                <ComboBox label="Parameter" value={fields.param}
-                    data={props.params}
-                    onChange={(e) => setFields({ ...fields, param: e.value })}
-                />
-                <ComboBox label="Function" value={fields.function}
-                    data={props.functions.map(f => f.name)}
-                    onChange={(e) => setFields({ ...fields, function: e.value })}
-                />
-                <fieldset className={'k-form-fieldset'}>
-                    <legend className={'k-form-legend'}>Arguments</legend>
-                    {(selectedFunc && selectedFunc.args && selectedFunc.args[0]) &&
-                        <Input autoFocus={true}
-                            label={`${selectedFunc.args[0].name}, ${selectedFunc.args[0].type}`}
-                            value={fields.arg1}
-                            onChange={(e) => setFields({ ...fields, arg1: e.value })}
-                        />
-                    }
-                    {(selectedFunc && selectedFunc.args && selectedFunc.args[1]) &&
-                        <Input
-                            label={`${selectedFunc.args[1].name}, ${selectedFunc.args[1].type}`}
-                            value={fields.arg2}
-                            onChange={(e) => setFields({ ...fields, arg2: e.value })}
-                        />
-                    }
-                </fieldset>
-                <div className="text-right mt-4">
-                    {fields.id &&
-                        <Button type='button' onClick={(e) => { e.preventDefault(); props.onDelete(fields); }}>Delete</Button>
-                    }
-                    <Button type='submit' className="k-primary ml-2" onClick={(e) => { e.preventDefault(); props.onSave(fields); }}>Save</Button>
+            <form className="k-form" style={{
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                height: '100%'
+            }}>
+                <div>
+                    <input type='hidden' readOnly name='zoneId' value={props.data.zoneId} />
+                    <input type='hidden' readOnly name='id' value={props.data.id} />
+                    <ComboBox label="Parameter" value={fields.param}
+                        data={props.params}
+                        onChange={(e) => setFields({ ...fields, param: e.value })}
+                    />
+                    <ComboBox label="Function" value={fields.function}
+                        data={props.functions.map(f => f.name)}
+                        onChange={(e) => setFields({ ...fields, function: e.value })}
+                    />
+                    <fieldset className={'k-form-fieldset'}>
+                        <legend className={'k-form-legend'}>Arguments</legend>
+                        {(selectedFunc && selectedFunc.args && selectedFunc.args[0]) &&
+                            <Input autoFocus={true}
+                                label={`${selectedFunc.args[0].name}, ${selectedFunc.args[0].type}`}
+                                value={fields.arg1}
+                                onChange={(e) => setFields({ ...fields, arg1: e.value })}
+                            />
+                        }
+                        {(selectedFunc && selectedFunc.args && selectedFunc.args[1]) &&
+                            <Input
+                                label={`${selectedFunc.args[1].name}, ${selectedFunc.args[1].type}`}
+                                value={fields.arg2}
+                                onChange={(e) => setFields({ ...fields, arg2: e.value })}
+                            />
+                        }
+                    </fieldset>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
+                    <Button
+                        style={fields.id ? {} : { visibility: 'hidden' }}
+                        type='button'
+                        onClick={(e) => { e.preventDefault(); props.onDelete(fields); }}
+                    >Delete</Button>
+                    <Button
+                        type='submit'
+                        themeColor={'primary'}
+                        onClick={(e) => { e.preventDefault(); props.onSave(fields); }}
+                    >Save</Button>
                 </div>
             </form>
         </Window>

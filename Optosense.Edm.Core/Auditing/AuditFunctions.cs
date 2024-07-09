@@ -60,6 +60,25 @@ namespace Optosense.Edm.Core.Auditing
             return result;
         }
 
+        [AuditFunc(Name = "Equals", Format = "='{0}'")]
+        [AuditArg("To", typeof(string))]
+        public static AuditResult EqualsFunction(AuditCriterion criterion, IEnumerable<object> values)
+        {
+            var result = new AuditResult
+            {
+                Valid = values.All(v => v.ToString() == criterion.Arg1),
+                Result = string.Format("='{0}'", criterion.Arg1)
+            };
+            if (!result.Valid)
+            {
+                var fail = values.FirstOrDefault(v => v.ToString() != criterion.Arg1);
+                result.Result = string.Format("'{0}'<>'{1}'", fail, criterion.Arg1);
+                result.Message = $"{criterion.Param}'s value '{fail}' not equal to '{criterion.Arg1}'";
+            }
+
+            return result;
+        }
+
         [AuditFunc(Name = "Failure", Format = "Failures<{0}")]
         [AuditArg("Max amount", typeof(double))]
         public static AuditResult FailureFunction(AuditCriterion criterion, IEnumerable<object> values)
