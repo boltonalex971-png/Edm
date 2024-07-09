@@ -97,7 +97,7 @@ namespace Optosense.Edm.Core.Services
             var processes = await Db.WorkplaceProcesses
                 .Include(w => w.Workplace)
                 .Include(w => w.Process)
-                .Where(w => ids.Contains(w.Workplace.HierarchyId))
+                .Where(w => ids.Contains(w.Workplace.HierarchyId) && w.Workplace.IsActive && w.Process.IsActive)
                 .ToListAsync();
             return processes;
         }
