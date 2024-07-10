@@ -40,7 +40,7 @@ export function NewOperationWizard() {
                 .then((p) => {
                     setProcess(e.value);
                     setProcessData(p.data.process)
-                    setDetail(<ProcessDetail process={p.data} />)
+                    setDetail(<ProcessDetail process={p.data.process} />)
                 })
                 .catch((error) => setError(error));
         }

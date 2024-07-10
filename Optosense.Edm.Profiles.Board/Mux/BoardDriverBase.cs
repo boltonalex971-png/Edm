@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Dynamic;
 using System.IO.Ports;
 using System.Linq;
 using System.Net.Http;
@@ -11,6 +10,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microprojects.Edm.Drivers;
 using Newtonsoft.Json;
+using Optosense.Edm.Profiles.Board;
 using Optosense.Edm.Utils;
 
 namespace Optosense.Edm.Drivers.Mux
@@ -59,11 +59,8 @@ namespace Optosense.Edm.Drivers.Mux
 
             var request = (BoardDriverRequest) req;
             var command = request.Command;
-            var parameters = new ExpandoObject();
-            if (!string.IsNullOrEmpty(request.Parameters)) {
-                parameters = JsonConvert.DeserializeObject<ExpandoObject>(request.Parameters);
-            }
-
+            var parameters = string.IsNullOrEmpty(request.Parameters) ? new () :
+                JsonConvert.DeserializeObject<Dictionary<string, object>>(request.Parameters);
             command = SubstituteParameters(command, parameters);
             response.Request = command;
             try
@@ -83,17 +80,20 @@ namespace Optosense.Edm.Drivers.Mux
                         RegexOptions.Singleline) ? 
                             DriverResponseState.Ok : DriverResponseState.InvalidResponse;
                 var match = Regex.Match(response.Response, request.Instruction.Syntax, RegexOptions.Singleline);
-                var outParams = new ExpandoObject();
-                parameters.All(p => outParams.TryAdd(p.Key, p.Value));
                 if (match.Success)
                 {
                     // Skip first global match
-                    match.Groups.Keys.Skip(1).All(g => outParams.TryAdd(g, match.Groups[g].Value));
+                    foreach (var key in match.Groups.Keys.Skip(1))
+                    {
+                        parameters[key] = match.Groups[key].Value;
+                    }
                 }
-                response.Parameters = JsonConvert.SerializeObject(outParams);
+
             }
             catch (Exception e)
             {
+                // Add default null parameters to stress that error happened
+                GetParameters(request.Instruction).All(p => parameters.TryAdd(p, null));
                 response.Message = e switch {
                     AggregateException ag when ag.InnerException is not TimeoutException => e.InnerException.Message,
                     not AggregateException or TimeoutException => e.Message,
@@ -106,15 +106,18 @@ namespace Optosense.Edm.Drivers.Mux
                 };
             }
 
+            // Provide parameters no matter what
+            response.Parameters = JsonConvert.SerializeObject(parameters);
+
             return Task.FromResult(response);
         }
 
-        private string SubstituteParameters(string command, ExpandoObject parameters)
+        private string SubstituteParameters(string command, Dictionary<string, object> parameters)
         {
             var result = command;
             foreach (var p in parameters)
             {
-                result = result.Replace($"{{{p.Key}}}", p.Value.ToString());
+                result = result.Replace($"{{{p.Key}}}", p.Value?.ToString());
             }
 
             return result;
@@ -152,6 +155,12 @@ namespace Optosense.Edm.Drivers.Mux
             if (Port != null && Port.IsOpen) Port.Close();
             Port.Dispose();
             HttpClient.Dispose();
+        }
+
+        private IEnumerable<string> GetParameters(Instruction instr)
+        {
+            var matches = Regex.Matches(instr.Syntax ?? string.Empty, @"\?<(\w+?)>");
+            return matches.Select(m => m.Groups[1].Value);
         }
     }
 

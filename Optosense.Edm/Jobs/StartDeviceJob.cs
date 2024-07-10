@@ -176,7 +176,7 @@ namespace Optosense.Edm.Jobs
             var result = parameters ?? string.Empty;
             foreach (var p in _inputParams)
             {
-                result = result.Replace($"{{{p.Key}}}", p.Value.ToString());
+                result = result.Replace($"{{{p.Key}}}", p.Value?.ToString());
             }
 
             return result;
@@ -244,6 +244,11 @@ namespace Optosense.Edm.Jobs
 
         private async Task<bool> MeetCondition(string condition)
         {
+            if (string.IsNullOrEmpty(condition))
+            {
+                return true;
+            }
+
             var expr = Expression.Parse(condition);
             if (expr.Type == ExpressionType.Constant)
             {

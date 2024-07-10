@@ -147,7 +147,7 @@ namespace Optosense.Edm.Core.Services
         public async Task<WorkplaceProcess> GetWorkplaceProcess(int workplaceProcessId)
         {
             var result = await Db.WorkplaceProcesses
-                .Include(p => p.Process)
+                .Include(p => p.Process.Profiles)
                 .Include(p => p.Workplace)
                 .FirstOrDefaultAsync(p => p.Id == workplaceProcessId) ?? throw new ArgumentException("No workspace process found");
             return result;
