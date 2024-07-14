@@ -2,7 +2,8 @@ import React from 'react';
 
 export const Sensor = ({ info, indicators, ...props }) => {
     const broken = Object.entries(info).some(e => e[1]?.valid === false)
-    const good = Object.entries(info).every(e => e[1]?.valid === true)
+    const checked = Object.entries(info).filter(e => e[1]?.valid !== undefined)
+    const good = checked.length > 0 && checked.every(e => e[1]?.valid === true)
     const completed = Object.entries(info).every(e => e[1]?.valid !== undefined)
 
     return (
