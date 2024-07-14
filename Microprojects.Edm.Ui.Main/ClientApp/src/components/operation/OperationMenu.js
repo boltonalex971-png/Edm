@@ -92,6 +92,7 @@ function OperationToolbar({ operationId, apiBase, onStarted, onCompleted, onCanc
                 .catch((error) => alert(error));
         }
     };
+    const onClose = () => window.close()
     useEffect(() => {
         const finalize = () => {
             clearInterval(interval);
@@ -146,6 +147,11 @@ function OperationToolbar({ operationId, apiBase, onStarted, onCompleted, onCanc
                 disabled={state === 'Idle' || state === 'Completed' || state === 'Cancelled'}
                 className='ms-2'
                 onClick={onStop}>Stop</Button>
+            <Button icon='x'
+                className='ms-2'
+                title='Close the window'
+                fillMode='flat'
+                onClick={onClose}></Button>
         </div>
     );
 }
