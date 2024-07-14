@@ -85,12 +85,19 @@ namespace Optosense.Edm.Core.Auditing
         [AuditArg("Max amount", typeof(double))]
         public static AuditResult FailureFunction(AuditCriterion criterion, IEnumerable<object> values)
         {
+            if (!double.TryParse(criterion.Arg1, out var max)) {
+                throw new ArgumentException("Failure criterion must by double");
+            }
+
+            var failures = values.Count(v => v == null);
+            var valid = failures < max;
             var result = new AuditResult
             {
-                Result = "Failures<{0}",
-                Valid = true,
-                Message = "Not implemented"
+                Result = string.Format("{0}<{1}", failures, max),
+                Valid = valid,
+                Message = valid ? string.Empty : $"Too many failures reading {criterion.Param}"
             };
+
             return result;
         }
 
