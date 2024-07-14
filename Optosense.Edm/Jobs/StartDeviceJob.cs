@@ -81,12 +81,12 @@ namespace Optosense.Edm.Jobs
                     onNext: async json =>
                     {
                         var param = JsonConvert.DeserializeObject<KeyValuePair<string, object>>(json.ToString());
-                        if (param.Key == "Stop" && (bool)param.Value) 
-                        { 
+                        if (param.Key == "Stop" && (bool)param.Value)
+                        {
                             CancellationTokenSource.Cancel();
                             return;
-                        } 
-                        else if (param.Key.StartsWith('?')) 
+                        }
+                        else if (param.Key.StartsWith('?'))
                         {
                             var name = param.Key[1..];
                             if (Parameters.OutputParameters.Contains(name) && _driver is IParamProvider)
@@ -99,6 +99,10 @@ namespace Optosense.Edm.Jobs
                             }
 
                             return;
+                        }
+                        else if ((Parameters.InputParameters?.Contains(param.Key) ?? false) && _driver is IParamConsumer consumer)
+                        {
+                            await consumer.SetParamAsync(param.Key, param.Value);
                         }
 
                         PushInputParameter(param);
@@ -198,10 +202,10 @@ namespace Optosense.Edm.Jobs
                 OperationHostDeviceId = Parameters.OperationHostDevice,
             };
             await Intercom.Publish(Parameters.StoreChannel, rec);
-            var output = JsonConvert.DeserializeObject<IDictionary<string, object>>(rec.Parameters ?? "{}");
+            var output = JsonConvert.DeserializeObject<IDictionary<string, object>>(string.IsNullOrEmpty(rec.Parameters) ? "{}" : rec.Parameters);
             foreach (var param in output)
             {
-                if (_outputParams.ContainsKey(param.Key))
+                if (_outputParams.ContainsKey(param.Key) || param.Key == "Stop")
                 {
                     // Do not wait pushing parameters
                     #pragma warning disable CS4014 

@@ -73,6 +73,12 @@ namespace Optosense.Edm.Drivers.Mux
                     }
                 }
             }
+
+            yield return new DriverRequest
+            {
+                Offset = 1000,
+                Command = "Stop",
+            };
         }
 
         internal IEnumerable<string> GetRequiredParams(IEnumerable<Command> commands)

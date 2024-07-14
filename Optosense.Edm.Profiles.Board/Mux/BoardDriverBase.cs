@@ -16,11 +16,10 @@ using Optosense.Edm.Utils;
 namespace Optosense.Edm.Drivers.Mux
 {
     [Driver(OptionsType = typeof(BoardDriverOptions))]
-    public class BoardDriverBase : DriverBase, IParamProvider, IDisposable
+    public class BoardDriverBase : DriverBase, IDisposable
     {
         protected BoardDriverOptions BoardOptions => (BoardDriverOptions) Options;
         protected SerialPort Port { get; set; }
-        protected HttpClient HttpClient { get; } = new();
 
         public BoardDriverBase() { }
 
@@ -33,10 +32,7 @@ namespace Optosense.Edm.Drivers.Mux
         {
             Port = new SerialPort(BoardOptions.Port, BoardOptions.Baudrate);
             Port.Open();
-            HttpClient.BaseAddress = new Uri("http://localhost:5000");
-            HttpClient.DefaultRequestHeaders.Accept.Clear();
-            HttpClient.DefaultRequestHeaders.Accept.Add(
-                new MediaTypeWithQualityHeaderValue("application/json"));
+        
             return OK;
         }
 
@@ -49,6 +45,7 @@ namespace Optosense.Edm.Drivers.Mux
                 {
                     Dispose();
                     response.Response = DriverResponseState.Ok.ToString();
+                    response.Parameters = "{Stop: true}";
                     return Task.FromResult(response);
                 }
                 else
@@ -123,38 +120,10 @@ namespace Optosense.Edm.Drivers.Mux
             return result;
         }
 
-        public async Task<DriverResponse> GetParam(string parameterName)
-        {
-            var result = new DriverResponse
-            {
-                Request = parameterName,
-                State = DriverResponseState.Ok
-            };
-            if (parameterName == "Serial")
-            {
-                // TODO Move to REST API Client driver
-                try
-                {
-                    var response = await HttpClient.PostAsJsonAsync("serials", "TST");
-                    response.EnsureSuccessStatusCode();
-                    result.Response = await response.Content.ReadAsStringAsync();
-                    result.Parameters = $"{{\"{parameterName}\": {result.Response}}}";
-                }
-                catch (Exception ex) 
-                { 
-                    result.Message = ex.Message;
-                    result.State = DriverResponseState.Failed;
-                }
-            }
-
-            return result;
-        }
-
         public void Dispose()
         {
             if (Port != null && Port.IsOpen) Port.Close();
             Port.Dispose();
-            HttpClient.Dispose();
         }
 
         private IEnumerable<string> GetParameters(Instruction instr)

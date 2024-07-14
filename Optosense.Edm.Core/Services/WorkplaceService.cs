@@ -105,7 +105,7 @@ namespace Optosense.Edm.Core.Services
         public async Task<IEnumerable<WorkplaceProcess>> GetProcesses(int workspaceId)
         {
             var devices = await Db.WorkplaceProcesses
-                .Include(w => w.Process)
+                .Include(w => w.Process.Profiles)
                 .Where(w => w.WorkplaceId == workspaceId)
                 .ToListAsync();
             return devices;

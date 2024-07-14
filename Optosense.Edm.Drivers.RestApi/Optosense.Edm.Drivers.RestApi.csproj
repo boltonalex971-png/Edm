@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+	  <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Edm\Edm.csproj" />
+	<PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="8.0.4" />
+  </ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="ui-driver\dist" />
+		<Compile Remove="ui-driver\dist\**" />
+		<Compile Remove="ui-driver\node_modules\**" />
+		<EmbeddedResource Include="ui-driver\dist/**" />
+		<EmbeddedResource Remove="ui-driver\node_modules\**" />
+		<None Remove="ui-driver\dist\**" />
+		<None Remove="ui-driver\node_modules\**" />
+		<None Remove="ui-driver\.env.development.local" />
+		<None Remove="ui-driver\package-lock.json" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Include="ui-profile\**" />
+	</ItemGroup>
+</Project>
