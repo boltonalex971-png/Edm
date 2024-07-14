@@ -256,9 +256,9 @@ namespace Optosense.Edm.Jobs
             var expr = Expression.Parse(condition);
             if (expr.Type == ExpressionType.Constant)
             {
-                var (offset, error) = expr.TryEvaluate<int>(_inputParams);
+                var (offset, error) = expr.TryEvaluate<double>(_inputParams);
                 // Offset in seconds
-                await Task.Delay(offset * 1000, CancellationToken);
+                await Task.Delay((int)(offset * 1000), CancellationToken);
             }
             else if (expr.Type == ExpressionType.Accessor)
             {

@@ -67,7 +67,7 @@ namespace Optosense.Edm.Drivers.Mux
                             Command = ci.Instruction.Code,
                             Parameters = JsonConvert.SerializeObject(instParams),
                             Instruction = ci.Instruction,
-                            Condition = string.Join(",", reqs)
+                            Condition = reqs.Count() > 0 ? string.Join(",", reqs) : (offset / 1000.0).ToString()
                         };
                         offset = ci.Instruction.Timeout;
                     }
