@@ -32,7 +32,7 @@ export function Monitor({ sensors, started, indicators, ...props }) {
                         <div style={{ padding: '0 0 1rem 3rem', display: 'flex', flexDirection: 'column' }}>
                             {Object.entries(s).map(p =>
                                 <span key={`${p[0]}`} className={p[1]?.valid ?? true ? '' : 'bg-danger text-white'}>
-                                    {p[0]}: {p[1].value ?? p[1]} {p[1].valid === undefined ? '' : p[1].valid ? 'Ok' : 'Failed'}
+                                    {p[0]}: {p[1]?.value ?? p[1]} {p[1]?.valid === undefined ? '' : p[1].valid ? 'Ok' : 'Failed'}
                                 </span>
                             )}
                         </div>
