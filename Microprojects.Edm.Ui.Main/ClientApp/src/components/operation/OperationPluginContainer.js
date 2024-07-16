@@ -5,7 +5,6 @@ export const OperationPluginContainer = ({ title, src, data, started, ...props }
     const url = new URL(document.location).searchParams.get('url')
     const targetSource = url || src
     const targetOrigin = new URL(targetSource).origin
-    console.log(targetSource, targetOrigin);
     const [frameId] = useState(Math.floor(Math.random() * 10000000).toString())
     const ref = useRef()
     useEffect(() => {
