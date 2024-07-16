@@ -3,19 +3,38 @@ import axios from 'axios';
 import { EasyGrid } from './EasyGrid';
 import { ComboBoxCell } from './DropDownCell';
 import { GridColumn } from '@progress/kendo-react-grid';
+import { Field } from '@progress/kendo-react-form';
+import { ComboBox } from '@progress/kendo-react-dropdowns';
 
 export function Config({ apiBase, operationId, settings, outputs, onSettingsChanged }) {
     const saveSettings = (s) => {
         axios.put(`${apiBase}/api/operations/${operationId}/settings`, s);
         onSettingsChanged(s)
     };
+    const serialChanged = (e) => {
+        settings.serial = e.value
+        saveSettings(settings)
+    }
+    const indicatorsChanged = (i) => {
+        settings.indicators = i
+        saveSettings(settings)
+    }
 
     return (
         <div>
+            <h6 style={{ margin: '1rem' }}>Serial No Parameter</h6>
+
+            <ComboBox
+                style={{ width: '400px' }}
+                data={outputs}
+                value={settings.serial}
+                title='SerialNo indicator'
+                onChange={serialChanged}
+            />
             <h6 style={{ margin: '1rem' }}>Sensor indicators</h6>
-            <EasyGrid data={settings || []}
+            <EasyGrid data={settings?.indicators || []}
                 orderField='order'
-                dataChange={saveSettings}
+                dataChange={indicatorsChanged}
             >
                 <GridColumn field='order' title='Order' width={120} editor='numeric' />
                 <GridColumn field='indicator' title='Indicator' />

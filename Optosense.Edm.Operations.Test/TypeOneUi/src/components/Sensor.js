@@ -1,6 +1,6 @@
 import React from 'react';
 
-export const Sensor = ({ info, indicators, ...props }) => {
+export const Sensor = ({ info, settings, ...props }) => {
     const broken = Object.entries(info).some(e => e[1]?.valid === false)
     const checked = Object.entries(info).filter(e => e[1]?.valid !== undefined)
     const good = checked.length > 0 && checked.every(e => e[1]?.valid === true)
@@ -19,7 +19,7 @@ export const Sensor = ({ info, indicators, ...props }) => {
                 justifyItems: 'center'
             }}>
             <span style={{ gridColumn: '1/-1' }}>#{props.addr + 1} <strong>{info.serial}</strong></span>
-            {indicators
+            {settings?.indicators
                 .sort((a, b) => a.order - b.order)
                 .map(i =>
                     <span

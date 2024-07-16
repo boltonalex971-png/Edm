@@ -33,7 +33,7 @@ function App(props) {
                                 operationId={operationId}
                                 outputs={processInfo?.parameters}
                                 settings={settings}
-                                onSettingsChanged={() => { }}
+                                onSettingsChanged={setSettings}
                             />
                         } />
                     </Routes>

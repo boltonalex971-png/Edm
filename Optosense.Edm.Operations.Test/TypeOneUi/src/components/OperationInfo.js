@@ -15,10 +15,10 @@ export const OperationInfo = (props) => {
     const [[data, setData]] = useGet(`${props.apiBase}/api/operations/${props.operationId}/criteria`, [refresh]);
     useGet(`${props.apiBase}/api/operations/${props.operationId}/records?lastRecordId=${lastId}`, [refresh], (records) => {
         setLastId(id => records.at(-1)?.id || id);
-        const serials = records.filter(r => r.parameters?.includes("Sn")).map(r => JSON.parse(r.parameters))
+        const serials = records.filter(r => r.parameters?.includes(props.settings?.serial)).map(r => JSON.parse(r.parameters))
         setSensors(sens => sens?.map((s, i) => {
             const f = serials.filter(r => parseInt(`0x${r.ADDR.slice(1)}`) === i).at(-1)
-            return f ? { ...s, serial: f.Sn, handled: true } : s
+            return f ? { ...s, serial: f[props.settings.serial], handled: true } : s
         }))
     })
     useGet(`${props.apiBase}/api/operations/${props.operationId}/devices`, [], d => {
@@ -63,7 +63,7 @@ export const OperationInfo = (props) => {
         <SmartScroll offtop={10} style={{ display: 'flex', margin: 10 }}>
             <div style={{ flex: 1 }}>
                 <SmartScrollContent style={{ flex: 1 }}>
-                    <Monitor {...props} sensors={sensors || []} indicators={props.settings} />
+                    <Monitor {...props} sensors={sensors || []} settings={props.settings} />
                 </SmartScrollContent>
             </div>
             <div style={{ flex: 4, marginLeft: '1rem' }}>
@@ -76,7 +76,7 @@ export const OperationInfo = (props) => {
                         gap: '1rem'
                     }}>
                         {sensors && sensors.map((s, i) =>
-                            <Sensor key={i} addr={i} info={s || {}} indicators={props.settings} />
+                            <Sensor key={i} addr={i} info={s || {}} settings={props.settings} />
                         )}
                     </div>
                 </SmartScrollContent>
