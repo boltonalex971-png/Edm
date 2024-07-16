@@ -178,6 +178,12 @@
         "Entry"
         {
         "MsmKey" = "8:_D0B890BB702947F2D6FB4ECD91735328"
+        "OwnerKey" = "8:_FBFE73DA4B2844A79D5017D8301D8109"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_D0B890BB702947F2D6FB4ECD91735328"
         "OwnerKey" = "8:_E4F5703BD7A246A1A451936EFFD2EB7E"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -250,6 +256,12 @@
         "Entry"
         {
         "MsmKey" = "8:_ED6A2AEBF09B48DA93492E82314B4F35"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_FBFE73DA4B2844A79D5017D8301D8109"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -881,7 +893,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Microprojects.Edm, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Microprojects.Edm, Version=1.12.1.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_D0B890BB702947F2D6FB4ECD91735328"
@@ -904,7 +916,7 @@
             "SharedLegacy" = "11:FALSE"
             "PackageAs" = "3:1"
             "Register" = "3:1"
-            "Exclude" = "11:TRUE"
+            "Exclude" = "11:FALSE"
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
@@ -922,6 +934,37 @@
                     }
                 }
             "SourcePath" = "8:..\\Optosense.Edm.Plugins.Operator\\bin\\Debug\\net8.0\\Optosense.Edm.Plugins.Operator.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_AEE31518259E4CFDABF559E3A191152E"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_FBFE73DA4B2844A79D5017D8301D8109"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:Optosense.Edm.Drivers.RestApi, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_FBFE73DA4B2844A79D5017D8301D8109"
+                    {
+                    "Name" = "8:Optosense.Edm.Drivers.RestApi.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:..\\Optosense.Edm.Drivers.RestApi\\bin\\Debug\\net8.0\\Optosense.Edm.Drivers.RestApi.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_AEE31518259E4CFDABF559E3A191152E"
@@ -1017,15 +1060,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:Edm"
-        "ProductCode" = "8:{909D8C05-16AE-4A2F-9795-D65C84EBA0AB}"
-        "PackageCode" = "8:{BA06C1E8-73B9-4329-9686-A1A2EC68A525}"
+        "ProductCode" = "8:{1EF965D1-7D74-42E4-9CE3-5B7ADC81DF62}"
+        "PackageCode" = "8:{437D8212-BB9E-41C4-B61E-25F65B499FAB}"
         "UpgradeCode" = "8:{0B59587D-B902-4F08-AFAE-4BB253F5EFE8}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:TRUE"
-        "ProductVersion" = "8:1.12.0"
+        "ProductVersion" = "8:1.12.5"
         "Manufacturer" = "8:Microprojects"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
