@@ -6,6 +6,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Dynamic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -46,12 +47,12 @@ namespace Optosense.Edm.Drivers.Mux
                     .FirstOrDefault(p => requiredParams.Contains(p.Key) && p.Value is IEnumerable);
                 var parameters = availableParams
                     .Where(p => requiredParams.Contains(p.Key));
-                var offset = command.Offset;
+                var offset = command.Offset * 60; // Command offset in minutes
                 foreach (var iterParam in iteratedParam.Value as IEnumerable)
                 {
                     foreach (var ci in commandInstructions)
                     {
-                        var purifiedArgs = Regex.Replace(ci.Args ?? string.Empty, @"{([\w\d]*)\?{1}}", @"""{$1}""");
+                        var purifiedArgs = Regex.Replace(ci.Args ?? string.Empty, @"{([\w\d]+)\?*}", @"""{$1}""");
                         var args = JsonConvert.DeserializeObject<ExpandoObject>($"{{{purifiedArgs}}}");
                         var reqs = Regex.Matches(ci.Args ?? string.Empty, @"{([\w\d]*)\?{1}}").Select(m => m.Groups[1].Value);
                         var instParams = GetRequiredParams(ci.Instruction)
@@ -67,7 +68,9 @@ namespace Optosense.Edm.Drivers.Mux
                             Command = ci.Instruction.Code,
                             Parameters = JsonConvert.SerializeObject(instParams),
                             Instruction = ci.Instruction,
-                            Condition = reqs.Count() > 0 ? string.Join(",", reqs) : (offset / 1000.0).ToString()
+                            // Condition offset in seconds
+                            // Instruction offset in milliseconds
+                            Condition = reqs.Count() > 0 ? string.Join(",", reqs) : (offset / 1000.0).ToString(CultureInfo.InvariantCulture)
                         };
                         offset = ci.Instruction.Timeout;
                     }

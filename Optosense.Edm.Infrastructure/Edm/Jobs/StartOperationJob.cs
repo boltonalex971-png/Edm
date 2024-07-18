@@ -42,6 +42,7 @@ namespace Optosense.Edm.Jobs
 
         public override bool Init()
         {
+            // TODO move device init here to check failures before start and notify user
             return true;
         }
 
@@ -58,7 +59,7 @@ namespace Optosense.Edm.Jobs
                 JobParameters = new StoreOperationRecordsJobParameters { Channel = storeChannel, AuditChannel = auditChannel }
             };
             await JobManager.Execute(storageJob);
-
+            var operation = await OperationService.Get(Parameters.Operation);
             // Launch devices
             var devices = await OperationService.GetOperationDevices(Parameters.Operation);
 
@@ -100,7 +101,8 @@ namespace Optosense.Edm.Jobs
                     StoreChannel = storeChannel,
                     ParametersChannel = parametersChannel,
                     InputParameters = operationHostDevice.Profile.Input,
-                    OutputParameters = operationHostDevice.Profile.Output
+                    OutputParameters = operationHostDevice.Profile.Output,
+                    InitialParameters = operation.Parameters
                 };
                 var url = $"{operationHostDevice.HostDevice.Host.Url}:{operationHostDevice.HostDevice.Host.Port}";
                 var deviceJob = new StartDeviceJob { JobParameters = deviceParams };
@@ -168,7 +170,6 @@ namespace Optosense.Edm.Jobs
         [JobParameter(Required = true)]
         public int Operation { get; set; }
         public DateTime StartAt { get; set; } = DateTime.Now.AddSeconds(10);
-
     }
 
 }

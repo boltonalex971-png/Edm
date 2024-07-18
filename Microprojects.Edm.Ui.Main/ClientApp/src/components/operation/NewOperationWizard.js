@@ -52,6 +52,7 @@ export function NewOperationWizard() {
         const data = {
             id: 0,
             workplaceProcessId: process.id,
+            parameters: inputs && JSON.stringify(inputs),
             devices: deviceOptions.map((p) => ({
                 profileId: p.profileId,
                 hostDeviceId: p.hostDeviceId,

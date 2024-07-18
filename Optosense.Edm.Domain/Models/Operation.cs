@@ -16,6 +16,7 @@ namespace Optosense.Edm.Domain.Models
         public DateTime? Started { get; set; }
         public DateTime? Completed { get; set; }
         public DateTime? Cancelled { get; set; }
+        public string Parameters { get; set; }
         
         public Workbench Workbench { get; set; }
         public WorkplaceProcess WorkplaceProcess { get; set; }

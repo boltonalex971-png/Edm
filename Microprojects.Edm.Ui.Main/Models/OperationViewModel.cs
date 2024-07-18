@@ -17,5 +17,6 @@ namespace Microprojects.Edm.Ui.Main.Models
         public DateTime Created { get; set; }
         public DateTime? Started { get; set; }
         public DateTime? Completed { get; set; }
+        public string Parameters { get; set; }
     }
 }
