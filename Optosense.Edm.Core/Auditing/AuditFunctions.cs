@@ -49,6 +49,16 @@ namespace Optosense.Edm.Core.Auditing
             var doubles = values
                 .Where(v => v != null && v.ToString() != "null")
                 .Select(v => double.TryParse(v.ToString(), CultureInfo.InvariantCulture, out var number) ? number : 0).ToList();
+            if (!doubles.Any() && values.Any())
+            {
+                return new AuditResult
+                {
+                    Result = "Not a value",
+                    Valid = false,
+                    Message = "Value is not available"
+                };
+            }
+
             double.TryParse(criterion.Arg1, out var min);
             double.TryParse(criterion.Arg2, out var max);
             var minValue = doubles.Min();
@@ -68,13 +78,13 @@ namespace Optosense.Edm.Core.Auditing
         {
             var result = new AuditResult
             {
-                Valid = values.All(v => v.ToString() == criterion.Arg1),
+                Valid = values.All(v => v?.ToString() == criterion.Arg1),
                 Result = string.Format("='{0}'", criterion.Arg1)
             };
             if (!result.Valid)
             {
-                var fail = values.FirstOrDefault(v => v.ToString() != criterion.Arg1);
-                result.Result = string.Format("'{0}'<>'{1}'", fail, criterion.Arg1);
+                var fail = values.FirstOrDefault(v => v?.ToString() != criterion.Arg1);
+                result.Result = string.Format("'{0}'≠'{1}'", fail, criterion.Arg1);
                 result.Message = $"{criterion.Param}'s value '{fail}' not equal to '{criterion.Arg1}'";
             }
 

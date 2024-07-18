@@ -94,9 +94,9 @@ namespace Optosense.Edm.Jobs
                     var effectiveZones = audit.Where(z => IsActive(z, currentOffset));
                     foreach (var zone in effectiveZones)
                     {
-                        var recordParams = JsonConvert.DeserializeObject<dynamic>(rec.Parameters ?? "{}");
+                        var recordParams = JsonConvert.DeserializeObject<Dictionary<string, object>>(rec.Parameters ?? "{}");
                         // Select criteria with existing parameter
-                        foreach (var criterion in zone.Criteria.Where(c => recordParams[c.Param] != null ))
+                        foreach (var criterion in zone.Criteria.Where(c => recordParams.ContainsKey(c.Param)))
                         {
                             var auditFunc = AuditFunctions.Function(criterion.Function);
                             // take cached zone values list
