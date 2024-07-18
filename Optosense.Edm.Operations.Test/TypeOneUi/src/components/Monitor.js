@@ -18,6 +18,7 @@ export function Monitor({ sensors, started, settings, ...props }) {
         inputRef.current.scrollTop = inputRef.current.scrollHeight;
         //}
     });
+
     return (
         <div style={{ ...props.style }} >
             <h5>{polled || 'No'} sensors polled</h5>
@@ -26,7 +27,7 @@ export function Monitor({ sensors, started, settings, ...props }) {
                 onScroll={setScroll}
                 ref={inputRef}
             >
-                {sensors.filter(s => s.handled).map((s, i) =>
+                {sensors.filter(s => Object.entries(s).length > 1).map((s, i) =>
                     <div key={i}>
                         <span>#{i + 1} <strong>{s.serial}</strong></span>
                         <div style={{ padding: '0 0 1rem 3rem', display: 'flex', flexDirection: 'column' }}>
