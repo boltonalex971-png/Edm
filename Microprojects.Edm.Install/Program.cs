@@ -37,6 +37,7 @@ void Install(Dictionary<string, string?> options)
     settings = settings.Replace("[PRINCIPALURL]", options["principalUrl"]);
     settings = settings.Replace("[CONSOLEURL]", options["consoleUrl"]);
     settings = settings.Replace("[GRPCURL]", options["grpcUrl"]);
+    settings = settings.Replace("[MODE]", options["mode"]);
     File.WriteAllText(settingsPath, settings);
     File.Delete($"{_targetDir}\\appsettings.Production.json");
     File.Delete($"{_targetDir}\\appsettings.Development.json");

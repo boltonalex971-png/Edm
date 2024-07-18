@@ -119,7 +119,7 @@ builder.Host.UseWindowsService();
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+if (builder.Configuration.GetValue<string>("Edm:Mode") == "admin" && app.Environment.IsDevelopment())
 {
     using (var scope = app.Services.CreateScope())
     {
