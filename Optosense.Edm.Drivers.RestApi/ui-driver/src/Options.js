@@ -35,7 +35,7 @@ export const Options = ({ options, changeOptions }) => {
                             disabled={!formProps.allowSubmit}
                             title='Save options'
                             name='save'
-                            themeColor={'primary'}
+                            themeColor={formProps.allowSubmit ? 'primary' : 'base'}
                             icon='save'
                             type={'submit'}
                         >

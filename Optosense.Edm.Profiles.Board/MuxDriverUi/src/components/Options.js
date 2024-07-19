@@ -30,9 +30,10 @@ export const Options = ({ data, changeOptions }) => {
                     </fieldset>
                     <div className="k-form-buttons" style={{ position: 'sticky', bottom: 10, display: 'flex', justifyContent: 'flex-start', backgroundColor: 'white' }}>
                         <Button
+                            disabled={!formRenderProps.allowSubmit}
                             title='Save options'
                             name='save'
-                            primary
+                            primary={formRenderProps.allowSubmit}
                             icon='save'
                             type={'submit'}
                         >

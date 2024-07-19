@@ -389,9 +389,10 @@ function InputsDetail({ inputs }) {
                         </fieldset>
                         <div className="k-form-buttons" style={{ position: 'sticky', bottom: 10, display: 'flex', justifyContent: 'flex-start', backgroundColor: 'white' }}>
                             <Button
+                                disabled={!formProps.allowSubmit}
                                 title='Save'
                                 name='save'
-                                themeColor={'primary'}
+                                themeColor={formProps.allowSubmit ? 'primary' : 'base'}
                                 icon='save'
                                 type={'submit'}
                             >
