@@ -7,6 +7,7 @@ using Optosense.Edm.Domain.Models;
 using Optosense.Edm.Persistence;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
@@ -36,8 +37,12 @@ namespace Optosense.Edm.Core.Services
         public override async Task<Host> Get(int id)
         {
             var host = await base.Get(id);
-            host.IsActive = _container.Hive.GetActivePeers()
-                    .Any(h => h.Host == host.Url);
+            var online  = _container.Hive.GetActivePeers().FirstOrDefault(h => h.Host == host.Url);
+            host.IsActive = online != null;
+            host.Version = online?.Version;
+            host.Mode = online?.Mode;
+            host.Environment = online?.Environment;
+
             return host;
         }
 

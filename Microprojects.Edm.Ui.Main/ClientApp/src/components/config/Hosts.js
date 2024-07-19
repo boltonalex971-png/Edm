@@ -69,17 +69,23 @@ export function HostDetail({ hostId, ...props }) {
             subDetail={sub}
             card={
                 <>
-                    <div className="d-flex justify-content-left align-items-baseline" >
+                    <div className="d-flex align-items-baseline" >
                         <span className={`me-2 k-icon k-i-circle text-${data.isActive ? 'success' : 'danger'}`} ></span>
                         <Info {...props}
                             data={data}
                             content={
                                 <div className='me-2' >
-                                    <p>{`${data.url}:${data.port}`} v{data.version}</p>
+                                    <p>{`${data.url}:${data.port}`}</p>
+                                    <p>
+                                        {data.version && <span style={{ marginRight: '2rem' }}>Version: <strong>{data.version}</strong></span>}
+                                        {data.mode && <span>Mode: <strong style={{ marginRight: '2rem' }}>{data.mode}</strong></span>}
+                                        {data.environment && <span style={{ marginRight: '2rem' }}>Environment: <strong>{data.environment}</strong></span>}
+                                    </p>
                                 </div>
                             }
                         />
                         <Button className='me-2' disabled={data.isActive === false}
+                            fillMode='solid'
                             onClick={() => setSub(
                                 <HostConsole
                                     data={data}

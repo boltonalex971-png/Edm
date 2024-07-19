@@ -51,7 +51,7 @@ namespace Microprojects.Edm.Ui.Main.Controllers
             }
             else
             {
-                host = new HostModel
+                host = new Host
                 {
                     Name = string.Empty,
                     Description = string.Empty,
@@ -60,7 +60,8 @@ namespace Microprojects.Edm.Ui.Main.Controllers
                 };
             }
 
-            return _mapper.Map<HostModel>(host);
+            var result = _mapper.Map<HostModel>(host);
+            return result;
         }
 
         [HttpPut("{id:int}")]
@@ -68,7 +69,7 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         {
             if (id != host.Id)
             {
-                throw new Exception("Process id is ambiguous");
+                throw new Exception("Host id is ambiguous");
             }
 
             var result = await _hostService.Save(host);

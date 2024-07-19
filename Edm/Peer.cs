@@ -12,6 +12,8 @@ namespace Microprojects.Edm
         public int UiPort { get; set; }
         public int GrpcPort { get; set; }
         public string Version { get; set; }
+        public string Mode { get; set; }
+        public string Environment { get; set; }
         public DateTime Timestamp { get; set; }
     }
 }

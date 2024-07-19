@@ -146,8 +146,7 @@ namespace Microprojects.Edm.Ui.Main.Models
             //    .ForMember(d => d.IsActive, o => o.MapFrom(s => true))
             //    .ForMember(d => d.Items, o => o.Ignore());
             CreateMap<Host, HostModel>()
-                .ForMember(d => d.Active, o => o.MapFrom(s => false))
-                .ForMember(d => d.Version, o => o.MapFrom(s => "1.0.0"));
+                .ForMember(d => d.Active, o => o.MapFrom(s => false));
 
             CreateMap<IPlugin, PluginInfoViewModel>();
         }

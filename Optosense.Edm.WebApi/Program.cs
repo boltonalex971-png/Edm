@@ -60,16 +60,18 @@ builder.Services.Configure<IntercomOptions>(builder.Configuration.GetSection("Ed
 builder.Services.Configure<Peer>(options =>
 {
     var section = builder.Configuration.GetSection("Kestrel:Endpoints").GetChildren();
-    var grpcUri = builder.Environment.IsDevelopment() ?
-        new Uri(section.First(s => s.Key == "Grpc")["Url"]) :
-        new Uri(section.First(s => s.Key == "GrpcSecure")["Url"]);
-    var uiUri = builder.Environment.IsDevelopment() ?
-        new Uri(section.First(s => s.Key == ("Http"))["Url"]) :
-        new Uri(section.First(s => s.Key == ("Https"))["Url"]);
+    var grpcUri = new Uri(
+        section.FirstOrDefault(s => s.Key == "GrpcSecure")?["Url"] ??
+                section.FirstOrDefault(s => s.Key == "Grpc")?["Url"]);
+    var uiUri = new Uri(
+        section.FirstOrDefault(s => s.Key == "Https")?["Url"] ??
+                section.FirstOrDefault(s => s.Key == "Http")?["Url"]);
     options.Host = $"{uiUri.Scheme}://{uiUri.Host}";
     options.GrpcPort = grpcUri.Port;
     options.UiPort = uiUri.Port;
     options.Version = typeof(Worker).Assembly.GetName().Version.ToString();
+    options.Mode = builder.Configuration.GetValue<string>("Edm:Mode");
+    options.Environment = builder.Environment.EnvironmentName;
 });
 //System.Diagnostics.Debugger.Launch();
 builder.AddCache();
@@ -104,7 +106,8 @@ builder.Services.AddSession(session =>
 if (builder.Environment.IsProduction())
 {
     builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
-} else
+}
+else
 {
     builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
 }
