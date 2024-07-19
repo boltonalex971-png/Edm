@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,7 +26,8 @@ namespace Microprojects.Edm
             var old = _peers.FirstOrDefault(p => p.Host == peer.Host && p.GrpcPort == peer.GrpcPort && p.UiPort == peer.UiPort);
             if (old is not null)
             {
-                old.Timestamp = peer.Timestamp;
+                var json = JsonConvert.SerializeObject(peer);
+                JsonConvert.PopulateObject(json, old);
             }
             else
             {
