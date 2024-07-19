@@ -1,73 +1,61 @@
 /* eslint-disable no-mixed-operators */
-import React, { useState, useEffect, useCallback, useContext } from 'react';
+import React, { useState, useContext } from 'react';
 import PropTypes from 'prop-types';
-import { Input as BSInput, Container, Row, Col, Alert } from 'reactstrap';
+import { Container, Row, Col, Alert } from 'reactstrap';
 import api from '../api';
 import { useGet } from '../hooks/hooks';
 import { DropDownList, DropDownTree } from '@progress/kendo-react-dropdowns';
 import { Button } from '@progress/kendo-react-buttons';
-import { Route, useHistory, useParams, Switch } from 'react-router-dom';
 import { SmartScroll, SmartScrollContent } from '../SmartScroll';
-import Axios from 'axios';
 import { Loading } from '../utils/Utils';
 import { Field, FormElement, Form } from '@progress/kendo-react-form';
 import { Input } from '@progress/kendo-react-inputs';
 import { PluginContainer } from '@microprojects/react-utils';
 import { ApiContext } from '../../ApiContext';
+import { useDispatch, useSelector } from 'react-redux';
+import { clearDevices, clearProcess, setDevice, setDriverOptions, setParameters, setProcess, setProfiles } from '../../slices/newOperationSlice';
+import axios from 'axios';
 
 export function NewOperationWizard() {
+    const params = useSelector(s => s.newOperation)
+    const dispatch = useDispatch()
     const [error, setError] = useState();
     const [started] = useState(false);
     const [[processList]] = useGet(`${api.workplaces}/processes/allowed`);
-    const [step, setStep] = useState()
-    const [process, setProcess] = useState();
-    const [processData, setProcessData] = useState() //useGet(`${api.processes}/${processId}`, [processId]);
-    const [devices, setDevices] = useState(false);
-    const [deviceOptions, setDeviceOptions] = useState([]);
     const [detail, setDetail] = useState(ProcessDetailStub)
-    const [inputs, setInputs] = useState();
-    const step2Disabled = !process && true;
-    const step3Disabled = !devices;
-    const step4Disabled = !inputs && true;
+    const step2Disabled = !params.process && true;
+    const step3Disabled = Object.entries(params.devices).length !== params.profiles?.length;
+    const step4Disabled = !params.parameters || step3Disabled;
     const onProcessChange = (e) => {
         if (e.value.isNode) {
-            setProcess(null);
-            setProcessData(null)
-            setStep(null)
+            dispatch(clearProcess())
+            setDetail(ProcessDetailStub)
             return false
         } else {
-            Axios.get(`${api.workplaces}/processes/${e.value.id}`)
-                .then((p) => {
-                    setProcess(e.value);
-                    setProcessData(p.data.process)
-                    setDetail(<ProcessDetail process={p.data.process} />)
-                })
-                .catch((error) => setError(error));
+            setDetail(<ProcessDetail id={e.value.id} />)
         }
 
-        setDevices(false);
-        setInputs(null);
+        dispatch(clearDevices())
     };
     const onOperationStart = () => {
         const data = {
             id: 0,
-            workplaceProcessId: process.id,
-            parameters: inputs && JSON.stringify(inputs),
-            devices: deviceOptions.map((p) => ({
-                profileId: p.profileId,
-                hostDeviceId: p.hostDeviceId,
-                options: JSON.stringify(p.options)
-            })),
+            workplaceProcessId: params.process.id,
+            parameters: params.parameters && JSON.stringify(params.parameters),
+            devices: Object.entries(params.devices).map((d) => {
+                const id = parseInt(d)
+                return {
+                    profileId: id,
+                    hostDeviceId: params.devices[id].hostDeviceId,
+                    options: JSON.stringify(params.options[id] || {})
+                }
+            }),
         };
-        Axios.post(api.operations, data)
+        axios.post(api.operations, data)
             .then((op) => {
-                //setStarted(true);
                 window.open(`${api.baseUrl}/operations/${op.data.id}`, '_blank')
             })
             .catch((error) => setError(error));
-    };
-    const onDeviceOptionsChanged = (options) => {
-        setDeviceOptions(o => [...o.filter((d) => d.id !== options.id), options]);
     };
 
     return (
@@ -91,6 +79,7 @@ export function NewOperationWizard() {
                             <span>Select appropriate process to run</span>
                             <div className='d-inline-flex' style={{ marginTop: 10 }}>
                                 <DropDownTree
+                                    value={{ id: params.process?.id, name: params.process?.processName }}
                                     data={processList || []}
                                     dataItemKey='id'
                                     textField='name'
@@ -98,12 +87,12 @@ export function NewOperationWizard() {
                                     onChange={onProcessChange}
                                     style={{ minWidth: '300px' }}
                                 />
-                                {process &&
+                                {params.process &&
                                     <Button
-                                        onClick={() => setDetail(<ProcessDetail process={processData} />)}
+                                        onClick={() => setDetail(<ProcessDetail id={params.process.id} />)}
                                         icon='info'
                                         className='text-info'
-                                        fillMode='clear'
+                                        fillMode='flat'
                                         style={{ outline: 'none', marginLeft: 5 }}>
                                     </Button>
                                 }
@@ -114,13 +103,11 @@ export function NewOperationWizard() {
                             disabled={step2Disabled}
                             description='Select devices for chosen process'
                         >
-                            {processData &&
+                            {!step2Disabled &&
                                 <DevicesStep
                                     changeDetail={setDetail}
-                                    workplaceId={process.parentId}
-                                    process={processData}
-                                    onAllSelected={setDevices}
-                                    onDeviceOptionsChanged={onDeviceOptionsChanged}
+                                    workplaceId={params.process.workplaceId}
+                                    process={params.process}
                                 />
                             }
                         </Step>
@@ -129,11 +116,12 @@ export function NewOperationWizard() {
                             disabled={step3Disabled}
                             description='Specify required input parameters'
                         >
-                            <InputsStep
-                                id={processData?.id}
-                                changeDetail={setDetail}
-                                onComplete={setInputs}
-                            />
+                            {!step3Disabled &&
+                                <InputsStep
+                                    id={params.process.processId}
+                                    changeDetail={setDetail}
+                                />
+                            }
                         </Step>
                         <Step
                             step={4}
@@ -176,14 +164,19 @@ const ProcessDetailStub = () => {
     )
 }
 
-const ProcessDetail = ({ process }) => {
+const ProcessDetail = ({ id }) => {
+    const process = useSelector(state => state.newOperation.process)
+    const dispatch = useDispatch()
+    useGet(`${api.workplaces}/processes/${id}`, [], data => {
+        dispatch(setProcess(data))
+    })
+    if (!process) return <ProcessDetailStub />
     return (
         <div>
             <h6>Selected process info</h6>
             <hr />
-            <p>Name: {process.name} </p>
-            <p>Description: {process.description} </p>
-            <p>Devices: {process.deviceTypes} </p>
+            <p>Name: {process.processName} </p>
+            <p>Description: {process.processDescription} </p>
         </div>
     )
 }
@@ -213,61 +206,39 @@ function Step({ step, children, disabled, description }) {
 }
 
 DevicesStep.propTypes = {
-    workplaceId: PropTypes.number,
-    process: PropTypes.any,
-    onAllSelected: PropTypes.func,
-    changeDetail: PropTypes.func,
-    onDeviceOptionsChanged: PropTypes.func
+    changeDetail: PropTypes.func
 }
 
-function DevicesStep({ workplaceId, process, onAllSelected, changeDetail, onDeviceOptionsChanged }) {
-    const [[profiles]] = useGet(`${api.processes}/${process.id}/profiles`, [], () => {
-        setDevices([])
-    });
-    const [devices, setDevices] = useState([]);
-    useEffect(() => {
-        if (devices.length !== 0 && devices.length === profiles.length) {
-            onAllSelected(true);
-        }
-    }, [devices]);
-    useEffect(() => {
-        if (profiles && profiles.length === 0) {
-            onAllSelected(true)
-        }
-    }, [profiles])
-
+function DevicesStep({ changeDetail }) {
+    const process = useSelector(state => state.newOperation.process)
+    const dispatch = useDispatch()
+    const [[profiles]] = useGet(`${api.processes}/${process.processId}/profiles`, [], data => {
+        dispatch(setProfiles(data.map(p => p.id)))
+    })
     if (!profiles) return (<>Loading ...</>)
 
     return (
         <>
-            <div>
-                <span>
-                    {process.name}
-                    {profiles.length > 0 &&
-                        <>
-                            &nbsp;requires {profiles.map(p => p.profilerName).join(', ')}.<br />
-                            Please choose appropriate device{profiles.length > 1 && 's'} and set options
-                        </>
-                    }
-                    {profiles.length === 0 && ` does not require any device`}
-                </span>
-            </div>
+            <span>
+                {profiles.length > 0 ?
+                    `Please choose appropriate device${profiles.length > 1 && 's'} and set options` :
+                    `${process.processName} does not require any device`
+                }
+            </span>
             <div>
                 {profiles.map((el) =>
                     <DeviceDropDown
-                        api={`${api.workplaces}/${workplaceId}/devices/${el.profilerGuid}`}
                         key={el.id}
+                        api={`${api.workplaces}/${process.workplaceId}/devices/${el.profilerGuid}`}
                         type={el.profilerName}
-                        details={'/options'}
+                        profileId={el.id}
                         onChange={(event) => {
                             changeDetail(
                                 <DeviceDetail
                                     id={event.value.id}
                                     profile={el}
-                                    onOptionsChanged={(options) => onDeviceOptionsChanged({ ...event.value, profileId: el.id, options })}
                                 />
                             )
-                            setDevices([...devices.filter((d) => d.id !== event.value.id), event.value]);
                         }}
                     />
                 )}
@@ -278,18 +249,11 @@ function DevicesStep({ workplaceId, process, onAllSelected, changeDetail, onDevi
 
 InputsStep.propTypes = {
     id: PropTypes.number,
-    onComplete: PropTypes.func,
     changeDetail: PropTypes.func
 }
 
-function InputsStep({ id, onComplete, changeDetail }) {
+function InputsStep({ id, changeDetail }) {
     const [[inputs]] = useGet(`${api.processes}/${id}/inputs`)
-    useEffect(() => {
-        if (inputs && !inputs.length) {
-            onComplete([])
-        }
-    }, [inputs])
-
     if (!inputs) {
         return (<span>Check missing inputs...</span>)
     } else if (!inputs.length) {
@@ -305,12 +269,11 @@ function InputsStep({ id, onComplete, changeDetail }) {
                 onClick={(e) => changeDetail(
                     <InputsDetail
                         inputs={inputs}
-                        onCompete={onComplete}
                     />
                 )}
                 icon='edit'
                 className='text-info'
-                fillMode='clear'
+                fillMode='flat'
                 style={{ outline: 'none', marginLeft: 5 }}>
             </Button>
         </div>
@@ -325,17 +288,17 @@ DeviceDropDown.propTypes = {
 }
 
 function DeviceDropDown({ api, type, profileId, onChange }) {
+    const device = useSelector(state => state.newOperation.devices[profileId])
     const [[data]] = useGet(api);
-    const [device, setDevice] = useState();
     const onDeviceChanged = (event) => {
-        setDevice({ ...event.value, profileId });
         onChange(event);
     };
     return (
-        <div style={{ marginRight: '10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-            <span style={{ marginTop: 10 }}>{type}</span>
-            <div className='d-inline-flex' style={{ marginTop: 5 }}>
+        <div style={{ marginTop: 10, marginRight: 10, display: 'flex', flexDirection: 'column' }}>
+            <div className='d-inline-flex' style={{ alignItems: 'baseline' }}>
                 <DropDownList
+                    value={{ id: device?.id, device: device?.device }}
+                    label={type}
                     data={data || []}
                     loading={!data}
                     dataItemKey='id'
@@ -347,8 +310,8 @@ function DeviceDropDown({ api, type, profileId, onChange }) {
                     onClick={(e) => onChange({ ...e, value: device })}
                     icon='edit'
                     className='text-info'
-                    fillMode='clear'
-                    style={{ outline: 'none', marginLeft: 5 }}>
+                    fillMode='flat'
+                    style={{ marginLeft: 5 }}>
                 </Button>}
             </div>
         </div>
@@ -357,34 +320,39 @@ function DeviceDropDown({ api, type, profileId, onChange }) {
 
 DeviceDetail.propTypes = {
     id: PropTypes.number,
-    profile: PropTypes.object,
-    onOptionsChanged: PropTypes.func
+    profile: PropTypes.object
 };
 
-function DeviceDetail({ id, profile, onOptionsChanged }) {
+function DeviceDetail({ id, profile }) {
+    const device = useSelector(state => state.newOperation.devices[profile.id])
+    const options = useSelector(state => state.newOperation.options[profile.id])
+    const dispatch = useDispatch()
     const apiContext = useContext(ApiContext)
-    const [[data]] = useGet(`${api.workplaces}/devices/${id}`);
-    const arg = data && {
-        options: JSON.parse(data.configuration || '{}'),
-        output: JSON.parse(profile.output || '[]')
-    };
+    useGet(`${api.workplaces}/devices/${id}`, [],
+        data => {
+            dispatch(setDevice({ profileId: profile.id, ...data }))
+            if (!options) {
+                dispatch(setDriverOptions({ id, profileId: profile.id, options: JSON.parse(data.configuration || '{}') }))
+            }
+        })
+    const loaded = device && options
     return (
         <>
-            {!data && <Loading />}
-            {data &&
+            {!loaded && <Loading />}
+            {loaded &&
                 <div>
                     <h6>Selected device info</h6>
                     <hr />
-                    <p>Device: {data.device}</p>
-                    <p>Model: {data.driverName}</p>
-                    <p>Type: {data.profilerName}</p>
-                    <p>Located on: {data.host} </p>
+                    <p>Device: {device.device}</p>
+                    <p>Model: {device.driverName}</p>
+                    <p>Type: {device.profilerName}</p>
+                    <p>Located on: {device.host} </p>
                     <div>
                         <PluginContainer title='Device Configuration'
-                            data={arg || {}}
+                            data={{ options }}
                             width='100%'
-                            src={`${apiContext}/${data.driverHomepage}/options`}
-                            onDataReceived={onOptionsChanged}
+                            src={`${apiContext}/${device.driverHomepage}/options`}
+                            onDataReceived={options => dispatch(setDriverOptions({ id, options, profileId: profile.id }))}
                         />
                     </div>
                 </div>
@@ -393,49 +361,47 @@ function DeviceDetail({ id, profile, onOptionsChanged }) {
     );
 }
 
-function InputsDetail({ inputs, onCompete }) {
-    const handleSubmit = (e) => {
-        onCompete(e)
+function InputsDetail({ inputs }) {
+    const parameters = useSelector(state => state.newOperation.parameters)
+    const parametersDispatch = useDispatch()
+    const handleSubmit = (p) => {
+        parametersDispatch(setParameters(p))
     };
+    if (!inputs) return <Loading />
     return (
-        <>
-            {!inputs && <Loading />}
-            {inputs &&
-                <div>
-                    <h6>Process missing input parameters</h6>
-                    <hr />
+        <div>
+            <h6>Process missing input parameters</h6>
+            <hr />
 
-                    <Form
-                        // key={data.id}
-                        // initialValues={{ textJson: initialValues }}
-                        onSubmit={handleSubmit}
-                        render={(formProps) => (
-                            <FormElement>
-                                <fieldset className={"k-form-fieldset"}>
-                                    <legend className={"k-form-legend"}>Enter input values</legend>
-                                    {inputs.map((i) =>
-                                        <div key={i} className="mb-1" style={{ width: 200 }}>
-                                            <Field name={i} component={Input} label={i} />
-                                        </div>
-                                    )}
-                                </fieldset>
-                                <div className="k-form-buttons" style={{ position: 'sticky', bottom: 10, display: 'flex', justifyContent: 'flex-start', backgroundColor: 'white' }}>
-                                    <Button
-                                        title='Save'
-                                        name='save'
-                                        themeColor={'primary'}
-                                        icon='save'
-                                        type={'submit'}
-                                    >
-                                        Accept
-                                    </Button>
+            <Form
+                // key={data.id}
+                initialValues={parameters}
+                onSubmit={handleSubmit}
+                render={(formProps) => (
+                    <FormElement>
+                        <fieldset className={"k-form-fieldset"}>
+                            <legend className={"k-form-legend"}>Enter input values</legend>
+                            {inputs.map((i) =>
+                                <div key={i} className="mb-1" style={{ width: 200 }}>
+                                    <Field name={i} component={Input} label={i} />
                                 </div>
-                            </FormElement>
-                        )}
-                    />
-                </div>
-            }
-        </>
+                            )}
+                        </fieldset>
+                        <div className="k-form-buttons" style={{ position: 'sticky', bottom: 10, display: 'flex', justifyContent: 'flex-start', backgroundColor: 'white' }}>
+                            <Button
+                                title='Save'
+                                name='save'
+                                themeColor={'primary'}
+                                icon='save'
+                                type={'submit'}
+                            >
+                                Accept
+                            </Button>
+                        </div>
+                    </FormElement>
+                )}
+            />
+        </div>
     );
 }
 
