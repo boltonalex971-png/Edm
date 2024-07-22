@@ -19,8 +19,7 @@ export const Sensor = ({ info, settings, ...props }) => {
                 justifyItems: 'center'
             }}>
             <span style={{ gridColumn: '1/-1' }}>#{props.addr + 1} <strong>{info.serial}</strong></span>
-            {settings?.indicators
-                .sort((a, b) => a.order - b.order)
+            {settings?.indicators?.sort((a, b) => a.order - b.order)
                 .map(i =>
                     <span
                         key={`${props.key}${i.indicator}`}

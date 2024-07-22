@@ -12,12 +12,10 @@ export function Config({ apiBase, operationId, settings, outputs, onSettingsChan
         onSettingsChanged(s)
     };
     const serialChanged = (e) => {
-        settings.serial = e.value
-        saveSettings(settings)
+        saveSettings({ ...settings, serial: e.value })
     }
     const indicatorsChanged = (i) => {
-        settings.indicators = i
-        saveSettings(settings)
+        saveSettings({ ...settings, indicators: i })
     }
 
     return (
