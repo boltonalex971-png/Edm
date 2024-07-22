@@ -1,5 +1,5 @@
 /* eslint-disable no-mixed-operators */
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { Container, Row, Col, Alert } from 'reactstrap';
 import api from '../api';
@@ -13,7 +13,7 @@ import { Input } from '@progress/kendo-react-inputs';
 import { PluginContainer } from '@microprojects/react-utils';
 import { ApiContext } from '../../ApiContext';
 import { useDispatch, useSelector } from 'react-redux';
-import { clearDevices, clearProcess, setDevice, setDriverOptions, setParameters, setProcess, setProfiles } from '../../slices/newOperationSlice';
+import { clearDevices, clearProcess, reset, setDevice, setDriverOptions, setParameters, setProcess, setProfiles, setWorkbench } from '../../slices/newOperationSlice';
 import axios from 'axios';
 
 export function NewOperationWizard() {
@@ -24,19 +24,17 @@ export function NewOperationWizard() {
     const [[processList]] = useGet(`${api.workplaces}/processes/allowed`);
     const [detail, setDetail] = useState(ProcessDetailStub)
     const step2Disabled = !params.process && true;
-    const step3Disabled = Object.entries(params.devices).length !== params.profiles?.length;
+    const step3Disabled = !(params.devices && params.options && params.profiles?.every(p => params.devices[p] && params.options[p]))
     const step4Disabled = !params.parameters || step3Disabled;
     const onProcessChange = (e) => {
+        dispatch(reset())
         if (e.value.isNode) {
-            dispatch(clearProcess())
             setDetail(ProcessDetailStub)
             return false
         } else {
             setDetail(<ProcessDetail id={e.value.id} />)
         }
-
-        dispatch(clearDevices())
-    };
+    }
     const onOperationStart = () => {
         const data = {
             id: 0,
@@ -211,21 +209,47 @@ DevicesStep.propTypes = {
 
 function DevicesStep({ changeDetail }) {
     const process = useSelector(state => state.newOperation.process)
+    const workbench = useSelector(state => state.newOperation.workbench)
+    //const devices = useSelector(state => state.newOperation.devices)
     const dispatch = useDispatch()
+    const [[workbenches]] = useGet(`${api.workplaces}/processes/${process.id}/workbenches`)
     const [[profiles]] = useGet(`${api.processes}/${process.processId}/profiles`, [], data => {
         dispatch(setProfiles(data.map(p => p.id)))
     })
-    if (!profiles) return (<>Loading ...</>)
+    const workbenchChosen = (w) => {
+        axios.get(`${api.workplaces}/processes/workbenches/${w.id}/devices`).then(response => {
+            dispatch(clearDevices())
+            dispatch(setWorkbench(w))
+            response.data.map(d => {
+                dispatch(setDevice({ profileId: d.profileId, id: d.workplaceHostDeviceId, device: d.deviceName }))
+                dispatch(setDriverOptions({ profileId: d.profileId, options: (d.configuration && JSON.parse(d.configuration)) }))
+            })
+        })
+    }
+    useEffect(() => workbench && workbenchChosen(workbench), [])
 
+    if (!profiles || !workbenches)
+        return (<>Loading ...</>)
     return (
         <>
-            <span>
+            <span style={{ marginBottom: 10 }}>
                 {profiles.length > 0 ?
-                    `Please choose appropriate device${profiles.length > 1 && 's'} and set options` :
+                    `Please choose the workbench or appropriate device${profiles.length > 1 && 's'} and set options` :
                     `${process.processName} does not require any device`
                 }
             </span>
             <div>
+                {workbenches?.length &&
+                    <DropDownList
+                        data={workbenches}
+                        value={workbench}
+                        dataItemKey='id'
+                        textField='name'
+                        label='Workbench'
+                        style={{ minWidth: '300px' }}
+                        onChange={(e) => workbenchChosen(e.value)}
+                    />
+                }
                 {profiles.map((el) =>
                     <DeviceDropDown
                         key={el.id}
@@ -254,6 +278,17 @@ InputsStep.propTypes = {
 
 function InputsStep({ id, changeDetail }) {
     const [[inputs]] = useGet(`${api.processes}/${id}/inputs`)
+    const dispatch = useDispatch()
+    useEffect(() => {
+        if (inputs) {
+            if (inputs.length) {
+                changeDetail(<InputsDetail inputs={inputs} />)
+            } else {
+                dispatch(setParameters({}))
+            }
+        }
+    }, [inputs])
+
     if (!inputs) {
         return (<span>Check missing inputs...</span>)
     } else if (!inputs.length) {
@@ -331,11 +366,11 @@ function DeviceDetail({ id, profile }) {
     useGet(`${api.workplaces}/devices/${id}`, [],
         data => {
             dispatch(setDevice({ profileId: profile.id, ...data }))
-            if (!options) {
-                dispatch(setDriverOptions({ id, profileId: profile.id, options: JSON.parse(data.configuration || '{}') }))
+            if (!options && data.configuration) {
+                dispatch(setDriverOptions({ id, profileId: profile.id, options: JSON.parse(data.configuration) }))
             }
         })
-    const loaded = device && options
+    const loaded = device && true
     return (
         <>
             {!loaded && <Loading />}
@@ -363,9 +398,9 @@ function DeviceDetail({ id, profile }) {
 
 function InputsDetail({ inputs }) {
     const parameters = useSelector(state => state.newOperation.parameters)
-    const parametersDispatch = useDispatch()
+    const dispatch = useDispatch()
     const handleSubmit = (p) => {
-        parametersDispatch(setParameters(p))
+        dispatch(setParameters(p))
     };
     if (!inputs) return <Loading />
     return (

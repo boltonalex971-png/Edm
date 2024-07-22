@@ -11,6 +11,8 @@ import { WorkbenchDevicesTab } from './workplace/WorkbenchDevicesTab';
 import { Button } from '@progress/kendo-react-buttons';
 import axios from 'axios';
 import api from '../api';
+import { useDispatch } from 'react-redux';
+import { setProcess, setWorkbench } from '../../slices/newOperationSlice';
 
 WorkbenchDetail.propTypes = {
     onChange: PropTypes.func,
@@ -21,25 +23,25 @@ WorkbenchDetail.propTypes = {
 }
 
 export function WorkbenchDetail({ workbenchId, ...props }) {
+    const history = useHistory()
+    const dispatch = useDispatch()
     let { id } = useParams();
     id = workbenchId || id;
     let [sub, setSub] = useState();
+    const [proc, setProc] = useState()
+    let [[data, setData], loading, error] = useGet(`${props.api}/${id}`, [id], data => {
+        axios.get(`${api.workplaces}/processes/${data.workplaceProcessId}`)
+            .then(response => setProc(response.data))
+    });
+    const onOperationStart = () => {
+        dispatch(setWorkbench(data))
+        dispatch(setProcess(proc))
+        history.push('/operation')
+    };
     useEffect(setSub, [id]);
-    let [[data, setData], loading, error] = useGet(`${props.api}/${id}`, [id]);
     if (!data || data.id === 0) {
         data = { ...data, name: '', description: '', url: '' };
     }
-    const onOperationStart = () => {
-        const opData = {
-            id: 0,
-            workbenchId: id,
-        };
-        axios.post(api.operations, opData)
-            .then((op) => {
-                window.open(`${api.baseUrl}/operations/${op.data.id}`, '_blank');
-            })
-            .catch(alert);
-    };
 
     return (
         <Detail {...props}
