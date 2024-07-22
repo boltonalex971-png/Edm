@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microprojects.Edm.Drivers;
+using Microprojects.Edm.Utils;
 using Newtonsoft.Json;
 using Optosense.Edm.Profiles.Board;
 using Optosense.Edm.Utils;
@@ -16,10 +17,11 @@ using Optosense.Edm.Utils;
 namespace Optosense.Edm.Drivers.Mux
 {
     [Driver(OptionsType = typeof(BoardDriverOptions))]
-    public class BoardDriverBase : DriverBase, IDisposable
+    public class BoardDriverBase : DriverBase, IReactiveDriver, IDisposable
     {
-        protected BoardDriverOptions BoardOptions => (BoardDriverOptions) Options;
+        protected BoardDriverOptions BoardOptions => (BoardDriverOptions)Options;
         protected SerialPort Port { get; set; }
+        public Func<DriverResponse, bool, Task> PushResponse { get; set; }
 
         public BoardDriverBase() { }
 
@@ -32,11 +34,11 @@ namespace Optosense.Edm.Drivers.Mux
         {
             Port = new SerialPort(BoardOptions.Port, BoardOptions.Baudrate);
             Port.Open();
-        
+
             return OK;
         }
 
-        public override Task<DriverResponse> Execute(DriverRequest req)
+        public override async Task<DriverResponse> Execute(DriverRequest req)
         {
             var response = new DriverResponse { Planned = req.Offset, Executed = req.Offset, Request = req.Command, State = DriverResponseState.Ok };
             if (req is not BoardDriverRequest)
@@ -46,7 +48,7 @@ namespace Optosense.Edm.Drivers.Mux
                     Dispose();
                     response.Response = DriverResponseState.Ok.ToString();
                     response.Parameters = "{Stop: true}";
-                    return Task.FromResult(response);
+                    return response;
                 }
                 else
                 {
@@ -54,27 +56,46 @@ namespace Optosense.Edm.Drivers.Mux
                 }
             }
 
-            var request = (BoardDriverRequest) req;
+            var request = (BoardDriverRequest)req;
+            var instruction = Regex.Replace(request.Instruction?.Code ?? request.Command, "{.*?}", "").Trim();
+
             var command = request.Command;
-            var parameters = string.IsNullOrEmpty(request.Parameters) ? new () :
+            var parameters = string.IsNullOrEmpty(request.Parameters) ? new() :
                 JsonConvert.DeserializeObject<Dictionary<string, object>>(request.Parameters);
             command = SubstituteParameters(command, parameters);
             response.Request = command;
             try
             {
-                response.Response = new string(
-                    Port.Request(
+                var bytes = Port.Request(
                         command,
-                        responseLength: 0, 
-                        singleLine: true, 
+                        responseLength: 0,
+                        singleLine: true,
                         timeout: request.Instruction?.Timeout ?? 500,
-                        retries: request.Instruction.Retries ?? 0));
+                        retries: request.Instruction.Retries ?? 0);
+
+                if (instruction == "KZ?")
+                {
+                    try
+                    {
+                        await executeKz(bytes, request.Instruction.Syntax, response);
+                        response.Response = string.Join(string.Empty, bytes.Select(b => b.ToString("X2")));
+                        return response;
+                    }
+                    catch (Exception e)
+                    {
+                        response.State = DriverResponseState.Failed;
+                        response.Message = e.GetFullInfo();
+                        return response;
+                    }
+                }
+
+                response.Response = new string(bytes.Select(b => (char)b).ToArray());
                 response.State =
                     string.IsNullOrEmpty(request.Instruction.Syntax) ||
                     Regex.IsMatch(
                         response.Response,
                         SubstituteParameters(request.Instruction.Syntax, parameters),
-                        RegexOptions.Singleline) ? 
+                        RegexOptions.Singleline) ?
                             DriverResponseState.Ok : DriverResponseState.InvalidResponse;
                 var match = Regex.Match(response.Response, request.Instruction.Syntax, RegexOptions.Singleline);
                 if (match.Success)
@@ -91,12 +112,14 @@ namespace Optosense.Edm.Drivers.Mux
             {
                 // Add default null parameters to stress that error happened
                 GetParameters(request.Instruction).All(p => parameters.TryAdd(p, null));
-                response.Message = e switch {
+                response.Message = e switch
+                {
                     AggregateException ag when ag.InnerException is not TimeoutException => e.InnerException.Message,
                     not AggregateException or TimeoutException => e.Message,
                     _ => null
                 };
-                response.State = e switch {
+                response.State = e switch
+                {
                     AggregateException ag when ag.InnerException is TimeoutException => DriverResponseState.Timeout,
                     TimeoutException => DriverResponseState.Timeout,
                     _ => DriverResponseState.Failed
@@ -106,7 +129,7 @@ namespace Optosense.Edm.Drivers.Mux
             // Provide parameters no matter what
             response.Parameters = JsonConvert.SerializeObject(parameters);
 
-            return Task.FromResult(response);
+            return response;
         }
 
         private string SubstituteParameters(string command, Dictionary<string, object> parameters)
@@ -130,6 +153,27 @@ namespace Optosense.Edm.Drivers.Mux
         {
             var matches = Regex.Matches(instr.Syntax ?? string.Empty, @"\?<(\w+?)>");
             return matches.Select(m => m.Groups[1].Value);
+        }
+
+        private async Task executeKz(byte[] bytes, string syntax, DriverResponse response)
+        {
+            int num = BitConverter.ToInt32(bytes.Take(4).Reverse().ToArray(), 0);
+            var outParam = Regex.Matches(syntax ?? string.Empty, @"\?<(\w+?)>")
+                .FirstOrDefault()
+                .Groups[1].Value;
+            for (int i = 0; i < BoardOptions.Capacity; i++)
+            {
+                var value = num >> i & 1;
+                await PushResponse(response with
+                {
+                    Parameters = JsonConvert.SerializeObject(new Dictionary<string, object>
+                    {
+                        { "ADDR", $"#{i.ToString("X2")}" },
+                        { outParam, value }
+                    }),
+                    Response = value.ToString()
+                }, false);
+            }
         }
     }
 

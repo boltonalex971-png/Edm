@@ -15,7 +15,7 @@ namespace Microprojects.Edm.Drivers
         NotCompleted = 4
     }
 
-    public class DriverResponse
+    public record DriverResponse
     {
         public long Planned { get; set; }
         public long Executed { get; set; }

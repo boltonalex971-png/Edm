@@ -33,6 +33,9 @@ namespace Optosense.Edm.Test
             //};
             var profileJson =  //JsonConvert.SerializeObject(profile);
                 @"[
+                    {name: ""KZ"", instructions: [
+                        {order: 10, name: ""KZ?"", instruction: {name: ""KZ?"", code: ""KZ?"", syntax: ""(?<KZ>)"", timeout: 1000 }  }
+                    ]},
                     {name: ""Measure"", instructions: [
                         {order: 20, name: ""TABTINIT"", instruction: {name: ""TABTINIT"", code: ""{ADDR}TABTINIT"", syntax: ""100000.0"", timeout: 200 } },
                         {order: 20, name: ""ZERO1"", instruction: {name: ""ZERO1"", code: ""{ADDR}ZERO1"", syntax: ""ZERO1 OK"", timeout: 200 }  },

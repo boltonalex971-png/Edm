@@ -24,7 +24,7 @@ namespace Optosense.Edm.Drivers.Mux
             }
 
             var profile = JsonConvert.DeserializeObject<BoardProfile>(profileJson);
-            var availableParams = JsonConvert.DeserializeObject<ExpandoObject>(paramJson ?? "{}");
+            var availableParams = JsonConvert.DeserializeObject<Dictionary<string,object>>(paramJson ?? "{}");
             var profileRequiredParams = GetRequiredParams(profile);
             
             // TODO Check if skipped parameter is in instruction args
@@ -44,7 +44,13 @@ namespace Optosense.Edm.Drivers.Mux
                     .ToList();
                 var requiredParams = GetRequiredParams(commandInstructions.Select(ci => ci.Instruction));
                 var iteratedParam = availableParams
-                    .FirstOrDefault(p => requiredParams.Contains(p.Key) && p.Value is IEnumerable);
+                    .Where(p => requiredParams.Contains(p.Key) && p.Value is IEnumerable)
+                    .FirstOrDefault();
+                if (iteratedParam.Key is null)
+                {
+                    iteratedParam = KeyValuePair.Create("None", (object)Enumerable.Range(0, 1));
+                }
+
                 var parameters = availableParams
                     .Where(p => requiredParams.Contains(p.Key));
                 var offset = command.Offset * 60; // Command offset in minutes
@@ -72,7 +78,8 @@ namespace Optosense.Edm.Drivers.Mux
                             // Instruction offset in milliseconds
                             Condition = reqs.Count() > 0 ? string.Join(",", reqs) : (offset / 1000.0).ToString(CultureInfo.InvariantCulture)
                         };
-                        offset = ci.Instruction.Timeout;
+                        // Delay before start new instruction
+                        offset = 500;//ci.Instruction.Timeout;
                     }
                 }
             }

@@ -49,9 +49,9 @@ namespace Optosense.Edm.Utils
             });
         }
 
-        public static async Task<char[]> Send(this SerialPort port, string command, int responseLength, bool singleLine, int timeout)
+        public static async Task<byte[]> Send(this SerialPort port, string command, int responseLength, bool singleLine, int timeout)
         {
-            var result = new List<char>();
+            var result = new List<byte>();
             var buffer = new byte[128];
             var totalRead = 0;
             port.BaseStream.ReadTimeout = timeout;
@@ -63,7 +63,7 @@ namespace Optosense.Edm.Utils
                 {
                     var bytesRead = port.BaseStream.Read(buffer, 0, buffer.Length);
                     totalRead += bytesRead;
-                    result.AddRange(buffer.Take(bytesRead).Select(b => (char)b));
+                    result.AddRange(buffer.Take(bytesRead));
                 } while (!((singleLine && result.LastOrDefault() == '\r' || !singleLine && result.LastOrDefault() == '\0' && result.Count > 0) && (responseLength == 0 || responseLength <= result.Count)));
             }
             catch (TimeoutException e)
@@ -72,7 +72,7 @@ namespace Optosense.Edm.Utils
                 {
                     var ex = new SerialPortException(e)
                     {
-                        Buffer = totalRead > 0 ? new string(result.ToArray()).ToByteString() : null,
+                        Buffer = totalRead > 0 ? new string(result.Select(b => (char)b).ToArray()).ToByteString() : null,
                         Port = port.PortName,
                         Command = command,
                         Timeout = timeout,
@@ -148,10 +148,10 @@ namespace Optosense.Edm.Utils
             });
         }
 
-        public static char[] Request(this SerialPort port, string command, int? address = null, int responseLength = 0, bool singleLine = true, int timeout = 1500, int retries = 0)
+        public static byte[] Request(this SerialPort port, string command, int? address = null, int responseLength = 0, bool singleLine = true, int timeout = 1500, int retries = 0)
         {
             var fullCommand = $"{(address == null ? string.Empty : $"#{address:X2}")}{command}\r";
-            char[] result;
+            byte[] result;
             //var obs = port.ToLine(fullCommand, responseLength, singleLine, timeout);
             while (true)
             {
