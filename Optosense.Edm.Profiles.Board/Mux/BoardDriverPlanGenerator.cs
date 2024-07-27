@@ -79,7 +79,7 @@ namespace Optosense.Edm.Drivers.Mux
                             Condition = reqs.Count() > 0 ? string.Join(",", reqs) : (offset / 1000.0).ToString(CultureInfo.InvariantCulture)
                         };
                         // Delay before start new instruction
-                        offset = 500;//ci.Instruction.Timeout;
+                        offset = 1000;//ci.Instruction.Timeout;
                     }
                 }
             }
