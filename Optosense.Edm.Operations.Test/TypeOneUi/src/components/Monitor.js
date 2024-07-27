@@ -15,7 +15,7 @@ export function Monitor({ sensors, started, settings, ...props }) {
     useEffect(() => {
         // TODO need to separate handle scroll from below one
         //if (!scrolled) {
-        inputRef.current.scrollTop = inputRef.current.scrollHeight;
+        //inputRef.current.scrollTop = inputRef.current.scrollHeight;
         //}
     });
 
