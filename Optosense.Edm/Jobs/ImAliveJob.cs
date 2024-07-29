@@ -33,10 +33,10 @@ namespace Optosense.Edm.Jobs
                     //Logger.Log($"Got imalive message: {h.Host} {h.Version} {h.Timestamp}");
                     var host = Container.Hive.TouchPeer(h);
                 });
-            var issuer = new Timer((state) =>
+            var issuer = new Timer(async state =>
             {
                 PeerOptions.Value.Timestamp = DateTime.Now;
-                Intercom.Publish(Parameters.Channel, PeerOptions.Value);
+                await Intercom.Publish(Parameters.Channel, PeerOptions.Value);
             }, null, 0, (int)Container.Hive.Alive.TotalMilliseconds);
             try
             {
