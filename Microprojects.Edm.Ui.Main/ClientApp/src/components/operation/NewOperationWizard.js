@@ -221,7 +221,12 @@ function DevicesStep({ changeDetail }) {
             dispatch(clearDevices())
             dispatch(setWorkbench(w))
             response.data.map(d => {
-                dispatch(setDevice({ profileId: d.profileId, id: d.workplaceHostDeviceId, device: d.deviceName }))
+                dispatch(setDevice({
+                    profileId: d.profileId,
+                    id: d.workplaceHostDeviceId,
+                    hostDeviceId: d.hostDeviceId,
+                    device: d.deviceName
+                }))
                 dispatch(setDriverOptions({ profileId: d.profileId, options: (d.configuration && JSON.parse(d.configuration)) }))
             })
         })

@@ -39,16 +39,17 @@ namespace Optosense.Edm.Core.Services
             if (operation.WorkbenchId != null)
             {
                 var wb = await Db.Workbenches
-                    .Include(wb => wb.DeviceConfigurations)
+                    .Include(wb => wb.DeviceConfigurations.Select(dc => dc.WorkplaceHostDevice))
                     .Include(wb => wb.WorkplaceProcess)
                     .FirstOrDefaultAsync(wb => wb.Id == operation.WorkbenchId)
                     ?? throw new ArgumentException("No workbench found");
-                var devices = await Db.WorkbenchDeviceConfigurations
-                    .Include(d => d.WorkplaceHostDevice)
-                    .Where(d => wb.DeviceConfigurations
-                                            .Select(c => c.Id)
-                                            .Contains(d.Id))
-                    .ToListAsync();
+                var devices = wb.DeviceConfigurations;
+                    //await Db.WorkbenchDeviceConfigurations
+                    //.Include(d => d.WorkplaceHostDevice)
+                    //.Where(d => wb.DeviceConfigurations
+                    //                        .Select(c => c.Id)
+                    //                        .Contains(d.Id))
+                    //.ToListAsync();
                 operation.Devices = devices
                     .Select(c => new OperationHostDevice
                     {

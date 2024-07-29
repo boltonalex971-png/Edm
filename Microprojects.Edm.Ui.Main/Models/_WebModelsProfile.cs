@@ -89,6 +89,7 @@ namespace Microprojects.Edm.Ui.Main.Models
 
             CreateMap<WorkbenchWorkplaceHostDevice, WorkbenchDeviceConfigViewModel>()
                 .ForMember(d => d.DeviceId, o => o.MapFrom(s => s.WorkplaceHostDevice.HostDevice.DeviceId))
+                .ForMember(d => d.HostDeviceId, o => o.MapFrom(s => s.WorkplaceHostDevice.HostDeviceId))
                 .ForMember(d => d.DeviceName, o => o.MapFrom(s => s.WorkplaceHostDevice.HostDevice.Device.Name))
                 .ForMember(d => d.ProfileName, o => o.MapFrom(s => s.Profile.Name))
                 .ForMember(d => d.HostName, o => o.MapFrom(s => s.WorkplaceHostDevice.HostDevice.Host.Name))
