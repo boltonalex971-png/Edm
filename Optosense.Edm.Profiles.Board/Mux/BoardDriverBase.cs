@@ -157,13 +157,15 @@ namespace Optosense.Edm.Drivers.Mux
 
         private async Task executeKz(byte[] bytes, string syntax, DriverResponse response)
         {
-            int num = BitConverter.ToInt32(bytes.Take(4).Reverse().ToArray(), 0);
+            int? num = bytes != null ? 
+                BitConverter.ToInt32(bytes.Take(4).Reverse().ToArray(), 0) :
+                null;
             var outParam = Regex.Matches(syntax ?? string.Empty, @"\?<(\w+?)>")
                 .FirstOrDefault()
                 .Groups[1].Value;
             for (int i = 0; i < BoardOptions.Capacity; i++)
             {
-                var value = num >> i & 1;
+                var value = num != null ? num >> i & 1 : null;
                 await PushResponse(response with
                 {
                     Parameters = JsonConvert.SerializeObject(new Dictionary<string, object>
