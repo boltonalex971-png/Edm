@@ -1,12 +1,14 @@
 ﻿using Microprojects.Edm.Intercom;
-using Microprojects.Edm.Utils;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
+using System.Collections;
+using System.Collections.Concurrent;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Optosense.Edm.WebApi.Utils
@@ -15,6 +17,10 @@ namespace Optosense.Edm.WebApi.Utils
     {
         protected HubConnection HubConnection { get; set; }
         protected IntercomOptions Options { get; init; }
+        protected ConcurrentQueue<(string, object)> Cache { get; init; } = new();
+
+        private readonly Task _worker;
+        private event EventHandler _messagePublished;
 
         public EdmIntercom(IntercomOptions options)
         {
@@ -23,37 +29,55 @@ namespace Optosense.Edm.WebApi.Utils
                 .WithUrl($"{Options.Principal}/{IntercomHub.Hub}")
                 .WithAutomaticReconnect()
                 .Build();
+            _worker = Task.Factory.StartNew(BackgroundSend, TaskCreationOptions.LongRunning);
         }
-        public async Task<long> Publish<T>(string channel, T message)
-        {
-            if (HubConnection.State != HubConnectionState.Connected)
-            {
-                await HubConnection.StartAsync();
-            }
-            for (int i = 3; i > 0; i--)
-            {
-                await HubConnection.InvokeAsync(nameof(IntercomHub.Publish), channel, message)
-                    .ContinueWith(t =>
-                    {
-                        if (t.IsCompletedSuccessfully)
-                        {
-                            i = 0;
-                            //Logger.LogDebug("Message sent:\n{message}\nto channel:\n{channel}", message, channel);
-                        }
-                        else if (t.IsFaulted)
-                        {
-                            var ex = t.Exception;
-                            //Logger.LogError("Message failed:\n{message}\nTo channel:\n{channel}\nError:\n{error}", message, channel, t.Exception.GetFullInfo());
-                        }
-                        else
-                        {
-                            var ex = t.IsCanceled;
-                            //Logger.LogDebug("Message cancelled:\n{message}\nTo channel:\n{channel}", message, channel);
-                        }
-                    });
-            }
 
-            return 0;
+        public Task<long> Publish<T>(string channel, T message)
+        {
+            Cache.Enqueue((channel, message));
+            // Awake BackgroundSend if sleep
+            _messagePublished?.Invoke(this, EventArgs.Empty);
+
+            return Task.FromResult<long>(0);
+        }
+
+        private async Task BackgroundSend()
+        {
+            await HubConnection.StartAsync();
+            var random = new Random(DateTime.Now.Millisecond);
+
+            // TODO add cancellation token for Intercom dispose with cached records check
+            while (true)
+            {
+                var tokenSource = new CancellationTokenSource();
+                EventHandler handler = (s, e) => tokenSource.Cancel();
+                _messagePublished += handler;
+                tokenSource.Token.Register(() => _messagePublished -= handler);
+                await Task.Delay(-1, tokenSource.Token).ContinueWith(t => { });
+
+                while (Cache.TryPeek(out var record))
+                {
+                    await HubConnection.InvokeAsync(nameof(IntercomHub.Publish), record.Item1, record.Item2)
+                        .ContinueWith(async t =>
+                        {
+                            if (t.IsCompletedSuccessfully)
+                            {
+                                Cache.TryDequeue(out var deq);
+                            }
+                            else if (t.IsFaulted)
+                            {
+                                var ex = t.Exception;
+                                await Task.Delay(random.Next(100, 1000));
+                                //Logger.LogError("Message failed:\n{message}\nTo channel:\n{channel}\nError:\n{error}", message, channel, t.Exception.GetFullInfo());
+                            }
+                            else
+                            {
+                                var ex = t.IsCanceled;
+                                //Logger.LogDebug("Message cancelled:\n{message}\nTo channel:\n{channel}", message, channel);
+                            }
+                        });
+                }
+            }
         }
 
         public IDisposable Subscribe<T>(string channel, Action<T> onNext)
