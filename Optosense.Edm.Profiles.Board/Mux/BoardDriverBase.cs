@@ -106,6 +106,11 @@ namespace Optosense.Edm.Drivers.Mux
                         parameters[key] = match.Groups[key].Value;
                     }
                 }
+                else
+                {
+                    // Set empty output parameters if response is wrong
+                    GetParameters(request.Instruction).All(p => parameters.TryAdd(p, null));
+                }
 
             }
             catch (Exception e)
