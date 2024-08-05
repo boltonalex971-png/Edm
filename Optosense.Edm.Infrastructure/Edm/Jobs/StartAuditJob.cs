@@ -154,7 +154,7 @@ namespace Optosense.Edm.Jobs
             }
 
             subscriber.Dispose();
-            Logger.LogDebug("{Command} {Action}", Name, completed ? "completed" : "cancelled");
+            Logger.LogDebug(Parameters.Operation, "{Command} {Action}", Name, completed ? "completed" : "cancelled");
             return "Ok";
         }
 
@@ -174,7 +174,7 @@ namespace Optosense.Edm.Jobs
             var (confirmed, activeError) = activeExpr.TryEvaluate<bool>(_inputParams);
             if (activeError is not null)
             {
-                Logger.LogError("Cannot evaluate audit zone {zoneNo} activation condition <{condition}>: {error}", zone.No, zone.ActiveWhen, activeError);
+                Logger.LogError(Parameters.Operation, "Cannot evaluate audit zone {zoneNo} activation condition <{condition}>: {error}", zone.No, zone.ActiveWhen, activeError);
             }
             
             return confirmed;

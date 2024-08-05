@@ -125,11 +125,11 @@ namespace Optosense.Edm.Utils
                     },
                     onError: e =>
                     {
-                        logger.LogError($"Plan for driver {driver.GetType().Name} was cancelled with exception: {e.GetFullInfo()}");
+                        logger.LogError(e, "Plan for driver {DriverName} was cancelled", driver.GetType().Name);
                     },
                     onCompleted: () =>
                     {
-                        logger.LogInformation($"Plan for driver {driver.GetType().Name} completed successfully");
+                        logger.LogInformation("Plan for driver {DriverName} completed successfully", driver.GetType().Name);
                     }
                 ).ToTask(token, driver as object);
             task.ContinueWith(t =>
@@ -137,13 +137,13 @@ namespace Optosense.Edm.Utils
                 switch (t.Status)
                 {
                     case TaskStatus.Canceled:
-                        logger.LogInformation($"Driver {t.Id} {t.AsyncState.GetType().Name} was cancelled by user");
+                        logger.LogInformation("Driver {Id} {DriverName} was cancelled by user", t.Id, t.AsyncState.GetType().Name);
                         break;
                     case TaskStatus.Faulted:
-                        logger.LogError($"Driver {t.Id} {t.AsyncState.GetType().Name} was cancelled with exception: {t.Exception.Flatten().GetFullInfo()}");
+                        logger.LogError(t.Exception, "Driver {Id} {DriverName} was cancelled", t.Id, t.AsyncState.GetType().Name);
                         break;
                     case TaskStatus.RanToCompletion:
-                        logger.LogInformation($"Driver {t.Id} {t.AsyncState.GetType().Name} completed successfully");
+                        logger.LogInformation("Driver {Id} {DriverName} completed successfully", t.Id, t.AsyncState.GetType().Name);
                         break;
                 }
             });

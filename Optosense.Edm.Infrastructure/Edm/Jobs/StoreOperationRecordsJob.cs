@@ -47,7 +47,7 @@ namespace Optosense.Edm.Jobs
                         //TODO Check what was saved in the context (and publish it)
                         //     and store the records that weren't
                         // Swallow the exception not to breaking up storing process
-                        _logger.LogWarning("Some InstructionExecutions lost: {Exception}", e.GetFullInfo());
+                        _logger.LogWarning(Parameters.Operation, e, "Some Records are lost");
                     }
                 });
             while (!completed && !CancellationToken.IsCancellationRequested)
@@ -57,13 +57,14 @@ namespace Optosense.Edm.Jobs
             }
 
             subscription.Dispose();
-            _logger.LogDebug("{Command} {Action}", Name, completed ? "completed" : "cancelled");
+            _logger.LogDebug(Parameters.Operation, "{Command} {Action}", Name, completed ? "completed" : "cancelled");
             return "Ok";
         }
     }
 
     public class StoreOperationRecordsJobParameters : IJobParameters
     {
+        public int Operation {  get; set; }
         public string Channel { get; set; }
         public string AuditChannel { get; set; }
 

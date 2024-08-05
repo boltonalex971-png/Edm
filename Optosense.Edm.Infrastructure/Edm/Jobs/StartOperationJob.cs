@@ -56,7 +56,12 @@ namespace Optosense.Edm.Jobs
             var parametersChannel = $"{storeChannel}-parameters";
             var storageJob = new StoreOperationRecordsJob
             {
-                JobParameters = new StoreOperationRecordsJobParameters { Channel = storeChannel, AuditChannel = auditChannel }
+                JobParameters = new StoreOperationRecordsJobParameters 
+                { 
+                    Operation = Parameters.Operation,
+                    Channel = storeChannel, 
+                    AuditChannel = auditChannel 
+                }
             };
             await JobManager.Execute(storageJob);
             var operation = await OperationService.Get(Parameters.Operation);

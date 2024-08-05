@@ -116,7 +116,7 @@ namespace Optosense.Edm.Jobs
             }
             catch (Exception e)
             {
-                _logger.LogError("Cannot init device with exception: \n{Exception}", e.GetFullInfo());
+                _logger.LogError(Parameters.Operation, e, "Cannot init device");
                 throw new EdmException($"Cannot init device: {e.Message}");
             }
 
@@ -293,7 +293,7 @@ namespace Optosense.Edm.Jobs
                     var (confirmed, error) = expr.TryEvaluate<bool>(_inputParams);
                     if (error is not null)
                     {
-                        _logger.LogError("Cannot evaluate profile condition <{condition}>: {error}", condition, error);
+                        _logger.LogError(Parameters.Operation, "Cannot evaluate profile condition <{condition}>: {error}", condition, error);
                     }
 
                     if (confirmed || CancellationToken.IsCancellationRequested)
