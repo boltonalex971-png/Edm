@@ -16,7 +16,7 @@ export function HostConsole({ onClose, data }) {
             card={
                 <PluginContainer title='Host Console'
                     data={{}}
-                    src={`${data.url}:16331/console`}
+                    src={`${data.url}:${data.uiPort}/console`}
                     height='500'
                     width='100%'
                 />

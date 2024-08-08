@@ -70,7 +70,7 @@ export function HostDetail({ hostId, ...props }) {
             card={
                 <>
                     <div className="d-flex align-items-baseline" >
-                        <span className={`me-2 k-icon k-i-circle text-${data.isActive ? 'success' : 'danger'}`} ></span>
+                        <span className={`me-2 k-icon k-i-circle text-${data.active ? 'success' : 'danger'}`} ></span>
                         <Info {...props}
                             data={data}
                             content={
@@ -84,7 +84,7 @@ export function HostDetail({ hostId, ...props }) {
                                 </div>
                             }
                         />
-                        <Button className='me-2' disabled={data.isActive === false}
+                        <Button className='me-2' disabled={data.active === false}
                             fillMode='solid'
                             onClick={() => setSub(
                                 <HostConsole

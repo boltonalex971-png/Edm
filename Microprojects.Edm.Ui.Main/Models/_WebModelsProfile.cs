@@ -147,7 +147,11 @@ namespace Microprojects.Edm.Ui.Main.Models
             //    .ForMember(d => d.IsActive, o => o.MapFrom(s => true))
             //    .ForMember(d => d.Items, o => o.Ignore());
             CreateMap<Host, HostModel>()
-                .ForMember(d => d.Active, o => o.MapFrom(s => false));
+                .ForMember(d => d.Active, o => o.MapFrom((s, d, v, c) => ((Peer)c.Items["Peer"]).Host != null))
+                .ForMember(d => d.Version, o => o.MapFrom((s, d, v, c) => ((Peer)c.Items["Peer"]).Version))
+                .ForMember(d => d.Environment, o => o.MapFrom((s, d, v, c) => ((Peer)c.Items["Peer"]).Environment))
+                .ForMember(d => d.Mode, o => o.MapFrom((s, d, v, c) => ((Peer)c.Items["Peer"]).Mode))
+                .ForMember(d => d.UiPort, o => o.MapFrom((s, d, v, c) => ((Peer)c.Items["Peer"]).UiPort));
 
             CreateMap<IPlugin, PluginInfoViewModel>();
         }

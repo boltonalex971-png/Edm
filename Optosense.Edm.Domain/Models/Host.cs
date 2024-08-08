@@ -10,12 +10,6 @@ namespace Optosense.Edm.Domain.Models
 
         public string Url { get; set; }
         public int Port { get; set; }
-        [NotMapped]
-        public string Version { get; set; }
-        [NotMapped]
-        public string Mode { get; set; }
-        [NotMapped]
-        public string Environment { get; set; }
         public ICollection<HostDevice> Devices { get; set; }
     }
 }

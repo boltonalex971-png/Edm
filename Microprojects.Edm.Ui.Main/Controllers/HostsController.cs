@@ -12,6 +12,7 @@ using Optosense.Edm.Core.AspNet.Controllers;
 using Microprojects.Edm.Ui.Main.Models;
 using Microprojects.Edm.Ui.Main.Utils;
 using Microsoft.Extensions.Configuration;
+using Microprojects.Edm.Jobs;
 
 namespace Microprojects.Edm.Ui.Main.Controllers
 {
@@ -24,8 +25,16 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         private readonly IHostService _hostService;
         private readonly IHierarchyService _hierarchyService;
         private readonly IPluginContainer _plugins;
+        private readonly IJobContainer _jobContainer;
 
-        public HostsController(ILogger<HostsController> logger, IMapper mapper, IHostService hostService, IHierarchyService hierarchyService,IPluginContainer plugins, IConfiguration configuration) :
+        public HostsController(
+            ILogger<HostsController> logger, 
+            IMapper mapper, 
+            IHostService hostService, 
+            IHierarchyService hierarchyService,
+            IPluginContainer plugins, 
+            IJobContainer jobContainer,
+            IConfiguration configuration) :
             base(configuration)
         {
             _logger = logger;
@@ -33,6 +42,7 @@ namespace Microprojects.Edm.Ui.Main.Controllers
             _hostService = hostService;
             _hierarchyService = hierarchyService;
             _plugins = plugins;
+            _jobContainer = jobContainer;
         }
 
         [HttpGet]
@@ -60,7 +70,9 @@ namespace Microprojects.Edm.Ui.Main.Controllers
                 };
             }
 
-            var result = _mapper.Map<HostModel>(host);
+            var peer = _jobContainer.Hive.GetActivePeers().FirstOrDefault(h => h.Host == host.Url) ?? new Peer();
+            var result = _mapper.Map<HostModel>(host, opts => opts.Items["Peer"] = peer);
+
             return result;
         }
 

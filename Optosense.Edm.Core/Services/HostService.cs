@@ -34,18 +34,6 @@ namespace Optosense.Edm.Core.Services
             _container = container;
         }
 
-        public override async Task<Host> Get(int id)
-        {
-            var host = await base.Get(id);
-            var online  = _container.Hive.GetActivePeers().FirstOrDefault(h => h.Host == host.Url);
-            host.IsActive = online != null;
-            host.Version = online?.Version;
-            host.Mode = online?.Mode;
-            host.Environment = online?.Environment;
-
-            return host;
-        }
-
         public override async Task<IEnumerable<Host>> GetAll()
         {
             var savedHosts = new List<Host>(await base.GetAll());
