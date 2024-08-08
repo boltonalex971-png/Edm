@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
+using System.Net;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading;
@@ -127,5 +128,4 @@ namespace Optosense.Edm.WebApi.Utils
         public string Principal { get; set; }
         public string ConnectionString { get; set; }
     }
-
 }

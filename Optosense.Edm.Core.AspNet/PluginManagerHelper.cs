@@ -12,6 +12,7 @@ using Newtonsoft.Json;
 using Optosense.Edm.Core.Infrastructure.Mapper;
 using Optosense.Edm.Core.Models;
 using Optosense.Edm.Plugins;
+using Optosense.Edm.WebApi.Utils;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -39,14 +40,17 @@ public static class PluginManagerHelper
     {
         builder.Use(async (context, next) =>
         {
-            if (!context.User.Identity.IsAuthenticated)
+            if (!context.User.Identity.IsAuthenticated && 
+                // Not an intercom call
+                !context.Request.Path.StartsWithSegments($"/{IntercomHub.Hub}") &&
+                // Not a gRPC call
+                !context.Request.Path.StartsWithSegments($"/Optosense.Edm.JobExecutor"))
             {
                 await context.ChallengeAsync();
+                return;
             }
-            else
-            {
-                await next();
-            }
+            
+            await next();
         });
 
         return builder;

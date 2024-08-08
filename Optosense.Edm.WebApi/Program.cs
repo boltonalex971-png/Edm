@@ -11,6 +11,7 @@ using Microprojects.Edm.Intercom;
 using Microprojects.Edm.Jobs;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Negotiate;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http.Connections;
@@ -24,6 +25,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.EventLog;
 using Microsoft.Extensions.Options;
 using Optosense.Edm.Core.AspNet;
+using Optosense.Edm.Core.AspNet.Auth;
 using Optosense.Edm.DataAccess;
 using Optosense.Edm.Domain.Models;
 using Optosense.Edm.Persistence;
@@ -105,7 +107,12 @@ builder.Services.AddSession(session =>
 });
 if (builder.Environment.IsProduction())
 {
+    builder.Services.AddSingleton<IAuthorizationHandler, HubAuthHandler>();
     builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
+    builder.Services.AddAuthorization(options =>
+    {
+        options.FallbackPolicy = options.DefaultPolicy;
+    });
 }
 else
 {
@@ -149,17 +156,16 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-    app.UseHttpsRedirection();
-    //app.UseHsts();
     app.UseAuthenticatedUserInfo();
 }
+
 app.UseEndpoints(endpoints =>
 {
-    endpoints.MapGrpcService<EdmJobService>();
+    endpoints.MapGrpcService<EdmJobService>().AllowAnonymous();
 });
 
 
-app.MapHub<IntercomHub>(IntercomHub.Hub);
+app.MapHub<IntercomHub>(IntercomHub.Hub).AllowAnonymous();
 app.MapGet("/status", () => "I AM ALIVE!");
 app.MapSpaPlugins();
 
