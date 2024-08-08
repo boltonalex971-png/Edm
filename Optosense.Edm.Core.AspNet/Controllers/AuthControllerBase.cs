@@ -49,7 +49,8 @@ namespace Optosense.Edm.Core.AspNet.Controllers
                     var root = _configuration.GetSection("Edm:Auth").GetValue<string>("DivisionsRoot");
                     var divisions = claims
                         .Where(c => c.Name.Contains(root))
-                        .Select(c => c.Name).ToList();
+                        .Select(c => new UserClaim { Name = c.Name.Replace(root, string.Empty), Sid = c.Sid})
+                        .ToList();
                     userInfo = new UserInfo
                     {
                         Name = identity.Name,
@@ -72,7 +73,7 @@ namespace Optosense.Edm.Core.AspNet.Controllers
                             .ToList(),
                         Role = claimsIdentity.FindFirst(ClaimTypes.Role)?.Value,
                         Divisions = claimsIdentity.FindAll("Groups")
-                            .Select(g => g.ToString())
+                            .Select((g, i) => new UserClaim { Sid = (i + 1).ToString(), Name = g.ToString() })
                             .ToList()
                     };
                 }

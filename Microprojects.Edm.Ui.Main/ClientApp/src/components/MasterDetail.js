@@ -15,7 +15,6 @@ import { Folder } from "./config/Folder";
 export function reloadMaster() {
     refresh();
     _renderFunc(++_render);
-    console.log(_render);
 }
 
 let _selectedItem, _render = 0, _renderFunc;

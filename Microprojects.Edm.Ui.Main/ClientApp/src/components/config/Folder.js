@@ -7,6 +7,7 @@ import { Detail, Info, Editor } from '../MasterDetail';
 import { useParams } from 'react-router-dom';
 import { DropDownComp } from '../DropDownCell';
 import { UserContext } from '../../ApiContext';
+import { useSelector } from 'react-redux';
 
 Folder.propTypes = {
     onChange: PropTypes.func,
@@ -16,6 +17,7 @@ Folder.propTypes = {
 }
 
 export function Folder(props) {
+    const user = useSelector(s => s.user)
     let { id } = useParams();
     id = parseInt(id);
     let [[data, setData], loading, error] = useGet(`${props.api}/${id}`, [id]);
@@ -56,20 +58,16 @@ export function Folder(props) {
                                 <Field name={'description'} component={Input} label={'Description'} />
                             </div>
                             <div className="mb-3" style={{ width: '400px' }}>
-                                <UserContext.Consumer>
-                                    {user =>
-                                        <Field name={'group'} label={'Division'}
-                                            component={(compProps) =>
-                                                <DropDownComp {...compProps}
-                                                    loading={!user}
-                                                    data={user && user.claims}
-                                                    textField='name'
-                                                    dataItemKey='sid'
-                                                />
-                                            }
+                                <Field name={'group'} label={'Division'}
+                                    component={(compProps) =>
+                                        <DropDownComp {...compProps}
+                                            loading={!user}
+                                            data={user && user.divisions}
+                                            textField='name'
+                                            dataItemKey='sid'
                                         />
                                     }
-                                </UserContext.Consumer>
+                                />
                             </div>
                         </fieldset>
                     }
