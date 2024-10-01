@@ -1,4 +1,5 @@
 ﻿using Microprojects.Edm.Intercom;
+using Microprojects.Edm.Utils;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
@@ -21,9 +22,10 @@ namespace Optosense.Edm.WebApi.Utils
         protected ConcurrentQueue<(string, object)> Cache { get; init; } = new();
 
         private readonly Task _worker;
+        private readonly ILogger<EdmIntercom> _logger;
         private event EventHandler _messagePublished;
 
-        public EdmIntercom(IntercomOptions options)
+        public EdmIntercom(IntercomOptions options, ILogger<EdmIntercom> logger)
         {
             Options = options;
             HubConnection = new HubConnectionBuilder()
@@ -31,6 +33,7 @@ namespace Optosense.Edm.WebApi.Utils
                 .WithAutomaticReconnect()
                 .Build();
             _worker = Task.Factory.StartNew(BackgroundSend, TaskCreationOptions.LongRunning);
+            _logger = logger;
         }
 
         public Task<long> Publish<T>(string channel, T message)
@@ -44,7 +47,7 @@ namespace Optosense.Edm.WebApi.Utils
 
         private async Task BackgroundSend()
         {
-            await HubConnection.StartAsync();
+            await StartHubConnection(HubConnection, "Main");
             var random = new Random(DateTime.Now.Millisecond);
 
             // TODO add cancellation token for Intercom dispose with cached records check
@@ -69,12 +72,12 @@ namespace Optosense.Edm.WebApi.Utils
                             {
                                 var ex = t.Exception;
                                 await Task.Delay(random.Next(100, 1000));
-                                //Logger.LogError("Message failed:\n{message}\nTo channel:\n{channel}\nError:\n{error}", message, channel, t.Exception.GetFullInfo());
+                                _logger.LogError("Sending message to channel {Channel} failed. Reason:\n{Reason}", record.Item1, t.Exception.GetMeaningfulMessage());
                             }
                             else
                             {
                                 var ex = t.IsCanceled;
-                                //Logger.LogDebug("Message cancelled:\n{message}\nTo channel:\n{channel}", message, channel);
+                                _logger.LogDebug("Sending message to channel {Channel} was cancelled", record.Item1);
                             }
                         });
                 }
@@ -91,17 +94,16 @@ namespace Optosense.Edm.WebApi.Utils
                     .Build();
                 connection.Closed += async (ex) =>
                 {
-                    if (ex is not null)
+                    if (ex != null)
                     {
-                        await Task.Delay(new Random().Next(0, 5) * 1000);
-                        await connection.StartAsync();
+                        await StartHubConnection(connection, channel, ex);
                     }
                 };
                 connection.On<T>("Receive", (message) =>
                 {
                     onNext(message);
                 });
-                await connection.StartAsync();
+                await StartHubConnection(connection, channel);
                 await connection.InvokeAsync(nameof(IntercomHub.Subscribe), channel);
                 return Disposable.Create(async () =>
                 {
@@ -114,6 +116,23 @@ namespace Optosense.Edm.WebApi.Utils
         public IDisposable Subscribe(string channel, Action<object> onNext)
         {
             throw new NotImplementedException();
+        }
+
+        private async Task StartHubConnection(HubConnection hub, string channel, Exception ex = null)
+        {
+            while (true)
+            {
+                try
+                {
+                    await Task.Delay(new Random().Next(0, 5) * 1000);
+                    await hub.StartAsync();
+                    break;
+                }
+                catch (Exception e)
+                {
+                    _logger.LogWarning("Cannot connect to hub channel {Channel} on subscribe. Reason: {Reason}", channel, e.GetMeaningfulMessage());
+                }
+            }
         }
     }
 

@@ -11,6 +11,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
 using Optosense.Edm.WebApi.Utils;
 using Newtonsoft.Json;
+using Microsoft.Extensions.Logging;
 
 namespace Optosense.Edm.Core.AspNet
 {
@@ -46,13 +47,12 @@ namespace Optosense.Edm.Core.AspNet
         public static void AddOperationIntercom(this IHostApplicationBuilder builder)
         {
             var options = builder.Configuration.GetSection("Edm:Intercom").Get<IntercomOptions>();
-            IIntercom intercome = options?.Kind switch
+            builder.Services.AddSingleton<IIntercom>(provider => options?.Kind switch
             {
-                IntercomOptions.Kinds.SignalR => new EdmIntercom(options),
+                IntercomOptions.Kinds.SignalR => new EdmIntercom(options, provider.GetService<ILogger<EdmIntercom>>()),
                 IntercomOptions.Kinds.Redis => new RedisCache(options.ConnectionString),
                 _ => default
-            };
-            builder.Services.AddSingleton(intercome);
+            });
         }
     }
 
