@@ -34,10 +34,12 @@ namespace Optosense.Edm.Profiles.Board
             var parameters = profile
                 .SelectMany(c => c.Instructions?
                     .SelectMany(i => Regex.Matches(i.Instruction?.Syntax ?? string.Empty, @"\?<(\w+?)>")
-                        .Select(m => m.Groups[1].Value))
+                        .Select(m => m.Groups[1].Value) ?? 
+                        Enumerable.Empty<string>())
                     .Concat(c.Instructions?
                         .SelectMany(i => Regex.Matches(i.Instruction?.Code ?? string.Empty, @"{(\w+?)}"))
-                            .Select(m => m.Groups[1].Value)))
+                            .Select(m => m.Groups[1].Value)) ??
+                        Enumerable.Empty<string>())
                 .Distinct()
                 .OrderBy(p => p)
                 .ToList();
