@@ -3,18 +3,23 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microprojects.Edm;
 using Microprojects.Edm.Cache;
 using Microprojects.Edm.Cache.Redis;
 using Microprojects.Edm.Intercom;
 using Microprojects.Edm.Jobs;
+using Microprojects.Edm.Utils;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Connections;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -32,7 +37,6 @@ using Optosense.Edm.Persistence;
 using Optosense.Edm.WebApi;
 using Optosense.Edm.WebApi.Services;
 using Optosense.Edm.WebApi.Utils;
-using static System.Collections.Specialized.BitVector32;
 
 var options = new WebApplicationOptions
 {
@@ -41,7 +45,8 @@ var options = new WebApplicationOptions
 };
 
 var builder = WebApplication.CreateBuilder(options);
-builder.WebHost.ConfigureLogging(configureLogging => configureLogging.AddFilter<EventLogLoggerProvider>(level => level >= LogLevel.Warning));
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>(); 
+builder.WebHost.ConfigureLogging(configureLogging => configureLogging.AddFilter<EventLogLoggerProvider>(level => level >= LogLevel.Information));
 
 builder.Services.AddDbContextPool<EdmContext>(options =>
     options.UseSqlServer(
@@ -124,7 +129,7 @@ builder.Services.AddHostedService<Worker>()
     {
         config.LogName = "Microprojects";
         config.SourceName = "EDM Service";
-    });
+    }).Configure<HostOptions>(options => options. BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore);
 builder.Host.UseWindowsService();
 
 var app = builder.Build();
@@ -159,14 +164,26 @@ else
     app.UseAuthenticatedUserInfo();
 }
 
-app.UseEndpoints(endpoints =>
-{
-    endpoints.MapGrpcService<EdmJobService>().AllowAnonymous();
-});
-
-
+app.MapGrpcService<EdmJobService>().AllowAnonymous();
 app.MapHub<IntercomHub>(IntercomHub.Hub).AllowAnonymous();
 app.MapGet("/status", () => "I AM ALIVE!");
 app.MapSpaPlugins();
 
 await app.RunAsync();
+
+internal sealed class GlobalExceptionHandler : IExceptionHandler
+{
+    private readonly ILogger<GlobalExceptionHandler> _logger;
+
+    public GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger)
+    {
+        _logger = logger;
+    }
+
+    public ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
+    {
+        _logger.LogError(exception, "Global exception occurred: {Message}", exception.GetMeaningfulMessage());
+
+        return ValueTask.FromResult(false);
+    }
+}
