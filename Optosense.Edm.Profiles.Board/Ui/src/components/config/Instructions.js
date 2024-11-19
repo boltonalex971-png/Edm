@@ -81,6 +81,9 @@ export function InstructionDetail({ instruction, ...props }) {
                                 <Field name={"syntax"} component={Input} label={"Syntax template"} />
                             </div>
                             <div className="mb-1">
+                                <Field name={"length"} component={NumericTextBox} label={"Response length"} />
+                            </div>
+                            <div className="mb-1">
                                 <Field name={"timeout"} component={NumericTextBox} label={"Timeout"} />
                             </div>
                             <div className="mb-1">

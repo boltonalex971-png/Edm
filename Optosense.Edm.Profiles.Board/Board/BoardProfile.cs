@@ -35,6 +35,7 @@ namespace Optosense.Edm.Profiles.Board
         public string Description { get; set; }
         public string Code { get; set; }
         public string Syntax { get; set; }
+        public int? Length { get; set; }
         public int Timeout { get; set; }
         public int? Retries { get; set; }
 

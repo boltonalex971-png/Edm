@@ -68,10 +68,10 @@ namespace Optosense.Edm.Drivers.Mux
             {
                 var bytes = Port.Request(
                         command,
-                        responseLength: 0,
+                        responseLength: request.Instruction?.Length ?? 0,
                         singleLine: true,
                         timeout: request.Instruction?.Timeout ?? 500,
-                        retries: request.Instruction.Retries ?? 0);
+                        retries: request.Instruction?.Retries ?? 0);
 
                 if (instruction == "KZ?")
                 {
