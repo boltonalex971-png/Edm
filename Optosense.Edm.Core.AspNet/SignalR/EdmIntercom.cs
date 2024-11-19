@@ -47,39 +47,46 @@ namespace Optosense.Edm.WebApi.Utils
 
         private async Task BackgroundSend()
         {
-            await StartHubConnection(HubConnection, "Main");
+            await StartHubConnection(HubConnection, $"{Options.Principal}/{IntercomHub.Hub}");
             var random = new Random(DateTime.Now.Millisecond);
 
             // TODO add cancellation token for Intercom dispose with cached records check
             while (true)
             {
-                var tokenSource = new CancellationTokenSource();
-                EventHandler handler = (s, e) => tokenSource.Cancel();
-                _messagePublished += handler;
-                tokenSource.Token.Register(() => _messagePublished -= handler);
-                await Task.Delay(-1, tokenSource.Token).ContinueWith(t => { });
-
-                while (Cache.TryPeek(out var record))
+                try
                 {
-                    await HubConnection.InvokeAsync(nameof(IntercomHub.Publish), record.Item1, record.Item2)
-                        .ContinueWith(async t =>
-                        {
-                            if (t.IsCompletedSuccessfully)
+                    var tokenSource = new CancellationTokenSource();
+                    EventHandler handler = (s, e) => tokenSource.Cancel();
+                    _messagePublished += handler;
+                    tokenSource.Token.Register(() => _messagePublished -= handler);
+                    await Task.Delay(-1, tokenSource.Token).ContinueWith(t => { });
+
+                    while (Cache.TryPeek(out var record))
+                    {
+                        await HubConnection.InvokeAsync(nameof(IntercomHub.Publish), record.Item1, record.Item2)
+                            .ContinueWith(async t =>
                             {
-                                Cache.TryDequeue(out var deq);
-                            }
-                            else if (t.IsFaulted)
-                            {
-                                var ex = t.Exception;
-                                await Task.Delay(random.Next(100, 1000));
-                                _logger.LogError("Sending message to channel {Channel} failed. Reason:\n{Reason}", record.Item1, t.Exception.GetMeaningfulMessage());
-                            }
-                            else
-                            {
-                                var ex = t.IsCanceled;
-                                _logger.LogDebug("Sending message to channel {Channel} was cancelled", record.Item1);
-                            }
-                        });
+                                if (t.IsCompletedSuccessfully)
+                                {
+                                    Cache.TryDequeue(out var deq);
+                                }
+                                else if (t.IsFaulted)
+                                {
+                                    var ex = t.Exception;
+                                    await Task.Delay(random.Next(100, 1000));
+                                    _logger.LogError("Sending message to channel {Channel} failed. Reason:\n{Reason}", record.Item1, t.Exception.GetMeaningfulMessage());
+                                }
+                                else
+                                {
+                                    var ex = t.IsCanceled;
+                                    _logger.LogWarning("Sending message to channel {Channel} was cancelled", record.Item1);
+                                }
+                            });
+                    }
+                }
+                catch (Exception ex) 
+                { 
+                    _logger.LogError("Error happened during background publishing: {Message}", ex.GetMeaningfulMessage());
                 }
             }
         }
@@ -120,18 +127,18 @@ namespace Optosense.Edm.WebApi.Utils
 
         private async Task StartHubConnection(HubConnection hub, string channel, Exception ex = null)
         {
-            while (true)
+            while (hub.State != HubConnectionState.Connected)
             {
                 try
                 {
-                    await Task.Delay(new Random().Next(0, 5) * 1000);
                     await hub.StartAsync();
-                    break;
                 }
                 catch (Exception e)
                 {
                     _logger.LogWarning("Cannot connect to hub channel {Channel} on subscribe. Reason: {Reason}", channel, e.GetMeaningfulMessage());
                 }
+
+                await Task.Delay(new Random().Next(0, 5) * 1000);
             }
         }
     }
