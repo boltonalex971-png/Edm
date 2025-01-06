@@ -227,8 +227,15 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         [HttpDelete("{id:int}/processes/{procId:int}")]
         public async Task<bool> DetachProcess(int id, int procId)
         {
-            var wasDetached = await _workplaceService.DetachProcess(id, procId);
-            return wasDetached;
+            try
+            {
+                var wasDetached = await _workplaceService.DetachProcess(id, procId);
+                return wasDetached;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         [HttpGet("processes")]
