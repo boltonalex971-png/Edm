@@ -47,7 +47,6 @@ namespace Optosense.Edm.WebApi.Utils
 
         private async Task BackgroundSend()
         {
-            await StartHubConnection(HubConnection, $"{Options.Principal}/{IntercomHub.Hub}");
             var random = new Random(DateTime.Now.Millisecond);
 
             // TODO add cancellation token for Intercom dispose with cached records check
@@ -63,6 +62,11 @@ namespace Optosense.Edm.WebApi.Utils
 
                     while (Cache.TryPeek(out var record))
                     {
+                        if (HubConnection.State != HubConnectionState.Connected)
+                        {
+                            await StartHubConnection(HubConnection, $"{Options.Principal}/{IntercomHub.Hub}");
+                        }
+
                         await HubConnection.InvokeAsync(nameof(IntercomHub.Publish), record.Item1, record.Item2)
                             .ContinueWith(async t =>
                             {
@@ -127,19 +131,26 @@ namespace Optosense.Edm.WebApi.Utils
 
         private async Task StartHubConnection(HubConnection hub, string channel, Exception ex = null)
         {
+            _logger.LogInformation("Connecting to hub channel {Channel}", channel);
             while (hub.State != HubConnectionState.Connected)
             {
                 try
                 {
-                    await hub.StartAsync();
+                    if (hub.State == HubConnectionState.Disconnected)
+                    {
+                        await hub.StartAsync();
+                    }
+                    else
+                    {
+                        await Task.Delay(new Random().Next(0, 5) * 1000);
+                    }
                 }
                 catch (Exception e)
                 {
                     _logger.LogWarning("Cannot connect to hub channel {Channel} on subscribe. Reason: {Reason}", channel, e.GetMeaningfulMessage());
                 }
-
-                await Task.Delay(new Random().Next(0, 5) * 1000);
             }
+            _logger.LogInformation("Successfully connected to hub channel {Channel}", channel);
         }
     }
 
