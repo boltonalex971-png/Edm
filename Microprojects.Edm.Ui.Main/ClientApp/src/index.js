@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom';
 import { BrowserRouter } from 'react-router-dom';
 import { ApiContext } from './ApiContext';
 import App from './App';
-import registerServiceWorker from './registerServiceWorker';
+//import registerServiceWorker from './registerServiceWorker';
 import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
 import store from './store'
@@ -20,5 +20,5 @@ root.render(
     </Provider>
 )
 
-registerServiceWorker();
+//registerServiceWorker();
 
