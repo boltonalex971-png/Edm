@@ -12,6 +12,12 @@ using Microsoft.Extensions.Configuration;
 using Optosense.Edm.WebApi.Utils;
 using Newtonsoft.Json;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Builder;
+using Optosense.Edm.Persistence;
+using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.AspNetCore.Hosting.Server;
+using Microprojects.Edm;
+using System.Net;
 
 namespace Optosense.Edm.Core.AspNet
 {
@@ -52,6 +58,20 @@ namespace Optosense.Edm.Core.AspNet
                 IntercomOptions.Kinds.SignalR => new EdmIntercom(options, provider.GetService<ILogger<EdmIntercom>>()),
                 IntercomOptions.Kinds.Redis => new RedisCache(options.ConnectionString),
                 _ => default
+            });
+        }
+
+        public static void UsePeer(this WebApplication app) {
+            app.Use( (context, next) =>
+            {
+                using var scope = app.Services.CreateScope();
+                var peerOptions = scope.ServiceProvider.GetRequiredService<IOptions<Peer>>();   
+                var server = scope.ServiceProvider.GetRequiredService<IServer>();
+                // This will include *all* configured addresses, whether they are from appsettings.json, launchSettings.json, ASPNETCORE_URLS environment variable, --urls command line arg, or the UseUrls extension method
+                var addresses = server.Features.Get<IServerAddressesFeature>();
+                var addr = context.Features.Get<IServerAddressesFeature>();
+                var name = Dns.GetHostName();
+                return next();
             });
         }
     }

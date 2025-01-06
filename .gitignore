@@ -364,3 +364,4 @@ Microprojects.Edm.Ui.Main/ClientApp/kendo-ui-license.txt
 /Optosense.Edm.WebApi/appsettings.Development.json
 /Optosense.Edm.Drivers.RestApi/ui-driver/package-lock.json
 /Optosense.Edm.Drivers.RestApi/ui-driver/kendo-ui-license.txt
+/Optosense.Edm.WebApi/Properties/launchSettings.json

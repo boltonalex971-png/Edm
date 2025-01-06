@@ -45,23 +45,29 @@ var options = new WebApplicationOptions
 };
 
 var builder = WebApplication.CreateBuilder(options);
-builder.Services.AddExceptionHandler<GlobalExceptionHandler>(); 
-builder.WebHost.ConfigureLogging(configureLogging => configureLogging.AddFilter<EventLogLoggerProvider>(level => level >= LogLevel.Information));
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
-builder.Services.AddDbContextPool<EdmContext>(options =>
+builder.Services.AddDbContextPool<EdmContext>((provider, options) =>
+{
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("Edm"),
         sqlOptions => sqlOptions
             .MigrationsAssembly("Optosense.Edm.DataAccess")
-            .UseCompatibilityLevel(120)), // This is workaround for EF 8 and "Contains" problem
-    poolSize: 128);
-builder.Services.AddPooledDbContextFactory<EdmContext>(options =>
+            .UseCompatibilityLevel(120)); // This is workaround for EF 8 and "Contains" problem
+    var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
+    options.UseLoggerFactory(loggerFactory);
+}, poolSize: 128);
+builder.Services.AddPooledDbContextFactory<EdmContext>((provider, options) =>
+{
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("Edm"),
         sqlOptions => sqlOptions
         .MigrationsAssembly("Optosense.Edm.DataAccess")
-        .UseCompatibilityLevel(120)),
-    poolSize: 16);
+        .UseCompatibilityLevel(120));
+    var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
+    options.UseLoggerFactory(loggerFactory);
+}, poolSize: 16);
 
 builder.Services.Configure<IntercomOptions>(builder.Configuration.GetSection("Edm:Intercom"));
 builder.Services.Configure<Peer>(options =>
@@ -129,10 +135,12 @@ builder.Services.AddHostedService<Worker>()
     {
         config.LogName = "Microprojects";
         config.SourceName = "EDM Service";
-    }).Configure<HostOptions>(options => options. BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore);
+    }).Configure<HostOptions>(options => options.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore);
 builder.Host.UseWindowsService();
 
 var app = builder.Build();
+
+app.UsePeer();
 
 if (builder.Configuration.GetValue<string>("Edm:Mode") == "admin" && app.Environment.IsDevelopment())
 {
@@ -163,7 +171,7 @@ else
 {
     app.UseAuthenticatedUserInfo();
 }
-
+app.UseExceptionHandler();
 app.MapGrpcService<EdmJobService>().AllowAnonymous();
 app.MapHub<IntercomHub>(IntercomHub.Hub).AllowAnonymous();
 app.MapGet("/status", () => "I AM ALIVE!");
@@ -174,16 +182,30 @@ await app.RunAsync();
 internal sealed class GlobalExceptionHandler : IExceptionHandler
 {
     private readonly ILogger<GlobalExceptionHandler> _logger;
+    private readonly IProblemDetailsService _problemDetailsService;
 
-    public GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger)
+    public GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger, IProblemDetailsService problemDetailsService)
     {
         _logger = logger;
+        _problemDetailsService = problemDetailsService;
     }
 
-    public ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
+    public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {
-        _logger.LogError(exception, "Global exception occurred: {Message}", exception.GetMeaningfulMessage());
-
-        return ValueTask.FromResult(false);
+        var problemDetails = new ProblemDetails
+        {
+            Type = "Bad request",
+            Status = StatusCodes.Status400BadRequest,
+            Title = exception.GetType().Name,
+            Detail = exception.GetMeaningfulMessage(),
+            Instance = $"{httpContext.Request.Method} {httpContext.Request.Path}"
+        };
+        _logger.LogError(exception, "{Type}: {Instance} {Message}", problemDetails.Type, problemDetails.Instance, problemDetails.Detail);
+        httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
+        return await _problemDetailsService.TryWriteAsync(new ProblemDetailsContext
+        {
+            ProblemDetails = problemDetails,
+            HttpContext = httpContext
+        });
     }
 }
