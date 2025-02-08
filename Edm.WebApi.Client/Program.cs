@@ -41,7 +41,7 @@ namespace Edm.WebApi.Client
             //var parameters = new StartOperationCommandParameters {
             //    DbConnectionString = @"Data Source=.\SQLEXPRESS;MultipleActiveResultSets=true;Initial Catalog=optosense_edm;Integrated Security=SSPI;",
             //    Operation = 1,
-            //    StartAt = DateTime.Now.AddSeconds(5)
+            //    StartAt = DateTime.UtcNow.AddSeconds(5)
             //};
             //var reply = await client.ExecuteCommandAsync(
             //                  new CommandParams

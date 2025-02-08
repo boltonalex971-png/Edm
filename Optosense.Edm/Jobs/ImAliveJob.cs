@@ -35,7 +35,7 @@ namespace Optosense.Edm.Jobs
                 });
             var issuer = new Timer(async state =>
             {
-                PeerOptions.Value.Timestamp = DateTime.Now;
+                PeerOptions.Value.Timestamp = DateTime.UtcNow;
                 await Intercom.Publish(Parameters.Channel, PeerOptions.Value);
             }, null, 0, (int)Container.Hive.Alive.TotalMilliseconds);
             try

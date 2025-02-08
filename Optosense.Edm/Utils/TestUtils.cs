@@ -44,7 +44,7 @@ namespace Optosense.Edm.Utils
         //            .OrderBy(ts => ts.Address)
         //            .Select(ts => new { Location = ts, ts.Sensor })
         //            .GroupBy(s => new { s.Location.Host, s.Location.Port });
-        //        DateTime startTime = startAt ?? DateTime.Now + TimeSpan.FromSeconds(10);
+        //        DateTime startTime = startAt ?? DateTime.UtcNow + TimeSpan.FromSeconds(10);
         //        DateTime execTime = startTime;
         //        int maxSensorCount = ports.Max(p => p.Count());
         //        var result = new List<Record>();
@@ -227,7 +227,7 @@ namespace Optosense.Edm.Utils
         //public static IEnumerable<Record> CreateProfilePlan(Device device, Profile profile, int stageId, string host, DateTime? startAt = null)
         //{
 
-        //    var startTime = startAt ?? DateTime.Now + TimeSpan.FromSeconds(10);
+        //    var startTime = startAt ?? DateTime.UtcNow + TimeSpan.FromSeconds(10);
         //    var plan = new List<Record>();
         //    var type = ((int) DeviceType.Gas & (int) device.Type) != 0 ? DeviceType.Gas :
         //        ((int) DeviceType.Temperature & (int) device.Type) != 0 ? DeviceType.Temperature :

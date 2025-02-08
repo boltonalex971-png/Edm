@@ -91,9 +91,10 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         }
 
         [HttpPost("{id:int}/start")]
-        public async Task<Operation> Start(int id, [FromBody] DateTime? startAt)
+        public async Task<Operation> Start(int id, [FromBody] DateTimeOffset? startAt)
         {
-            var operation = await _operationService.Start(id, (startAt ?? DateTime.Now).ToLocalTime());
+            var startTime = startAt?.UtcDateTime ?? DateTime.UtcNow; 
+            var operation = await _operationService.Start(id, startTime);
             return operation;
         }
 

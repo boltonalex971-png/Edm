@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { useEffect } from 'react';
 import { useGet } from '../hooks/hooks';
 import Axios from 'axios';
+import {utcDateToLocal} from "../utils/Utils";
 
 export function OperationMenu({ process, to, ...props }) {
     const [collapsed, setCollapsed] = useState(true);
@@ -67,17 +68,22 @@ function OperationToolbar({ operationId, apiBase, onStarted, onCompleted, onCanc
     const startAtInput = useRef();
 
     const state = useMemo(() => status?.state, [status]);
-    const date = useMemo(() => status?.stateTimestamp, [status]);
+    const date = useMemo(() => utcDateToLocal(status?.stateTimestamp), [status]);
 
     const onStart = () => {
-        const startAt = startAtInput.current.value;
+        const currentDate = new Date(); 
+        const specifiedDate = startAtInput.current.value;
+        const startAt = specifiedDate > currentDate ? specifiedDate : currentDate;
         startBtn.current.element.setAttribute('disabled', 'disabled');
         statusLbl.current.textContent = 'Starting...';
         Axios.post(`${apiBase}/${operationId}/start`, startAt)
             .then((response) => {
                 setRefresh(!refresh);
             })
-            .catch((error) => alert(error));
+            .catch((error) => {
+                startBtn.current.element.setAttribute('disabled', false);
+                statusLbl.current.textContent = 'Start';
+            });
     };
     const onStop = () => {
         if (window.confirm('Confirm operation cancelling')) {
@@ -127,8 +133,7 @@ function OperationToolbar({ operationId, apiBase, onStarted, onCompleted, onCanc
                 {state === 'Idle' &&
                     <DateTimePicker
                         ref={startAtInput}
-                        min={new Date()}
-                        defaultValue={new Date(date)}
+                        placeholder={'Now'}
                         format={'dd MMMM HH:mm'}
                     />
                 }

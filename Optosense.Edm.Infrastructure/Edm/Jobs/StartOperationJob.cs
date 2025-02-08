@@ -174,7 +174,7 @@ namespace Optosense.Edm.Jobs
     {
         [JobParameter(Required = true)]
         public int Operation { get; set; }
-        public DateTime StartAt { get; set; } = DateTime.Now.AddSeconds(10);
+        public DateTime StartAt { get; set; } = DateTime.UtcNow.AddSeconds(10);
     }
 
 }

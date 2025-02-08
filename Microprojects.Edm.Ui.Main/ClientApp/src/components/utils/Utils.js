@@ -76,3 +76,14 @@ export function dateToHumanSpan(dateToConvert) {
 
     return result;
 }
+
+export function utcDateToLocal(utcDate) {
+    if (!utcDate){
+        return;
+    }
+
+    const utc = new Date(utcDate);
+    const offset = utc.getTimezoneOffset();
+    const date = new Date(utc.getTime() - offset * 60 * 1000);
+    return date;
+}

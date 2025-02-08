@@ -35,8 +35,8 @@ namespace Optosense.Edm.Core.Models
         public int Elapsed { get; set; }
         public string Message { get; set; }
         public string Error { get; set; }
-        public DateTime Timestamp { get; set; } = DateTime.Now;
-        public DateTime StateTimestamp { get; set; } = DateTime.Now;
+        public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+        public DateTime StateTimestamp { get; set; } = DateTime.UtcNow;
 
     }
 }

@@ -73,7 +73,7 @@ namespace Optosense.Edm.Utils
             CancellationToken? cancellationToken = null)
         {
             var token = cancellationToken ?? CancellationToken.None;
-            var startedAt = DateTime.Now;
+            var startedAt = DateTime.UtcNow;
             var task = plan.ToObservable()
                 .Pace(p => TimeSpan.FromMilliseconds(p.Offset))
                 .ObserveOn(NewThreadScheduler.Default)
@@ -114,7 +114,7 @@ namespace Optosense.Edm.Utils
             CancellationToken? cancellationToken = null)
         {
             var token = cancellationToken ?? CancellationToken.None;
-            var startedAt = DateTime.Now;
+            var startedAt = DateTime.UtcNow;
             var task = plan.ToObservable()
                 .Pace(driver, condition, action)
                 .ObserveOn(NewThreadScheduler.Default)

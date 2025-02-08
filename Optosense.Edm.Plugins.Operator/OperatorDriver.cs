@@ -21,7 +21,7 @@ namespace Optosense.Edm.Drivers.Operator
         public Func<DriverResponse, bool, Task>? PushResponse { get; set; }
 
         private OperatorState? _state;
-        private DateTime _startTs = DateTime.Now;
+        private DateTime _startTs = DateTime.UtcNow;
         private CancellationTokenSource _tokenSource;
         private DriverResponse _response;
 
@@ -64,7 +64,7 @@ namespace Optosense.Edm.Drivers.Operator
             _state = state;
             if (_state != null)
             {
-                _state.Scheduled = DateTime.Now;
+                _state.Scheduled = DateTime.UtcNow;
             }
         }
 
@@ -88,7 +88,7 @@ namespace Optosense.Edm.Drivers.Operator
         {
             var response = new DriverResponse
             {
-                Executed = (long)(DateTime.Now - _startTs).TotalMilliseconds,
+                Executed = (long)(DateTime.UtcNow - _startTs).TotalMilliseconds,
                 State = DriverResponseState.Ok
             };
 

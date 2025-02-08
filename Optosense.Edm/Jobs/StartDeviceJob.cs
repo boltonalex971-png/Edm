@@ -97,10 +97,10 @@ namespace Optosense.Edm.Jobs
                             var name = param.Key[1..];
                             if (Parameters.OutputParameters.Contains(name) && _driver is IParamProvider)
                             {
-                                var planned = DateTime.Now;
+                                var planned = DateTime.UtcNow;
                                 var result = await (_driver as IParamProvider).GetParam(name);
                                 result.Planned = (long)(planned - _startTime).TotalMilliseconds;
-                                result.Executed = (long)(DateTime.Now - _startTime).TotalMilliseconds;
+                                result.Executed = (long)(DateTime.UtcNow - _startTime).TotalMilliseconds;
                                 await PushResponse(result);
                             }
 
@@ -125,7 +125,7 @@ namespace Optosense.Edm.Jobs
 
         public override async Task<object> ExecuteAsync()
         {
-            _startTime = DateTime.Now;
+            _startTime = DateTime.UtcNow;
             await _executionPlan.Launch(
                 _driver,
                 MeetCondition,
@@ -237,7 +237,7 @@ namespace Optosense.Edm.Jobs
             {
                 Param = param.Key,
                 Value = _inputParams[param.Key],
-                ArrivedAt = DateTime.Now
+                ArrivedAt = DateTime.UtcNow
             });
         }
 
@@ -334,7 +334,7 @@ namespace Optosense.Edm.Jobs
         public string OutputParameters { get; set; }
         public string InitialParameters { get; set; }
         public Guid Driver { get; set; }
-        public DateTime StartAt { get; set; } = DateTime.Now.AddSeconds(10);
+        public DateTime StartAt { get; set; } = DateTime.UtcNow.AddSeconds(10);
     }
 
     public class InputParamArrivedEventArgs : EventArgs

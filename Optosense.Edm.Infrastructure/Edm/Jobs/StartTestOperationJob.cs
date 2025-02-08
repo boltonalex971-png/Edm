@@ -32,7 +32,7 @@ namespace Optosense.Edm.Jobs
 
         public override async Task<object> ExecuteAsync()
         {
-            var now = DateTime.Now;
+            var now = DateTime.UtcNow;
             var waitBeforeStart = now > Parameters.StartAt ? TimeSpan.Zero : Parameters.StartAt - now;
             var cancelled = false;
             var opHostDeviceId = 0;
@@ -53,8 +53,8 @@ namespace Optosense.Edm.Jobs
                     {
                         IsValid = true,
                         Status = ExecutionStatus.Succeed,
-                        ScheduledAt = DateTime.Now,
-                        ExecutedAt = DateTime.Now,
+                        ScheduledAt = DateTime.UtcNow,
+                        ExecutedAt = DateTime.UtcNow,
                         Message = string.Empty,
                         OperationHostDeviceId = opHostDeviceId,
                         Parameters = "{}",
@@ -73,7 +73,7 @@ namespace Optosense.Edm.Jobs
 
             using (var db = await ContextFactory.CreateDbContextAsync())
             {
-                now = DateTime.Now;
+                now = DateTime.UtcNow;
                 var operation = await db.Operations.FindAsync(Parameters.Operation);
                 if (cancelled)
                 {

@@ -47,7 +47,7 @@ namespace Optosense.Edm.WebApi.Utils
 
         private async Task BackgroundSend()
         {
-            var random = new Random(DateTime.Now.Millisecond);
+            var random = new Random(DateTime.UtcNow.Millisecond);
 
             // TODO add cancellation token for Intercom dispose with cached records check
             while (true)

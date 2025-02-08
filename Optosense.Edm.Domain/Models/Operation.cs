@@ -11,7 +11,7 @@ namespace Optosense.Edm.Domain.Models
     {
         public int? WorkbenchId { get; set; }
         public int? WorkplaceProcessId { get; set; }
-        public DateTime Created { get; set; } = DateTime.Now;
+        public DateTime Created { get; set; } = DateTime.UtcNow;
         public DateTime? Scheduled { get; set; }
         public DateTime? Started { get; set; }
         public DateTime? Completed { get; set; }

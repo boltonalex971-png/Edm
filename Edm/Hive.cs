@@ -44,7 +44,7 @@ namespace Microprojects.Edm
 
         public IEnumerable<Peer> GetActivePeers()
         {
-            return GetPeers().Where(p => DateTime.Now - p.Timestamp < Suspended);
+            return GetPeers().Where(p => DateTime.UtcNow - p.Timestamp < Suspended);
         }
     }
 }

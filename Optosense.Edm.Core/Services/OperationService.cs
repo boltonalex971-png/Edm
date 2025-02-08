@@ -44,12 +44,6 @@ namespace Optosense.Edm.Core.Services
                     .FirstOrDefaultAsync(wb => wb.Id == operation.WorkbenchId)
                     ?? throw new ArgumentException("No workbench found");
                 var devices = wb.DeviceConfigurations;
-                    //await Db.WorkbenchDeviceConfigurations
-                    //.Include(d => d.WorkplaceHostDevice)
-                    //.Where(d => wb.DeviceConfigurations
-                    //                        .Select(c => c.Id)
-                    //                        .Contains(d.Id))
-                    //.ToListAsync();
                 operation.Devices = devices
                     .Select(c => new OperationHostDevice
                     {
@@ -60,6 +54,8 @@ namespace Optosense.Edm.Core.Services
                     .ToList();
                 operation.WorkplaceProcessId = wb.WorkplaceProcessId;
             }
+
+            operation.Created = DateTime.UtcNow;
             var result = Db.Operations.Add(operation);
             await Db.SaveChangesAsync();
             return result.Entity;
@@ -181,7 +177,7 @@ namespace Optosense.Edm.Core.Services
                     _ => OperationState.Idle
                 }
             };
-            if (status.State == OperationState.InProgress && DateTime.Now - operation.Started > TimeSpan.FromMinutes(10))
+            if (status.State == OperationState.InProgress && DateTime.UtcNow - operation.Started > TimeSpan.FromMinutes(10))
             {
                 // Check if operation is really performing
                 try
@@ -202,7 +198,7 @@ namespace Optosense.Edm.Core.Services
                 OperationState.InProgress => operation.Started.Value,
                 OperationState.Scheduled => operation.Scheduled.Value,
                 OperationState.Idle => operation.Created,
-                OperationState.Faulted => DateTime.Now
+                OperationState.Faulted => DateTime.UtcNow
             };
 
             var (valid, message) = await GetResult(operation.Id);
@@ -226,7 +222,7 @@ namespace Optosense.Edm.Core.Services
         public async Task<Operation> StopOperation(int operationId)
         {
             var result = await Get(operationId);
-            result.Cancelled = DateTime.Now;
+            result.Cancelled = DateTime.UtcNow;
             await Db.SaveChangesAsync();
             Db.Entry(result).State = EntityState.Detached;
             return result;
@@ -235,7 +231,7 @@ namespace Optosense.Edm.Core.Services
         public async Task<Operation> CompleteOperation(int operationId)
         {
             var result = await Get(operationId);
-            result.Completed = DateTime.Now;
+            result.Completed = DateTime.UtcNow;
             await Db.SaveChangesAsync();
             Db.Entry(result).State = EntityState.Detached;
             return result;

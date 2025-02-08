@@ -198,7 +198,7 @@ namespace Optosense.Edm.Jobs
         /// Id of <code>Optosense.Edm.Domain.Models.OperationHostDevice</code> which Audit belongs to.
         /// </summary>
         public int Device { get; set; }
-        public DateTime StartAt { get; set; } = DateTime.Now;
+        public DateTime StartAt { get; set; } = DateTime.UtcNow;
         public string Channel { get; set; }
         public string ParametersChannel { get; set; }
 
