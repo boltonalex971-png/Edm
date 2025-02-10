@@ -5,7 +5,7 @@ import {
 } from 'reactstrap';
 import api from '../api';
 import { useGet } from '../hooks/hooks';
-import { Loading, dateToSpan, dateToHumanSpan } from '../utils/Utils';
+import {Loading, dateToSpan, dateToHumanSpan, utcDateToLocal} from '../utils/Utils';
 import { Link } from 'react-router-dom';
 import Axios from 'axios';
 
@@ -29,12 +29,14 @@ const Operations = () => {
                                 <CardTitle><Link to={`/operations/${o.id}`} target='_blank'><h5>{o.processName}</h5></Link></CardTitle>
                                 <CardSubtitle>{o.processDescription}</CardSubtitle>
                                 <CardText>
-                                    <span title={dateToSpan(o.created)}>Created {dateToHumanSpan(o.created)} ago</span><br />
+                                    <span title={dateToSpan(utcDateToLocal(o.created))}>
+                                        Created {dateToHumanSpan(utcDateToLocal(o.created))}
+                                    </span><br />
                                     {o.started &&
-                                        <span title={dateToSpan(o.started)}>Started {dateToHumanSpan(o.started)} ago</span>
+                                        <span title={dateToSpan(utcDateToLocal(o.started))}>Started {dateToHumanSpan(utcDateToLocal(o.started))}</span>
                                     }<br />
                                     {o.completed &&
-                                        <span title={dateToSpan(o.completed)}>Completed {dateToHumanSpan(o.completed)} ago</span>
+                                        <span title={dateToSpan(utcDateToLocal(o.completed))}>Completed {dateToHumanSpan(utcDateToLocal(o.completed))}</span>
                                     }<br />
                                 </CardText>
                             </CardBody>

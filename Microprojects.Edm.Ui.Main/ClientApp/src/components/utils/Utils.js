@@ -69,12 +69,12 @@ export function dateToHumanSpan(dateToConvert) {
     const hours = Math.floor(span / dividerToSeconds / 60 / 60 % 24);
     const minutes = Math.floor(span / dividerToSeconds / 60 % 60);
     const seconds = Math.floor(span / dividerToSeconds % 60);
-    const result = days && (days == 1 ? 'yesterday' : `${days} days`) ||
-        hours && (hours == 1 ? 'an hour' : `${hours} hours`) ||
-        minutes && (minutes == 1 ? 'a minute' : `${minutes} minutes`) ||
-        seconds && (seconds == 1 ? 'a second' : `${seconds} seconds`);
+    const result = days && (days === 1 ? 'yesterday' : `${days} days`) ||
+        hours && (hours === 1 ? 'an hour' : `${hours} hours`) ||
+        minutes && (minutes === 1 ? 'a minute' : `${minutes} minutes`) ||
+        seconds && (seconds === 1 ? 'a second' : `${seconds} seconds`);
 
-    return result;
+    return `${result}${days !== 1 ? ' ago' : ''}`;
 }
 
 export function utcDateToLocal(utcDate) {
