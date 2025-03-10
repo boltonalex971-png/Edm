@@ -57,7 +57,7 @@ namespace Optosense.Edm.Jobs
                         ExecutedAt = DateTime.UtcNow,
                         Message = string.Empty,
                         OperationHostDeviceId = opHostDeviceId,
-                        Parameters = "{}",
+                        Parameters = [],
                         Request = $"instrunction #{count}",
                         Response = "Well done",
                         Info = $"Some info about operation #{count}"

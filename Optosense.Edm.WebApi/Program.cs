@@ -54,7 +54,7 @@ builder.Services.AddDbContextPool<EdmContext>((provider, options) =>
         builder.Configuration.GetConnectionString("Edm"),
         sqlOptions => sqlOptions
             .MigrationsAssembly("Optosense.Edm.DataAccess")
-            .UseCompatibilityLevel(120)); // This is workaround for EF 8 and "Contains" problem
+            .UseCompatibilityLevel(140)); // This is workaround for EF 8 and "Contains" problem
     var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
     options.UseLoggerFactory(loggerFactory);
 }, poolSize: 128);
@@ -64,7 +64,7 @@ builder.Services.AddPooledDbContextFactory<EdmContext>((provider, options) =>
         builder.Configuration.GetConnectionString("Edm"),
         sqlOptions => sqlOptions
         .MigrationsAssembly("Optosense.Edm.DataAccess")
-        .UseCompatibilityLevel(120));
+        .UseCompatibilityLevel(140));
     var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
     options.UseLoggerFactory(loggerFactory);
 }, poolSize: 16);

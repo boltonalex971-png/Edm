@@ -18,14 +18,14 @@ namespace Optosense.Edm.Domain.Models
 
         public DateTime ScheduledAt { get; set; }
         public DateTime ExecutedAt { get; set; }
-        public string Parameters { get; set; }
+        public Dictionary<string, object> Parameters { get; set; }
         public string /*byte[]*/ Request { get; set; }
         public string /*byte[]*/ Response { get; set; }
         public string Info { get; set; }
         public ExecutionStatus Status { get; set; }
         public bool IsValid { get; set; }
         public string Message { get; set; }
-
+        
         public OperationHostDevice Device { get; set; }
         public ICollection<RecordOperationCriterion> Criteria { get; set; }
     }

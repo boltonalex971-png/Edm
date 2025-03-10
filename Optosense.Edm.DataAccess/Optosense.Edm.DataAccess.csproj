@@ -22,4 +22,8 @@
     <ProjectReference Include="..\Optosense.Edm.Domain\Optosense.Edm.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Scripts\" />
+  </ItemGroup>
+
 </Project>

@@ -203,12 +203,12 @@ namespace Optosense.Edm.Jobs
                 Response = response.Response,
                 IsValid = response.State == DriverResponseState.Ok,
                 Message = response.Message,
-                Parameters = response.Parameters,
+                Parameters = JsonConvert.DeserializeObject<Dictionary<string, object>>(response.Parameters ?? "{}"), //response.Parameters,
                 Status = (ExecutionStatus)response.State,
                 OperationHostDeviceId = Parameters.OperationHostDevice,
             };
             await Intercom.Publish(Parameters.StoreChannel, rec);
-            var output = JsonConvert.DeserializeObject<IDictionary<string, object>>(string.IsNullOrEmpty(rec.Parameters) ? "{}" : rec.Parameters);
+            var output = rec.Parameters; //JsonConvert.DeserializeObject<IDictionary<string, object>>(string.IsNullOrEmpty(rec.Parameters) ? "{}" : rec.Parameters);
             foreach (var param in output)
             {
                 if (_outputParams.ContainsKey(param.Key) || param.Key == "Stop")

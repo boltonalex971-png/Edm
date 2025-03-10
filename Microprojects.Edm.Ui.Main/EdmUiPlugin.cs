@@ -13,6 +13,8 @@ using Optosense.Edm.Plugins;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Microprojects.Edm.Ui.Main.Contracts;
+using Microprojects.Edm.Ui.Main.Services;
 
 namespace Microprojects.Edm.Ui.Main
 {
@@ -35,6 +37,8 @@ namespace Microprojects.Edm.Ui.Main
             services.AddScoped<IProfileService, ProfileService>();
             services.AddScoped<IOperationService, OperationService>();
             services.AddScoped<ISettingService, SettingService>();
+
+            services.AddScoped<ISensorService, SensorService>();
         }
     }
 }

@@ -28,7 +28,7 @@ namespace Optosense.Edm.Persistence
         public DbSet<WorkbenchWorkplaceHostDevice> WorkbenchDeviceConfigurations { get; set; }
         public DbSet<Workplace> Workplaces { get; set; }
         public DbSet<WorkplaceHostDevice> WorkplaceHostDevices { get; set; }
-        public DbSet<WorkplaceProcess> WorkplaceProcesses{ get; set; }
+        public DbSet<WorkplaceProcess> WorkplaceProcesses { get; set; }
 
         public EdmContext(DbContextOptions<EdmContext> options) : base(options)
         {
@@ -38,6 +38,8 @@ namespace Optosense.Edm.Persistence
         {
             base.OnModelCreating(modelBuilder);
             modelBuilder.Entity<Audit>().HasMany(a => a.Qualifiers).WithMany();
+
+            modelBuilder.Entity<Record>().OwnsOne(r => r.Parameters).ToJson();
         }
     }
 }

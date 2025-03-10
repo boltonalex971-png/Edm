@@ -94,7 +94,7 @@ namespace Optosense.Edm.Jobs
                     var effectiveZones = audit.Where(z => IsActive(z, currentOffset));
                     foreach (var zone in effectiveZones)
                     {
-                        var recordParams = JsonConvert.DeserializeObject<Dictionary<string, object>>(rec.Parameters ?? "{}");
+                        var recordParams = rec.Parameters; 
                         // Select criteria with existing parameter
                         foreach (var criterion in zone.Criteria.Where(c => recordParams.ContainsKey(c.Param)))
                         {
@@ -114,12 +114,13 @@ namespace Optosense.Edm.Jobs
                                             .Select(c => c.Record.Parameters)
                                             .ToListAsync();
                                         var values = recs
-                                            .Select(r => (string)JsonConvert.DeserializeObject<dynamic>(r)[criterion.Param]).ToList();
+                                            .Select(r => r[criterion.Param].ToString())
+                                            .ToList();
                                         return values;
                                     }, expireAt: TimeSpan.FromDays(10)))
                                     .ToList();
                             // Add new value to cache
-                            var value = (string)JsonConvert.DeserializeObject<dynamic>(rec.Parameters)[criterion.Param];
+                            var value = rec.Parameters[criterion.Param].ToString();
                             values.Add(value);
                             Cache.Push(key, value);
                             // check

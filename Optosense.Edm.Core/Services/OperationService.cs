@@ -198,7 +198,7 @@ namespace Optosense.Edm.Core.Services
                 OperationState.InProgress => operation.Started.Value,
                 OperationState.Scheduled => operation.Scheduled.Value,
                 OperationState.Idle => operation.Created,
-                OperationState.Faulted => DateTime.UtcNow
+                _ => DateTime.UtcNow
             };
 
             var (valid, message) = await GetResult(operation.Id);
