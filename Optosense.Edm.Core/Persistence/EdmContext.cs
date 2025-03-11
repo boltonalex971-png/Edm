@@ -2,7 +2,7 @@
 using Optosense.Edm.Domain.Models;
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Text.Json;
 
 namespace Optosense.Edm.Persistence
 {
@@ -39,7 +39,15 @@ namespace Optosense.Edm.Persistence
             base.OnModelCreating(modelBuilder);
             modelBuilder.Entity<Audit>().HasMany(a => a.Qualifiers).WithMany();
 
-            modelBuilder.Entity<Record>().OwnsOne(r => r.Parameters).ToJson();
+            modelBuilder.Entity<Record>()
+                .Property(e => e.Parameters)
+                .HasColumnType("jsonb")
+                .HasConversion(
+                    d => JsonSerializer.Serialize(d, JsonSerializerOptions.Default),
+                    s => JsonSerializer.Deserialize<Dictionary<string, object>>(s, JsonSerializerOptions.Default)
+                );
+            // TODO .ToJson() does not properly process Dictionaries 
+            //modelBuilder.Entity<Record>().OwnsOne(r => r.Parameters).ToJson();
         }
     }
 }

@@ -3,10 +3,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microprojects.Edm.Ui.Main.Contracts;
 using Microprojects.Edm.Ui.Main.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Microprojects.Edm.Ui.Main.Api;
 
+[AllowAnonymous]
 [ApiController]
 [Route("api/[controller]")]
 public class SensorsController(ISensorService sensorService) : ControllerBase
