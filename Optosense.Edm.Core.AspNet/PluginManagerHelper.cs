@@ -41,6 +41,8 @@ public static class PluginManagerHelper
         builder.Use(async (context, next) =>
         {
             if (!context.User.Identity.IsAuthenticated && 
+                // Not Sensor API call
+                !context.Request.Path.StartsWithSegments($"/api/sensors") &&
                 // Not an intercom call
                 !context.Request.Path.StartsWithSegments($"/{IntercomHub.Hub}") &&
                 // Not a gRPC call

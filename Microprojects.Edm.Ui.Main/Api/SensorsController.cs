@@ -19,6 +19,12 @@ public class SensorsController(ISensorService sensorService) : ControllerBase
         return "Ok";
     }
     
+    [HttpGet("{sn:int}")]
+    public async Task<SensorMeasureModel> GetSensorMeasures(int sn)
+    {
+        return (await sensorService.FindSensorMeasures(sn, null, null, null)).FirstOrDefault();
+    }
+
     [HttpPost]
     public async Task<IEnumerable<SensorMeasureModel>> FindSensorMeasures(SensorMeasureSearchModel model)
     {
