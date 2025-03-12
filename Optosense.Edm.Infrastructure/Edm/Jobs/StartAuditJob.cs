@@ -9,7 +9,6 @@ using Microprojects.Edm.Utils;
 using Newtonsoft.Json;
 using Optosense.Edm.Utils;
 using System.Diagnostics;
-using Optosense.Edm.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Optosense.Edm.Infrastructure.Edm;
 using System.Dynamic;
@@ -71,7 +70,7 @@ namespace Optosense.Edm.Jobs
         public override async Task<object> ExecuteAsync()
         {
             bool completed = false;
-            IEnumerable<AuditZone> audit = default;
+            IEnumerable<AuditZone> audit;
             using (var db = await ContextFactory.CreateDbContextAsync()) 
             {
                 var service = new AuditService(db);
@@ -100,7 +99,7 @@ namespace Optosense.Edm.Jobs
                         {
                             var auditFunc = AuditFunctions.Function(criterion.Function);
                             // take cached zone values list
-                            var selector = recordParams.ContainsKey("ADDR") ? (string)recordParams["ADDR"] : string.Empty;
+                            var selector = recordParams.ContainsKey("ADDR") ? recordParams["ADDR"].ToString() : string.Empty;
                             var key = CacheKey(Parameters.Operation, criterion.Id, selector);
                             var values = (await Cache.GetRangeAsync<string>(key,
                                     async () =>

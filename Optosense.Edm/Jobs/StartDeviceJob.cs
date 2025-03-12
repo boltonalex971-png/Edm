@@ -6,7 +6,6 @@ using Microprojects.Edm.Jobs;
 using Microprojects.Edm.Utils;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Optosense.Edm.Domain.Models;
 using Optosense.Edm.Plugins;
 using Optosense.Edm.Utils;
 using System;
@@ -195,7 +194,7 @@ namespace Optosense.Edm.Jobs
 
         private async Task PushResponse(DriverResponse response, bool throwEx = false)
         {
-            var rec = new Record
+            var rec = new DeviceResponse
             {
                 ScheduledAt = _startTime + TimeSpan.FromMilliseconds(response.Planned),
                 ExecutedAt = _startTime + TimeSpan.FromMilliseconds(response.Executed),
@@ -203,12 +202,13 @@ namespace Optosense.Edm.Jobs
                 Response = response.Response,
                 IsValid = response.State == DriverResponseState.Ok,
                 Message = response.Message,
-                Parameters = JsonConvert.DeserializeObject<Dictionary<string, object>>(response.Parameters ?? "{}"), //response.Parameters,
-                Status = (ExecutionStatus)response.State,
+                Parameters = response.Parameters,
+                Status = response.State,
                 OperationHostDeviceId = Parameters.OperationHostDevice,
             };
             await Intercom.Publish(Parameters.StoreChannel, rec);
-            var output = rec.Parameters; //JsonConvert.DeserializeObject<IDictionary<string, object>>(string.IsNullOrEmpty(rec.Parameters) ? "{}" : rec.Parameters);
+            var output = JsonConvert.DeserializeObject<IDictionary<string, object>>(
+                string.IsNullOrEmpty(response.Parameters) ? "{}" : response.Parameters);
             foreach (var param in output)
             {
                 if (_outputParams.ContainsKey(param.Key) || param.Key == "Stop")
@@ -224,9 +224,9 @@ namespace Optosense.Edm.Jobs
                 }
             }
 
-            if (throwEx && !rec.IsValid)
+            if (throwEx && response.State != DriverResponseState.Ok)
             {
-                throw new EdmException(rec.Message);
+                throw new EdmException(response.Message);
             }
         }
 

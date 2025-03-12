@@ -1,6 +1,5 @@
 ﻿using Microprojects.Edm.Drivers;
 using Newtonsoft.Json;
-using Optosense.Edm.Domain.Models;
 using Optosense.Edm.Profiles.Board;
 using System;
 using System.Collections;
@@ -51,22 +50,18 @@ namespace Optosense.Edm.Drivers.Mux
                     iteratedParam = KeyValuePair.Create("None", (object)Enumerable.Range(0, 1));
                 }
 
-                var parameters = availableParams
-                    .Where(p => requiredParams.Contains(p.Key));
                 var offset = command.Offset * 60; // Command offset in minutes
                 foreach (var iterParam in iteratedParam.Value as IEnumerable)
                 {
                     foreach (var ci in commandInstructions)
                     {
                         var purifiedArgs = Regex.Replace(ci.Args ?? string.Empty, @"{([\w\d]+)\?*}", @"""{$1}""");
-                        var args = JsonConvert.DeserializeObject<ExpandoObject>($"{{{purifiedArgs}}}");
+                        var args = JsonConvert.DeserializeObject<Dictionary<string, object>>($"{{{purifiedArgs}}}");
                         var reqs = Regex.Matches(ci.Args ?? string.Empty, @"{([\w\d]*)\?{1}}").Select(m => m.Groups[1].Value);
                         var instParams = GetRequiredParams(ci.Instruction)
                             .Select(p => KeyValuePair
                                 .Create(p, p == iteratedParam.Key ? iterParam 
-                                    : ((IDictionary<string, object>)availableParams).ContainsKey(p) ? 
-                                        ((IDictionary<string, object>) availableParams)[p] :
-                                        ((IDictionary<string, object>)args)[p]))
+                                    : availableParams.ContainsKey(p) ? availableParams[p] : args[p]))
                             .ToDictionary(p => p.Key, p => p.Value);
                         yield return new BoardDriverRequest
                         {

@@ -11,9 +11,6 @@ using Optosense.Edm.Plugins;
 using Optosense.Edm.Core.AspNet.Controllers;
 using Microprojects.Edm.Ui.Main.Models;
 using Microprojects.Edm.Ui.Main.Utils;
-using Newtonsoft.Json;
-using Optosense.Edm.DataAccess.Migrations;
-using Optosense.Edm.Core.Services;
 using Microsoft.Extensions.Configuration;
 
 namespace Microprojects.Edm.Ui.Main.Controllers

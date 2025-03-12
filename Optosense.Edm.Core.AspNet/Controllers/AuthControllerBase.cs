@@ -12,11 +12,11 @@ using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Core.Models;
 using Optosense.Edm.Domain.Models;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Primitives;
 using System.Security.Claims;
 using System.Security.Principal;
 using System.Runtime.Versioning;
 using Optosense.Edm.Core.AspNet.Auth;
-using Microsoft.IdentityModel.Tokens;
 
 namespace Optosense.Edm.Core.AspNet.Controllers
 {
@@ -29,8 +29,8 @@ namespace Optosense.Edm.Core.AspNet.Controllers
         {
             get
             {
-                if (!Request.Headers["Origin"].ToString().IsNullOrEmpty() && 
-                    !Request.Headers["Origin"].ToString().EndsWith(Request.Headers["Host"]))
+                if (!string.IsNullOrEmpty(Request.Headers.Origin.ToString()) && 
+                    !Request.Headers.Origin.ToString().EndsWith(Request.Headers.Host))
                 {
                     return new UserInfo();
                 }

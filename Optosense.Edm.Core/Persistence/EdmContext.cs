@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using Optosense.Edm.Domain.Models;
 using System;
 using System.Collections.Generic;
-using System.Text.Json;
 
 namespace Optosense.Edm.Persistence
 {
@@ -43,8 +43,8 @@ namespace Optosense.Edm.Persistence
                 .Property(e => e.Parameters)
                 .HasColumnType("jsonb")
                 .HasConversion(
-                    d => JsonSerializer.Serialize(d, JsonSerializerOptions.Default),
-                    s => JsonSerializer.Deserialize<Dictionary<string, object>>(s, JsonSerializerOptions.Default)
+                    d => JsonConvert.SerializeObject(d),
+                    s => JsonConvert.DeserializeObject<Dictionary<string, object>>(s)
                 );
             // TODO .ToJson() does not properly process Dictionaries 
             //modelBuilder.Entity<Record>().OwnsOne(r => r.Parameters).ToJson();

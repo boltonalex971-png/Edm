@@ -1,7 +1,6 @@
 ﻿using Microprojects.Edm.Drivers;
 using Microprojects.Edm.Utils;
 using Microsoft.Extensions.Logging;
-using Optosense.Edm.Domain.Models;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -11,6 +10,7 @@ using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
 using System.Threading;
 using System.Threading.Tasks;
+using Optosense.Edm.Jobs;
 
 namespace Optosense.Edm.Utils
 {
@@ -54,8 +54,8 @@ namespace Optosense.Edm.Utils
             });
         }
 
-        public static IDisposable Start(this IEnumerable<Record> plan,
-            Action<Record> action, Action completedAction = null, Action<Exception> errorAction = null)
+        public static IDisposable Start(this IEnumerable<DeviceResponse> plan,
+            Action<DeviceResponse> action, Action completedAction = null, Action<Exception> errorAction = null)
         {
             return plan.ToObservable()
                 .Pace(ie => ie.ScheduledAt)

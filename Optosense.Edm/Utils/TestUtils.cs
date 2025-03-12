@@ -7,8 +7,6 @@ using System.Threading.Tasks;
 using Optosense.Edm.Drivers;
 using Newtonsoft.Json;
 using System.Text.RegularExpressions;
-using Optosense.Edm.Domain.Models;
-using Optosense.Edm.DataAccess;
 
 namespace Optosense.Edm.Utils
 {

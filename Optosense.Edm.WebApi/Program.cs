@@ -91,6 +91,9 @@ builder.AddCache();
 builder.AddOperationIntercom();
 builder.Services.AddGrpc();
 builder.Services.AddSignalR();
+builder.Services.AddControllers().AddNewtonsoftJson(o =>
+{
+});
 builder.Services.AddPlugins(config =>
 {
     config.BaseDirectory = AppContext.BaseDirectory;

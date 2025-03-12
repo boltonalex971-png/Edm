@@ -43,6 +43,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Edm\Edm.csproj" />
     <ProjectReference Include="..\Optosense.Edm.Core.AspNet\Optosense.Edm.Core.AspNet.csproj" />
+    <ProjectReference Include="..\Optosense.Edm.DataAccess\Optosense.Edm.DataAccess.csproj" />
     <ProjectReference Include="..\Optosense.Edm.Infrastructure\Optosense.Edm.Infrastructure.csproj" />
   </ItemGroup>
 

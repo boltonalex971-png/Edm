@@ -1,18 +1,12 @@
-﻿using Microprojects.Edm.Cache;
-using Microprojects.Edm.Cache.Redis;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Core.Infrastructure;
 using Optosense.Edm.Core.Services;
-using Optosense.Edm.DataAccess;
 using Optosense.Edm.Infrastructure.Edm;
 using Optosense.Edm.Jobs;
 using Optosense.Edm.Plugins;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using Microprojects.Edm.Ui.Main.Contracts;
 using Microprojects.Edm.Ui.Main.Services;
 
