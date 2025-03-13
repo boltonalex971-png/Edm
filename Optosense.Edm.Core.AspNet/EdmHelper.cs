@@ -74,6 +74,8 @@ namespace Optosense.Edm.Core.AspNet
                 return next();
             });
         }
+
+        public static void UseJobs(this WebApplication app) => app.Services.GetRequiredService<IJobContainer>().Start();
     }
 
     public enum CacheKinds

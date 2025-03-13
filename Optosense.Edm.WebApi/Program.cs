@@ -133,13 +133,13 @@ else
     builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
 }
 
+builder.Services.AddWindowsService();
 builder.Services.AddHostedService<Worker>()
     .Configure<EventLogSettings>(config =>
     {
         config.LogName = "Microprojects";
         config.SourceName = "EDM Service";
     }).Configure<HostOptions>(options => options.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore);
-builder.Host.UseWindowsService();
 
 var app = builder.Build();
 
@@ -154,9 +154,7 @@ if (builder.Configuration.GetValue<string>("Edm:Mode") == "admin" && app.Environ
     }
 }
 
-var jobContainer = app.Services.GetService<IJobContainer>();
-jobContainer.Start();
-
+app.UseJobs();
 app.JsonConfigure();
 app.UseCors("DevCorsPolicy");
 

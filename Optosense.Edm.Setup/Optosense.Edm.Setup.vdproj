@@ -117,12 +117,6 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_7ADF7070F2AF27667A1892FA209ADEF2"
-        "OwnerKey" = "8:_C49A2E9237896F019D1A444656B72770"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_87832F9C524143F696DC26626386A609"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -393,7 +387,7 @@
                 {
                 "Name" = "8:.NET Core"
                 "Message" = "8:[VSDNETCOREMSG]"
-                "FrameworkVersion" = "8:8.0 "
+                "FrameworkVersion" = "8:8.0  "
                 "AllowLaterVersions" = "11:FALSE"
                 "InstallUrl" = "8:https://dotnet.microsoft.com/download/dotnet-core/[NetCoreVerMajorDotMinor]"
                 "IsNETCore" = "11:TRUE"
@@ -1055,15 +1049,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:Edm"
-        "ProductCode" = "8:{1EF965D1-7D74-42E4-9CE3-5B7ADC81DF62}"
-        "PackageCode" = "8:{6D1C078C-79CD-4438-A4FA-F933FE22666B}"
+        "ProductCode" = "8:{1A5918C8-7F12-460C-AE6C-409FF29065A2}"
+        "PackageCode" = "8:{2E137AC0-8995-4CBE-A3DD-05DD1A17E5AB}"
         "UpgradeCode" = "8:{0B59587D-B902-4F08-AFAE-4BB253F5EFE8}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:TRUE"
-        "ProductVersion" = "8:1.12.5"
+        "ProductVersion" = "8:1.13.0"
         "Manufacturer" = "8:Microprojects"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
@@ -1508,7 +1502,7 @@
                             "ContextData" = "8:"
                             "Attributes" = "3:0"
                             "Setting" = "3:2"
-                            "Value" = "8:http://localhost:16331"
+                            "Value" = "8:https://ps.optosense.local:16332"
                             "DefaultValue" = "8:"
                             "UsePlugInResources" = "11:TRUE"
                             }
@@ -1573,7 +1567,7 @@
                             "ContextData" = "8:1;True=1;False=0"
                             "Attributes" = "3:0"
                             "Setting" = "3:0"
-                            "Value" = "3:1"
+                            "Value" = "3:0"
                             "DefaultValue" = "3:1"
                             "UsePlugInResources" = "11:TRUE"
                             }
@@ -1625,7 +1619,7 @@
                             "ContextData" = "8:1;True=1;False=0"
                             "Attributes" = "3:0"
                             "Setting" = "3:0"
-                            "Value" = "3:1"
+                            "Value" = "3:0"
                             "DefaultValue" = "3:1"
                             "UsePlugInResources" = "11:TRUE"
                             }
@@ -1786,7 +1780,7 @@
                             "ContextData" = "8:1;True=1;False=0"
                             "Attributes" = "3:0"
                             "Setting" = "3:0"
-                            "Value" = "3:1"
+                            "Value" = "3:0"
                             "DefaultValue" = "3:1"
                             "UsePlugInResources" = "11:TRUE"
                             }

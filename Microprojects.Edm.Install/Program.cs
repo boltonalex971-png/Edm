@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Net;
 //System.Diagnostics.Debugger.Launch();
 var stage = args[0];
 var options = args[1..]
@@ -29,14 +30,21 @@ void Install(Dictionary<string, string?> options)
     };
     cmd.Start();
 
+    // Define DNS name of target host
+    var protocol = "https";
+    var hostName = Dns.GetHostEntry(Dns.GetHostName()).HostName;
+    var consolePort = 16332;
+    var grpcPort = 16334;
+
     // Fix appsettings.json according choosen installation options
     var settingsPath = $"{_targetDir}\\appsettings.json";
     var settings = File.ReadAllText(settingsPath);
     //settings = settings.Replace("[CACHECONNECTIONSTRING]", options["cache"]);
     settings = settings.Replace("[DBCONNECTIONSTRING]", options["db"]?.Replace("\\", "\\\\"));
     settings = settings.Replace("[PRINCIPALURL]", options["principalUrl"]);
-    settings = settings.Replace("[CONSOLEURL]", options["consoleUrl"]);
-    settings = settings.Replace("[GRPCURL]", options["grpcUrl"]);
+    settings = settings.Replace("[CONSOLEURL]", $"{protocol}://{hostName}:{consolePort}"); //options["consoleUrl"]);
+    settings = settings.Replace("[GRPCURL]", $"{protocol}://{hostName}:{grpcPort}"); //options["grpcUrl"]);
+    settings = settings.Replace("[HOSTNAME]", hostName); //options["mode"]);
     settings = settings.Replace("[MODE]", options["mode"]);
     File.WriteAllText(settingsPath, settings);
     File.Delete($"{_targetDir}\\appsettings.Production.json");
