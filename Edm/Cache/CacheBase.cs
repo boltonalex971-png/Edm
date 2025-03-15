@@ -94,20 +94,5 @@ namespace Microprojects.Edm.Cache
             var result = keys.Select(k => Get(k.ToString())).ToList();
             return result;
         }
-
-        public virtual IDisposable Subscribe<T>(string channel, Action<T> onNext)
-        {
-            throw new NotImplementedException();
-        }
-
-        public virtual IDisposable Subscribe(string channel, Action<object> onNext)
-        {
-            throw new NotImplementedException();
-        }
-
-        public virtual Task<long> Publish<T>(string channel, T message)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

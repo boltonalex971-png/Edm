@@ -80,6 +80,7 @@ namespace Optosense.Edm.Jobs
             var subscriber = Intercom.Subscribe<Record>(Parameters.Channel,
                 onNext: async rec =>
                 {
+                    // TODO Cache coming record to avoid loosing it and handle them later
                     // TODO Use RX to filter records
                     if (rec.OperationHostDeviceId != Parameters.Device)
                     {
@@ -101,8 +102,7 @@ namespace Optosense.Edm.Jobs
                             // take cached zone values list
                             var selector = recordParams.ContainsKey("ADDR") ? recordParams["ADDR"].ToString() : string.Empty;
                             var key = CacheKey(Parameters.Operation, criterion.Id, selector);
-                            var values = (await Cache.GetRangeAsync<string>(key,
-                                    async () =>
+                            var values = (await Cache.GetRangeAsync<object>(key,async () =>
                                     {
                                         var recs = await db.RecordOperationCriteria
                                             .Include(c => c.Record)
@@ -113,13 +113,13 @@ namespace Optosense.Edm.Jobs
                                             .Select(c => c.Record.Parameters)
                                             .ToListAsync();
                                         var values = recs
-                                            .Select(r => r[criterion.Param].ToString())
+                                            .Select(r => r[criterion.Param])
                                             .ToList();
                                         return values;
                                     }, expireAt: TimeSpan.FromDays(10)))
                                     .ToList();
                             // Add new value to cache
-                            var value = rec.Parameters[criterion.Param].ToString();
+                            var value = rec.Parameters[criterion.Param];
                             values.Add(value);
                             Cache.Push(key, value);
                             // check

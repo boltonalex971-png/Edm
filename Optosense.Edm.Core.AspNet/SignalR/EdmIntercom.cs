@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -23,7 +24,7 @@ namespace Optosense.Edm.WebApi.Utils
 
         private readonly Task _worker;
         private readonly ILogger<EdmIntercom> _logger;
-        private event EventHandler _messagePublished;
+        private event EventHandler MessagePublished;
 
         public EdmIntercom(IntercomOptions options, ILogger<EdmIntercom> logger)
         {
@@ -40,7 +41,7 @@ namespace Optosense.Edm.WebApi.Utils
         {
             Cache.Enqueue((channel, message));
             // Awake BackgroundSend if sleep
-            _messagePublished?.Invoke(this, EventArgs.Empty);
+            MessagePublished?.Invoke(this, EventArgs.Empty);
 
             return Task.FromResult<long>(0);
         }
@@ -50,15 +51,20 @@ namespace Optosense.Edm.WebApi.Utils
             var random = new Random(DateTime.UtcNow.Millisecond);
 
             // TODO add cancellation token for Intercom dispose with cached records check
+            CancellationTokenSource tokenSource = null;
             while (true)
             {
                 try
                 {
-                    var tokenSource = new CancellationTokenSource();
-                    EventHandler handler = (s, e) => tokenSource.Cancel();
-                    _messagePublished += handler;
-                    tokenSource.Token.Register(() => _messagePublished -= handler);
-                    await Task.Delay(-1, tokenSource.Token).ContinueWith(t => { });
+                    if (tokenSource is null || tokenSource.TryReset() == false)
+                    {
+                        tokenSource = new CancellationTokenSource();
+                        EventHandler handler = (s, e) => tokenSource.Cancel();
+                        MessagePublished += handler;
+                        tokenSource.Token.Register(() => MessagePublished -= handler);
+                    }
+
+                    await Task.Delay(1000, tokenSource.Token).ContinueWith(t => { });
 
                     while (Cache.TryPeek(out var record))
                     {
@@ -76,9 +82,16 @@ namespace Optosense.Edm.WebApi.Utils
                                 }
                                 else if (t.IsFaulted)
                                 {
-                                    var ex = t.Exception;
+                                    _logger.LogError("Sending message to channel {Channel} failed.\nPayload: {Data}\nReason: {Reason}",
+                                        record.Item1, JsonConvert.SerializeObject(record.Item2), t.Exception.GetMeaningfulMessage());
+
+                                    // TODO Detect service packets to avoid collecting them in cache
+                                    if (record.Item1.Contains("Edm-Lifecycle"))
+                                    {
+                                        Cache.TryDequeue(out var deq);
+                                    }
+
                                     await Task.Delay(random.Next(100, 1000));
-                                    _logger.LogError("Sending message to channel {Channel} failed. Reason:\n{Reason}", record.Item1, t.Exception.GetMeaningfulMessage());
                                 }
                                 else
                                 {
@@ -95,7 +108,10 @@ namespace Optosense.Edm.WebApi.Utils
             }
         }
 
-        public IDisposable Subscribe<T>(string channel, Action<T> onNext)
+        public IDisposable Subscribe<T>(string channel, 
+            Action<T> onNext, 
+            Action<Exception> onError = null, 
+            Action onCompleted = null)
         {
             var obs = Observable.Create<T>(async observer =>
             {
@@ -107,21 +123,27 @@ namespace Optosense.Edm.WebApi.Utils
                 {
                     if (ex != null)
                     {
+                        observer.OnError(ex);
                         await StartHubConnection(connection, channel, ex);
                     }
+                    else
+                    {
+                        observer.OnCompleted();
+                    }
                 };
-                connection.On<T>("Receive", (message) =>
-                {
-                    onNext(message);
-                });
+                connection.On<T>("Receive", onNext);
                 await StartHubConnection(connection, channel);
                 await connection.InvokeAsync(nameof(IntercomHub.Subscribe), channel);
                 return Disposable.Create(async () =>
                 {
                     await connection.StopAsync();
                 });
-            }).Subscribe(onNext);
+            }).Subscribe(onNext, onError ?? NoError, onCompleted ?? NoCompleted);
+
             return obs;
+
+            void NoCompleted() => _logger.LogInformation("Subscription to {Channel} completed successfully", channel);
+            void NoError(Exception ex) => _logger.LogInformation("Subscription to {Channel} failed: \n\n{Exception}", channel, ex.GetFullInfo());
         }
 
         public IDisposable Subscribe(string channel, Action<object> onNext)
@@ -131,25 +153,34 @@ namespace Optosense.Edm.WebApi.Utils
 
         private async Task StartHubConnection(HubConnection hub, string channel, Exception ex = null)
         {
-            _logger.LogInformation("Connecting to hub channel {Channel}", channel);
-            while (hub.State != HubConnectionState.Connected)
+            if (ex is null)
             {
-                try
-                {
-                    if (hub.State == HubConnectionState.Disconnected)
-                    {
-                        await hub.StartAsync();
-                    }
-                    else
-                    {
-                        await Task.Delay(new Random().Next(0, 5) * 1000);
-                    }
-                }
-                catch (Exception e)
-                {
-                    _logger.LogWarning("Cannot connect to hub channel {Channel} on subscribe. Reason: {Reason}", channel, e.GetMeaningfulMessage());
-                }
+                _logger.LogInformation("Connecting to hub channel {Channel}", channel);
             }
+            else
+            {
+                _logger.LogWarning("Reconnecting to hub channel {Channel} after failure:\n\n{Exception}", 
+                    channel, ex.GetFullInfo());
+            }
+            while (hub.State != HubConnectionState.Connected)
+                {
+                    try
+                    {
+                        if (hub.State == HubConnectionState.Disconnected)
+                        {
+                            await hub.StartAsync();
+                        }
+                        else
+                        {
+                            await Task.Delay(new Random().Next(0, 5) * 1000);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        _logger.LogWarning("Cannot connect to hub channel {Channel} on subscribe. Reason: {Reason}", channel, e.GetMeaningfulMessage());
+                    }
+                }
+
             _logger.LogInformation("Successfully connected to hub channel {Channel}", channel);
         }
     }

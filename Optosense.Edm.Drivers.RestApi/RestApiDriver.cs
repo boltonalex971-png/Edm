@@ -38,7 +38,7 @@ namespace Optosense.Edm.Drivers.RestApi
 
         public override string Stop()
         {
-            Debug.WriteLine("Serial stopping...");
+            Debug.WriteLine("RestApi driver stopping...");
             Dispose();
             return OK;
         }

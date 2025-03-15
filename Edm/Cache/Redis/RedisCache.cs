@@ -107,7 +107,7 @@ namespace Microprojects.Edm.Cache.Redis
                 .ToList();
         }
 
-        public override IDisposable Subscribe<T>(string channel, Action<T> onNext)
+        public IDisposable Subscribe<T>(string channel, Action<T> onNext, Action<Exception> onError = null, Action onCompleted = null)
         {
             var obs = Observable.Create<T>(async observer =>
             {
@@ -124,7 +124,7 @@ namespace Microprojects.Edm.Cache.Redis
             return obs;
         }
 
-        public override IDisposable Subscribe(string channel, Action<object> onNext)
+        public IDisposable Subscribe(string channel, Action<object> onNext)
         {
             var obs = Observable.Create<object>(async observer =>
             {
@@ -138,7 +138,7 @@ namespace Microprojects.Edm.Cache.Redis
             return obs;
         }
 
-        public override async Task<long> Publish<T>(string channel, T message)
+        public async Task<long> Publish<T>(string channel, T message)
         {
             var value = RedisValue.Unbox(JsonSerializer.Serialize(message));
             var listeners = await Db.PublishAsync(channel, value).ConfigureAwait(false);

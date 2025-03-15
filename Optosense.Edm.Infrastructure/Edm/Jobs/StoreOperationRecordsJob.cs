@@ -35,6 +35,7 @@ namespace Optosense.Edm.Jobs
             var subscription = Intercom.Subscribe<DeviceResponse>(Parameters.Channel,
                 onNext: async r =>
                 {
+                    // TODO Cache coming record to avoid loosing it and handle them later
                     var rec = new Record
                     {
                         ScheduledAt = r.ScheduledAt,

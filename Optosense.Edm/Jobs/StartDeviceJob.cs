@@ -33,10 +33,9 @@ namespace Optosense.Edm.Jobs
         private IEnumerable<DriverRequest> _executionPlan;
         private IDeviceDriver _driver;
         private IProfilePlugin _profilerPlugin;
-        private DateTime _startTime;
         // List of profile parameters for internal use
-        private Dictionary<string, object> _internalParams = new();
-        private Dictionary<string, object> _inputParams = new();
+        private Dictionary<string, object> _internalParams = [];
+        private Dictionary<string, object> _inputParams = [];
         private Dictionary<string, object> _outputParams;
         private IDisposable _subscriber;
 
@@ -97,9 +96,9 @@ namespace Optosense.Edm.Jobs
                             if (Parameters.OutputParameters.Contains(name) && _driver is IParamProvider)
                             {
                                 var planned = DateTime.UtcNow;
-                                var result = await (_driver as IParamProvider).GetParam(name);
-                                result.Planned = (long)(planned - _startTime).TotalMilliseconds;
-                                result.Executed = (long)(DateTime.UtcNow - _startTime).TotalMilliseconds;
+                                var result = await ((IParamProvider)_driver).GetParam(name);
+                                result.Planned = (long)(planned - Parameters.StartAt).TotalMilliseconds;
+                                result.Executed = (long)(DateTime.UtcNow - Parameters.StartAt).TotalMilliseconds;
                                 await PushResponse(result);
                             }
 
@@ -124,23 +123,30 @@ namespace Optosense.Edm.Jobs
 
         public override async Task<object> ExecuteAsync()
         {
-            _startTime = DateTime.UtcNow;
-            await _executionPlan.Launch(
-                _driver,
-                MeetCondition,
-                (d, x) => ExecuteDeviceInstruction(d, x),
-                _logger, CancellationToken)
-                .ContinueWith(t => { }); // To ignore cancel exception
-            if (CancellationToken.IsCancellationRequested)
+            var startTime = DateTime.UtcNow;
+            var delay = Parameters.StartAt < startTime ? -1 : (Parameters.StartAt - startTime).Milliseconds;
+            try
+            {
+                await Task.Delay(delay, CancellationToken);
+                await _executionPlan.Launch(
+                    _driver,
+                    MeetCondition,
+                    (d, x) => ExecuteDeviceInstruction(d, x),
+                    _logger, CancellationToken);
+                    //.ContinueWith(t => { }); // To ignore cancel exception
+            }
+            catch (TaskCanceledException) 
             {
                 // Release related audits and store jobs
                 await ExecuteDeviceInstruction(_driver, DriverRequests.Stop);
             }
-
-            _subscriber.Dispose();
-            if (_driver is IDisposable)
+            finally
             {
-                ((IDisposable)_driver).Dispose();
+                _subscriber.Dispose();
+                if (_driver is IDisposable)
+                {
+                    ((IDisposable)_driver).Dispose();
+                }
             }
 
             return "Ok";
@@ -167,7 +173,7 @@ namespace Optosense.Edm.Jobs
                     } while (!tokenSource.Token.IsCancellationRequested);
                 });
                 await MeetCondition(request.Until);
-                tokenSource.Cancel();
+                await tokenSource.CancelAsync();
                 await task.ContinueWith((t) => { });
             }
             else
@@ -196,8 +202,8 @@ namespace Optosense.Edm.Jobs
         {
             var rec = new DeviceResponse
             {
-                ScheduledAt = _startTime + TimeSpan.FromMilliseconds(response.Planned),
-                ExecutedAt = _startTime + TimeSpan.FromMilliseconds(response.Executed),
+                ScheduledAt = Parameters.StartAt + TimeSpan.FromMilliseconds(response.Planned),
+                ExecutedAt = Parameters.StartAt + TimeSpan.FromMilliseconds(response.Executed),
                 Request = response.Request,
                 Response = response.Response,
                 IsValid = response.State == DriverResponseState.Ok,
@@ -277,12 +283,22 @@ namespace Optosense.Edm.Jobs
                     }
                 };
                 InputParamArrived += handler;
-                #pragma warning disable CS4014 
+#pragma warning disable CS4014
                 // Do not need to wait
-                await PushOutputParameterAsync(new KeyValuePair<string, object>($"?{condition}", null));
-                #pragma warning restore CS4014 
+                await Task.Factory.ContinueWhenAll(
+                [
+                    Task.Delay(-1, cancellationSource.Token).ContinueWith(t => 
+                    {
+                        if (!t.IsCanceled)
+                        {
+                            PushInputParameter(new KeyValuePair<string, object>(condition, null));
+                        }
+                    }),
+                    Task.Delay(100).ContinueWith(t => PushOutputParameterAsync(new KeyValuePair<string, object>($"?{condition}", null)))
+                ], 
+                t => {});
+#pragma warning restore CS4014 
                 // TODO Cancel task by timeout
-                await Task.Delay(-1, cancellationSource.Token).ContinueWith(t => { });
                 InputParamArrived -= handler;
             }
             else if (!expr.TryEvaluate<bool>(_inputParams).value)

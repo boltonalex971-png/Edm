@@ -36,8 +36,7 @@ export const OperationInfo = (props) => {
                 axios.get(`${props.apiBase}/api/operations/${props.operationId}/records?lastRecordId=${lastId}`)
                     .then(r => {
                         setLastId(id => r.data.at(-1)?.id || id);
-                        console.log(r.data);
-                        const serials = r.data.filter(r => r.parameters[props.settings.serial]).map(r => r.parameters)
+                        const serials = r.data.filter(r => (r.parameters || {})[props.settings.serial]).map(r => r.parameters)
                         setSensors(sensors.map((s, i) => {
                             const f = serials.filter(r => parseInt(`0x${r.ADDR.slice(1)}`) === i).at(-1)
                             return f ? { ...s, serial: f[props.settings.serial] } : s

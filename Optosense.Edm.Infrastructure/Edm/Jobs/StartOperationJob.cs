@@ -45,6 +45,13 @@ namespace Optosense.Edm.Jobs
 
         public override async Task<object> ExecuteAsync()
         {
+            // Adjust operation start time
+            // TODO Move all device initializations to Init() method, run jobs from here.
+            //      RemoteJobs service must implement separate methods: first for create and init job, second must launch it
+            // TODO Make delay value configurable
+            var startTime = DateTime.UtcNow.AddSeconds(2); // 2 seconds should be enough to init all devices before start
+            startTime = startTime > Parameters.StartAt ? startTime : Parameters.StartAt;
+
             var running = new List<(string url, IJob job)>();
             var audits = new List<IJob>();
             // Launch execution result storage
@@ -80,7 +87,7 @@ namespace Optosense.Edm.Jobs
                         Operation = Parameters.Operation,
                         Channel = auditChannel,
                         ParametersChannel = parametersChannel,
-                        StartAt = Parameters.StartAt
+                        StartAt = startTime
                     };
                     var auditJob = new StartAuditJob { JobParameters = auditParams };
                     await JobManager.Execute(auditJob);
@@ -97,7 +104,7 @@ namespace Optosense.Edm.Jobs
                     DriverOptions = driverOptions,
                     Operation = Parameters.Operation,
                     OperationHostDevice = operationHostDevice.Id,
-                    StartAt = Parameters.StartAt,
+                    StartAt = startTime,
                     Profile = operationHostDevice.Profile.TextJson,
                     Profiler = operationHostDevice.Profile.ProfilerGuid,
                     StoreChannel = storeChannel,
@@ -118,8 +125,8 @@ namespace Optosense.Edm.Jobs
             do
             {
                 count = 0;
-                await Task.Delay(10000, CancellationToken)
-                    .ContinueWith(t => { }); // Avoid Cancelled exception
+                await Task.Delay(5000, CancellationToken)
+                    .ContinueWith(t => { }); // Avoid Canceled exception
                 foreach (var (url, job) in running)
                 {
                     IJob check = CancellationToken.IsCancellationRequested ? new StopJob(job) : new CheckJob(job);
@@ -171,7 +178,7 @@ namespace Optosense.Edm.Jobs
     {
         [JobParameter(Required = true)]
         public int Operation { get; set; }
-        public DateTime StartAt { get; set; } = DateTime.UtcNow.AddSeconds(10);
+        public DateTime StartAt { get; set; } = DateTime.UtcNow.AddSeconds(5);
     }
 
 }
