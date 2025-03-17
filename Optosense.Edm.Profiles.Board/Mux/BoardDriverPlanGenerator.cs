@@ -25,7 +25,7 @@ namespace Optosense.Edm.Drivers.Mux
             var profile = JsonConvert.DeserializeObject<BoardProfile>(profileJson);
             var availableParams = JsonConvert.DeserializeObject<Dictionary<string,object>>(paramJson ?? "{}");
             var profileRequiredParams = GetRequiredParams(profile);
-
+            
             // TODO Check if skipped parameter is in instruction args
             //var profileParamSkipped = profileRequiredParams
             //    .Where(p => ((IDictionary<string, object>) availableParams)[p] == null)
@@ -35,7 +35,6 @@ namespace Optosense.Edm.Drivers.Mux
             //    throw new EdmException($"Profile parameters [{string.Join(", ", profileParamSkipped)}] must be provided");
             //}
 
-            var offset = 0;
             foreach (var command in profile.OrderBy(c => c.Order))
             {
                 var commandInstructions = command.Instructions
@@ -51,7 +50,7 @@ namespace Optosense.Edm.Drivers.Mux
                     iteratedParam = KeyValuePair.Create("None", (object)Enumerable.Range(0, 1));
                 }
 
-                offset += command.Offset * 1000 * 60; // Command offset in minutes
+                var offset = command.Offset * 60; // Command offset in minutes
                 foreach (var iterParam in iteratedParam.Value as IEnumerable)
                 {
                     foreach (var ci in commandInstructions)
@@ -70,18 +69,19 @@ namespace Optosense.Edm.Drivers.Mux
                             Command = ci.Instruction.Code,
                             Parameters = JsonConvert.SerializeObject(instParams),
                             Instruction = ci.Instruction,
-                            Condition = reqs.Any() ? string.Join(",", reqs) : null
+                            // Condition offset in seconds
+                            // Instruction offset in milliseconds
+                            Condition = reqs.Count() > 0 ? string.Join(",", reqs) : (offset / 1000.0).ToString(CultureInfo.InvariantCulture)
                         };
-                        // Delay before to start new instruction
-                        offset += ci.Instruction.Timeout;
+                        // Delay before start new instruction
+                        offset = 1000;//ci.Instruction.Timeout;
                     }
                 }
             }
 
             yield return new DriverRequest
             {
-                Offset = offset + 100,
-                Condition = "1", // Wait a second before stop to give a chance to complete related services
+                Offset = 1000,
                 Command = "Stop",
             };
         }
