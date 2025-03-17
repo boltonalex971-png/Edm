@@ -124,7 +124,7 @@ namespace Optosense.Edm.Jobs
         public override async Task<object> ExecuteAsync()
         {
             var startTime = DateTime.UtcNow;
-            var delay = Parameters.StartAt < startTime ? -1 : (Parameters.StartAt - startTime).Milliseconds;
+            var delay = Parameters.StartAt < startTime ? 0 : (Parameters.StartAt - startTime).Milliseconds;
             try
             {
                 await Task.Delay(delay, CancellationToken);
@@ -156,7 +156,7 @@ namespace Optosense.Edm.Jobs
         {
             request.Parameters = SubstituteParameters(request.Parameters);
             // cyclic commands here: add repeat interval and stop condition to DriverRequest
-            if (request.Repeat != null && request.Repeat > 0)
+            if ((request.Repeat ?? 0) > 0)
             {
                 var tokenSource = new CancellationTokenSource();
                 var task = Task.Factory.StartNew(async () =>
@@ -171,10 +171,9 @@ namespace Optosense.Edm.Jobs
 
                         await Task.Delay(request.Repeat.Value * 1000, tokenSource.Token);
                     } while (!tokenSource.Token.IsCancellationRequested);
-                });
+                }).ContinueWith((t) => { }); // To ignore task cancel exception
                 await MeetCondition(request.Until);
                 await tokenSource.CancelAsync();
-                await task.ContinueWith((t) => { });
             }
             else
             {
@@ -202,8 +201,8 @@ namespace Optosense.Edm.Jobs
         {
             var rec = new DeviceResponse
             {
-                ScheduledAt = Parameters.StartAt + TimeSpan.FromMilliseconds(response.Planned),
-                ExecutedAt = Parameters.StartAt + TimeSpan.FromMilliseconds(response.Executed),
+                ScheduledAt = Parameters.StartAt.AddMilliseconds(response.Planned),
+                ExecutedAt = DateTime.UtcNow, 
                 Request = response.Request,
                 Response = response.Response,
                 IsValid = response.State == DriverResponseState.Ok,
