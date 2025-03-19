@@ -4,6 +4,7 @@ using Optosense.Edm.Plugins;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace Optosense.Edm.Drivers.Mux
 {
@@ -14,7 +15,7 @@ namespace Optosense.Edm.Drivers.Mux
         Description = "Controls 20-sockets MUX board",
         SpaPath = "MuxDriverUi/build", 
         UiRoot = "drivers/mux")]
-    public class MuxDriverPlugin : DriverPluginBase
+    public class MuxDriverPlugin : DriverPluginBase,  IAsyncPlanProvider
     {
         public override IDeviceDriver GetDriver() => new BoardDriverBase();
 
@@ -28,6 +29,19 @@ namespace Optosense.Edm.Drivers.Mux
                     .Select(a => $"#{a:X2}")
             );
             var plan = gen.GetTestPlan(profile, $"{{ADDR: {addr}}}");
+            return plan;
+        }
+
+        public IAsyncEnumerable<DriverRequest> GetAsyncPlan(string profile, string parameters, DateTime startedAt)
+        {
+            var gen = new BoardDriverPlanGenerator();
+            var availableParams = JsonConvert.DeserializeObject<BoardDriverOptions>(parameters);
+            var addr = JsonConvert.SerializeObject(
+                Enumerable
+                    .Range(0, availableParams.Capacity)
+                    .Select(a => $"#{a:X2}")
+            );
+            var plan = gen.GetAsyncPlan(profile, $"{{ADDR: {addr}}}", startedAt);
             return plan;
         }
     }

@@ -49,9 +49,8 @@ namespace Optosense.Edm.Jobs
             // TODO Move all device initializations to Init() method, run jobs from here.
             //      RemoteJobs service must implement separate methods: first for create and init job, second must launch it
             // TODO Make delay value configurable
-            var startTime = DateTime.UtcNow.AddSeconds(2); // 2 seconds should be enough to init all devices before start
+            var startTime = DateTime.UtcNow.AddSeconds(2); // 1 seconds should be enough to init all devices before start
             startTime = startTime > Parameters.StartAt ? startTime : Parameters.StartAt;
-
             var running = new List<(string url, IJob job)>();
             var audits = new List<IJob>();
             // Launch execution result storage
@@ -138,20 +137,18 @@ namespace Optosense.Edm.Jobs
                     };
                     var response = //await JobManager.Execute(check, parameter);
                         await check.Execute(url, parameter);
-                    if (response.Status == "Ok" && Enum.TryParse(response.Message, out TaskStatus jobStatus))
+                    if (response.Status != "Ok" || !Enum.TryParse(response.Message, out TaskStatus jobStatus)) 
+                        continue;
+                    
+                    if (jobStatus is TaskStatus.Running 
+                        or TaskStatus.WaitingForActivation 
+                        or TaskStatus.WaitingToRun 
+                        or TaskStatus.WaitingForChildrenToComplete)
                     {
-                        if (jobStatus == TaskStatus.Running ||
-                                jobStatus == TaskStatus.WaitingForActivation ||
-                                jobStatus == TaskStatus.WaitingToRun ||
-                                jobStatus == TaskStatus.WaitingForChildrenToComplete)
-                        {
-                            continue;
-                        }
-                        else
-                        {
-                            count++;
-                        }
+                        continue;
                     }
+
+                    count++;
                 }
             } while (count < running.Count && !CancellationToken.IsCancellationRequested);
 

@@ -24,7 +24,11 @@ namespace Optosense.Edm.Profiles.Board
     public class CommandInstruction
     {
         public int Order { get; set; }
-        public string Name { get; set; }
+
+        /// <summary>
+        /// Delay before running instruction
+        /// </summary>
+        public int? Offset { get; set; }
         public string Args { get; set; }
         public Instruction Instruction { get; set; }
     }
@@ -33,10 +37,10 @@ namespace Optosense.Edm.Profiles.Board
     {
         public string Name { get; set; }
         public string Description { get; set; }
-        public string Code { get; set; }
+        public required string Code { get; set; }
         public string Syntax { get; set; }
         public int? Length { get; set; }
-        public int Timeout { get; set; }
+        public int? Timeout { get; set; }
         public int? Retries { get; set; }
 
     }

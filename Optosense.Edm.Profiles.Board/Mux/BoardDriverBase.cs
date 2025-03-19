@@ -17,7 +17,7 @@ using Optosense.Edm.Utils;
 namespace Optosense.Edm.Drivers.Mux
 {
     [Driver(OptionsType = typeof(BoardDriverOptions))]
-    public class BoardDriverBase : DriverBase, IReactiveDriver, IDisposable
+    public partial class BoardDriverBase : DriverBase, IReactiveDriver, IDisposable
     {
         protected BoardDriverOptions BoardOptions => (BoardDriverOptions)Options;
         protected SerialPort Port { get; set; }
@@ -40,25 +40,34 @@ namespace Optosense.Edm.Drivers.Mux
 
         public override async Task<DriverResponse> Execute(DriverRequest req)
         {
-            var response = new DriverResponse { Planned = req.Offset, Executed = req.Offset, Request = req.Command, State = DriverResponseState.Ok };
-            if (req is not BoardDriverRequest)
+            var response = new DriverResponse 
+            { 
+                Planned = req.Offset, 
+                Executed = req.Offset, 
+                Request = req.Command, 
+                State = DriverResponseState.Ok 
+            };
+            if (req is not BoardDriverRequest request)
             {
-                if (req.Command == "Stop")
+                if (req.Command != "Stop")
                 {
-                    Dispose();
-                    response.Response = DriverResponseState.Ok.ToString();
-                    response.Parameters = "{Stop: true}";
-                    return response;
+                    throw new EdmException(
+                        $"{GetType().Name} driver parameters must be of type {nameof(BoardDriverRequest)}");
                 }
-                else
-                {
-                    throw new EdmException($"{GetType().Name} driver parameters must be of type {typeof(BoardDriverRequest).Name}");
-                }
+
+                Dispose();
+                response.Response = DriverResponseState.Ok.ToString();
+                response.Parameters = "{Stop: true}";
+                return response;
+
             }
 
-            var request = (BoardDriverRequest)req;
-            var instruction = Regex.Replace(request.Instruction?.Code ?? request.Command, "{.*?}", "").Trim();
-
+            if (request.Instruction is null)
+            {
+                throw new EdmException("Instruction for board driver must not be null");
+            }
+            
+            var instruction = CodeParamsRegex().Replace(request.Instruction.Code ?? request.Command, "").Trim();
             var command = request.Command;
             var parameters = string.IsNullOrEmpty(request.Parameters) ? new() :
                 JsonConvert.DeserializeObject<Dictionary<string, object>>(request.Parameters);
@@ -68,16 +77,16 @@ namespace Optosense.Edm.Drivers.Mux
             {
                 var bytes = Port.Request(
                         command,
-                        responseLength: request.Instruction?.Length ?? 0,
+                        responseLength: request.Instruction.Length ?? 0,
                         singleLine: true,
-                        timeout: request.Instruction?.Timeout ?? 500,
-                        retries: request.Instruction?.Retries ?? 0);
+                        timeout: request.Instruction.Timeout ?? 100,
+                        retries: request.Instruction.Retries ?? 0);
 
                 if (instruction == "KZ?")
                 {
                     try
                     {
-                        await executeKz(bytes, request.Instruction.Syntax, response);
+                        await ExecuteKz(bytes, request.Instruction.Syntax, response);
                         response.Response = string.Join(string.Empty, bytes.Select(b => b.ToString("X2")));
                         return response;
                     }
@@ -97,7 +106,7 @@ namespace Optosense.Edm.Drivers.Mux
                         SubstituteParameters(request.Instruction.Syntax, parameters),
                         RegexOptions.Singleline) ?
                             DriverResponseState.Ok : DriverResponseState.InvalidResponse;
-                var match = Regex.Match(response.Response, request.Instruction.Syntax, RegexOptions.Singleline);
+                var match = Regex.Match(response.Response, request.Instruction.Syntax ?? string.Empty, RegexOptions.Singleline);
                 if (match.Success)
                 {
                     // Skip first global match
@@ -109,23 +118,25 @@ namespace Optosense.Edm.Drivers.Mux
                 else
                 {
                     // Set empty output parameters if response is wrong
-                    GetParameters(request.Instruction).All(p => parameters.TryAdd(p, null));
+                    foreach (var p in GetParameters(request.Instruction))
+                    {
+                        parameters.TryAdd(p, null);
+                    }
                 }
 
             }
             catch (Exception e)
             {
                 // Add default null parameters to stress that error happened
-                GetParameters(request.Instruction).All(p => parameters.TryAdd(p, null));
-                response.Message = e switch
+                foreach (var p in GetParameters(request.Instruction))
                 {
-                    AggregateException ag when ag.InnerException is not TimeoutException => e.InnerException.Message,
-                    not AggregateException or TimeoutException => e.Message,
-                    _ => null
-                };
+                    parameters.TryAdd(p, null);
+                }
+
+                response.Message = e.GetMeaningfulMessage();
                 response.State = e switch
                 {
-                    AggregateException ag when ag.InnerException is TimeoutException => DriverResponseState.Timeout,
+                    AggregateException { InnerException: TimeoutException } => DriverResponseState.Timeout,
                     TimeoutException => DriverResponseState.Timeout,
                     _ => DriverResponseState.Failed
                 };
@@ -150,38 +161,43 @@ namespace Optosense.Edm.Drivers.Mux
 
         public void Dispose()
         {
-            if (Port != null && Port.IsOpen) Port.Close();
-            Port.Dispose();
+            if (Port is { IsOpen: true }) 
+                Port.Close();
         }
 
         private IEnumerable<string> GetParameters(Instruction instr)
         {
-            var matches = Regex.Matches(instr.Syntax ?? string.Empty, @"\?<(\w+?)>");
+            var matches = ParametersRegex().Matches(instr.Syntax ?? string.Empty);
             return matches.Select(m => m.Groups[1].Value);
         }
 
-        private async Task executeKz(byte[] bytes, string syntax, DriverResponse response)
+        private async Task ExecuteKz(byte[] bytes, string syntax, DriverResponse response)
         {
             int? num = bytes != null ? 
                 BitConverter.ToInt32(bytes.Take(4).Reverse().ToArray(), 0) :
                 null;
-            var outParam = Regex.Matches(syntax ?? string.Empty, @"\?<(\w+?)>")
+            var outParam = ParametersRegex().Matches(syntax ?? string.Empty)
                 .FirstOrDefault()
-                .Groups[1].Value;
-            for (int i = 0; i < BoardOptions.Capacity; i++)
+                ?.Groups[1].Value ?? throw new EdmException("Output param for instruction \"KZ\" is missing");
+            for (var i = 0; i < BoardOptions.Capacity; i++)
             {
-                var value = num != null ? num >> i & 1 : null;
+                var value = num >> i & 1;
                 await PushResponse(response with
                 {
                     Parameters = JsonConvert.SerializeObject(new Dictionary<string, object>
                     {
-                        { "ADDR", $"#{i.ToString("X2")}" },
+                        { "ADDR", $"#{i:X2}" },
                         { outParam, value }
                     }),
                     Response = value.ToString()
                 }, false);
             }
         }
+
+        [GeneratedRegex("{.*?}")]
+        private static partial Regex CodeParamsRegex();
+        [GeneratedRegex(@"\?<(\w+?)>")]
+        private static partial Regex ParametersRegex();
     }
 
     public class BoardDriverOptions : IDriverOptions

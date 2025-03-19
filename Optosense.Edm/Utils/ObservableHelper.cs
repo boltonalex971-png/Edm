@@ -29,21 +29,23 @@ namespace Optosense.Edm.Utils
 
         public static IObservable<T> Pace<T>(this IObservable<T> source, Func<T, DateTime> selector)
         {
-            return source.Select(i => Observable.Return<T>(i).Delay(selector(i))).Concat(); //.Merge()
+            return source.Select(i => Observable.Return<T>(i).Delay(selector(i))).Concat(); 
         }
 
         public static IObservable<T> Pace<T>(
-            this IObservable<T> source, 
+            this IEnumerable<T> source, 
             IDeviceDriver driver,
             Func<T, Task<bool>> delay,
             Func<IDeviceDriver, T, Task> action)
         {
-            return source.Select(i => Observable.Create<T>(async (obs, token) =>
+            return source.Select(i => Observable.FromAsync(() => Exec(driver, i))).Concat();
+
+            async Task<T> Exec(IDeviceDriver d, T r)
             {
-                var ok = await delay(i);
-                await action(driver, i);
-                obs.OnNext(i);
-            })).Concat(); 
+                var ok = await delay(r);
+                await action(driver, r);
+                return r;
+            }
         }
 
         public static IObservable<T> Execute<T>(this IObservable<T> instructions, IObserver<T> observer)
@@ -93,13 +95,13 @@ namespace Optosense.Edm.Utils
                 switch (t.Status)
                 {
                     case TaskStatus.Canceled:
-                        logger.LogInformation($"Driver {t.Id} {t.AsyncState.GetType().Name} was cancelled by user");
+                        logger.LogInformation($"Driver {t.Id} {t.AsyncState?.GetType().Name} was cancelled by user");
                         break;
                     case TaskStatus.Faulted:
-                        logger.LogError($"Driver {t.Id} {t.AsyncState.GetType().Name} was cancelled with exception: {t.Exception.Flatten().GetFullInfo()}");
+                        logger.LogError($"Driver {t.Id} {t.AsyncState?.GetType().Name} was cancelled with exception: {t.Exception.Flatten().GetFullInfo()}");
                         break;
                     case TaskStatus.RanToCompletion:
-                        logger.LogInformation($"Driver {t.Id} {t.AsyncState.GetType().Name} completed successfully");
+                        logger.LogInformation($"Driver {t.Id} {t.AsyncState?.GetType().Name} completed successfully");
                         break;
                 }
             });
@@ -115,9 +117,8 @@ namespace Optosense.Edm.Utils
         {
             var token = cancellationToken ?? CancellationToken.None;
             var startedAt = DateTime.UtcNow;
-            var task = plan.ToObservable()
+            var task = plan
                 .Pace(driver, condition, action)
-                .ObserveOn(NewThreadScheduler.Default)
                 .Do(
                     onNext: p =>
                     {
