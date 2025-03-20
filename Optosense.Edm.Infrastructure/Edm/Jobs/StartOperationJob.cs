@@ -9,6 +9,9 @@ using Microprojects.Edm.Jobs;
 using Optosense.Edm.Infrastructure.Edm.Jobs;
 using Optosense.Edm.Core.Contracts;
 using Microprojects.Edm.Intercom;
+using Microsoft.Extensions.Logging;
+using Microprojects.Edm.Utils;
+using Optosense.Edm.Infrastructure.Protos;
 
 namespace Optosense.Edm.Jobs
 {
@@ -20,21 +23,22 @@ namespace Optosense.Edm.Jobs
         protected IProfileService ProfileService { get; init; }
         protected IJobContainer JobManager { get; init; }
         protected IIntercom Intercom { get; init; }
-        //protected IDbContextFactory<EdmContext> ContextFactory { get; init; }
+        protected ILogger<StartOperationJob> Logger { get; init; }
 
         public StartOperationJob() { }
         public StartOperationJob(
             IOperationService operationService,
             IProfileService profileService,
             IJobContainer container,
-            IIntercom intercom)
+            IIntercom intercom,
+            ILogger<StartOperationJob> logger)
         //IDbContextFactory<EdmContext> contextFactory)
         {
             OperationService = operationService;
             ProfileService = profileService;
             JobManager = container;
-            //ContextFactory = contextFactory;
             Intercom = intercom;
+            Logger = logger;
         }
 
         public override bool Init()
@@ -135,8 +139,18 @@ namespace Optosense.Edm.Jobs
                         ((StartDeviceJobParameters)job.JobParameters).OperationHostDevice,
                         ((StartDeviceJobParameters)job.JobParameters).Driver
                     };
-                    var response = //await JobManager.Execute(check, parameter);
-                        await check.Execute(url, parameter);
+                    var response = await check.Execute(url, parameter)
+                        .ContinueWith(t =>
+                        {
+                            if (t.Status == TaskStatus.Faulted)
+                            {
+                                Logger.LogWarning("Operation {Id} {OpName} cannot check child job {Job} on {host}.\n{Error}", 
+                                    operation.Id, operation.Name, job.Name, url, t.Exception.GetMeaningfulMessage() );
+                                return new JobResponse { Status = "Faulted", Message = t.Exception.GetMeaningfulMessage() };
+                            }
+
+                            return t.Result;
+                        });
                     if (response.Status != "Ok" || !Enum.TryParse(response.Message, out TaskStatus jobStatus)) 
                         continue;
                     
