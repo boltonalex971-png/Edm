@@ -65,6 +65,7 @@ namespace Optosense.Edm.Core.Services
             var result = await Set()
                 .Include(include)
                 .Include(include2)
+                .AsSplitQuery()
                 .FirstOrDefaultAsync(p => id == p.Id);
             return result;
         }
