@@ -46,7 +46,7 @@ SELECT
 		END
 FROM dbo.SensorMeasure
 WITH (NOEXPAND)
-WHERE Sn>0 AND Pw>0 AND Count=2
+WHERE Sn>0 --AND Pw>0 AND Count=2
 
 GO
 
