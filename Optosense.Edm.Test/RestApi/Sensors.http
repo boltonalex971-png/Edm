@@ -1,0 +1,13 @@
+GET https://ps.optosense.local:16332/api/sensors/1228265
+
+###
+
+POST https://ps.optosense.local:16332/api/sensors
+Content-Type: application/json
+
+{
+//  "minSn": 200000,
+//  "maxSn": 90000000,
+//  "from": "2024/01/20 10:00",
+//  "to": "2026/01/20 10:00"
+}

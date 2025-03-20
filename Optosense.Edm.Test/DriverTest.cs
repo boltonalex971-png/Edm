@@ -14,6 +14,9 @@ using System.Linq.Expressions;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Microprojects.Edm.Drivers;
+using Microsoft.Extensions.Logging.Abstractions;
+using Optosense.Edm.Utils;
 
 namespace Optosense.Edm.Test
 {
@@ -31,7 +34,7 @@ namespace Optosense.Edm.Test
             //{
             //    new Command { Instructions = { new CommandInstruction { Instruction = new Instruction { Code = "{ADDR}F", Timeout = 100 } } } }
             //};
-            var profileJson =  //JsonConvert.SerializeObject(profile);
+            var profileJson = //JsonConvert.SerializeObject(profile);
                 @"[
                     {name: ""KZ"", instructions: [
                         {order: 10, name: ""KZ?"", instruction: {name: ""KZ?"", code: ""KZ?"", syntax: ""(?<KZ>)"", timeout: 1000 }  }
@@ -53,13 +56,126 @@ namespace Optosense.Edm.Test
         }
 
         [TestMethod]
+        public async Task RealExecutionPlanTest()
+        {
+            var mux = new MuxDriverPlugin();
+            var logger = NullLogger.Instance;
+            var parameters = new { ADDR = new[] { 0, 1, 2, 3, 4, 5 }, Capacity = 5 };
+            var profileJson = //JsonConvert.SerializeObject(profile);
+                """
+                [
+                    {"name": "Measure", "instructions": [
+                        {"order": 10, "offset": 1000, "instruction": {"name": "SREV", "code": "{ADDR}SREV?", "syntax": "", "timeout": 200 } },
+                        {"order": 15, "offset": 1000, "instruction": {"name": "F", "code": "{ADDR}F", "syntax": "", "timeout": 100 } } ,
+                    ]}
+                ]
+                """;
+
+            var paramJson = JsonConvert.SerializeObject(parameters);
+            var plan = mux.GetPlan(profileJson, paramJson).ToList();
+            var driver = new BoardDriverBase(new BoardDriverOptions { Baudrate = 9600, Port = "COM4", Capacity = 20 });
+            driver.Init();
+            await plan.Launch(
+                driver,
+                Delay,
+                ShowRequestAsync,
+                logger,
+                CancellationToken.None
+            );
+            driver.Dispose();
+
+            Assert.IsTrue(true);
+            return;
+
+            async Task<bool> Delay(DriverRequest req)
+            {
+                await Task.Delay((int)req.Offset);
+                return true;
+            }
+
+            async Task ExecuteRequestAsync(IDeviceDriver d, DriverRequest r)
+            {
+                Debug.WriteLine($"REQUEST {DateTime.Now:HH:mm:ss.fff}: {JsonConvert.SerializeObject(r.Parameters)}");
+                var response = await driver.Execute(r);
+                Debug.WriteLine(
+                    $"RESPONSE {DateTime.Now:HH:mm:ss.fff}: {JsonConvert.SerializeObject(response.Response)}");
+                //await Task.Delay(1000);
+            }
+
+            Task ShowRequestAsync(IDeviceDriver d, DriverRequest r)
+            {
+                Debug.WriteLine($"REQUEST {DateTime.Now:HH:mm:ss.fff}: {JsonConvert.SerializeObject(r.Parameters)}");
+                return Task.CompletedTask;
+            }
+
+            void ExecuteRequest(IDeviceDriver d, DriverRequest r)
+            {
+                Debug.WriteLine($"REQUEST {DateTime.Now:HH:mm:ss.fff}: {JsonConvert.SerializeObject(r.Parameters)}");
+            }
+        }
+
+        [TestMethod]
+        public async Task AsyncExecutionPlanTest()
+        {
+            var mux = new MuxDriverPlugin();
+            var logger = NullLogger.Instance;
+            var parameters = new { ADDR = new[] { 0, 1, 2, 3, 4, 5 }, Capacity = 5 };
+            var profileJson = //JsonConvert.SerializeObject(profile);
+                """
+                [
+                    {"name": "Measure", "instructions": [
+                        {"order": 10, "offset": 500, "instruction": {"name": "SREV", "code": "{ADDR}SREV?", "syntax": "", "timeout": 200 } },
+                        {"order": 15, "offset": 1000, "instruction": {"name": "F", "code": "{ADDR}F", "syntax": "", "timeout": 100 } } ,
+                    ]}
+                ]
+                """;
+
+            var paramJson = JsonConvert.SerializeObject(parameters);
+            var plan = mux.GetAsyncPlan(profileJson, paramJson, CancellationToken.None);
+            // var driver = new BoardDriverBase(new BoardDriverOptions { Baudrate = 9600, Port = "COM4", Capacity = 20 });
+            // driver.Init();
+            var start =  DateTime.UtcNow;
+            await foreach (var no in plan) //IterateAsync())
+            {
+                Debug.Write(
+                    $"SCHEDULED {start.AddMilliseconds(no.Offset):HH:mm:ss.fff}\tCALLED {DateTime.UtcNow:HH:mm:ss.fff}\t");
+                var payload = Random.Shared.Next(50, 200);
+                await Task.Delay(payload);
+                Debug.WriteLine($"PAYLOAD COMPLETE {DateTime.Now:HH:mm:ss.fff}\tpayload: {payload}\t\t{no.Command}");
+            }
+
+            return;
+
+            async IAsyncEnumerable<int> IterateAsync()
+            {
+                var offset = 500;
+                var scheduled = DateTime.UtcNow;
+                Debug.WriteLine($"START AT {scheduled:HH:mm:ss.fff} ");
+                foreach (var no in Enumerable.Range(0, 100))
+                {
+                    scheduled = scheduled.AddMilliseconds(offset);
+                    var current = DateTime.UtcNow;
+                    var next = (scheduled - current).TotalMilliseconds;
+                    var delay = next > 0 ? next : 0;
+                    await Task.Delay(delay);
+                    var start = DateTime.UtcNow;
+                    Debug.Write(
+                        $"{(DateTime.UtcNow - scheduled).Milliseconds}\tSCHEDULED {scheduled:HH:mm:ss.fff}\tEXEC {start:HH:mm:ss.fff}\t");
+                    yield return no;
+                }
+
+                Debug.Write($"COMPLETED AT {DateTime.UtcNow:HH:mm:ss.fff} ");
+            }
+        }
+
+        [TestMethod]
         public async Task OpcUaDriverTest()
         {
             var options = new OpcUaDriverOptions { Endpoint = "opc.tcp://localhost:51210/UA/SampleServer" };
             var driver = new OpcUaDriver(options);
             driver.Init();
             //var node = await driver.GetNode("ns=4;i=1241");
-            var nodes = driver.GetChildNodes("ns=4;i=1240"); 
+            var nodes = driver.GetChildNodes("ns=4;i=1240");
 //            Console.WriteLine(node.DisplayName);
             //driver.Start();
             //await Task.Delay(3000);
@@ -76,8 +192,8 @@ namespace Optosense.Edm.Test
             var exprCondition = "Temp>10";
             var state = new Dictionary<string, object>
             {
-                {"Param", true },
-                {"Temp", 5 }
+                { "Param", true },
+                { "Temp", 5 }
             };
 
             var exp1 = AdaptiveExpressions.Expression.Parse(expOffset);
