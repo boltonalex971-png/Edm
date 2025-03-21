@@ -30,12 +30,14 @@ export const Profile = (props) => {
         return (
             <EasyGrid data={props.dataItem.instructions || []}
                 details={InstructionDetail}
-                style={{ width: '75%' }} orderField='order' dataChange={dataChange}
+                style={{ width: '90%' }} orderField='order' dataChange={dataChange}
             >
                 <GridColumn field='order' title='Order' width={150} editor='numeric' />
                 <GridColumn field='name' title='Instruction' width={200} editable={true}
                     cell={(p) => DropDownCell({ ...p, key: 'name', text: 'name', data: instructions, editField: 'edit', dataChange: instructionChanged })}
                 />
+                <GridColumn field='offset' title='Offset (ms)' width={150} editor='numeric' />
+                <GridColumn field='gap' title='Gap (ms)' width={150} editor='numeric' />
                 <GridColumn field='args' title='Arguments' />
             </EasyGrid>
         );
@@ -57,7 +59,7 @@ export const Profile = (props) => {
                     >
                         <GridColumn field='order' title='Order' editor='numeric' width={150} />
                         <GridColumn field='command' title='Command' />
-                        <GridColumn field='offset' title='Offset (min)' editor='numeric' width={150} />
+                        <GridColumn field='offset' title='Offset (ms)' editor='numeric' width={150} />
                         <GridColumn field='duration' title='Duration (min)' editor='numeric' width={150} />
                     </EasyGrid>
                 </div>

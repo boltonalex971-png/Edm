@@ -26,9 +26,14 @@ namespace Optosense.Edm.Profiles.Board
         public int Order { get; set; }
 
         /// <summary>
-        /// Delay before running instruction
+        /// Offset between launches of sequential instructions, in milliseconds
         /// </summary>
         public int? Offset { get; set; }
+
+        /// <summary>
+        /// Minimal gap between sequential instructions, in milliseconds
+        /// </summary>
+        public int? Gap { get; set; }
         public string Args { get; set; }
         public Instruction Instruction { get; set; }
     }

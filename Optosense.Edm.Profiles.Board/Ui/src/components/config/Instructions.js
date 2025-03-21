@@ -8,7 +8,7 @@ import { useGet } from "../hooks";
 import { ApiContext } from "../../ApiContext";
 import axios from "axios";
 import { Button } from "@progress/kendo-react-buttons";
-import { useHistory } from "react-router-dom";
+import { useHistory, Link } from "react-router-dom";
 
 export function Instructions({ guid }) {
     const history = useHistory();
@@ -29,9 +29,10 @@ export function Instructions({ guid }) {
     };
     return (
         <div style={{ margin: 10 }}>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'baseline' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '1rem'  }}>
                 <h6>Board Profile Configuration</h6>
-                <Button type='button' onClick={() => history.goBack()}>Go back to editor</Button>
+                {/*<Button type='button' onClick={() => history.goBack()}>Go back to editor</Button>*/}
+                <Link onClick={() => history.goBack()} className='btn btn-light'>Go back to editor</Link>
             </div>
             <MasterDetail
                 data={data}

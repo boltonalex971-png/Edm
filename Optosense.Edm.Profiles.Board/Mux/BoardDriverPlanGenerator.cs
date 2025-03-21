@@ -124,7 +124,7 @@ namespace Optosense.Edm.Drivers.Mux
                     iteratedParam = KeyValuePair.Create("None", (object)Enumerable.Range(0, 1));
                 }
 
-                offset += command.Offset * 60 * 1000;
+                offset += command.Offset;
                 scheduledAt = scheduledAt.AddMinutes(command.Offset);
                 foreach (var iterParam in (IEnumerable)iteratedParam.Value)
                 {
@@ -147,7 +147,8 @@ namespace Optosense.Edm.Drivers.Mux
                         scheduledAt = scheduledAt.AddMilliseconds(ci.Offset ?? 100);
                         var current = DateTime.UtcNow;
                         var next = (scheduledAt - current).TotalMilliseconds;
-                        var delay = next > 0 ? next : 0;
+                        // Wait until proper time or minimal gap before start instruction 
+                        var delay = next < ci.Gap ? ci.Gap ?? 0: next;
                         await Task.Delay((int)delay, ct);
                         yield return new BoardDriverRequest
                         {
