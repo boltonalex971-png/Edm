@@ -166,7 +166,7 @@ namespace Optosense.Edm.Jobs
                         _logger, CancellationToken);
                 }
             }
-            catch (TaskCanceledException)
+            catch (OperationCanceledException)
             {
                 // Release related audits and store jobs
                 await ExecuteDeviceInstruction(_driver, DriverRequests.Stop);

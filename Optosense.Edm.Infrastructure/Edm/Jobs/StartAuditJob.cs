@@ -69,9 +69,8 @@ namespace Optosense.Edm.Jobs
 
         public override async Task<object> ExecuteAsync()
         {
-            bool completed = false;
             IEnumerable<AuditZone> audit;
-            using (var db = await ContextFactory.CreateDbContextAsync()) 
+            await using (var db = await ContextFactory.CreateDbContextAsync()) 
             {
                 var service = new AuditService(db);
                 audit = await service.GetZones(Parameters.Audit);
@@ -87,9 +86,8 @@ namespace Optosense.Edm.Jobs
                         return;
                     }
 
-                    completed = completed || rec.Request.StartsWith("Stop");
                     // TODO move all db activity to corresponding core service
-                    using EdmContext db = await ContextFactory.CreateDbContextAsync();
+                    await using EdmContext db = await ContextFactory.CreateDbContextAsync();
                     var currentOffset = (rec.ExecutedAt - Parameters.StartAt).TotalMinutes;
                     var effectiveZones = audit.Where(z => IsActive(z, currentOffset));
                     foreach (var zone in effectiveZones)
@@ -100,7 +98,7 @@ namespace Optosense.Edm.Jobs
                         {
                             var auditFunc = AuditFunctions.Function(criterion.Function);
                             // take cached zone values list
-                            var selector = recordParams.ContainsKey("ADDR") ? recordParams["ADDR"].ToString() : string.Empty;
+                            var selector = recordParams.TryGetValue("ADDR", out var addr) ? addr.ToString() : string.Empty;
                             var key = CacheKey(Parameters.Operation, criterion.Id, selector);
                             var values = (await Cache.GetRangeAsync<object>(key,async () =>
                                     {
@@ -147,14 +145,12 @@ namespace Optosense.Edm.Jobs
                         }
                     }
                 });
-            while (!completed && !CancellationToken.IsCancellationRequested)
-            {
-                await Task.Delay(1000, CancellationToken)
-                    .ContinueWith(t => { });
-            }
+
+            await Task.Delay(-1, CancellationToken).ContinueWith(t => { });
 
             subscriber.Dispose();
-            Logger.LogDebug(Parameters.Operation, "{Command} {Action}", Name, completed ? "completed" : "cancelled");
+            Logger.LogDebug(Parameters.Operation, "{Command} {Action}", 
+                Name, CancellationToken.IsCancellationRequested ? "cancelled" : "completed" );
             return "Ok";
         }
 

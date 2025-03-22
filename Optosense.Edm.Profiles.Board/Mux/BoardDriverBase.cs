@@ -7,6 +7,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Microprojects.Edm.Drivers;
 using Microprojects.Edm.Utils;
@@ -21,6 +22,8 @@ namespace Optosense.Edm.Drivers.Mux
     {
         protected BoardDriverOptions BoardOptions => (BoardDriverOptions)Options;
         protected SerialPort Port { get; set; }
+        protected CancellationTokenSource CancellationTokenSource { get; } = new CancellationTokenSource();
+        protected CancellationToken CancellationToken => CancellationTokenSource.Token;
         public Func<DriverResponse, bool, Task> PushResponse { get; set; }
 
         public BoardDriverBase() { }
@@ -34,7 +37,9 @@ namespace Optosense.Edm.Drivers.Mux
         {
             Port = new SerialPort(BoardOptions.Port, BoardOptions.Baudrate);
             Port.Open();
-
+            // TODO Make safe port closing regarding if it is in busy state
+            //CancellationToken.Register(() => Port.Close());
+            
             return OK;
         }
 
@@ -47,6 +52,11 @@ namespace Optosense.Edm.Drivers.Mux
                 Request = req.Command, 
                 State = DriverResponseState.Ok 
             };
+            if (CancellationToken.IsCancellationRequested)
+            {
+                return response with {State = DriverResponseState.NotCompleted, Message = "Operation cancelled"};
+            }
+            
             if (req is not BoardDriverRequest request)
             {
                 if (req.Command != "Stop")
@@ -55,11 +65,11 @@ namespace Optosense.Edm.Drivers.Mux
                         $"{GetType().Name} driver parameters must be of type {nameof(BoardDriverRequest)}");
                 }
 
+                await CancellationTokenSource.CancelAsync();
                 Dispose();
                 response.Response = DriverResponseState.Ok.ToString();
                 response.Parameters = "{Stop: true}";
                 return response;
-
             }
 
             if (request.Instruction is null)
@@ -144,7 +154,10 @@ namespace Optosense.Edm.Drivers.Mux
 
             // Provide parameters no matter what
             response.Parameters = JsonConvert.SerializeObject(parameters);
-
+            
+            if (CancellationToken.IsCancellationRequested)
+                Dispose();
+            
             return response;
         }
 

@@ -5,6 +5,8 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microprojects.Edm.Utils;
+using Microsoft.Extensions.Logging;
 
 namespace Optosense.Edm.Jobs
 {
@@ -14,14 +16,16 @@ namespace Optosense.Edm.Jobs
         protected IIntercom Intercom { get; init; }
         protected IJobContainer Container { get; init; }
         protected IOptions<Peer> PeerOptions { get; init; }
+        protected ILogger<ImAliveJob> Logger { get; init; }
         protected ImAliveJobParameters Parameters => (ImAliveJobParameters)JobParameters;
 
         public ImAliveJob() { }
-        public ImAliveJob(IIntercom intercom, IJobContainer container, IOptions<Peer> options)
+        public ImAliveJob(IIntercom intercom, IJobContainer container, IOptions<Peer> options, ILogger<ImAliveJob> logger)
         {
             Intercom = intercom;
             Container = container;
             PeerOptions = options;
+            Logger = logger;
         }
 
         public override async Task<object> ExecuteAsync()
@@ -36,7 +40,24 @@ namespace Optosense.Edm.Jobs
             var issuer = new Timer(async state =>
             {
                 PeerOptions.Value.Timestamp = DateTime.UtcNow;
-                await Intercom.Publish(Parameters.Channel, PeerOptions.Value);
+                Exception ex = null;
+                await Intercom.Publish(Parameters.Channel, PeerOptions.Value)
+                    .ContinueWith(t =>
+                    {
+                        if (t.IsFaulted && (ex == null || t.Exception.GetType() != ex.GetType()))
+                        {
+                            ex = t.Exception;
+                            Logger.LogWarning("Could not publish message.\n{Exception}",
+                                t.Exception.GetMeaningfulMessage());
+                            return;
+                        }
+                        
+                        if (t.IsCompleted && ex != null)
+                        {
+                            Logger.LogInformation("Back to normal state after {Exception}", ex.GetType());
+                            ex = null;
+                        }
+                    });
             }, null, 0, (int)Container.Hive.Alive.TotalMilliseconds);
             try
             {
@@ -45,7 +66,7 @@ namespace Optosense.Edm.Jobs
             finally
             {
                 listener.Dispose();
-                issuer.Dispose();
+                await issuer.DisposeAsync();
             }
 
             return "Ok";

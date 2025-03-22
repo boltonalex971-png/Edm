@@ -13,26 +13,45 @@ using Optosense.Edm.Domain.Models;
 
 namespace Optosense.Edm.Jobs
 {
-    [Job(Name = "StoreOperationRecords", Lifetime = JobLifetime.LongRunning, Parameters = typeof(StoreOperationRecordsJobParameters))]
+    [Job(Name = "StoreOperationRecords", Lifetime = JobLifetime.LongRunning,
+        Parameters = typeof(StoreOperationRecordsJobParameters))]
     public class StoreOperationRecordsJob : BaseJob
     {
         protected IIntercom Intercom { get; init; }
         protected IDbContextFactory<EdmContext> ContextFactory { get; init; }
-        protected StoreOperationRecordsJobParameters Parameters => (StoreOperationRecordsJobParameters) JobParameters;
+        protected StoreOperationRecordsJobParameters Parameters => (StoreOperationRecordsJobParameters)JobParameters;
         private readonly ILogger<StoreOperationRecordsJob> _logger;
 
-        public StoreOperationRecordsJob() { }
-        public StoreOperationRecordsJob(ILogger<StoreOperationRecordsJob> logger, IIntercom intercom, IDbContextFactory<EdmContext> factory)
+        public StoreOperationRecordsJob()
+        {
+        }
+
+        public StoreOperationRecordsJob(ILogger<StoreOperationRecordsJob> logger, IIntercom intercom,
+            IDbContextFactory<EdmContext> factory)
         {
             Intercom = intercom;
             ContextFactory = factory;
             _logger = logger;
         }
 
+        public override bool Init()
+        {
+            return true;
+        }
+
         public override async Task<object> ExecuteAsync()
         {
-            bool completed = false;
-            var subscription = Intercom.Subscribe<DeviceResponse>(Parameters.Channel,
+            using var paramsSubscriber = Intercom.Subscribe<object>(
+                Parameters.ParametersChannel,
+                onNext: json =>
+                {
+                    var param = JsonConvert.DeserializeObject<KeyValuePair<string, object>>(json.ToString());
+                    if (param.Key == "Stop" && (bool)param.Value)
+                    {
+                        CancellationTokenSource.Cancel();
+                    }
+                });
+            using var subscription = Intercom.Subscribe<DeviceResponse>(Parameters.Channel,
                 onNext: async r =>
                 {
                     // TODO Cache coming record to avoid loosing it and handle them later
@@ -44,17 +63,20 @@ namespace Optosense.Edm.Jobs
                         Response = r.Response,
                         IsValid = r.Status == DriverResponseState.Ok,
                         Message = r.Message,
-                        Parameters = JsonConvert.DeserializeObject<Dictionary<string, object>>(r.Parameters ?? "{}"), 
+                        Parameters = JsonConvert.DeserializeObject<Dictionary<string, object>>(r.Parameters ?? "{}"),
                         Status = (ExecutionStatus)r.Status,
                         OperationHostDeviceId = r.OperationHostDeviceId,
                     };
-                    using var context = await ContextFactory.CreateDbContextAsync();
+                    await using var context = await ContextFactory.CreateDbContextAsync();
                     try
                     {
                         context.Records.Add(rec);
                         await context.SaveChangesAsync();
                         await Intercom.Publish(Parameters.AuditChannel, rec);
-                        completed = completed || r.Request == "Stop";
+                        if (r.Request == "Stop")
+                        {
+                            await CancellationTokenSource.CancelAsync();
+                        }
                     }
                     catch (Exception e)
                     {
@@ -64,25 +86,20 @@ namespace Optosense.Edm.Jobs
                         _logger.LogWarning(Parameters.Operation, e, "Some Records are lost");
                     }
                 });
-            while (!completed && !CancellationToken.IsCancellationRequested)
-            {
-                await Task.Delay(1000, CancellationToken)
-                    .ContinueWith(t => { });
-            }
 
-            subscription.Dispose();
-            _logger.LogDebug(Parameters.Operation, "{Command} {Action}", Name, completed ? "completed" : "cancelled");
+            await Task.Delay(-1, CancellationToken).ContinueWith(t => { });
+
+            _logger.LogDebug(Parameters.Operation, "{Command} {Action}", 
+                Name, CancellationToken.IsCancellationRequested ? "cancelled" : "completed");
             return "Ok";
         }
     }
 
     public class StoreOperationRecordsJobParameters : IJobParameters
     {
-        public int Operation {  get; set; }
+        public int Operation { get; set; }
         public string Channel { get; set; }
         public string AuditChannel { get; set; }
-
+        public string ParametersChannel { get; set; }
     }
 }
-
-

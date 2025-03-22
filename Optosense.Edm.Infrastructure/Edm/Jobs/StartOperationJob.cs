@@ -67,7 +67,8 @@ namespace Optosense.Edm.Jobs
                 { 
                     Operation = Parameters.Operation,
                     Channel = storeChannel, 
-                    AuditChannel = auditChannel 
+                    AuditChannel = auditChannel,
+                    ParametersChannel = parametersChannel
                 }
             };
             await JobManager.Execute(storageJob);
@@ -168,8 +169,7 @@ namespace Optosense.Edm.Jobs
 
             // Stop audits and storage
             await Intercom.Publish(parametersChannel, KeyValuePair.Create("Stop", true));
-
-
+            await Task.Delay(1000);
             if (CancellationToken.IsCancellationRequested)
             {
                 await OperationService.StopOperation(Parameters.Operation);
