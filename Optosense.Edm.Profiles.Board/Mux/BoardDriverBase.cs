@@ -85,7 +85,7 @@ namespace Optosense.Edm.Drivers.Mux
             response.Request = command;
             try
             {
-                var bytes = Port.Request(
+                var bytes = await Port.Request(
                         command,
                         responseLength: request.Instruction.Length ?? 0,
                         singleLine: true,
@@ -148,6 +148,7 @@ namespace Optosense.Edm.Drivers.Mux
                 {
                     AggregateException { InnerException: TimeoutException } => DriverResponseState.Timeout,
                     TimeoutException => DriverResponseState.Timeout,
+                    OperationCanceledException => DriverResponseState.NotCompleted,
                     _ => DriverResponseState.Failed
                 };
             }

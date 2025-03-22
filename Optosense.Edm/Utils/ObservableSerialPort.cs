@@ -4,6 +4,7 @@ using System.IO.Ports;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Optosense.Edm.Utils
@@ -49,19 +50,24 @@ namespace Optosense.Edm.Utils
             });
         }
 
-        public static async Task<byte[]> Send(this SerialPort port, string command, int responseLength, bool singleLine, int timeout)
+        public static async Task<byte[]> Send(this SerialPort port,
+            string command,
+            int responseLength,
+            bool singleLine,
+            int timeout,
+            CancellationToken ct)
         {
             var result = new List<byte>();
             var buffer = new byte[128];
             var totalRead = 0;
             port.BaseStream.ReadTimeout = timeout;
             port.ReadTimeout = timeout;
-            await port.BaseStream.WriteAsync(command.ToBytes(), 0, command.Length);
+            await port.BaseStream.WriteAsync(command.ToBytes().AsMemory(0, command.Length), ct);
             try
             {
                 do
                 {
-                    var bytesRead = port.BaseStream.Read(buffer, 0, buffer.Length);
+                    var bytesRead = await port.BaseStream.ReadAsync(buffer, ct);
                     totalRead += bytesRead;
                     result.AddRange(buffer.Take(bytesRead));
                 } while (!((singleLine && result.LastOrDefault() == '\r' || !singleLine && result.LastOrDefault() == '\0' && result.Count > 0) && (responseLength == 0 || responseLength <= result.Count)));
@@ -148,7 +154,14 @@ namespace Optosense.Edm.Utils
             });
         }
 
-        public static byte[] Request(this SerialPort port, string command, int? address = null, int responseLength = 0, bool singleLine = true, int timeout = 1500, int retries = 0)
+        public static async Task<byte[]> Request(this SerialPort port,
+            string command,
+            int? address = null,
+            int responseLength = 0,
+            bool singleLine = true,
+            int timeout = 1500,
+            int retries = 0,
+            CancellationToken ct = default)
         {
             var fullCommand = $"{(address == null ? string.Empty : $"#{address:X2}")}{command}\r";
             byte[] result;
@@ -157,11 +170,10 @@ namespace Optosense.Edm.Utils
             {
                 try
                 {
-                    //result = obs.ToTask().Result;
-                    result = port.Send(fullCommand, responseLength, singleLine, timeout).Result;
+                    result = await port.Send(fullCommand, responseLength, singleLine, timeout, ct);
                     break;
                 }
-                catch (AggregateException e)
+                catch (Exception e)
                 {
                     if (e.InnerException is TimeoutException && retries-- > 0)
                     {
