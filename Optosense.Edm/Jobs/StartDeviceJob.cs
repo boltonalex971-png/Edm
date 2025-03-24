@@ -248,10 +248,7 @@ namespace Optosense.Edm.Jobs
             {
                 if (_outputParams.ContainsKey(param.Key) || param.Key == "Stop")
                 {
-                    // Do not wait pushing parameters
-#pragma warning disable CS4014
-                    PushOutputParameterAsync(param);
-#pragma warning restore CS4014
+                    await PushOutputParameterAsync(param);
                 }
                 else if (_internalParams.ContainsKey(param.Key))
                 {
@@ -303,7 +300,7 @@ namespace Optosense.Edm.Jobs
             }
             else if (expr.Type == ExpressionType.Accessor)
             {
-                var cancellationSource = new CancellationTokenSource();
+                var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);
                 EventHandler<InputParamArrivedEventArgs> handler = (source, args) =>
                 {
                     if (args.Param == condition || CancellationToken.IsCancellationRequested)
@@ -312,10 +309,7 @@ namespace Optosense.Edm.Jobs
                     }
                 };
                 InputParamArrived += handler;
-#pragma warning disable CS4014
-                // Do not need to wait
                 await PushOutputParameterAsync(new KeyValuePair<string, object>($"?{condition}", null));
-#pragma warning restore CS4014
                 // TODO Cancel task by timeout
                 await Task.Delay(-1, cancellationSource.Token).ContinueWith(t => { });
                 InputParamArrived -= handler;

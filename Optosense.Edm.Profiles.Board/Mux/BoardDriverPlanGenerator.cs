@@ -148,7 +148,7 @@ namespace Optosense.Edm.Drivers.Mux
                         var current = DateTime.UtcNow;
                         var next = (scheduledAt - current).TotalMilliseconds;
                         // Wait until proper time or minimal gap before start instruction 
-                        var delay = next < ci.Gap ? ci.Gap ?? 0: next;
+                        var delay = next < (ci.Gap ?? 0) ? ci.Gap ?? 0 : next;
                         await Task.Delay((int)delay, ct);
                         yield return new BoardDriverRequest
                         {

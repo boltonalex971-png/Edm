@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.IO.Ports;
 using System.Linq;
 using System.Net.Http;
@@ -24,9 +26,21 @@ namespace Optosense.Edm.Drivers.Mux
         protected SerialPort Port { get; set; }
         protected CancellationTokenSource CancellationTokenSource { get; } = new CancellationTokenSource();
         protected CancellationToken CancellationToken => CancellationTokenSource.Token;
+
+        // Minimum interval between serial port sequential requests
+        private const int PortRequestSpan = 100;
+        // Keep timestamp of the last serial port request 
+        private DateTime _lastPortRequestTs;
+        // Timing serial port read operation
+        private readonly Stopwatch _stopwatch = new();
+        // Buffer to read serial port. Reading is sequential operation so it's safe to keep it instance-wise
+        private readonly byte[] _buffer = new byte[4096];
+
         public Func<DriverResponse, bool, Task> PushResponse { get; set; }
 
-        public BoardDriverBase() { }
+        public BoardDriverBase()
+        {
+        }
 
         public BoardDriverBase(BoardDriverOptions p)
         {
@@ -39,24 +53,24 @@ namespace Optosense.Edm.Drivers.Mux
             Port.Open();
             // TODO Make safe port closing regarding if it is in busy state
             //CancellationToken.Register(() => Port.Close());
-            
+
             return OK;
         }
 
         public override async Task<DriverResponse> Execute(DriverRequest req)
         {
-            var response = new DriverResponse 
-            { 
-                Planned = req.Offset, 
-                Executed = req.Offset, 
-                Request = req.Command, 
-                State = DriverResponseState.Ok 
+            var response = new DriverResponse
+            {
+                Planned = req.Offset,
+                Executed = req.Offset,
+                Request = req.Command,
+                State = DriverResponseState.Ok
             };
             if (CancellationToken.IsCancellationRequested)
             {
-                return response with {State = DriverResponseState.NotCompleted, Message = "Operation cancelled"};
+                return response with { State = DriverResponseState.NotCompleted, Message = "Operation cancelled" };
             }
-            
+
             if (req is not BoardDriverRequest request)
             {
                 if (req.Command != "Stop")
@@ -76,21 +90,22 @@ namespace Optosense.Edm.Drivers.Mux
             {
                 throw new EdmException("Instruction for board driver must not be null");
             }
-            
+
             var instruction = CodeParamsRegex().Replace(request.Instruction.Code ?? request.Command, "").Trim();
             var command = request.Command;
-            var parameters = string.IsNullOrEmpty(request.Parameters) ? new() :
-                JsonConvert.DeserializeObject<Dictionary<string, object>>(request.Parameters);
+            var parameters = string.IsNullOrEmpty(request.Parameters)
+                ? new()
+                : JsonConvert.DeserializeObject<Dictionary<string, object>>(request.Parameters);
             command = SubstituteParameters(command, parameters);
             response.Request = command;
             try
             {
-                var bytes = await Port.Request(
-                        command,
-                        responseLength: request.Instruction.Length ?? 0,
-                        singleLine: true,
-                        timeout: request.Instruction.Timeout ?? 100,
-                        retries: request.Instruction.Retries ?? 0);
+                var bytes = await Send(
+                    $"{command}\r",
+                    request.Instruction.Timeout ?? 100,
+                    true,
+                    request.Instruction.Length ?? 0,
+                    request.Instruction.Retries ?? 0);
 
                 if (instruction == "KZ?")
                 {
@@ -114,9 +129,11 @@ namespace Optosense.Edm.Drivers.Mux
                     Regex.IsMatch(
                         response.Response,
                         SubstituteParameters(request.Instruction.Syntax, parameters),
-                        RegexOptions.Singleline) ?
-                            DriverResponseState.Ok : DriverResponseState.InvalidResponse;
-                var match = Regex.Match(response.Response, request.Instruction.Syntax ?? string.Empty, RegexOptions.Singleline);
+                        RegexOptions.Singleline)
+                        ? DriverResponseState.Ok
+                        : DriverResponseState.InvalidResponse;
+                var match = Regex.Match(response.Response, request.Instruction.Syntax ?? string.Empty,
+                    RegexOptions.Singleline);
                 if (match.Success)
                 {
                     // Skip first global match
@@ -133,7 +150,6 @@ namespace Optosense.Edm.Drivers.Mux
                         parameters.TryAdd(p, null);
                     }
                 }
-
             }
             catch (Exception e)
             {
@@ -155,10 +171,10 @@ namespace Optosense.Edm.Drivers.Mux
 
             // Provide parameters no matter what
             response.Parameters = JsonConvert.SerializeObject(parameters);
-            
+
             if (CancellationToken.IsCancellationRequested)
                 Dispose();
-            
+
             return response;
         }
 
@@ -175,7 +191,7 @@ namespace Optosense.Edm.Drivers.Mux
 
         public void Dispose()
         {
-            if (Port is { IsOpen: true }) 
+            if (Port is { IsOpen: true })
                 Port.Close();
         }
 
@@ -187,9 +203,7 @@ namespace Optosense.Edm.Drivers.Mux
 
         private async Task ExecuteKz(byte[] bytes, string syntax, DriverResponse response)
         {
-            int? num = bytes != null ? 
-                BitConverter.ToInt32(bytes.Take(4).Reverse().ToArray(), 0) :
-                null;
+            int? num = bytes != null ? BitConverter.ToInt32(bytes.Take(4).Reverse().ToArray(), 0) : null;
             var outParam = ParametersRegex().Matches(syntax ?? string.Empty)
                 .FirstOrDefault()
                 ?.Groups[1].Value ?? throw new EdmException("Output param for instruction \"KZ\" is missing");
@@ -210,8 +224,75 @@ namespace Optosense.Edm.Drivers.Mux
 
         [GeneratedRegex("{.*?}")]
         private static partial Regex CodeParamsRegex();
+
         [GeneratedRegex(@"\?<(\w+?)>")]
         private static partial Regex ParametersRegex();
+
+        private async Task<byte[]> Send(string command, int initialTimeout, bool singleLine, int responseLength,
+            int retries)
+        {
+            long timeout = initialTimeout;
+            for (;;)
+            {
+                // Check if span between requests is exceeded
+                var check = (DateTime.UtcNow - _lastPortRequestTs).TotalMilliseconds;
+                if (check < PortRequestSpan)
+                {
+                    await Task.Delay(PortRequestSpan - (int)check, CancellationToken);
+                }
+
+                // Continue executing request
+                var totalRead = 0;
+                Port.DiscardInBuffer();
+                Port.DiscardOutBuffer();
+                // TODO ReadTimeout has no effect in async reading mode
+                // Port.BaseStream.ReadTimeout = timeout;
+                // Port.ReadTimeout = timeout;
+                await Port.BaseStream.WriteAsync(command.ToBytes().AsMemory(0, command.Length), CancellationToken);
+                try
+                {
+                    byte lastByte = 0xFF;
+                    do
+                    {
+                        // Whole response must arrive before timeout exceeded
+                        if (timeout < 0)
+                            throw new TimeoutException();
+                        _stopwatch.Restart();
+                        var readCount = await Port.BaseStream.ReadAsync(_buffer, totalRead, _buffer.Length - totalRead,
+                                CancellationToken)
+                            .WaitAsync(TimeSpan.FromMilliseconds(timeout), CancellationToken);
+                        _stopwatch.Stop();
+                        timeout -= _stopwatch.ElapsedMilliseconds;
+                        totalRead += readCount;
+                        lastByte = _buffer[totalRead - 1];
+                    } while (!((singleLine && lastByte == '\r' || !singleLine && lastByte == 0x00 && totalRead > 0) &&
+                               (responseLength == 0 || responseLength <= totalRead)));
+                }
+                catch (TimeoutException)
+                {
+                    if (totalRead == 0 || totalRead < responseLength)
+                    {
+                        if (retries-- <= 0)
+                        {
+                            throw;
+                        }
+                        else
+                        {
+                            // Increase timeout by 50%
+                            timeout = (int)(initialTimeout * 1.5);
+                            continue;
+                        }
+                    }
+                }
+                finally
+                {
+                    _stopwatch.Stop();
+                    _lastPortRequestTs = DateTime.UtcNow;
+                }
+
+                return _buffer[..totalRead];
+            }
+        }
     }
 
     public class BoardDriverOptions : IDriverOptions
