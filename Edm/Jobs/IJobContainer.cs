@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -13,7 +14,7 @@ namespace Microprojects.Edm.Jobs;
 public interface IJobContainer : IDisposable
 {
     Hive Hive { get; }
-    ICollection<CancellableTask> RunningTasks { get; }
+    ConcurrentDictionary<int, CancellableTask> RunningTasks { get; }
     IEnumerable<AvailableTask> GetRunningTasks();
     IEnumerable<AvailableTask> GetAvailableTasks();
     IEnumerable<IJob> GetRunningJobs();
