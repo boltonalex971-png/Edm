@@ -62,6 +62,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microprojects.Edm.Install",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Optosense.Edm.Drivers.RestApi", "Optosense.Edm.Drivers.RestApi\Optosense.Edm.Drivers.RestApi.csproj", "{3924404F-56FC-4874-8AC1-0303B2FD1216}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microprojects.Edm.Ui.Logistics", "Microprojects.Edm.Ui.Logistics\Microprojects.Edm.Ui.Logistics.csproj", "{8C6B1D4E-F05D-4A76-95F9-340B6540E754}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -150,6 +152,10 @@ Global
 		{3924404F-56FC-4874-8AC1-0303B2FD1216}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3924404F-56FC-4874-8AC1-0303B2FD1216}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3924404F-56FC-4874-8AC1-0303B2FD1216}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8C6B1D4E-F05D-4A76-95F9-340B6540E754}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8C6B1D4E-F05D-4A76-95F9-340B6540E754}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8C6B1D4E-F05D-4A76-95F9-340B6540E754}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8C6B1D4E-F05D-4A76-95F9-340B6540E754}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -164,6 +170,7 @@ Global
 		{64DD102C-E20D-4E59-BBDF-EA68A8A920AE} = {5DE79CDF-469D-46D8-B365-BE9D4DB8BBD3}
 		{85E00613-E1D8-4908-874D-5F0DF83F1D5F} = {89B8BDA7-EE19-4878-AA00-E0C5A18A87D5}
 		{3924404F-56FC-4874-8AC1-0303B2FD1216} = {E5A45074-EE72-494C-B46C-475675E3E80E}
+		{8C6B1D4E-F05D-4A76-95F9-340B6540E754} = {81AF2D89-E19A-41C7-8BAD-4E67FDD65E79}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F93F8111-60F8-4D4C-994F-1A46CE7F76FA}

@@ -1,0 +1,18 @@
+using UUIDNext;
+
+namespace Microprojects.Edm.Ui.Logistics.Models;
+
+public class DomainObject
+{
+    public static Guid NewGuid() => Uuid.NewDatabaseFriendly(Database.SqlServer); 
+    public virtual Guid Id { get; set; } = NewGuid();
+}
+
+public static class DomainObjectHelper
+{
+    public static T SetId<T>(this T obj) where T : DomainObject
+    {
+        obj.Id = DomainObject.NewGuid();
+        return obj;
+    }
+}
