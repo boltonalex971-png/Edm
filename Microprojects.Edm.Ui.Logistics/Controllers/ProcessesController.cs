@@ -126,4 +126,49 @@ public class ProcessesController : AuthControllerBase
         var result = await _processService.ChangeParent<Process>(id, parent.Id);
         return _mapper.Map<ProcessViewModel>(result);
     }
+
+    [HttpGet("kinds")]
+    public IEnumerable<string> GetProcessKinds() => Enum.GetNames(typeof(ProcessKinds));
+
+    #region subprocesses
+
+    [HttpGet("{id:guid}/subprocesses")]
+    public async Task<IEnumerable<SubProcessViewModel>> GetSubProcesses(Guid id)
+    {
+        if (id == Guid.Empty)
+        {
+            return new List<SubProcessViewModel>();
+        }
+
+        var subs = await _processService.GetSubProcesses(id);
+        var model = _mapper.Map<IEnumerable<SubProcessViewModel>>(subs);
+        return model;
+    }
+
+    [HttpPut("{id:guid}/subprocesses")]
+    public async Task<SubProcessViewModel> SaveWorkbench(Guid id, SubProcessViewModel model)
+    {
+        var sp = _mapper.Map<SubProcess>(model);
+        var result = await _processService.SaveSubProcess(sp);
+        return _mapper.Map<SubProcessViewModel>(result);
+    }
+
+    [HttpPost("{id:guid}/subprocesses")]
+    public async Task<SubProcessViewModel> AddProfile(Guid id, SubProcessViewModel model)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+
+        var subProcess = _mapper.Map<SubProcess>(model);
+        subProcess = await _processService.AddSubProcess(id, subProcess);
+        return _mapper.Map<SubProcessViewModel>(subProcess);
+    }
+
+    [HttpDelete("{id:guid}/subprocesses/{subProcessId:guid}")]
+    public async Task<bool> DeleteProfile(Guid id, Guid subProcessId)
+    {
+        var wasDetached = await _processService.DeleteSubProcess(id, subProcessId);
+        return wasDetached;
+    }
+
+    #endregion
 }

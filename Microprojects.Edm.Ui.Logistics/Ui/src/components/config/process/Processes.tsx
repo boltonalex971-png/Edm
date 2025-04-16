@@ -2,10 +2,10 @@ import { Field } from '@progress/kendo-react-form'
 import { Input } from '@progress/kendo-react-inputs'
 import {type EffectCallback, useEffect, useState} from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import type { DetailEventHandler, Operation, Process } from "../../../data/types"
+import type {DetailEventHandler, Operation, Process, ProcessKind} from "../../../data/types"
 import Api from '@features/api/api'
-import {useGet} from "../../../hooks/hooks";
-import { useBasePath } from "../../../hooks/routerHooks"
+import {useGet} from "@logistics/hooks/hooks";
+import { useBasePath } from "@logistics/hooks/routerHooks"
 import { DropDownComp } from '../../DropDownCell'
 import {Detail, type DetailProps, Editor, EMPTY_GUID, Info, MasterDetail, reloadMaster} from '../../MasterDetail'
 import { ProcessTabs } from './ProcessTabs'
@@ -35,7 +35,7 @@ export function Processes() {
 }
 
 export interface ProcessDetailProps extends DetailProps {
-    onChange: DetailEventHandler,
+    onChange?: DetailEventHandler,
     onUpdate?: DetailEventHandler
     onClose: () => void,
     path: string,
@@ -48,8 +48,8 @@ export function ProcessDetail({ processId, ...props } :ProcessDetailProps) {
     const params = useParams<{id: string}>();
     const id = processId?.toString() || params.id;
     const [sub, setSub] = useState<React.ReactElement>();
-    useEffect(setSub as EffectCallback);
-    //const [[ops]] = useGet<Operation[]>(`${Api.plugins}/operations`, []);
+    useEffect(setSub as EffectCallback, [id]);
+    const [[kinds]] = useGet<string[]>(`${Api.processes}/kinds`, []);
     let [[data, setData], loading, error] = useGet<Process>(`${props.api}/${id}`, [id]);
     if (!data || data.id === EMPTY_GUID) {
         data = { ...data, name: '', description: '' } as Process
@@ -74,10 +74,10 @@ export function ProcessDetail({ processId, ...props } :ProcessDetailProps) {
             subDetail={sub}
             card={
                 <Info 
-                    content={
+                    content={data &&
                         <>
                             <div>
-                                {data.commonUid && <p>Common UID: {data.commonUid}</p>}
+                                <p>{data.kind} process</p>
                             </div>
                             {/* {data.qualifiers &&
                                 <div className='my-2'>
@@ -100,7 +100,7 @@ export function ProcessDetail({ processId, ...props } :ProcessDetailProps) {
                     path={props.path}
                     onChange={props.onChange}
                     data={data}
-                    setData={setData as DetailEventHandler}
+                    setData={setData}
                     onUpdate={props.onUpdate}
                     content={
                         <fieldset className={'k-form-fieldset'}>
@@ -115,16 +115,16 @@ export function ProcessDetail({ processId, ...props } :ProcessDetailProps) {
                             {/*    <Field name={'commonUid'} component={Input} label={'Common UID'} />*/}
                             {/*</div>*/}
                             <div className="mb-3" style={{ width: '400px' }}>
-                                {/*<Field name={'operationGuid'} label={'Operation'}*/}
-                                {/*    component={(compProps) =>*/}
-                                {/*        <DropDownComp {...compProps}*/}
-                                {/*            loading={!ops}*/}
-                                {/*            data={ops}*/}
-                                {/*            textField='name'*/}
-                                {/*            dataItemKey='guid'*/}
-                                {/*        />*/}
-                                {/*    }*/}
-                                {/*/>*/}
+                                <Field name={'kind'} label={'Process kind'}
+                                    component={(compProps) =>
+                                        <DropDownComp {...compProps}
+                                            loading={!kinds}
+                                            data={[{name: ''}, ...kinds?.map(k => ({ name: k }))]}
+                                            textField='name'
+                                            dataItemKey='name'
+                                        />
+                                    }
+                                />
                             </div>
                             {/* <div className="mb-3">
                                 <Field name={'qualifiers'}
@@ -147,9 +147,9 @@ export function ProcessDetail({ processId, ...props } :ProcessDetailProps) {
                     }
                 />
             }
-            // relations={
-            //     <ProcessTabs id={id} api={props.api} missedInputs={missedInputs} onDetailSelected={setSub} />
-            // }
+            relations={
+                <ProcessTabs id={id} api={props.api} missedInputs={missedInputs} onDetailSelected={setSub} />
+            }
         />
     );
 }

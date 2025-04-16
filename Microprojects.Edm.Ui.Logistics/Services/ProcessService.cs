@@ -24,4 +24,37 @@ public class ProcessService : ServiceBase<Process>, IProcessService
     public ProcessService(LogisticsContext db) : base(db)
     {
     }
+
+    public async Task<IEnumerable<SubProcess>> GetSubProcesses(Guid id)
+    {
+        var subs = await Set<SubProcess>().AsNoTracking()
+            .Include(s => s.LinkedProcess)
+            .Where(s => s.ProcessId == id)
+            .ToListAsync();
+        return subs;
+    }
+
+    public async Task<SubProcess> AddSubProcess(Guid id, SubProcess process)
+    {
+        process.ProcessId = id;
+        var sub = Set<SubProcess>().Add(process);
+        await Db.SaveChangesAsync();
+        return sub.Entity;
+    }
+
+    public async Task<SubProcess> SaveSubProcess(SubProcess sp)
+    {
+        var sub = Set<SubProcess>().Attach(sp);
+        sub.State = EntityState.Modified;
+        await Db.SaveChangesAsync();
+        return sub.Entity;
+    }
+
+    public async Task<bool> DeleteSubProcess(Guid id, Guid subProcessId)
+    {
+        var sup = Set<SubProcess>().Attach(new SubProcess {Id = subProcessId});
+        sup.State = EntityState.Deleted;
+        await Db.SaveChangesAsync();
+        return true;
+    }
 }

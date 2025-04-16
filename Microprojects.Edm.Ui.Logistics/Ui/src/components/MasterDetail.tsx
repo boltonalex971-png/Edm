@@ -85,7 +85,7 @@ export type DetailProps = {
     error?: string,
     validation?: string,
     data?: DataItem,
-    onChange: DetailEventHandler,
+    onChange?: DetailEventHandler,
     onClose: MouseEventHandler,
     onUp?: MouseEventHandler,
     path: string,
@@ -214,7 +214,7 @@ interface EditorProps extends InfoProps {
     onUpdate?: DetailEventHandler
     onChange: DetailEventHandler
     api: string
-    path: string
+    path?: string
 }
 
 export function Editor(props : EditorProps) {

@@ -22,7 +22,8 @@
     
     /* paths */
     "paths": {
-      "@features/*": ["./src/features/*"]
+      "@features/*": ["./src/features/*"],
+      "@logistics/*": ["./src/*"]
     },
   },
   "include": ["src"]

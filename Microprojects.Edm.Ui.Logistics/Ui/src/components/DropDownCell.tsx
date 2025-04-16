@@ -5,7 +5,7 @@ import { ParentContext } from './ParentContext';
 import {DropDownListChangeEvent} from "@progress/kendo-react-dropdowns/dist/npm/DropDownList/DropDownListProps";
 
 type EditableCellProps = {
-    inEdit: boolean;
+    inEdit?: boolean;
 }
 
 type DropDownCompProps = {
@@ -40,10 +40,10 @@ interface DropDownCellProps extends EditableCellProps  {
     field: string,
     id: string,
     text: string,
-    fieldName: string,
+    fieldName?: string,
     fieldId: string,
-    editable: boolean,
-    template: string
+    editable?: boolean,
+    template?: string
 }
 
 export const DropDownCell = ({ getData, id, text, fieldName, fieldId, onClick, editable = true, ...props } : DropDownCellProps) => {

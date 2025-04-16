@@ -14,9 +14,10 @@ import {useGet} from "../hooks/hooks"
 import isEqual from 'lodash.isequal'
 import {Loading} from "../features/utils/Utils";
 import {ParentContext} from "./ParentContext";
+import {UUID} from "@logistics/data/types";
 
 type RelationTableProps = {
-    id: number,
+    id: UUID,
     api: string,
     editable: boolean,
     removable: boolean,
@@ -27,7 +28,7 @@ type RelationTableProps = {
 export function RelationTable({ api, children, ...props } :RelationTableProps) {
     const [reload, setReload] = useState(false); // used to force fetching table data
     const [editItem, setEditItem] = useState<any>(null);
-    let [[data, setData], loading, error] = useGet<any[]>(`${api}`, [reload]);
+    let [[data, setData], loading, error] = useGet<any[]>(`${api}`, [reload, api]);
 
     const rowClick = (event : GridRowClickEvent | { dataItem: any }) => {
         const edit = data!.filter(i => i.inEdit)

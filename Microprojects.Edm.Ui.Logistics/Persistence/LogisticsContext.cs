@@ -13,7 +13,7 @@ public class LogisticsContext : DbContext
     public DbSet<Nomenclature> Nomenclatures { get; set; }
     public DbSet<NomenclatureType> NomenclatureTypes { get; set; }
     public DbSet<Process> Processes { get; set; }
-    public DbSet<ProcessTree> ProcessTrees { get; set; }
+    public DbSet<SubProcess> SubProcesses { get; set; }
     public DbSet<Specification> Specifications { get; set; }
     public DbSet<SpecificationNomenclature> SpecificationNomenclatures { get; set; }
     public DbSet<Tare> Tares { get; set; }
@@ -67,6 +67,19 @@ public class LogisticsContext : DbContext
             .HasOne(p => p.Meta)
             .WithOne()
             .HasForeignKey<Process>(m => m.Id)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        // Self-referencing relation to build process tree
+        builder.Entity<Process>()
+            .HasMany(p => p.SubProcesses)
+            .WithOne(s => s.Process)
+            .HasForeignKey(s => s.ProcessId)
+            .OnDelete(DeleteBehavior.NoAction);
+        builder.Entity<SubProcess>()
+            .ToTable("SubProcesses")
+            .HasOne(s => s.LinkedProcess)
+            .WithMany()
+            .HasForeignKey(s => s.LinkedProcessId)
             .OnDelete(DeleteBehavior.NoAction);
     }
 

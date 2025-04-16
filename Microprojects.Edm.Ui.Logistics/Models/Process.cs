@@ -10,4 +10,5 @@ public enum ProcessKinds
 public class Process : DirectoryEntry
 {
     public ProcessKinds Kind { get; set; }
+    public ICollection<SubProcess>? SubProcesses { get; set; }
 }

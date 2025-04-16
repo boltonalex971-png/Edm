@@ -25,7 +25,7 @@ export interface TreeNode extends TreeDataItem {
 
 export interface Process extends DataItem {
     message: string
-    commonUid: string
+    kind: string
 }
 
 export interface Operation extends DataItem {
@@ -39,3 +39,8 @@ export interface User extends DataItem {
 }
 
 export type DetailEventHandler = (data?: TreeNode) => void;
+
+export type ProcessKind = {
+    name: string
+    id: string
+}

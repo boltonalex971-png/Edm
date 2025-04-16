@@ -27,5 +27,8 @@ public class WebModelsProfile : AutoMapper.Profile
             .ForMember(d => d.IsFolder, o => o.MapFrom(s => s is Directory))
             .ForMember(d => d.Expanded, o => o.MapFrom(s => true))
             .ForMember(d => d.DirectoryId, o => o.MapFrom(s => s.DirectoryId));
+
+        CreateMap<SubProcess, SubProcessViewModel>();
+        CreateMap<SubProcessViewModel, SubProcess>();
     }
 }
