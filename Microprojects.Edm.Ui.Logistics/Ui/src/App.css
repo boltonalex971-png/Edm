@@ -28,3 +28,7 @@ code {
   font-size: 0.9rem !important;
   font-weight: lighter;
 }
+
+.nav-link:hover {
+  background-color: #d2e6fd;
+}

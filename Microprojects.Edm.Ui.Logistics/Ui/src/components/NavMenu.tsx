@@ -21,18 +21,16 @@ export const NavMenu = () => {
                                 <NavLink tag={Link} className="text-dark" to="/">Home</NavLink>
                             </NavItem>
                             <NavItem>
-                                <NavLink tag={Link} className="text-dark"
-                                         to="/dashboard/operations">Operations</NavLink>
+                                <NavLink tag={Link} className="text-dark" to="/tasks/ongoing">Tasks</NavLink>
                             </NavItem>
                             <NavItem>
-                                <NavLink tag={Link} className="text-dark" to="/dashboard/operations">Dashboard</NavLink>
+                                <NavLink tag={Link} className="text-dark" to="/supplies/remaining">Supplies</NavLink>
                             </NavItem>
                             <NavItem>
-                                <NavLink tag={Link} className="text-dark"
-                                         to="/config/processes">Configurations</NavLink>
+                                <NavLink tag={Link} className="text-dark" to="/warehouse">Warehouse</NavLink>
                             </NavItem>
                             <NavItem>
-                                <NavLink tag={Link} className="text-dark" to="/plugins/drivers">Plugins</NavLink>
+                                <NavLink tag={Link} className="text-dark" to="/config/processes">Configurations</NavLink>
                             </NavItem>
                         </ul>
                     </Collapse>

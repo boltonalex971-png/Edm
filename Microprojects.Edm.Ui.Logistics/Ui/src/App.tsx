@@ -3,6 +3,11 @@ import {Link, Route, Routes} from "react-router-dom";
 import {Layout} from "./components/Layout";
 import {useGetUserQuery} from "./features/api/apiSlice";
 import {Processes} from "./components/config/process/Processes";
+import {Home} from "@logistics/components/homepages/Home.tsx";
+import {Config} from "@logistics/components/config/Config.tsx";
+import {Tasks} from "@logistics/components/tasks/Tasks.tsx";
+import {Supplies} from "@logistics/components/supplies/Supplies.tsx";
+import {Warehouse} from "@logistics/components/warehouse/Warehouse.tsx";
 
 export function App() {
     const {data: user, error, isLoading} = useGetUserQuery();
@@ -14,8 +19,12 @@ export function App() {
         <Layout>
             {user?.role &&
                     <Routes>
-                        <Route index element={<Link to={'/processes'}>Processes</Link>} />
-                        <Route path='/processes/*' element={<Processes/>} />
+                        <Route index element={<Home />} />
+                        <Route path='/config/*' element={<Config />} />
+                        <Route path='/tasks/*' element={<Tasks />} />
+                        <Route path='/supplies/*' element={<Supplies />} />
+                        <Route path='/warehouse/*' element={<Warehouse />} />
+                        <Route path='*' element={<span>Page not exists</span>} />
                     </Routes>
             }
             {user && !user.role &&
