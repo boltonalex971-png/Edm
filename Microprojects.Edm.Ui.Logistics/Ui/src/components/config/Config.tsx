@@ -2,7 +2,7 @@ import React from 'react';
 import { Processes } from "./process/Processes";
 import {useRouteMatch} from "@logistics/hooks/routerHooks";
 import {Route, Routes} from "react-router-dom";
-import {PageTitle} from "@logistics/components/PageTitle.tsx";
+import {PageTitle} from "@logistics/components/PageTitle";
 import {Nav, NavItem, NavLink} from "reactstrap";
 import {NavLink as Link} from "react-router";
 
@@ -19,9 +19,6 @@ export function Config() {
                     </NavItem>
                     <NavItem>
                         <NavLink tag={Link} to={`${path}/nomenclatures`} >Nomenclatures</NavLink>
-                    </NavItem>
-                    <NavItem>
-                        <NavLink tag={Link} to={`${path}/n-types`} >Nomenclature types</NavLink>
                     </NavItem>
                     <NavItem>
                         <NavLink tag={Link} to={`${path}/tares`} >Tares</NavLink>

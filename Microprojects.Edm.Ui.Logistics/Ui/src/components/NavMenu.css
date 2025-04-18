@@ -2,10 +2,11 @@
   white-space: normal;
   text-align: center;
   word-break: break-all;
-  background-color: #d8f1d8;
+  background-color: #def1de;
   border-radius:  0.25em;
   padding-inline:  0.5em;
-}
+  display: flex;
+  align-items: center;}
 
 html {
   font-size: 14px;

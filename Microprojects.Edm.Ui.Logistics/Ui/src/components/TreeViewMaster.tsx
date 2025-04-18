@@ -12,6 +12,8 @@ import { TreeDataItem} from "../data/types";
 import axios from "axios";
 import api from "../features/api/api";
 import {EMPTY_GUID} from "./MasterDetail.tsx";
+import {FileText, Folder2, Folder2Open, FolderPlus} from "react-bootstrap-icons";
+import './TreeViewMaster.css'
 
 export type TreeViewMasterProps = {
     api: string,
@@ -101,7 +103,8 @@ export function TreeViewMaster(props : TreeViewMasterProps) {
                     <Button fillMode='flat' title='Add new folder' style={{ justifySelf: 'end' }}
                         onClick={() => navigate(`${url}/folder/${EMPTY_GUID}`)}
                     >
-                        <span className="k-icon k-i-folder-add" />
+                        {/*<span className="k-icon k-i-folder-add" />*/}
+                        <FolderPlus/>
                     </Button>
                     <Button fillMode='flat' title='Add new item' style={{ justifySelf: 'end' }}
                         onClick={() => navigate(`${url}/${EMPTY_GUID}`)}
@@ -146,7 +149,8 @@ export type TreeItemProps = {
 const TreeItem = (props : TreeItemProps) => {
     return (
         <>
-            <span className={iconClassName(props.item)}>&nbsp;</span>
+            {/*<span className={iconClassName(props.item)}>&nbsp;</span>*/}
+            {icon(props.item)}&nbsp;
             <span className={props.item.isFolder ? 'fw-bolder' : ''} title={props.item.description}>
                 {props.item.name}
             </span>
@@ -157,9 +161,17 @@ const TreeItem = (props : TreeItemProps) => {
 function iconClassName({ isFolder, isActive, ...item } : TreeDataItem) {
     if (isFolder) {
         return item.expanded ? "k-icon k-i-folder-open" : "k-icon k-i-folder";
-    } 
+    }
 
     return "k-icon k-i-file-txt";
+}
+
+function icon({ isFolder, isActive, ...item } : TreeDataItem) {
+    if (isFolder) {
+        return item.expanded ? <Folder2Open /> : <Folder2/>;
+    }
+
+    return <FileText/>;
 }
 
 // function getSiblings(itemIndex, data) {

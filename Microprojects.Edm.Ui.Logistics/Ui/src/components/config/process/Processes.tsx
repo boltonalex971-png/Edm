@@ -9,6 +9,7 @@ import { useBasePath } from "@logistics/hooks/routerHooks"
 import { DropDownComp } from '../../DropDownCell'
 import {Detail, type DetailProps, Editor, EMPTY_GUID, Info, MasterDetail, reloadMaster} from '../../MasterDetail'
 import { ProcessTabs } from './ProcessTabs'
+import {Diagram3} from "react-bootstrap-icons";
 
 export function Processes() {
     const type = 'process';
@@ -63,7 +64,7 @@ export function ProcessDetail({ processId, ...props } :ProcessDetailProps) {
             onChange={props.onChange}
             onClose={props.onClose}
             id={id}
-            icon={<span className='k-icon k-i-aggregate-fields' title='Process' />}
+            icon={<Diagram3 title='Process' />}
             loading={loading}
             error={error as string}
             validation={
