@@ -31,6 +31,7 @@ namespace Microprojects.Edm.Ui.Logistics
 
             services.AddScoped<IDirectoryService, DirectoryService>();
             services.AddScoped<IProcessService, ProcessService>();
+            services.AddScoped<INomenclatureService, NomenclatureService>();
         }
     }
 }

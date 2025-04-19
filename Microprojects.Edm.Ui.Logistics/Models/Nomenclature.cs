@@ -1,17 +1,19 @@
 namespace Microprojects.Edm.Ui.Logistics.Models;
 
-public enum NomenclatureCategory
+public enum NomenclatureCategories
 {
-    Materials = 0,
-    Semifinished = 1,
+    Product = 0,
+    Materials = 1,
     Part = 2,
-    Product = 3
+    Semifinished = 3
 }
 
 public class Nomenclature : DirectoryEntry
 {
+    //public Guid? TareTypeId { get; set; }
     /// <summary>
     /// Nomenclature category
     /// </summary>
-    public NomenclatureCategory Category { get; set; }
+    public NomenclatureCategories Category { get; set; }
+    //public TareType? TareType { get; set; }
 }

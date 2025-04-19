@@ -9,10 +9,6 @@ public class WebModelsProfile : AutoMapper.Profile
 {
     public WebModelsProfile()
     {
-        CreateMap<Process, ProcessViewModel>()
-            .ForMember(p => p.IsFolder, o => o.MapFrom(s => false));
-        CreateMap<ProcessViewModel, Process>();
-
         CreateMap<Directory, DirectoryEntryViewModel>()
             .ForMember(d => d.IsFolder, o => o.MapFrom(s => true))
             .ForMember(d => d.Expanded, o => o.MapFrom(s => true))
@@ -28,7 +24,13 @@ public class WebModelsProfile : AutoMapper.Profile
             .ForMember(d => d.Expanded, o => o.MapFrom(s => true))
             .ForMember(d => d.DirectoryId, o => o.MapFrom(s => s.DirectoryId));
 
+        CreateMap<Process, ProcessViewModel>();
+        CreateMap<ProcessViewModel, Process>();
+
         CreateMap<SubProcess, SubProcessViewModel>();
         CreateMap<SubProcessViewModel, SubProcess>();
+
+        CreateMap<Nomenclature, NomenclatureViewModel>();
+        CreateMap<NomenclatureViewModel, Nomenclature>();
     }
 }

@@ -28,6 +28,11 @@ export interface Process extends DataItem {
     kind: string
 }
 
+export interface Nomenclature extends DataItem {
+    category: string
+    taretype: string
+}
+
 export interface Operation extends DataItem {
 }
 

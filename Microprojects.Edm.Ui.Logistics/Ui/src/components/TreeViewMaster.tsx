@@ -57,7 +57,7 @@ export function TreeViewMaster(props : TreeViewMasterProps) {
 
     const onItemDragOver = (event: TreeViewItemDragOverEvent) => {
         dragClue.current.show(
-            event.pageY - 80,
+            event.pageY - 160,
             event.pageX,
             event.item.name,
             getClueClassName(event)
