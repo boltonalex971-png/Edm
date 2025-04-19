@@ -33,4 +33,8 @@
 	  <ProjectReference Include="..\Optosense.Edm.DataAccess\Optosense.Edm.DataAccess.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="Ui\src\components\config\tare\" />
+	</ItemGroup>
+
 </Project>

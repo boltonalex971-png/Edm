@@ -6,6 +6,7 @@ import {PageTitle} from "@logistics/components/PageTitle";
 import {Nav, NavItem, NavLink} from "reactstrap";
 import {NavLink as Link} from "react-router";
 import {Nomenclatures} from "@logistics/components/config/nomenclature/Nomenclatures.tsx";
+import {TareTypes} from "@logistics/components/config/taretype/TareTypes.tsx";
 
 export function Config() {
     let { path } = useRouteMatch();
@@ -25,7 +26,7 @@ export function Config() {
                         <NavLink tag={Link} to={`${path}/tares`} >Tares</NavLink>
                     </NavItem>
                     <NavItem>
-                        <NavLink tag={Link} to={`${path}/t-types`} >Tare types</NavLink>
+                        <NavLink tag={Link} to={`${path}/taretypes`} >Tare types</NavLink>
                     </NavItem>
                 </Nav>
             </div>
@@ -36,7 +37,7 @@ export function Config() {
                     <Route path='processes/*' element={<Processes />} />
                     <Route path='nomenclatures/*' element={<Nomenclatures />} />
                     <Route path='tares' element={<span>Tares</span>} />
-                    <Route path='t-types' element={<span>Tare types</span>} />
+                    <Route path='taretypes/*' element={<TareTypes />} />
                     <Route path='*' element={<span>Page not exists</span>} />
                 </Routes>
             </div>

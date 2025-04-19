@@ -32,5 +32,8 @@ public class WebModelsProfile : AutoMapper.Profile
 
         CreateMap<Nomenclature, NomenclatureViewModel>();
         CreateMap<NomenclatureViewModel, Nomenclature>();
+
+        CreateMap<TareType, TareTypeViewModel>();
+        CreateMap<TareTypeViewModel, TareType>();
     }
 }

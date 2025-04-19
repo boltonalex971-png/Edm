@@ -33,6 +33,13 @@ export interface Nomenclature extends DataItem {
     taretype: string
 }
 
+export interface TareType extends DataItem {
+    unit: string
+    countable: boolean
+    dimensions: number
+    capacity: number
+}
+
 export interface Operation extends DataItem {
 }
 

@@ -24,14 +24,14 @@ namespace Microprojects.Edm.Ui.Logistics
                 options.UseSqlServer(
                     configuration.GetConnectionString("Logistics"),
                     sqlOptions => sqlOptions
-                        .UseCompatibilityLevel(140)); // This is workaround for EF 8 and "Contains" problem
+                        .UseCompatibilityLevel(140)); // This is a workaround for EF 8 and "Contains" problem
                 var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
                 options.UseLoggerFactory(loggerFactory);
             }, poolSize: 128);
 
             services.AddScoped<IDirectoryService, DirectoryService>();
             services.AddScoped<IProcessService, ProcessService>();
-            services.AddScoped<INomenclatureService, NomenclatureService>();
+            services.AddScoped<ITareTypeService, TareTypeService>();
         }
     }
 }

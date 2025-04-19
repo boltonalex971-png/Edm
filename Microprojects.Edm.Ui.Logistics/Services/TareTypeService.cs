@@ -1,0 +1,17 @@
+﻿using System;
+using Microprojects.Edm.Ui.Logistics.Contracts;
+using Microprojects.Edm.Ui.Logistics.Models;
+using Microprojects.Edm.Ui.Logistics.Persistence;
+
+namespace Microprojects.Edm.Ui.Logistics.Services;
+
+public class TareTypeService : ServiceBase<TareType>, ITareTypeService
+{
+    public TareTypeService()
+    {
+    }
+
+    public TareTypeService(LogisticsContext db) : base(db)
+    {
+    }
+}
