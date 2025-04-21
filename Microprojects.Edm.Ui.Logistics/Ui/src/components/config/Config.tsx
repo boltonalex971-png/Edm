@@ -23,9 +23,6 @@ export function Config() {
                         <NavLink tag={Link} to={`${path}/nomenclatures`} >Nomenclatures</NavLink>
                     </NavItem>
                     <NavItem>
-                        <NavLink tag={Link} to={`${path}/tares`} >Tares</NavLink>
-                    </NavItem>
-                    <NavItem>
                         <NavLink tag={Link} to={`${path}/taretypes`} >Tare types</NavLink>
                     </NavItem>
                 </Nav>
@@ -36,7 +33,6 @@ export function Config() {
                     <Route index element={<p>Select one of the options above</p>} />
                     <Route path='processes/*' element={<Processes />} />
                     <Route path='nomenclatures/*' element={<Nomenclatures />} />
-                    <Route path='tares' element={<span>Tares</span>} />
                     <Route path='taretypes/*' element={<TareTypes />} />
                     <Route path='*' element={<span>Page not exists</span>} />
                 </Routes>
