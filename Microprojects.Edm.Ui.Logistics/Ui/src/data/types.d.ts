@@ -40,6 +40,17 @@ export interface TareType extends DataItem {
     capacity: number
 }
 
+export interface Item {
+    id: UUID
+    nomenclatureName: string
+    children: Item[]
+    tareBarcode: string
+    tareTypeName: string
+    tareTypeUnits: string
+    capacity: number
+}
+
+
 export interface Operation extends DataItem {
 }
 

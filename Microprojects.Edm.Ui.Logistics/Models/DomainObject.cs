@@ -5,7 +5,7 @@ namespace Microprojects.Edm.Ui.Logistics.Models;
 public class DomainObject
 {
     public static Guid NewGuid() => Uuid.NewDatabaseFriendly(Database.SqlServer); 
-    public virtual Guid Id { get; set; } = NewGuid();
+    public virtual Guid Id { get; set; }
 }
 
 public static class DomainObjectHelper

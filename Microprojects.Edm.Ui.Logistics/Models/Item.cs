@@ -1,9 +1,7 @@
 namespace Microprojects.Edm.Ui.Logistics.Models;
 
-public class Item : DomainObject
+public class Item : DomainObject, IWithMeta
 {
-    public Guid? OriginId { get; set; }
-    
     /// <summary>
     /// Name of shipment for incoming items
     /// </summary>
@@ -25,19 +23,26 @@ public class Item : DomainObject
     public string? Barcode { get; set; }
     
     /// <summary>
-    /// Amount of available units
+    /// Number of available units
     /// </summary>
     public int Quantity { get; set; }
   
-    public required Guid NomenclatureId { get; set; }
-
     /// <summary>
     /// Item nomenclature
     /// </summary>
     public Nomenclature Nomenclature { get; set; }
+    public required Guid NomenclatureId { get; set; }
+
+    /// <summary>
+    /// Tare
+    /// </summary>
+    public Tare? Tare { get; set; }
+    public Guid? TareId { get; set; }
     
     /// <summary>
     /// Parent item the current one is part of
     /// </summary>
     public Item Origin { get; set; }
+    public Guid? OriginId { get; set; }
+    public Meta Meta { get; set; }
 }

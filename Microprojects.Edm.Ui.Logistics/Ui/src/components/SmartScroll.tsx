@@ -1,5 +1,5 @@
-import type React from 'react';
-import { useEffect } from 'react';
+import React, {CSSProperties} from 'react';
+import {useEffect} from 'react';
 import './SmartScroll.css';
 
 export type SmartScrollProps = {
@@ -9,32 +9,52 @@ export type SmartScrollProps = {
 
 export type SmartScrollContentProps = {
     children: React.ReactNode
+    flex?: number
+    style?: CSSProperties | undefined
 }
 
-export function SmartScroll({ children, offtop } : SmartScrollProps) {
+export function SmartScroll({children, offtop}: SmartScrollProps) {
     useEffect(() => {
         return smartScroll(offtop)
     });
 
     return (
-        <div className="smart-scroll-container" style={{ display: 'flex' }}>
+        <div className="smart-scroll-container" style={{display: 'flex'}}>
             {children}
         </div>
     )
 }
 
-export function SmartScrollContent({ children } : SmartScrollContentProps) {
+export function SmartScrollContent({children, flex, style}: SmartScrollContentProps) {
     return (
-        <div className="smart-scroll-content">
-            {children}
+        <div style={{flex: flex ?? 1}}>
+            <div className="smart-scroll-content" style={style}>
+                {children}
+            </div>
         </div>
     )
+}
+
+type ResizableHandleProps = {
+    isResizing?: boolean
+    handleMouseDown?: React.MouseEventHandler
+}
+
+export function ResizableHandle({ isResizing, handleMouseDown } : ResizableHandleProps) {
+    return (
+        <div
+            className={`absolute w-1 top-0 bottom-0 right-0 cursor-col-resize hover:bg-blue-600 ${
+                isResizing ? "bg-blue-600" : ""
+            }`}
+            onMouseDown={handleMouseDown}
+        />
+    );
 }
 
 let container: Element
 let contents: Array<HTMLElement>
 
-function smartScroll(marginTop : number) {
+function smartScroll(marginTop: number) {
 
     const viewport = document.documentElement
     let currPos = viewport.scrollTop
@@ -55,17 +75,17 @@ function smartScroll(marginTop : number) {
             if (container.clientHeight <= element.clientHeight) {
                 // no need to change the highest content style
                 state = "static"
-                style = { position: "static" }
+                style = {position: "static"}
             } else if (windowHeight > element.clientHeight) {
                 state = "small"
-                style = { position: "sticky", top: `${marginTop}px` }
+                style = {position: "sticky", top: `${marginTop}px`}
             } else {
                 if (currPos < windowScrollHeight) { // down 
                     state = "down"
-                    style = { position: "sticky", top: `-${element.clientHeight - windowHeight + marginTop}px` }
+                    style = {position: "sticky", top: `-${element.clientHeight - windowHeight + marginTop}px`}
                 } else { // up or stay
                     state = "up"
-                    style = { position: "sticky", top: `${marginTop}px` }
+                    style = {position: "sticky", top: `${marginTop}px`}
                 }
             }
 
@@ -85,5 +105,4 @@ function smartScroll(marginTop : number) {
     return () => {
         window.removeEventListener("scroll", scrolled)
     }
-
 }

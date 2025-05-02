@@ -10,10 +10,10 @@ public enum NomenclatureCategories
 
 public class Nomenclature : DirectoryEntry
 {
-    //public Guid? TareTypeId { get; set; }
-    /// <summary>
     /// Nomenclature category
     /// </summary>
     public NomenclatureCategories Category { get; set; }
-    //public TareType? TareType { get; set; }
+    
+    public TareType? DefaultTareType { get; set; }
+    public Guid? DefaultTareTypeId { get; set; }
 }

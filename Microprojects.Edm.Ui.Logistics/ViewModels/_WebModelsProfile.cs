@@ -29,11 +29,14 @@ public class WebModelsProfile : AutoMapper.Profile
 
         CreateMap<SubProcess, SubProcessViewModel>();
         CreateMap<SubProcessViewModel, SubProcess>();
-
+        
         CreateMap<Nomenclature, NomenclatureViewModel>();
         CreateMap<NomenclatureViewModel, Nomenclature>();
-
         CreateMap<TareType, TareTypeViewModel>();
         CreateMap<TareTypeViewModel, TareType>();
+        CreateMap<Item, ItemViewModel>().ReverseMap()
+            .ForMember(d => d.Nomenclature, o => o.Ignore());
+        CreateMap<Tare, TareViewModel>().ReverseMap()
+            .ForMember(d => d.TareType, o => o.Ignore());
     }
 }

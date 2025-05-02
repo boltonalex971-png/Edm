@@ -10,8 +10,8 @@ public class LogisticsContext : DbContext
     public DbSet<Changelog> Changelog { get; set; }
     public DbSet<Meta> Meta { get; set; }
     public DbSet<Directory> Directories { get; set; }
+    public DbSet<Item> Items { get; set; }
     public DbSet<Nomenclature> Nomenclatures { get; set; }
-    public DbSet<NomenclatureType> NomenclatureTypes { get; set; }
     public DbSet<Process> Processes { get; set; }
     public DbSet<SubProcess> SubProcesses { get; set; }
     public DbSet<Specification> Specifications { get; set; }
@@ -42,32 +42,8 @@ public class LogisticsContext : DbContext
                 s => JsonConvert.DeserializeObject<string[]>(s ?? "[]")
             );
 
-        
-        builder.Entity<Directory>()
-            .HasOne(p => p.Meta)
-            .WithOne()
-            .HasForeignKey<Directory>(m => m.Id)
-            .OnDelete(DeleteBehavior.NoAction);
-        builder.Entity<TareType>()
-            .HasOne(p => p.Meta)
-            .WithOne()
-            .HasForeignKey<TareType>(m => m.Id)
-            .OnDelete(DeleteBehavior.NoAction);
-        builder.Entity<Nomenclature>()
-            .HasOne(p => p.Meta)
-            .WithOne()
-            .HasForeignKey<Nomenclature>(m => m.Id)
-            .OnDelete(DeleteBehavior.NoAction);
-        builder.Entity<NomenclatureType>()
-            .HasOne(p => p.Meta)
-            .WithOne()
-            .HasForeignKey<NomenclatureType>(m => m.Id)
-            .OnDelete(DeleteBehavior.NoAction);
-        builder.Entity<Process>()
-            .HasOne(p => p.Meta)
-            .WithOne()
-            .HasForeignKey<Process>(m => m.Id)
-            .OnDelete(DeleteBehavior.NoAction);
+        // Foreign keys for tables with metainfo
+        ConfigureMetaEntities(builder);
 
         // Self-referencing relation to build process tree
         builder.Entity<Process>()
@@ -86,5 +62,21 @@ public class LogisticsContext : DbContext
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken())
     {
         return base.SaveChangesAsync(cancellationToken);
+    }
+
+    private void ConfigureMetaEntities(ModelBuilder builder)
+    {
+        var entityTypes = builder.Model.GetEntityTypes()
+            .Where(t => typeof(IWithMeta).IsAssignableFrom(t.ClrType))
+            .Select(t => t.ClrType);
+
+        foreach (var entityType in entityTypes)
+        {
+            builder.Entity(entityType)
+                .HasOne(nameof(IWithMeta.Meta))
+                .WithOne()
+                .HasForeignKey(entityType.Name, nameof(DomainObject.Id))
+                .OnDelete(DeleteBehavior.NoAction);
+        }
     }
 }

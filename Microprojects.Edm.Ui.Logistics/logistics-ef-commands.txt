@@ -1,0 +1,6 @@
+dotnet ef database update -- --connection-string "Data Source=.\SQLEXPRESS;MultipleActiveResultSets=true;Initial Catalog=optosense_logistics;Integrated Security=SSPI;Encrypt=no;TrustServerCertificate=no;"
+
+dotnet ef migrations add TareTypes --output-dir Persistence\Migrations -- --connection-string "Data Source=.\SQLEXPRESS;MultipleActiveResultSets=true;Initial Catalog=optosense_logistics;Integrated Security=SSPI;Encrypt=no;TrustServerCertificate=no;"
+
+dotnet ef migrations remove -- --connection-string "Data Source=.\SQLEXPRESS;MultipleActiveResultSets=true;Initial Catalog=optosense_logistics;Integrated Security=SSPI;Encrypt=no;TrustServerCertificate=no;"
+

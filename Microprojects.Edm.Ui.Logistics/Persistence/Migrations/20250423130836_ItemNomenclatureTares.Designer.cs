@@ -4,6 +4,7 @@ using Microprojects.Edm.Ui.Logistics.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 {
     [DbContext(typeof(LogisticsContext))]
-    partial class LogisticsContextModelSnapshot : ModelSnapshot
+    [Migration("20250423130836_ItemNomenclatureTares")]
+    partial class ItemNomenclatureTares
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -121,6 +124,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Item", b =>
                 {
                     b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Barcode")
@@ -400,12 +404,6 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Item", b =>
                 {
-                    b.HasOne("Microprojects.Edm.Ui.Logistics.Models.Meta", "Meta")
-                        .WithOne()
-                        .HasForeignKey("Microprojects.Edm.Ui.Logistics.Models.Item", "Id")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
                     b.HasOne("Microprojects.Edm.Ui.Logistics.Models.Nomenclature", "Nomenclature")
                         .WithMany()
                         .HasForeignKey("NomenclatureId")
@@ -419,8 +417,6 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
                     b.HasOne("Microprojects.Edm.Ui.Logistics.Models.Tare", "Tare")
                         .WithMany()
                         .HasForeignKey("TareId");
-
-                    b.Navigation("Meta");
 
                     b.Navigation("Nomenclature");
 

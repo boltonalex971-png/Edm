@@ -219,25 +219,17 @@ public class ServiceBase<TEntity> : IGenericService<TEntity> where TEntity : Dom
     {
         var state = entity.Id == Guid.Empty ? EntityState.Added : EntityState.Modified;
         var id = DomainObject.NewGuid();
-        if (entity is DirectoryEntry entry)
+        if (entity is DirectoryEntry dirEntry)
         {
             if (state == EntityState.Added)
             {
-                // Db.Meta.Add(new Meta
-                // {
-                //     Id = id,
-                //     Metatype = typeof(TEntity).Name,
-                //     Owner = "Admin",
-                //     Groups = [],
-                //     Created = DateTime.UtcNow
-                // });
-                entry.Id = id;
+                dirEntry.Id = id;
                 Set().Add(entity);
             }
             else
             {
-                var info = entry.Meta;
-                entry.Meta = null!;
+                var info = dirEntry.Meta;
+                dirEntry.Meta = null!;
                 var meta = await Set<Meta>().FindAsync(entity.Id) ?? 
                            throw new EdmException("Cannot find the corresponding meta information.");
                 meta.Modified = DateTime.UtcNow;
@@ -245,10 +237,15 @@ public class ServiceBase<TEntity> : IGenericService<TEntity> where TEntity : Dom
                 {
                     MetaId = meta.Id,
                     Author = info.Owner, 
-                    JsonValue  = JsonConvert.SerializeObject(entry)
+                    JsonValue  = JsonConvert.SerializeObject(dirEntry)
                 });
                 Set().Attach(entity).State = EntityState.Modified;
             }
+        }
+        else
+        {
+            var entry = Set().Attach(entity);
+            entry.State = state;
         }
 
         await Db.SaveChangesAsync();

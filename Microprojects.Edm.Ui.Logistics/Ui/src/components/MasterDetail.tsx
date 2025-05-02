@@ -220,8 +220,10 @@ interface EditorProps extends InfoProps {
 export function Editor(props : EditorProps) {
     const navigate = useNavigate();
     const handleSubmit = (data: Dictionary) => {
+        const foreignData = Object.keys(data)
+            .reduce((r, d, i, a ) => ({ ...r, [d]: data[d] && typeof data[d] === 'object' ? data[d]['id'] : data[d]}), {})
         if (data.id !== EMPTY_GUID) {
-            axios.put(`${props.api}/${props.data.id}`, data)
+            axios.put(`${props.api}/${props.data.id}`, foreignData)
                 .then((response) => {
                     props.onUpdate?.(response.data);
                     props.onChange?.(response.data)
@@ -229,7 +231,7 @@ export function Editor(props : EditorProps) {
                 })
         } else {
             const parentId = _selectedItem?.isFolder ? _selectedItem.id : _selectedItem?.directoryId;
-            axios.post(`${props.api}`, { ...data, directoryId: parentId })
+            axios.post(`${props.api}`, { ...foreignData, directoryId: parentId })
                 .then((response) => {
                     props.onUpdate?.(response.data);
                     props.onChange?.(response.data)
@@ -251,7 +253,7 @@ export function Editor(props : EditorProps) {
                         <Button
                             title='Save'
                             name='save'
-                            themeColor="primary"
+                            themeColor={formRenderProps.allowSubmit ? "primary" : "secondary"}
                             icon='save'
                             type={'submit'}
                             disabled={!formRenderProps.allowSubmit}

@@ -30,8 +30,10 @@ namespace Microprojects.Edm.Ui.Logistics
             }, poolSize: 128);
 
             services.AddScoped<IDirectoryService, DirectoryService>();
-            services.AddScoped<IProcessService, ProcessService>();
+            services.AddScoped<IItemService, ItemService>();
             services.AddScoped<INomenclatureService, NomenclatureService>();
+            services.AddScoped<IProcessService, ProcessService>();
+            services.AddScoped<ITareService, TareService>();
             services.AddScoped<ITareTypeService, TareTypeService>();
         }
     }
