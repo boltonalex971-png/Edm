@@ -35,6 +35,8 @@ namespace Microprojects.Edm.Ui.Logistics
             services.AddScoped<IProcessService, ProcessService>();
             services.AddScoped<ITareService, TareService>();
             services.AddScoped<ITareTypeService, TareTypeService>();
+            services.AddScoped<ISpecificationService, SpecificationService>();
+            services.AddScoped<IUserService, UserService>();
         }
     }
 }

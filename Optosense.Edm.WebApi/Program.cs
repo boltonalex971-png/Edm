@@ -141,6 +141,8 @@ builder.Services.AddHostedService<Worker>()
         config.SourceName = "EDM Service";
     }).Configure<HostOptions>(options => options.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore);
 
+builder.Services.AddHttpContextAccessor();
+
 var app = builder.Build();
 
 app.UsePeer();

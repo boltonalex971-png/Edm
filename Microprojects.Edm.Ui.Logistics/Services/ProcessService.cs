@@ -16,13 +16,18 @@ public class ProcessService : ServiceBase<Process>, IProcessService
     //private IHierarchyService _hierarchyService;
 
     #endregion
+    
+    public ISpecificationService SpecificationService { get; set; }
+    public IUserService UserService { get; set; }
 
     public ProcessService()
     {
     }
 
-    public ProcessService(LogisticsContext db) : base(db)
+    public ProcessService(LogisticsContext db, IUserService userService, ISpecificationService specificationService) : base(db)
     {
+        SpecificationService = specificationService;
+        UserService = userService;
     }
 
     public async Task<IEnumerable<SubProcess>> GetSubProcesses(Guid id)
@@ -53,6 +58,60 @@ public class ProcessService : ServiceBase<Process>, IProcessService
     public async Task<bool> DeleteSubProcess(Guid id, Guid subProcessId)
     {
         var sup = Set<SubProcess>().Attach(new SubProcess {Id = subProcessId});
+        sup.State = EntityState.Deleted;
+        await Db.SaveChangesAsync();
+        return true;
+    }
+    
+    public async Task<Specification?> GetActiveSpecification(Guid processId)
+    {
+        var spec = await Db.Specifications.AsNoTracking()
+            .Include(s => s.Rows)
+            .ThenInclude(r => r.Nomenclature)
+            .FirstOrDefaultAsync(s => s.ProcessId == processId && s.Active); 
+                   //?? throw new EdmException("No active specification found");
+        return spec;
+    }
+
+    public async Task<SpecificationNomenclature> AddSpecificationRow(Guid processId, SpecificationNomenclature row)
+    {
+        var spec = await Db.Specifications
+            .Include(s => s.Rows)
+            .FirstOrDefaultAsync(s => s.ProcessId == processId && s.Active);
+        // Add active specification if not exists
+        if (spec == null)
+        {
+            var process = await Get(processId);
+            spec = await SpecificationService.Save(new Specification
+            {
+                Active = true,
+                ProcessId = processId,
+                Name = process.Name,
+                Description = $"Specification for process {process.Name}",
+                // TODO the owner must be obtained from UserService
+                Meta = new Meta {Metatype = nameof(Specification), Owner = UserService.GetUserName()}
+            });
+        }
+        
+        row.Nomenclature = null;
+        spec.Rows.Add(row);
+        await Db.SaveChangesAsync();
+        return row;
+    }
+
+    public async Task<SpecificationNomenclature> SaveSpecificationRow(Guid processId, SpecificationNomenclature row)
+    {
+        row.Nomenclature = null;
+        row.Specification = null;
+        var sub = Set<SpecificationNomenclature>().Attach(row);
+        sub.State = EntityState.Modified;
+        await Db.SaveChangesAsync();
+        return sub.Entity;
+    }
+
+    public async Task<bool> DeleteSpecificationRow(Guid id, Guid rowId)
+    {
+        var sup = Set<SpecificationNomenclature>().Attach(new SpecificationNomenclature {Id = rowId});
         sup.State = EntityState.Deleted;
         await Db.SaveChangesAsync();
         return true;

@@ -3,7 +3,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Microprojects.Edm.Ui.Logistics.Models;
 
-public class Specification : DomainObject
+public class Specification : DirectoryEntry
 {
-    public ICollection<SpecificationNomenclature> Row { get; set; }
+    public bool Active { get; set; }
+    public Guid ProcessId { get; set; } 
+    public Process Process { get; set; }
+    public ICollection<SpecificationNomenclature> Rows { get; set; } = [];
 }

@@ -107,7 +107,7 @@ public class ServiceBase<TEntity> : IGenericService<TEntity> where TEntity : Dom
     public virtual async Task<IEnumerable<TEntity>> GetAll()
     {
         var query = Set().AsNoTracking();
-        var result = await (Set() is IWithMeta ? 
+        var result = await (typeof(TEntity).IsAssignableTo(typeof(IWithMeta)) ? 
                 query
                     .Include(e => ((IWithMeta)e).Meta)
                     .Where(e => ((IWithMeta)e).Meta.Deleted == null) : 

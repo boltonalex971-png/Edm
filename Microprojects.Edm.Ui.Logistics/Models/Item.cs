@@ -25,7 +25,7 @@ public class Item : DomainObject, IWithMeta
     /// <summary>
     /// Number of available units
     /// </summary>
-    public int Quantity { get; set; }
+    public double Quantity { get; set; }
   
     /// <summary>
     /// Item nomenclature

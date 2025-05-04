@@ -2,12 +2,10 @@ import React from 'react';
 import {GridColumn} from '@progress/kendo-react-grid';
 import {RelationTable} from '../../RelationTable';
 import {DropDownCell, LinkTextCell} from '../../DropDownCell';
-import {Chip, ChipList} from '@progress/kendo-react-buttons';
 import {useGet} from "../../../hooks/hooks";
 import Api from '../../../features/api/api'
 import {ProcessDetail} from "@logistics/components/config/process/Processes.tsx";
 import {UUID} from "@logistics/data/types";
-import {Input} from "@progress/kendo-react-inputs";
 
 export type ProcessProfilesTabProps = {
     id: UUID,

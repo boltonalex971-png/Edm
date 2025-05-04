@@ -11,4 +11,5 @@ public class Process : DirectoryEntry
 {
     public ProcessKinds Kind { get; set; }
     public ICollection<SubProcess>? SubProcesses { get; set; }
+    public ICollection<Specification>? Specifications { get; set; }
 }

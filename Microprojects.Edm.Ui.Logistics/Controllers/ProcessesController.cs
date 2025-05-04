@@ -46,7 +46,7 @@ public class ProcessesController : EntriesControllerBase<Process, ProcessViewMod
     }
 
     [HttpPut("{id:guid}/subprocesses")]
-    public async Task<SubProcessViewModel> SaveWorkbench(Guid id, SubProcessViewModel model)
+    public async Task<SubProcessViewModel> SaveSubProcess(Guid id, SubProcessViewModel model)
     {
         var sp = Mapper.Map<SubProcess>(model);
         var result = await Service.SaveSubProcess(sp);
@@ -54,7 +54,7 @@ public class ProcessesController : EntriesControllerBase<Process, ProcessViewMod
     }
 
     [HttpPost("{id:guid}/subprocesses")]
-    public async Task<SubProcessViewModel> AddProfile(Guid id, SubProcessViewModel model)
+    public async Task<SubProcessViewModel> AddSubProcess(Guid id, SubProcessViewModel model)
     {
         ArgumentNullException.ThrowIfNull(model);
 
@@ -68,6 +68,40 @@ public class ProcessesController : EntriesControllerBase<Process, ProcessViewMod
     {
         var wasDetached = await Service.DeleteSubProcess(id, subProcessId);
         return wasDetached;
+    }
+
+    #endregion
+
+    #region  specification
+
+    [HttpGet("{id:guid}/specification")]
+    public async Task<IEnumerable<SpecificationRowViewModel>> GetSpecification(Guid id)
+    {
+        var spec = await Service.GetActiveSpecification(id);
+        return spec == null ? [] : Mapper.Map<IEnumerable<SpecificationRowViewModel>>(spec?.Rows);
+    }
+
+    [HttpPost("{id:guid}/specification")]
+    public async Task<SpecificationRowViewModel> AddSpecificationRow(Guid id, [FromBody] SpecificationRowViewModel model)
+    {
+        var row = Mapper.Map<SpecificationNomenclature>(model);
+        var result = await Service.AddSpecificationRow(id, row);
+        return Mapper.Map<SpecificationRowViewModel>(result);
+    }
+
+    [HttpPut("{id:guid}/specification")]
+    public async Task<SpecificationRowViewModel> SaveSpecificationRow(Guid id, SpecificationRowViewModel model)
+    {
+        var row = Mapper.Map<SpecificationNomenclature>(model);
+        var result = await Service.SaveSpecificationRow(id, row);
+        return Mapper.Map<SpecificationRowViewModel>(result);
+    }
+
+    [HttpDelete("{id:guid}/specification/{rowId:guid}")]
+    public async Task<bool> DeleteSpecificationRow(Guid id, Guid rowId)
+    {
+        var result = await Service.DeleteSpecificationRow(id, rowId);
+        return result;
     }
 
     #endregion

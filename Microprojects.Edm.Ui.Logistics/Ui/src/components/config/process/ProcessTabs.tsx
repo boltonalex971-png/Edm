@@ -4,6 +4,7 @@ import { TabStrip, TabStripTab } from '@progress/kendo-react-layout';
 import { ProcessSubProcessesTab } from './ProcessSubProcessesTab.tsx';
 import { ProcessQualifiersTab } from './ProcessQualifiersTab';
 import {UUID} from "@logistics/data/types";
+import {ProcessSpecificationTab} from "@logistics/components/config/process/ProcessSpecificationTab.tsx";
 
 type ProcessTabsProps = {
     api: string,
@@ -19,9 +20,9 @@ export function ProcessTabs(props : ProcessTabsProps) {
             <TabStripTab title={'Processes'} >
                 <ProcessSubProcessesTab {...props} />
             </TabStripTab>
-            {/*<TabStripTab title={'Qualifiers'} >*/}
-            {/*    <ProcessQualifiersTab {...props} />*/}
-            {/*</TabStripTab>*/}
+            <TabStripTab title={'Specification'} >
+                <ProcessSpecificationTab {...props} />
+            </TabStripTab>
         </TabStrip>
     );
 }

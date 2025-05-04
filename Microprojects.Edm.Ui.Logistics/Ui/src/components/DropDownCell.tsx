@@ -100,6 +100,7 @@ interface LinkTextCellProps extends EditableCellProps{
     editable: boolean,
     template: string
 }
+
 export const LinkTextCell = ({ fieldId, onClick, template, editable = true, ...props } : LinkTextCellProps) => {
     const context = useContext(ParentContext)
     const handleChange = (e : InputChangeEvent) : void => {

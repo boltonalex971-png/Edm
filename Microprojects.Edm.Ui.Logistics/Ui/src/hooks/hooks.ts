@@ -45,9 +45,8 @@ function useFetch<T>(
         async function fetchUrl() {
             try {
                 const response = await fetch(url, { ...options, signal: controller.signal })
-                const error: string | boolean = !response.ok && `Data request failed with status ${response.status}`
-                const json = response.ok && (await response.json())
-                setState({ loading: false, data: json, error: error })
+                const json = await response.json()
+                setState({ loading: false, data: response.ok && json, error: !response.ok && json.detail })
             } catch (err : any) {
                 if (err.name !== 'AbortError') {
                     setState({ loading: false, data: undefined, error: 'Cannot load the data' })
