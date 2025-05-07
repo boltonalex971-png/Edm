@@ -1,14 +1,13 @@
 ﻿using AdaptiveExpressions;
-using Microprojects.Edm.Cache;
 using Microprojects.Edm.Drivers;
 using Microprojects.Edm.Intercom;
 using Microprojects.Edm.Jobs;
-using Microprojects.Edm.Utils;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Optosense.Edm.Plugins;
 using Optosense.Edm.Utils;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Dynamic;
@@ -37,7 +36,7 @@ namespace Optosense.Edm.Jobs
         private IProfilePlugin _profilerPlugin;
         // List of profile parameters for internal use
         private Dictionary<string, object> _internalParams = [];
-        private Dictionary<string, object> _inputParams = [];
+        private ConcurrentDictionary<string, object> _inputParams = [];
         private Dictionary<string, object> _outputParams;
         private IDisposable _subscriber;
         private int _startSpan;
@@ -308,9 +307,15 @@ namespace Optosense.Edm.Jobs
                         cancellationSource.Cancel();
                     }
                 };
+
                 InputParamArrived += handler;
-                await PushOutputParameterAsync(new KeyValuePair<string, object>($"?{condition}", null));
-                // TODO Cancel task by timeout
+                await PushOutputParameterAsync(new KeyValuePair<string, object>($"?{condition}", null))
+                    .ContinueWith(t =>
+                    {
+                        if (t is { Status: TaskStatus.Faulted, Exception: not null })
+                            throw t.Exception;
+                    });
+                
                 await Task.Delay(-1, cancellationSource.Token).ContinueWith(t => { });
                 InputParamArrived -= handler;
             }
