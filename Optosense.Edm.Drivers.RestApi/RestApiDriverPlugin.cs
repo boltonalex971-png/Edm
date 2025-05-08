@@ -25,7 +25,7 @@ namespace Optosense.Edm.Drivers.RestApi
                 new List<DriverRequest>
                 {
                     new() { Condition = "0", Command="Start" },
-                    new() { Condition = $"EverWait-{Random.Shared.NextInt64()}", Command="Nope" }
+                    new() { Condition = $"EverWait_{Random.Shared.NextInt64()}", Command="Nope" }
                 } : JsonConvert.DeserializeObject<IEnumerable<DriverRequest>>(profileJson);
 
             return plan;
