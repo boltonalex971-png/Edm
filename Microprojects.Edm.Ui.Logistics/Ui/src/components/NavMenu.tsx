@@ -27,8 +27,8 @@ export const NavMenu = () => {
                                 </NavLink>
                             </NavItem>
                             <NavItem>
-                                <NavLink tag={Link} className="text-dark" to="/tasks/ongoing">
-                                    <ListTask/>&nbsp;Tasks
+                                <NavLink tag={Link} className="text-dark" to="/orders/ongoing">
+                                    <ListTask/>&nbsp;Orders
                                 </NavLink>
                             </NavItem>
                             <NavItem>

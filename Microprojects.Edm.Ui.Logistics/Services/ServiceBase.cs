@@ -17,13 +17,14 @@ namespace Microprojects.Edm.Ui.Logistics.Services;
 /// Provides a base implementation for generic service operations to manage entities in the database.
 /// </summary>
 /// <typeparam name="TEntity">The type of the entity being managed. Must inherit from <see cref="DomainObject"/>.</typeparam>
-public class ServiceBase<TEntity> : IGenericService<TEntity> where TEntity : DomainObject
+public class ServiceBase<TEntity> : IGenericService<TEntity> where TEntity : class, IDomainObject
 {
     #region Injected Properties
 
     /// Represents the database context used by the service.
     /// The context is required for executing database operations such as querying, inserting, updating, and deleting entities.
     protected LogisticsContext Db { get; set; }
+    protected IUserService UserService { get; set; }
     //protected ICache Cache { get; set; }
     //protected ILogger Log { get; set; }
     #endregion
@@ -40,9 +41,10 @@ public class ServiceBase<TEntity> : IGenericService<TEntity> where TEntity : Dom
     /// <typeparam name="TEntity">
     /// The type of the entity the service operates on. This type must derive from <see cref="DomainObject"/>.
     /// </typeparam>
-    public ServiceBase(LogisticsContext db)
+    public ServiceBase(LogisticsContext db, IUserService userService)
     {
         Db = db;
+        UserService = userService;
     }
 
     /// <summary>
@@ -62,7 +64,7 @@ public class ServiceBase<TEntity> : IGenericService<TEntity> where TEntity : Dom
     /// </summary>
     /// <typeparam name="T">The type of the entity for which the <see cref="DbSet{T}"/> is fetched. Must inherit from <see cref="DomainObject"/>.</typeparam>
     /// <returns>A <see cref="DbSet{T}"/> instance for the specified entity type.</returns>
-    protected DbSet<T> Set<T>() where T : DomainObject
+    protected DbSet<T> Set<T>() where T : class, IDomainObject
     {
         var set = Db.Set<T>();
         return set;
@@ -219,31 +221,42 @@ public class ServiceBase<TEntity> : IGenericService<TEntity> where TEntity : Dom
     {
         var state = entity.Id == Guid.Empty ? EntityState.Added : EntityState.Modified;
         var id = DomainObject.NewGuid();
-        if (entity is DirectoryEntry dirEntry)
+        if (entity is IWithMeta withMeta)
         {
             if (state == EntityState.Added)
             {
-                dirEntry.Id = id;
+                withMeta.Meta = new Meta
+                {
+                    Owner = UserService.GetUserName() ?? "?",
+                    Metatype = typeof(TEntity).Name,
+                    //Groups = model.Division == null ? [] : [model.Division]
+                };
+                withMeta.Id = id;
                 Set().Add(entity);
             }
             else
             {
-                var info = dirEntry.Meta;
-                dirEntry.Meta = null!;
+                withMeta.Meta = null!;
                 var meta = await Set<Meta>().FindAsync(entity.Id) ?? 
                            throw new EdmException("Cannot find the corresponding meta information.");
                 meta.Modified = DateTime.UtcNow;
                 Set<History>().Add(new History
                 {
+                    Id = DomainObject.NewGuid(),
                     MetaId = meta.Id,
-                    Author = info.Owner, 
-                    JsonValue  = JsonConvert.SerializeObject(dirEntry)
+                    Author = UserService.GetUserName() ?? "?", 
+                    JsonValue  = JsonConvert.SerializeObject(withMeta)
                 });
                 Set().Attach(entity).State = EntityState.Modified;
             }
         }
         else
         {
+            if (state == EntityState.Added)
+            {
+                entity.Id = id;
+            }
+            
             var entry = Set().Attach(entity);
             entry.State = state;
         }
@@ -262,7 +275,7 @@ public class ServiceBase<TEntity> : IGenericService<TEntity> where TEntity : Dom
     {
         var track = Set<T>().Attach(entity);
         track.State = entity.Id == Guid.Empty ? EntityState.Added : EntityState.Modified;
-        if (entity is DirectoryEntry && track.State == EntityState.Added)
+        if (entity is IWithMeta && track.State == EntityState.Added)
         {
             // (entity as DirectoryObject).IsActive = true;
         }
@@ -286,7 +299,7 @@ public class ServiceBase<TEntity> : IGenericService<TEntity> where TEntity : Dom
         {
             case null:
                 throw new EdmException("Entity cannot be null.", new ArgumentNullException(typeof(TEntity).Name));
-            case DirectoryEntry:
+            case IWithMeta:
             {
                 var info = await Set<Meta>().FindAsync(entity.Id)
                            ?? throw new EdmException("Cannot find the corresponding meta information.", new ArgumentNullException(typeof(TEntity).Name));

@@ -9,5 +9,7 @@ namespace Microprojects.Edm.Ui.Logistics.ViewModels
     public class ProcessViewModel : DirectoryEntryViewModel
     {
         public ProcessKinds Kind { get; set; }
+        public string? NomenclatureName { get; set; }
+        public Guid? NomenclatureId { get; set; }
     }
 }

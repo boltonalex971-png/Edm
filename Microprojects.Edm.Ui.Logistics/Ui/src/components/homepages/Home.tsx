@@ -5,7 +5,7 @@ export const Home = () => {
         <div style={{width: '100%', height: '50vh', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
             <div>
                 <h3>This is a logistics home page</h3>
-                <p>There should a few different home pages for every role.</p>
+                <p>There should be a few different home pages for every role.</p>
                 <p>
                     Examples:
                 </p>

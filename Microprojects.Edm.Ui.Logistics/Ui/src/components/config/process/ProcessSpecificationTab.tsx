@@ -15,7 +15,7 @@ type ProcessSpecificationTabProps = {
 export function ProcessSpecificationTab({ id, api } : ProcessSpecificationTabProps) {
     const [[noms]] = useGet<Nomenclature>(`${Api.nomenclatures}`)
     return (
-        <RelationTable api={`${api}/${id}/specification`} removable editable >
+        <RelationTable api={`${api}/${id}/specification`} removable editable creatable>
             <GridColumn field='nomenclatureCategory' title='Category' width='auto' editable={false} />
             <GridColumn field='nomenclatureId' title='Name' width={200} 
                         cell={p => 

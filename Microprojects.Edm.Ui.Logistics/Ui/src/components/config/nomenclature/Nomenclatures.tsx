@@ -35,12 +35,7 @@ export function Nomenclatures() {
 }
 
 export interface NomenclatureDetailProps extends DetailProps {
-    onChange?: DetailEventHandler,
     onUpdate?: DetailEventHandler
-    onClose: () => void,
-    path: string,
-    api: string,
-    id?: UUID,
     type: string,
 }
 
@@ -57,11 +52,7 @@ export function NomenclatureDetail({ id, ...props } : NomenclatureDetailProps) {
     }
 
     return (
-        <Detail 
-            api={props.api}
-            path={props.path}
-            onChange={props.onChange}
-            onClose={props.onClose}
+        <Detail {...props}
             id={effectiveId}
             icon={<CardChecklist title='Nomenclature' />}
             loading={loading}

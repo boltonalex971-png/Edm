@@ -11,7 +11,7 @@ public class TareService : ServiceBase<Tare>, ITareService
     {
     }
 
-    public TareService(LogisticsContext db) : base(db)
+    public TareService(LogisticsContext db, IUserService userService) : base(db, userService)
     {
     }
 }

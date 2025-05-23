@@ -11,7 +11,7 @@ public class NomenclatureService : ServiceBase<Nomenclature>, INomenclatureServi
     {
     }
 
-    public NomenclatureService(LogisticsContext db) : base(db)
+    public NomenclatureService(LogisticsContext db, IUserService userService) : base(db, userService)
     {
     }
 }

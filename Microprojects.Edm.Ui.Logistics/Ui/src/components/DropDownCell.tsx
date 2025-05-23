@@ -1,8 +1,9 @@
-import React, { useContext } from 'react';
-import { DropDownList } from '@progress/kendo-react-dropdowns';
+import React, {useContext} from 'react';
+import {DropDownList} from '@progress/kendo-react-dropdowns';
 import {Input, InputChangeEvent} from '@progress/kendo-react-inputs';
-import { ParentContext } from './ParentContext';
+import {ParentContext} from './ParentContext';
 import {DropDownListChangeEvent} from "@progress/kendo-react-dropdowns/dist/npm/DropDownList/DropDownListProps";
+import {DataItem, Dictionary, UUID} from "@logistics/data/types";
 
 type EditableCellProps = {
     inEdit?: boolean;
@@ -17,8 +18,8 @@ type DropDownCompProps = {
     value: any
 }
 
-export const DropDownComp = (props : DropDownCompProps) => {
-    const handleChange = (e : DropDownListChangeEvent) : void => {
+export const DropDownComp = (props: DropDownCompProps) => {
+    const handleChange = (e: DropDownListChangeEvent): void => {
         props.onChange({
             dataItem: props.dataItem,
             field: props.field,
@@ -28,11 +29,11 @@ export const DropDownComp = (props : DropDownCompProps) => {
     }
     const value = (props.data || []).find(c => c[props.dataItemKey] === props.value) || {};
     return (
-        <DropDownList {...props} data={props.data || []} onChange={handleChange} value={value} />
+        <DropDownList {...props} data={props.data || []} onChange={handleChange} value={value}/>
     );
 };
 
-interface DropDownCellProps extends EditableCellProps  {
+interface DropDownCellProps extends EditableCellProps {
     getData: Function,
     onClick: Function,
     onChange: Function,
@@ -46,9 +47,18 @@ interface DropDownCellProps extends EditableCellProps  {
     template?: string
 }
 
-export const DropDownCell = ({ getData, id, text, fieldName, fieldId, onClick, editable = true, ...props } : DropDownCellProps) => {
+export const DropDownCell = ({
+                                 getData,
+                                 id,
+                                 text,
+                                 fieldName,
+                                 fieldId,
+                                 onClick,
+                                 editable = true,
+                                 ...props
+                             }: DropDownCellProps) => {
     const context = useContext(ParentContext)
-    const handleChange = (e : DropDownListChangeEvent) : void => {
+    const handleChange = (e: DropDownListChangeEvent): void => {
         const event = {
             dataItem: props.dataItem, //e.value,
             field: props.field,
@@ -57,11 +67,11 @@ export const DropDownCell = ({ getData, id, text, fieldName, fieldId, onClick, e
         };
         props.onChange(event);
     }
-    let content : React.ReactNode;
-    const { dataItem, field } = props;
+    let content: React.ReactNode;
+    const {dataItem, field} = props;
     const dataValue = dataItem[field];
     const list = (getData && getData()) || [];
-    let value = list.find((c : any) => c[id] === dataValue);
+    let value = list.find((c: any) => c[id] === dataValue);
     if (getData && dataItem.inEdit && editable) {
         content = <DropDownList
             onChange={handleChange}
@@ -73,20 +83,26 @@ export const DropDownCell = ({ getData, id, text, fieldName, fieldId, onClick, e
     } else if (onClick) {
         const valueName = fieldName ? dataItem[fieldName] : ((value && value[text]) || dataItem[fieldId]);
         const valueId = fieldId ? dataItem[fieldId] : value ? value[id] : dataItem[field];
-        content = <button type='button' onClick={() => onClick(valueId, context.itemUpdate)} className='btn btn-link'>{valueName}</button>;
+        content =
+            <a style={{color: 'var(--anchor-color)'}}
+               type='button' 
+               onClick={() => onClick(valueId, context.itemUpdate)} 
+            >
+                {valueName}
+            </a>;
     } else {
         const valueName = fieldName ? dataItem[fieldName] : ((value && value[text]) || '');
         content = <span>{valueName}</span>;
     }
 
     return (
-        <td style={{ whiteSpace: 'nowrap' }}>
+        <td style={{whiteSpace: 'nowrap'}}>
             {content}
         </td>
     )
 }
 
-interface LinkTextCellProps extends EditableCellProps{
+interface LinkTextCellProps extends EditableCellProps {
     getData: Function,
     onClick: Function,
     onChange: Function,
@@ -101,9 +117,9 @@ interface LinkTextCellProps extends EditableCellProps{
     template: string
 }
 
-export const LinkTextCell = ({ fieldId, onClick, template, editable = true, ...props } : LinkTextCellProps) => {
+export const LinkTextCell = ({fieldId, onClick, template, editable = true, ...props}: LinkTextCellProps) => {
     const context = useContext(ParentContext)
-    const handleChange = (e : InputChangeEvent) : void => {
+    const handleChange = (e: InputChangeEvent): void => {
         props.onChange({
             dataItem: props.dataItem,
             field: props.field,
@@ -111,22 +127,46 @@ export const LinkTextCell = ({ fieldId, onClick, template, editable = true, ...p
         });
     }
     let content: React.ReactElement;
-    const { dataItem, field } = props;
+    const {dataItem, field} = props;
     const value = template || dataItem[field];
     if (dataItem.inEdit) {
         content = editable ?
-            <Input onChange={handleChange} value={value} /> :
+            <Input onChange={handleChange} value={value}/> :
             <></>;
     } else {
         const id = dataItem[fieldId || "id"];
-        content = <button type='button' onClick={() => onClick(id, context.itemUpdate)} className='btn btn-link'>{value}</button>;
+        content =
+            <a type='button'
+               style={{color: 'var(--anchor-color)'}}
+               onClick={() => onClick(id, context.itemUpdate)}
+           >
+                {value}
+            </a>
     }
 
     return (
-        <td style={{ whiteSpace: 'nowrap' }}>
+        <td style={{whiteSpace: 'nowrap'}}>
             {content}
         </td>
     );
+}
+
+interface DetailLinkTextProps {
+    onClick: (id: UUID, onUpdate: (dataItem: DataItem) => void) => void
+    id: UUID,
+    text: string,
+}
+
+export const DetailLinkText = ({onClick, id, text} : DetailLinkTextProps) => {
+    const context = useContext(ParentContext)
+    return (
+        <span 
+           style={{color: 'var(--anchor-color)', cursor: 'pointer'}}
+           onClick={() => onClick(id, context.itemUpdate)}
+        >
+            {text}
+        </span>
+    )
 }
 
 

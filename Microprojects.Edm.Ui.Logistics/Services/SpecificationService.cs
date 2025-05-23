@@ -11,7 +11,7 @@ public class SpecificationService : ServiceBase<Specification>, ISpecificationSe
     {
     }
 
-    public SpecificationService(LogisticsContext db) : base(db)
+    public SpecificationService(LogisticsContext db, IUserService userService) : base(db, userService)
     {
     }
 }

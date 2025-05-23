@@ -79,11 +79,6 @@ public class EntriesControllerBase<TEntry, TEntryViewModel, TService> : AuthCont
             throw new Exception($"{typeof(TEntry).Name} id is ambiguous");
         }
 
-        entry.Meta = new Meta
-        {
-            Owner = UserInfo.Name,
-            Metatype = typeof(TEntry).Name
-        };
         var result = await Service.Save(entry);
         return result;
     }
@@ -99,12 +94,6 @@ public class EntriesControllerBase<TEntry, TEntryViewModel, TService> : AuthCont
     public async Task<TEntry> CreateEntry([FromBody] TEntryViewModel model)
     {
         var entry = Mapper.Map<TEntry>(model);
-        entry.Meta = new Meta
-        {
-            Owner = UserInfo.Name,
-            Metatype = typeof(TEntry).Name,
-            //Groups = model.Division == null ? [] : [model.Division]
-        };
         var result = await Service.Save(entry);
         return result;
     }

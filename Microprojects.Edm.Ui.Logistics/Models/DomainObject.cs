@@ -2,7 +2,7 @@ using UUIDNext;
 
 namespace Microprojects.Edm.Ui.Logistics.Models;
 
-public class DomainObject
+public class DomainObject : IDomainObject
 {
     public static Guid NewGuid() => Uuid.NewDatabaseFriendly(Database.SqlServer); 
     public virtual Guid Id { get; set; }

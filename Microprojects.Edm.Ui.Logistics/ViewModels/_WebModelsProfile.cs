@@ -39,5 +39,9 @@ public class WebModelsProfile : AutoMapper.Profile
         CreateMap<Tare, TareViewModel>().ReverseMap()
             .ForMember(d => d.TareType, o => o.Ignore());
         CreateMap<SpecificationNomenclature, SpecificationRowViewModel>().ReverseMap();
+        CreateMap<Order, OrderViewModel>().ReverseMap();
+
+        CreateMap<OrderSpecificationNomenclature, OrderSpecificationViewModel>();
+        CreateMap<OrderProcess, OrderProcessViewModel>();
     }
 }

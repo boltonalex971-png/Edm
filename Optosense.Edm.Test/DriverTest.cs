@@ -131,7 +131,7 @@ namespace Optosense.Edm.Test
                 """;
 
             var paramJson = JsonConvert.SerializeObject(parameters);
-            var plan = mux.GetAsyncPlan(profileJson, paramJson, CancellationToken.None);
+            var plan = mux.GetAsyncPlan(profileJson, paramJson, DateTime.Now);
             // var driver = new BoardDriverBase(new BoardDriverOptions { Baudrate = 9600, Port = "COM4", Capacity = 20 });
             // driver.Init();
             var start =  DateTime.UtcNow;
@@ -157,7 +157,7 @@ namespace Optosense.Edm.Test
                     var current = DateTime.UtcNow;
                     var next = (scheduled - current).TotalMilliseconds;
                     var delay = next > 0 ? next : 0;
-                    await Task.Delay(delay);
+                    await Task.Delay((int)delay);
                     var start = DateTime.UtcNow;
                     Debug.Write(
                         $"{(DateTime.UtcNow - scheduled).Milliseconds}\tSCHEDULED {scheduled:HH:mm:ss.fff}\tEXEC {start:HH:mm:ss.fff}\t");

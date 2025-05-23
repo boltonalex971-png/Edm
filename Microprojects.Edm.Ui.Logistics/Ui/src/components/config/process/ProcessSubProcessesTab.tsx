@@ -17,16 +17,16 @@ export type ProcessProfilesTabProps = {
 export function ProcessSubProcessesTab({id, api, missedInputs, onDetailSelected}: ProcessProfilesTabProps) {
     const [[data]] = useGet(`${api}`);
     return (
-        <RelationTable api={`${api}/${id}/subprocesses`} removable editable >
+        <RelationTable api={`${api}/${id}/subprocesses`} removable editable creatable>
             <GridColumn 
-                width={100} 
+                width='100' 
                 title={'Order'} 
                 field={'order'} 
                 editable 
             />
             <GridColumn
                 editable={false}
-                width={200}
+                width='200'
                 field='linkedProcessId'
                 title='Process'
                 cell={(cellProps) => data &&

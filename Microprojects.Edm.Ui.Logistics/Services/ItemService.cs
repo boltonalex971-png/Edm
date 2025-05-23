@@ -14,7 +14,7 @@ public class ItemService : ServiceBase<Item>, IItemService
     {
     }
 
-    public ItemService(LogisticsContext db, ITareService tareService) : base(db)
+    public ItemService(LogisticsContext db, ITareService tareService, IUserService userService) : base(db, userService)
     {
         _tareService = tareService;
     }

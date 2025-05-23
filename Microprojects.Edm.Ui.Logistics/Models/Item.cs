@@ -44,5 +44,18 @@ public class Item : DomainObject, IWithMeta
     /// </summary>
     public Item Origin { get; set; }
     public Guid? OriginId { get; set; }
+    
+    /// <summary>
+    /// The process where the item has been assembled
+    /// </summary>
+    public Process? Process { get; set; }
+    public Guid? ProcessId { get; set; }
+    
+    /// <summary>
+    /// The order where the item has been assigned
+    /// </summary>
+    public Order? Order { get; set; }
+    public Guid? OrderId { get; set; }
+    
     public Meta Meta { get; set; }
 }

@@ -2,7 +2,7 @@ import { Field } from '@progress/kendo-react-form'
 import { Input } from '@progress/kendo-react-inputs'
 import {type EffectCallback, useEffect, useState} from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import type {DetailEventHandler, Operation, Process, ProcessKind} from "../../../data/types"
+import type {DetailEventHandler, Item, Operation, Process, ProcessKind, UUID} from "../../../data/types"
 import Api from '@features/api/api'
 import {useGet} from "@logistics/hooks/hooks";
 import { useBasePath } from "@logistics/hooks/routerHooks"
@@ -39,10 +39,10 @@ export interface ProcessDetailProps extends DetailProps {
     onChange?: DetailEventHandler,
     onUpdate?: DetailEventHandler
     onClose: () => void,
-    path: string,
+    path?: string,
     api: string,
-    processId?: number,
-    type: string,
+    processId?: UUID,
+    type?: string,
 }
 
 export function ProcessDetail({ processId, ...props } :ProcessDetailProps) {
@@ -51,6 +51,7 @@ export function ProcessDetail({ processId, ...props } :ProcessDetailProps) {
     const [sub, setSub] = useState<React.ReactElement>();
     useEffect(setSub as EffectCallback, [id]);
     const [[kinds]] = useGet<string[]>(`${Api.processes}/kinds`, []);
+    const [[noms]] = useGet<Item[]>(`${Api.nomenclatures}`, []);
     let [[data, setData], loading, error] = useGet<Process>(`${props.api}/${id}`, [id]);
     if (!data || data.id === EMPTY_GUID) {
         data = { ...data, name: '', description: '' } as Process
@@ -58,11 +59,7 @@ export function ProcessDetail({ processId, ...props } :ProcessDetailProps) {
 
     const missedInputs = JSON.parse(data.message || '[]');
     return (
-        <Detail 
-            api={props.api}
-            path={props.path}
-            onChange={props.onChange}
-            onClose={props.onClose}
+        <Detail {...props}
             id={id}
             icon={<Diagram3 title='Process' />}
             loading={loading}
@@ -79,6 +76,7 @@ export function ProcessDetail({ processId, ...props } :ProcessDetailProps) {
                         <>
                             <div>
                                 <p>{data.kind} process</p>
+                                <p>{data.nomenclatureName}</p>
                             </div>
                             {/* {data.qualifiers &&
                                 <div className='my-2'>
@@ -120,11 +118,24 @@ export function ProcessDetail({ processId, ...props } :ProcessDetailProps) {
                                     component={(compProps) =>
                                         <DropDownComp {...compProps}
                                             loading={!kinds}
-                                            data={[{name: ''}, ...kinds?.map(k => ({ name: k }))]}
+                                            data={kinds && [{name: ''}, ...kinds?.map(k => ({ name: k }))]}
                                             textField='name'
                                             dataItemKey='name'
                                         />
                                     }
+                                />
+                            </div>
+                            <div className="mb-3" style={{ width: '400px' }}>
+                                <Field name={'nomenclatureId'} label={'Nomenclature'}
+                                       component={(compProps) =>
+                                           <DropDownComp {...compProps}
+                                                         loading={!noms}
+                                                         data={noms}
+                                                         textField='name'
+                                                         dataItemKey='id'
+                                                         valueField='nomenclatureId'
+                                           />
+                                       }
                                 />
                             </div>
                             {/* <div className="mb-3">

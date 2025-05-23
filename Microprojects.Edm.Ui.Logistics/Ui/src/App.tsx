@@ -5,7 +5,7 @@ import {useGetUserQuery} from "./features/api/apiSlice";
 import {Processes} from "./components/config/process/Processes";
 import {Home} from "@logistics/components/homepages/Home.tsx";
 import {Config} from "@logistics/components/config/Config.tsx";
-import {Tasks} from "@logistics/components/tasks/Tasks.tsx";
+import {Orders} from "@logistics/components/orders/Orders.tsx";
 import {Supplies} from "@logistics/components/supplies/Supplies.tsx";
 import {Warehouse} from "@logistics/components/warehouse/Warehouse.tsx";
 
@@ -21,7 +21,7 @@ export function App() {
                     <Routes>
                         <Route index element={<Home />} />
                         <Route path='/config/*' element={<Config />} />
-                        <Route path='/tasks/*' element={<Tasks />} />
+                        <Route path='/orders/*' element={<Orders />} />
                         <Route path='/supplies/*' element={<Supplies />} />
                         <Route path='/warehouse/*' element={<Warehouse />} />
                         <Route path='*' element={<span>Page not exists</span>} />

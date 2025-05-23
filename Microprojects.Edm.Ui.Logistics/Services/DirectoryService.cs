@@ -14,7 +14,7 @@ namespace Microprojects.Edm.Ui.Logistics.Services
 {
     public class DirectoryService : ServiceBase<Directory>, IDirectoryService
     {
-        public DirectoryService(LogisticsContext db) : base(db)
+        public DirectoryService(LogisticsContext db, IUserService userService) : base(db, userService)
         {
         }
 

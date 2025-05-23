@@ -12,7 +12,7 @@ import { Loading, DetailStub } from "../features/utils/Utils";
 import api from '../features/api/api';
 import { Folder } from "./config/Folder";
 import { useBasePath } from "../hooks/routerHooks";
-import type {DataItem, DetailEventHandler, Dictionary, TreeDataItem} from "../data/types"
+import type {DataItem, DetailEventHandler, Dictionary, TreeDataItem, UUID} from "../data/types"
 import type { TreeItemProps } from "./TreeViewMaster"
 
 export const EMPTY_GUID = '00000000-0000-0000-0000-000000000000'
@@ -80,7 +80,7 @@ export type DetailProps = {
     editor?: React.ReactNode,
     relations?: React.ReactNode,
     subDetail?: React.ReactElement,
-    id?: string,
+    id?: UUID,
     loading?: boolean,
     error?: string,
     validation?: string,
@@ -88,18 +88,22 @@ export type DetailProps = {
     onChange?: DetailEventHandler,
     onClose: MouseEventHandler,
     onUp?: MouseEventHandler,
-    path: string,
+    path?: string,
     api: string,
+    editMode?: boolean,
     editable?: boolean,
     copyable?: boolean,
     deletable?: boolean
+    readonly?: boolean
+    title?: string
+    subTitle?: string
 };
 
-export function Detail({editable = true, copyable = true, deletable =true, ...props} : DetailProps) {
+export function Detail({editable = true, copyable = true, deletable =true, readonly = false, ...props} : DetailProps) {
     const navigate = useNavigate();
     const [_, setRefresh] = useState(0);
     _renderFunc = setRefresh;
-    let [editMode, setEditMode] = useState(false);
+    let [editMode, setEditMode] = useState(props.editMode);
     editMode = editMode || props.id === EMPTY_GUID;
     return (
         props.error ? <Alert color='danger' style={{ display: 'flex', justifyContent: 'space-around' }}>{props.error}</Alert> :
@@ -115,13 +119,13 @@ export function Detail({editable = true, copyable = true, deletable =true, ...pr
                                     </div>
                                     <div>
 
-                                        <CardTitle>{props.data?.name}</CardTitle>
-                                        <CardSubtitle>{props.data?.description}</CardSubtitle>
+                                        <CardTitle>{props.title || props.data?.name}</CardTitle>
+                                        <CardSubtitle>{props.subTitle || props.data?.description}</CardSubtitle>
                                     </div>
                                 </div>
                                 <Toolbar style={{ padding: '0', borderStyle: 'none' }}>
                                     <ToolbarItem>
-                                        {props.editor &&
+                                        {(props.editor && !readonly) &&
                                             <ButtonGroup>
                                                 <ToolbarButton
                                                     visible={editable}
@@ -140,8 +144,8 @@ export function Detail({editable = true, copyable = true, deletable =true, ...pr
                                                         const data = { ...props.data, id: 0, name: `${props.data?.name} (Copy)` }
                                                         axios.post(`${props.api}`, data)
                                                             .then((response) => {
-                                                                props.onChange()
-                                                                navigate(`${props.path}/${response.data.id}`)
+                                                                props.onChange && props.onChange()
+                                                                props.path && navigate(`${props.path}/${response.data.id}`)
                                                             });
                                                     }}
                                                 />
@@ -155,8 +159,8 @@ export function Detail({editable = true, copyable = true, deletable =true, ...pr
                                                         if (window.confirm('Confirm deleting entity')) {
                                                             axios.delete(`${props.api}/${props.data?.id}`)
                                                                 .then(() => {
-                                                                    props.onChange()
-                                                                    navigate(props.path)
+                                                                    props.onChange && props.onChange()
+                                                                    props.path && navigate(props.path)
                                                                 });
                                                         }
                                                     }}
@@ -212,7 +216,7 @@ interface EditorProps extends InfoProps {
     setData: DetailEventHandler
     type: string
     onUpdate?: DetailEventHandler
-    onChange: DetailEventHandler
+    onChange?: DetailEventHandler
     api: string
     path?: string
 }
@@ -220,9 +224,11 @@ interface EditorProps extends InfoProps {
 export function Editor(props : EditorProps) {
     const navigate = useNavigate();
     const handleSubmit = (data: Dictionary) => {
+        console.log(data);
         const foreignData = Object.keys(data)
-            .reduce((r, d, i, a ) => ({ ...r, [d]: data[d] && typeof data[d] === 'object' ? data[d]['id'] : data[d]}), {})
-        if (data.id !== EMPTY_GUID) {
+            .reduce((r, d, i, a ) => 
+                ({ ...r, [d]: data[d] && typeof data[d] === 'object' && !(data[d] instanceof Date) ? data[d]['id'] : data[d]}), {})
+        if (data.id &&  data.id !== EMPTY_GUID) {
             axios.put(`${props.api}/${props.data.id}`, foreignData)
                 .then((response) => {
                     props.onUpdate?.(response.data);

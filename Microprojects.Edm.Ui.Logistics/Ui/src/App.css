@@ -1,6 +1,10 @@
 /* Provide sufficient contrast against white background */
+:root {
+    --anchor-color: #0366d6;
+}
+
 a {
-    color: #0366d6;
+    color: var(--anchor-color);
 }
 
 code {

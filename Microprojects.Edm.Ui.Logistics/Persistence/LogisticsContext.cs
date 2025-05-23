@@ -57,6 +57,28 @@ public class LogisticsContext : DbContext
             .WithMany()
             .HasForeignKey(s => s.LinkedProcessId)
             .OnDelete(DeleteBehavior.NoAction);
+
+        builder.Entity<Order>()
+            .HasMany(o => o.Items)
+            .WithOne(i => i.Order)
+            .HasForeignKey(op => op.OrderId)
+            .OnDelete(DeleteBehavior.NoAction);
+        builder.Entity<Order>()
+            .HasOne(o => o.Process)
+            .WithMany()
+            .HasForeignKey(op => op.ProcessId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        builder.Entity<OrderProcess>()
+            .HasOne(o => o.Process)
+            .WithMany()
+            .HasForeignKey(op => op.ProcessId)
+            .OnDelete(DeleteBehavior.NoAction);
+        builder.Entity<OrderProcess>()
+            .HasOne(o => o.Order)
+            .WithMany()
+            .HasForeignKey(op => op.OrderId)
+            .OnDelete(DeleteBehavior.NoAction);
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken())

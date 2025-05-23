@@ -18,18 +18,24 @@ public class ProcessService : ServiceBase<Process>, IProcessService
     #endregion
     
     public ISpecificationService SpecificationService { get; set; }
-    public IUserService UserService { get; set; }
 
     public ProcessService()
     {
     }
 
-    public ProcessService(LogisticsContext db, IUserService userService, ISpecificationService specificationService) : base(db)
+    public ProcessService(LogisticsContext db, IUserService userService, ISpecificationService specificationService) : base(db, userService)
     {
         SpecificationService = specificationService;
-        UserService = userService;
     }
 
+    public override async Task<Process> Get(Guid id)
+    {
+        var result = await Set().AsNoTracking()
+            .Include(p => p.Nomenclature)
+            .FirstOrDefaultAsync(p => id == p.Id);
+        return result;
+    }
+    
     public async Task<IEnumerable<SubProcess>> GetSubProcesses(Guid id)
     {
         var subs = await Set<SubProcess>().AsNoTracking()

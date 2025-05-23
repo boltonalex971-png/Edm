@@ -17,8 +17,8 @@ namespace Microprojects.Edm.Ui.Logistics.Controllers;
 [ApiController]
 [Route("api/logistics/[controller]")]
 public class CrudControllerBase<TObject, TObjectViewModel, TService> : AuthControllerBase 
-    where TService : IGenericService<TObject> 
     where TObject : DomainObject
+    where TService : IGenericService<TObject>
     where TObjectViewModel : new()
 {
     protected readonly IMapper Mapper;

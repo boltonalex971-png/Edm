@@ -2,7 +2,6 @@ using AdaptiveExpressions;
 using Microprojects.Edm;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
-using Optosense.Edm.Domain.Models;
 using Optosense.Edm.Drivers.Mux;
 using Optosense.Edm.Drivers.OpcUa;
 using Optosense.Edm.Profiles.Board;
@@ -15,6 +14,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Microprojects.Edm.Ui.Logistics.Models;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace Optosense.Edm.Test
@@ -38,7 +38,13 @@ namespace Optosense.Edm.Test
         {
             var dic1 =  new Dictionary<string, object> { { "a", 1 }, { "b", "qqq" } };
             var dic2 =  new Dictionary<string, object> { { "a", 1 }, { "b", "qqq" } };
-            var comparer = ValueCompare.CreateDefault<Dictionary<string, object>>(true);
+            //var comparer = ValueCompare.CreateDefault<Dictionary<string, object>>(true);
+        }
+
+        [TestMethod]
+        public void DomainGuidTest()
+        {
+            var guid = DomainObject.NewGuid();
         }
     }
 }

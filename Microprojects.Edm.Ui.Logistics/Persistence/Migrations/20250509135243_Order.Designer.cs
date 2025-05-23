@@ -4,6 +4,7 @@ using Microprojects.Edm.Ui.Logistics.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 {
     [DbContext(typeof(LogisticsContext))]
-    partial class LogisticsContextModelSnapshot : ModelSnapshot
+    [Migration("20250509135243_Order")]
+    partial class Order
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -248,7 +251,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
                     b.Property<Guid>("ProcessId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime?>("StartDate")
+                    b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
@@ -264,7 +267,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime?>("EndTime")
+                    b.Property<DateTime>("EndTime")
                         .HasColumnType("datetime2");
 
                     b.Property<Guid>("OrderId")
@@ -279,7 +282,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
                     b.Property<Guid>("ProcessId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime?>("StartTime")
+                    b.Property<DateTime>("StarTime")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
@@ -311,14 +314,9 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("NomenclatureId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.HasKey("Id");
 
                     b.HasIndex("DirectoryId");
-
-                    b.HasIndex("NomenclatureId");
 
                     b.ToTable("Processes");
                 });
@@ -616,15 +614,9 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("Microprojects.Edm.Ui.Logistics.Models.Nomenclature", "Nomenclature")
-                        .WithMany()
-                        .HasForeignKey("NomenclatureId");
-
                     b.Navigation("Directory");
 
                     b.Navigation("Meta");
-
-                    b.Navigation("Nomenclature");
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Specification", b =>

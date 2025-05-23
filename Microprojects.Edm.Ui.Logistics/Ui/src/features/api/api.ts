@@ -9,7 +9,8 @@ const api = {
     processes: `${baseUrl}/${appApiUrl}/processes`,
     supplies: `${baseUrl}/${appApiUrl}/items`,
     tares: `${baseUrl}/${appApiUrl}/tares`,
-    taretypes: `${baseUrl}/${appApiUrl}/taretypes`
+    taretypes: `${baseUrl}/${appApiUrl}/taretypes`,
+    orders: `${baseUrl}/${appApiUrl}/orders`,
 };
 
 export default api;

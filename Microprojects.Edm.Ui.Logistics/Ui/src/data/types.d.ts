@@ -25,7 +25,9 @@ export interface TreeNode extends TreeDataItem {
 
 export interface Process extends DataItem {
     message: string
-    kind: string
+    kind: string,
+    nomenclatureName?: string,
+    nomenclatureId?: number,
 }
 
 export interface Nomenclature extends DataItem {
@@ -50,6 +52,15 @@ export interface Item {
     capacity: number
 }
 
+export interface Order extends DataItem {
+    processId: UUID
+    processName: string
+    processNomenclatureId: UUID
+    processNomenclatureName: string
+    amount: number
+    startDate: Date
+    dueDate: Date
+}
 
 export interface Operation extends DataItem {
 }
