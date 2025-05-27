@@ -15,7 +15,7 @@ public interface IGenericService<T>
     Task<T> Get<T1, T2>(Guid id, Expression<Func<T, T1>> include, Expression<Func<T, T2>> include2);
     Task<IEnumerable<T>> Get(Expression<Func<T, bool>> predicate);
     Task<IEnumerable<T>> Get<T1>(Expression<Func<T, bool>> predicate, Expression<Func<T, T1>> include);
-    Task<T> Save(T device);
+    Task<T> Save(T entry);
     Task<T> Delete(Guid id);
     Task<T> ChangeParent<T>(Guid entryId, Guid newParentId) where T : DirectoryEntry;
 }

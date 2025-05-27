@@ -44,12 +44,19 @@ export interface TareType extends DataItem {
 
 export interface Item {
     id: UUID
+    originId: UUID
     nomenclatureName: string
+    nomenclatureId: UUID
     children: Item[]
     tareBarcode: string
-    tareTypeName: string
-    tareTypeUnits: string
+    tareTareTypeName: string
+    tareTareTypeUnits: string
     capacity: number
+}
+
+export interface ItemSearchQuery {
+    originId?: UUID
+    nomenclatureId?: UUID
 }
 
 export interface Order extends DataItem {

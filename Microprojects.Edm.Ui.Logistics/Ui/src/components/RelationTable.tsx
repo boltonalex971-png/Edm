@@ -6,7 +6,7 @@ import {
     GridToolbar,
     GridCell,
     GridRowClickEvent,
-    GridItemChangeEvent, GridCellProps
+    GridItemChangeEvent, GridCellProps, GridRowDoubleClickEvent
 } from '@progress/kendo-react-grid';
 import {Alert} from 'reactstrap';
 import {ButtonGroup, Button} from '@progress/kendo-react-buttons';
@@ -23,6 +23,8 @@ type RelationTableProps = {
     removable: boolean,
     creatable?: boolean,
     onRowSelected: Function,
+    onRowClick?: ((event: GridRowClickEvent) => void),
+    onRowDoubleClick?: ((event: GridRowDoubleClickEvent) => void),
     children: React.ReactElement
 }
 
@@ -32,6 +34,11 @@ export function RelationTable({api, children, ...props}: RelationTableProps) {
     let [[data, setData], loading, error] = useGet<any[]>(`${api}`, [reload, api]);
 
     const rowClick = (event: GridRowClickEvent | { dataItem: any }) => {
+        if (props.onRowSelected) {
+            props.onRowSelected(event.dataItem, itemUpdate);
+        }
+    };
+    const enterEdit = (event: GridRowClickEvent | { dataItem: any }) => {
         const edit = data!.filter(i => i.inEdit)
         for (const item of edit) {
             if (!discardEdit({dataItem: item})) {
@@ -44,10 +51,6 @@ export function RelationTable({api, children, ...props}: RelationTableProps) {
             setEditItem({...event.dataItem});
             item.inEdit = true;
             setData([...data!])
-        }
-
-        if (props.onRowSelected) {
-            props.onRowSelected(event.dataItem);
         }
     };
     const itemUpdate = (item: any) => {
@@ -96,6 +99,9 @@ export function RelationTable({api, children, ...props}: RelationTableProps) {
 
         return false
     };
+    const linkItem = (item: any, itemUpdate: (item: any) => void) => {
+        
+    }
 
     return (
         <>
@@ -121,7 +127,8 @@ export function RelationTable({api, children, ...props}: RelationTableProps) {
                         data={data}
                         editField="inEdit"
                         scrollable='none'
-                        onRowClick={props.editable ? rowClick : undefined}
+                        onRowClick={rowClick}
+                        onRowDoubleClick={props.onRowDoubleClick}
                         onItemChange={itemChange}
                     >
                         {props.creatable &&
@@ -140,7 +147,7 @@ export function RelationTable({api, children, ...props}: RelationTableProps) {
                                     width='2rem'
                                     cell={(cellProps) =>
                                         <ActionCell {...cellProps}
-                                                    edit={props.editable ? ((item) => rowClick({
+                                                    edit={props.editable ? ((item) => enterEdit({
                                                         dataItem: item,
                                                         syntheticEvent: undefined
                                                     })) : undefined}
@@ -162,9 +169,10 @@ type ActionCellProps = {
     remove?: (item: any) => void
     save: (item: any) => void
     discard: (item: any) => void
+    link?: (item: any) => void
     dataItem: any
 }
-export const ActionCell = ({edit, remove, save, discard, ...props}: ActionCellProps) => {
+export const ActionCell = ({edit, remove, save, link, discard, ...props}: ActionCellProps) => {
     const inEdit = props.dataItem.inEdit;
     return (
         <td>
@@ -206,6 +214,18 @@ export const ActionCell = ({edit, remove, save, discard, ...props}: ActionCellPr
                     <span className='k-icon k-i-edit'></span>
                 </Button>
                 <Button
+                    hidden={!link || inEdit}
+                    title='Choose entity'
+                    style={{padding: '6px'}}
+                    fillMode='flat'
+                    className='k-button k-grid-edit-command'
+                    onClick={() => {
+                        link!(props.dataItem);
+                    }}
+                >
+                    <span className='k-icon k-i-plus'></span>
+                </Button>
+                <Button
                     hidden={!remove || inEdit}
                     title='Delete record'
                     style={{padding: '6px'}}
@@ -232,3 +252,12 @@ export const DateCell = (props: GridCellProps)=> {
     )
 }
 
+export const DateTimeCell = (props: GridCellProps)=> {
+    const value = props.dataItem[props.field!]
+    const date = value && new Date(value).toLocaleString()
+    return (
+        <td>
+            {date}
+        </td>
+    )
+}

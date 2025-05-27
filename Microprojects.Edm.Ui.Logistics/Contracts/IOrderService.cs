@@ -10,4 +10,5 @@ public interface IOrderService : IGenericService<Order>
     Task<IEnumerable<Item>> GetItems(Guid id);
     Task<IEnumerable<OrderSpecificationNomenclature>> GetSpecifications(Guid id);
     Task<IEnumerable<OrderProcess>> GetOrderProcesses(Guid id);
+    Task<Item> AddItem(Guid id, Item item);
 }

@@ -26,4 +26,11 @@ public class ItemsController : CrudControllerBase<Item, ItemViewModel, IItemServ
     {
         _logger = logger;
     }
+
+    [HttpPost("search")]
+    public async Task<IEnumerable<ItemViewModel>> Search([FromBody] ItemSearchQuery query)
+    {
+        var result = await Service.Search(query);
+        return Mapper.Map<IEnumerable<ItemViewModel>>(result);
+    }
 }

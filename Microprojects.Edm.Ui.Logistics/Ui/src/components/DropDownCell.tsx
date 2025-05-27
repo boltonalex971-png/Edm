@@ -85,8 +85,8 @@ export const DropDownCell = ({
         const valueId = fieldId ? dataItem[fieldId] : value ? value[id] : dataItem[field];
         content =
             <a style={{color: 'var(--anchor-color)'}}
-               type='button' 
-               onClick={() => onClick(valueId, context.itemUpdate)} 
+               type='button'
+               onClick={() => onClick(valueId, context.itemUpdate)}
             >
                 {valueName}
             </a>;
@@ -139,7 +139,7 @@ export const LinkTextCell = ({fieldId, onClick, template, editable = true, ...pr
             <a type='button'
                style={{color: 'var(--anchor-color)'}}
                onClick={() => onClick(id, context.itemUpdate)}
-           >
+            >
                 {value}
             </a>
     }
@@ -157,12 +157,12 @@ interface DetailLinkTextProps {
     text: string,
 }
 
-export const DetailLinkText = ({onClick, id, text} : DetailLinkTextProps) => {
+export const DetailLinkText = ({onClick, id, text}: DetailLinkTextProps) => {
     const context = useContext(ParentContext)
     return (
-        <span 
-           style={{color: 'var(--anchor-color)', cursor: 'pointer'}}
-           onClick={() => onClick(id, context.itemUpdate)}
+        <span
+            style={{color: 'var(--anchor-color)', cursor: 'pointer'}}
+            onClick={() => onClick(id, context.itemUpdate)}
         >
             {text}
         </span>

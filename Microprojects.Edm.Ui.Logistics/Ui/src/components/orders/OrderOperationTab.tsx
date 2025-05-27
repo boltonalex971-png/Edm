@@ -5,7 +5,7 @@ import {DropDownCell} from "@logistics/components/DropDownCell.tsx";
 import {Dictionary, Nomenclature, UUID} from "@logistics/data/types";
 import {useGet} from "@logistics/hooks/hooks.ts";
 import Api from "@features/api/api.ts";
-import {RelationTable} from "@logistics/components/RelationTable.tsx";
+import {DateTimeCell, RelationTable} from "@logistics/components/RelationTable.tsx";
 
 type OrderOperationTabProps = {
     id: UUID
@@ -18,8 +18,8 @@ export function OrderOperationTab({ id, api } : OrderOperationTabProps) {
         <RelationTable api={`${api}/${id}/operations`} >
             <GridColumn field='processName' title='Process' width='auto' editable={false} />
             <GridColumn field='processNomenclatureName' title='Name' width='auto' />
-            <GridColumn field='startTime' title='Started' width='150' />
-            <GridColumn field='endTime' title='Completed' width='150' />
+            <GridColumn field='startTime' title='Started' width='150' cell={DateTimeCell}/>
+            <GridColumn field='endTime' title='Completed' width='150' cell={DateTimeCell}/>
         </RelationTable>
     );
 }

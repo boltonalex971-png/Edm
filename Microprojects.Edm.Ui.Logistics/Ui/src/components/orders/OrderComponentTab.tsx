@@ -15,13 +15,13 @@ type OrderComponentTabProps = {
 export function OrderComponentTab({ id, api } : OrderComponentTabProps) {
     //const [[noms]] = useGet<Nomenclature>(`${Api.nomenclatures}`)
     return (
-        <RelationTable api={`${api}/${id}/items`} creatable editable removable >
+        <RelationTable api={`${api}/${id}/items`} removable >
             <GridColumn field='nomenclatureCategory' title='Category' width='100' editable={false} />
             <GridColumn field='nomenclatureName' title='Name' width='200' />
             <GridColumn field='nomenclatureDescription' title='Description' width='auto' editable={false}/>
             <GridColumn field='tareTareTypeName' title='Tare' width='auto' />
             <GridColumn field='quantity' title='Quantity' width='auto' />
-            <GridColumn field='tareTareTypeUnit' title='Units' width='auto' />
+            <GridColumn field='tareTareTypeUnits' title='Units' width='auto' />
             <GridColumn field='tareBarcode' title='Barcode' width='auto' />
         </RelationTable>
     );

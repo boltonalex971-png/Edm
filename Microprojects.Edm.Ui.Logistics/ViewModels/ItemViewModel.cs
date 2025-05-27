@@ -11,10 +11,12 @@ public class ItemViewModel
     public int Quantity { get; set; }
     public Guid NomenclatureId { get; set; }
     public string? NomenclatureName { get; set; }
+    public string? NomenclatureDescription { get; set; }
+    public string? NomenclatureCategory { get; set; }
     public Guid TareId { get; set; }
     public string? TareBarcode { get; set; }
     public Guid TareTareTypeId { get; set; }
     public string? TareTareTypeName { get; set; }
-    public string? TareTareTypeUnit { get; set; }
+    public string? TareTareTypeUnits { get; set; }
     public DateTime MetaCreated { get; set; }
 }

@@ -67,7 +67,7 @@ function useGet<T>(url: string, deps: any[] = []): UseFetchResult<T> {
     return useFetch<T>(url, deps, RequestType.GET)
 }
 
-function usePost<T>(url: string, data: any, deps: [] = []): UseFetchResult<T> {
+function usePost<T>(url: string, data: any, deps: any[] = []): UseFetchResult<T> {
     return useFetch(url, deps, RequestType.POST, data)
 }
 

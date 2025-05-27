@@ -57,5 +57,6 @@ public class Item : DomainObject, IWithMeta
     public Order? Order { get; set; }
     public Guid? OrderId { get; set; }
     
+    public ICollection<Item> Items { get; set; } = new List<Item>();
     public Meta Meta { get; set; }
 }

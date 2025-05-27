@@ -10,8 +10,8 @@ namespace Microprojects.Edm.Ui.Logistics.ViewModels
     {
         public Guid Id { get; set; }
         public Guid OrderId { get; set; } 
-        public DateTime StartTime { get; set; }
-        public DateTime EndTime { get; set; }
+        public DateTime? StartTime { get; set; }
+        public DateTime? EndTime { get; set; }
         public Guid? ProcessId { get; set; }
         public string? ProcessName { get; set; }
         public ProcessKinds? ProcessKind { get; set; }

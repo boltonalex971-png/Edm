@@ -1,4 +1,5 @@
 ﻿using System;
+using AutoMapper;
 using Microprojects.Edm.Ui.Logistics.Contracts;
 using Microprojects.Edm.Ui.Logistics.Models;
 using Microprojects.Edm.Ui.Logistics.Persistence;
@@ -8,12 +9,15 @@ namespace Microprojects.Edm.Ui.Logistics.Services;
 
 public class OrderService : ServiceBase<Order>, IOrderService
 {
+    private IItemService _itemService;
+    
     public OrderService()
     {
     }
 
-    public OrderService(LogisticsContext db, IUserService userService) : base(db, userService)
+    public OrderService(LogisticsContext db, IUserService userService, IItemService itemService) : base(db, userService)
     {
+        _itemService = itemService;
     }
 
     public override async Task<Order> Get(Guid id)
@@ -89,6 +93,8 @@ public class OrderService : ServiceBase<Order>, IOrderService
     public async Task<IEnumerable<Item>> GetItems(Guid id)
     {
         var items = await Set<Item>().AsNoTracking()
+            .Include(i => i.Nomenclature)
+            .Include(i => i.Tare.TareType)
             .Where(i => i.OrderId == id)
             .ToListAsync();
 
@@ -104,6 +110,32 @@ public class OrderService : ServiceBase<Order>, IOrderService
             .ToListAsync();
 
         return operations;
+    }
+
+    public async Task<Item> AddItem(Guid id, Item item)
+    {
+        var specification = (await GetSpecifications(id))
+            .FirstOrDefault(s => s.NomenclatureId == item.NomenclatureId) 
+            ?? throw new EdmException($"Specification for nomenclature {item.NomenclatureId} not found");
+        if ( specification.Total >= specification.Amount)
+        {
+            throw new EdmException($"{specification.Nomenclature.Name} no more required");
+        }
+
+        var storeItem = await Set<Item>()
+                            .FirstOrDefaultAsync(i => i.Id == item.Id)
+                        ?? throw new EdmException($"Item with id {item.Id} not found");
+        var requiredAmount = specification.Amount - specification.Total;
+        var orderItem = await _itemService.Save(new Item
+        {
+            OrderId = id,
+            OriginId = storeItem.Id,
+            NomenclatureId = storeItem.NomenclatureId,
+            Quantity = storeItem.Quantity < requiredAmount ? storeItem.Quantity : requiredAmount,
+            TareId = storeItem.TareId
+        });
+
+        return orderItem;
     }
 
     private async Task<IEnumerable<Guid>> GetOperationProcesses(Guid id)
