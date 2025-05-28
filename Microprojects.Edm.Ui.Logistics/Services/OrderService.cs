@@ -62,16 +62,17 @@ public class OrderService : ServiceBase<Order>, IOrderService
         return order;
     }
 
-    public async Task<IEnumerable<OrderSpecificationNomenclature>> GetSpecifications(Guid id)
+    public async Task<IEnumerable<OrderSpecificationNomenclature>> GetSpecifications(Guid orderId, Guid? processId = null)
     {
-        var order = await Get(id);
+        var order = await Get(orderId);
         var specifications = await Set<OrderProcess>().AsNoTracking()
-            .Include(p => p.Process.Specifications.Where(s => s.Active))
-            .Where(p => p.OrderId == id)
+            .Include(p => p.Process.Specifications
+                .Where(s => s.Active &&  (processId == null || s.ProcessId == processId)))
+            .Where(p => p.OrderId == orderId)
             .SelectMany(p => p.Process.Specifications)
             .ToListAsync();
         var items = await Set<Item>().AsNoTracking()
-            .Where(i => i.OrderId == id)
+            .Where(i => i.OrderId == orderId)
             .ToListAsync();
         var rows = await Set<SpecificationNomenclature>().AsNoTracking()
             .Include(sn => sn.Nomenclature)
@@ -95,15 +96,16 @@ public class OrderService : ServiceBase<Order>, IOrderService
         var items = await Set<Item>().AsNoTracking()
             .Include(i => i.Nomenclature)
             .Include(i => i.Tare.TareType)
-            .Where(i => i.OrderId == id)
+            .Include(i => i.Meta)
+            .Where(i => i.OrderId == id && i.Meta.Deleted == null)
             .ToListAsync();
 
         return items;
     }
 
-    public async Task<IEnumerable<OrderProcess>> GetOrderProcesses(Guid id)
+    public async Task<IEnumerable<OrderProcess>> GetOrderProcesses(Guid id, bool asNoTracking = true)
     {
-        var operations = await Set<OrderProcess>().AsNoTracking()
+        var operations = await (asNoTracking ? Set<OrderProcess>().AsNoTracking() : Set<OrderProcess>())
             .Include(op => op.Process.Nomenclature)
             .Where(i => i.OrderId == id)
             .OrderBy(op => op.Ordering)
@@ -125,17 +127,98 @@ public class OrderService : ServiceBase<Order>, IOrderService
         var storeItem = await Set<Item>()
                             .FirstOrDefaultAsync(i => i.Id == item.Id)
                         ?? throw new EdmException($"Item with id {item.Id} not found");
+        var tare = storeItem.Tare;
         var requiredAmount = specification.Amount - specification.Total;
-        var orderItem = await _itemService.Save(new Item
+        if (storeItem.Quantity <= requiredAmount)
         {
-            OrderId = id,
-            OriginId = storeItem.Id,
-            NomenclatureId = storeItem.NomenclatureId,
-            Quantity = storeItem.Quantity < requiredAmount ? storeItem.Quantity : requiredAmount,
-            TareId = storeItem.TareId
-        });
+            storeItem.OrderId = id;
+            await Db.SaveChangesAsync();
+        }
+        else
+        {
+            storeItem = await _itemService.Save(new Item
+            {
+                OrderId = id,
+                OriginId = storeItem.Id,
+                NomenclatureId = storeItem.NomenclatureId,
+                Quantity = Math.Min(storeItem.Quantity, requiredAmount), 
+                TareId = storeItem.TareId
+            });
+            storeItem.Tare = tare;
+        }
 
-        return orderItem;
+        return storeItem;
+    }
+
+    public async Task<bool> Execute(Guid id, Guid? processId)
+    {
+        var order = await Set()
+            .Include(o => o.Meta)
+            .FirstOrDefaultAsync(o => o.Id == id);
+        var processes = (await GetOrderProcesses(id, asNoTracking: false))//order.Processes
+            .Where(p => p.StartTime == null)
+            .OrderBy(p => p.Ordering);
+        foreach (var process in processes)
+        {
+            var specification = (await GetSpecifications(id, process.ProcessId))
+                .ToList();
+            // Check if all required components for the process are allocated
+            if (specification.Any(n => n.Total < n.Amount)) 
+                throw new EdmException("Not all required components are available");
+
+            // Set operation started 
+            process.StartTime = DateTime.UtcNow;
+            if (process.Process.NomenclatureId != null)
+            {
+                // Create new output item
+                // TODO Operation can be
+                //      bulk-to-bulk: takes all income items and convert them to single large outcome item (the same op-parameters for all)
+                //      bulk-to-many: takes all income and shards it to many one-pcs items (splitting smth to pieces)
+                //      many-to-many: take at least one one-pcs nomenclature item and convert it to one-pcs output item
+                //          m-2-m operation is usually is one piece operation (e.g., measuring parameters of a single component)
+                // WARNING at the moment only bulk-to-bulk implemented
+                var outputItem = await _itemService.Save(new Item
+                {
+                    NomenclatureId = process.Process.NomenclatureId!.Value,
+                    OrderId = id,
+                    ProcessId = process.ProcessId,
+                    Quantity = order.Amount,
+                    Tare = new Tare
+                    {
+                        TareTypeId = process.Process.Nomenclature!.DefaultTareTypeId!.Value,
+                        Barcode = $"{id}"
+                    }
+                });
+            }
+
+            // Archive specification items
+            foreach (var specItem in specification)
+            {
+                var items = await Set<Item>()
+                    .Include(i => i.Meta)
+                    .Where(i => i.OrderId == order.Id && i.NomenclatureId == specItem.NomenclatureId && i.Meta.Deleted == null)
+                    .OrderBy(i => i.Meta.Created)
+                    .ToListAsync();
+                double total = 0;
+                foreach (var item in items)
+                {
+                    // TODO split item if it is not fully consumed
+                    total += item.Quantity;
+                    item.Meta.Deleted = DateTime.UtcNow;
+                    if (total >= specItem.Amount)
+                        break;
+                }
+            }
+            // Set operation completed
+            process.EndTime = DateTime.UtcNow;
+            await Db.SaveChangesAsync();
+        }
+        
+        // Complete order
+        order.Meta.Deleted = DateTime.UtcNow;
+        await Db.SaveChangesAsync();
+            
+        return true;
     }
 
     private async Task<IEnumerable<Guid>> GetOperationProcesses(Guid id)

@@ -13,7 +13,7 @@ import {ProcessDetail} from "@logistics/components/config/process/Processes";
 import {NomenclatureDetail} from "@logistics/components/config/nomenclature/Nomenclatures";
 import {Detail} from "@logistics/components/MasterDetail";
 import {process} from "@progress/kendo-data-query"
-import {Alert, UncontrolledAlert} from "reactstrap";
+import {AlertState, InlineAlert} from "@logistics/components/InlineAlert.tsx";
 
 type ItemSearchProps = {
     onClose: () => void
@@ -25,11 +25,6 @@ type ItemSearchProps = {
 interface PageState {
     skip: number;
     take: number;
-}
-
-export type AlertState = {
-    message: string
-    status: 'warning' | 'danger' | undefined
 }
 
 const initialDataState: PageState = {skip: 0, take: 10};
@@ -105,11 +100,7 @@ export const ItemSearch = (props: ItemSearchProps) => {
                     {error && <Error>{error}</Error>}
                     {data &&
                         <>
-                            {alert && 
-                                <Alert color={alert.status} fade={true} isOpen={!!alert} toggle={() => setAlert(undefined)}>
-                                    {alert.message}
-                                </Alert>
-                            }
+                            <InlineAlert state={alert} onClose={() => setAlert(undefined)}></InlineAlert>
                             <Grid data={data} /* TODO use RelationTable */
                                   scrollable='none'
                                   pageable={true}

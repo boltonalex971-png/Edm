@@ -46,7 +46,7 @@ public class OrdersController : CrudControllerBase<Order, OrderViewModel, IOrder
     {
         var item = Mapper.Map<Item>(itemModel);
         var orderItem = await Service.AddItem(id, item);
-        return Mapper.Map<ItemViewModel>(item);
+        return Mapper.Map<ItemViewModel>(orderItem);
     }
     
     [HttpGet("{id:Guid}/operations")]
@@ -54,5 +54,18 @@ public class OrdersController : CrudControllerBase<Order, OrderViewModel, IOrder
     {
         var items = await Service.GetOrderProcesses(id);
         return Mapper.Map<IEnumerable<OrderProcessViewModel>>(items);
+    }
+
+    /// <summary>
+    /// Execute the next order process if available
+    /// </summary>
+    /// <param name="id"></param>
+    /// <param name="process"></param>
+    /// <returns></returns>
+    [HttpPost("{id:Guid}/execute")]
+    public async Task<bool> Execute(Guid id, [FromBody] ProcessViewModel? process)
+    {
+        var result = await Service.Execute(id, process?.Id);
+        return result;
     }
 }

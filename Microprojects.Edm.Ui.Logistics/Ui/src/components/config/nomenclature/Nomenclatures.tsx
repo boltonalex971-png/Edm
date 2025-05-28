@@ -2,7 +2,7 @@ import { Field } from '@progress/kendo-react-form'
 import { Input } from '@progress/kendo-react-inputs'
 import {type EffectCallback, useEffect, useState} from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import type {DetailEventHandler, Nomenclature, UUID } from "../../../data/types"
+import type {DetailEventHandler, Nomenclature, TareType, UUID} from "../../../data/types"
 import Api from '@features/api/api'
 import {useGet} from "@logistics/hooks/hooks";
 import { useBasePath } from "@logistics/hooks/routerHooks"
@@ -45,7 +45,7 @@ export function NomenclatureDetail({ id, ...props } : NomenclatureDetailProps) {
     const [sub, setSub] = useState<React.ReactElement>();
     useEffect(setSub as EffectCallback, [effectiveId]);
     const [[categories]] = useGet<string[]>(`${Api.nomenclatures}/categories`, []);
-    //const [[taretypes]] = useGet<string[]>(`${Api.taretypes}/types`, []);
+    const [[tareTypes]] = useGet<TareType[]>(`${Api.taretypes}`, []);
     let [[data, setData], loading, error] = useGet<Nomenclature>(`${props.api}/${effectiveId}`, [effectiveId]);
     if (!data || data.id === EMPTY_GUID) {
         data = { ...data, name: '', description: '' } as Nomenclature
@@ -104,18 +104,18 @@ export function NomenclatureDetail({ id, ...props } : NomenclatureDetailProps) {
                                        }
                                 />
                             </div>
-                            {/*<div className="mb-3" style={{ width: '400px' }}>*/}
-                            {/*    <Field name={'taretype'} label={'Tare'}*/}
-                            {/*           component={(compProps) =>*/}
-                            {/*               <DropDownComp {...compProps}*/}
-                            {/*                             loading={!taretypes}*/}
-                            {/*                             data={[{name: ''}, ...taretypes?.map(t => ({ name: t }))]}*/}
-                            {/*                             textField='name'*/}
-                            {/*                             dataItemKey='name'*/}
-                            {/*               />*/}
-                            {/*           }*/}
-                            {/*    />*/}
-                            {/*</div>*/}
+                            <div className="mb-3" style={{ width: '400px' }}>
+                                <Field name={'defaultTareTypeId'} label={'Default tare'}
+                                       component={(compProps) =>
+                                           <DropDownComp {...compProps}
+                                                         loading={!tareTypes}
+                                                         data={[{name: ''}, ...tareTypes!]}
+                                                         textField='name'
+                                                         dataItemKey='id'
+                                           />
+                                       }
+                                />
+                            </div>
                         </fieldset>
                     }
                 />

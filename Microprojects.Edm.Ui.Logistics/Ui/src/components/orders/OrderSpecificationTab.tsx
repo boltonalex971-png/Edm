@@ -24,7 +24,7 @@ export function OrderSpecificationTab({id, api, onDetailSelected}: OrderSpecific
     const addComponent = (item: Item, itemUpdate : (item : any) => void, setAlert: (message : AlertState) => void) => {
         axios.post(`${api}/${id}/items`, item)
             .then(result => {
-                setAlert({message: `${result.data.quantity} component(s) allocated`,  status: undefined})
+                setAlert({message: `${result.data.quantity} allocated`,  status: undefined})
                 itemUpdate(result.data)
             }).catch(e => setAlert({message: e.response.data.detail,  status: 'danger'}))
     }

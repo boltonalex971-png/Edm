@@ -32,7 +32,8 @@ export interface Process extends DataItem {
 
 export interface Nomenclature extends DataItem {
     category: string
-    taretype: string
+    defaultTareTypeId: UUID
+    defaultTareTypeName?: string
 }
 
 export interface TareType extends DataItem {

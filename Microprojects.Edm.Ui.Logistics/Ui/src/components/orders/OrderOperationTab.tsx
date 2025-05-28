@@ -16,10 +16,10 @@ export function OrderOperationTab({ id, api } : OrderOperationTabProps) {
     //const [[noms]] = useGet<Nomenclature>(`${Api.nomenclatures}`)
     return (
         <RelationTable api={`${api}/${id}/operations`} >
-            <GridColumn field='processName' title='Process' width='auto' editable={false} />
-            <GridColumn field='processNomenclatureName' title='Name' width='auto' />
-            <GridColumn field='startTime' title='Started' width='150' cell={DateTimeCell}/>
-            <GridColumn field='endTime' title='Completed' width='150' cell={DateTimeCell}/>
+            <GridColumn field='processName' title='Process' editable={false} />
+            <GridColumn field='processNomenclatureName' title='Name' />
+            <GridColumn field='startTime' title='Started' cell={DateTimeCell}/>
+            <GridColumn field='endTime' title='Completed' cell={DateTimeCell}/>
         </RelationTable>
     );
 }
