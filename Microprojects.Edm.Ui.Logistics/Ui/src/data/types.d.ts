@@ -43,16 +43,18 @@ export interface TareType extends DataItem {
     capacity: number
 }
 
-export interface Item {
+export interface Item  extends DataItem {
     id: UUID
     originId: UUID
     nomenclatureName: string
     nomenclatureId: UUID
     children: Item[]
     tareBarcode: string
+    tareTareTypeId: UUID
     tareTareTypeName: string
     tareTareTypeUnits: string
     capacity: number
+    quantity:  number
 }
 
 export interface ItemSearchQuery {

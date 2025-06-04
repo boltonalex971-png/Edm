@@ -14,6 +14,7 @@ import {NomenclatureDetail} from "@logistics/components/config/nomenclature/Nome
 import {Detail} from "@logistics/components/MasterDetail";
 import {process} from "@progress/kendo-data-query"
 import {AlertState, InlineAlert} from "@logistics/components/InlineAlert.tsx";
+import {ItemDetail} from "@logistics/components/items/ItemDetail.tsx";
 
 type ItemSearchProps = {
     onClose: () => void
@@ -31,7 +32,7 @@ const initialDataState: PageState = {skip: 0, take: 10};
 let refresh: boolean = false;
 
 export const ItemSearch = (props: ItemSearchProps) => {
-    const [[items], loading, error] = usePost<Item[]>(`${api.supplies}/search`, props.query, [props.query?.nomenclatureId, refresh]);
+    const [[items], loading, error] = usePost<Item[]>(`${api.supplies}/search`, props.query || {}, [props.query?.nomenclatureId, refresh]);
     const [subDetail, setSubDetail] = useState<ReactElement | undefined>();
     const [page, setPage] = React.useState<PageState>(initialDataState);
     const [filter, setFilter] = useState<string>('');
@@ -110,14 +111,14 @@ export const ItemSearch = (props: ItemSearchProps) => {
                                   total={data.total}
                                   onPageChange={pageChange}
                                   onRowDoubleClick={rowClicked}
-                                // onRowClick={(event) => setSubDetail(
-                                //     <OrderDetail
-                                //         id={event.dataItem.id}
-                                //         api={Api.orders}
-                                //         onClose={() => setSubDetail(undefined)}
-                                //         //onUpdate={event.itemUpdate}
-                                //     />
-                                // )}
+                                onRowClick={(event) => setSubDetail(
+                                    <ItemDetail
+                                        id={event.dataItem.id}
+                                        api={Api.supplies}
+                                        onClose={() => setSubDetail(undefined)}
+                                        //onUpdate={event.itemUpdate}
+                                    />
+                                )}
                             >
                                 <GridColumn field='serialNo' title='Serial No' width='100'/>
                                 <GridColumn field='nomenclatureName' title='Nomenclature' cell={p =>
@@ -133,7 +134,7 @@ export const ItemSearch = (props: ItemSearchProps) => {
                                     />
                                 }/>
                                 <GridColumn field='tareTareTypeName' title='Tare'/>
-                                <GridColumn field='tareBarcode' title='Barecode'/>
+                                <GridColumn field='tareBarcode' title='Barcode'/>
                                 <GridColumn field='quantity' title='Quantity'/>
                                 <GridColumn field='tareTareTypeUnits' title='Units'/>
                             </Grid>

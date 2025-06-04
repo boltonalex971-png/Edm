@@ -8,6 +8,7 @@ import {Config} from "@logistics/components/config/Config.tsx";
 import {Orders} from "@logistics/components/orders/Orders.tsx";
 import {Supplies} from "@logistics/components/supplies/Supplies.tsx";
 import {Warehouse} from "@logistics/components/warehouse/Warehouse.tsx";
+import {Items} from "@logistics/components/items/Items.tsx";
 
 export function App() {
     const {data: user, error, isLoading} = useGetUserQuery();
@@ -22,9 +23,9 @@ export function App() {
                         <Route index element={<Home />} />
                         <Route path='/config/*' element={<Config />} />
                         <Route path='/orders/*' element={<Orders />} />
-                        <Route path='/supplies/*' element={<Supplies />} />
+                        <Route path='/items/*' element={<Items />} />
                         <Route path='/warehouse/*' element={<Warehouse />} />
-                        <Route path='*' element={<span>Page not exists</span>} />
+                        <Route path='*' element={<span>Page not exist</span>} />
                     </Routes>
             }
             {user && !user.role &&

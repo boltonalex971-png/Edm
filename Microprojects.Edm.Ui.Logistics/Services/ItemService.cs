@@ -20,6 +20,14 @@ public class ItemService : ServiceBase<Item>, IItemService
         _tareService = tareService;
     }
 
+    public override async Task<Item> Get(Guid id)
+    {
+        var result = await Set().AsNoTracking()
+            .Include(i => i.Nomenclature)
+            .FirstOrDefaultAsync(i => id == i.Id);
+        return result;
+    }
+
     public override async Task<IEnumerable<Item>> GetAll()
     {
         var query = Set().AsNoTracking();

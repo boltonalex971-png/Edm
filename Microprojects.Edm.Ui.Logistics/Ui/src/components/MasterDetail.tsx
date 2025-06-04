@@ -224,7 +224,7 @@ interface EditorProps extends InfoProps {
 export function Editor(props : EditorProps) {
     const navigate = useNavigate();
     const handleSubmit = (data: Dictionary) => {
-        console.log(data);
+        //console.log(data);
         const foreignData = Object.keys(data)
             .reduce((r, d, i, a ) => 
                 ({ ...r, [d]: data[d] && typeof data[d] === 'object' && !(data[d] instanceof Date) ? data[d]['id'] : data[d]}), {})
