@@ -23,9 +23,11 @@ function App({ apiBase }) {
     const [started, setStarted] = useState(false);
     const [lifecycle] = useOperationData(types.operationLifecycle, (d) => setStarted(d.Start))
     useEffect(() => {
-        if (processInfo?.settings) {
-            setSettings(JSON.parse(processInfo.settings))
+        if (!processInfo) {
+            return;
         }
+        
+        setSettings(processInfo.settings ? JSON.parse(processInfo.settings) : defaultOptions)
     }, [processInfo])
     return (
         <Routes>

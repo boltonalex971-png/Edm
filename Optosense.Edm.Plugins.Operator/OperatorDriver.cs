@@ -40,6 +40,13 @@ namespace Optosense.Edm.Drivers.Operator
 
         public override async Task<DriverResponse> Execute(DriverRequest req)
         {
+            if (req.Command == Stop() && _response.Request == Stop())
+            {
+                // This means that the previous command was "Stop" and 
+                // StartDevice job is just cancelling the driver 
+                return null;
+            }
+            
             // TODO Send the request by SignalR channel
             if (req != null && req.Parameters != null)
             {

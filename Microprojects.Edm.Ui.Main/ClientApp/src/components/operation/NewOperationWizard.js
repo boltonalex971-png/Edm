@@ -45,7 +45,7 @@ export function NewOperationWizard() {
                 return {
                     profileId: id,
                     hostDeviceId: params.devices[id].hostDeviceId,
-                    options: JSON.stringify(params.options[id] || {})
+                    options: JSON.stringify(params.options[id]?.options || {})
                 }
             }),
         };
@@ -227,7 +227,12 @@ function DevicesStep({ changeDetail }) {
                     hostDeviceId: d.hostDeviceId,
                     device: d.deviceName
                 }))
-                dispatch(setDriverOptions({ profileId: d.profileId, options: (d.configuration && JSON.parse(d.configuration)) }))
+                dispatch(setDriverOptions({ 
+                    id: d.id, 
+                    profileId: d.profileId,
+                    options: JSON.parse(d.configuration || '{}'),
+                    output: JSON.parse(d.profileOutput || '[]') 
+                }))
             })
         })
     }
@@ -372,7 +377,12 @@ function DeviceDetail({ id, profile }) {
         data => {
             dispatch(setDevice({ profileId: profile.id, ...data }))
             if (!options && data.configuration) {
-                dispatch(setDriverOptions({ id, profileId: profile.id, options: JSON.parse(data.configuration) }))
+                dispatch(setDriverOptions({ 
+                    id, 
+                    profileId: profile.id, 
+                    options: JSON.parse(data.configuration),
+                    output: JSON.parse(data.profileOutput || '[]')
+                }))
             }
         })
     const loaded = device && true
@@ -389,10 +399,10 @@ function DeviceDetail({ id, profile }) {
                     <p>Located on: {device.host} </p>
                     <div>
                         <PluginContainer title='Device Configuration'
-                            data={{ options }}
+                            data={options}
                             width='100%'
                             src={`${apiContext}/${device.driverHomepage}/options`}
-                            onDataReceived={options => dispatch(setDriverOptions({ id, options, profileId: profile.id }))}
+                            onDataReceived={o => dispatch(setDriverOptions(o))}
                         />
                     </div>
                 </div>

@@ -1,13 +1,17 @@
-import React from 'react';
+import React, {useState} from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
 import { Options } from './Options';
 import '@progress/kendo-theme-bootstrap/dist/all.scss';
-import "bootstrap/scss/bootstrap.scss";
+//import "bootstrap/scss/bootstrap.scss";
 import { ApiContext } from './ApiContext';
-import { useHeightEffect } from '@microprojects/react-utils';
+import { usePluginData } from '@microprojects/react-utils';
 
 function App(props) {
-    useHeightEffect();
+    const [data, setData] = usePluginData();
+    const handleOptionsChanged = (options) => {
+        setData({...data, options});
+    }
+    
     return (
         <ApiContext.Provider value={`${process.env.REACT_APP_API_URL || window.location.origin}`}>
             <Routes>
@@ -23,7 +27,7 @@ function App(props) {
                 >
                 </Route>
                 <Route path='/plan/:id' element={<></>} />
-                <Route path='/options' element={<Options guid={`${process.env.REACT_APP_GUID}`} />} />
+                <Route path='/options' element={<Options guid={`${process.env.REACT_APP_GUID}`} data={data} onChange={handleOptionsChanged} />} />
                 <Route path='/console' element={<h1>Console is in the development progress...</h1>} />
             </Routes>
         </ApiContext.Provider>

@@ -24,7 +24,7 @@ export function DeviceConfigEditor({ id, ...props }) {
         output: JSON.parse(o.profileOutput || '[]')
     }))
     const onOptionsChanged = (o) => {
-        axios.put(`${props.api}/${id}`, o)
+        axios.put(`${props.api}/${id}`, o.options)
     }
 
     return (

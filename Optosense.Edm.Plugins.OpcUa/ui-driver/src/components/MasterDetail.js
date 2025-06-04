@@ -22,7 +22,7 @@ MasterDetail.propTypes = {
 
 export function MasterDetail(props) {
     return (
-        <SmartScroll offtop={10}>
+        <SmartScroll offtop={20}>
             <div style={{ flex: 1 }}>
                 <SmartScrollContent>
                     <TreeViewMaster data={props.data} onItemClick={props.onItemClick} />

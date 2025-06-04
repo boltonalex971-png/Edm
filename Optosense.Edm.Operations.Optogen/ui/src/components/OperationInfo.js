@@ -28,7 +28,7 @@ export const OperationInfo = ({ settings, started }) => {
         setLastId(data.reduce((max, el) => el.id > max ? el.id : max, 0));
         let paramsChanged = false;
         data.forEach(r => {
-            const parameters = JSON.parse(r.parameters || '{}');
+            const parameters = r.parameters || {}
             Object.keys(parameters).forEach(k => {
                 paramsChanged = true;
                 // const currValue = Math.round(parameters[k] * 100) / 100;
