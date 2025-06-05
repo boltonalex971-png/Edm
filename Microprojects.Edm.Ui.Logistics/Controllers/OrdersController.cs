@@ -68,4 +68,11 @@ public class OrdersController : CrudControllerBase<Order, OrderViewModel, IOrder
         var result = await Service.Execute(id, process?.Id);
         return result;
     }
+    
+    [HttpPost("search")]
+    public async Task<IEnumerable<OrderViewModel>> Search([FromBody] OrderSearchQuery query)
+    {
+        var result = await Service.Search(query);
+        return Mapper.Map<IEnumerable<OrderViewModel>>(result);
+    }
 }

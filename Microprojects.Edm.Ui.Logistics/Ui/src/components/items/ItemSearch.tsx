@@ -113,14 +113,14 @@ export const ItemSearch = (props: ItemSearchProps) => {
                                   total={data.total}
                                   onPageChange={pageChange}
                                   onRowDoubleClick={rowClicked}
-                                onRowClick={(event) => setSubDetail(
-                                    <ItemDetail
-                                        id={event.dataItem.id}
-                                        api={Api.supplies}
-                                        onClose={() => setSubDetail(undefined)}
-                                        //onUpdate={event.itemUpdate}
-                                    />
-                                )}
+                                  // onRowClick={(event) => setSubDetail(
+                                  //     <ItemDetail
+                                  //         id={event.dataItem.id}
+                                  //         api={Api.supplies}
+                                  //         onClose={() => setSubDetail(undefined)}
+                                  //         //onUpdate={event.itemUpdate}
+                                  //     />
+                                  // )}
                             >
                                 <GridColumn field='serialNo' title='Serial No' width='100'/>
                                 <GridColumn field='nomenclatureName' title='Nomenclature' cell={p =>

@@ -3,6 +3,7 @@ using AutoMapper;
 using Microprojects.Edm.Ui.Logistics.Contracts;
 using Microprojects.Edm.Ui.Logistics.Models;
 using Microprojects.Edm.Ui.Logistics.Persistence;
+using Microprojects.Edm.Ui.Logistics.ViewModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace Microprojects.Edm.Ui.Logistics.Services;
@@ -237,5 +238,18 @@ public class OrderService : ServiceBase<Order>, IOrderService
         }
 
         return result;
+    }
+
+    public async Task<IEnumerable<Order>> Search(OrderSearchQuery query)
+    {
+        // TODO Use materialized view to gain performance
+        var orders = await Set().AsNoTracking()
+            .Include(o => o.Process.Nomenclature)
+            .Include(o => o.Meta)
+            .Where(i => (query.Active && i.Meta.Deleted == null || !query.Active && i.Meta.Deleted != null)
+                        && (query.NomenclatureId == null || query.NomenclatureId == i.Process.NomenclatureId))
+            .ToListAsync();
+            
+        return orders;
     }
 }

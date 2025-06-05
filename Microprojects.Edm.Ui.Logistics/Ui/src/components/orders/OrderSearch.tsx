@@ -1,8 +1,8 @@
 import React, {ReactElement, useMemo, useState} from 'react';
 import {Diagram3, Search} from "react-bootstrap-icons";
 import api from "@features/api/api.ts";
-import {useGet} from "@logistics/hooks/hooks.ts";
-import {DataItem, Item, Order} from "@logistics/data/types";
+import {useGet, usePost} from "@logistics/hooks/hooks.ts";
+import {DataItem, Item, ItemSearchQuery, Order} from "@logistics/data/types";
 import {InputPrefix, TextBox, TextBoxChangeEvent} from "@progress/kendo-react-inputs";
 import {Loading} from "@features/utils/Utils";
 import {Error} from "@progress/kendo-react-labels";
@@ -16,7 +16,9 @@ import {OrderDetail} from "@logistics/components/orders/OrderDetail";
 import {DateCell} from "@logistics/components/RelationTable";
 import {process} from "@progress/kendo-data-query"
 
-type OrderSearchProps = {}
+type OrderSearchProps = {
+    query?: ItemSearchQuery
+}
 interface PageState {
     skip: number;
     take: number;
@@ -24,7 +26,9 @@ interface PageState {
 const initialDataState: PageState = { skip: 0, take: 10 };
 
 export const OrderSearch = (props: OrderSearchProps) => {
-    const [[orders], loading, error] = useGet<Order[]>(`${api.orders}`, [api]);
+    const [[orders], loading, error] = usePost<Order[]>(
+        `${api.orders}/search`, props.query || {},
+        [props.query?.nomenclatureId, props.query?.active]);
     const [subDetail, setSubDetail] = useState<ReactElement | undefined>();
     const [page, setPage] = React.useState<PageState>(initialDataState);
     const [filter, setFilter] = useState<string>('');

@@ -1,9 +1,9 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {useRouteMatch} from "@logistics/hooks/routerHooks";
 import {PageTitle} from "@logistics/components/PageTitle";
 import {Nav, NavItem, NavLink} from "reactstrap";
 import {NavLink as Link} from "react-router";
-import {SmartScroll, SmartScrollContent} from "@logistics/components/SmartScroll";
+import {SmartScrollContent} from "@logistics/components/SmartScroll";
 import {ChevronLeft, InfoCircle} from "react-bootstrap-icons";
 import {TreeViewLink} from "@logistics/components/TreeViewLink";
 import {Search} from "@logistics/components/Search"
@@ -11,12 +11,17 @@ import Api from "@features/api/api.ts";
 import {useParams} from "react-router-dom";
 import {OrderDetail} from "@logistics/components/orders/OrderDetail";
 import {OrderSearch} from "@logistics/components/orders/OrderSearch.tsx";
+import {OrderSearchQuery} from "@logistics/data/types";
 
 export function Orders() {
-    let {path} = useRouteMatch();
+    let {path, name} = useRouteMatch();
     const param = useParams();
     const [panel, setPanel] = useState<'search' | 'create'>('search')
     const [linkPanel, setLinkPanel] = useState<string>()
+    const [query, setQuery] = useState<OrderSearchQuery>()
+    useEffect(() => {
+        setQuery({active: name.includes('ongoing')})
+    }, [name])
     const searchClick = (e) => {
         setPanel('search')
         setLinkPanel(undefined)
@@ -32,7 +37,7 @@ export function Orders() {
                 <PageTitle title="Orders"/>
                 <Nav pills>
                     <NavItem>
-                        <NavLink tag={Link} to={`${path}/ongoing`}>Ongoing</NavLink>
+                        <NavLink tag={Link} to={`${path}/ongoing`}>Active</NavLink>
                     </NavItem>
                     <NavItem>
                         <NavLink tag={Link} to={`${path}/completed`}>Completed</NavLink>
@@ -44,7 +49,7 @@ export function Orders() {
                 <Search api={Api.orders}
                         stubMessage={'Select an action'}
                         type={'none'}
-                        search={<OrderSearch/>}
+                        search={<OrderSearch query={query}/>}
                         detail={<OrderDetail title='New Order' editMode={true} api={Api.orders}/>}
                 />
             </div>
