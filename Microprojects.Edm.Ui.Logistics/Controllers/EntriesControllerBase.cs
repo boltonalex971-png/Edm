@@ -34,9 +34,10 @@ public class EntriesControllerBase<TEntry, TEntryViewModel, TService> : AuthCont
     }
 
     [HttpGet]
-    public async Task<IEnumerable<TEntry>> GetAllEntries()
+    public async Task<IEnumerable<TEntryViewModel>> GetAllEntries()
     {
-        return await Service.GetAll();
+        var entries = await Service.GetAll();
+        return Mapper.Map<IEnumerable<TEntryViewModel>>(entries);
     }
 
     [HttpGet("hierarchy")]
