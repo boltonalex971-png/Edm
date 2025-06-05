@@ -8,7 +8,7 @@ namespace Microprojects.Edm.Ui.Logistics.ViewModels
 {
     public class TareTypeViewModel : DirectoryEntryViewModel
     {
-        public string? Unit { get; set; }
+        public string? Units { get; set; }
         public bool Countable { get; set; }
         public int Dimensions { get; set; }
         public double Capacity { get; set; } 

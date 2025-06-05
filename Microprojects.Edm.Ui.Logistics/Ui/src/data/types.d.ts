@@ -37,7 +37,7 @@ export interface Nomenclature extends DataItem {
 }
 
 export interface TareType extends DataItem {
-    unit: string
+    units: string
     countable: boolean
     dimensions: number
     capacity: number

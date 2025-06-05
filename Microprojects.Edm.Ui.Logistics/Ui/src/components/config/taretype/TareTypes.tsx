@@ -72,7 +72,7 @@ export function TareTypeDetail({ id, ...props } : TareTypeDetailProps) {
                         <>
                             <div>
                                 <p><span>{data.countable && 'Countable'}</span></p>
-                                <p><span>Measured in: </span><strong>{data.unit}</strong></p>
+                                <p><span>Measured in: </span><strong>{data.units}</strong></p>
                                 <p><span>Dimensions: </span><strong>{data.dimensions}</strong></p>
                                 <p><span>Capacity: </span><strong>{data.capacity}</strong></p>
                             </div>
@@ -99,7 +99,7 @@ export function TareTypeDetail({ id, ...props } : TareTypeDetailProps) {
                                 <Field name={'description'} component={Input} label={'Description'} />
                             </div>
                             <div className="mb-3">
-                                <Field name={'unit'} component={Input} label={'Units'} />
+                                <Field name={'units'} component={Input} label={'Units'} />
                             </div>
                             <div className="mb-3">
                                 <Field name={'countable'} component={Checkbox} label={'Countable'} />
