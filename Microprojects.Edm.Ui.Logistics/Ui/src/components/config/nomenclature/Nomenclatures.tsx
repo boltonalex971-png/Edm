@@ -65,7 +65,7 @@ export function NomenclatureDetail({ id, ...props } : NomenclatureDetailProps) {
                         <>
                             <div>
                                 <p><span>Category: </span><span>{data.category}</span></p>
-                                <p><span>Tare: </span><span>{data.taretype}</span></p>
+                                <p><span>Tare: </span><span>{data.defaultTareTypeName}</span></p>
                             </div>
                         </>
                     }
@@ -109,7 +109,7 @@ export function NomenclatureDetail({ id, ...props } : NomenclatureDetailProps) {
                                        component={(compProps) =>
                                            <DropDownComp {...compProps}
                                                          loading={!tareTypes}
-                                                         data={[{name: ''}, ...tareTypes!]}
+                                                         data={[{name: ''}, ...(tareTypes || [])]}
                                                          textField='name'
                                                          dataItemKey='id'
                                            />
