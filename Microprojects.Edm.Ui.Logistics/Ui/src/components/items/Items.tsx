@@ -36,7 +36,7 @@ export function Items() {
     return (
         <>
             <div style={{display: 'flex', justifyContent: 'space-between'}}>
-                <PageTitle title="Orders"/>
+                <PageTitle title="Supplies"/>
                 <Nav pills>
                     <NavItem>
                         <NavLink tag={Link} to={`${path}/remaining`}>Available</NavLink>
