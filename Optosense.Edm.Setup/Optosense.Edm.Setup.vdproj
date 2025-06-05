@@ -57,6 +57,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_3E0247198B08ABF31BDC712628ECE8C3"
+        "OwnerKey" = "8:_EB48077AD75D4B31A5FE71BF65197108"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_414DC650980E40EE9DFDD55B313A0646"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -178,6 +184,12 @@
         "Entry"
         {
         "MsmKey" = "8:_D0B890BB702947F2D6FB4ECD91735328"
+        "OwnerKey" = "8:_EB48077AD75D4B31A5FE71BF65197108"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_D0B890BB702947F2D6FB4ECD91735328"
         "OwnerKey" = "8:_E4F5703BD7A246A1A451936EFFD2EB7E"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -244,6 +256,12 @@
         "Entry"
         {
         "MsmKey" = "8:_E4F5703BD7A246A1A451936EFFD2EB7E"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_EB48077AD75D4B31A5FE71BF65197108"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -387,7 +405,7 @@
                 {
                 "Name" = "8:.NET Core"
                 "Message" = "8:[VSDNETCOREMSG]"
-                "FrameworkVersion" = "8:8.0  "
+                "FrameworkVersion" = "8:8.0    "
                 "AllowLaterVersions" = "11:FALSE"
                 "InstallUrl" = "8:https://dotnet.microsoft.com/download/dotnet-core/[NetCoreVerMajorDotMinor]"
                 "IsNETCore" = "11:TRUE"
@@ -882,7 +900,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Microprojects.Edm, Version=1.12.5.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Microprojects.Edm, Version=1.13.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_D0B890BB702947F2D6FB4ECD91735328"
@@ -905,7 +923,7 @@
             "SharedLegacy" = "11:FALSE"
             "PackageAs" = "3:1"
             "Register" = "3:1"
-            "Exclude" = "11:FALSE"
+            "Exclude" = "11:TRUE"
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
@@ -923,6 +941,37 @@
                     }
                 }
             "SourcePath" = "8:..\\Optosense.Edm.Plugins.Operator\\bin\\Debug\\net8.0\\Optosense.Edm.Plugins.Operator.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_AEE31518259E4CFDABF559E3A191152E"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_EB48077AD75D4B31A5FE71BF65197108"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:Microprojects.Edm.Ui.Logistics, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_EB48077AD75D4B31A5FE71BF65197108"
+                    {
+                    "Name" = "8:Microprojects.Edm.Ui.Logistics.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:..\\Microprojects.Edm.Ui.Logistics\\bin\\Debug\\net8.0\\Microprojects.Edm.Ui.Logistics.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_AEE31518259E4CFDABF559E3A191152E"
