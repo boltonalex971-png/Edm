@@ -11,7 +11,7 @@ namespace Microprojects.Edm.Ui.Logistics.Services;
 public class OrderService : ServiceBase<Order>, IOrderService
 {
     private IItemService _itemService;
-    
+
     public OrderService()
     {
     }
@@ -43,10 +43,11 @@ public class OrderService : ServiceBase<Order>, IOrderService
 
     public override async Task<Order> Save(Order order)
     {
+        var process = await Set<Process>().FirstAsync(p => p.Id == order.ProcessId);
+        var processes = await GetOperationProcesses(process);
         // Avoid creating a new process
         order.Process = null;
         await base.Save(order);
-        var processes = await GetOperationProcesses(order.ProcessId);
         Db.AddRange(
             processes
                 .Select((p, i) => new OrderProcess
@@ -63,13 +64,14 @@ public class OrderService : ServiceBase<Order>, IOrderService
         return order;
     }
 
-    public async Task<IEnumerable<OrderSpecificationNomenclature>> GetSpecifications(Guid orderId, Guid? processId = null)
+    public async Task<IEnumerable<OrderSpecificationNomenclature>> GetSpecifications(Guid orderId,
+        Guid? processId = null)
     {
         var order = await Get(orderId);
         var specifications = await Set<OrderProcess>().AsNoTracking()
             .Include(p => p.Process.Specifications
-                .Where(s => s.Active &&  (processId == null || s.ProcessId == processId)))
-            .Where(p => p.OrderId == orderId)
+                .Where(s => s.Active))
+            .Where(p => p.OrderId == orderId && (processId == null || p.ProcessId == processId))
             .SelectMany(p => p.Process.Specifications)
             .ToListAsync();
         var items = await Set<Item>().AsNoTracking()
@@ -118,9 +120,10 @@ public class OrderService : ServiceBase<Order>, IOrderService
     public async Task<Item> AddItem(Guid id, Item item)
     {
         var specification = (await GetSpecifications(id))
-            .FirstOrDefault(s => s.NomenclatureId == item.NomenclatureId) 
-            ?? throw new EdmException($"Specification for nomenclature {item.NomenclatureId} not found");
-        if ( specification.Total >= specification.Amount)
+                            .FirstOrDefault(s => s.NomenclatureId == item.NomenclatureId)
+                            ?? throw new EdmException(
+                                $"Specification for nomenclature {item.NomenclatureId} not found");
+        if (specification.Total >= specification.Amount)
         {
             throw new EdmException($"{specification.Nomenclature.Name} no more required");
         }
@@ -142,7 +145,7 @@ public class OrderService : ServiceBase<Order>, IOrderService
                 OrderId = id,
                 OriginId = storeItem.Id,
                 NomenclatureId = storeItem.NomenclatureId,
-                Quantity = Math.Min(storeItem.Quantity, requiredAmount), 
+                Quantity = Math.Min(storeItem.Quantity, requiredAmount),
                 TareId = storeItem.TareId
             });
             storeItem.Tare = tare;
@@ -156,7 +159,7 @@ public class OrderService : ServiceBase<Order>, IOrderService
         var order = await Set()
             .Include(o => o.Meta)
             .FirstOrDefaultAsync(o => o.Id == id);
-        var processes = (await GetOrderProcesses(id, asNoTracking: false))//order.Processes
+        var processes = (await GetOrderProcesses(id, asNoTracking: false)) //order.Processes
             .Where(p => p.StartTime == null)
             .OrderBy(p => p.Ordering);
         foreach (var process in processes)
@@ -164,7 +167,7 @@ public class OrderService : ServiceBase<Order>, IOrderService
             var specification = (await GetSpecifications(id, process.ProcessId))
                 .ToList();
             // Check if all required components for the process are allocated
-            if (specification.Any(n => n.Total < n.Amount)) 
+            if (specification.Any(n => n.Total < n.Amount))
                 throw new EdmException("Not all required components are available");
 
             // Set operation started 
@@ -197,7 +200,8 @@ public class OrderService : ServiceBase<Order>, IOrderService
             {
                 var items = await Set<Item>()
                     .Include(i => i.Meta)
-                    .Where(i => i.OrderId == order.Id && i.NomenclatureId == specItem.NomenclatureId && i.Meta.Deleted == null)
+                    .Where(i => i.OrderId == order.Id && i.NomenclatureId == specItem.NomenclatureId &&
+                                i.Meta.Deleted == null)
                     .OrderBy(i => i.Meta.Created)
                     .ToListAsync();
                 double total = 0;
@@ -210,31 +214,36 @@ public class OrderService : ServiceBase<Order>, IOrderService
                         break;
                 }
             }
+
             // Set operation completed
             process.EndTime = DateTime.UtcNow;
             await Db.SaveChangesAsync();
         }
-        
+
         // Complete order
         order.Meta.Deleted = DateTime.UtcNow;
         await Db.SaveChangesAsync();
-            
+
         return true;
     }
 
-    private async Task<IEnumerable<Guid>> GetOperationProcesses(Guid id)
+    private async Task<IEnumerable<Guid>> GetOperationProcesses(Process process)
     {
         var result = new List<Guid>();
         var subs = await Set<SubProcess>().AsNoTracking()
             .Include(p => p.Process.SubProcesses)
-            .Where(p => p.ProcessId == id)
+            .Where(p => p.ProcessId == process.Id)
             .OrderBy(p => p.Order)
-            .Select(p => p.LinkedProcessId)
+            .Select(p => p.LinkedProcess)
             .ToListAsync();
-        result.Add(id);
-        foreach (var processId in subs)
+        if (process.Kind == ProcessKinds.Operation)
         {
-            result.AddRange(await GetOperationProcesses(processId));
+            result.Add(process.Id);
+        }
+
+        foreach (var linked in subs)
+        {
+            result.AddRange(await GetOperationProcesses(linked));
         }
 
         return result;
@@ -249,7 +258,7 @@ public class OrderService : ServiceBase<Order>, IOrderService
             .Where(i => (query.Active && i.Meta.Deleted == null || !query.Active && i.Meta.Deleted != null)
                         && (query.NomenclatureId == null || query.NomenclatureId == i.Process.NomenclatureId))
             .ToListAsync();
-            
+
         return orders;
     }
 }
