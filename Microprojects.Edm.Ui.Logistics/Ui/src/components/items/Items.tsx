@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {useRouteMatch} from "@logistics/hooks/routerHooks";
 import {PageTitle} from "@logistics/components/PageTitle";
 import {Nav, NavItem, NavLink} from "reactstrap";
@@ -13,12 +13,17 @@ import {OrderDetail} from "@logistics/components/orders/OrderDetail";
 import {OrderSearch} from "@logistics/components/orders/OrderSearch.tsx";
 import {ItemSearch} from "@logistics/components/items/ItemSearch.tsx";
 import {ItemDetail} from "@logistics/components/items/ItemDetail.tsx";
+import {ItemSearchQuery} from "@logistics/data/types";
 
 export function Items() {
-    let {path} = useRouteMatch();
+    let {path, name} = useRouteMatch();
     const param = useParams();
     const [panel, setPanel] = useState<'search' | 'create'>('search')
     const [linkPanel, setLinkPanel] = useState<string>()
+    const [query, setQuery] = useState<ItemSearchQuery>()
+    useEffect(() => {
+        setQuery({active: name.includes('remaining')})     
+    }, [name])
     const searchClick = (e) => {
         setPanel('search')
         setLinkPanel(undefined)
@@ -34,7 +39,7 @@ export function Items() {
                 <PageTitle title="Orders"/>
                 <Nav pills>
                     <NavItem>
-                        <NavLink tag={Link} to={`${path}/remaining`}>Remains</NavLink>
+                        <NavLink tag={Link} to={`${path}/remaining`}>Available</NavLink>
                     </NavItem>
                     <NavItem>
                         <NavLink tag={Link} to={`${path}/consumed`}>Consumed</NavLink>
@@ -46,7 +51,7 @@ export function Items() {
                 <Search api={Api.supplies}
                         stubMessage={'Select an action'}
                         type={'none'}
-                        search={<ItemSearch />}
+                        search={<ItemSearch query={query} />}
                         detail={<ItemDetail title='New Item' editMode={true} api={Api.supplies}/>}
                 />
             </div>

@@ -60,6 +60,7 @@ export interface Item  extends DataItem {
 export interface ItemSearchQuery {
     originId?: UUID
     nomenclatureId?: UUID
+    active?: boolean 
 }
 
 export interface Order extends DataItem {

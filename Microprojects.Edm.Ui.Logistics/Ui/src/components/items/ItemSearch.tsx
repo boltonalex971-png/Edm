@@ -32,7 +32,9 @@ const initialDataState: PageState = {skip: 0, take: 10};
 let refresh: boolean = false;
 
 export const ItemSearch = (props: ItemSearchProps) => {
-    const [[items], loading, error] = usePost<Item[]>(`${api.supplies}/search`, props.query || {}, [props.query?.nomenclatureId, refresh]);
+    const [[items], loading, error] = usePost<Item[]>(
+        `${api.supplies}/search`, props.query || {}, 
+        [props.query?.nomenclatureId, props.query?.active, refresh]);
     const [subDetail, setSubDetail] = useState<ReactElement | undefined>();
     const [page, setPage] = React.useState<PageState>(initialDataState);
     const [filter, setFilter] = useState<string>('');

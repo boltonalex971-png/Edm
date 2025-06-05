@@ -71,7 +71,7 @@ public class ItemService : ServiceBase<Item>, IItemService
             .Include(i => i.Nomenclature)
             .Include(e => e.Meta)
             .Include(i => i.Items)
-            .Where(i => i.Meta.Deleted == null
+            .Where(i => (query.Active && i.Meta.Deleted == null || !query.Active && i.Meta.Deleted != null)
                         && (query.NomenclatureId == null || query.NomenclatureId == i.NomenclatureId)
                         && (query.OriginId == null || query.OriginId == i.OriginId)
                         && i.OrderId == null)

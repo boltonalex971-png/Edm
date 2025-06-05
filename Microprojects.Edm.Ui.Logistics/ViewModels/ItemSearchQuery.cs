@@ -5,6 +5,7 @@ public class ItemSearchQuery
     public Guid? Id { get; set; }
     public Guid? OriginId { get; set; }
     public Guid? NomenclatureId { get; set; }
+    public bool Active { get; set; } = true;
     
     // public string? Shipment { get; set; }
     // public string? ShipmentExternalId { get; set; }

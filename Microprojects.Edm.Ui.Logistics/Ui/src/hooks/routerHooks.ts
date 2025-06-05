@@ -4,7 +4,8 @@ const useRouteMatch = () => {
     const params = useParams<Record<string, string | undefined>>()
     const { pathname } = useLocation()
     const url = params?.['*']?.length ? pathname.replace(`/${params['*']}`, '') : pathname
-    return { path: url }
+    const name = pathname.replace(`${url}`, '') 
+    return { path: url, name }
 }
 
 const useBasePath = () => {
