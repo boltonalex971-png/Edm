@@ -3,7 +3,7 @@ import {Button} from "@progress/kendo-react-buttons";
 import {Diagram3, Link45deg} from "react-bootstrap-icons";
 import api from "@features/api/api.ts";
 import {useGet} from "@logistics/hooks/hooks.ts";
-import {type DetailEventHandler, Item, Order} from "@logistics/data/types";
+import {type DetailEventHandler, Item, Nomenclature, Order, TareType} from "@logistics/data/types";
 import {Input, NumericTextBox, TextArea} from "@progress/kendo-react-inputs";
 import {DetailLinkText} from "@logistics/components/DropDownCell.tsx";
 import Api from "@features/api/api.ts";
@@ -16,6 +16,7 @@ import {OrderTabs} from "@logistics/components/orders/OrderTabs.tsx";
 import axios from "axios";
 import {AlertState, InlineAlert} from "@logistics/components/InlineAlert.tsx";
 import {ComboBox, ComboBoxProps} from "@progress/kendo-react-dropdowns";
+import {LinkableComboBox} from "@logistics/components/DropDowns.tsx";
 
 export interface ItemDetailProps extends DetailProps {
     onUpdate?: DetailEventHandler
@@ -27,8 +28,8 @@ export function ItemDetail({id, title = 'Item', ...props}: ItemDetailProps) {
     const [subDetail, setSubDetail] = useState<React.ReactElement>();
     useEffect(setSubDetail as EffectCallback, [id]);
     //const [[processes]] = useGet<any[]>(api.processes, []);
-    // const [[kinds]] = useGet<string[]>(`${Api.processes}/kinds`, []);
-    // const [[noms]] = useGet<Item[]>(`${Api.nomenclatures}`, []);
+    const [[taretypes]] = useGet<TareType[]>(`${Api.taretypes}`, []);
+    const [[nomenclatures]] = useGet<Nomenclature[]>(`${Api.nomenclatures}`, []);
     let [[data, setData], loading, error] = useGet<Item>(`${Api.supplies}/${id || EMPTY_GUID}`, [id]);
     if (!data || data.id === EMPTY_GUID) {
         data = {...data, name: '', description: ''} as Item
@@ -109,7 +110,7 @@ export function ItemDetail({id, title = 'Item', ...props}: ItemDetailProps) {
                                 <div className="mb-2" style={{display: 'flex', alignItems: 'baseline'}}>
                                     <Field name={'nomenclatureId'}
                                            component={(p) =>
-                                               <LinkableComboBox {...p} api={api.nomenclatures}/>
+                                               <LinkableComboBox {...p} data={nomenclatures}/>
                                            }
                                            label={'Nomenclature'}
                                     />
@@ -121,7 +122,7 @@ export function ItemDetail({id, title = 'Item', ...props}: ItemDetailProps) {
                                 <div className="mb-2" style={{display: 'flex', alignItems: 'baseline'}}>
                                     <Field name={'tareTareTypeId'}
                                            component={(p) =>
-                                               <LinkableComboBox {...p} api={api.taretypes}/>
+                                               <LinkableComboBox {...p} data={taretypes}/>
                                            }
                                            label={'Tare Type'}
                                     />
@@ -134,7 +135,7 @@ export function ItemDetail({id, title = 'Item', ...props}: ItemDetailProps) {
                                     <Field name={'shipment'} component={Input} label={'Shipment'}/>
                                 </div>
                                 <div className="mb-2">
-                                    <Field name={'externalShipmentId'} component={Input} label={'Shipment Id'}/>
+                                    <Field name={'shipmentExternalId'} component={Input} label={'Shipment Id'}/>
                                 </div>
                                 <div className="mb-2">
                                     <Field name={'tareBarcode'} component={Input} label={'Tare Barcode'}/>
@@ -151,14 +152,4 @@ export function ItemDetail({id, title = 'Item', ...props}: ItemDetailProps) {
                 }
         />
     );
-}
-
-type LinkableComboBoxProps = ComboBoxProps & React.RefAttributes<any> & {
-    api: string;
-}
-export const LinkableComboBox = (props: LinkableComboBoxProps) => {
-    const [[data]] = useGet<any[]>(props.api);
-    return (
-        <ComboBox {...props} data={data} dataItemKey={'id'} textField={'name'} />
-    )
 }

@@ -52,7 +52,7 @@ public class CrudControllerBase<TObject, TObjectViewModel, TService> : AuthContr
     }
 
     [HttpPut("{id:guid}")]
-    public async Task<TObject> SaveObject(Guid id, [FromBody] TObjectViewModel model)
+    public async Task<TObjectViewModel> SaveObject(Guid id, [FromBody] TObjectViewModel model)
     {
         var entry = Mapper.Map<TObject>(model);
         if (id != entry.Id)
@@ -61,21 +61,21 @@ public class CrudControllerBase<TObject, TObjectViewModel, TService> : AuthContr
         }
 
         var result = await Service.Save(entry);
-        return result;
+        return Mapper.Map<TObjectViewModel>(result);
     }
 
     [HttpDelete("{id:guid}")]
-    public async Task<TObject> DeleteObject(Guid id)
+    public async Task<TObjectViewModel> DeleteObject(Guid id)
     {
-        var entry = await Service.Delete(id);
-        return entry;
+        var result = await Service.Delete(id);
+        return Mapper.Map<TObjectViewModel>(result);
     }
 
     [HttpPost]
-    public async Task<TObject> CreateObject([FromBody] TObjectViewModel model)
+    public async Task<TObjectViewModel> CreateObject([FromBody] TObjectViewModel model)
     {
         var entry = Mapper.Map<TObject>(model);
         var result = await Service.Save(entry);
-        return result;
+        return Mapper.Map<TObjectViewModel>(result);
     }
 }

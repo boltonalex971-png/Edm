@@ -59,8 +59,12 @@ public class ItemService : ServiceBase<Item>, IItemService
         }
 
         item.Tare = null;
-        
-        return await base.Save(item);
+        await base.Save(item);
+        // Required to return item with full tare info
+        item = await Set().AsNoTracking()
+            .Include(i => i.Tare.TareType)
+            .FirstAsync(i => i.Id == item.Id);
+        return item;
     }
 
     public async Task<IEnumerable<Item>> Search(ItemSearchQuery query)
