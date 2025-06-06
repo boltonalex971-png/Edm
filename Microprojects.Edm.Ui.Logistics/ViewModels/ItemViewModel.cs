@@ -8,7 +8,7 @@ public class ItemViewModel
     public string? Shipment { get; set; }
     public string? ShipmentExternalId { get; set; }
     public string? SerialNo { get; set; }   
-    public int Quantity { get; set; }
+    public double Quantity { get; set; }
     public Guid NomenclatureId { get; set; }
     public string? NomenclatureName { get; set; }
     public string? NomenclatureDescription { get; set; }
