@@ -9,7 +9,7 @@
     "preview": "rsbuild preview"
   },
   "dependencies": {
-    "@microprojects/react-utils": "^1.0.22",
+    "@microprojects/react-utils": "^1.0.23",
     "@progress/kendo-licensing": "^1.2.0",
     "@progress/kendo-react-buttons": "~5.8.0",
     "@progress/kendo-react-dropdowns": "~5.8.0",

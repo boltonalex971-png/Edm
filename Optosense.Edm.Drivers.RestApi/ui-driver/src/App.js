@@ -15,6 +15,9 @@ function App() {
                 initialSerialNo: 90000000
             }
         })
+    const handleOptionsChanged = (options) => {
+        setData({...data, options});
+    }
     return (data &&
         <div>
             <Routes>
@@ -30,7 +33,7 @@ function App() {
                 } />
                 <Route path='/plan' element={<p>No execution plan available</p>} />
                 <Route path='/options' element={
-                    <Options options={data?.options || {}} changeOptions={setData} />
+                    <Options options={data?.options || {}} changeOptions={handleOptionsChanged} />
                 } />
                 <Route path='/console' element={
                     <p>Console is in the development progress...</p>
