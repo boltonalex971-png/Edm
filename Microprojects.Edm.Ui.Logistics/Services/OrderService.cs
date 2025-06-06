@@ -43,23 +43,27 @@ public class OrderService : ServiceBase<Order>, IOrderService
 
     public override async Task<Order> Save(Order order)
     {
-        var process = await Set<Process>().FirstAsync(p => p.Id == order.ProcessId);
-        var processes = await GetOperationProcesses(process);
+        var create = order.Id == Guid.Empty;
         // Avoid creating a new process
         order.Process = null;
         await base.Save(order);
-        Db.AddRange(
-            processes
-                .Select((p, i) => new OrderProcess
-                    {
-                        Id = DomainObject.NewGuid(),
-                        OrderId = order.Id,
-                        ProcessId = p,
-                        Ordering = (i + 1) * 10
-                    }
-                )
-        );
-        await Db.SaveChangesAsync();
+        if (create)
+        {
+            var process = await Set<Process>().FirstAsync(p => p.Id == order.ProcessId);
+            var processes = await GetOperationProcesses(process);
+            Db.AddRange(
+                processes
+                    .Select((p, i) => new OrderProcess
+                        {
+                            Id = DomainObject.NewGuid(),
+                            OrderId = order.Id,
+                            ProcessId = p,
+                            Ordering = (i + 1) * 10
+                        }
+                    )
+            );
+            await Db.SaveChangesAsync();
+        }
 
         return order;
     }
