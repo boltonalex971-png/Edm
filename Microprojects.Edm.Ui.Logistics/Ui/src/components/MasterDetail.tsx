@@ -2,18 +2,19 @@ import type React from "react";
 import {type MouseEventHandler, useState} from "react"
 import {Route, Routes, useNavigate} from "react-router-dom";
 import axios from 'axios';
-import { Card, CardHeader, CardBody, CardTitle, CardSubtitle } from '@progress/kendo-react-layout';
-import { Form, FormElement } from '@progress/kendo-react-form';
+import {Card, CardHeader, CardBody, CardTitle, CardSubtitle} from '@progress/kendo-react-layout';
+import {Form, FormElement} from '@progress/kendo-react-form';
 import {Button, ButtonGroup, type ButtonProps, Toolbar, ToolbarItem} from '@progress/kendo-react-buttons';
-import { Alert } from 'reactstrap';
-import { SmartScroll, SmartScrollContent } from "./SmartScroll";
-import { TreeViewMaster, refresh } from "./TreeViewMaster";
-import { Loading, DetailStub } from "../features/utils/Utils";
+import {Alert} from 'reactstrap';
+import {SmartScroll, SmartScrollContent} from "./SmartScroll";
+import {TreeViewMaster, refresh} from "./TreeViewMaster";
+import {Loading, DetailStub} from "../features/utils/Utils";
 import api from '../features/api/api';
-import { Folder } from "./config/Folder";
-import { useBasePath } from "../hooks/routerHooks";
+import {Folder} from "./config/Folder";
+import {useBasePath} from "../hooks/routerHooks";
 import type {DataItem, DetailEventHandler, Dictionary, TreeDataItem, UUID} from "../data/types"
-import type { TreeItemProps } from "./TreeViewMaster"
+import type {TreeItemProps} from "./TreeViewMaster"
+import {AlertState, InlineAlert} from "@logistics/components/InlineAlert.tsx";
 
 export const EMPTY_GUID = '00000000-0000-0000-0000-000000000000'
 
@@ -22,9 +23,9 @@ export function reloadMaster() {
     _renderFunc(++_render);
 }
 
-let _selectedItem : TreeDataItem;
+let _selectedItem: TreeDataItem;
 let _render = 0;
-let _renderFunc : (r: number) => void;
+let _renderFunc: (r: number) => void;
 
 export type MasterDetailProps = {
     api: string,
@@ -35,23 +36,23 @@ export type MasterDetailProps = {
     path: string
 }
 
-export function MasterDetail(props : MasterDetailProps) {
-    const { path } = useBasePath();
+export function MasterDetail(props: MasterDetailProps) {
+    const {path} = useBasePath();
     const navigate = useNavigate();
     return (
         <SmartScroll offtop={10}>
-            <div style={{ flex: 1 }}>
+            <div style={{flex: 1}}>
                 <SmartScrollContent>
                     <TreeViewMaster api={props.api}
-                        onCurrentRootChanged={(root) => (_selectedItem = root)}
-                        item={props.item}
+                                    onCurrentRootChanged={(root) => (_selectedItem = root)}
+                                    item={props.item}
                     />
                 </SmartScrollContent>
             </div>
-            <div style={{ flex: 5, marginLeft: '1rem' }}>
+            <div style={{flex: 5, marginLeft: '1rem'}}>
                 <SmartScrollContent>
                     <Routes>
-                        <Route index element={<DetailStub message={props.stubMessage} />} />
+                        <Route index element={<DetailStub message={props.stubMessage}/>}/>
                         <Route path={'folder/:id'} element={
                             <Folder
                                 api={api.directories}
@@ -60,13 +61,14 @@ export function MasterDetail(props : MasterDetailProps) {
                                 onChange={() => reloadMaster()}
                                 onClose={() => navigate(path)}
                             />
-                        } />
+                        }/>
                         <Route path={':id'} element={
                             <>
                                 {props.detail}
-                                <div style={{ height: '40vh' }}>{ /*div to avoid ui jerking when switching cards at bottom*/}</div>
+                                <div
+                                    style={{height: '40vh'}}>{ /*div to avoid ui jerking when switching cards at bottom*/}</div>
                             </>
-                        } />
+                        }/>
                     </Routes>
                 </SmartScrollContent>
             </div>
@@ -99,21 +101,23 @@ export type DetailProps = {
     subTitle?: string
 };
 
-export function Detail({editable = true, copyable = true, deletable =true, readonly = false, ...props} : DetailProps) {
+export function Detail({editable = true, copyable = true, deletable = true, readonly = false, ...props}: DetailProps) {
     const navigate = useNavigate();
     const [_, setRefresh] = useState(0);
     _renderFunc = setRefresh;
     let [editMode, setEditMode] = useState(props.editMode);
     editMode = editMode || props.id === EMPTY_GUID;
     return (
-        props.error ? <Alert color='danger' style={{ display: 'flex', justifyContent: 'space-around' }}>{props.error}</Alert> :
+        props.error ?
+            <Alert color='danger' style={{display: 'flex', justifyContent: 'space-around'}}>{props.error}</Alert> :
             <>
                 <Card className='animated'>
-                    {(props.loading && props.id) && <CardBody><Loading /></CardBody>}
+                    {(props.loading && props.id) && <CardBody><Loading/></CardBody>}
                     {!(props.loading && props.id) &&
                         <>
-                            <CardHeader style={{ position: "sticky", top: 0, display: 'flex', justifyContent: "space-between" }}>
-                                <div style={{ display: 'flex' }}>
+                            <CardHeader
+                                style={{position: "sticky", top: 0, display: 'flex', justifyContent: "space-between"}}>
+                                <div style={{display: 'flex'}}>
                                     <div className='me-2'>
                                         {props.icon}
                                     </div>
@@ -123,7 +127,7 @@ export function Detail({editable = true, copyable = true, deletable =true, reado
                                         <CardSubtitle>{props.subTitle || props.data?.description}</CardSubtitle>
                                     </div>
                                 </div>
-                                <Toolbar style={{ padding: '0', borderStyle: 'none' }}>
+                                <Toolbar style={{padding: '0', borderStyle: 'none'}}>
                                     <ToolbarItem>
                                         {(props.editor && !readonly) &&
                                             <ButtonGroup>
@@ -141,7 +145,11 @@ export function Detail({editable = true, copyable = true, deletable =true, reado
                                                     icon='copy'
                                                     onClick={(e) => {
                                                         e.preventDefault();
-                                                        const data = { ...props.data, id: 0, name: `${props.data?.name} (Copy)` }
+                                                        const data = {
+                                                            ...props.data,
+                                                            id: 0,
+                                                            name: `${props.data?.name} (Copy)`
+                                                        }
                                                         axios.post(`${props.api}`, data)
                                                             .then((response) => {
                                                                 props.onChange && props.onChange()
@@ -170,21 +178,26 @@ export function Detail({editable = true, copyable = true, deletable =true, reado
                                     </ToolbarItem>
                                     <ToolbarItem>
                                         <ButtonGroup>
-                                            <ToolbarButton visible={true} title='Move Up' fillMode='flat' icon='arrow-up' onClick={props.onUp} />
-                                            <ToolbarButton visible={true} title='Close' fillMode='flat' icon='close' onClick={props.onClose} />
+                                            <ToolbarButton visible={true} title='Move Up' fillMode='flat'
+                                                           icon='arrow-up' onClick={props.onUp}/>
+                                            <ToolbarButton visible={true} title='Close' fillMode='flat' icon='close'
+                                                           onClick={props.onClose}/>
                                         </ButtonGroup>
                                     </ToolbarItem>
                                 </Toolbar>
                             </CardHeader>
-                            <CardBody>
-                                {props.validation && <Alert color='warning' style={{ display: 'flex', justifyContent: 'space-around' }}>{props.validation}</Alert>}
+                            <CardBody style={{position: 'relative'}}>
+                                {props.validation && <Alert color='warning' style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-around'
+                                }}>{props.validation}</Alert>}
                                 {(editMode && props.editor) || props.card}
                                 {!editMode && props.relations}
                             </CardBody>
                         </>
                     }
                 </Card>
-                <div className="mt-2" />
+                <div className="mt-2"/>
                 {props.subDetail}
             </>
     );
@@ -193,8 +206,8 @@ export function Detail({editable = true, copyable = true, deletable =true, reado
 type ToolbarButtonProps = ButtonProps & {
     visible?: boolean;
 }
-    
-function ToolbarButton({ visible, ...props } : ToolbarButtonProps) {
+
+function ToolbarButton({visible, ...props}: ToolbarButtonProps) {
     return visible ? <Button {...props} /> : null;
 }
 
@@ -203,7 +216,7 @@ type InfoProps = {
     //data: TreeNode
 }
 
-export function Info(props : InfoProps) {
+export function Info(props: InfoProps) {
     return (
         <>
             {props.content}
@@ -221,54 +234,70 @@ interface EditorProps extends InfoProps {
     path?: string
 }
 
-export function Editor(props : EditorProps) {
+export function Editor(props: EditorProps) {
     const navigate = useNavigate();
+    const [alert, setAlert] = useState<AlertState>();
+    const mode = props.data.id && props.data.id !== EMPTY_GUID && 'Update' || 'Create';
     const handleSubmit = (data: Dictionary) => {
-        //console.log(data);
+        setAlert(undefined);
         const foreignData = Object.keys(data)
-            .reduce((r, d, i, a ) => 
-                ({ ...r, [d]: data[d] && typeof data[d] === 'object' && !(data[d] instanceof Date) ? data[d]['id'] : data[d]}), {})
-        if (data.id &&  data.id !== EMPTY_GUID) {
+            .reduce((r, d, i, a) =>
+                ({
+                    ...r,
+                    [d]: data[d] && typeof data[d] === 'object' && !(data[d] instanceof Date) ? data[d]['id'] : data[d]
+                }), {})
+        if (data.id && data.id !== EMPTY_GUID) {
             axios.put(`${props.api}/${props.data.id}`, foreignData)
                 .then((response) => {
                     props.onUpdate?.(response.data);
                     props.onChange?.(response.data)
                     props.setData(response.data);
-                })
+                    setAlert({message: 'Updated successfully'});
+                }).catch(r => setAlert({status: 'danger', message: r.response?.data?.detail || 'Unknown error'}))
         } else {
             const parentId = _selectedItem?.isFolder ? _selectedItem.id : _selectedItem?.directoryId;
-            axios.post(`${props.api}`, { ...foreignData, directoryId: parentId })
+            axios.post(`${props.api}`, {...foreignData, directoryId: parentId})
                 .then((response) => {
                     props.onUpdate?.(response.data);
                     props.onChange?.(response.data)
                     props.setData(response.data);
+                    setAlert({message: 'Created successfully'});
                     navigate(`${props.path}${response.data.isFolder ? '/folder' : ''}/${response.data.id}`);
-                });
+                }).catch(r => setAlert({status: 'danger', message: r.response?.data?.detail || 'Unknown error'}))
         }
     };
 
     return (
-        <Form
-            key={props.data.id}
-            initialValues={props.data}
-            onSubmit={handleSubmit}
-            render={(formRenderProps) => (
-                <FormElement>
-                    {props.content}
-                    <div className="k-form-buttons" style={{ position: 'sticky', bottom: 10, display: 'flex', justifyContent: 'space-between', backgroundColor: 'white' }}>
-                        <Button
-                            title='Save'
-                            name='save'
-                            themeColor={formRenderProps.allowSubmit ? "primary" : "secondary"}
-                            icon='save'
-                            type={'submit'}
-                            disabled={!formRenderProps.allowSubmit}
-                        >
-                            Save
-                        </Button>
-                    </div>
-                </ FormElement>
-            )}
-        />
+        <>
+            <InlineAlert state={alert} onClose={() => setAlert(undefined)}/>
+            <Form
+                key={props.data.id}
+                initialValues={props.data}
+                onSubmit={handleSubmit}
+                render={(formRenderProps) => (
+                    <FormElement>
+                        {props.content}
+                        <div className="k-form-buttons" style={{
+                            position: 'sticky',
+                            bottom: 10,
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            backgroundColor: 'white'
+                        }}>
+                            <Button
+                                title='Save'
+                                name='save'
+                                themeColor={formRenderProps.allowSubmit ? "primary" : "secondary"}
+                                icon='save'
+                                type={'submit'}
+                                disabled={!formRenderProps.allowSubmit}
+                            >
+                                {mode}
+                            </Button>
+                        </div>
+                    </ FormElement>
+                )}
+            />
+        </>
     );
 }

@@ -17,7 +17,7 @@ export const InlineAlert = (props: InlineAlertProps) => {
     }
     return (
         props.state &&
-        <>
+        <div style={{position: 'absolute', top: 0, right: 0, zIndex: 1}}>
             <style>
                 {`
                     .alertCloseBtn {
@@ -29,6 +29,6 @@ export const InlineAlert = (props: InlineAlertProps) => {
             <Alert id={props.id} color={props.state.status} fade={true} toggle={closeAlert} closeClassName='alertCloseBtn'>
                 {props.state.message}
             </Alert>
-        </>
+        </div>
     )
 }
