@@ -22,7 +22,9 @@ public class SensorsController(ISensorService sensorService) : ControllerBase
     [HttpGet("{sn:int}")]
     public async Task<SensorMeasureModel> GetSensorMeasures(int sn)
     {
-        return (await sensorService.FindSensorMeasures(sn, null, null, null)).FirstOrDefault();
+        return (await sensorService.FindSensorMeasures(sn, null, null, null))
+            .OrderByDescending(r => r.OperationId)
+            .FirstOrDefault();
     }
 
     [HttpPost]
