@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import PropTypes from 'prop-types';
-import { Grid, GridCell, GridColumn, GridToolbar } from '@progress/kendo-react-grid';
+import { Grid, GridColumn, GridToolbar } from '@progress/kendo-react-grid';
 import { FloatingActionButton } from '@progress/kendo-react-buttons';
 import { useGet } from '../../hooks/hooks';
 import { Alert } from 'bootstrap';
@@ -25,19 +25,8 @@ export function AuditEditorTab({ id, api, params }) {
     let parameters = zones && [...new Set(zones.flatMap(z => (z.criteria || []).map(p => p.param)))].sort((a, b) => `${a}`.localeCompare(`${b}`));
     parameters = (parameters && parameters.length) ? parameters : [' '];
 
-    const [timeout, setActiveTimeout] = useState();
     let criterionAnchor = null;
-    const delayActive = (active) => {
-        clearTimeout(timeout);
-        setActiveTimeout(setTimeout(() => {
-            setActive(active);
-            setActiveTimeout();
-        }, 500));
-    };
-    const getCriteria = (param, zone) => {
-        const cr = zone.criteria && zone.criteria.filter(c => c.param === param) || [];
-        return cr;
-    };
+    const getCriteria = (param, zone) => zone.criteria && zone.criteria.filter(c => c.param === param) || [];
     const addZone = () => {
         //const newZone = { id: 0, offset: 0, duration: 0 };
         axios.post(`${api}/${id}/zones`, {}).then((response) => {
@@ -131,14 +120,14 @@ export function AuditEditorTab({ id, api, params }) {
                     <GridColumn title='Zone'>
                         <GridColumn field='no' title='#' width={40}
                             cell={(cellProps) =>
-                                <td onClick={() => toggleZoneEditor(cellProps.dataItem)} style={{ cursor: 'pointer' }}>
+                                <td onMouseDown={() => toggleZoneEditor(cellProps.dataItem)} style={{ cursor: 'pointer' }}>
                                     {cellProps.dataItem[cellProps.field]}
                                 </td>
                             }
                         />
                         <GridColumn title='Interval' width={100}
                             cell={(cellProps) =>
-                                <td onClick={() => toggleZoneEditor(cellProps.dataItem)} style={{ cursor: 'pointer' }}>
+                                <td onMouseDown={() => toggleZoneEditor(cellProps.dataItem)} style={{ cursor: 'pointer' }}>
                                     {`${cellProps.dataItem.offset} : ${cellProps.dataItem.offset + cellProps.dataItem.duration}`}
                                 </td>
                             }
@@ -146,7 +135,7 @@ export function AuditEditorTab({ id, api, params }) {
                         <GridColumn title='Active When'
                             field='activeWhen'
                             cell={(cellProps) =>
-                                <td onClick={() => toggleZoneEditor(cellProps.dataItem)} style={{ cursor: 'pointer' }}>
+                                <td onMouseDown={() => toggleZoneEditor(cellProps.dataItem)} style={{ cursor: 'pointer' }}>
                                     {cellProps.dataItem[cellProps.field]}
                                 </td>
                             }
@@ -157,13 +146,13 @@ export function AuditEditorTab({ id, api, params }) {
                             <GridColumn key={p} field={p}
                                 cell={(cellProps) =>
                                     <td style={{ position: 'relative' }}
-                                        onMouseEnter={() => delayActive({ param: p, zoneId: cellProps.dataItem.id })}
+                                        onMouseEnter={() => setActive({ param: p, zoneId: cellProps.dataItem.id })}
                                         onMouseLeave={() => setActive({})}
                                     >
                                         {getCriteria(p, cellProps.dataItem)
                                             .map(c =>
                                                 <div key={c.id}>
-                                                    <a type='button' onClick={() => toggleCriterionEditor(c)}>
+                                                    <a type='button' onMouseDown={() => toggleCriterionEditor(c)}>
                                                         {funcFormat(c)}
                                                     </a>
                                                 </div>
@@ -176,7 +165,7 @@ export function AuditEditorTab({ id, api, params }) {
                                                     icon='add'
                                                     size='small'
                                                     alignOffset={{ x: 10, y: 10 }}
-                                                    onClick={() => toggleCriterionEditor({ zoneId: cellProps.dataItem.id, param: p })}
+                                                    onMouseDown={() => toggleCriterionEditor({ zoneId: cellProps.dataItem.id, param: p })}
                                                 />
                                             </div>
                                         }
