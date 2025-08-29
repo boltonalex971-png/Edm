@@ -12,7 +12,7 @@ export const Options = ({ data, changeOptions }) => {
     return (
         <Form
             key={1}
-            initialValues={param.options}
+            initialValues={param?.options}
             onSubmit={changeOptions}
             render={(formRenderProps) => (
                 <FormElement>

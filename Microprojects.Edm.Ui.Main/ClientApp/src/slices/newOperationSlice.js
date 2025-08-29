@@ -8,7 +8,7 @@ export const newOperationSlice = createSlice({
     reducers: {
         reset: () => initialState,
         setDriverOptions: (state, action) => {
-            state.options[action.payload.profileId] = action.payload.options
+            state.options[action.payload.profileId] = action.payload
         },
         setParameters: (state, action) => {
             state.parameters = action.payload

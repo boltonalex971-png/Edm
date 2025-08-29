@@ -376,11 +376,11 @@ function DeviceDetail({ id, profile }) {
     useGet(`${api.workplaces}/devices/${id}`, [],
         data => {
             dispatch(setDevice({ profileId: profile.id, ...data }))
-            if (!options && data.configuration) {
+            if (!options || Object.entries(options).length === 0) {
                 dispatch(setDriverOptions({ 
                     id, 
                     profileId: profile.id, 
-                    options: JSON.parse(data.configuration),
+                    options: JSON.parse(data.configuration || "{}"),
                     output: JSON.parse(data.profileOutput || '[]')
                 }))
             }
