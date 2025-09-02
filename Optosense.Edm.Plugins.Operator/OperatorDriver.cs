@@ -40,7 +40,7 @@ namespace Optosense.Edm.Drivers.Operator
 
         public override async Task<DriverResponse> Execute(DriverRequest req)
         {
-            if (req.Command == Stop() && _response.Request == Stop())
+            if (req.Command == Stop() && _response?.Request == Stop())
             {
                 // This means that the previous command was "Stop" and 
                 // StartDevice job is just cancelling the driver 
@@ -48,7 +48,7 @@ namespace Optosense.Edm.Drivers.Operator
             }
             
             // TODO Send the request by SignalR channel
-            if (req != null && req.Parameters != null)
+            if (req is { Parameters: not null })
             {
                 SetState(JsonConvert.DeserializeObject<OperatorState>(req.Parameters));
                 // Wait for response
@@ -108,7 +108,7 @@ namespace Optosense.Edm.Drivers.Operator
             {
                 response.Planned = (long)(_state.Scheduled - _startTs).TotalMilliseconds;
                 response.Request = _state.Command;
-                response.Response = DriverResponseState.Ok.ToString();
+                response.Response = nameof(DriverResponseState.Ok);
                 var extendedParameters = parameters ?? new Dictionary<string, object>();
                 extendedParameters[_state.Command] = true;
                 response.Parameters = JsonConvert.SerializeObject(extendedParameters);
