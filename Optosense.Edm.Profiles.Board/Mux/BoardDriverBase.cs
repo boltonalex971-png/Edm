@@ -29,10 +29,13 @@ namespace Optosense.Edm.Drivers.Mux
 
         // Minimum interval between serial port sequential requests
         private const int PortRequestSpan = 100;
+
         // Keep timestamp of the last serial port request 
         private DateTime _lastPortRequestTs;
+
         // Timing serial port read operation
         private readonly Stopwatch _stopwatch = new();
+
         // Buffer to read serial port. Reading is sequential operation so it's safe to keep it instance-wise
         private readonly byte[] _buffer = new byte[4096];
 
@@ -81,7 +84,7 @@ namespace Optosense.Edm.Drivers.Mux
 
                 await CancellationTokenSource.CancelAsync();
                 Dispose();
-                response.Response = DriverResponseState.Ok.ToString();
+                response.Response = nameof(DriverResponseState.Ok);
                 response.Parameters = "{Stop: true}";
                 return response;
             }
@@ -98,12 +101,15 @@ namespace Optosense.Edm.Drivers.Mux
                 : JsonConvert.DeserializeObject<Dictionary<string, object>>(request.Parameters);
             command = SubstituteParameters(command, parameters);
             response.Request = command;
+            var bytes = Array.Empty<byte>();
+
             try
             {
-                var bytes = await Send(
+                bytes = await Send(
                     $"{command}\r",
+                    (b) => PushResponse(Respond(b), false),
                     request.Instruction.Timeout ?? 100,
-                    true,
+                    !request.Instruction.MultiLineResponse,
                     request.Instruction.Length ?? 0,
                     request.Instruction.Retries ?? 0);
 
@@ -122,8 +128,38 @@ namespace Optosense.Edm.Drivers.Mux
                         return response;
                     }
                 }
+            }
+            catch (Exception e)
+            {
+                // Add default null parameters to stress that error happened
+                foreach (var p in GetParameters(request.Instruction))
+                {
+                    parameters.TryAdd(p, null);
+                }
 
-                response.Response = new string(bytes.Select(b => (char)b).ToArray());
+                response.Message = e.GetMeaningfulMessage();
+                response.State = e switch
+                {
+                    AggregateException { InnerException: TimeoutException } => DriverResponseState.Timeout,
+                    TimeoutException => DriverResponseState.Timeout,
+                    OperationCanceledException => DriverResponseState.NotCompleted,
+                    _ => DriverResponseState.Failed
+                };
+
+                // Provide parameters no matter what
+                response.Parameters = JsonConvert.SerializeObject(parameters);
+
+                return response;
+            }
+
+
+            if (CancellationToken.IsCancellationRequested) Dispose();
+
+            return request.Instruction.MultiLineResponse ? null : Respond(bytes);
+
+            DriverResponse Respond(byte[] bytes1)
+            {
+                response.Response = new string(bytes1.Select(b => (char)b).ToArray());
                 response.State =
                     string.IsNullOrEmpty(request.Instruction.Syntax) ||
                     Regex.IsMatch(
@@ -150,32 +186,12 @@ namespace Optosense.Edm.Drivers.Mux
                         parameters.TryAdd(p, null);
                     }
                 }
+
+                response.Parameters = JsonConvert.SerializeObject(parameters);
+                //Debug.WriteLine(JsonConvert.SerializeObject(response with { Parameters = JsonConvert.SerializeObject(parameters)}));
+                //await PushResponse(response with { Parameters = JsonConvert.SerializeObject(parameters) }, false);
+                return response;
             }
-            catch (Exception e)
-            {
-                // Add default null parameters to stress that error happened
-                foreach (var p in GetParameters(request.Instruction))
-                {
-                    parameters.TryAdd(p, null);
-                }
-
-                response.Message = e.GetMeaningfulMessage();
-                response.State = e switch
-                {
-                    AggregateException { InnerException: TimeoutException } => DriverResponseState.Timeout,
-                    TimeoutException => DriverResponseState.Timeout,
-                    OperationCanceledException => DriverResponseState.NotCompleted,
-                    _ => DriverResponseState.Failed
-                };
-            }
-
-            // Provide parameters no matter what
-            response.Parameters = JsonConvert.SerializeObject(parameters);
-
-            if (CancellationToken.IsCancellationRequested)
-                Dispose();
-
-            return response;
         }
 
         private string SubstituteParameters(string command, Dictionary<string, object> parameters)
@@ -228,7 +244,9 @@ namespace Optosense.Edm.Drivers.Mux
         [GeneratedRegex(@"\?<(\w+?)>")]
         private static partial Regex ParametersRegex();
 
-        private async Task<byte[]> Send(string command, int initialTimeout, bool singleLine, int responseLength,
+        private async Task<byte[]> Send(string command, Func<byte[], Task> onLineReceived, int initialTimeout,
+            bool singleLine,
+            int responseLength,
             int retries)
         {
             long timeout = initialTimeout;
@@ -248,25 +266,46 @@ namespace Optosense.Edm.Drivers.Mux
                 // TODO ReadTimeout has no effect in async reading mode
                 // Port.BaseStream.ReadTimeout = timeout;
                 // Port.ReadTimeout = timeout;
-                await Port.BaseStream.WriteAsync(command.ToBytes().AsMemory(0, command.Length), CancellationToken);
+                Port.Write(command);
                 try
                 {
-                    byte lastByte = 0xFF;
                     do
                     {
-                        // Whole response must arrive before timeout exceeded
-                        if (timeout < 0)
-                            throw new TimeoutException();
-                        _stopwatch.Restart();
-                        var readCount = await Port.BaseStream.ReadAsync(_buffer, totalRead, _buffer.Length - totalRead,
-                                CancellationToken)
-                            .WaitAsync(TimeSpan.FromMilliseconds(timeout), CancellationToken);
-                        _stopwatch.Stop();
-                        timeout -= _stopwatch.ElapsedMilliseconds;
-                        totalRead += readCount;
-                        lastByte = _buffer[totalRead - 1];
-                    } while (!((singleLine && lastByte == '\r' || !singleLine && lastByte == 0x00 && totalRead > 0) &&
-                               (responseLength == 0 || responseLength <= totalRead)));
+                        totalRead = 0;
+                        timeout = initialTimeout;
+                        do
+                        {
+                            // Whole response must arrive before timeout exceeded
+                            if (timeout < 0)
+                                throw new TimeoutException();
+                            _stopwatch.Restart();
+                            // var readCount = await Port.BaseStream.ReadAsync(_buffer, totalRead, _buffer.Length - totalRead,
+                            //         CancellationToken)
+                            //     .WaitAsync(TimeSpan.FromMilliseconds(timeout), CancellationToken);
+                            var readCount = await Task.Run(
+                                    () => Port.Read(_buffer, totalRead, _buffer.Length - totalRead),
+                                    CancellationToken)
+                                .WaitAsync(TimeSpan.FromMilliseconds(timeout), CancellationToken);
+                            _stopwatch.Stop();
+                            timeout -= _stopwatch.ElapsedMilliseconds;
+                            totalRead += readCount;
+                        } while (responseLength == 0 && _buffer[totalRead - 1] != '\r' ||
+                                 responseLength != 0 && responseLength < totalRead);
+
+                        if (!singleLine)
+                        {
+                            if (totalRead == 1 && _buffer[totalRead - 1] == '\r')
+                            {
+                                break;
+                            }
+
+                            await onLineReceived(_buffer[..totalRead]);
+                            if (_buffer[totalRead - 2] == '\r' && _buffer[totalRead - 1] == '\r')
+                            {
+                                break;
+                            }
+                        }
+                    } while (!singleLine);
                 }
                 catch (TimeoutException)
                 {

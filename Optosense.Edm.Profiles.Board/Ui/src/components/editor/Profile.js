@@ -77,6 +77,7 @@ const InstructionDetail = (props) => {
             <p style={{ display: 'grid', gridTemplateColumns: '5rem auto' }}>
                 <span>Code:</span><span>{inst.code}</span>
                 <span>Syntax:</span><span>{inst.syntax}</span>
+                <span>Response:</span><span>{inst.multiLineResponse ? 'Multi' : 'Single'} line</span>
                 <span>Timeout:</span><span>{inst.timeout}</span>
                 <span>Retries:</span><span>{inst.retries}</span>
             </p>

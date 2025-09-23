@@ -2,7 +2,7 @@ import React, { useContext, useState } from "react";
 import './Instructions.css';
 import PropTypes from "prop-types";
 import { Field } from "@progress/kendo-react-form";
-import { Input, NumericTextBox } from "@progress/kendo-react-inputs";
+import { Input, NumericTextBox, Checkbox } from "@progress/kendo-react-inputs";
 import { MasterDetail, Detail, Editor } from "../MasterDetail";
 import { useGet } from "../hooks";
 import { ApiContext } from "../../ApiContext";
@@ -80,6 +80,9 @@ export function InstructionDetail({ instruction, ...props }) {
                             </div>
                             <div className="mb-1">
                                 <Field name={"syntax"} component={Input} label={"Syntax template"} />
+                            </div>
+                            <div className="my-3">
+                                <Field name={"multiLineResponse"} component={Checkbox} label={"Multiline response"} />
                             </div>
                             <div className="mb-1">
                                 <Field name={"length"} component={NumericTextBox} label={"Response length"} />

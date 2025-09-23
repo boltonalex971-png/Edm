@@ -47,7 +47,7 @@ namespace Optosense.Edm.Profiles.Board
         public int? Length { get; set; }
         public int? Timeout { get; set; }
         public int? Retries { get; set; }
-
+        public bool MultiLineResponse { get; set; }
     }
 }
 
