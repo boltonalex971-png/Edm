@@ -26,7 +26,7 @@ public class UserService : IUserService
 
     public string? GetUserName() => _userInfo.Name;
 
-    public string[] GetUserGroups() => _userInfo.Divisions.Select(d=>d.Name).ToArray();
+    public string[] GetUserGroups() => _userInfo.Divisions?.Select(d=>d.Name).ToArray() ?? [];
 
     [SupportedOSPlatform("windows")]
     private UserInfo GetUserInfo()

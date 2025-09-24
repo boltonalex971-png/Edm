@@ -37,16 +37,16 @@ namespace Microprojects.Edm.Ui.Logistics.Services
             return folder;
         }
 
-        public async Task<IEnumerable<Directory>> GetTree(string entryType, IEnumerable<string> groups)
+        public async Task<IEnumerable<Directory>> GetTree(string entryType)
         {
+            var groups = UserService.GetUserGroups();
             var folder = await Db.Directories.AsNoTracking()
                 .Include(d => d.Meta)
                 //.Include(d => d.Children)
                 .Where(d => 
                     d.Meta.Deleted == null && 
-                    (d.Meta.Groups == null || groups == null || d.Meta.Groups.Length == 0 || d.Meta.Groups.Any(groups.Contains)
-                    )
-            ).ToListAsync();
+                    (d.Meta.Groups == null || groups == null || d.Meta.Groups.Length == 0 || groups.Any(g => d.Meta.Groups.Contains(g)))
+                ).ToListAsync();
             return folder;
         }
 

@@ -85,7 +85,7 @@ export interface User extends DataItem {
     roles: string[]
     role: string
     claims: string[]
-    divisions: string[]
+    groups: string[]
 }
 
 export type DetailEventHandler = (data?: TreeNode) => void;

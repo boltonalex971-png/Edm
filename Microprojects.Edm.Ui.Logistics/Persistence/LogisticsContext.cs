@@ -34,13 +34,13 @@ public class LogisticsContext : DbContext
         base.OnModelCreating(builder);
         
         //builder.Entity<Meta>().OwnsOne(m => m.Groups).ToJson();
-        builder.Entity<Meta>()
-            .Property(e => e.Groups)
-            .HasColumnType("nvarchar(max)")
-            .HasConversion(
-                d => JsonConvert.SerializeObject(d),
-                s => JsonConvert.DeserializeObject<string[]>(s ?? "[]")
-            );
+        // builder.Entity<Meta>()
+        //     .Property(e => e.Groups)
+        //     .HasColumnType("nvarchar(max)")
+        //     .HasConversion(
+        //         d => JsonConvert.SerializeObject(d),
+        //         s => JsonConvert.DeserializeObject<string[]>(s ?? "[]")
+        //     );
 
         // Foreign keys for tables with metainfo
         ConfigureMetaEntities(builder);

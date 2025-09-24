@@ -6,5 +6,5 @@ public interface IDirectoryService : IGenericService<Directory>
 {
     Task<Directory> ChangeParent(Guid id, Guid newParentId);
     Task<Directory> GetRoot(string entryType);
-    Task<IEnumerable<Directory>> GetTree(string entryType, IEnumerable<string> groups);
+    Task<IEnumerable<Directory>> GetTree(string entryType);
 }

@@ -82,7 +82,7 @@ public class DirectoriesController : AuthControllerBase
     {
         var folders =
             _mapper.Map<IEnumerable<DirectoryEntryViewModel>>(
-                    await _directoryService.GetTree(entryType, UserInfo.Groups))
+                    await _directoryService.GetTree(entryType))
                 .ToList();
         var tree = folders.ToTree();
         return tree;
@@ -98,7 +98,7 @@ public class DirectoriesController : AuthControllerBase
         {
             Owner = UserInfo.Name,
             Metatype = nameof(Directory),
-            Groups = model.Division == null ? [] : [model.Division]
+            Groups = model.Groups == null ? [] : [model.Groups]
         };
         var saved = await _directoryService.Save(directory);
         return _mapper.Map<DirectoryViewModel>(saved);
@@ -112,7 +112,7 @@ public class DirectoriesController : AuthControllerBase
         {
             Owner = UserInfo.Name,
             Metatype = nameof(Directory),
-            Groups = model.Division == null ? [] : [model.Division]
+            Groups = model.Groups == null ? [] : [model.Groups]
         };
         var saved = await _directoryService.Save(directory);
         return _mapper.Map<DirectoryViewModel>(saved);

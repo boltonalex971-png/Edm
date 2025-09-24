@@ -57,11 +57,11 @@ export function Folder(props : FolderProps) {
                                 <Field name={'description'} component={Input} label={'Description'} />
                             </div>
                             <div className="mb-3" style={{ width: '400px' }}>
-                                <Field name={'group'} label={'Division'}
+                                <Field name={'groups'} label={'Groups'}
                                     component={(compProps) =>
                                         <DropDownComp {...compProps}
                                             loading={!user}
-                                            data={user?.divisions}
+                                            data={user?.groups}
                                             textField='name'
                                             dataItemKey='sid'
                                         />

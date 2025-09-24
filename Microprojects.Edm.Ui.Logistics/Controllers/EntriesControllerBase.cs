@@ -46,7 +46,7 @@ public class EntriesControllerBase<TEntry, TEntryViewModel, TService> : AuthCont
         var entries = Mapper.Map<IEnumerable<DirectoryEntryViewModel>>(
             await Service.GetAll());
         var folders = Mapper.Map<IEnumerable<DirectoryEntryViewModel>>(
-            await DirectoryService.GetTree(typeof(TEntry).Name, UserInfo.Groups));
+            await DirectoryService.GetTree(typeof(TEntry).Name));
         var tree = folders.Concat(entries)
             .ToList()
             .ToTree();
