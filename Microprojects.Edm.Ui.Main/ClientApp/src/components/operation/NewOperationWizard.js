@@ -415,7 +415,7 @@ function InputsDetail({ inputs }) {
     const parameters = useSelector(state => state.newOperation.parameters)
     const dispatch = useDispatch()
     const handleSubmit = (p) => {
-        dispatch(setParameters(p))
+        dispatch(setParameters({...p})) // Cannot use From values directly
     };
     if (!inputs) return <Loading />
     return (
