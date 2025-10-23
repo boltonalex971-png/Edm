@@ -28,6 +28,8 @@ export const OperationInfo = (props) => {
             .then(c => {
                 c.data.forEach(d => {
                     const addr = d.selector !== undefined && parseInt(`0x${d.selector.slice(1)}`);
+                    // Ignore sensors when specified capacity less than the multi-string command can return (e.g. <SOC?>)
+                    if (addr >= sensors.length) return   
                     if (addr !== false) {
                         const attr = d.auditCriterionParam
                         sensors[addr][attr] = { value: d.result, valid: d.valid };
