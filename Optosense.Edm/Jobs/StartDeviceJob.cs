@@ -88,12 +88,6 @@ namespace Optosense.Edm.Jobs
                     .ToDictionary(k => k, e => default(object));
                 _internalParams = _profilerPlugin.GetParameters(Parameters.Profile)
                     .ToDictionary(k => k, e => default(object));
-                var parameters = JsonConvert.DeserializeObject<Dictionary<string, object>>(Parameters.InitialParameters ?? "{}");
-                foreach (var p in parameters)
-                {
-                    PushInputParameter(p);
-                }
-
                 _subscriber = Intercom.Subscribe<object>(Parameters.ParametersChannel,
                     onNext: async json =>
                     {
@@ -366,7 +360,6 @@ namespace Optosense.Edm.Jobs
         public Guid Profiler { get; set; }
         public string InputParameters { get; set; }
         public string OutputParameters { get; set; }
-        public string InitialParameters { get; set; }
         public Guid Driver { get; set; }
         public DateTime StartAt { get; set; } = DateTime.UtcNow.AddSeconds(10);
     }

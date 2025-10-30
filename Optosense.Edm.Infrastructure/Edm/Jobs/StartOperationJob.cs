@@ -24,6 +24,7 @@ namespace Optosense.Edm.Jobs
         protected IJobContainer JobManager { get; init; }
         protected IIntercom Intercom { get; init; }
         protected ILogger<StartOperationJob> Logger { get; init; }
+        protected string ParametersChannel { get; set; }
 
         public StartOperationJob() { }
         public StartOperationJob(
@@ -32,7 +33,6 @@ namespace Optosense.Edm.Jobs
             IJobContainer container,
             IIntercom intercom,
             ILogger<StartOperationJob> logger)
-        //IDbContextFactory<EdmContext> contextFactory)
         {
             OperationService = operationService;
             ProfileService = profileService;
@@ -60,7 +60,7 @@ namespace Optosense.Edm.Jobs
             // Launch execution result storage
             var storeChannel = $"Operation-{Parameters.Operation}";
             var auditChannel = $"{storeChannel}-audit";
-            var parametersChannel = $"{storeChannel}-parameters";
+            ParametersChannel = $"{storeChannel}-parameters";
             var storageJob = new StoreOperationRecordsJob
             {
                 JobParameters = new StoreOperationRecordsJobParameters 
@@ -68,7 +68,7 @@ namespace Optosense.Edm.Jobs
                     Operation = Parameters.Operation,
                     Channel = storeChannel, 
                     AuditChannel = auditChannel,
-                    ParametersChannel = parametersChannel
+                    ParametersChannel = ParametersChannel
                 }
             };
             await JobManager.Execute(storageJob);
@@ -90,7 +90,7 @@ namespace Optosense.Edm.Jobs
                         Device = operationHostDevice.Id,
                         Operation = Parameters.Operation,
                         Channel = auditChannel,
-                        ParametersChannel = parametersChannel,
+                        ParametersChannel = ParametersChannel,
                         StartAt = startTime
                     };
                     var auditJob = new StartAuditJob { JobParameters = auditParams };
@@ -112,18 +112,26 @@ namespace Optosense.Edm.Jobs
                     Profile = operationHostDevice.Profile.TextJson,
                     Profiler = operationHostDevice.Profile.ProfilerGuid,
                     StoreChannel = storeChannel,
-                    ParametersChannel = parametersChannel,
+                    ParametersChannel = ParametersChannel,
                     InputParameters = operationHostDevice.Profile.Input,
-                    OutputParameters = operationHostDevice.Profile.Output,
-                    InitialParameters = operation.Parameters
+                    OutputParameters = operationHostDevice.Profile.Output
                 };
                 var url = $"{operationHostDevice.HostDevice.Host.Url}:{operationHostDevice.HostDevice.Host.Port}";
                 var deviceJob = new StartDeviceJob { JobParameters = deviceParams };
                 running.Add((url, deviceJob));
                 // TODO check response for validity
                 var response = await deviceJob.Execute(url);
-
             }
+            
+            // Push operation input parameters after delay to ensure that devices started
+            Task.Delay(1000).ContinueWith(async t =>
+            {
+                foreach (var p in JsonConvert.DeserializeObject<Dictionary<string, object>>(
+                             operation.Parameters ?? "{}"))
+                {
+                    await Intercom.Publish(ParametersChannel, p);
+                }
+            });
 
             int count;
             do
@@ -168,7 +176,7 @@ namespace Optosense.Edm.Jobs
             } while (count < running.Count && !CancellationToken.IsCancellationRequested);
 
             // Stop audits and storage
-            await Intercom.Publish(parametersChannel, KeyValuePair.Create("Stop", true));
+            await Intercom.Publish(ParametersChannel, KeyValuePair.Create("Stop", true));
             await Task.Delay(1000);
             if (CancellationToken.IsCancellationRequested)
             {

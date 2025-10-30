@@ -2,17 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microprojects.Edm;
 using Microprojects.Edm.Cache;
 using Optosense.Edm.Domain.Models;
-using Microprojects.Edm.Utils;
 using Newtonsoft.Json;
-using Optosense.Edm.Utils;
-using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
-using Optosense.Edm.Infrastructure.Edm;
-using System.Dynamic;
-using Optosense.Edm.Core.Contracts;
+using System.Text.RegularExpressions;
 using Optosense.Edm.Core.Services;
 using Optosense.Edm.Core.Auditing;
 using Microprojects.Edm.Jobs;
@@ -120,8 +114,22 @@ namespace Optosense.Edm.Jobs
                             var value = rec.Parameters[criterion.Param];
                             values.Add(value);
                             Cache.Push(key, value);
+                            
+                            // Replace args with parameters if required
+                            var crit = (AuditCriterion)criterion.Copy();
+                            var param1 = Regex.Match(criterion.Arg1 ?? string.Empty, @"{(?<Name>\w*)}");
+                            if (param1.Success && _inputParams.TryGetValue(param1.Groups["Name"].Value, out var inputParam1))
+                            {
+                                crit.Arg1 = inputParam1?.ToString(); 
+                            }
+                            var param2 = Regex.Match(criterion.Arg2 ?? string.Empty, @"{(?<Name>\w*)}");
+                            if (param2.Success && _inputParams.TryGetValue(param2.Groups["Name"].Value, out var inputParam2))
+                            {
+                                crit.Arg2 = inputParam2?.ToString(); 
+                            }
+                            
                             // check
-                            var auditResult = auditFunc(criterion, values);
+                            var auditResult = auditFunc(crit, values);
                             // save result to db
                             var operationCriterion = (await db.OperationCriteria
                                 .FirstOrDefaultAsync(oc => oc.OperationId == Parameters.Operation 

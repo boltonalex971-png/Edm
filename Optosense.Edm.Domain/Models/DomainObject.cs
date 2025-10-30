@@ -23,7 +23,12 @@ namespace Optosense.Edm.Domain.Models
 
         public bool Equals(DomainObject other)
         {
-            return GetType() == other.GetType() && Id == other.Id;
+            return GetType() == other?.GetType() && Id == other.Id;
+        }
+
+        public DomainObject Copy()
+        {
+            return (DomainObject)MemberwiseClone();
         }
 
         //public bool EquivalentTo(object another)
