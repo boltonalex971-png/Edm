@@ -177,7 +177,7 @@ namespace Optosense.Edm.Core.Services
                     _ => OperationState.Idle
                 }
             };
-            if (status.State == OperationState.InProgress && DateTime.UtcNow - operation.Started > TimeSpan.FromMinutes(10))
+            if (status.State == OperationState.InProgress)
             {
                 // Check if operation is really performing
                 try
