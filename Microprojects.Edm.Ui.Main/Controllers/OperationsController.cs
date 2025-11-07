@@ -52,6 +52,13 @@ namespace Microprojects.Edm.Ui.Main.Controllers
             return operation;
         }
 
+        [HttpPost("{id:int}")]
+        public async Task<Operation> Add(int id)
+        {
+            var operation = await _operationService.Copy(id);
+            return operation;
+        }
+
         [HttpPost]
         public async Task<Operation> Create(Operation model)
         {
@@ -102,6 +109,13 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         public async Task<Operation> Stop(int id)
         {
             var operation = await _operationService.Stop(id);
+            return operation;
+        }
+
+        [HttpPost("{id:int}/complete")]
+        public async Task<Operation> Complete(int id)
+        {
+            var operation = await _operationService.CompleteOperation(id);
             return operation;
         }
 

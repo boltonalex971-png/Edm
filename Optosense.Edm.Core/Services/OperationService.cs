@@ -20,11 +20,12 @@ namespace Optosense.Edm.Core.Services
     public class OperationService : ServiceBase<Operation>, IOperationService
     {
         private IRemoteJobs _commands;
+
         public OperationService()
         {
         }
 
-        public OperationService(EdmContext db, IRemoteJobs commands): base(db)
+        public OperationService(EdmContext db, IRemoteJobs commands) : base(db)
         {
             _commands = commands;
         }
@@ -39,10 +40,10 @@ namespace Optosense.Edm.Core.Services
             if (operation.WorkbenchId != null)
             {
                 var wb = await Db.Workbenches
-                    .Include(wb => wb.DeviceConfigurations.Select(dc => dc.WorkplaceHostDevice))
-                    .Include(wb => wb.WorkplaceProcess)
-                    .FirstOrDefaultAsync(wb => wb.Id == operation.WorkbenchId)
-                    ?? throw new ArgumentException("No workbench found");
+                             .Include(wb => wb.DeviceConfigurations.Select(dc => dc.WorkplaceHostDevice))
+                             .Include(wb => wb.WorkplaceProcess)
+                             .FirstOrDefaultAsync(wb => wb.Id == operation.WorkbenchId)
+                         ?? throw new ArgumentException("No workbench found");
                 var devices = wb.DeviceConfigurations;
                 operation.Devices = devices
                     .Select(c => new OperationHostDevice
@@ -56,6 +57,28 @@ namespace Optosense.Edm.Core.Services
             }
 
             operation.Created = DateTime.UtcNow;
+            var result = Db.Operations.Add(operation);
+            await Db.SaveChangesAsync();
+            return result.Entity;
+        }
+
+        public async Task<Operation> Copy(int operationId)
+        {
+            var origin = await Db.Operations.AsNoTracking()
+                             .Include(o => o.Devices)
+                             .FirstOrDefaultAsync(o => o.Id == operationId)
+                         ?? throw new EdmException($"Operation with id {operationId} not found");
+            var operation = (Operation)origin.Copy();
+            operation.Created = DateTime.UtcNow;
+            operation.Cancelled = null;
+            operation.Completed = null;
+            operation.Started = null;
+            operation.Id = 0;
+            foreach (var device in operation.Devices)
+            {
+                device.Id = 0;
+            }
+            
             var result = Db.Operations.Add(operation);
             await Db.SaveChangesAsync();
             return result.Entity;
@@ -158,7 +181,7 @@ namespace Optosense.Edm.Core.Services
         public async Task<OperationStatus> Status(int operationId)
         {
             var operation = await Db.Operations.FirstOrDefaultAsync(o => o.Id == operationId)
-                ?? throw new EdmException($"Operation with id {operationId} is not found");
+                            ?? throw new EdmException($"Operation with id {operationId} is not found");
 
             return await GetStatus(operation);
         }
@@ -182,7 +205,9 @@ namespace Optosense.Edm.Core.Services
                 // Check if operation is really performing
                 try
                 {
-                    status.State = await _commands.CheckOperationRun(operation.Id) ? status.State : OperationState.Faulted;
+                    status.State = await _commands.CheckOperationRun(operation.Id)
+                        ? status.State
+                        : OperationState.Faulted;
                 }
                 catch (Exception ex)
                 {
@@ -202,8 +227,9 @@ namespace Optosense.Edm.Core.Services
             };
 
             var (valid, message) = await GetResult(operation.Id);
-            status.IsValid = valid && status.State != OperationState.Faulted && status.State != OperationState.Cancelled;
-            status.Message= message;
+            status.IsValid = valid && status.State != OperationState.Faulted &&
+                             status.State != OperationState.Cancelled;
+            status.Message = message;
 
             return status;
         }
@@ -240,9 +266,11 @@ namespace Optosense.Edm.Core.Services
         public async Task<(Operation, Process)> Launch(string processUid, string workbenchUid)
         {
             var workbench = await Db.Workbenches.AsNoTracking()
-                .Include(w => w.WorkplaceProcess.Process)
-                .FirstOrDefaultAsync(w => w.CommonUid == workbenchUid && w.WorkplaceProcess.Process.CommonUid == processUid) ??
-                throw new EdmException("Workbench for the specified process cannot be found");
+                                .Include(w => w.WorkplaceProcess.Process)
+                                .FirstOrDefaultAsync(w =>
+                                    w.CommonUid == workbenchUid &&
+                                    w.WorkplaceProcess.Process.CommonUid == processUid) ??
+                            throw new EdmException("Workbench for the specified process cannot be found");
             var operation = await Create(new Operation() { WorkbenchId = workbench.Id });
 
             return (operation, workbench.WorkplaceProcess.Process);
