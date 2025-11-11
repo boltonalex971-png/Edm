@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Microprojects.Edm.Jobs;
 
-public interface IJob
+public interface IJob : IDisposable
 {
     CancellationTokenSource CancellationTokenSource { get; }
     string Name { get; }
@@ -19,7 +19,7 @@ public interface IJob
     Task<object> ExecuteAsync();
     Dictionary<string, object> GetParameters();
     void SetParameters(string data);
-    bool Init();
+    Task<bool> InitAsync();
 }
 
 public interface IJobParameters

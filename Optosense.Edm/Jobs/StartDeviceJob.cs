@@ -9,10 +9,7 @@ using Optosense.Edm.Utils;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Dynamic;
 using System.Linq;
-using System.Reflection.Metadata;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -50,7 +47,7 @@ namespace Optosense.Edm.Jobs
             Intercom = intercom;
         }
 
-        public override bool Init()
+        public override Task<bool> InitAsync()
         {
             try
             {
@@ -124,10 +121,10 @@ namespace Optosense.Edm.Jobs
             catch (Exception e)
             {
                 _logger.LogError(Parameters.Operation, e, "Cannot init device");
-                throw new EdmException($"Cannot init device: {e.Message}");
+                throw new EdmException($"Cannot init {_driverPlugin.Name}: {e.Message}");
             }
 
-            return true;
+            return Task.FromResult(true);
         }
 
         public override async Task<object> ExecuteAsync()
@@ -165,13 +162,17 @@ namespace Optosense.Edm.Jobs
                 await ExecuteDeviceInstruction(_driver, DriverRequests.Stop);
             }
 
-            _subscriber.Dispose();
-            if (_driver is IDisposable)
-            {
-                ((IDisposable)_driver).Dispose();
-            }
-
             return "Ok";
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+            _subscriber?.Dispose();
+            if (_driver is IDisposable disposableDriver)
+            {
+                disposableDriver.Dispose();
+            }
         }
 
         private async Task ExecuteDeviceInstruction(IDeviceDriver driver, DriverRequest request, bool throwEx = false, int totalRetrials = 0)

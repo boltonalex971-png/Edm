@@ -54,7 +54,7 @@ namespace Optosense.Edm.Infrastructure.Edm
             return response.Response;
         }
 
-        public async Task<string> StartOperation(int operationId, DateTime startAt)
+        public async Task<ResponseData> StartOperation(int operationId, DateTime startAt)
         {
             var parameters = new StartOperationJobParameters
             {
@@ -67,7 +67,8 @@ namespace Optosense.Edm.Infrastructure.Edm
                     Job = "StartOperation",
                     Params = $@"{JsonConvert.SerializeObject(parameters)}"
                 });
-            return response.Response;
+            
+            return response;
         }
 
         public async Task<string> StartTestOperation(int operationId, DateTime startAt)

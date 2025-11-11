@@ -49,7 +49,7 @@ namespace Optosense.Edm.Infrastructure.Edm.Jobs
             catch (Exception e)
             {
                 jobResponse.Message = e.Message;
-                jobResponse.Status = JobContainer.FAILED_STATUS;
+                jobResponse.Status = JobStatus.FAILED;
             }
 
             return jobResponse;

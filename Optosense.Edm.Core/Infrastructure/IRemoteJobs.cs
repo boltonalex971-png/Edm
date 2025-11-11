@@ -14,7 +14,7 @@ namespace Optosense.Edm.Core.Infrastructure
             string Profile,
             Guid driverGuid,
             DateTime startAt);
-        Task<string> StartOperation(int operationId, DateTime startAt);
+        Task<ResponseData> StartOperation(int operationId, DateTime startAt);
         Task<string> StartTestOperation(int operationId, DateTime startAt);
         Task<bool> CheckOperationRun(int operationId);
         Task<string> CancelOperation(int operationId);

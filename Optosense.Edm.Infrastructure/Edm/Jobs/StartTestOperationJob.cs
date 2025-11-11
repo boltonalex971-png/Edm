@@ -25,11 +25,6 @@ namespace Optosense.Edm.Jobs
             ContextFactory = contextFactory;
         }
 
-        public override bool Init()
-        {
-            return true;
-        }
-
         public override async Task<object> ExecuteAsync()
         {
             var now = DateTime.UtcNow;

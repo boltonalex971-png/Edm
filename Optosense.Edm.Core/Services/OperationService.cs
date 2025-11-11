@@ -10,10 +10,8 @@ using Optosense.Edm.Persistence;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
+using Microprojects.Edm.Jobs;
 
 namespace Optosense.Edm.Core.Services
 {
@@ -124,30 +122,13 @@ namespace Optosense.Edm.Core.Services
 
         public async Task<Operation> Start(int operationId, DateTime startAt)
         {
-            var operation = await Db.Operations.FindAsync(operationId);
-            await _commands.StartOperation(operationId, startAt);
-
-            //var devices = await Db.OperationHostDevices
-            //    .Include(d => d.Profile)
-            //    .Include(d => d.HostDevice.Device)
-            //    .Include(d => d.HostDevice.Host)
-            //    .Include(d => d.Profile.Points)
-            //    .Where(p => p.OperationId == operationId)
-            //    .ToListAsync();
-
-            //foreach (var operationHostDevice in devices)
-            //{
-            //    var driverOptions = JsonConvert.DeserializeObject<ExpandoObject>(operationHostDevice.HostDevice.Device.Parameters);
-            //    JsonConvert.PopulateObject(operationHostDevice.HostDevice.Parameters, driverOptions);
-            //    JsonConvert.PopulateObject(operationHostDevice.Options, driverOptions);
-            //    var response = await _commands.StartDevice(
-            //        operationHostDevice.Id,
-            //        $"{operationHostDevice.HostDevice.Host.Url}:{operationHostDevice.HostDevice.Host.Port}",
-            //        driverOptions,
-            //        operationHostDevice.Profile.Points,
-            //        operationHostDevice.HostDevice.Device.Model,
-            //        startAt);
-            //}
+            var operation = await Db.Operations.FirstOrDefaultAsync(o => o.Id == operationId) ??
+                            throw new EdmException("Operation not found");
+            var result = await _commands.StartOperation(operationId, startAt);
+            if (result.Status != JobStatus.SUCCESS)
+            {
+                throw new EdmException($"Cannot start operation: {result.Message}");
+            }
 
             operation.Started = startAt;
             await Db.SaveChangesAsync();

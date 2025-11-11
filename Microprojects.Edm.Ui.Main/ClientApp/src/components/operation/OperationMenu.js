@@ -85,7 +85,7 @@ function OperationToolbar({operationId, apiBase, onStarted, onCompleted, onCance
     //const state = status?.state //useMemo(() => status?.state, [status]);
     //const date = utcDateToLocal(status?.stateTimestamp) //useMemo(() => utcDateToLocal(status?.stateTimestamp), [status]);
 
-    const copyOperation = () => {
+    const copy = () => {
         copyBtn.current.element.setAttribute('disabled', 'disabled');
         statusLbl.current.textContent = 'Copying...';
         Axios.post(`${apiBase}/${operationId}`)
@@ -97,7 +97,7 @@ function OperationToolbar({operationId, apiBase, onStarted, onCompleted, onCance
                 statusLbl.current.textContent = 'Failed to copy';
             });
     };
-    const onStart = () => {
+    const start = () => {
         const currentDate = new Date();
         const specifiedDate = startAtInput.current.value;
         const startAt = specifiedDate > currentDate ? specifiedDate : currentDate;
@@ -105,21 +105,22 @@ function OperationToolbar({operationId, apiBase, onStarted, onCompleted, onCance
         statusLbl.current.textContent = 'Starting...';
         Axios.post(`${apiBase}/${operationId}/start`, startAt)
             .then((response) => {
-                setRefresh(!refresh);
+                setRefresh(r => !r);
             })
             .catch((error) => {
-                startBtn.current.element.setAttribute('disabled', false);
-                statusLbl.current.textContent = 'Start';
+                startBtn.current.element.removeAttribute('disabled');
+                statusLbl.current.textContent = 'Faulted';
+                window.alert(error.response?.data?.detail);
             });
     };
-    const onStop = () => {
+    const stop = () => {
         if (window.confirm('Confirm operation cancelling')) {
             stopBtn.current.element.setAttribute('disabled', 'disabled');
             statusLbl.current.textContent = 'Cancelling...';
 
             Axios.post(`${apiBase}/${operationId}/stop`)
                 .then((response) => {
-                    setRefresh(!refresh);
+                    setRefresh(r => !r);
                     onCancelled();
                 })
                 .catch((error) => alert(error));
@@ -132,13 +133,13 @@ function OperationToolbar({operationId, apiBase, onStarted, onCompleted, onCance
 
             Axios.post(`${apiBase}/${operationId}/complete`)
                 .then((response) => {
-                    setRefresh(!refresh);
+                    setRefresh(r => !r);
                     onCompleted();
                 })
                 .catch((error) => alert(error));
         }
     };
-    const onClose = () => window.close()
+    const close = () => window.close()
     useEffect(() => {
         if (!status) return 
         const finalize = () => {
@@ -150,7 +151,7 @@ function OperationToolbar({operationId, apiBase, onStarted, onCompleted, onCance
             timeout = setTimeout(() => setRefresh(r => !r), status.date - Date.now());
         } else if (status.state === 'InProgress') {
             onStarted();
-            interval = setInterval(() => setRefresh(r => !r), 5000);
+            interval = setInterval(() => setRefresh(r => !r), 2000);
         } else if (status.state === 'Completed') {
             onCompleted();
         }
@@ -188,15 +189,15 @@ function OperationToolbar({operationId, apiBase, onStarted, onCompleted, onCance
             <Button icon='play' ref={startBtn}
                     hidden={!(status.state === 'Idle')}
                     className='ms-2'
-                    onClick={onStart}>Start</Button>
+                    onClick={start}>Start</Button>
             <Button icon='stop' ref={stopBtn}
                     hidden={status.state !== 'InProgress'}
                     className='ms-2'
-                    onClick={onStop}>Stop</Button>
+                    onClick={stop}>Stop</Button>
             <Button icon='copy' ref={copyBtn} id={status}
-                    hidden={status.state === 'inProgress'}
+                    hidden={status.state === 'InProgress'}
                     className='ms-2'
-                    onClick={copyOperation}>Copy</Button>
+                    onClick={copy}>Copy</Button>
             <Button icon='check' ref={stopBtn}
                     hidden={!(status.state === 'Idle'|| status.state === 'Faulted')}
                     className='ms-2'
@@ -205,7 +206,7 @@ function OperationToolbar({operationId, apiBase, onStarted, onCompleted, onCance
                     className='ms-2'
                     title='Close the window'
                     fillMode='flat'
-                    onClick={onClose}></Button>
+                    onClick={close}></Button>
         </div>
     );
 }

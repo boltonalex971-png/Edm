@@ -11,20 +11,28 @@ using Optosense.Edm.Core.Contracts;
 using Microprojects.Edm.Intercom;
 using Microsoft.Extensions.Logging;
 using Microprojects.Edm.Utils;
+using Microsoft.Extensions.DependencyInjection;
 using Optosense.Edm.Infrastructure.Protos;
 
 namespace Optosense.Edm.Jobs
 {
     [Job(Name = "StartOperation", Lifetime = JobLifetime.LongRunning, Parameters = typeof(StartOperationJobParameters))]
-    public class StartOperationJob : BaseJob, IKnowOperation
+    public class StartOperationJob : BaseJob, IKnowOperation, INeedServiceScope
     {
+        public IServiceScope ServiceScope { get; set; }
+
         protected StartOperationJobParameters Parameters => (StartOperationJobParameters)JobParameters;
         protected IOperationService OperationService { get; init; }
         protected IProfileService ProfileService { get; init; }
         protected IJobContainer JobManager { get; init; }
         protected IIntercom Intercom { get; init; }
         protected ILogger<StartOperationJob> Logger { get; init; }
+        protected IServiceProvider ServiceProvider { get; init; }
         protected string ParametersChannel { get; set; }
+        
+        private List<(string url, IJob job)> _devices = [];
+        private List<IJob> _audits = [];
+        private IJob _storageJob;
 
         public StartOperationJob() { }
         public StartOperationJob(
@@ -32,22 +40,18 @@ namespace Optosense.Edm.Jobs
             IProfileService profileService,
             IJobContainer container,
             IIntercom intercom,
-            ILogger<StartOperationJob> logger)
+            ILogger<StartOperationJob> logger,
+            IServiceProvider serviceProvider)
         {
             OperationService = operationService;
             ProfileService = profileService;
             JobManager = container;
             Intercom = intercom;
             Logger = logger;
+            ServiceProvider = serviceProvider; 
         }
 
-        public override bool Init()
-        {
-            // TODO move device init here to check failures before start and notify user
-            return true;
-        }
-
-        public override async Task<object> ExecuteAsync()
+        public override async Task<bool> InitAsync()
         {
             // Adjust operation start time
             // TODO Move all device initializations to Init() method, run jobs from here.
@@ -55,31 +59,26 @@ namespace Optosense.Edm.Jobs
             // TODO Make delay value configurable
             var startTime = DateTime.UtcNow.AddSeconds(2); // 1 seconds should be enough to init all devices before start
             startTime = startTime > Parameters.StartAt ? startTime : Parameters.StartAt;
-            var running = new List<(string url, IJob job)>();
-            var audits = new List<IJob>();
-            // Launch execution result storage
+            // Prepare execution result storage
             var storeChannel = $"Operation-{Parameters.Operation}";
             var auditChannel = $"{storeChannel}-audit";
             ParametersChannel = $"{storeChannel}-parameters";
-            var storageJob = new StoreOperationRecordsJob
+            var storeJobParameters = new StoreOperationRecordsJobParameters
             {
-                JobParameters = new StoreOperationRecordsJobParameters 
-                { 
-                    Operation = Parameters.Operation,
-                    Channel = storeChannel, 
-                    AuditChannel = auditChannel,
-                    ParametersChannel = ParametersChannel
-                }
+                Operation = Parameters.Operation,
+                Channel = storeChannel,
+                AuditChannel = auditChannel,
+                ParametersChannel = ParametersChannel
             };
-            await JobManager.Execute(storageJob);
-            var operation = await OperationService.Get(Parameters.Operation);
-            // Launch devices
+            _storageJob = await JobManager.GetJobAsync<StoreOperationRecordsJob>(ServiceScope, storeJobParameters);
+            
+            // Prepare devices
             var devices = await OperationService.GetOperationDevices(Parameters.Operation);
 
             // TODO refactor starting device in parallel
             foreach (var operationHostDevice in devices)
             {
-                // Launch audits
+                // Prepare audits
                 // TODO Launch audits in parallel
                 var deviceAudits = await ProfileService.GetAudits(operationHostDevice.ProfileId);
                 foreach (var audit in deviceAudits)
@@ -93,9 +92,8 @@ namespace Optosense.Edm.Jobs
                         ParametersChannel = ParametersChannel,
                         StartAt = startTime
                     };
-                    var auditJob = new StartAuditJob { JobParameters = auditParams };
-                    await JobManager.Execute(auditJob);
-                    audits.Add(auditJob);
+                    var auditJob = await JobManager.GetJobAsync<StartAuditJob>(ServiceScope, auditParams); 
+                    _audits.Add(auditJob);
                 }
 
                 // Launch devices
@@ -118,20 +116,34 @@ namespace Optosense.Edm.Jobs
                 };
                 var url = $"{operationHostDevice.HostDevice.Host.Url}:{operationHostDevice.HostDevice.Host.Port}";
                 var deviceJob = new StartDeviceJob { JobParameters = deviceParams };
-                running.Add((url, deviceJob));
+                _devices.Add((url, deviceJob));
                 // TODO check response for validity
                 var response = await deviceJob.Execute(url);
+                if (response.Status != JobStatus.SUCCESS)
+                {
+                    throw new EdmException($"{deviceJob.Name} failed: {response.Message}");
+                }
+            }
+
+            return true;
+        }
+
+        public override async Task<object> ExecuteAsync()
+        {
+            foreach (var audit in _audits)
+            {
+                await JobManager.ExecuteAsync(audit);
             }
             
-            // Push operation input parameters after delay to ensure that devices started
-            Task.Delay(1000).ContinueWith(async t =>
+            await JobManager.ExecuteAsync(_storageJob);
+            
+            var operation = await OperationService.Get(Parameters.Operation);
+            // Push operation input parameters
+            foreach (var p in JsonConvert.DeserializeObject<Dictionary<string, object>>(
+                         operation.Parameters ?? "{}"))
             {
-                foreach (var p in JsonConvert.DeserializeObject<Dictionary<string, object>>(
-                             operation.Parameters ?? "{}"))
-                {
-                    await Intercom.Publish(ParametersChannel, p);
-                }
-            });
+                await Intercom.Publish(ParametersChannel, p);
+            }
 
             int count;
             do
@@ -139,7 +151,7 @@ namespace Optosense.Edm.Jobs
                 count = 0;
                 await Task.Delay(5000, CancellationToken)
                     .ContinueWith(t => { }); // Avoid Canceled exception
-                foreach (var (url, job) in running)
+                foreach (var (url, job) in _devices)
                 {
                     IJob check = CancellationToken.IsCancellationRequested ? new StopJob(job) : new CheckJob(job);
                     var parameter = new
@@ -173,7 +185,7 @@ namespace Optosense.Edm.Jobs
 
                     count++;
                 }
-            } while (count < running.Count && !CancellationToken.IsCancellationRequested);
+            } while (count < _devices.Count && !CancellationToken.IsCancellationRequested);
 
             // Stop audits and storage
             await Intercom.Publish(ParametersChannel, KeyValuePair.Create("Stop", true));
@@ -187,7 +199,7 @@ namespace Optosense.Edm.Jobs
                 await OperationService.CompleteOperation(Parameters.Operation);
             }
 
-            return "Ok";
+            return JobStatus.SUCCESS;
         }
 
         public int GetOperationId() => Parameters.Operation;

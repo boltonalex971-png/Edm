@@ -8,6 +8,7 @@ using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Microprojects.Edm.Jobs;
 
@@ -21,10 +22,19 @@ public interface IJobContainer : IDisposable
     Task<ResponseData> ExecuteAsync<T>(IJobParameters parameters = null) where T : IJob;
     Task<ResponseData> ExecuteAsync(Type jobType, IJobParameters parameters = null);
     Task<ResponseData> ExecuteAsync(JobData data);
+    Task<IJob> GetJobAsync<T>(IServiceScope scope, IJobParameters parameters = null) where T : IJob;
     Task<ResponseData> ExecuteAsync(IJob job);
-    Task<ResponseData> ExecuteAsync(Action job);
+
+    // Task<ResponseData> ExecuteAsync(Action job);
     void Start();
     void Stop();
+}
+
+public static class JobStatus
+{
+    public static readonly string FAILED = "Failed";
+    public static readonly string NOT_FOUND = "Not found";
+    public static readonly string SUCCESS = "Ok";
 }
 
 public class JobData

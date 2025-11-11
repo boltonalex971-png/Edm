@@ -15,10 +15,6 @@ namespace Microprojects.Edm.Jobs;
 
 public class JobContainer : IJobContainer
 {
-    public static readonly string FAILED_STATUS = "Failed";
-    public static readonly string NOT_FOUND = "Not found";
-    public static readonly string SUCCESS_STATUS = "Ok";
-
     private readonly JobConfiguration _config;
     private readonly IServiceProvider _services;
     private readonly ILogger<JobContainer> _logger;
@@ -86,36 +82,50 @@ public class JobContainer : IJobContainer
 
     public async Task<ResponseData> ExecuteAsync(Type jobType, IJobParameters parameters = null)
     {
-        var response = new ResponseData { Status = SUCCESS_STATUS, Response = SUCCESS_STATUS };
+        var response = new ResponseData { Status = JobStatus.SUCCESS, Response = JobStatus.SUCCESS };
         // TODO Using async calls make no difference between lifetimes, refactor this to single call
-        switch (jobType.GetJobLifetime())
+        try
         {
-            case JobLifetime.ShortRunning:
-                using (var scope = _services.CreateScope())
-                {
-                    var job = GetScopedJob(scope, jobType, parameters);
-                    var result = await job.ExecuteAsync();
-                    response.Response = JsonConvert.SerializeObject(result);
-                    response.Message = $"Job {job.Name} executed succesfully";
-                    //Logger.Log(response.Message);
-                }
+            switch (jobType.GetJobLifetime())
+            {
+                case JobLifetime.ShortRunning:
+                    using (var scope = _services.CreateScope())
+                    {
+                        var job = await GetScopedJob(scope, jobType, parameters);
+                        var result = await job.ExecuteAsync();
+                        response.Response = JsonConvert.SerializeObject(result);
+                        response.Message = $"Job {job.Name} executed successfully";
+                        //Logger.Log(response.Message);
+                    }
 
-                break;
-            case JobLifetime.Permanent:
-            case JobLifetime.LongRunning:
-                var taskId = RunLongTask(jobType, parameters);
-                response.Response = JsonConvert.SerializeObject(taskId);
-                response.Message = $"Job {jobType.GetJobName()} {taskId} started";
-                break;
+                    break;
+                case JobLifetime.Permanent:
+                case JobLifetime.LongRunning:
+                    response = await RunLongTask(jobType, parameters);
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            response.Status = JobStatus.FAILED;
+            response.Message = ex.GetMeaningfulMessage();
         }
 
         return response;
     }
 
-    private IJob GetScopedJob(IServiceScope scope, Type jobType, IJobParameters parameters = null)
+    public Task<IJob> GetJobAsync<T>(IServiceScope scope, IJobParameters parameters = null) where T : IJob =>
+        GetScopedJob(scope, typeof(T), parameters);
+
+    private async Task<IJob> GetScopedJob(IServiceScope scope, Type jobType, IJobParameters parameters = null)
     {
         var job = (IJob)scope.ServiceProvider.GetService(jobType) ??
-                  throw new EdmException($"Job is not a registered service: {jobType.Name}");
+                  throw new EdmException($"Job is not registered: {jobType.Name}");
+
+        if (job is INeedServiceScope scopedJob)
+        {
+            scopedJob.ServiceScope = scope;
+        }
 
         if (parameters != null)
         {
@@ -131,48 +141,27 @@ public class JobContainer : IJobContainer
             job.SetParameters(null);
         }
 
-        job.Init();
-
-        return job;
+        if (await job.InitAsync())
+            return job;
+        
+        throw new EdmException($"Cannot initialize the job {job.Name}");
     }
 
-    public Task<ResponseData> ExecuteAsync(Action job)
-    {
-        Task.Run(job).ConfigureAwait(false);
-        return Task.FromResult(new ResponseData { Status = SUCCESS_STATUS });
-    }
+    // public Task<ResponseData> ExecuteAsync(Action job)
+    // {
+    //     Task.Run(job).ConfigureAwait(false);
+    //     return Task.FromResult(new ResponseData { Status = JobStatus.SUCCESS });
+    // }
 
-    public Task<ResponseData> ExecuteAsync(IJob job)
-    {
-        job.Init();
-        var response = new ResponseData { Status = SUCCESS_STATUS, Response = SUCCESS_STATUS };
-        // TODO Using async calls make no difference between lifetimes, refactor this to single call
-        //switch (job.Lifetime)
-        //{
-        //    case JobLifetime.ShortRunning:
-        //        var result = await job.ExecuteAsync();
-        //        response.Response = JsonConvert.SerializeObject(result);
-        //        response.Message = $"Job {job.Name} executed succesfully";
-        //        //Logger.Log(response.Message);
-        //        break;
-        //    case JobLifetime.Permanent:
-        //    case JobLifetime.LongRunning:
-        //        var taskId = RunLongTask(job);
-        //        response.Response = JsonConvert.SerializeObject(taskId);
-        //        response.Message = $"Task {taskId} {job.Name} started succesfully";
-        //        break;
-        //}
-
-        return Task.FromResult(response);
-    }
-
+    public Task<ResponseData> ExecuteAsync(IJob job) => RunLongTask(job);
+    
     public async Task<ResponseData> ExecuteAsync(JobData data)
     {
         try
         {
             //Logger.Log($"User {ServiceSecurityContext.Current.PrimaryIdentity.Name} calling...");
             //var sec = OperationContext.Current.ServiceSecurityContext;
-            var response = new ResponseData { Status = SUCCESS_STATUS, Response = SUCCESS_STATUS };
+            var response = new ResponseData { Status = JobStatus.SUCCESS, Response = JobStatus.SUCCESS };
 
             if (data.Job == "Stop")
             {
@@ -193,7 +182,7 @@ public class JobContainer : IJobContainer
                     {
                         response.Message =
                             $"Task {task.Task.Id} {task.Job.Name} was requested to stop but is not running";
-                        response.Status = FAILED_STATUS;
+                        response.Status = JobStatus.FAILED;
                         _logger.LogError("Task {Id} {JobName} was requested to stop but is not running", task.Task.Id,
                             task.Job.Name);
                     }
@@ -201,7 +190,7 @@ public class JobContainer : IJobContainer
                 else
                 {
                     response.Message = $"Task not found. Parameters: {data.Params}";
-                    response.Status = FAILED_STATUS;
+                    response.Status = JobStatus.FAILED;
                 }
             }
             else if (data.Job == "Check")
@@ -233,7 +222,7 @@ public class JobContainer : IJobContainer
         catch (Exception e)
         {
             //Logger.Error(e.GetFullInfo());
-            return new ResponseData { Status = FAILED_STATUS, Message = e.GetMeaningfulMessage() };
+            return new ResponseData { Status = JobStatus.FAILED, Message = e.GetMeaningfulMessage() };
         }
     }
 
@@ -280,16 +269,36 @@ public class JobContainer : IJobContainer
         }
     }
 
-    private int RunLongTask(Type jobType, IJobParameters parameters = null)
+    private async Task<ResponseData> RunLongTask(Type jobType, IJobParameters parameters = null)
     {
         var longTask = new CancellableTask();
+        var semaphore = new TaskCompletionSource<ResponseData>();
         var task = Task.Run(async () =>
         {
             using var scope = _services.CreateScope();
-            var job = GetScopedJob(scope, jobType, parameters);
-            longTask.Job = job;
-            longTask.TokenSource = job.CancellationTokenSource;
-            await job.ExecuteAsync();
+            IJob job = null;
+            try
+            {
+                job = await GetScopedJob(scope, jobType, parameters);
+                longTask.Job = job;
+                longTask.TokenSource = job.CancellationTokenSource;
+                semaphore.SetResult(new  ResponseData
+                {
+                    Status = JobStatus.SUCCESS, 
+                    Message = $"Job {jobType.GetJobName()} started"
+                });
+            }
+            catch (Exception e)
+            {
+                semaphore.SetResult(new ResponseData
+                {
+                    Status = JobStatus.FAILED, 
+                    Message = e.GetMeaningfulMessage()
+                });
+                return;
+            }
+
+            await job!.ExecuteAsync();
         });
         longTask.Task = task;
         RunningTasks[task.Id] = longTask;
@@ -298,22 +307,61 @@ public class JobContainer : IJobContainer
             switch (t.Status)
             {
                 case TaskStatus.Canceled:
-                    _logger.LogInformation("Job {Name} {Id} canceled by user", longTask.Job.Name, t.Id);
+                    _logger.LogInformation("Job {Name} {Id} canceled by user", longTask.Job?.Name, t.Id);
                     break;
                 case TaskStatus.Faulted:
-                    // TODO lonTask.Job is always null
                     _logger.LogError("Job {Name} {Id} failed with exception: {Exception}", longTask.Job?.Name, t.Id,
-                        t.Exception.Flatten().GetFullInfo());
+                        t.Exception?.Flatten().GetFullInfo());
                     break;
                 case TaskStatus.RanToCompletion:
-                    _logger.LogInformation("Job {Name} {Id} completed successfully", longTask.Job.Name, t.Id);
+                    _logger.LogInformation("Job {Name} {Id} completed successfully", longTask.Job?.Name, t.Id);
                     break;
             }
 
             DisposeTask(t.Id);
         }, TaskScheduler.Default);
+        var response = await semaphore.Task;
+        response.Response = JsonConvert.SerializeObject(task.Id);
 
-        return task.Id;
+        return response;
+    }
+
+    private Task<ResponseData> RunLongTask(IJob job)
+    {
+        var longTask = new CancellableTask();
+        var task = Task.Run(async () =>
+        {
+            longTask.Job = job;
+            longTask.TokenSource = job.CancellationTokenSource;
+            await job!.ExecuteAsync();
+        }).ContinueWith(t =>
+        {
+            switch (t.Status)
+            {
+                case TaskStatus.Canceled:
+                    _logger.LogInformation("Job {Name} {Id} canceled by user", longTask.Job?.Name, t.Id);
+                    break;
+                case TaskStatus.Faulted:
+                    _logger.LogError("Job {Name} {Id} failed with exception: {Exception}", longTask.Job?.Name, t.Id,
+                        t.Exception?.Flatten().GetFullInfo());
+                    break;
+                case TaskStatus.RanToCompletion:
+                    _logger.LogInformation("Job {Name} {Id} completed successfully", longTask.Job?.Name, t.Id);
+                    break;
+            }
+
+            DisposeTask(t.Id);
+        }, TaskScheduler.Default);
+        longTask.Task = task;
+        RunningTasks[task.Id] = longTask;
+        var response = new ResponseData
+        {
+            Status = JobStatus.SUCCESS, 
+            Message = $"Job {job.Name} started",
+            Response = JsonConvert.SerializeObject(task.Id)
+        };
+
+        return Task.FromResult(response);
     }
 
     private CancellableTask GetTaskByPid(int pid)

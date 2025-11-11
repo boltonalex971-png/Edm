@@ -10,13 +10,18 @@ namespace Microprojects.Edm.Jobs
     public class BaseJob : IJob
     {
         public CancellationTokenSource CancellationTokenSource { get; } = new CancellationTokenSource();
-        public CancellationToken CancellationToken { get => CancellationTokenSource.Token; }
+
+        public CancellationToken CancellationToken
+        {
+            get => CancellationTokenSource.Token;
+        }
+
         public virtual IJobParameters JobParameters { get; set; }
 
         public virtual string Name
         {
             get => GetType().GetCustomAttribute<JobAttribute>()?.Name ??
-                GetType().Name.Replace("Job", string.Empty);
+                   GetType().Name.Replace("Job", string.Empty);
         }
 
         public virtual string Description
@@ -29,9 +34,11 @@ namespace Microprojects.Edm.Jobs
             get => GetType().GetCustomAttribute<JobAttribute>()?.Lifetime ?? JobLifetime.ShortRunning;
         }
 
-        public virtual bool Init()
+        private bool _disposed = false;
+
+        public virtual Task<bool> InitAsync()
         {
-            return true;
+            return Task.FromResult(true);
         }
 
         public virtual Task<object> ExecuteAsync()
@@ -60,6 +67,28 @@ namespace Microprojects.Edm.Jobs
                 JsonConvert.PopulateObject(data, this);
             }
         }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                CancellationTokenSource?.Dispose();
+            }
+        }
+
+        public void Dispose()
+        {
+            if (!_disposed)
+                return;
+            Dispose(true);
+            _disposed = true;
+            GC.SuppressFinalize(this);
+        }
+
+        ~BaseJob()
+        {
+            Dispose(false);
+        }
     }
 
     public class JobParameters : IJobParameters
@@ -73,6 +102,5 @@ namespace Microprojects.Edm.Jobs
     {
         public string Name { get; set; }
         public bool Required { get; set; } = false;
-
     }
 }

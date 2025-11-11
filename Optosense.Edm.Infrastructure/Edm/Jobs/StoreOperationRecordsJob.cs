@@ -34,11 +34,6 @@ namespace Optosense.Edm.Jobs
             _logger = logger;
         }
 
-        public override bool Init()
-        {
-            return true;
-        }
-
         public override async Task<object> ExecuteAsync()
         {
             using var paramsSubscriber = Intercom.Subscribe<object>(

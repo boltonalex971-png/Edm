@@ -44,8 +44,9 @@ namespace Optosense.Edm.Jobs
             ContextFactory = contextFactory;
         }
 
-        public override bool Init()
+        public override Task<bool> InitAsync()
         {
+            // Parameter subscriber must be initialized before executing to avoid loosing incoming parameters
             _paramsSubscriber = Intercom.Subscribe<object>(Parameters.ParametersChannel,
                 onNext: json =>
                 {
@@ -58,7 +59,7 @@ namespace Optosense.Edm.Jobs
 
                     PushInputParameter(param);
                 });
-            return true;
+            return Task.FromResult(true);
         }
 
         public override async Task<object> ExecuteAsync()
@@ -70,7 +71,7 @@ namespace Optosense.Edm.Jobs
                 audit = await service.GetZones(Parameters.Audit);
             }
 
-            var subscriber = Intercom.Subscribe<Record>(Parameters.Channel,
+            using var subscriber = Intercom.Subscribe<Record>(Parameters.Channel,
                 onNext: async rec =>
                 {
                     // TODO Cache coming record to avoid loosing it and handle them later
@@ -156,10 +157,15 @@ namespace Optosense.Edm.Jobs
 
             await Task.Delay(-1, CancellationToken).ContinueWith(t => { });
 
-            subscriber.Dispose();
             Logger.LogDebug(Parameters.Operation, "{Command} {Action}", 
                 Name, CancellationToken.IsCancellationRequested ? "cancelled" : "completed" );
-            return "Ok";
+            
+            return JobStatus.SUCCESS;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing) _paramsSubscriber.Dispose();  
         }
 
         private void PushInputParameter(KeyValuePair<string, object> param)
