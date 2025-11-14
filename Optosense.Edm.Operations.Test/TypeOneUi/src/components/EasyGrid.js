@@ -11,7 +11,8 @@ const idField = '_id';
 export const EasyGrid = (props) => {
     const [data, setData] = useState(() => props.data
         .map(d => ({ [idField]: getId(), ...d }))
-        .sort((a, b) => props.orderField ? a[props.orderField] - b[props.orderField] : -1))
+        .sort((a, b) => 
+            !props.orderField ? 0 : a[props.orderField] < b[props.orderField] ? -1 : a[props.orderField] < b[props.orderField] ? 1 : 0))
     const [origin, setOrigin] = useState();
     const dataChange = (d) => {
         setData(d);
@@ -67,7 +68,7 @@ export const EasyGrid = (props) => {
         //setData([...data]);
         dataChange([...data]);
     };
-    const commandCell = props => (
+    const commandCell = props => 
         <CommandCell
             {...props}
             edit={enterEdit}
@@ -78,7 +79,6 @@ export const EasyGrid = (props) => {
             cancel={cancel}
             editField={editField}
         />
-    );
 
     return (
         <>
@@ -91,11 +91,13 @@ export const EasyGrid = (props) => {
                     scrollable='none'
                     style={props.style}
                 >
-                    <GridToolbar>
-                        <Button title="Add new" icon='plus' onClick={addNew} />
-                    </GridToolbar>
+                    {!props.readonly &&
+                        <GridToolbar>
+                            <Button title="Add new" icon='plus' onClick={addNew} />
+                        </GridToolbar>
+                    }
                     {props.children}
-                    <GridColumn cell={commandCell} />
+                    {!props.readonly && <GridColumn cell={commandCell} />}
                 </Grid>
             }
         </>
@@ -106,7 +108,8 @@ EasyGrid.propTypes = {
     data: PropTypes.array,
     orderField: PropTypes.string,
     details: PropTypes.func,
-    dataChange: PropTypes.func
+    dataChange: PropTypes.func,
+    readonly: PropTypes.bool
 };
 
 
