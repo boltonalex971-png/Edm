@@ -54,9 +54,10 @@ namespace Optosense.Edm.Drivers.Mux
         {
             Port = new SerialPort(BoardOptions.Port, BoardOptions.Baudrate);
             Port.Open();
-            // TODO Make safe port closing regarding if it is in busy state
-            //CancellationToken.Register(() => Port.Close());
-
+            // TODO use driver parameters to get test command
+            var command = "SENSOFF";
+            var response = Send($"{command}\r", null, 1000, true, 0, 0).Result;
+            
             return OK;
         }
 

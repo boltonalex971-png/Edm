@@ -78,7 +78,7 @@ namespace Microprojects.Edm.Jobs
 
         public void Dispose()
         {
-            if (!_disposed)
+            if (_disposed)
                 return;
             Dispose(true);
             _disposed = true;
