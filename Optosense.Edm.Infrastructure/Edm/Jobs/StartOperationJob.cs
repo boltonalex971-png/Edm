@@ -57,8 +57,9 @@ namespace Optosense.Edm.Jobs
             // TODO Move all device initializations to Init() method, run jobs from here.
             //      RemoteJobs service must implement separate methods: first for create and init job, second must launch it
             // TODO Make delay value configurable
-            var startTime = DateTime.UtcNow.AddSeconds(2); // 1 seconds should be enough to init all devices before start
+            var startTime = DateTime.UtcNow.AddSeconds(1); // 1 seconds should be enough to init all devices before start
             startTime = startTime > Parameters.StartAt ? startTime : Parameters.StartAt;
+            Parameters.StartAt = startTime; // Renew operation start time (useless?? check)
             // Prepare execution result storage
             var storeChannel = $"Operation-{Parameters.Operation}";
             var auditChannel = $"{storeChannel}-audit";
@@ -106,7 +107,7 @@ namespace Optosense.Edm.Jobs
                     DriverOptions = driverOptions,
                     Operation = Parameters.Operation,
                     OperationHostDevice = operationHostDevice.Id,
-                    StartAt = startTime,
+                    StartAt = startTime.AddSeconds(1),
                     Profile = operationHostDevice.Profile.TextJson,
                     Profiler = operationHostDevice.Profile.ProfilerGuid,
                     StoreChannel = storeChannel,
@@ -119,6 +120,7 @@ namespace Optosense.Edm.Jobs
                 _devices.Add((url, deviceJob));
                 // TODO check response for validity
                 var response = await deviceJob.Execute(url);
+                Logger.LogDebug("Operation started device at {Time}", DateTime.UtcNow.ToString("hh:mm:ss.fff"));
                 if (response.Status != JobStatus.SUCCESS)
                 {
                     throw new EdmException($"{deviceJob.Name} failed: {response.Message}");
@@ -138,6 +140,14 @@ namespace Optosense.Edm.Jobs
             await JobManager.ExecuteAsync(_storageJob);
             
             var operation = await OperationService.Get(Parameters.Operation);
+            var delay = Parameters.StartAt - DateTime.UtcNow;
+            if (delay.TotalMilliseconds > 0)
+            {
+                await Task.Delay(delay);
+            }
+            
+            Logger.LogDebug("Operation starts propagate parameters at {Time}", DateTime.UtcNow.ToString("hh:mm:ss.fff"));
+            
             // Push operation input parameters
             foreach (var p in JsonConvert.DeserializeObject<Dictionary<string, object>>(
                          operation.Parameters ?? "{}"))

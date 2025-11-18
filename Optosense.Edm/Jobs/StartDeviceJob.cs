@@ -36,7 +36,6 @@ namespace Optosense.Edm.Jobs
         private ConcurrentDictionary<string, object> _inputParams = [];
         private Dictionary<string, object> _outputParams;
         private IDisposable _subscriber;
-        private int _startSpan;
 
         public StartDeviceJob() { }
 
@@ -88,10 +87,15 @@ namespace Optosense.Edm.Jobs
                 _subscriber = Intercom.Subscribe<object>(Parameters.ParametersChannel,
                     onNext: async json =>
                     {
+                        if (json == null)
+                            return;
+                        _logger.LogDebug("Device {Device} received parameter {Param} at {Time}", _driver.GetType().Name, json, DateTime.UtcNow.ToString("hh:mm:ss.fff"));
                         var param = JsonConvert.DeserializeObject<KeyValuePair<string, object>>(json.ToString());
                         if (param.Key == "Stop" && (bool)param.Value)
                         {
-                            CancellationTokenSource.Cancel();
+                            if (!CancellationTokenSource.IsCancellationRequested)
+                                await CancellationTokenSource.CancelAsync()
+                                    .ContinueWith((t) => { }); // Ignore exceptions
                             return;
                         }
 
@@ -117,6 +121,7 @@ namespace Optosense.Edm.Jobs
 
                         PushInputParameter(param);
                     });
+                _logger.LogDebug("Device {Device} inited at {Time}", _driver.GetType().Name, DateTime.UtcNow.ToString("hh:mm:ss.fff"));
             }
             catch (Exception e)
             {
@@ -130,11 +135,12 @@ namespace Optosense.Edm.Jobs
         public override async Task<object> ExecuteAsync()
         {
             var startTime = DateTime.UtcNow;
-            _startSpan = (int)(Parameters.StartAt - startTime).TotalMilliseconds;
-            var delay = Parameters.StartAt < startTime ? 0 : _startSpan;
+            var startSpan = Parameters.StartAt - startTime;
+            var delay = startSpan < TimeSpan.Zero ? TimeSpan.Zero : startSpan;
             try
             {
                 await Task.Delay(delay, CancellationToken);
+                _logger.LogInformation("Device {Device} run to execute at {Time}", _driver.GetType().Name, DateTime.UtcNow.ToString("hh:mm:ss.fff"));
                 if (_asyncPlan != null)
                 {
                     await foreach (var request in _asyncPlan.WithCancellation(CancellationToken))
