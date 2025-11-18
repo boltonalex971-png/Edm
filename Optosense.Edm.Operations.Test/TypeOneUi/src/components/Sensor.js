@@ -25,7 +25,7 @@ export const Sensor = ({ info, settings, ...props }) => {
                         key={`${props.key}${i.indicator}`}
                         className={(info[i.parameter]?.valid !== undefined && `bg-${(info[i.parameter].valid && 'success') || 'danger'} text-white`) || ''}
                         style={{ display: 'flex', width: '80%', justifyContent: 'center' }}
-                        title={`${i.title} ${info[i.parameter]?.value}`}
+                        title={`${i.title || i.indicator} ${info[i.parameter]?.value}`}
                     >{i.indicator}
                     </span>
                 )}

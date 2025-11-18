@@ -5,16 +5,16 @@ import {Sensor} from "./Sensor";
 import {SmartScroll, SmartScrollContent} from "./SmartScroll";
 import axios from "axios";
 import {Log} from "./Log";
+import {Sensors} from "./Sensors";
 
 let monitorInterval;
 
 export const OperationInfo = (props) => {
-    const [lastId, setLastId] = useState(0)
     const [sensors, setSensors] = useState();
     const [records, setRecords] = useState([]);
     const [refresh, setRefresh] = useState(false);
     const [logView, setLogView] = useState(false);
-
+    const lastId = records.at(-1)?.id || 0
     useGet(`${props.apiBase}/api/operations/${props.operationId}/devices`, [], d => {
         const options = JSON.parse(d.find(dev => dev.options?.includes('capacity'))?.options)
         const cap = parseInt(options?.capacity)
@@ -23,7 +23,7 @@ export const OperationInfo = (props) => {
     });
 
     const [[status]] = useGet(`${props.apiBase}/api/operations/${props.operationId}/status`);
-    
+
     useEffect(() => {
         if (!sensors) return
         axios.get(`${props.apiBase}/api/operations/${props.operationId}/criteria`)
@@ -40,15 +40,13 @@ export const OperationInfo = (props) => {
                 axios.get(`${props.apiBase}/api/operations/${props.operationId}/records?lastRecordId=${lastId}`)
                     .then(r => {
                         const ord = 'executedAt'
-                        setRecords(recs => 
-                            [...recs, ...r.data].sort((a, b) => a[ord] < b[ord] ? -1 : a[ord] < b[ord] ? 1 : 0))
-                        setLastId(id => r.data.at(-1)?.id || id);
+                        setRecords(recs =>
+                            [...recs, ...r.data].sort((a, b) => a[ord] < b[ord] ? -1 : a[ord] > b[ord] ? 1 : 0))
                         const serials = r.data.filter(r => (r.parameters || {})[props.settings.serial]).map(r => r.parameters)
-                        setSensors(sensors.map((s, i) => {
+                        setSensors(sens => sens.map((s, i) => {
                             const f = serials.filter(r => parseInt(`0x${r.ADDR.slice(1)}`) === i).at(-1)
                             return f ? {...s, serial: f[props.settings.serial]} : s
                         }))
-
                     }).catch(alert)
             }).catch(alert)
     }, [refresh])
@@ -90,16 +88,7 @@ export const OperationInfo = (props) => {
                         <Log {...props} records={records || []}/>
                     }
                     {!logView &&
-                        <div style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(5, 1fr)',
-                            gridTemplateRows: 'repeat(auto, 100px)',
-                            gap: '1rem'
-                        }}>
-                            {sensors && sensors.map((s, i) =>
-                                <Sensor key={i} addr={i} info={s || {}} settings={props.settings}/>
-                            )}
-                        </div>
+                        <Sensors sensors={sensors || []} settings={props.settings} style={props.style}/> 
                     }
                 </SmartScrollContent>
             </div>
