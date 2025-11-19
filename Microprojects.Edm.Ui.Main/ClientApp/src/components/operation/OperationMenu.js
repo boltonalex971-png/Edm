@@ -1,7 +1,5 @@
-import React, {useMemo, useRef} from 'react';
+import React, {useRef} from 'react';
 import {
-    Collapse,
-    Container,
     Navbar,
     NavbarBrand,
     NavbarToggler,
@@ -21,7 +19,7 @@ import {useEffect} from 'react';
 import {useGet} from '../hooks/hooks';
 import Axios from 'axios';
 import {utcDateToLocal} from "../utils/Utils";
-import api from "../api";
+import {useDialog} from "../hooks/dialogHooks";
 
 export function OperationMenu({process, to, ...props}) {
     const [collapsed, setCollapsed] = useState(true);
@@ -74,18 +72,16 @@ let timeout, interval;
 
 function OperationToolbar({operationId, apiBase, onStarted, onCompleted, onCancelled}) {
     const [refresh, setRefresh] = useState(false);
-    const [[status]] = useGet(`${apiBase}/${operationId}/status`, [refresh], 
+    const [[status]] = useGet(`${apiBase}/${operationId}/status`, [refresh],
         (data) => ({state: data.state, date: utcDateToLocal(data.stateTimestamp)}));
     const stopBtn = useRef(null);
     const startBtn = useRef(null);
     const copyBtn = useRef(null);
     const statusLbl = useRef(null);
     const startAtInput = useRef();
+    const {dialog, confirm, alert, warning} = useDialog()
 
-    //const state = status?.state //useMemo(() => status?.state, [status]);
-    //const date = utcDateToLocal(status?.stateTimestamp) //useMemo(() => utcDateToLocal(status?.stateTimestamp), [status]);
-
-    const copy = () => {
+    const copy = (event) => {
         copyBtn.current.element.setAttribute('disabled', 'disabled');
         statusLbl.current.textContent = 'Copying...';
         Axios.post(`${apiBase}/${operationId}`)
@@ -95,9 +91,10 @@ function OperationToolbar({operationId, apiBase, onStarted, onCompleted, onCance
             .catch((error) => {
                 copyBtn.current.element.removeAttribute('disabled');
                 statusLbl.current.textContent = 'Failed to copy';
+                alert({target: event.target, message: error.response?.data?.detail});
             });
     };
-    const start = () => {
+    const start = (event) => {
         const currentDate = new Date();
         const specifiedDate = startAtInput.current.value;
         const startAt = specifiedDate > currentDate ? specifiedDate : currentDate;
@@ -110,59 +107,70 @@ function OperationToolbar({operationId, apiBase, onStarted, onCompleted, onCance
             .catch((error) => {
                 startBtn.current.element.removeAttribute('disabled');
                 statusLbl.current.textContent = 'Faulted';
-                window.alert(error.response?.data?.detail);
+                alert({target: event.target, message: error.response?.data?.detail});
             });
     };
-    const stop = () => {
-        if (window.confirm('Confirm operation cancelling')) {
-            stopBtn.current.element.setAttribute('disabled', 'disabled');
-            statusLbl.current.textContent = 'Cancelling...';
+    const stop = (event) => warning({
+            target: event.target,
+            message: 'Cancel the operation?',
+            onConfirm: () => {
+                stopBtn.current.element.setAttribute('disabled', 'disabled');
+                statusLbl.current.textContent = 'Cancelling...';
+                Axios.post(`${apiBase}/${operationId}/stop`)
+                    .then((response) => {
+                        setRefresh(r => !r);
+                        onCancelled();
+                    })
+                    .catch((error) => alert({
+                        target: event.target,
+                        message: error.response?.data?.detail
+                    }))
+            }
+        })
 
-            Axios.post(`${apiBase}/${operationId}/stop`)
-                .then((response) => {
-                    setRefresh(r => !r);
-                    onCancelled();
-                })
-                .catch((error) => alert(error));
-        }
-    };
-    const complete = () => {
-        if (window.confirm('Confirm operation completing')) {
+const complete = (event) => confirm(
+    {
+        target: event.target,
+        message: 'Complete the operation?',
+        onConfirm: () => {
             stopBtn.current.element.setAttribute('disabled', 'disabled');
             statusLbl.current.textContent = 'Completing...';
-
             Axios.post(`${apiBase}/${operationId}/complete`)
                 .then((response) => {
                     setRefresh(r => !r);
                     onCompleted();
                 })
-                .catch((error) => alert(error));
+                .catch((error) => alert({
+                    target: event.target,
+                    message: error.response?.data?.detail
+                }));
         }
+    })
+const close = () => window.close()
+useEffect(() => {
+    if (!status) return
+    const finalize = () => {
+        clearInterval(interval);
+        clearTimeout(timeout);
     };
-    const close = () => window.close()
-    useEffect(() => {
-        if (!status) return 
-        const finalize = () => {
-            clearInterval(interval);
-            clearTimeout(timeout);
-        };
-        finalize();
-        if (status.state === 'Scheduled') {
-            timeout = setTimeout(() => setRefresh(r => !r), status.date - Date.now());
-        } else if (status.state === 'InProgress') {
-            onStarted();
-            interval = setInterval(() => setRefresh(r => !r), 2000);
-        } else if (status.state === 'Completed') {
-            onCompleted();
-        }
-        return finalize;
-    }, [status?.state]);
+    finalize();
+    if (status.state === 'Scheduled') {
+        timeout = setTimeout(() => setRefresh(r => !r), status.date - Date.now());
+    } else if (status.state === 'InProgress') {
+        onStarted();
+        interval = setInterval(() => setRefresh(r => !r), 2000);
+    } else if (status.state === 'Completed') {
+        onCompleted();
+    }
+    return finalize;
+}, [status?.state]);
 
-    return (
-        status &&
-        <div style={{display: 'flex', flexWrap: 'nowrap', alignItems: 'baseline'}}>
-            <form style={{display: 'flex', flexWrap: 'nowrap', alignItems: 'baseline'}}>
-                <Label>
+return (
+    status &&
+    <div style={{display: 'flex', flexWrap: 'nowrap', alignItems: 'baseline'}}>
+        {dialog}
+        <form style={{display: 'flex', flexWrap: 'nowrap', alignItems: 'baseline'}}>
+            <Label>
                     <span className='text-nowrap me-2'>
                         {status.state === 'Idle' && 'Start at '}
                         {status.state === 'Scheduled' && 'Will start at'}
@@ -171,42 +179,42 @@ function OperationToolbar({operationId, apiBase, onStarted, onCompleted, onCance
                         {status.state === 'Cancelled' && 'Cancelled at '}
                         {status.state === 'Faulted' && 'Checked at '}
                     </span>
-                </Label>
-                {status.state === 'Idle' &&
-                    <DateTimePicker
-                        ref={startAtInput}
-                        placeholder={'Now'}
-                        format={'dd MMMM HH:mm'}
-                    />
-                }
-                {!(status.state === 'Idle') &&
-                    <Input value={formatDate(new Date(status.date), 'dd MMMM HH:mm:ss')} disabled></Input>
-                }
-                <span ref={statusLbl} className='mx-2'>
+            </Label>
+            {status.state === 'Idle' &&
+                <DateTimePicker
+                    ref={startAtInput}
+                    placeholder={'Now'}
+                    format={'dd MMMM HH:mm'}
+                />
+            }
+            {!(status.state === 'Idle') &&
+                <Input value={formatDate(new Date(status.date), 'dd MMMM HH:mm:ss')} disabled></Input>
+            }
+            <span ref={statusLbl} className='mx-2'>
                     {status?.state}
                 </span>
-            </form>
-            <Button icon='play' ref={startBtn}
-                    hidden={!(status.state === 'Idle')}
-                    className='ms-2'
-                    onClick={start}>Start</Button>
-            <Button icon='stop' ref={stopBtn}
-                    hidden={status.state !== 'InProgress'}
-                    className='ms-2'
-                    onClick={stop}>Stop</Button>
-            <Button icon='copy' ref={copyBtn} id={status}
-                    hidden={status.state === 'InProgress'}
-                    className='ms-2'
-                    onClick={copy}>Copy</Button>
-            <Button icon='check' ref={stopBtn}
-                    hidden={!(status.state === 'Idle'|| status.state === 'Faulted')}
-                    className='ms-2'
-                    onClick={complete}>Complete</Button>
-            <Button icon='x'
-                    className='ms-2'
-                    title='Close the window'
-                    fillMode='flat'
-                    onClick={close}></Button>
-        </div>
-    );
+        </form>
+        <Button icon='play' ref={startBtn}
+                hidden={!(status.state === 'Idle')}
+                className='ms-2'
+                onClick={start}>Start</Button>
+        <Button icon='stop' ref={stopBtn}
+                hidden={status.state !== 'InProgress'}
+                className='ms-2'
+                onClick={stop}>Stop</Button>
+        <Button icon='copy' ref={copyBtn} id={status}
+                hidden={status.state === 'InProgress'}
+                className='ms-2'
+                onClick={copy}>Copy</Button>
+        <Button icon='check' ref={stopBtn}
+                hidden={!(status.state === 'Idle' || status.state === 'Faulted')}
+                className='ms-2'
+                onClick={complete}>Complete</Button>
+        <Button icon='x'
+                className='ms-2'
+                title='Close the window'
+                fillMode='flat'
+                onClick={close}></Button>
+    </div>
+);
 }

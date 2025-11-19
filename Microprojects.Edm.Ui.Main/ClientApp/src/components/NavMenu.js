@@ -21,9 +21,7 @@ export const NavMenu = (props) => {
                 // Reload to get correct data for the role
                 window.location.reload()
             })
-            .catch(r => alert(r))
-
-
+            .catch(r => alert(r.response?.data?.detail))
     return (
         <header>
             <Navbar className="navbar-expand-sm navbar-toggleable-sm border-bottom box-shadow mb-3" light>
