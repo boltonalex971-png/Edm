@@ -158,7 +158,7 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         public async Task<IEnumerable<OperationViewModel>> GetTodayOperations()
         {
             var ops = (await _operationService.Get(
-                o => o.Completed > DateTime.Today || o.Cancelled >  DateTime.Today,
+                o => o.Completed > DateTime.UtcNow.Date || o.Cancelled >  DateTime.UtcNow.Date,
                 o => o.WorkplaceProcess.Process)).ToList();
             var uncompleted = _mapper.Map<IEnumerable<OperationViewModel>>(ops);
             

@@ -16,19 +16,23 @@ const Operations = () => {
     const path = location.pathname.replace(`/${when}`, '');
     return (
         <div>
-            <Nav style={{ marginBottom: '0.5rem' }}>
+            <Nav style={{marginBottom: '0.5rem'}}>
                 <NavItem>
                     <NavLink tag={Link} to={`${path}/running`}>
-                        <span className={when === 'running' || !(when?.length) ? 'text-dark' : 'text-primary'}>&#9211; Running</span>
+                        <span className={when === 'running' || !(when?.length) ? 'text-dark' : 'text-primary'}>
+                            &#9211; Running
+                        </span>
                     </NavLink>
                 </NavItem>
                 <NavItem>
                     <NavLink tag={Link} to={`${path}/today`}>
-                        <span className={when === 'today' ? 'text-dark' : 'text-primary'}>&#9212; Today</span>
+                        <span className={when === 'today' ? 'text-dark' : 'text-primary'}>
+                            &#9212; Today
+                        </span>
                     </NavLink>
                 </NavItem>
             </Nav>
-            <OperationsWhen period={when ?? 'running'} />
+            <OperationsWhen period={when ?? 'running'}/>
         </div>
     )
 }
@@ -43,8 +47,13 @@ const OperationsWhen = ({period}) => {
     return (
         <>
             {!operations && <Loading/>}
-            {operations?.length === 0 && 
-                <p>No operation is running at this moment</p> 
+            {operations?.length === 0 &&
+                <p>
+                    {period === 'today' ?
+                        'No operation has been completed today' :
+                        'No operation is running at the moment'
+                    }
+                </p>
             }
             {operations &&
                 <CardDeck style={{display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '1rem'}}>
@@ -60,18 +69,25 @@ const OperationsWhen = ({period}) => {
                             <CardBody>
                                 <CardTitle><h5>{o.processName}</h5></CardTitle>
                                 <CardSubtitle>{o.processDescription}</CardSubtitle>
-                                <CardText>
+                                <CardText style={{display: 'flex', flexDirection: 'column'}}>
                                     <span title={dateToSpan(utcDateToLocal(o.created))}>
                                         Created {dateToHumanSpan(utcDateToLocal(o.created))}
-                                    </span><br/>
+                                    </span>
                                     {o.started &&
-                                        <span
-                                            title={dateToSpan(utcDateToLocal(o.started))}>Started {dateToHumanSpan(utcDateToLocal(o.started))}</span>
-                                    }<br/>
+                                        <span title={dateToSpan(utcDateToLocal(o.started))}>
+                                            Started {dateToHumanSpan(utcDateToLocal(o.started))}
+                                        </span>
+                                    }
                                     {o.completed &&
-                                        <span
-                                            title={dateToSpan(utcDateToLocal(o.completed))}>Completed {dateToHumanSpan(utcDateToLocal(o.completed))}</span>
-                                    }<br/>
+                                        <span title={dateToSpan(utcDateToLocal(o.completed))}>
+                                            Completed {dateToHumanSpan(utcDateToLocal(o.completed))}
+                                        </span>
+                                    }
+                                    {o.cancelled &&
+                                        <span title={dateToSpan(utcDateToLocal(o.cancelled))}>
+                                            Cancelled {dateToHumanSpan(utcDateToLocal(o.cancelled))}
+                                        </span>
+                                    }
                                 </CardText>
                             </CardBody>
                         </Card>
