@@ -98,12 +98,12 @@ namespace Optosense.Edm.Infrastructure.Edm
             });
 
             var response = await _jobs.Execute(job);
-            if (response.Status == "Ok" && Enum.TryParse(response.Message, out TaskStatus jobStatus))
+            if (response.Status == JobStatus.SUCCESS && Enum.TryParse(response.Message, out TaskStatus jobStatus))
             {
-                return jobStatus == TaskStatus.Running ||
-                       jobStatus == TaskStatus.WaitingForActivation ||
-                       jobStatus == TaskStatus.WaitingToRun ||
-                       jobStatus == TaskStatus.WaitingForChildrenToComplete;
+                return jobStatus is TaskStatus.Running 
+                    or TaskStatus.WaitingForActivation 
+                    or TaskStatus.WaitingToRun 
+                    or TaskStatus.WaitingForChildrenToComplete;
             }
 
             return false;

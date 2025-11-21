@@ -143,7 +143,7 @@ public class JobContainer : IJobContainer
 
         if (await job.InitAsync())
             return job;
-        
+
         throw new EdmException($"Cannot initialize the job {job.Name}");
     }
 
@@ -154,7 +154,7 @@ public class JobContainer : IJobContainer
     // }
 
     public Task<ResponseData> ExecuteAsync(IJob job) => RunLongTask(job);
-    
+
     public async Task<ResponseData> ExecuteAsync(JobData data)
     {
         try
@@ -190,7 +190,7 @@ public class JobContainer : IJobContainer
                 else
                 {
                     response.Message = $"Task not found. Parameters: {data.Params}";
-                    response.Status = JobStatus.FAILED;
+                    response.Status = JobStatus.NOT_FOUND;
                 }
             }
             else if (data.Job == "Check")
@@ -206,6 +206,7 @@ public class JobContainer : IJobContainer
                     // TODO keep finished tasks in the container before first check?
                     response.Message = TaskStatus.RanToCompletion.ToString();
                     response.Response = e.Message;
+                    response.Status = JobStatus.NOT_FOUND;
                 }
             }
             else
@@ -282,9 +283,9 @@ public class JobContainer : IJobContainer
                 job = await GetScopedJob(scope, jobType, parameters);
                 longTask.Job = job;
                 longTask.TokenSource = job.CancellationTokenSource;
-                semaphore.SetResult(new  ResponseData
+                semaphore.SetResult(new ResponseData
                 {
-                    Status = JobStatus.SUCCESS, 
+                    Status = JobStatus.SUCCESS,
                     Message = $"Job {jobType.GetJobName()} started"
                 });
             }
@@ -292,7 +293,7 @@ public class JobContainer : IJobContainer
             {
                 semaphore.SetResult(new ResponseData
                 {
-                    Status = JobStatus.FAILED, 
+                    Status = JobStatus.FAILED,
                     Message = e.GetMeaningfulMessage()
                 });
                 return;
@@ -356,7 +357,7 @@ public class JobContainer : IJobContainer
         RunningTasks[task.Id] = longTask;
         var response = new ResponseData
         {
-            Status = JobStatus.SUCCESS, 
+            Status = JobStatus.SUCCESS,
             Message = $"Job {job.Name} started",
             Response = JsonConvert.SerializeObject(task.Id)
         };
@@ -390,11 +391,14 @@ public class JobContainer : IJobContainer
             var job = RunningTasks.Values
                           .FirstOrDefault(t =>
                               jobName.ToString() == t.Job?.Name &&
-                              parameters.All(p =>
-                                  p.Key == "Job" ||
-                                  t.Job.GetParameters().ContainsKey(p.Key) &&
-                                  parameters[p.Key] == p.Value))
-                      ?? throw new EdmException(
+                              parameters
+                                  .Where(p => p.Key != "Job")
+                                  .All(p =>
+                                  {
+                                      var jobParams = t.Job.GetParameters();
+                                      return jobParams.ContainsKey(p.Key) && jobParams[p.Key].Equals(p.Value);
+                                  })) ?? 
+                      throw new EdmException(
                           $"Job, executing with parameters {JsonConvert.SerializeObject(parameters)} cannot be found");
             pid = job.Task.Id;
         }

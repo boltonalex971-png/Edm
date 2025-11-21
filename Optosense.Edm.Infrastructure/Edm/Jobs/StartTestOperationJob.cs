@@ -28,7 +28,7 @@ namespace Optosense.Edm.Jobs
         public override async Task<object> ExecuteAsync()
         {
             var now = DateTime.UtcNow;
-            var waitBeforeStart = now > Parameters.StartAt ? TimeSpan.Zero : Parameters.StartAt - now;
+            var waitBeforeStart = now > Parameters.StartAt ? TimeSpan.Zero : Parameters.StartAt!.Value - now;
             var cancelled = false;
             var opHostDeviceId = 0;
             using (var db = await ContextFactory.CreateDbContextAsync())

@@ -29,12 +29,16 @@ namespace Optosense.Edm.Jobs
         protected ILogger<StartOperationJob> Logger { get; init; }
         protected IServiceProvider ServiceProvider { get; init; }
         protected string ParametersChannel { get; set; }
-        
+
         private List<(string url, IJob job)> _devices = [];
         private List<IJob> _audits = [];
         private IJob _storageJob;
+        private DateTime _startTime;
 
-        public StartOperationJob() { }
+        public StartOperationJob()
+        {
+        }
+
         public StartOperationJob(
             IOperationService operationService,
             IProfileService profileService,
@@ -48,7 +52,7 @@ namespace Optosense.Edm.Jobs
             JobManager = container;
             Intercom = intercom;
             Logger = logger;
-            ServiceProvider = serviceProvider; 
+            ServiceProvider = serviceProvider;
         }
 
         public override async Task<bool> InitAsync()
@@ -57,9 +61,9 @@ namespace Optosense.Edm.Jobs
             // TODO Move all device initializations to Init() method, run jobs from here.
             //      RemoteJobs service must implement separate methods: first for create and init job, second must launch it
             // TODO Make delay value configurable
-            var startTime = DateTime.UtcNow.AddSeconds(1); // 1 seconds should be enough to init all devices before start
-            startTime = startTime > Parameters.StartAt ? startTime : Parameters.StartAt;
-            Parameters.StartAt = startTime; // Renew operation start time (useless?? check)
+            var startTime =
+                DateTime.UtcNow.AddSeconds(1); // 1 seconds should be enough to init all devices before start
+            _startTime = startTime > Parameters.StartAt ? startTime : Parameters.StartAt!.Value;
             // Prepare execution result storage
             var storeChannel = $"Operation-{Parameters.Operation}";
             var auditChannel = $"{storeChannel}-audit";
@@ -72,7 +76,7 @@ namespace Optosense.Edm.Jobs
                 ParametersChannel = ParametersChannel
             };
             _storageJob = await JobManager.GetJobAsync<StoreOperationRecordsJob>(ServiceScope, storeJobParameters);
-            
+
             // Prepare devices
             var devices = await OperationService.GetOperationDevices(Parameters.Operation);
 
@@ -93,12 +97,14 @@ namespace Optosense.Edm.Jobs
                         ParametersChannel = ParametersChannel,
                         StartAt = startTime
                     };
-                    var auditJob = await JobManager.GetJobAsync<StartAuditJob>(ServiceScope, auditParams); 
+                    var auditJob = await JobManager.GetJobAsync<StartAuditJob>(ServiceScope, auditParams);
                     _audits.Add(auditJob);
                 }
 
                 // Launch devices
-                var driverOptions = JsonConvert.DeserializeObject<ExpandoObject>(operationHostDevice.HostDevice.Device.Parameters ?? "{}");
+                var driverOptions =
+                    JsonConvert.DeserializeObject<ExpandoObject>(
+                        operationHostDevice.HostDevice.Device.Parameters ?? "{}");
                 JsonConvert.PopulateObject(operationHostDevice.HostDevice.Parameters ?? "{}", driverOptions);
                 JsonConvert.PopulateObject(operationHostDevice.Options ?? "{}", driverOptions);
                 var deviceParams = new StartDeviceJobParameters
@@ -136,18 +142,19 @@ namespace Optosense.Edm.Jobs
             {
                 await JobManager.ExecuteAsync(audit);
             }
-            
+
             await JobManager.ExecuteAsync(_storageJob);
-            
+
             var operation = await OperationService.Get(Parameters.Operation);
-            var delay = Parameters.StartAt - DateTime.UtcNow;
+            var delay = _startTime - DateTime.UtcNow;
             if (delay.TotalMilliseconds > 0)
             {
                 await Task.Delay(delay);
             }
-            
-            Logger.LogDebug("Operation starts propagate parameters at {Time}", DateTime.UtcNow.ToString("hh:mm:ss.fff"));
-            
+
+            Logger.LogDebug("Operation starts propagate parameters at {Time}",
+                DateTime.UtcNow.ToString("hh:mm:ss.fff"));
+
             // Push operation input parameters
             foreach (var p in JsonConvert.DeserializeObject<Dictionary<string, object>>(
                          operation.Parameters ?? "{}"))
@@ -173,22 +180,24 @@ namespace Optosense.Edm.Jobs
                     var response = await check.Execute(url, parameter)
                         .ContinueWith(t =>
                         {
-                            if (t.Status == TaskStatus.Faulted)
-                            {
-                                Logger.LogWarning("Operation {Id} {OpName} cannot check child job {Job} on {host}.\n{Error}", 
-                                    operation.Id, operation.Name, job.Name, url, t.Exception.GetMeaningfulMessage() );
-                                return new JobResponse { Status = "Faulted", Message = t.Exception.GetMeaningfulMessage() };
-                            }
+                            if (t.Status != TaskStatus.Faulted) return t.Result;
+                            
+                            Logger.LogWarning(
+                                "Operation {Id} {OpName} cannot check child job {Job} on {host}.\n{Error}",
+                                operation.Id, operation.Name, job.Name, url, t.Exception.GetMeaningfulMessage());
+                            return new JobResponse
+                                { Status = "Faulted", Message = t.Exception.GetMeaningfulMessage() };
 
-                            return t.Result;
                         });
-                    if (response.Status != "Ok" || !Enum.TryParse(response.Message, out TaskStatus jobStatus)) 
+                    if (response.Status == JobStatus.FAILED)
                         continue;
-                    
-                    if (jobStatus is TaskStatus.Running 
-                        or TaskStatus.WaitingForActivation 
-                        or TaskStatus.WaitingToRun 
-                        or TaskStatus.WaitingForChildrenToComplete)
+
+                    if (response.Status == JobStatus.SUCCESS && 
+                        Enum.TryParse(response.Message, out TaskStatus jobStatus) && 
+                        jobStatus is TaskStatus.Running
+                            or TaskStatus.WaitingForActivation
+                            or TaskStatus.WaitingToRun
+                            or TaskStatus.WaitingForChildrenToComplete)
                     {
                         continue;
                     }
@@ -217,11 +226,7 @@ namespace Optosense.Edm.Jobs
 
     public class StartOperationJobParameters : IJobParameters
     {
-        [JobParameter(Required = true)]
-        public int Operation { get; set; }
-        public DateTime StartAt { get; set; } = DateTime.UtcNow.AddSeconds(5);
+        [JobParameter(Required = true)] public int Operation { get; set; }
+        public DateTime? StartAt { get; set; }
     }
-
 }
-
-
