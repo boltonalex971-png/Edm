@@ -4,6 +4,7 @@ using Optosense.Edm.Domain.Models;
 using Optosense.Edm.Plugins;
 using System.Collections.Generic;
 using System.Linq;
+using Optosense.Edm.Core.Models;
 
 namespace Microprojects.Edm.Ui.Main.Models
 {
@@ -18,14 +19,18 @@ namespace Microprojects.Edm.Ui.Main.Models
                 .ForMember(d => d.DeviceId, o => o.MapFrom(s => s.HostDevice.DeviceId))
                 .ForMember(d => d.Device, o => o.MapFrom(s => s.HostDevice.Device.Name))
                 .ForMember(d => d.DriverGuid, o => o.MapFrom(s => s.HostDevice.Device.DriverGuid))
-                .ForMember(d => d.DriverName, o => o.MapFrom(
-                    (s, d, m, c) => (c.State as IPluginContainer)?.GetDriver(s.HostDevice.Device.DriverGuid)?.Name))
-                .ForMember(d => d.DriverHomepage, o => o.MapFrom(
-                    (s, d, m, c) => (c.State as IPluginContainer)?.GetDriver(s.HostDevice.Device.DriverGuid)?.Homepage))
-                .ForMember(d => d.ProfilerName, o => o.MapFrom(
-                    (s, d, m, c) => (c.State as IPluginContainer)?.GetProfileByDriver(s.HostDevice.Device.DriverGuid)?.Name))
-                .ForMember(d => d.ProfilerGuid, o => o.MapFrom(
-                    (s, d, m, c) => (c.State as IPluginContainer)?.GetDriver(s.HostDevice.Device.DriverGuid)?.ProfileGuid));
+                .ForMember(d => d.DriverName,
+                    o => o.MapFrom((s, d, m, c) =>
+                        (c.State as IPluginContainer)?.GetDriver(s.HostDevice.Device.DriverGuid)?.Name))
+                .ForMember(d => d.DriverHomepage,
+                    o => o.MapFrom((s, d, m, c) =>
+                        (c.State as IPluginContainer)?.GetDriver(s.HostDevice.Device.DriverGuid)?.Homepage))
+                .ForMember(d => d.ProfilerName,
+                    o => o.MapFrom((s, d, m, c) =>
+                        (c.State as IPluginContainer)?.GetProfileByDriver(s.HostDevice.Device.DriverGuid)?.Name))
+                .ForMember(d => d.ProfilerGuid,
+                    o => o.MapFrom((s, d, m, c) =>
+                        (c.State as IPluginContainer)?.GetDriver(s.HostDevice.Device.DriverGuid)?.ProfileGuid));
             CreateMap<WorkplaceHostDeviceModel, WorkplaceHostDevice>()
                 .ForMember(d => d.Workplace, o => o.Ignore())
                 .ForMember(d => d.HostDevice, o => o.Ignore());
@@ -42,26 +47,29 @@ namespace Microprojects.Edm.Ui.Main.Models
             CreateMap<Process, ProcessViewModel>()
                 .ForMember(d => d.Message,
                     o => o.MapFrom(s => JsonConvert.SerializeObject(s.Profiles
-                            .SelectMany(p => JsonConvert.DeserializeObject<string[]>(p.Input ?? "[]"))
-                            .Distinct()
-                            .Except(s.Profiles
-                                .SelectMany(p => JsonConvert.DeserializeObject<string[]>(p.Output ?? "[]"))
-                                .Distinct())
-                            )));
+                        .SelectMany(p => JsonConvert.DeserializeObject<string[]>(p.Input ?? "[]"))
+                        .Distinct()
+                        .Except(s.Profiles
+                            .SelectMany(p => JsonConvert.DeserializeObject<string[]>(p.Output ?? "[]"))
+                            .Distinct())
+                    )));
 
             CreateMap<Qualifier, QualifierViewModel>();
             CreateMap<QualifierViewModel, Qualifier>();
 
             CreateMap<HostDevice, HostDeviceModel>()
                 .ForMember(d => d.DriverGuid, o => o.MapFrom(s => s.Device.DriverGuid))
-                .ForMember(d => d.DriverName, o => o.MapFrom(
-                    (s, d, m, c) => (c.State as IPluginContainer)?.GetDriver(s.Device.DriverGuid)?.Name))
-                .ForMember(d => d.DriverHomepage, o => o.MapFrom(
-                    (s, d, m, c) => (c.State as IPluginContainer)?.GetDriver(s.Device.DriverGuid)?.Homepage))
-                .ForMember(d => d.ProfilerName, o => o.MapFrom(
-                    (s, d, m, c) => (c.State as IPluginContainer)?.GetProfileByDriver(s.Device.DriverGuid)))
-                .ForMember(d => d.ProfilerGuid, o => o.MapFrom(
-                    (s, d, m, c) => (c.State as IPluginContainer)?.GetDriver(s.Device.DriverGuid)?.ProfileGuid));
+                .ForMember(d => d.DriverName,
+                    o => o.MapFrom((s, d, m, c) => (c.State as IPluginContainer)?.GetDriver(s.Device.DriverGuid)?.Name))
+                .ForMember(d => d.DriverHomepage,
+                    o => o.MapFrom((s, d, m, c) =>
+                        (c.State as IPluginContainer)?.GetDriver(s.Device.DriverGuid)?.Homepage))
+                .ForMember(d => d.ProfilerName,
+                    o => o.MapFrom((s, d, m, c) =>
+                        (c.State as IPluginContainer)?.GetProfileByDriver(s.Device.DriverGuid)))
+                .ForMember(d => d.ProfilerGuid,
+                    o => o.MapFrom((s, d, m, c) =>
+                        (c.State as IPluginContainer)?.GetDriver(s.Device.DriverGuid)?.ProfileGuid));
             CreateMap<HostDeviceModel, HostDevice>();
             //.ForMember(d => d.Host, o => o.Ignore());
 
@@ -69,9 +77,12 @@ namespace Microprojects.Edm.Ui.Main.Models
             CreateMap<Host, IdNameModel>();
 
             CreateMap<Operation, OperationViewModel>()
+                .ForMember(d => d.State, o => o.MapFrom(s =>
+                    s.Cancelled != null ? OperationState.Cancelled :
+                    s.Completed != null ? OperationState.Completed :
+                    s.Started == null ? OperationState.Idle : OperationState.InProgress))
                 .ForMember(d => d.ProcessId, o => o.MapFrom(s => s.WorkplaceProcess.ProcessId))
-                .ForMember(d => d.ProcessName, o => o.MapFrom(s => s.WorkplaceProcess.Process.Name))
-                .ForMember(d => d.State, o => o.Ignore());
+                .ForMember(d => d.ProcessName, o => o.MapFrom(s => s.WorkplaceProcess.Process.Name));
 
             CreateMap<OperationCriterion, OperationCriterionModel>();
 

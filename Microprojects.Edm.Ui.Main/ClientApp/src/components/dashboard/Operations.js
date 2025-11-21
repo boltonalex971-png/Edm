@@ -1,45 +1,85 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
     Card, CardTitle, CardText, CardDeck,
-    CardSubtitle, CardBody
+    CardSubtitle, CardBody, Nav, NavItem, NavLink, NavbarBrand
 } from 'reactstrap';
 import api from '../api';
-import { useGet } from '../hooks/hooks';
+import {useGet} from '../hooks/hooks';
 import {Loading, dateToSpan, dateToHumanSpan, utcDateToLocal} from '../utils/Utils';
-import { Link } from 'react-router-dom';
-import Axios from 'axios';
+import {NavLink as Link, Route, Switch, useParams, useRouteMatch, useLocation} from "react-router-dom";
 
 let interval;
 
 const Operations = () => {
+    const [period, setPeriod] = useState('running');
+    let location = useLocation();
+    let {when} = useParams();
+    const path = location.pathname.replace(`/${when}`, '');
+    return (
+        <div>
+            <Nav style={{ marginBottom: '0.5rem' }}>
+                <NavItem>
+                    <NavLink tag={Link} to={`${path}/running`}>
+                        <span className={when === 'running' ?'text-dark' : 'text-primary'}>&#9211; Running</span>
+                    </NavLink>
+                </NavItem>
+                <NavItem>
+                    <NavLink tag={Link} to={`${path}/today`}>
+                        <span className={when === 'today' ? 'text-dark' : 'text-primary'}>&#9212; Today</span>
+                    </NavLink>
+                </NavItem>
+            </Nav>
+            <Switch>
+                <Route path={`${path}/running`}>
+                    <OperationsWhen period={'running'}/>
+                </Route>
+                <Route path={`${path}/today`}>
+                    <OperationsWhen period={'today'}/>
+                </Route>
+            </Switch>
+        </div>
+    )
+}
+
+const OperationsWhen = ({period}) => {
     const [time, setTime] = useState();
-    const [[operations]] = useGet(`${api.operations}/running`, [time]);
+    const [[operations]] = useGet(`${api.operations}/${period}`, [time, period]);
     useEffect(() => {
         interval = setInterval(() => setTime(Date.now), 10000);
         return () => clearInterval(interval);
     }, []);
     return (
         <>
-            {!operations && <Loading />}
+            {!operations && <Loading/>}
+            {operations?.length === 0 && 
+                <p>No operation is running at this moment</p> 
+            }
             {operations &&
-                <CardDeck style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '1rem' }}>
+                <CardDeck style={{display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '1rem'}}>
                     {operations.map((o) =>
-                        <Card key={o.id} onClick={() => window.open(`/operations/${o.id}`, '_blank')} style={{cursor: 'pointer'}} 
-                              className={'bg-gradient ' + (o.state === 'Faulted' ? 'bg-danger text-light' : o.state === 'Idle' ? 'bg-warning text-dark' : o.state === 'InProgress' ? 'bg-success text-light' : 'bg-white text-dark') }
-                        > 
+                        <Card key={o.id} onClick={() => window.open(`/operations/${o.id}`, '_blank')}
+                              style={{cursor: 'pointer'}}
+                              className={'bg-gradient ' + (
+                                  o.state === 'Faulted' ? 'bg-danger text-light' :
+                                      o.state === 'Idle' ? 'bg-warning text-dark' :
+                                          o.state === 'InProgress' ? 'bg-success text-light' :
+                                              'bg-light text-dark')}
+                        >
                             <CardBody>
                                 <CardTitle><h5>{o.processName}</h5></CardTitle>
                                 <CardSubtitle>{o.processDescription}</CardSubtitle>
                                 <CardText>
                                     <span title={dateToSpan(utcDateToLocal(o.created))}>
                                         Created {dateToHumanSpan(utcDateToLocal(o.created))}
-                                    </span><br />
+                                    </span><br/>
                                     {o.started &&
-                                        <span title={dateToSpan(utcDateToLocal(o.started))}>Started {dateToHumanSpan(utcDateToLocal(o.started))}</span>
-                                    }<br />
+                                        <span
+                                            title={dateToSpan(utcDateToLocal(o.started))}>Started {dateToHumanSpan(utcDateToLocal(o.started))}</span>
+                                    }<br/>
                                     {o.completed &&
-                                        <span title={dateToSpan(utcDateToLocal(o.completed))}>Completed {dateToHumanSpan(utcDateToLocal(o.completed))}</span>
-                                    }<br />
+                                        <span
+                                            title={dateToSpan(utcDateToLocal(o.completed))}>Completed {dateToHumanSpan(utcDateToLocal(o.completed))}</span>
+                                    }<br/>
                                 </CardText>
                             </CardBody>
                         </Card>

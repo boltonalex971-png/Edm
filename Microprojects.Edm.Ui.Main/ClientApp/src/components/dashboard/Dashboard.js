@@ -22,7 +22,7 @@ export function Dashboard() {
                     <Route exact path={path}>
                         <p>Select one of the options above</p>
                     </Route>
-                    <Route path={`${path}/operations`}>
+                    <Route path={`${path}/operations/:when`}>
                         <Operations />
                     </Route>
                     <Route path={`${path}/workplaces`}>

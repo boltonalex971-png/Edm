@@ -142,15 +142,25 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         [HttpGet("running")]
         public async Task<IEnumerable<OperationViewModel>> GetRunningOperations()
         {
-            var ops = (await _operationService.Get(
+            var ops = await _operationService.Get(
                 o => o.Completed == null && o.Cancelled == null,
+                o => o.WorkplaceProcess.Process);
+            var uncompleted = _mapper.Map<IEnumerable<OperationViewModel>>(ops);
+            foreach (var op in uncompleted.Where(o => o.State == OperationState.InProgress))
+            {
+                op.State = (await _operationService.GetStatus(ops.First(o => o.Id == op.Id))).State;
+            }
+            
+            return uncompleted.OrderByDescending(o => o.Created);
+        }
+
+        [HttpGet("today")]
+        public async Task<IEnumerable<OperationViewModel>> GetTodayOperations()
+        {
+            var ops = (await _operationService.Get(
+                o => o.Completed > DateTime.Today || o.Cancelled >  DateTime.Today,
                 o => o.WorkplaceProcess.Process)).ToList();
             var uncompleted = _mapper.Map<IEnumerable<OperationViewModel>>(ops);
-            foreach (var op in uncompleted)
-            {
-                var status = await _operationService.GetStatus(ops.First(o => o.Id == op.Id));
-                op.State = status.State;
-            }
             
             return uncompleted.OrderByDescending(o => o.Created);
         }
