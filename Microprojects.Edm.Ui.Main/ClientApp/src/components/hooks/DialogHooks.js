@@ -37,7 +37,7 @@ function Dialog(props) {
             }}
             onClose={() => props.close()}
         >
-            <p style={{padding: '2rem', textAlign: 'center'}} className={color}>
+            <p style={{padding: '2rem', textAlign: 'center'}} className={'bg-gradient ' + color}>
                 {props.message}
             </p>
             <DialogActionsBar layout={'center'}>

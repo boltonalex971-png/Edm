@@ -24,9 +24,11 @@ const Operations = () => {
             {operations &&
                 <CardDeck style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '1rem' }}>
                     {operations.map((o) =>
-                        <Card key={o.id}>
+                        <Card key={o.id} onClick={() => window.open(`/operations/${o.id}`, '_blank')} style={{cursor: 'pointer'}} 
+                              className={'bg-gradient ' + (o.state === 'Faulted' ? 'bg-danger text-light' : o.state === 'Idle' ? 'bg-warning text-dark' : o.state === 'InProgress' ? 'bg-success text-light' : 'bg-white text-dark') }
+                        > 
                             <CardBody>
-                                <CardTitle><Link to={`/operations/${o.id}`} target='_blank'><h5>{o.processName}</h5></Link></CardTitle>
+                                <CardTitle><h5>{o.processName}</h5></CardTitle>
                                 <CardSubtitle>{o.processDescription}</CardSubtitle>
                                 <CardText>
                                     <span title={dateToSpan(utcDateToLocal(o.created))}>

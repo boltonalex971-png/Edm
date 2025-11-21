@@ -142,10 +142,17 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         [HttpGet("running")]
         public async Task<IEnumerable<OperationViewModel>> GetRunningOperations()
         {
-            var ops = await _operationService.Get(
+            var ops = (await _operationService.Get(
                 o => o.Completed == null && o.Cancelled == null,
-                o => o.WorkplaceProcess.Process);
-            return _mapper.Map<IEnumerable<OperationViewModel>>(ops).OrderByDescending(o => o.Created);
+                o => o.WorkplaceProcess.Process)).ToList();
+            var uncompleted = _mapper.Map<IEnumerable<OperationViewModel>>(ops);
+            foreach (var op in uncompleted)
+            {
+                var status = await _operationService.GetStatus(ops.First(o => o.Id == op.Id));
+                op.State = status.State;
+            }
+            
+            return uncompleted.OrderByDescending(o => o.Created);
         }
 
         [HttpGet("{operationId:int}/records")]

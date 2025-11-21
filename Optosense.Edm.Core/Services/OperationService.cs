@@ -167,7 +167,7 @@ namespace Optosense.Edm.Core.Services
             return await GetStatus(operation);
         }
 
-        protected async Task<OperationStatus> GetStatus(Operation operation)
+        public async Task<OperationStatus> GetStatus(Operation operation)
         {
             var status = new OperationStatus
             {

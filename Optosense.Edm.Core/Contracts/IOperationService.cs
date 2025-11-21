@@ -23,5 +23,6 @@ namespace Optosense.Edm.Core.Contracts
         Task<Operation> StopOperation(int operationId);
         Task<Operation> CompleteOperation(int operationId);
         Task<Operation> Copy(int id);
+        Task <OperationStatus> GetStatus(Operation operation);
     }
 }

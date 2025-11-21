@@ -70,7 +70,8 @@ namespace Microprojects.Edm.Ui.Main.Models
 
             CreateMap<Operation, OperationViewModel>()
                 .ForMember(d => d.ProcessId, o => o.MapFrom(s => s.WorkplaceProcess.ProcessId))
-                .ForMember(d => d.ProcessName, o => o.MapFrom(s => s.WorkplaceProcess.Process.Name));
+                .ForMember(d => d.ProcessName, o => o.MapFrom(s => s.WorkplaceProcess.Process.Name))
+                .ForMember(d => d.State, o => o.Ignore());
 
             CreateMap<OperationCriterion, OperationCriterionModel>();
 

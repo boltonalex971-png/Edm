@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Optosense.Edm.Core.Models;
 
 namespace Microprojects.Edm.Ui.Main.Models
 {
@@ -18,5 +19,6 @@ namespace Microprojects.Edm.Ui.Main.Models
         public DateTime? Started { get; set; }
         public DateTime? Completed { get; set; }
         public string Parameters { get; set; }
+        public OperationState State { get; set; }
     }
 }

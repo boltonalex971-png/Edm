@@ -19,7 +19,7 @@ import {useEffect} from 'react';
 import {useGet} from '../hooks/hooks';
 import Axios from 'axios';
 import {utcDateToLocal} from "../utils/Utils";
-import {useDialog} from "../hooks/dialogHooks";
+import {useDialog} from "../hooks/DialogHooks";
 
 export function OperationMenu({process, to, ...props}) {
     const [collapsed, setCollapsed] = useState(true);
