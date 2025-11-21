@@ -6,12 +6,11 @@ import {
 import api from '../api';
 import {useGet} from '../hooks/hooks';
 import {Loading, dateToSpan, dateToHumanSpan, utcDateToLocal} from '../utils/Utils';
-import {NavLink as Link, Route, Switch, useParams, useRouteMatch, useLocation} from "react-router-dom";
+import {NavLink as Link, useParams, useLocation} from "react-router-dom";
 
 let interval;
 
 const Operations = () => {
-    const [period, setPeriod] = useState('running');
     let location = useLocation();
     let {when} = useParams();
     const path = location.pathname.replace(`/${when}`, '');
@@ -20,7 +19,7 @@ const Operations = () => {
             <Nav style={{ marginBottom: '0.5rem' }}>
                 <NavItem>
                     <NavLink tag={Link} to={`${path}/running`}>
-                        <span className={when === 'running' ?'text-dark' : 'text-primary'}>&#9211; Running</span>
+                        <span className={when === 'running' || !(when?.length) ? 'text-dark' : 'text-primary'}>&#9211; Running</span>
                     </NavLink>
                 </NavItem>
                 <NavItem>
@@ -29,14 +28,7 @@ const Operations = () => {
                     </NavLink>
                 </NavItem>
             </Nav>
-            <Switch>
-                <Route path={`${path}/running`}>
-                    <OperationsWhen period={'running'}/>
-                </Route>
-                <Route path={`${path}/today`}>
-                    <OperationsWhen period={'today'}/>
-                </Route>
-            </Switch>
+            <OperationsWhen period={when ?? 'running'} />
         </div>
     )
 }
