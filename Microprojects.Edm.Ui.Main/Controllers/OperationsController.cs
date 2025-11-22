@@ -158,7 +158,18 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         public async Task<IEnumerable<OperationViewModel>> GetTodayOperations()
         {
             var ops = (await _operationService.Get(
-                o => o.Completed > DateTime.UtcNow.Date || o.Cancelled >  DateTime.UtcNow.Date,
+                o => o.Completed > DateTime.UtcNow.Date || o.Cancelled > DateTime.UtcNow.Date,
+                o => o.WorkplaceProcess.Process)).ToList();
+            var uncompleted = _mapper.Map<IEnumerable<OperationViewModel>>(ops);
+            
+            return uncompleted.OrderByDescending(o => o.Created);
+        }
+
+        [HttpGet("week")]
+        public async Task<IEnumerable<OperationViewModel>> GetWeekOperations()
+        {
+            var ops = (await _operationService.Get(
+                o => o.Completed > DateTime.UtcNow.Date.AddDays(-6) || o.Cancelled >  DateTime.UtcNow.Date.AddDays(-6),
                 o => o.WorkplaceProcess.Process)).ToList();
             var uncompleted = _mapper.Map<IEnumerable<OperationViewModel>>(ops);
             

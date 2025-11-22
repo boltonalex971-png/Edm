@@ -27,7 +27,14 @@ const Operations = () => {
                 <NavItem>
                     <NavLink tag={Link} to={`${path}/today`}>
                         <span className={when === 'today' ? 'text-dark' : 'text-primary'}>
-                            &#9212; Today
+                            &#9312; Today
+                        </span>
+                    </NavLink>
+                </NavItem>
+                <NavItem>
+                    <NavLink tag={Link} to={`${path}/week`}>
+                        <span className={when === 'week' ? 'text-dark' : 'text-primary'}>
+                            &#9318; Week
                         </span>
                     </NavLink>
                 </NavItem>
@@ -67,7 +74,10 @@ const OperationsWhen = ({period}) => {
                                               'bg-light text-dark')}
                         >
                             <CardBody>
-                                <CardTitle><h5>{o.processName}</h5></CardTitle>
+                                <CardTitle>
+                                    <span style={{fontSize: 'smaller'}}>{o.id}</span>
+                                    <h5>{o.processName}</h5>
+                                </CardTitle>
                                 <CardSubtitle>{o.processDescription}</CardSubtitle>
                                 <CardText style={{display: 'flex', flexDirection: 'column'}}>
                                     <span title={dateToSpan(utcDateToLocal(o.created))}>
