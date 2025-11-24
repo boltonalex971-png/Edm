@@ -15,79 +15,37 @@
     {
         "Entry"
         {
-        "MsmKey" = "8:_1B12C2D465E83093B57A5329FA640551"
-        "OwnerKey" = "8:_3E0247198B08ABF31BDC712628ECE8C3"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_1B12C2D465E83093B57A5329FA640551"
-        "OwnerKey" = "8:_E4F5703BD7A246A1A451936EFFD2EB7E"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_1B12C2D465E83093B57A5329FA640551"
-        "OwnerKey" = "8:_45C855C4E459FA376B2BD4CF642A5284"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_1B12C2D465E83093B57A5329FA640551"
-        "OwnerKey" = "8:_3AA6D14B9E3E43EBA540759DB2E76F53"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_2B5427774F3C40FAB0429DAB4784187A"
+        "MsmKey" = "8:_012A26D5E241432D90283C4746228809"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_3AA6D14B9E3E43EBA540759DB2E76F53"
+        "MsmKey" = "8:_20601409E3A0473CAA26DA12D0886EDA"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_3E0247198B08ABF31BDC712628ECE8C3"
-        "OwnerKey" = "8:_3AA6D14B9E3E43EBA540759DB2E76F53"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_3E0247198B08ABF31BDC712628ECE8C3"
-        "OwnerKey" = "8:_EB48077AD75D4B31A5FE71BF65197108"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_414DC650980E40EE9DFDD55B313A0646"
+        "MsmKey" = "8:_2761540854B34F3A855A9CCC770CFC1E"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_45C855C4E459FA376B2BD4CF642A5284"
-        "OwnerKey" = "8:_3AA6D14B9E3E43EBA540759DB2E76F53"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_49EC7734E13541D7B3959C7AEE4E8901"
+        "MsmKey" = "8:_3B66ADF4D6C74F2CBEDDAFF070A5CF8F"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_4D6E12EB8FDB494B9824E2679157FC21"
+        "MsmKey" = "8:_48115BB3E9374F259480F84A63A14BD2"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_6D811CC4C2EF47EA9DDA1F3EE6A53869"
+        "MsmKey" = "8:_63F237870A9C4C489B4FABD54952257C"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -99,26 +57,20 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_7ADF7070F2AF27667A1892FA209ADEF2"
-        "OwnerKey" = "8:_1B12C2D465E83093B57A5329FA640551"
+        "MsmKey" = "8:_80831C912AA02F312845F283ED7E4099"
+        "OwnerKey" = "8:_2761540854B34F3A855A9CCC770CFC1E"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_7ADF7070F2AF27667A1892FA209ADEF2"
-        "OwnerKey" = "8:_E4F5703BD7A246A1A451936EFFD2EB7E"
+        "MsmKey" = "8:_80831C912AA02F312845F283ED7E4099"
+        "OwnerKey" = "8:_DD150EF497155A37EA51C63F254DEC23"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_7ADF7070F2AF27667A1892FA209ADEF2"
-        "OwnerKey" = "8:_45C855C4E459FA376B2BD4CF642A5284"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_7ADF7070F2AF27667A1892FA209ADEF2"
-        "OwnerKey" = "8:_3AA6D14B9E3E43EBA540759DB2E76F53"
+        "MsmKey" = "8:_80831C912AA02F312845F283ED7E4099"
+        "OwnerKey" = "8:_A7EAE4D95410E4C69BD856ECB8423A0C"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -129,20 +81,158 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_8881E31E440D056CCF547448A7ACF397"
+        "OwnerKey" = "8:_DD150EF497155A37EA51C63F254DEC23"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_8881E31E440D056CCF547448A7ACF397"
+        "OwnerKey" = "8:_48115BB3E9374F259480F84A63A14BD2"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_8881E31E440D056CCF547448A7ACF397"
+        "OwnerKey" = "8:_A7EAE4D95410E4C69BD856ECB8423A0C"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_8881E31E440D056CCF547448A7ACF397"
+        "OwnerKey" = "8:_3B66ADF4D6C74F2CBEDDAFF070A5CF8F"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_9D2FEA08D79A4B7CA2F5CAD216FBAE11"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_A2B7EE2CEE7C42E4853F013D2C2B8416"
+        "MsmKey" = "8:_A2759FB1B7464D3990F485DB4345D59C"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_B0E3A0C1C0874B9F84A61431257C71B2"
+        "MsmKey" = "8:_A519D093F8CE40382E4A7954CAB18702"
+        "OwnerKey" = "8:_8881E31E440D056CCF547448A7ACF397"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_A519D093F8CE40382E4A7954CAB18702"
+        "OwnerKey" = "8:_48115BB3E9374F259480F84A63A14BD2"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_A519D093F8CE40382E4A7954CAB18702"
+        "OwnerKey" = "8:_A7EAE4D95410E4C69BD856ECB8423A0C"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_A519D093F8CE40382E4A7954CAB18702"
+        "OwnerKey" = "8:_3B66ADF4D6C74F2CBEDDAFF070A5CF8F"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_A7EAE4D95410E4C69BD856ECB8423A0C"
+        "OwnerKey" = "8:_3B66ADF4D6C74F2CBEDDAFF070A5CF8F"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_AA00FCD1CD1E4632A87C731FAE5E96D3"
         "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_B5469623A3F4D72AEB334E557B0CAEC0"
+        "OwnerKey" = "8:_012A26D5E241432D90283C4746228809"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_B5469623A3F4D72AEB334E557B0CAEC0"
+        "OwnerKey" = "8:_DD150EF497155A37EA51C63F254DEC23"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_B5469623A3F4D72AEB334E557B0CAEC0"
+        "OwnerKey" = "8:_C36F7BD51A1E424086E1F8A45663E6A9"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_B5469623A3F4D72AEB334E557B0CAEC0"
+        "OwnerKey" = "8:_C00660176293443CBB97D73B2EF0804B"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_B5469623A3F4D72AEB334E557B0CAEC0"
+        "OwnerKey" = "8:_B7BF6F14322C4A1583BC0D17D8C5AA7A"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_B5469623A3F4D72AEB334E557B0CAEC0"
+        "OwnerKey" = "8:_AA00FCD1CD1E4632A87C731FAE5E96D3"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_B5469623A3F4D72AEB334E557B0CAEC0"
+        "OwnerKey" = "8:_A7EAE4D95410E4C69BD856ECB8423A0C"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_B5469623A3F4D72AEB334E557B0CAEC0"
+        "OwnerKey" = "8:_A2759FB1B7464D3990F485DB4345D59C"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_B5469623A3F4D72AEB334E557B0CAEC0"
+        "OwnerKey" = "8:_8881E31E440D056CCF547448A7ACF397"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_B5469623A3F4D72AEB334E557B0CAEC0"
+        "OwnerKey" = "8:_80831C912AA02F312845F283ED7E4099"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_B5469623A3F4D72AEB334E557B0CAEC0"
+        "OwnerKey" = "8:_48115BB3E9374F259480F84A63A14BD2"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_B5469623A3F4D72AEB334E557B0CAEC0"
+        "OwnerKey" = "8:_3B66ADF4D6C74F2CBEDDAFF070A5CF8F"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_B5469623A3F4D72AEB334E557B0CAEC0"
+        "OwnerKey" = "8:_2761540854B34F3A855A9CCC770CFC1E"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_B5469623A3F4D72AEB334E557B0CAEC0"
+        "OwnerKey" = "8:_20601409E3A0473CAA26DA12D0886EDA"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -153,116 +243,32 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_C49A2E9237896F019D1A444656B72770"
-        "OwnerKey" = "8:_3E0247198B08ABF31BDC712628ECE8C3"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_C49A2E9237896F019D1A444656B72770"
-        "OwnerKey" = "8:_49EC7734E13541D7B3959C7AEE4E8901"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_C49A2E9237896F019D1A444656B72770"
-        "OwnerKey" = "8:_45C855C4E459FA376B2BD4CF642A5284"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_D0B890BB702947F2D6FB4ECD91735328"
-        "OwnerKey" = "8:_1B12C2D465E83093B57A5329FA640551"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_D0B890BB702947F2D6FB4ECD91735328"
-        "OwnerKey" = "8:_FBFE73DA4B2844A79D5017D8301D8109"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_D0B890BB702947F2D6FB4ECD91735328"
-        "OwnerKey" = "8:_EB48077AD75D4B31A5FE71BF65197108"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_D0B890BB702947F2D6FB4ECD91735328"
-        "OwnerKey" = "8:_E4F5703BD7A246A1A451936EFFD2EB7E"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_D0B890BB702947F2D6FB4ECD91735328"
-        "OwnerKey" = "8:_C49A2E9237896F019D1A444656B72770"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_D0B890BB702947F2D6FB4ECD91735328"
-        "OwnerKey" = "8:_B0E3A0C1C0874B9F84A61431257C71B2"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_D0B890BB702947F2D6FB4ECD91735328"
-        "OwnerKey" = "8:_A2B7EE2CEE7C42E4853F013D2C2B8416"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_D0B890BB702947F2D6FB4ECD91735328"
-        "OwnerKey" = "8:_6D811CC4C2EF47EA9DDA1F3EE6A53869"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_D0B890BB702947F2D6FB4ECD91735328"
-        "OwnerKey" = "8:_4D6E12EB8FDB494B9824E2679157FC21"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_D0B890BB702947F2D6FB4ECD91735328"
-        "OwnerKey" = "8:_49EC7734E13541D7B3959C7AEE4E8901"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_D0B890BB702947F2D6FB4ECD91735328"
-        "OwnerKey" = "8:_45C855C4E459FA376B2BD4CF642A5284"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_D0B890BB702947F2D6FB4ECD91735328"
-        "OwnerKey" = "8:_3E0247198B08ABF31BDC712628ECE8C3"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_D0B890BB702947F2D6FB4ECD91735328"
-        "OwnerKey" = "8:_3AA6D14B9E3E43EBA540759DB2E76F53"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_D0B890BB702947F2D6FB4ECD91735328"
-        "OwnerKey" = "8:_2B5427774F3C40FAB0429DAB4784187A"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_E4F5703BD7A246A1A451936EFFD2EB7E"
+        "MsmKey" = "8:_B7BF6F14322C4A1583BC0D17D8C5AA7A"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_EB48077AD75D4B31A5FE71BF65197108"
+        "MsmKey" = "8:_C00660176293443CBB97D73B2EF0804B"
         "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_C36F7BD51A1E424086E1F8A45663E6A9"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_DD150EF497155A37EA51C63F254DEC23"
+        "OwnerKey" = "8:_3B66ADF4D6C74F2CBEDDAFF070A5CF8F"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_DD150EF497155A37EA51C63F254DEC23"
+        "OwnerKey" = "8:_B7BF6F14322C4A1583BC0D17D8C5AA7A"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -273,14 +279,8 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_FBFE73DA4B2844A79D5017D8301D8109"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_C49A2E9237896F019D1A444656B72770"
+        "OwnerKey" = "8:_80831C912AA02F312845F283ED7E4099"
         "MsmSig" = "8:_UNDEFINED"
         }
     }
@@ -310,16 +310,6 @@
             "ComponentsUrl" = "8:"
                 "Items"
                 {
-                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:.NETFramework,Version=v4.7.2"
-                    {
-                    "Name" = "8:Microsoft .NET Framework 4.7.2 (x86 and x64)"
-                    "ProductCode" = "8:.NETFramework,Version=v4.7.2"
-                    }
-                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:Microsoft.NetCore.CoreRuntime.6.0.x64"
-                    {
-                    "Name" = "8:.NET Runtime 6.0.3 (x64)"
-                    "ProductCode" = "8:Microsoft.NetCore.CoreRuntime.6.0.x64"
-                    }
                 }
             }
         }
@@ -405,7 +395,7 @@
                 {
                 "Name" = "8:.NET Core"
                 "Message" = "8:[VSDNETCOREMSG]"
-                "FrameworkVersion" = "8:8.0    "
+                "FrameworkVersion" = "8:8.0     "
                 "AllowLaterVersions" = "11:FALSE"
                 "InstallUrl" = "8:https://dotnet.microsoft.com/download/dotnet-core/[NetCoreVerMajorDotMinor]"
                 "IsNETCore" = "11:TRUE"
@@ -424,226 +414,20 @@
         }
         "File"
         {
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_1B12C2D465E83093B57A5329FA640551"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Optosense.Edm.Core, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_1B12C2D465E83093B57A5329FA640551"
-                    {
-                    "Name" = "8:Optosense.Edm.Core.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:Optosense.Edm.Core.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_AEE31518259E4CFDABF559E3A191152E"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:TRUE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_2B5427774F3C40FAB0429DAB4784187A"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Optosense.Edm.Operations.Test, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_2B5427774F3C40FAB0429DAB4784187A"
-                    {
-                    "Name" = "8:Optosense.Edm.Operations.Test.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:..\\Optosense.Edm.Operations.Test\\bin\\Debug\\net8.0\\Optosense.Edm.Operations.Test.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_AEE31518259E4CFDABF559E3A191152E"
-            "Condition" = "8:ROLE=\"admin\""
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_3AA6D14B9E3E43EBA540759DB2E76F53"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Microprojects.Edm.Ui.Main, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_3AA6D14B9E3E43EBA540759DB2E76F53"
-                    {
-                    "Name" = "8:Microprojects.Edm.Ui.Main.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:..\\Microprojects.Edm.Ui.Main\\bin\\Debug\\net8.0\\Microprojects.Edm.Ui.Main.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_AEE31518259E4CFDABF559E3A191152E"
-            "Condition" = "8:ROLE=\"admin\""
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_3E0247198B08ABF31BDC712628ECE8C3"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Optosense.Edm.Core.AspNet, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_3E0247198B08ABF31BDC712628ECE8C3"
-                    {
-                    "Name" = "8:Optosense.Edm.Core.AspNet.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:Optosense.Edm.Core.AspNet.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_AEE31518259E4CFDABF559E3A191152E"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:TRUE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_414DC650980E40EE9DFDD55B313A0646"
-            {
-            "SourcePath" = "8:..\\Optosense.Edm.WebApi\\bin\\Debug\\net8.0\\win-x64\\Microsoft.Data.SqlClient.SNI.dll"
-            "TargetName" = "8:Microsoft.Data.SqlClient.SNI.dll"
-            "Tag" = "8:"
-            "Folder" = "8:_AE4052A7CE5F48FF84E7825B278F4895"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_45C855C4E459FA376B2BD4CF642A5284"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Optosense.Edm.Infrastructure, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_45C855C4E459FA376B2BD4CF642A5284"
-                    {
-                    "Name" = "8:Optosense.Edm.Infrastructure.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:Optosense.Edm.Infrastructure.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_AEE31518259E4CFDABF559E3A191152E"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:TRUE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_49EC7734E13541D7B3959C7AEE4E8901"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Optosense.Edm.Profiles.Board, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_49EC7734E13541D7B3959C7AEE4E8901"
-                    {
-                    "Name" = "8:Optosense.Edm.Profiles.Board.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:..\\Optosense.Edm.Profiles.Board\\bin\\Debug\\net8.0\\Optosense.Edm.Profiles.Board.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_AEE31518259E4CFDABF559E3A191152E"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_4D6E12EB8FDB494B9824E2679157FC21"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_012A26D5E241432D90283C4746228809"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
             "AssemblyAsmDisplayName" = "8:Microprojects.Edm.Ui.Console, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_4D6E12EB8FDB494B9824E2679157FC21"
+                    "_012A26D5E241432D90283C4746228809"
                     {
                     "Name" = "8:Microprojects.Edm.Ui.Console.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:..\\Microprojects.Edm.Ui.Console\\bin\\Debug\\net8.0\\Microprojects.Edm.Ui.Console.dll"
+            "SourcePath" = "8:..\\Microprojects.Edm.Ui.Console\\bin\\Debug\\net10.0\\Microprojects.Edm.Ui.Console.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_AEE31518259E4CFDABF559E3A191152E"
@@ -661,23 +445,136 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_6D811CC4C2EF47EA9DDA1F3EE6A53869"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_20601409E3A0473CAA26DA12D0886EDA"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Optosense.Edm.Plugins.OpcUa, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Optosense.Edm.Drivers.RestApi, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_6D811CC4C2EF47EA9DDA1F3EE6A53869"
+                    "_20601409E3A0473CAA26DA12D0886EDA"
                     {
-                    "Name" = "8:Optosense.Edm.Plugins.OpcUa.dll"
+                    "Name" = "8:Optosense.Edm.Drivers.RestApi.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:..\\Optosense.Edm.Plugins.OpcUa\\bin\\Debug\\net8.0\\Optosense.Edm.Plugins.OpcUa.dll"
+            "SourcePath" = "8:..\\Optosense.Edm.Drivers.RestApi\\bin\\Debug\\net10.0\\Optosense.Edm.Drivers.RestApi.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_AEE31518259E4CFDABF559E3A191152E"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_2761540854B34F3A855A9CCC770CFC1E"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:Optosense.Edm.Profiles.Board, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_2761540854B34F3A855A9CCC770CFC1E"
+                    {
+                    "Name" = "8:Optosense.Edm.Profiles.Board.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:..\\Optosense.Edm.Profiles.Board\\bin\\Debug\\net10.0\\Optosense.Edm.Profiles.Board.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_AEE31518259E4CFDABF559E3A191152E"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_3B66ADF4D6C74F2CBEDDAFF070A5CF8F"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:Microprojects.Edm.Ui.Main, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_3B66ADF4D6C74F2CBEDDAFF070A5CF8F"
+                    {
+                    "Name" = "8:Microprojects.Edm.Ui.Main.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:..\\Microprojects.Edm.Ui.Main\\bin\\Debug\\net10.0\\Microprojects.Edm.Ui.Main.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_AEE31518259E4CFDABF559E3A191152E"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_48115BB3E9374F259480F84A63A14BD2"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:Optosense.Edm.Plugins.Operator, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_48115BB3E9374F259480F84A63A14BD2"
+                    {
+                    "Name" = "8:Optosense.Edm.Plugins.Operator.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:..\\Optosense.Edm.Plugins.Operator\\bin\\Debug\\net10.0\\Optosense.Edm.Plugins.Operator.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_AEE31518259E4CFDABF559E3A191152E"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_63F237870A9C4C489B4FABD54952257C"
+            {
+            "SourcePath" = "8:..\\Optosense.Edm.WebApi\\bin\\Debug\\net10.0\\win-x64\\Microsoft.Data.SqlClient.SNI.dll"
+            "TargetName" = "8:Microsoft.Data.SqlClient.SNI.dll"
+            "Tag" = "8:"
+            "Folder" = "8:_AE4052A7CE5F48FF84E7825B278F4895"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -712,20 +609,20 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_7ADF7070F2AF27667A1892FA209ADEF2"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_80831C912AA02F312845F283ED7E4099"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Optosense.Edm.Domain, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Optosense.Edm, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_7ADF7070F2AF27667A1892FA209ADEF2"
+                    "_80831C912AA02F312845F283ED7E4099"
                     {
-                    "Name" = "8:Optosense.Edm.Domain.dll"
+                    "Name" = "8:Optosense.Edm.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Optosense.Edm.Domain.dll"
+            "SourcePath" = "8:Optosense.Edm.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_AEE31518259E4CFDABF559E3A191152E"
@@ -763,6 +660,37 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_8881E31E440D056CCF547448A7ACF397"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:Optosense.Edm.Core, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_8881E31E440D056CCF547448A7ACF397"
+                    {
+                    "Name" = "8:Optosense.Edm.Core.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:Optosense.Edm.Core.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_AEE31518259E4CFDABF559E3A191152E"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:TRUE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_9D2FEA08D79A4B7CA2F5CAD216FBAE11"
             {
             "SourcePath" = "8:..\\Optosense.Edm.WebApi\\Properties\\mp-bolotin.pfx"
@@ -783,20 +711,20 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_A2B7EE2CEE7C42E4853F013D2C2B8416"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_A2759FB1B7464D3990F485DB4345D59C"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
             "AssemblyAsmDisplayName" = "8:Optosense.Edm.Drivers.Null, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_A2B7EE2CEE7C42E4853F013D2C2B8416"
+                    "_A2759FB1B7464D3990F485DB4345D59C"
                     {
                     "Name" = "8:Optosense.Edm.Drivers.Null.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:..\\Optosense.Edm.Drivers.Null\\bin\\Debug\\net8.0\\Optosense.Edm.Drivers.Null.dll"
+            "SourcePath" = "8:..\\Optosense.Edm.Drivers.Null\\bin\\Debug\\net10.0\\Optosense.Edm.Drivers.Null.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_AEE31518259E4CFDABF559E3A191152E"
@@ -814,71 +742,20 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_B0E3A0C1C0874B9F84A61431257C71B2"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_A519D093F8CE40382E4A7954CAB18702"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Optosense.Edm.Operations.Optogen, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Optosense.Edm.Domain, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_B0E3A0C1C0874B9F84A61431257C71B2"
+                    "_A519D093F8CE40382E4A7954CAB18702"
                     {
-                    "Name" = "8:Optosense.Edm.Operations.Optogen.dll"
+                    "Name" = "8:Optosense.Edm.Domain.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:..\\Optosense.Edm.Operations.Optogen\\bin\\Debug\\net8.0\\Optosense.Edm.Operations.Optogen.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_AEE31518259E4CFDABF559E3A191152E"
-            "Condition" = "8:ROLE=\"admin\""
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_B54FC83497FD4BE4B35E1172638558B0"
-            {
-            "SourcePath" = "8:icons8-mu-48.ico"
-            "TargetName" = "8:icons8-mu-48.ico"
-            "Tag" = "8:"
-            "Folder" = "8:_AE4052A7CE5F48FF84E7825B278F4895"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_C49A2E9237896F019D1A444656B72770"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Optosense.Edm, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_C49A2E9237896F019D1A444656B72770"
-                    {
-                    "Name" = "8:Optosense.Edm.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:Optosense.Edm.dll"
+            "SourcePath" = "8:Optosense.Edm.Domain.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_AEE31518259E4CFDABF559E3A191152E"
@@ -896,14 +773,76 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_D0B890BB702947F2D6FB4ECD91735328"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_A7EAE4D95410E4C69BD856ECB8423A0C"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Microprojects.Edm, Version=1.13.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Optosense.Edm.Infrastructure, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_D0B890BB702947F2D6FB4ECD91735328"
+                    "_A7EAE4D95410E4C69BD856ECB8423A0C"
+                    {
+                    "Name" = "8:Optosense.Edm.Infrastructure.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:Optosense.Edm.Infrastructure.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_AEE31518259E4CFDABF559E3A191152E"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:TRUE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_AA00FCD1CD1E4632A87C731FAE5E96D3"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:Optosense.Edm.Operations.Optogen, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_AA00FCD1CD1E4632A87C731FAE5E96D3"
+                    {
+                    "Name" = "8:Optosense.Edm.Operations.Optogen.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:..\\Optosense.Edm.Operations.Optogen\\bin\\Debug\\net10.0\\Optosense.Edm.Operations.Optogen.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_AEE31518259E4CFDABF559E3A191152E"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_B5469623A3F4D72AEB334E557B0CAEC0"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:Microprojects.Edm, Version=1.13.2.0, Culture=neutral, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_B5469623A3F4D72AEB334E557B0CAEC0"
                     {
                     "Name" = "8:Microprojects.Edm.dll"
                     "Attributes" = "3:512"
@@ -927,23 +866,12 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_E4F5703BD7A246A1A451936EFFD2EB7E"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_B54FC83497FD4BE4B35E1172638558B0"
             {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Optosense.Edm.Plugins.Operator, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_E4F5703BD7A246A1A451936EFFD2EB7E"
-                    {
-                    "Name" = "8:Optosense.Edm.Plugins.Operator.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:..\\Optosense.Edm.Plugins.Operator\\bin\\Debug\\net8.0\\Optosense.Edm.Plugins.Operator.dll"
-            "TargetName" = "8:"
+            "SourcePath" = "8:icons8-mu-48.ico"
+            "TargetName" = "8:icons8-mu-48.ico"
             "Tag" = "8:"
-            "Folder" = "8:_AEE31518259E4CFDABF559E3A191152E"
+            "Folder" = "8:_AE4052A7CE5F48FF84E7825B278F4895"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -958,20 +886,20 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_EB48077AD75D4B31A5FE71BF65197108"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_B7BF6F14322C4A1583BC0D17D8C5AA7A"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
             "AssemblyAsmDisplayName" = "8:Microprojects.Edm.Ui.Logistics, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_EB48077AD75D4B31A5FE71BF65197108"
+                    "_B7BF6F14322C4A1583BC0D17D8C5AA7A"
                     {
                     "Name" = "8:Microprojects.Edm.Ui.Logistics.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:..\\Microprojects.Edm.Ui.Logistics\\bin\\Debug\\net8.0\\Microprojects.Edm.Ui.Logistics.dll"
+            "SourcePath" = "8:..\\Microprojects.Edm.Ui.Logistics\\bin\\Debug\\net10.0\\Microprojects.Edm.Ui.Logistics.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_AEE31518259E4CFDABF559E3A191152E"
@@ -989,20 +917,20 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_FBFE73DA4B2844A79D5017D8301D8109"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_C00660176293443CBB97D73B2EF0804B"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Optosense.Edm.Drivers.RestApi, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Optosense.Edm.Plugins.OpcUa, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_FBFE73DA4B2844A79D5017D8301D8109"
+                    "_C00660176293443CBB97D73B2EF0804B"
                     {
-                    "Name" = "8:Optosense.Edm.Drivers.RestApi.dll"
+                    "Name" = "8:Optosense.Edm.Plugins.OpcUa.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:..\\Optosense.Edm.Drivers.RestApi\\bin\\Debug\\net8.0\\Optosense.Edm.Drivers.RestApi.dll"
+            "SourcePath" = "8:..\\Optosense.Edm.Plugins.OpcUa\\bin\\Debug\\net10.0\\Optosense.Edm.Plugins.OpcUa.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_AEE31518259E4CFDABF559E3A191152E"
@@ -1018,6 +946,68 @@
             "Register" = "3:1"
             "Exclude" = "11:FALSE"
             "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_C36F7BD51A1E424086E1F8A45663E6A9"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:Optosense.Edm.Operations.Test, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_C36F7BD51A1E424086E1F8A45663E6A9"
+                    {
+                    "Name" = "8:Optosense.Edm.Operations.Test.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:..\\Optosense.Edm.Operations.Test\\bin\\Debug\\net10.0\\Optosense.Edm.Operations.Test.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_AEE31518259E4CFDABF559E3A191152E"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_DD150EF497155A37EA51C63F254DEC23"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:Optosense.Edm.Core.AspNet, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_DD150EF497155A37EA51C63F254DEC23"
+                    {
+                    "Name" = "8:Optosense.Edm.Core.AspNet.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:Optosense.Edm.Core.AspNet.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_AEE31518259E4CFDABF559E3A191152E"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:TRUE"
+            "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
         }
@@ -1099,7 +1089,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:Edm"
         "ProductCode" = "8:{1A5918C8-7F12-460C-AE6C-409FF29065A2}"
-        "PackageCode" = "8:{2E137AC0-8995-4CBE-A3DD-05DD1A17E5AB}"
+        "PackageCode" = "8:{512475EB-96E8-4DD4-88FE-51D63F9E25DF}"
         "UpgradeCode" = "8:{0B59587D-B902-4F08-AFAE-4BB253F5EFE8}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
@@ -2002,7 +1992,7 @@
         {
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_94DD7F8D28904D0FA7CB96979109C4F0"
             {
-            "SourcePath" = "8:..\\Optosense.Edm.WebApi\\bin\\Debug\\net8.0\\win-x64\\publish\\Optosense.Edm.WebApi.exe"
+            "SourcePath" = "8:..\\Optosense.Edm.WebApi\\bin\\Debug\\net10.0\\win-x64\\publish\\Optosense.Edm.WebApi.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_AE4052A7CE5F48FF84E7825B278F4895"
@@ -2030,7 +2020,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_ED6A2AEBF09B48DA93492E82314B4F35"
             {
-            "SourcePath" = "8:..\\Microprojects.Edm.Install\\bin\\Debug\\net8.0\\win-x64\\publish\\Microprojects.Edm.Install.exe"
+            "SourcePath" = "8:..\\Microprojects.Edm.Install\\bin\\Debug\\net10.0\\win-x64\\publish\\Microprojects.Edm.Install.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_AE4052A7CE5F48FF84E7825B278F4895"

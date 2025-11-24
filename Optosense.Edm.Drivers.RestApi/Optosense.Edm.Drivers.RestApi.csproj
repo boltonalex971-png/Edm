@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 	  <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Edm\Edm.csproj" />
-	<PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="8.0.7" />
+	<PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="10.0.0" />
   </ItemGroup>
 
 	<ItemGroup>

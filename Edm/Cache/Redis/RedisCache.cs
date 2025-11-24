@@ -61,7 +61,7 @@ namespace Microprojects.Edm.Cache.Redis
             }
             else
             {
-                var data = list.Select(v => JsonSerializer.Deserialize<T>(RedisValue.Unbox(v)));
+                var data = list.Select(v => JsonSerializer.Deserialize<T>(RedisValue.Unbox(v).ToString()));
                 return data;
             }
         }
@@ -113,7 +113,7 @@ namespace Microprojects.Edm.Cache.Redis
             {
                 var obs = await Db.Multiplexer.GetSubscriber().SubscribeAsync(channel).ConfigureAwait(false);
                 obs.OnMessage(message => {
-                    var value = JsonSerializer.Deserialize<T>(message.Message);
+                    var value = JsonSerializer.Deserialize<T>(message.Message.ToString());
                     observer.OnNext(value);
                 });
                 return Disposable.Create(async () => 

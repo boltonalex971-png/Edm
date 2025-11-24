@@ -72,7 +72,7 @@ namespace Optosense.Edm.Drivers.OpcUa
                 ApplicationConfiguration = DefaultApplicationConfiguration
             };
 
-            var selectedEndpoint = CoreClientUtils.SelectEndpoint(OpcUaOptions.Endpoint, false, 15000);
+            var selectedEndpoint = CoreClientUtils.SelectEndpoint(application.ApplicationConfiguration, OpcUaOptions.Endpoint, false, 15000);
             var endpointConfiguration = EndpointConfiguration.Create(application.ApplicationConfiguration);
             var endpoint = new ConfiguredEndpoint(null, selectedEndpoint, endpointConfiguration);
             var session = Session.Create(
