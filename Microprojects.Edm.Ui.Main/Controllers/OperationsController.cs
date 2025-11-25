@@ -162,7 +162,7 @@ namespace Microprojects.Edm.Ui.Main.Controllers
                 o => o.WorkplaceProcess.Process)).ToList();
             var uncompleted = _mapper.Map<IEnumerable<OperationViewModel>>(ops);
             
-            return uncompleted.OrderByDescending(o => o.Created);
+            return uncompleted.OrderByDescending(o => o.Completed ?? o.Cancelled);
         }
 
         [HttpGet("week")]
@@ -173,7 +173,7 @@ namespace Microprojects.Edm.Ui.Main.Controllers
                 o => o.WorkplaceProcess.Process)).ToList();
             var uncompleted = _mapper.Map<IEnumerable<OperationViewModel>>(ops);
             
-            return uncompleted.OrderByDescending(o => o.Created);
+            return uncompleted.OrderByDescending(o => o.Completed ?? o.Cancelled);
         }
 
         [HttpGet("{operationId:int}/records")]
