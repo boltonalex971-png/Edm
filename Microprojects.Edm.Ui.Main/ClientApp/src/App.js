@@ -21,7 +21,7 @@ export default function App() {
     const userRole = useSelector(state => state.user.role)
     const user = useSelector(state => state.user.name)
     const userDispatch = useDispatch()
-    const [homebase] = useState(`${process.env.REACT_APP_API_URL || window.location.origin}`);
+    const [homebase] = useState(`${import.meta.env.ASSET_PREFIX || window.location.origin}`);
     const _ = useGet(`${api.auth}/user/name`, [], (u) => {
         userDispatch(setUser(u))
     })
