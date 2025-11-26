@@ -19,6 +19,10 @@ namespace Optosense.Edm.WebApi
 
         public override Task StartAsync(CancellationToken cancellationToken)
         {
+            AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
+            {
+                _logger.LogError((Exception)args.ExceptionObject, "Unhandled exception");
+            };
             _logger.LogInformation("Service starting...");
             var startTask = base.StartAsync(cancellationToken);
             return startTask.ContinueWith(
