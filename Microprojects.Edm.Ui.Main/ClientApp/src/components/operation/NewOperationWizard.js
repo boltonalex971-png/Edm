@@ -13,7 +13,7 @@ import { Input } from '@progress/kendo-react-inputs';
 import { PluginContainer } from '@microprojects/react-utils';
 import { ApiContext } from '../../ApiContext';
 import { useDispatch, useSelector } from 'react-redux';
-import { clearDevices, clearProcess, reset, setDevice, setDriverOptions, setParameters, setProcess, setProfiles, setWorkbench } from '../../slices/newOperationSlice';
+import { clearDevices, clearProcess, reset, setDevice, setDriverOptions, setParameters, setProcess, setProfiles, setWorkbench } from '../../slices/newOperationSlice.ts';
 import axios from 'axios';
 
 export function NewOperationWizard() {
@@ -412,10 +412,12 @@ function DeviceDetail({ id, profile }) {
 }
 
 function InputsDetail({ inputs }) {
+    const [submitted, setSubmitted] = React.useState(false);
     const parameters = useSelector(state => state.newOperation.parameters)
     const dispatch = useDispatch()
     const handleSubmit = (p) => {
         dispatch(setParameters({...p})) // Cannot use From values directly
+        setSubmitted(true);
     };
     if (!inputs) return <Loading />
     return (

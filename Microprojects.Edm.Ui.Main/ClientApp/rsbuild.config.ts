@@ -10,7 +10,6 @@ export default defineConfig({
   html: {
     title: 'Edm Technology',
     favicon: './public/favicon.ico',
-    template: './public/index.html',
   },
   output: {
     assetPrefix: '/',
@@ -18,14 +17,13 @@ export default defineConfig({
       root: 'build',
     },
   },
-  source: {
-    // Compile all JS files and exclude core-js
-    include: [{ not: /[\\/]core-js[\\/]/ }],
-  },
   dev: {
     assetPrefix: '/',
     liveReload: true,
     hmr: true,
+  },
+  server: {
+    open: true,
   }
 });
 

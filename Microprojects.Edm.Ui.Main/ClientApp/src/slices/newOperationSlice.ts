@@ -1,6 +1,26 @@
 import { createSlice } from '@reduxjs/toolkit'
 
-const initialState = { process: undefined, workbench: undefined, devices: {}, options: {}, parameters: undefined, profiles: undefined }
+export interface NewOperationState {
+    process?: {} | undefined,
+    workbench?: {} | undefined,
+    devices: {[index: number]: {
+            device: string
+            driverName: string
+            profileName: string
+            host: string
+            driverHomepage: string
+        }},
+    options: {[index: number]: {
+            id: number
+            profileId: number
+            options: {}
+            output: []
+        }},
+    parameters?: {} | undefined,
+    profiles?: {} | undefined,
+}
+
+const initialState: NewOperationState = { devices: {}, options: {} }
 
 export const newOperationSlice = createSlice({
     name: 'newOperation',

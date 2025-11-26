@@ -7,7 +7,8 @@ import { DropDownList } from '@progress/kendo-react-dropdowns';
 import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
 import api from './api';
-import { changeRole } from '../slices/userSlice';
+import { changeRole } from '../slices/userSlice.ts';
+import logo from '../../public/applogo.svg'
 
 export const NavMenu = (props) => {
     const user = useSelector(s => s.user)
@@ -26,7 +27,9 @@ export const NavMenu = (props) => {
         <header>
             <Navbar className="navbar-expand-sm navbar-toggleable-sm border-bottom box-shadow mb-3" light>
                 <div style={{ display: 'flex', justifyContent: 'space-between', margin: '0 1rem 0 1rem', width: '100%' }}>
-                    <NavbarBrand tag={Link} to="/">Optosense EDM</NavbarBrand>
+                    <NavbarBrand tag={Link} to="/">
+                        <img src={logo} alt={'EDμ'} />&nbsp;Technology
+                    </NavbarBrand>
                     <NavbarToggler onClick={toggleNavbar} className="mr-2" />
                     <Collapse className="d-sm-inline-flex" isOpen={!collapsed} navbar>
                         <ul className="navbar-nav flex-grow">

@@ -1,4 +1,4 @@
-const baseUrl = import.meta.env.ASSET_PREFIX || window.location.origin;
+const baseUrl = import.meta.env.PUBLIC_APP_API_URL || window.location.origin;
 
 const api = {
     baseUrl: baseUrl,

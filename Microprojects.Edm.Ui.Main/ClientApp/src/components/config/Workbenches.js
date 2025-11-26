@@ -12,7 +12,7 @@ import { Button } from '@progress/kendo-react-buttons';
 import axios from 'axios';
 import api from '../api';
 import { useDispatch } from 'react-redux';
-import { setProcess, setWorkbench } from '../../slices/newOperationSlice';
+import { setProcess, setWorkbench } from '../../slices/newOperationSlice.ts';
 
 WorkbenchDetail.propTypes = {
     onChange: PropTypes.func,

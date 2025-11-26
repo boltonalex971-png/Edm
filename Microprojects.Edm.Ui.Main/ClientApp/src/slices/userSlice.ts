@@ -1,8 +1,15 @@
 import { createSlice } from '@reduxjs/toolkit'
 
+export interface UserState {
+    name: string,
+    role: 'Guest' | 'Operator' | 'Technologist' | 'Admin'
+}
+
+const initialState: UserState = { name: 'Guest', role: 'Guest' }
+
 export const userSlice = createSlice({
     name: 'user',
-    initialState: { user: { name: 'Guest', role: 'Guest' } },
+    initialState,
     reducers: {
         setUser: (state, action) => {
             return action.payload

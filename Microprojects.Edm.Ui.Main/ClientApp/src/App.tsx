@@ -1,6 +1,6 @@
 import React, {useState} from "react";
 import {Route, MemoryRouter, Switch} from "react-router";
-import {Layout} from "./components/Layout";
+import {Layout} from "./components/Layout.js";
 import {Home} from "./components/home/Home";
 import {Dashboard} from "./components/dashboard/Dashboard";
 import {Config} from "./components/config/Config";
@@ -15,19 +15,21 @@ import {useGet} from "./components/hooks/hooks";
 import Operations from "./components/dashboard/Operations";
 import {OperationLayout} from "./components/operation/OperationLayout";
 import {useDispatch, useSelector} from "react-redux";
-import {changeRole, setUser} from "./slices/userSlice";
+import {changeRole, setUser, type UserState} from "./slices/userSlice";
+import type {RootState} from "@edm/store.ts";
 
 export default function App() {
-    const userRole = useSelector(state => state.user.role)
-    const user = useSelector(state => state.user.name)
+    const userRole = useSelector((state : RootState) => state.user.role)
+    const user = useSelector((state : RootState) => state.user.name)
     const userDispatch = useDispatch()
-    const [homebase] = useState(`${import.meta.env.ASSET_PREFIX || window.location.origin}`);
-    const _ = useGet(`${api.auth}/user/name`, [], (u) => {
+    //const [homebase] = useState(`${import.meta.env.ASSET_PREFIX || window.location.origin}`);
+    const apiBase = api.baseUrl
+    const _ = useGet(`${api.auth}/user/name`, [], (u: UserState) => {
         userDispatch(setUser(u))
     })
 
     return (
-            <ApiContext.Provider value={homebase}>
+            <ApiContext.Provider value={apiBase}>
                 <Switch>
                     <Route path='/operations/:id' component={OperationLayout}/>
                     <Layout>

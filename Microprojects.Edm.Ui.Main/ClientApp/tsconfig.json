@@ -7,12 +7,15 @@
 
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
-    "module": "nodenext",
+    "module": "ESNext",
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,  
     "target": "esnext",
-    "types": [],
     // For nodejs:
-    // "lib": ["esnext"],
-    // "types": ["node"],
+    "lib": ["esnext", "dom"],
+    "types": ["node"],
     // and npm install -D @types/node
 
     // Other Outputs
@@ -23,6 +26,7 @@
     // Stricter Typechecking Options
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
+    "allowSyntheticDefaultImports": true,
 
     // Style Options
     // "noImplicitReturns": true,
@@ -36,9 +40,11 @@
     "strict": true,
     "jsx": "react-jsx",
     "verbatimModuleSyntax": true,
-    "isolatedModules": true,
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "skipLibCheck": true,
+    "paths": {
+      "@edm/*": ["./src/*"]
+    },
   }
 }
