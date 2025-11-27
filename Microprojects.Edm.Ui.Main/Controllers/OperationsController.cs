@@ -144,7 +144,8 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         {
             var ops = await _operationService.Get(
                 o => o.Completed == null && o.Cancelled == null,
-                o => o.WorkplaceProcess.Process);
+                o => o.WorkplaceProcess.Process,
+                o => o.WorkplaceProcess.Workplace);
             var uncompleted = _mapper.Map<IEnumerable<OperationViewModel>>(ops);
             foreach (var op in uncompleted.Where(o => o.State == OperationState.InProgress))
             {
@@ -157,9 +158,10 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         [HttpGet("today")]
         public async Task<IEnumerable<OperationViewModel>> GetTodayOperations()
         {
-            var ops = (await _operationService.Get(
+            var ops = await _operationService.Get(
                 o => o.Completed > DateTime.UtcNow.Date || o.Cancelled > DateTime.UtcNow.Date,
-                o => o.WorkplaceProcess.Process)).ToList();
+                o => o.WorkplaceProcess.Process,
+                o => o.WorkplaceProcess.Workplace);
             var uncompleted = _mapper.Map<IEnumerable<OperationViewModel>>(ops);
             
             return uncompleted.OrderByDescending(o => o.Completed ?? o.Cancelled);
@@ -168,9 +170,10 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         [HttpGet("week")]
         public async Task<IEnumerable<OperationViewModel>> GetWeekOperations()
         {
-            var ops = (await _operationService.Get(
+            var ops = await _operationService.Get(
                 o => o.Completed > DateTime.UtcNow.Date.AddDays(-6) || o.Cancelled >  DateTime.UtcNow.Date.AddDays(-6),
-                o => o.WorkplaceProcess.Process)).ToList();
+                o => o.WorkplaceProcess.Process,
+                o => o.WorkplaceProcess.Workplace);
             var uncompleted = _mapper.Map<IEnumerable<OperationViewModel>>(ops);
             
             return uncompleted.OrderByDescending(o => o.Completed ?? o.Cancelled);

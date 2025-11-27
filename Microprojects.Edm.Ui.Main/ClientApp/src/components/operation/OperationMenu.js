@@ -20,6 +20,7 @@ import {useGet} from '../hooks/hooks';
 import Axios from 'axios';
 import {utcDateToLocal} from "../utils/Utils";
 import {useDialog} from "../hooks/DialogHooks";
+import api from "../api.js";
 
 export function OperationMenu({process, to, ...props}) {
     const [collapsed, setCollapsed] = useState(true);
@@ -30,7 +31,7 @@ export function OperationMenu({process, to, ...props}) {
         <header style={{width: '100%'}}>
             <Navbar color="light" expand="md" light className="d-inline-flex justify-content-between"
                     style={{width: '100%', paddingRight: '40px'}}>
-                <NavbarBrand>#{props.operationId} <strong>{process && process.name}</strong></NavbarBrand>
+                <NavbarBrand>#{props.operationId}&nbsp;<strong>{process && process.name}</strong></NavbarBrand>
                 <NavbarToggler onClick={toggleNavbar} className="mr-2"/>
                 {/* <Collapse className="d-inline-flex justify-content-between" isOpen={!collapsed} navbar> */}
                 <Nav>

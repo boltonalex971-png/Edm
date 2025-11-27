@@ -237,7 +237,10 @@ namespace Optosense.Edm.Core.Services
 
         public async Task<Operation> CompleteOperation(int operationId)
         {
-            var result = await Get(operationId);
+            var result = await Get(operationId) ?? 
+                throw new EdmException("Operation not found");
+            if (result.Cancelled != null || result.Completed != null)
+                throw new EdmException($"Operation has been finished already");
             result.Completed = DateTime.UtcNow;
             await Db.SaveChangesAsync();
             Db.Entry(result).State = EntityState.Detached;

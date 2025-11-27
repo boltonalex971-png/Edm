@@ -23,7 +23,7 @@ export const OperationPlugins = (props) => {
                                     <button type='button' className='btn btn-link'
                                         onClick={
                                             (e) => {
-                                                window.open(cellProps.dataItem.homepage, '_blank');
+                                                window.open(`/${cellProps.dataItem.homepage}`, '_blank');
                                                 e.target.blur();
                                             }
                                         }

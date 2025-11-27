@@ -54,7 +54,7 @@ export function OperationLayout() {
                             started={started}
                             data={options}
                             width='100%'
-                            src={`${apiContext}/${options.homepage}/${to}?id=${id}`}
+                            src={`${api.baseUrl}/${options.homepage}/${to}?id=${id}`}
                         />
                     </div>
                     <div style={{ display: hidden ? 'none' : '' }}>

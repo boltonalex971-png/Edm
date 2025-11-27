@@ -82,7 +82,8 @@ namespace Microprojects.Edm.Ui.Main.Models
                     s.Completed != null ? OperationState.Completed :
                     s.Started == null ? OperationState.Idle : OperationState.InProgress))
                 .ForMember(d => d.ProcessId, o => o.MapFrom(s => s.WorkplaceProcess.ProcessId))
-                .ForMember(d => d.ProcessName, o => o.MapFrom(s => s.WorkplaceProcess.Process.Name));
+                .ForMember(d => d.ProcessName, o => o.MapFrom(s => s.WorkplaceProcess.Process.Name))
+                .ForMember(d => d.WorkplaceName, o => o.MapFrom(s => s.WorkplaceProcess.Workplace.Name));
 
             CreateMap<OperationCriterion, OperationCriterionModel>();
 
