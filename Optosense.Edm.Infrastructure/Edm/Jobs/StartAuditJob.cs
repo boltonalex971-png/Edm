@@ -15,6 +15,7 @@ using Optosense.Edm.Persistence;
 using Microprojects.Edm.Intercom;
 using System.Threading;
 using AdaptiveExpressions;
+using Microprojects.Edm.Utils;
 
 namespace Optosense.Edm.Jobs
 {
@@ -74,35 +75,40 @@ namespace Optosense.Edm.Jobs
             using var subscriber = Intercom.Subscribe<Record>(Parameters.Channel,
                 onNext: async rec =>
                 {
-                    // TODO Cache coming record to avoid loosing it and handle them later
-                    // TODO Use RX to filter records
-                    if (rec.OperationHostDeviceId != Parameters.Device)
+                    try
                     {
-                        return;
-                    }
-
-                    // TODO move all db activity to corresponding core service
-                    await using EdmContext db = await ContextFactory.CreateDbContextAsync();
-                    var currentOffset = (rec.ExecutedAt - Parameters.StartAt).TotalMinutes;
-                    var effectiveZones = audit.Where(z => IsActive(z, currentOffset));
-                    foreach (var zone in effectiveZones)
-                    {
-                        var recordParams = rec.Parameters; 
-                        // Select criteria with existing parameter
-                        foreach (var criterion in zone.Criteria.Where(c => recordParams.ContainsKey(c.Param)))
+                        // TODO Cache coming record to avoid loosing it and handle them later
+                        // TODO Use RX to filter records
+                        if (rec == null || rec.OperationHostDeviceId != Parameters.Device)
                         {
-                            var auditFunc = AuditFunctions.Function(criterion.Function);
-                            // take cached zone values list
-                            var selector = recordParams.TryGetValue("ADDR", out var addr) ? addr.ToString() : string.Empty;
-                            var key = CacheKey(Parameters.Operation, criterion.Id, selector);
-                            var values = (await Cache.GetRangeAsync<object>(key,async () =>
+                            return;
+                        }
+
+                        // TODO move all db activity to corresponding core service
+                        await using EdmContext db = await ContextFactory.CreateDbContextAsync();
+                        var currentOffset = (rec.ExecutedAt - Parameters.StartAt).TotalMinutes;
+                        var effectiveZones = audit.Where(z => IsActive(z, currentOffset));
+                        foreach (var zone in effectiveZones)
+                        {
+                            var recordParams = rec.Parameters;
+                            // Select criteria with existing parameter
+                            foreach (var criterion in zone.Criteria.Where(c =>
+                                         recordParams?.ContainsKey(c.Param) ?? false))
+                            {
+                                var auditFunc = AuditFunctions.Function(criterion.Function);
+                                // take cached zone values list
+                                var selector = recordParams.TryGetValue("ADDR", out var addr)
+                                    ? addr.ToString()
+                                    : string.Empty;
+                                var key = CacheKey(Parameters.Operation, criterion.Id, selector);
+                                var values = (await Cache.GetRangeAsync<object>(key, async () =>
                                     {
                                         var recs = await db.RecordOperationCriteria
                                             .Include(c => c.Record)
                                             .Include(c => c.OperationCriterion)
-                                            .Where(c => c.OperationCriterion.OperationId == Parameters.Operation 
-                                                && c.OperationCriterion.AuditCriterionId == criterion.Id
-                                                && c.OperationCriterion.Selector == selector)
+                                            .Where(c => c.OperationCriterion.OperationId == Parameters.Operation
+                                                        && c.OperationCriterion.AuditCriterionId == criterion.Id
+                                                        && c.OperationCriterion.Selector == selector)
                                             .Select(c => c.Record.Parameters)
                                             .ToListAsync();
                                         var values = recs
@@ -111,47 +117,59 @@ namespace Optosense.Edm.Jobs
                                         return values;
                                     }, expireAt: TimeSpan.FromDays(10)))
                                     .ToList();
-                            // Add new value to cache
-                            var value = rec.Parameters[criterion.Param];
-                            values.Add(value);
-                            Cache.Push(key, value);
-                            
-                            // Replace args with parameters if required
-                            var crit = (AuditCriterion)criterion.Copy();
-                            var param1 = Regex.Match(criterion.Arg1 ?? string.Empty, @"{(?<Name>\w*)}");
-                            if (param1.Success && _inputParams.TryGetValue(param1.Groups["Name"].Value, out var inputParam1))
-                            {
-                                crit.Arg1 = inputParam1?.ToString(); 
-                            }
-                            var param2 = Regex.Match(criterion.Arg2 ?? string.Empty, @"{(?<Name>\w*)}");
-                            if (param2.Success && _inputParams.TryGetValue(param2.Groups["Name"].Value, out var inputParam2))
-                            {
-                                crit.Arg2 = inputParam2?.ToString(); 
-                            }
-                            
-                            // check
-                            var auditResult = auditFunc(crit, values);
-                            // save result to db
-                            var operationCriterion = (await db.OperationCriteria
-                                .FirstOrDefaultAsync(oc => oc.OperationId == Parameters.Operation 
-                                    && oc.AuditCriterionId == criterion.Id
-                                    && oc.Selector == selector))
-                                ?? db.OperationCriteria.Add(new OperationCriterion 
+                                // Add new value to cache
+                                var value = rec.Parameters[criterion.Param];
+                                values.Add(value);
+                                Cache.Push(key, value);
+
+                                // Replace args with parameters if required
+                                var crit = (AuditCriterion)criterion.Copy();
+                                var param1 = Regex.Match(criterion.Arg1 ?? string.Empty, @"{(?<Name>\w*)}");
+                                if (param1.Success &&
+                                    _inputParams.TryGetValue(param1.Groups["Name"].Value, out var inputParam1))
                                 {
-                                    AuditCriterionId = criterion.Id,
-                                    OperationId = Parameters.Operation,
-                                    Selector = selector
-                                }).Entity;
-                            operationCriterion.Result = auditResult.Result;
-                            operationCriterion.Valid = auditResult.Valid;
-                            operationCriterion.Message = auditResult.Message;
-                            db.RecordOperationCriteria.Add(new RecordOperationCriterion
-                            {
-                                RecordId = rec.Id,
-                                OperationCriterion = operationCriterion
-                            });
-                            await db.SaveChangesAsync();
+                                    crit.Arg1 = inputParam1?.ToString();
+                                }
+
+                                var param2 = Regex.Match(criterion.Arg2 ?? string.Empty, @"{(?<Name>\w*)}");
+                                if (param2.Success &&
+                                    _inputParams.TryGetValue(param2.Groups["Name"].Value, out var inputParam2))
+                                {
+                                    crit.Arg2 = inputParam2?.ToString();
+                                }
+
+                                // check
+                                var auditResult = auditFunc(crit, values);
+                                // save result to db
+                                var operationCriterion = (await db.OperationCriteria
+                                                             .FirstOrDefaultAsync(oc =>
+                                                                 oc.OperationId == Parameters.Operation
+                                                                 && oc.AuditCriterionId == criterion.Id
+                                                                 && oc.Selector == selector))
+                                                         ?? db.OperationCriteria.Add(new OperationCriterion
+                                                         {
+                                                             AuditCriterionId = criterion.Id,
+                                                             OperationId = Parameters.Operation,
+                                                             Selector = selector
+                                                         }).Entity;
+                                operationCriterion.Result = auditResult.Result;
+                                operationCriterion.Valid = auditResult.Valid;
+                                operationCriterion.Message = auditResult.Message;
+                                db.RecordOperationCriteria.Add(new RecordOperationCriterion
+                                {
+                                    RecordId = rec.Id,
+                                    OperationCriterion = operationCriterion
+                                });
+                                await db.SaveChangesAsync();
+                            }
                         }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.LogWarning(Parameters.Operation, 
+                            ex,
+                            "{Command} failed processing incoming records, some data may be lost.\nRecords: {Records}\n{Exception}", 
+                            Name, JsonConvert.SerializeObject(rec), ex.GetFullInfo());
                     }
                 });
 
