@@ -1,39 +1,40 @@
-import React, { useState, useEffect } from "react";
-import { Route, Routes } from 'react-router-dom';
+import React, { useState } from "react";
+import {Route, Routes, useNavigate} from 'react-router-dom';
 import { Layout } from "./components/Layout";
 import { OperationInfo } from "./components/OperationInfo";
 import { Config } from "./components/Config";
-import { usePluginData, types, useOperationData } from '@microprojects/react-utils'
-import { useGet } from "./components/hooks/hooks";
+import {PluginMessageTypes, useOperationData, usePluginMessaging} from "./components/hooks/messagingHooks";
 
 function App(props) {
-    const [data] = usePluginData()
+    const navigate = useNavigate();
     const [settings, setSettings] = useState()
+    const info = useOperationData('Init', undefined, 
+        (i) => setSettings(JSON.parse(i.process.settings || "[]")))
+    useOperationData('Navigate', undefined, (m) => navigate(m))
     const [operationId] = useState(() => new URLSearchParams(document.location.search).get('id') || 0);
-    const [[processInfo]] = useGet(`${props.apiBase}/api/operations/${operationId}/processInfo`, [], (p) => {
-        setSettings(JSON.parse(p.settings || "[]"))
-    });
-    const [started, setStarted] = useState(false);
-    const [lifecycle] = useOperationData(types.operationLifecycle)
-    useEffect(() => {
-        setStarted(lifecycle?.Start)
-    }, [lifecycle])
-    if (!settings) return (<>Loading...</>)
+    const postMessage = usePluginMessaging(window.parent)
+    const saveSettings = (s) => {
+        postMessage({type: PluginMessageTypes.settings, data: s})
+        setSettings(s)
+    }
+
+    if (!info) return (<>Loading...</>)
+
     return (
         <div className="App">
             <Layout
                 content={
                     <Routes>
                         <Route path='/' exact element={
-                            <OperationInfo operationId={operationId} started={started} {...props} settings={settings} />
+                            <OperationInfo info={info} operationId={operationId} settings={settings} {...props} />
                         } />
                         <Route path='/config' element={
                             <Config
                                 apiBase={props.apiBase}
                                 operationId={operationId}
-                                outputs={processInfo?.parameters}
+                                outputs={info.process.parameters}
                                 settings={settings}
-                                onSettingsChanged={setSettings}
+                                onSettingsChanged={saveSettings}
                             />
                         } />
                     </Routes>

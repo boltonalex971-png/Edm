@@ -14,7 +14,7 @@
     "allowImportingTsExtensions": true,  
     "target": "esnext",
     // For nodejs:
-    "lib": ["esnext", "dom"],
+    "lib": ["esnext", "dom", "WebWorker"],
     "types": ["node"],
     // and npm install -D @types/node
 

@@ -16,13 +16,12 @@ import {Button} from '@progress/kendo-react-buttons';
 import {formatDate} from '@telerik/kendo-intl';
 import {useState} from 'react';
 import {useEffect} from 'react';
-import {useGet} from '../hooks/hooks';
 import Axios from 'axios';
-import {utcDateToLocal} from "../utils/Utils";
 import {useDialog} from "../hooks/DialogHooks";
+import useSignalR from "../hooks/signalRHooks.ts";
 import api from "../api.js";
 
-export function OperationMenu({process, to, ...props}) {
+export function OperationMenu({operation, to}) {
     const [collapsed, setCollapsed] = useState(true);
     const toggleNavbar = () => {
         setCollapsed(!collapsed);
@@ -31,7 +30,7 @@ export function OperationMenu({process, to, ...props}) {
         <header style={{width: '100%'}}>
             <Navbar color="light" expand="md" light className="d-inline-flex justify-content-between"
                     style={{width: '100%', paddingRight: '40px'}}>
-                <NavbarBrand>#{props.operationId}&nbsp;<strong>{process && process.name}</strong></NavbarBrand>
+                <NavbarBrand>#{operation.id}&nbsp;<strong>{operation.process.name}</strong></NavbarBrand>
                 <NavbarToggler onClick={toggleNavbar} className="mr-2"/>
                 {/* <Collapse className="d-inline-flex justify-content-between" isOpen={!collapsed} navbar> */}
                 <Nav>
@@ -49,7 +48,7 @@ export function OperationMenu({process, to, ...props}) {
                 <NavbarText>
                     <Timer/>
                 </NavbarText>
-                <OperationToolbar {...props} />
+                <OperationToolbar operation={operation} />
                 {/* </Collapse> */}
             </Navbar>
         </header>
@@ -69,23 +68,20 @@ function Timer() {
     );
 }
 
-let timeout, interval;
-
-function OperationToolbar({operationId, apiBase, onStarted, onCompleted, onCancelled}) {
-    const [refresh, setRefresh] = useState(false);
-    const [[status]] = useGet(`${apiBase}/${operationId}/status`, [refresh],
-        (data) => ({state: data.state, date: utcDateToLocal(data.stateTimestamp)}));
+function OperationToolbar({operation}) {
+    const [status, setStatus] = 
+        useState({state: operation.state, stateTimestamp: operation.stateTimestamp})
     const stopBtn = useRef(null);
     const startBtn = useRef(null);
     const copyBtn = useRef(null);
     const statusLbl = useRef(null);
     const startAtInput = useRef();
     const {dialog, confirm, alert, warning} = useDialog()
-
+    useSignalR(`${api.baseUrl}/hub`, `Operation-${operation.id}-lifecycle`, (message) => setStatus(message))
     const copy = (event) => {
         copyBtn.current.element.setAttribute('disabled', 'disabled');
         statusLbl.current.textContent = 'Copying...';
-        Axios.post(`${apiBase}/${operationId}`)
+        Axios.post(`${api.operations}/${operation.id}`)
             .then((response) => {
                 window.open(`/operations/${response.data.id}`, '_self')
             })
@@ -101,9 +97,8 @@ function OperationToolbar({operationId, apiBase, onStarted, onCompleted, onCance
         const startAt = specifiedDate > currentDate ? specifiedDate : currentDate;
         startBtn.current.element.setAttribute('disabled', 'disabled');
         statusLbl.current.textContent = 'Starting...';
-        Axios.post(`${apiBase}/${operationId}/start`, startAt)
+        Axios.post(`${api.operations}/${operation.id}/start`, startAt)
             .then((response) => {
-                setRefresh(r => !r);
             })
             .catch((error) => {
                 startBtn.current.element.removeAttribute('disabled');
@@ -117,11 +112,7 @@ function OperationToolbar({operationId, apiBase, onStarted, onCompleted, onCance
             onConfirm: () => {
                 stopBtn.current.element.setAttribute('disabled', 'disabled');
                 statusLbl.current.textContent = 'Cancelling...';
-                Axios.post(`${apiBase}/${operationId}/stop`)
-                    .then((response) => {
-                        setRefresh(r => !r);
-                        onCancelled();
-                    })
+                Axios.post(`${api.operations}/${operation.id}/stop`)
                     .catch((error) => alert({
                         target: event.target,
                         message: error.response?.data?.detail
@@ -136,11 +127,7 @@ const complete = (event) => confirm(
         onConfirm: () => {
             stopBtn.current.element.setAttribute('disabled', 'disabled');
             statusLbl.current.textContent = 'Completing...';
-            Axios.post(`${apiBase}/${operationId}/complete`)
-                .then((response) => {
-                    setRefresh(r => !r);
-                    onCompleted();
-                })
+            Axios.post(`${api.operations}/${operation.id}/complete`)
                 .catch((error) => alert({
                     target: event.target,
                     message: error.response?.data?.detail
@@ -148,23 +135,6 @@ const complete = (event) => confirm(
         }
     })
 const close = () => window.close()
-useEffect(() => {
-    if (!status) return
-    const finalize = () => {
-        clearInterval(interval);
-        clearTimeout(timeout);
-    };
-    finalize();
-    if (status.state === 'Scheduled') {
-        timeout = setTimeout(() => setRefresh(r => !r), status.date - Date.now());
-    } else if (status.state === 'InProgress') {
-        onStarted();
-        interval = setInterval(() => setRefresh(r => !r), 2000);
-    } else if (status.state === 'Completed') {
-        onCompleted();
-    }
-    return finalize;
-}, [status?.state]);
 
 return (
     status &&
@@ -189,7 +159,7 @@ return (
                 />
             }
             {!(status.state === 'Idle') &&
-                <Input value={formatDate(new Date(status.date), 'dd MMMM HH:mm:ss')} disabled></Input>
+                <Input value={formatDate(new Date(status.stateTimestamp), 'dd MMMM HH:mm:ss')} disabled></Input>
             }
             <span ref={statusLbl} className='mx-2'>
                     {status?.state}
@@ -204,7 +174,7 @@ return (
                 className='ms-2'
                 onClick={stop}>Stop</Button>
         <Button icon='copy' ref={copyBtn} id={status}
-                hidden={status.state === 'InProgress'}
+                hidden={status.state === 'InProgress' || status.state === 'Idle'}
                 className='ms-2'
                 onClick={copy}>Copy</Button>
         <Button icon='check' ref={stopBtn}

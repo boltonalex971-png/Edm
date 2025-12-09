@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using Optosense.Edm.Utils;
 using System.Dynamic;
 using Microprojects.Edm.Jobs;
 using Optosense.Edm.Infrastructure.Edm.Jobs;
@@ -12,7 +10,9 @@ using Microprojects.Edm.Intercom;
 using Microsoft.Extensions.Logging;
 using Microprojects.Edm.Utils;
 using Microsoft.Extensions.DependencyInjection;
+using Optosense.Edm.Core.Models;
 using Optosense.Edm.Infrastructure.Protos;
+using Enum = System.Enum;
 
 namespace Optosense.Edm.Jobs
 {
@@ -29,6 +29,7 @@ namespace Optosense.Edm.Jobs
         protected ILogger<StartOperationJob> Logger { get; init; }
         protected IServiceProvider ServiceProvider { get; init; }
         protected string ParametersChannel { get; set; }
+        protected string LifecycleChannel { get; set; }
 
         private List<(string url, IJob job)> _devices = [];
         private List<IJob> _audits = [];
@@ -67,13 +68,16 @@ namespace Optosense.Edm.Jobs
             // Prepare execution result storage
             var storeChannel = $"Operation-{Parameters.Operation}";
             var auditChannel = $"{storeChannel}-audit";
+            var dataChannel = $"{storeChannel}-data";
+            LifecycleChannel = $"{storeChannel}-lifecycle";
             ParametersChannel = $"{storeChannel}-parameters";
             var storeJobParameters = new StoreOperationRecordsJobParameters
             {
                 Operation = Parameters.Operation,
                 Channel = storeChannel,
                 AuditChannel = auditChannel,
-                ParametersChannel = ParametersChannel
+                ParametersChannel = ParametersChannel,
+                DataChannel = dataChannel
             };
             _storageJob = await JobManager.GetJobAsync<StoreOperationRecordsJob>(ServiceScope, storeJobParameters);
 
@@ -95,6 +99,7 @@ namespace Optosense.Edm.Jobs
                         Operation = Parameters.Operation,
                         Channel = auditChannel,
                         ParametersChannel = ParametersChannel,
+                        DataChannel = dataChannel,
                         StartAt = startTime
                     };
                     var auditJob = await JobManager.GetJobAsync<StartAuditJob>(ServiceScope, auditParams);
@@ -138,6 +143,9 @@ namespace Optosense.Edm.Jobs
 
         public override async Task<object> ExecuteAsync()
         {
+            await Intercom.Publish(LifecycleChannel, 
+                new { State = nameof(OperationState.InProgress), StateTimestamp = DateTime.UtcNow });
+
             foreach (var audit in _audits)
             {
                 await JobManager.ExecuteAsync(audit);
@@ -212,10 +220,12 @@ namespace Optosense.Edm.Jobs
             if (CancellationToken.IsCancellationRequested)
             {
                 await OperationService.StopOperation(Parameters.Operation);
+                await Intercom.Publish(LifecycleChannel, new { State = nameof(OperationState.Cancelled), StateTimestamp = DateTime.UtcNow });
             }
             else
             {
                 await OperationService.CompleteOperation(Parameters.Operation);
+                await Intercom.Publish(LifecycleChannel, new { State = nameof(OperationState.Completed), StateTimestamp = DateTime.UtcNow });
             }
 
             return JobStatus.SUCCESS;

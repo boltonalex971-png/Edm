@@ -25,19 +25,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Compile Remove="ClientApp\build\**" />
-		<Compile Remove="ClientApp\node_modules\**" />
-		<Folder Include="ClientApp\build" />
-		<EmbeddedResource Include="ClientApp\build/**" />
-		<None Remove="ClientApp\build\**" />
-		<None Remove="ClientApp\node_modules\**" />
-		<None Remove="ClientApp\*.local" />
-		<None Remove="ClientApp\.env.local" />
-		<None Remove="ClientApp\.eslintcache" />
-		<None Remove="ClientApp\.gitignore" />
-		<None Remove="ClientApp\kendo-ui-license.txt" />
-		<None Remove="ClientApp\yarn-error.log" />
-		<None Remove="ClientApp\yarn.lock" />
+	  <Compile Remove="ClientApp\build\**" />
+	  <Content Remove="ClientApp\build\**" />
+	  <None Remove="ClientApp\build\**" />
+	  <EmbeddedResource Include="ClientApp\build/**" />
 	</ItemGroup>
 
 </Project>

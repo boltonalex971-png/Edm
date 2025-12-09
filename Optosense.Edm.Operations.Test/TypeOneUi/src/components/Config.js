@@ -7,15 +7,11 @@ import { Field } from '@progress/kendo-react-form';
 import { ComboBox } from '@progress/kendo-react-dropdowns';
 
 export function Config({ apiBase, operationId, settings, outputs, onSettingsChanged }) {
-    const saveSettings = (s) => {
-        axios.put(`${apiBase}/api/operations/${operationId}/settings`, s);
-        onSettingsChanged(s)
-    };
     const serialChanged = (e) => {
-        saveSettings({ ...settings, serial: e.value })
+        onSettingsChanged({ ...settings, serial: e.value })
     }
     const indicatorsChanged = (i) => {
-        saveSettings({ ...settings, indicators: i })
+        onSettingsChanged({ ...settings, indicators: i })
     }
 
     return (

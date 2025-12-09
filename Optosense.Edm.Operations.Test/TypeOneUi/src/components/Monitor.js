@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useGet } from './hooks/hooks';
 
 
-export function Monitor({ sensors, started, settings, ...props }) {
+export function Monitor({ sensors, settings, ...props }) {
     const inputRef = useRef();
     const [scrolled, setScrolled] = useState(false);
     const polled = sensors.filter(s => s && s.serial).length;

@@ -7,6 +7,7 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@microprojects/react-utils": "^1.0.23",
+    "@microsoft/signalr": "^10.0.0",
     "@mui/icons-material": "^7.3.5",
     "@mui/material": "^7.3.5",
     "@progress/kendo-data-query": "^1.5.4",
@@ -58,10 +59,11 @@
     "extends": "react-app"
   },
   "scripts": {
-    "start": "rsbuild dev",
     "build": "rsbuild build",
-    "preview": "rsbuild preview",
-    "lint": "eslint src"
+    "check": "biome check --write",
+    "dev": "rsbuild dev",
+    "format": "biome format --write",
+    "preview": "rsbuild preview"
   },
   "browserslist": {
     "production": [

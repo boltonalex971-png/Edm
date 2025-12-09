@@ -1,26 +1,17 @@
 using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.IO;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Microprojects.Edm;
-using Microprojects.Edm.Cache;
-using Microprojects.Edm.Cache.Redis;
-using Microprojects.Edm.Intercom;
-using Microprojects.Edm.Jobs;
 using Microprojects.Edm.Utils;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,11 +19,9 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Hosting.WindowsServices;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.EventLog;
-using Microsoft.Extensions.Options;
 using Optosense.Edm.Core.AspNet;
 using Optosense.Edm.Core.AspNet.Auth;
-using Optosense.Edm.DataAccess;
-using Optosense.Edm.Domain.Models;
+using Optosense.Edm.Infrastructure.Models;
 using Optosense.Edm.Persistence;
 using Optosense.Edm.WebApi;
 using Optosense.Edm.WebApi.Services;
@@ -75,25 +64,27 @@ builder.Services.Configure<Peer>(options =>
     var section = builder.Configuration.GetSection("Kestrel:Endpoints").GetChildren();
     var grpcUri = new Uri(
         section.FirstOrDefault(s => s.Key == "GrpcSecure")?["Url"] ??
-                section.FirstOrDefault(s => s.Key == "Grpc")?["Url"]);
+        section.FirstOrDefault(s => s.Key == "Grpc")?["Url"]);
     var uiUri = new Uri(
         section.FirstOrDefault(s => s.Key == "Https")?["Url"] ??
-                section.FirstOrDefault(s => s.Key == "Http")?["Url"]);
+        section.FirstOrDefault(s => s.Key == "Http")?["Url"]);
     options.Host = $"{uiUri.Scheme}://{uiUri.Host}";
     options.GrpcPort = grpcUri.Port;
     options.UiPort = uiUri.Port;
-    options.Version = typeof(Worker).Assembly.GetName().Version.ToString();
+    options.Version = typeof(Worker).Assembly.GetName().Version?.ToString();
     options.Mode = builder.Configuration.GetValue<string>("Edm:Mode");
     options.Environment = builder.Environment.EnvironmentName;
 });
 //System.Diagnostics.Debugger.Launch();
 builder.AddCache();
+builder.Services.AddAutoMapper(typeof(InfrastructureModelsProfile));
 builder.AddOperationIntercom();
 builder.Services.AddGrpc();
-builder.Services.AddSignalR();
-builder.Services.AddControllers().AddNewtonsoftJson(o =>
+builder.Services.AddSignalR().AddJsonProtocol(o =>
 {
+    o.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter(allowIntegerValues: false));
 });
+builder.Services.AddControllers().AddNewtonsoftJson(o => { });
 builder.Services.AddPlugins(config =>
 {
     config.BaseDirectory = AppContext.BaseDirectory;
@@ -102,15 +93,19 @@ builder.Services.AddPlugins(config =>
 });
 builder.AddJobs();
 
-builder.Services.AddCors(options =>
+if (builder.Environment.IsDevelopment())
 {
-    options.AddPolicy("DevCorsPolicy", builder =>
+    builder.Services.AddCors(o =>
     {
-        builder.AllowAnyOrigin();
-        builder.AllowAnyHeader();
-        builder.AllowAnyMethod();
+        o.AddDefaultPolicy(b =>
+            b
+                .AllowAnyOrigin()
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .SetIsOriginAllowed((host) => true)
+        );
     });
-});
+}
 
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(session =>
@@ -123,10 +118,7 @@ if (builder.Environment.IsProduction())
 {
     builder.Services.AddSingleton<IAuthorizationHandler, HubAuthHandler>();
     builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
-    builder.Services.AddAuthorization(options =>
-    {
-        options.FallbackPolicy = options.DefaultPolicy;
-    });
+    builder.Services.AddAuthorization(options => { options.FallbackPolicy = options.DefaultPolicy; });
 }
 else
 {
@@ -139,27 +131,31 @@ builder.Services.AddHostedService<Worker>()
     {
         config.LogName = "Microprojects";
         config.SourceName = "EDM Service";
-    }).Configure<HostOptions>(options => options.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore);
+    }).Configure<HostOptions>(options =>
+        options.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore);
 
 builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
+
+// if (builder.Configuration.GetValue<string>("Edm:Mode") == "admin" && app.Environment.IsDevelopment())
+// {
+//     using var scope = app.Services.CreateScope();
+//     var db = scope.ServiceProvider.GetRequiredService<EdmContext>();
+//     db.Database.Migrate();
+// }
+
 app.UsePeer();
-
-if (builder.Configuration.GetValue<string>("Edm:Mode") == "admin" && app.Environment.IsDevelopment())
-{
-    using (var scope = app.Services.CreateScope())
-    {
-        var db = scope.ServiceProvider.GetRequiredService<EdmContext>();
-        db.Database.Migrate();
-    }
-}
-
 app.UseJobs();
 app.JsonConfigure();
-app.UseCors("DevCorsPolicy");
-
+if (builder.Environment.IsDevelopment())
+{
+    app.UseCors(policy => policy
+        .WithOrigins("http://localhost:3000")
+        .AllowAnyMethod()
+        .AllowAnyHeader());
+}
 
 app.UseRouting();
 app.UseAuthentication();
@@ -174,6 +170,7 @@ else
 {
     app.UseAuthenticatedUserInfo();
 }
+
 app.UseExceptionHandler();
 app.MapGrpcService<EdmJobService>().AllowAnonymous();
 app.MapHub<IntercomHub>(IntercomHub.Hub).AllowAnonymous();
@@ -193,7 +190,8 @@ internal sealed class GlobalExceptionHandler : IExceptionHandler
         _problemDetailsService = problemDetailsService;
     }
 
-    public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
+    public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception,
+        CancellationToken cancellationToken)
     {
         var problemDetails = new ProblemDetails
         {
@@ -203,7 +201,8 @@ internal sealed class GlobalExceptionHandler : IExceptionHandler
             Detail = exception.GetMeaningfulMessage(),
             Instance = $"{httpContext.Request.Method} {httpContext.Request.Path}"
         };
-        _logger.LogError(exception, "{Type}: {Instance} {Message}", problemDetails.Type, problemDetails.Instance, problemDetails.Detail);
+        _logger.LogError(exception, "{Type}: {Instance} {Message}", problemDetails.Type, problemDetails.Instance,
+            problemDetails.Detail);
         httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
         return await _problemDetailsService.TryWriteAsync(new ProblemDetailsContext
         {

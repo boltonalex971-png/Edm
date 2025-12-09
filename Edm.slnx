@@ -1,0 +1,44 @@
+<Solution>
+  <Folder Name="/Drivers/">
+    <Project Path="Optosense.Edm.Drivers.Null/Optosense.Edm.Drivers.Null.csproj" />
+    <Project Path="Optosense.Edm.Drivers.RestApi/Optosense.Edm.Drivers.RestApi.csproj" />
+  </Folder>
+  <Folder Name="/Operations/">
+    <Project Path="Optosense.Edm.Operations.Optogen/Optosense.Edm.Operations.Optogen.csproj" />
+    <Project Path="Optosense.Edm.Operations.Test/Optosense.Edm.Operations.Test.csproj" />
+  </Folder>
+  <Folder Name="/Plugins/">
+    <Project Path="Optosense.Edm.Plugins.OpcUa/Optosense.Edm.Plugins.OpcUa.csproj" />
+    <Project Path="Optosense.Edm.Plugins.Operator/Optosense.Edm.Plugins.Operator.csproj" />
+  </Folder>
+  <Folder Name="/Profiles/">
+    <Project Path="Optosense.Edm.Profiles.Board/Optosense.Edm.Profiles.Board.csproj" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path="EdmAssemblyInfo.cs" />
+  </Folder>
+  <Folder Name="/Ui/">
+    <Project Path="Microprojects.Edm.Ui.Console/Microprojects.Edm.Ui.Console.csproj" />
+    <Project Path="Microprojects.Edm.Ui.Logistics/Microprojects.Edm.Ui.Logistics.csproj" />
+    <Project Path="Microprojects.Edm.Ui.Main/Microprojects.Edm.Ui.Main.csproj" />
+  </Folder>
+  <Project Path="Edm.Test/Edm.Test.csproj">
+    <Build Project="false" />
+  </Project>
+  <Project Path="Edm.WebApi.Client/Edm.WebApi.Client.csproj" />
+  <Project Path="Edm/Edm.csproj" />
+  <Project Path="Microprojects.Edm.Install/Microprojects.Edm.Install.csproj" />
+  <Project Path="Optosense.Edm.Core.AspNet/Optosense.Edm.Core.AspNet.csproj" />
+  <Project Path="Optosense.Edm.Core/Optosense.Edm.Core.csproj" />
+  <Project Path="Optosense.Edm.DataAccess/Optosense.Edm.DataAccess.csproj" />
+  <Project Path="Optosense.Edm.Domain/Optosense.Edm.Domain.csproj" />
+  <Project Path="Optosense.Edm.Infrastructure/Optosense.Edm.Infrastructure.csproj" />
+  <Project Path="Optosense.Edm.Setup/Optosense.Edm.Setup.vdproj" Type="Installer">
+    <Build Solution="Release|*" />
+  </Project>
+  <Project Path="Optosense.Edm.Test/Optosense.Edm.Test.csproj">
+    <Build Project="false" />
+  </Project>
+  <Project Path="Optosense.Edm.WebApi/Optosense.Edm.WebApi.csproj" />
+  <Project Path="Optosense.Edm/Optosense.Edm.csproj" />
+</Solution>

@@ -10,6 +10,8 @@ using Optosense.Edm.Persistence;
 using Microprojects.Edm.Intercom;
 using Newtonsoft.Json;
 using Optosense.Edm.Domain.Models;
+using AutoMapper;
+using Optosense.Edm.Infrastructure.Models;
 
 namespace Optosense.Edm.Jobs
 {
@@ -21,17 +23,19 @@ namespace Optosense.Edm.Jobs
         protected IDbContextFactory<EdmContext> ContextFactory { get; init; }
         protected StoreOperationRecordsJobParameters Parameters => (StoreOperationRecordsJobParameters)JobParameters;
         private readonly ILogger<StoreOperationRecordsJob> _logger;
+        private readonly IMapper _mapper;
 
         public StoreOperationRecordsJob()
         {
         }
 
         public StoreOperationRecordsJob(ILogger<StoreOperationRecordsJob> logger, IIntercom intercom,
-            IDbContextFactory<EdmContext> factory)
+            IDbContextFactory<EdmContext> factory, IMapper mapper)
         {
             Intercom = intercom;
             ContextFactory = factory;
             _logger = logger;
+            _mapper = mapper;
         }
 
         public override async Task<object> ExecuteAsync()
@@ -68,6 +72,11 @@ namespace Optosense.Edm.Jobs
                         context.Records.Add(rec);
                         await context.SaveChangesAsync();
                         await Intercom.Publish(Parameters.AuditChannel, rec);
+                        var data = new OperationDataContainer {
+                            Type = OperationDataType.Device,
+                            Data = _mapper.Map<OperationDeviceData>(rec)
+                        };
+                        await Intercom.Publish(Parameters.DataChannel, data);
                         if (r.Request == "Stop")
                         {
                             await CancellationTokenSource.CancelAsync();
@@ -96,5 +105,6 @@ namespace Optosense.Edm.Jobs
         public string Channel { get; set; }
         public string AuditChannel { get; set; }
         public string ParametersChannel { get; set; }
+        public string DataChannel { get; set; }
     }
 }

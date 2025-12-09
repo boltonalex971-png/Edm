@@ -1,71 +1,44 @@
-import React, {useEffect, useState} from "react"
-import {useGet} from "./hooks/hooks";
+import React, {useState} from "react"
 import {Monitor} from "./Monitor";
-import {Sensor} from "./Sensor";
 import {SmartScroll, SmartScrollContent} from "./SmartScroll";
-import axios from "axios";
 import {Log} from "./Log";
 import {Sensors} from "./Sensors";
+import {useOperationData} from "./hooks/messagingHooks";
 
-let monitorInterval;
-
-export const OperationInfo = (props) => {
-    const [sensors, setSensors] = useState();
-    const [records, setRecords] = useState([]);
-    const [refresh, setRefresh] = useState(false);
-    const [logView, setLogView] = useState(false);
-    const lastId = records.at(-1)?.id || 0
-    useGet(`${props.apiBase}/api/operations/${props.operationId}/devices`, [], d => {
-        const options = JSON.parse(d.find(dev => dev.options?.includes('capacity'))?.options)
+export const OperationInfo = ({info, settings, ...props}) => {
+    const [sensors, setSensors] = useState(() => {
+        const options = JSON.parse(info.devices.find(dev => dev.options?.includes('capacity'))?.options)
         const cap = parseInt(options?.capacity)
-        setSensors(new Array(cap).fill({}).map((s, i) => ({addr: i})))
-        setRefresh(r => !r)
+        return new Array(cap).fill({}).map((s, i) => ({addr: i}))
     });
-
-    const [[status]] = useGet(`${props.apiBase}/api/operations/${props.operationId}/status`);
-
-    useEffect(() => {
-        if (!sensors) return
-        axios.get(`${props.apiBase}/api/operations/${props.operationId}/criteria`)
-            .then(c => {
-                c.data.forEach(d => {
-                    const addr = d.selector !== undefined && parseInt(`0x${d.selector.slice(1)}`);
-                    // Ignore sensors when specified capacity less than the multi-string command can return (e.g. <SOC?>)
-                    if (addr >= sensors.length) return
-                    if (addr !== false) {
-                        const attr = d.auditCriterionParam
-                        sensors[addr][attr] = {value: d.result, valid: d.valid};
-                    }
-                });
-                axios.get(`${props.apiBase}/api/operations/${props.operationId}/records?lastRecordId=${lastId}`)
-                    .then(r => {
-                        const ord = 'executedAt'
-                        setRecords(recs =>
-                            [...recs, ...r.data].sort((a, b) => a[ord] < b[ord] ? -1 : a[ord] > b[ord] ? 1 : 0))
-                        const serials = r.data.filter(r => (r.parameters || {})[props.settings.serial]).map(r => r.parameters)
-                        setSensors(sens => sens.map((s, i) => {
-                            const f = serials.filter(r => parseInt(`0x${r.ADDR.slice(1)}`) === i).at(-1)
-                            return f ? {...s, serial: f[props.settings.serial]} : s
-                        }))
-                    }).catch(alert)
-            }).catch(alert)
-    }, [refresh])
-
-    useEffect(() => {
-        if (props.started && status && status !== 'Abandoned') {
-            monitorInterval = setInterval(() => setRefresh(r => !r), 1000);
-        } else {
-            clearInterval(monitorInterval);
-        }
-
-        return () => clearInterval(monitorInterval);
-    }, [props.started, status]);
+    const [logView, setLogView] = useState(false);
+    const records = useOperationData('Device', info.records || [], (d) => {
+        const serials = d.filter(r => (r.parameters || {})[settings.serial]).map(r => r.parameters)
+        setSensors(sens => sens.map((s, i) => {
+            const f = serials.filter(r => parseInt(`0x${r.ADDR.slice(1)}`) === i).at(-1)
+            return f ? {...s, serial: f[settings.serial]} : s
+        }))
+    })
+    const criteria = useOperationData('Audit', info.criteria || [], (m) => {
+        m.forEach(d => {
+            const addr = d.selector && parseInt(`0x${d.selector.slice(1)}`);
+            // Ignore sensors when specified capacity less than the multi-string command can return (e.g. <SOC?>)
+            if (addr !== undefined) {
+                if (addr >= sensors.length) return
+                const attr = d.auditCriterionParam
+                setSensors(s => {
+                    s[addr][attr] = {value: d.result, valid: d.valid}
+                    return [...s]
+                })
+            }
+        });
+    })
 
     return (
         <SmartScroll offtop={10} style={{display: 'flex', margin: 10}}>
             <div style={{flex: 1}}>
                 <SmartScrollContent style={{flex: 1}}>
-                    <Monitor {...props} sensors={sensors || []} settings={props.settings}/>
+                    <Monitor {...props} sensors={sensors || []} settings={settings}/>
                 </SmartScrollContent>
             </div>
             <div style={{flex: 4, marginLeft: '1rem'}}>
@@ -88,7 +61,7 @@ export const OperationInfo = (props) => {
                         <Log {...props} records={records || []}/>
                     }
                     {!logView &&
-                        <Sensors sensors={sensors || []} settings={props.settings} style={props.style}/> 
+                        <Sensors sensors={sensors || []} settings={settings} style={props.style}/> 
                     }
                 </SmartScrollContent>
             </div>

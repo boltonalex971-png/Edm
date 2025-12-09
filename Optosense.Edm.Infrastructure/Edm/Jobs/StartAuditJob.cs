@@ -16,6 +16,8 @@ using Microprojects.Edm.Intercom;
 using System.Threading;
 using AdaptiveExpressions;
 using Microprojects.Edm.Utils;
+using AutoMapper;
+using Optosense.Edm.Infrastructure.Models;
 
 namespace Optosense.Edm.Jobs
 {
@@ -29,20 +31,24 @@ namespace Optosense.Edm.Jobs
         protected ILogger<StartAuditJob> Logger { get; init; }
         protected IDbContextFactory<EdmContext> ContextFactory { get; init; }
 
+        private readonly IMapper _mapper;
         private readonly string OffsetParamName = "Offset";
         private IDisposable _paramsSubscriber;
         private Dictionary<string, object> _inputParams = new();
         private Func<int, int, string, string> CacheKey = (opId, opCritId, addr) => 
             $"{nameof(Operation)}:{opId}:{nameof(OperationCriterion)}:{opCritId}:{addr}";
 
+
         public StartAuditJob() { }
-        public StartAuditJob(IJobContainer container, ICache cache, IIntercom intercom, ILogger<StartAuditJob> logger, IDbContextFactory<EdmContext> contextFactory)
+        public StartAuditJob(IJobContainer container, ICache cache, IIntercom intercom, ILogger<StartAuditJob> logger, 
+            IDbContextFactory<EdmContext> contextFactory, IMapper mapper)
         {
             JobManager = container;
             Intercom = intercom;
             Cache = cache;
             Logger = logger;
             ContextFactory = contextFactory;
+            _mapper = mapper;
         }
 
         public override Task<bool> InitAsync()
@@ -161,8 +167,14 @@ namespace Optosense.Edm.Jobs
                                     OperationCriterion = operationCriterion
                                 });
                                 await db.SaveChangesAsync();
-                            }
-                        }
+                            operationCriterion.AuditCriterion = (AuditCriterion)criterion.Copy();
+                            operationCriterion.AuditCriterion.Zone = null;
+                            var data = new OperationDataContainer
+                            {
+                                Type = OperationDataType.Audit,
+                                Data = _mapper.Map<OperationAuditData>(operationCriterion)
+                            };
+                            await Intercom.Publish(Parameters.DataChannel, data);
                     }
                     catch (Exception ex)
                     {
@@ -229,7 +241,7 @@ namespace Optosense.Edm.Jobs
         public DateTime StartAt { get; set; } = DateTime.UtcNow;
         public string Channel { get; set; }
         public string ParametersChannel { get; set; }
-
+        public string DataChannel { get; set; }
     }
 
 }

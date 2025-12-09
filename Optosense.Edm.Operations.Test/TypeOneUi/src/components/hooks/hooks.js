@@ -1,4 +1,4 @@
-import { useEffect, useReducer } from "react";
+import {useEffect, useReducer, useCallback, useState} from "react";
 
 const requestType = Object.freeze({
     get: "GET",
@@ -9,10 +9,10 @@ const requestType = Object.freeze({
 
 function useFetch(url, deps = [], type = requestType.get, data = null, afterLoad) {
     const [state, setState] = useReducer(
-        (state, newState) => ({ ...state, ...newState }),
-        { loading: true, data: null, error: null }
+        (state, newState) => ({...state, ...newState}),
+        {loading: true, data: null, error: null}
     );
-    const setData = (data) => setState({ data: data });
+    const setData = (data) => setState({data: data});
     const options = {
         method: type,
         mode: 'cors', // no-cors, *cors, same-origin
@@ -29,23 +29,27 @@ function useFetch(url, deps = [], type = requestType.get, data = null, afterLoad
 
     useEffect(() => {
         const controller = new AbortController();
+
         async function fetchUrl() {
             try {
-                const response = await fetch(url, { ...options, signal: controller.signal });
+                const response = await fetch(url, {...options, signal: controller.signal});
                 const error = !response.ok && `Data request failed with status ${response.status}`;
                 const json = response.ok && await response.json();
                 const result = afterLoad && (afterLoad(json))
-                setState({ loading: false, data: result || json, error: error });
+                setState({loading: false, data: result || json, error: error});
             } catch (error) {
                 if (error.name !== 'AbortError') {
-                    setState({ loading: false, data: null, error: 'Cannot load the data' });
+                    setState({loading: false, data: null, error: 'Cannot load the data'});
                 }
             }
         }
+
         /*// Uncomment next line to make reloading visible
         setState({ loading: true, data: null, error: null })*/
         fetchUrl();
-        return () => { controller.abort(); }
+        return () => {
+            controller.abort();
+        }
     }, [url, options.type, ...deps]);
     return [[state.data, setData], state.loading, state.error];
 }
@@ -58,5 +62,4 @@ function usePost(url, data, deps) {
     return useFetch(url, deps, requestType.post, data);
 }
 
-
-export { requestType, useFetch, useGet, usePost };
+export {requestType, useFetch, useGet, usePost};

@@ -1,35 +1,29 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { types } from '@microprojects/react-utils'
+import React, {useCallback, useEffect, useRef, useState} from 'react'
+import useSignalR, {PluginMessageTypes, usePluginMessaging} from "../hooks/signalRHooks.ts";
+import api from "../api.js";
 
-export const OperationPluginContainer = ({ title, src, data, started, ...props }) => {
+export const OperationPluginContainer = ({ title, src, id, options, info, navigate, onMessage }) => {
     const url = new URL(document.location).searchParams.get('url')
-    const targetSource = url || src
-    const targetOrigin = new URL(targetSource).origin
+    const target = useRef(new URL(url || src))
     const [frameId] = useState(Math.floor(Math.random() * 10000000).toString())
     const ref = useRef()
-    useEffect(() => {
-        if (started === undefined) return
-        ref.current.contentWindow?.postMessage(
-            { type: types.operationLifecycle, frameId, data: started ? { Start: true } : { Stop: true } },
-            targetOrigin
-        )
-    }, [started])
-    const onLoad = () => {
-        ref.current.contentWindow.postMessage(
-            { type: types.pluginData, frameId, data },
-            targetOrigin
-        )
-    }
+    const post = usePluginMessaging(ref.current?.contentWindow, frameId, target.current.origin, onMessage)
+    useSignalR(`${api.baseUrl}/hub`, `Operation-${id}-data`, (message) => {
+        const data = Array.isArray(message) ? message : [message]
+        data.forEach(post)
+    })
+    useEffect(() => post({type: PluginMessageTypes.navigate, data: navigate}), [navigate])
+    const onLoad = () => post({type: PluginMessageTypes.init, data: info})
 
     return (
         <iframe
             style={{ border: 0 }}
             ref={ref}
             title={title}
-            src={targetSource}
+            src={target.current.toString()}
             onLoad={onLoad}
             seamless
-            {...props}
+            width='100%'
         />
     )
 }

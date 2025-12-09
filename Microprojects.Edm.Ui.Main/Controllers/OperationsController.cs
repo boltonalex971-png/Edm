@@ -201,6 +201,7 @@ namespace Microprojects.Edm.Ui.Main.Controllers
             var result = _mapper.Map<IEnumerable<OperationCriterionModel>>(criterion);
             return result;
         }
+        
         [HttpGet("{id:int}/devices")]
         public async Task<IEnumerable<OperationHostDevice>> GetOperationDevices(int id)
         {
@@ -237,11 +238,36 @@ namespace Microprojects.Edm.Ui.Main.Controllers
                 Id = operation.WorkplaceProcess.ProcessId,
                 Name = operation.WorkplaceProcess.Process.Name,
                 Description = operation.WorkplaceProcess.Process.Description,
+                AppGuid = operation.WorkplaceProcess.Process.OperationGuid,
                 Parameters = parameters.Concat(profileParams).Distinct(),
                 Settings = settings
             };
 
             return processInfo;
+        }
+
+        [HttpGet("{id:int}/info")]
+        public async Task<OperationInfo> GetOperationInfo(int id)
+        {
+            var status = await Status(id);
+            var process = await GetProcessInfo(id);
+            var devices = await GetOperationDevices(id);
+            var criteria = await GetOperationCriteria(id);
+            var records = await GetOperationRecords(id, 0);
+            var info = new OperationInfo
+            {
+                Id = status.Id,
+                State = status.State,
+                StateTimestamp = status.StateTimestamp,
+                Error = status.Error,
+                IsValid = status.IsValid,
+                Message = status.Message,
+                Process = process,
+                Devices = devices,
+                Criteria = criteria,
+                Records = records,
+            };
+            return info;
         }
 
         [HttpPut("{id:int}/settings")]
