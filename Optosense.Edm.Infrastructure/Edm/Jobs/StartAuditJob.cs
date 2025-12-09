@@ -167,14 +167,16 @@ namespace Optosense.Edm.Jobs
                                     OperationCriterion = operationCriterion
                                 });
                                 await db.SaveChangesAsync();
-                            operationCriterion.AuditCriterion = (AuditCriterion)criterion.Copy();
-                            operationCriterion.AuditCriterion.Zone = null;
-                            var data = new OperationDataContainer
-                            {
-                                Type = OperationDataType.Audit,
-                                Data = _mapper.Map<OperationAuditData>(operationCriterion)
-                            };
-                            await Intercom.Publish(Parameters.DataChannel, data);
+                                operationCriterion.AuditCriterion = (AuditCriterion)criterion.Copy();
+                                operationCriterion.AuditCriterion.Zone = null;
+                                var data = new OperationDataContainer
+                                {
+                                    Type = OperationDataType.Audit,
+                                    Data = _mapper.Map<OperationAuditData>(operationCriterion)
+                                };
+                                await Intercom.Publish(Parameters.DataChannel, data);
+                            }
+                        }
                     }
                     catch (Exception ex)
                     {
