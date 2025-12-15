@@ -6,11 +6,12 @@ import { Card, CardHeader, CardBody, CardTitle, CardSubtitle } from '@progress/k
 import { Form, FormElement } from '@progress/kendo-react-form';
 import { Button, ButtonGroup, Toolbar, ToolbarItem } from '@progress/kendo-react-buttons';
 import { Alert } from 'reactstrap';
-import { SmartScroll, SmartScrollContent } from "./SmartScroll";
+//import { SmartScroll, SmartScrollContent } from "./SmartScroll";
 import { TreeViewMaster, refresh } from "./TreeViewMaster";
 import { Loading, DetailStub } from "./utils/Utils";
 import api from './api';
 import { Folder } from "./config/Folder";
+import {SmartScroll, SmartScrollContent} from "@microprojects/tools";
 
 export function reloadMaster() {
     refresh();
@@ -33,17 +34,14 @@ export function MasterDetail(props) {
     const history = useHistory();
     let { path } = useRouteMatch();
     return (
-        <SmartScroll offtop={10}>
-            <div style={{ flex: 1 }}>
-                <SmartScrollContent>
+        <SmartScroll offsetTop={10} style={{display: "flex", flexDirection: "row", alignItems: 'flex-start', gap: 20}}>
+                <SmartScrollContent style={{ flex: 1 }}>
                     <TreeViewMaster api={props.api}
                         onCurrentRootChanged={(root) => (_selectedItem = root)}
                         item={props.item}
                     />
                 </SmartScrollContent>
-            </div>
-            <div style={{ flex: 5, marginLeft: '1rem' }}>
-                <SmartScrollContent>
+                <SmartScrollContent style={{ flex: 5, marginLeft: '1rem' }}>
                     <Switch>
                         <Route exact path={path}>
                             <DetailStub message={props.stubMessage} />
@@ -58,14 +56,10 @@ export function MasterDetail(props) {
                             />
                         </Route>
                         <Route path={`${path}/:id`}>
-                            <>
-                                {props.detail}
-                                <div style={{ height: '40vh' }}>{ /*div to avoid ui jerking when switching cards at bottom*/}</div>
-                            </>
+                            {props.detail}
                         </Route>
                     </Switch>
                 </SmartScrollContent>
-            </div>
         </SmartScroll>
     );
 }

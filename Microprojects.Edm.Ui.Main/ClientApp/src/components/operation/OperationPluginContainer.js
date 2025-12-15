@@ -1,6 +1,7 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react'
-import useSignalR, {PluginMessageTypes, usePluginMessaging} from "../hooks/signalRHooks.ts";
 import api from "../api.js";
+import {PluginMessageTypes, usePluginMessaging} from "@microprojects/tools";
+import useSignalR from "../hooks/signalRHooks.ts";
 
 export const OperationPluginContainer = ({ title, src, id, options, info, navigate, onMessage }) => {
     const url = new URL(document.location).searchParams.get('url')
@@ -12,8 +13,8 @@ export const OperationPluginContainer = ({ title, src, id, options, info, naviga
         const data = Array.isArray(message) ? message : [message]
         data.forEach(post)
     })
-    useEffect(() => post({type: PluginMessageTypes.navigate, data: navigate}), [navigate])
-    const onLoad = () => post({type: PluginMessageTypes.init, data: info})
+    useEffect(() => post({type: PluginMessageTypes.NAVIGATE, data: navigate}), [navigate])
+    const onLoad = () => post({type: PluginMessageTypes.INIT, data: info})
 
     return (
         <iframe

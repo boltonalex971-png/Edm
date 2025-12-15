@@ -1,9 +1,10 @@
 import React, {useState} from "react"
 import {Monitor} from "./Monitor";
-import {SmartScroll, SmartScrollContent} from "./SmartScroll";
+//import {SmartScroll, SmartScrollContent} from "./SmartScroll";
 import {Log} from "./Log";
 import {Sensors} from "./Sensors";
-import {useOperationData} from "./hooks/messagingHooks";
+import {PluginMessageTypes, SmartScroll, SmartScrollContent, useOperationData} from "@microprojects/tools";
+//import {useOperationData} from "./hooks/messagingHooks";
 
 export const OperationInfo = ({info, settings, ...props}) => {
     const [sensors, setSensors] = useState(() => {
@@ -12,14 +13,14 @@ export const OperationInfo = ({info, settings, ...props}) => {
         return new Array(cap).fill({}).map((s, i) => ({addr: i}))
     });
     const [logView, setLogView] = useState(false);
-    const records = useOperationData('Device', info.records || [], (d) => {
+    const records = useOperationData(PluginMessageTypes.DEVICE, info.records || [], (d) => {
         const serials = d.filter(r => (r.parameters || {})[settings.serial]).map(r => r.parameters)
         setSensors(sens => sens.map((s, i) => {
             const f = serials.filter(r => parseInt(`0x${r.ADDR.slice(1)}`) === i).at(-1)
             return f ? {...s, serial: f[settings.serial]} : s
         }))
     })
-    const criteria = useOperationData('Audit', info.criteria || [], (m) => {
+    const criteria = useOperationData(PluginMessageTypes.AUDIT, info.criteria || [], (m) => {
         m.forEach(d => {
             const addr = d.selector && parseInt(`0x${d.selector.slice(1)}`);
             // Ignore sensors when specified capacity less than the multi-string command can return (e.g. <SOC?>)
@@ -35,14 +36,11 @@ export const OperationInfo = ({info, settings, ...props}) => {
     })
 
     return (
-        <SmartScroll offtop={10} style={{display: 'flex', margin: 10}}>
-            <div style={{flex: 1}}>
+        <SmartScroll offsetTop={10} style={{display: 'flex', margin: 10}}>
                 <SmartScrollContent style={{flex: 1}}>
                     <Monitor {...props} sensors={sensors || []} settings={settings}/>
                 </SmartScrollContent>
-            </div>
-            <div style={{flex: 4, marginLeft: '1rem'}}>
-                <SmartScrollContent>
+                <SmartScrollContent style={{flex: 4, marginLeft: '1rem'}}>
                     <div style={{display: 'flex', justifyContent: 'space-between'}}>
                         <h5>{logView ? 'Log' : 'Sensor'} view</h5>
                         <a
@@ -64,7 +62,6 @@ export const OperationInfo = ({info, settings, ...props}) => {
                         <Sensors sensors={sensors || []} settings={settings} style={props.style}/> 
                     }
                 </SmartScrollContent>
-            </div>
         </SmartScroll>
     );
 };
