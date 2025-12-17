@@ -3,18 +3,18 @@ import {Route, Routes, useNavigate} from 'react-router-dom';
 import { Layout } from "./components/Layout";
 import { OperationInfo } from "./components/OperationInfo";
 import { Config } from "./components/Config";
-import {PluginMessageTypes, useOperationData, usePluginMessaging} from "./components/hooks/messagingHooks";
+import {PluginMessageTypes, useOperationData, usePluginMessaging} from "@microprojects/tools";
 
 function App(props) {
     const navigate = useNavigate();
     const [settings, setSettings] = useState()
-    const info = useOperationData('Init', undefined, 
+    const info = useOperationData(PluginMessageTypes.INIT, undefined, 
         (i) => setSettings(JSON.parse(i.process.settings || "[]")))
-    useOperationData('Navigate', undefined, (m) => navigate(m))
+    useOperationData(PluginMessageTypes.NAVIGATE, undefined, (m) => navigate(m))
     const [operationId] = useState(() => new URLSearchParams(document.location.search).get('id') || 0);
     const postMessage = usePluginMessaging(window.parent)
     const saveSettings = (s) => {
-        postMessage({type: PluginMessageTypes.settings, data: s})
+        postMessage({type: PluginMessageTypes.SETTINGS, data: s})
         setSettings(s)
     }
 
