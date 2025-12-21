@@ -1,23 +1,16 @@
 import React from 'react';
-import { useOutletContext } from 'react-router-dom';
 import { GridColumn } from '@progress/kendo-react-grid';
 import { EasyGrid } from './EasyGrid';
 import { ColorPicker } from '@progress/kendo-react-inputs';
 import { ComboBoxCell, DropDownCell } from './DropDownCell';
-import axios from 'axios';
 
-export function Config({ settings, setSettings, outputs }) {
-    const { apiBase, operationId } = useOutletContext();
-    const saveSettings = (s) => {
-        axios.put(`${apiBase}/api/operations/${operationId}/settings`, s);
-        setSettings(s)
-    };
+export function Config({ settings, onSettingsChanged, outputs }) {
     const paramsChanged = (s) => {
-        saveSettings({ ...settings, params: [...s] });
+        onSettingsChanged({ ...settings, params: [...s] });
     };
     const colorsChanged = (name, color) => {
         settings.panels[name].color = color;
-        saveSettings({ ...settings });
+        onSettingsChanged({ ...settings });
     };
 
     return (

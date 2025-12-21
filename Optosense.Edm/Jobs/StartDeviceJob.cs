@@ -53,10 +53,15 @@ namespace Optosense.Edm.Jobs
                 _profilerPlugin = _plugins.GetProfile(Parameters.Profiler) ?? throw new EdmException("Profiler plugin not found");
                 _driverPlugin = _plugins.GetDriver(Parameters.Driver) ?? throw new EdmException("Driver plugin not found");
                 //_profilePlugin = _plugins.GetProfile(_driverPlugin.ProfileGuid) ?? throw new EdmException("No profiler found");
-                _driver = _driverPlugin.GetDriver();
+                _driver = _driverPlugin.GetDriver(Parameters);
                 if (_driver is IReactiveDriver reactiveDriver)
                 {
                     reactiveDriver.PushResponse = PushResponse;
+                }
+
+                if (_driver is INeedIntercom driverWithIntercom)
+                {
+                    driverWithIntercom.Intercom = Intercom;   
                 }
 
                 var options = _driver.GetEffectiveOptions(); //DriverUtils.GetDriverOptions(DeviceModel.None); //Parameters.Driver);
@@ -89,6 +94,7 @@ namespace Optosense.Edm.Jobs
                     {
                         if (json == null)
                             return;
+                        
                         _logger.LogDebug("Device {Device} received parameter {Param} at {Time}", _driver.GetType().Name, json, DateTime.UtcNow.ToString("hh:mm:ss.fff"));
                         var param = JsonConvert.DeserializeObject<KeyValuePair<string, object>>(json.ToString());
                         if (param.Key == "Stop" && (bool)param.Value)
@@ -102,14 +108,14 @@ namespace Optosense.Edm.Jobs
                         if (param.Key.StartsWith('?'))
                         {
                             var name = param.Key[1..];
-                            if (Parameters.OutputParameters.Contains(name) && _driver is IParamProvider)
-                            {
-                                var planned = DateTime.UtcNow;
-                                var result = await ((IParamProvider)_driver).GetParam(name);
-                                result.Planned = (long)(planned - Parameters.StartAt).TotalMilliseconds;
-                                result.Executed = (long)(DateTime.UtcNow - Parameters.StartAt).TotalMilliseconds;
-                                await PushResponse(result);
-                            }
+                            if (!Parameters.OutputParameters.Contains(name) || _driver is not IParamProvider) 
+                                return;
+                            
+                            var planned = DateTime.UtcNow;
+                            var result = await ((IParamProvider)_driver).GetParam(name);
+                            result.Planned = (long)(planned - Parameters.StartAt).TotalMilliseconds;
+                            result.Executed = (long)(DateTime.UtcNow - Parameters.StartAt).TotalMilliseconds;
+                            await PushResponse(result);
 
                             return;
                         }
@@ -354,19 +360,13 @@ namespace Optosense.Edm.Jobs
         public int GetOperationId() => Parameters.Operation;
     }
 
-    public class StartDeviceJobParameters : IJobParameters
+    public class StartDeviceJobParameters : DeviceParameters, IJobParameters
     {
         [JobParameter(Required = true)]
         public int OperationHostDevice { get; set; }
         [JobParameter(Required = true)]
         public int Operation { get; set; }
-        public string StoreChannel { get; set; }
-        public string ParametersChannel { get; set; }
-        public dynamic DriverOptions { get; set; }
-        public string Profile { get; set; }
         public Guid Profiler { get; set; }
-        public string InputParameters { get; set; }
-        public string OutputParameters { get; set; }
         public Guid Driver { get; set; }
         public DateTime StartAt { get; set; } = DateTime.UtcNow.AddSeconds(10);
     }

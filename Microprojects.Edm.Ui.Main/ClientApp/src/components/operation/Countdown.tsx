@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 
-let timerInterval;
+let timerInterval: ReturnType<typeof setInterval>;
 
-export function Countdown({ start }) {
+export function Countdown({ start } : {start: number}) {
     const [timer, setTimer] = useState(start);
     useEffect(() => {
         timerInterval = setInterval(() => setTimer(t => t - 1), 1000);

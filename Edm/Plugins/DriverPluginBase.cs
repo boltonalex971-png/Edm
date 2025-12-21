@@ -15,6 +15,7 @@ namespace Optosense.Edm.Plugins
         }
 
         public abstract IDeviceDriver GetDriver();
+        public virtual IDeviceDriver GetDriver(DeviceParameters parameters) => GetDriver();
         public abstract IEnumerable<DriverRequest> GetPlan(string profile, string parameters);
     }
 }

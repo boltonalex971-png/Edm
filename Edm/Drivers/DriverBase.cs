@@ -16,6 +16,10 @@ namespace Microprojects.Edm.Drivers
         public static double PingIntervalInSec { get; } = 10.0;
 
         public IDriverOptions Options { get; set; }
+        public DeviceParameters Parameters { get; set; }
+        
+        public DriverBase() {}
+        public DriverBase(DeviceParameters parameters) => Parameters = parameters;
 
         public virtual IDriverOptions GetEffectiveOptions()
         {

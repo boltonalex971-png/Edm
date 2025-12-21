@@ -1,35 +1,29 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Dynamic;
-using System.IO.Ports;
-using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Text.RegularExpressions;
-using Microprojects.Edm;
-using Microprojects.Edm.Drivers;
+﻿using Microprojects.Edm.Drivers;
+using Microprojects.Edm.Intercom;
 using Newtonsoft.Json;
 using Optosense.Edm.Profiles.Operator;
 
 namespace Optosense.Edm.Drivers.Operator
 {
     [Driver(OptionsType = typeof(OperatorDriverOptions))]
-    public class OperatorDriver : DriverBase, IDriverWithState, IReactiveDriver
+    public class OperatorDriver : DriverBase, IDriverWithState, IReactiveDriver, INeedIntercom
     {
         protected OperatorDriverOptions BoardOptions => (OperatorDriverOptions) Options;
 
         public Func<DriverResponse, bool, Task>? PushResponse { get; set; }
+        public IIntercom Intercom { get; set; }
 
         private OperatorState? _state;
         private DateTime _startTs = DateTime.UtcNow;
         private CancellationTokenSource _tokenSource;
         private DriverResponse _response;
+        private string _operatorChannel;
 
         public OperatorDriver() { }
 
-        public OperatorDriver(OperatorDriverOptions p)
+        public OperatorDriver(DeviceParameters parameters) : base(parameters)
         {
-            Options = p;
+            _operatorChannel = $"{parameters.StoreChannel}-operator";
         }
 
         public override string Init()
@@ -48,17 +42,18 @@ namespace Optosense.Edm.Drivers.Operator
             }
             
             // TODO Send the request by SignalR channel
-            if (req is { Parameters: not null })
-            {
-                SetState(JsonConvert.DeserializeObject<OperatorState>(req.Parameters));
-                // Wait for response
-                _tokenSource = new();
-                await Task.Delay(-1, _tokenSource.Token).ContinueWith((t) => { });
-                ClearState();
-                return _response;
-            }
+            if (req is { Parameters: null }) 
+                return null;
+            
+            var state = JsonConvert.DeserializeObject<OperatorState>(req.Parameters);
+            SetState(state);
+            await Intercom.Publish(_operatorChannel, state);
+            // Wait for response
+            _tokenSource = new CancellationTokenSource();
+            await Task.Delay(-1, _tokenSource.Token).ContinueWith((t) => { });
+            ClearState();
+            return _response;
 
-            return null;
         }
 
         private void ClearState()
@@ -69,21 +64,7 @@ namespace Optosense.Edm.Drivers.Operator
         private void SetState(OperatorState state) 
         {
             _state = state;
-            if (_state != null)
-            {
-                _state.Scheduled = DateTime.UtcNow;
-            }
-        }
-
-        private string SubstituteParameters(string command, ExpandoObject parameters)
-        {
-            var result = command;
-            foreach (var p in parameters)
-            {
-                result = result.Replace($"{{{p.Key}}}", p.Value.ToString());
-            }
-
-            return result;
+            _state?.Scheduled = DateTime.UtcNow;
         }
 
         public IDriverState GetState()
@@ -111,6 +92,7 @@ namespace Optosense.Edm.Drivers.Operator
                 response.Response = nameof(DriverResponseState.Ok);
                 var extendedParameters = parameters ?? new Dictionary<string, object>();
                 extendedParameters[_state.Command] = true;
+                extendedParameters["ResponseTime"] = (DateTime.UtcNow - _state.Scheduled).TotalSeconds;
                 response.Parameters = JsonConvert.SerializeObject(extendedParameters);
                 if (response.Executed - response.Planned > _state.ResponseTime * 1000)
                 {

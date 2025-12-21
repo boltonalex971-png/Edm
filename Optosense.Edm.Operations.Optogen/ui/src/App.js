@@ -1,45 +1,43 @@
-import React, { useState, useCallback, useEffect } from "react";
-import { Outlet, Route, Routes, useLocation, useSearchParams } from 'react-router-dom';
-// import logo from "./logo.svg";
-//import "./App.css";
-// import { FetchData } from "./FetchData";
-import { Layout } from "./components/Layout";
+import React, { useState } from "react";
+import {Outlet, Route, Routes, useNavigate, useSearchParams} from 'react-router-dom';
 import { OperationInfo } from "./components/OperationInfo";
-import queryString from 'query-string';
-import { OperationMenu } from "./components/OperationMenu";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Config } from "./components/Config";
-import { useGet } from "./components/hooks/hooks";
 import { defaultOptions } from "./components/DefaultOptions";
-import { useOperationData, types } from '@microprojects/react-utils'
+import {useOperationData, PluginMessageTypes, usePluginMessaging} from '@microprojects/tools'
 
-function App({ apiBase }) {
-    // const location = useLocation();
-    // const query = queryString.parse(location.search);
+// Operator driver guid shouldn't be changed ever
+const OPERATOR_DRIVER_GUID = 'f222f3fa-0c13-4ae1-9b2d-cb055d4b9679'
+
+function App() {
+    const navigate = useNavigate()
     const [searchParams] = useSearchParams();
-    const [operationId] = useState(searchParams.get('id'));
-    const [[processInfo]] = useGet(`${apiBase}/api/operations/${operationId}/processInfo`);
     const [settings, setSettings] = useState();
-    const [started, setStarted] = useState(false);
-    const [lifecycle] = useOperationData(types.operationLifecycle, (d) => setStarted(d.Start))
-    useEffect(() => {
-        if (!processInfo) {
-            return;
-        }
-        
-        setSettings(processInfo.settings ? JSON.parse(processInfo.settings) : defaultOptions)
-    }, [processInfo])
+    const [profile, setProfile] = useState();
+    const [operationId] = useState(searchParams.get('id'));
+    const info = useOperationData(PluginMessageTypes.INIT, undefined, (i) => {
+        setSettings(i.process.settings ? JSON.parse(i.process.settings) : defaultOptions)
+        const operatorDevice = i.devices.find((d) => d.hostDevice.device.driverGuid === OPERATOR_DRIVER_GUID) 
+        setProfile(JSON.parse(operatorDevice.profile.textJson || '[]').sort((a, b) => a.order - b.order));
+    })
+    useOperationData(PluginMessageTypes.NAVIGATE, '', (m) => navigate(m))
+    const postMessage = usePluginMessaging(window.parent)
+    const saveSettings = (s) => {
+        postMessage({type: PluginMessageTypes.SETTINGS, data: s})
+        setSettings(s)
+    }
+
     return (
         <Routes>
             <Route path="*" element={
-                <Outlet context={{ operationId, apiBase, processInfo }} />
+                <Outlet />
             }>
-                <Route index element={
-                    settings && <OperationInfo settings={settings} started={started} /> || 'Loading...'
-                } />
-                <Route path='config' element={
-                    settings && <Config settings={settings} setSettings={setSettings} outputs={processInfo.parameters} /> || 'Loading...'
-                } />
+                    <Route index element={
+                        settings && <OperationInfo settings={settings} records={info.records} profile={profile}/> || 'Loading...'
+                    } />
+                    <Route path='config' element={
+                        settings && <Config settings={settings} onSettingsChanged={saveSettings} outputs={info.process.parameters} /> || 'Loading...'
+                    } />
             </Route>
         </Routes>
     );

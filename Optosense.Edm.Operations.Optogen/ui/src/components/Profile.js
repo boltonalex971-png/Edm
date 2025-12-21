@@ -1,16 +1,4 @@
-import { Button } from '@progress/kendo-react-buttons';
-import React, { useEffect, useRef } from 'react';
-import { useState } from 'react';
-import { Input, NumericTextBox } from '@progress/kendo-react-inputs';
-import { useGet } from './hooks/hooks';
-import { Field, Form, FormElement } from '@progress/kendo-react-form';
-import axios from 'axios';
-import { Countdown } from './Countdown';
-import { useOutletContext } from 'react-router-dom';
-
-export function Profile({ steps, params }) {
-    const { operationId, apiBase } = useOutletContext();
-    const [[profile]] = useGet(`${apiBase}/api/operator/${operationId}/profile`, []);
+export function Profile({ steps, params, profile }) {
     return (
         <div style={{ padding: '0.5rem', fontSize: '1rem' }}>
             {profile && profile.map((s, i) => {

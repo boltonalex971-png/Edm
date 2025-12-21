@@ -1,10 +1,11 @@
 {
   "name": "optogen",
+  "type": "module",
   "homepage": "/apps/optogen",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@microprojects/react-utils": "^1.0.17",
+    "@microprojects/tools": "^1.0.5",
     "@popperjs/core": "^2.10.2",
     "@progress/kendo-data-query": "^1.5.5",
     "@progress/kendo-date-math": "^1.5.5",
@@ -22,20 +23,17 @@
     "@progress/kendo-react-treeview": "~5.8.0",
     "@progress/kendo-theme-bootstrap": "^5.12.0",
     "@telerik/kendo-intl": "^2.3.0",
-    "axios": "^1.2.0",
     "number-format.js": "^2.0.9",
     "query-string": "^7.1.1",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-router-dom": "^6.2.1",
-    "react-scripts": "5.0.0",
     "reactstrap": "^9.1.0"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "start": "rsbuild dev",
+    "build": "rsbuild build",
+    "preview": "rsbuild preview"
   },
   "eslintConfig": {
     "extends": [
@@ -56,6 +54,11 @@
     ]
   },
   "devDependencies": {
+    "@rsbuild/core": "^1.6.15",
+    "@rsbuild/plugin-react": "^1.4.2",
+    "@rsbuild/plugin-sass": "^1.4.0",
+    "@types/react": "^18.3.27",
+    "@types/react-dom": "^18.3.7",
     "sass": "^1.49.7"
   }
 }
