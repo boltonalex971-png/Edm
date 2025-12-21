@@ -1,6 +1,4 @@
-import React from 'react';
-
-export const Sensor = ({ info, settings, ...props }) => {
+export const Sensor = ({ info, settings, key, addr}) => {
     const broken = Object.entries(info).some(e => e[1]?.valid === false)
     const checked = Object.entries(info).filter(e => e[1]?.valid !== undefined)
     const good = checked.length === settings.indicators?.length && checked.every(e => e[1]?.valid === true)
@@ -8,7 +6,6 @@ export const Sensor = ({ info, settings, ...props }) => {
 
     return (
         <div
-            {...props}
             style={{
                 border: completed ? 'solid 2px darkgray' : 'solid 1px lightgray',
                 backgroundColor: broken ? '#ffe2e2' : good ? '#ddfad9' : 'inherit',
@@ -18,11 +15,11 @@ export const Sensor = ({ info, settings, ...props }) => {
                 alignItems: 'center',
                 justifyItems: 'center'
             }}>
-            <span style={{ gridColumn: '1/-1' }}>#{props.addr + 1} <strong>{info.serial}</strong></span>
+            <span style={{ gridColumn: '1/-1' }}>#{addr + 1} <strong>{info.serial}</strong></span>
             {settings?.indicators && settings.indicators.sort((a, b) => a.order - b.order)
                 .map(i =>
                     <span
-                        key={`${props.key}${i.indicator}`}
+                        key={`${key}${i.indicator}`}
                         className={(info[i.parameter]?.valid !== undefined && `bg-${(info[i.parameter].valid && 'success') || 'danger'} text-white`) || ''}
                         style={{ display: 'flex', width: '80%', justifyContent: 'center' }}
                         title={`${i.title || i.indicator} ${info[i.parameter]?.value || ''}`}

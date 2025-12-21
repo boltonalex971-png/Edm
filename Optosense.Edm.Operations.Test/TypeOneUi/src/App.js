@@ -26,12 +26,10 @@ function App(props) {
                 content={
                     <Routes>
                         <Route path='/' exact element={
-                            <OperationInfo info={info} operationId={operationId} settings={settings} {...props} />
+                            <OperationInfo info={info} operationId={operationId} settings={settings} />
                         } />
                         <Route path='/config' element={
                             <Config
-                                apiBase={props.apiBase}
-                                operationId={operationId}
                                 outputs={info.process.parameters}
                                 settings={settings}
                                 onSettingsChanged={saveSettings}

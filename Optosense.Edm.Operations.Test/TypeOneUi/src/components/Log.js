@@ -3,13 +3,12 @@ import {useState} from 'react';
 import {Grid, GridColumn} from "@progress/kendo-react-grid";
 
 
-export function Log({records, ...props}) {
+export function Log({records}) {
     const inputRef = useRef();
     const [scrolled, setScrolled] = useState(false);
     const setScroll = (e) => {
         const scroll = e.target.scrollHeight >= e.target.scrollTop + e.target.getBoundingClientRect().y + 10;
         setScrolled(scroll);
-        // console.log(scroll, e.target.scrollHeight, e.target.scrollTop + e.target.getBoundingClientRect().y + 10, e.target);
     };
     useEffect(() => {
         // TODO need to separate handle scroll from below one
@@ -19,7 +18,7 @@ export function Log({records, ...props}) {
     });
 
     return (
-        <div style={{...props.style}}>
+        <div>
             <div
                 style={{
                     border: 'solid 1px',
@@ -33,7 +32,6 @@ export function Log({records, ...props}) {
                 <Grid data={records}
                       id='id' 
                       scrollable='none'
-                      style={props.style}
                 >
                     <GridColumn field='executedAt' title='Executed At'
                                 cell={p => <td>{new Date(p.dataItem.executedAt).toLocaleString()}</td>}

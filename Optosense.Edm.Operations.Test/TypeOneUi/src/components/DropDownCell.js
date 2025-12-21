@@ -1,7 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { ComboBox, DropDownList } from '@progress/kendo-react-dropdowns';
-import { GridCell } from '@progress/kendo-react-grid';
 import { Input } from '@progress/kendo-react-inputs';
 
 export const DropDownComp = (props) => {

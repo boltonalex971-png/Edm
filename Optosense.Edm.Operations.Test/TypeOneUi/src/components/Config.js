@@ -1,12 +1,10 @@
 import React from 'react';
-import axios from 'axios';
 import { EasyGrid } from './EasyGrid';
 import { ComboBoxCell } from './DropDownCell';
 import { GridColumn } from '@progress/kendo-react-grid';
-import { Field } from '@progress/kendo-react-form';
 import { ComboBox } from '@progress/kendo-react-dropdowns';
 
-export function Config({ apiBase, operationId, settings, outputs, onSettingsChanged }) {
+export function Config({ settings, outputs, onSettingsChanged }) {
     const serialChanged = (e) => {
         onSettingsChanged({ ...settings, serial: e.value })
     }
@@ -16,7 +14,7 @@ export function Config({ apiBase, operationId, settings, outputs, onSettingsChan
 
     return (
         <div>
-            <h6 style={{ margin: '1rem' }}>Serial No Parameter</h6>
+            <h3 style={{ margin: '1rem' }}>Serial No Parameter</h3>
 
             <ComboBox
                 style={{ width: '400px' }}
@@ -25,7 +23,7 @@ export function Config({ apiBase, operationId, settings, outputs, onSettingsChan
                 title='SerialNo indicator'
                 onChange={serialChanged}
             />
-            <h6 style={{ margin: '1rem' }}>Sensor indicators</h6>
+            <h3 style={{ margin: '1rem' }}>Sensor indicators</h3>
             <EasyGrid data={settings?.indicators || []}
                 orderField='order'
                 dataChange={indicatorsChanged}

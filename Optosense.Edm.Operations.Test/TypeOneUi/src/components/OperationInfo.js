@@ -1,12 +1,10 @@
 import React, {useState} from "react"
 import {Monitor} from "./Monitor";
-//import {SmartScroll, SmartScrollContent} from "./SmartScroll";
 import {Log} from "./Log";
 import {Sensors} from "./Sensors";
 import {PluginMessageTypes, SmartScroll, SmartScrollContent, useOperationData} from "@microprojects/tools";
-//import {useOperationData} from "./hooks/messagingHooks";
 
-export const OperationInfo = ({info, settings, ...props}) => {
+export const OperationInfo = ({info, settings}) => {
     const [sensors, setSensors] = useState(() => {
         const options = JSON.parse(info.devices.find(dev => dev.options?.includes('capacity'))?.options)
         const cap = parseInt(options?.capacity)
@@ -38,11 +36,11 @@ export const OperationInfo = ({info, settings, ...props}) => {
     return (
         <SmartScroll offsetTop={10} style={{display: 'flex', margin: 10}}>
                 <SmartScrollContent style={{flex: 1}}>
-                    <Monitor {...props} sensors={sensors || []} settings={settings}/>
+                    <Monitor sensors={sensors || []} settings={settings}/>
                 </SmartScrollContent>
                 <SmartScrollContent style={{flex: 4, marginLeft: '1rem'}}>
-                    <div style={{display: 'flex', justifyContent: 'space-between'}}>
-                        <h5>{logView ? 'Log' : 'Sensor'} view</h5>
+                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                        <h3>{logView ? 'Log' : 'Sensor'} view</h3>
                         <a
                             style={{
                                 color: 'blue',
@@ -56,10 +54,10 @@ export const OperationInfo = ({info, settings, ...props}) => {
                         </a>
                     </div>
                     {logView &&
-                        <Log {...props} records={records || []}/>
+                        <Log records={records || []}/>
                     }
                     {!logView &&
-                        <Sensors sensors={sensors || []} settings={settings} style={props.style}/> 
+                        <Sensors sensors={sensors || []} settings={settings} /> 
                     }
                 </SmartScrollContent>
         </SmartScroll>

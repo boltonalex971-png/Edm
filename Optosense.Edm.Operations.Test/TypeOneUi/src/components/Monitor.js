@@ -1,16 +1,14 @@
 import React, { useEffect, useRef } from 'react';
 import { useState } from 'react';
-import { useGet } from './hooks/hooks';
 
 
-export function Monitor({ sensors, settings, ...props }) {
+export function Monitor({ sensors }) {
     const inputRef = useRef();
     const [scrolled, setScrolled] = useState(false);
     const polled = sensors.filter(s => s && s.serial).length;
     const setScroll = (e) => {
         const scroll = e.target.scrollHeight >= e.target.scrollTop + e.target.getBoundingClientRect().y + 10;
         setScrolled(scroll);
-        // console.log(scroll, e.target.scrollHeight, e.target.scrollTop + e.target.getBoundingClientRect().y + 10, e.target);
     };
     useEffect(() => {
         // TODO need to separate handle scroll from below one
@@ -20,8 +18,8 @@ export function Monitor({ sensors, settings, ...props }) {
     });
 
     return (
-        <div style={{ ...props.style }} >
-            <h5>{polled || 'No'} sensors polled</h5>
+        <div>
+            <h3>{polled || 'No'} sensors polled</h3>
             <div
                 style={{ border: 'solid 1px', padding: '1rem', backgroundColor: 'lightgrey', height: '92vh', overflowY: 'auto' }}
                 onScroll={setScroll}

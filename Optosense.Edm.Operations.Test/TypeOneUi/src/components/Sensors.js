@@ -1,9 +1,9 @@
 import {Sensor} from "./Sensor";
 import React from "react";
 
-export const Sensors = ({sensors, settings, ...props}) => {
+export const Sensors = ({sensors, settings}) => {
     return (
-        <div style={{...props.style}}>
+        <div>
             <div
                 style={{
                     border: 'solid 1px',
@@ -21,7 +21,7 @@ export const Sensors = ({sensors, settings, ...props}) => {
                     gap: '1rem'
                 }}>
                     {sensors && sensors.map((s, i) =>
-                        <Sensor key={i} addr={i} info={s || {}} settings={settings}/>
+                        <Sensor key={i} addr={i} info={s || {}} settings={settings} />
                     )}
                 </div>
             </div>
