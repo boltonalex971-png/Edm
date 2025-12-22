@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Edm\Edm.csproj" />
+    <ProjectReference Include="..\Optosense.Edm.Core\Optosense.Edm.Core.csproj" />
   </ItemGroup>
 
 </Project>

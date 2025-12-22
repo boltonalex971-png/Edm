@@ -12,13 +12,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Optosense.Edm.Core.Models;
+using Optosense.Edm.Events;
 
 namespace Optosense.Edm.Jobs
 {
     [Job(Name = "StartDevice", Lifetime = JobLifetime.LongRunning, Parameters = typeof(StartDeviceJobParameters))]
     public class StartDeviceJob : BaseJob, IContainDriver
     {
-        public event EventHandler<InputParamArrivedEventArgs> InputParamArrived;
+        protected event EventHandler<InputParamArrivedEventArgs> InputParamArrived;
+        protected event EventHandler<LifecycleArrivedEventArgs> LifecycleArrived;
 
         protected IIntercom Intercom { get; init; }
         protected StartDeviceJobParameters Parameters => (StartDeviceJobParameters)JobParameters;
@@ -35,7 +38,8 @@ namespace Optosense.Edm.Jobs
         private Dictionary<string, object> _internalParams = [];
         private ConcurrentDictionary<string, object> _inputParams = [];
         private Dictionary<string, object> _outputParams;
-        private IDisposable _subscriber;
+        private IDisposable _paramSubscriber;
+        private IDisposable _lifecycleSubscriber;
 
         public StartDeviceJob() { }
 
@@ -89,7 +93,7 @@ namespace Optosense.Edm.Jobs
                     .ToDictionary(k => k, e => default(object));
                 _internalParams = _profilerPlugin.GetParameters(Parameters.Profile)
                     .ToDictionary(k => k, e => default(object));
-                _subscriber = Intercom.Subscribe<object>(Parameters.ParametersChannel,
+                _paramSubscriber = Intercom.Subscribe<object>(Parameters.ParametersChannel,
                     onNext: async json =>
                     {
                         if (json == null)
@@ -127,6 +131,10 @@ namespace Optosense.Edm.Jobs
 
                         PushInputParameter(param);
                     });
+                _lifecycleSubscriber = Intercom.Subscribe<object>(Parameters.LifecycleChannel,
+                    onNext: json => LifecycleArrived?.Invoke(
+                        this,
+                        JsonConvert.DeserializeObject<LifecycleArrivedEventArgs>(json.ToString())));
                 _logger.LogDebug("Device {Device} inited at {Time}", _driver.GetType().Name, DateTime.UtcNow.ToString("hh:mm:ss.fff"));
             }
             catch (Exception e)
@@ -140,12 +148,23 @@ namespace Optosense.Edm.Jobs
 
         public override async Task<object> ExecuteAsync()
         {
-            var startTime = DateTime.UtcNow;
-            var startSpan = Parameters.StartAt - startTime;
-            var delay = startSpan < TimeSpan.Zero ? TimeSpan.Zero : startSpan;
+            var startCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);
+            LifecycleArrived += (source, args) =>
+            {
+                switch (args.State)
+                {
+                    case OperationState.InProgress: 
+                        startCancellationTokenSource.Cancel(); 
+                        break;
+                    case OperationState.Cancelled:
+                        CancellationTokenSource.Cancel();
+                        break;
+                }
+            };
             try
             {
-                await Task.Delay(delay, CancellationToken);
+                // Wait until operation lifecycle start event arrived
+                await Task.Delay(-1, startCancellationTokenSource.Token).ContinueWith((t) => { });
                 _logger.LogInformation("Device {Device} run to execute at {Time}", _driver.GetType().Name, DateTime.UtcNow.ToString("hh:mm:ss.fff"));
                 if (_asyncPlan != null)
                 {
@@ -170,7 +189,7 @@ namespace Optosense.Edm.Jobs
             }
             catch (OperationCanceledException)
             {
-                // Release related audits and store jobs
+                // Release audits and store jobs
                 await ExecuteDeviceInstruction(_driver, DriverRequests.Stop);
             }
 
@@ -180,7 +199,8 @@ namespace Optosense.Edm.Jobs
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
-            _subscriber?.Dispose();
+            _paramSubscriber?.Dispose();
+            _lifecycleSubscriber?.Dispose();
             if (_driver is IDisposable disposableDriver)
             {
                 disposableDriver.Dispose();
@@ -369,13 +389,6 @@ namespace Optosense.Edm.Jobs
         public Guid Profiler { get; set; }
         public Guid Driver { get; set; }
         public DateTime StartAt { get; set; } = DateTime.UtcNow.AddSeconds(10);
-    }
-
-    public class InputParamArrivedEventArgs : EventArgs
-    {
-        public string Param { get; set; }
-        public object Value { get; set; }
-        public DateTime ArrivedAt { get; set; }
     }
 }
 

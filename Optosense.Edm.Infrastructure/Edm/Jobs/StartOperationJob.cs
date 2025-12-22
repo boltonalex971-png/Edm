@@ -123,6 +123,7 @@ namespace Optosense.Edm.Jobs
                     Profiler = operationHostDevice.Profile.ProfilerGuid,
                     StoreChannel = storeChannel,
                     ParametersChannel = ParametersChannel,
+                    LifecycleChannel = LifecycleChannel,
                     InputParameters = operationHostDevice.Profile.Input,
                     OutputParameters = operationHostDevice.Profile.Output
                 };
@@ -143,9 +144,6 @@ namespace Optosense.Edm.Jobs
 
         public override async Task<object> ExecuteAsync()
         {
-            await Intercom.Publish(LifecycleChannel, 
-                new { State = nameof(OperationState.InProgress), StateTimestamp = DateTime.UtcNow });
-
             foreach (var audit in _audits)
             {
                 await JobManager.ExecuteAsync(audit);
@@ -169,6 +167,9 @@ namespace Optosense.Edm.Jobs
             {
                 await Intercom.Publish(ParametersChannel, p);
             }
+
+            await Intercom.Publish(LifecycleChannel, 
+                new { State = nameof(OperationState.InProgress), StateTimestamp = DateTime.UtcNow });
 
             int count;
             do

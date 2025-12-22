@@ -319,7 +319,7 @@ public class JobContainer : IJobContainer
                     break;
             }
 
-            DisposeTask(t.Id);
+            DisposeTask(longTask.Task.Id);
         }, TaskScheduler.Default);
         var response = await semaphore.Task;
         response.Response = JsonConvert.SerializeObject(task.Id);
@@ -351,7 +351,7 @@ public class JobContainer : IJobContainer
                     break;
             }
 
-            DisposeTask(t.Id);
+            DisposeTask(longTask.Task.Id);
         }, TaskScheduler.Default);
         longTask.Task = task;
         RunningTasks[task.Id] = longTask;
