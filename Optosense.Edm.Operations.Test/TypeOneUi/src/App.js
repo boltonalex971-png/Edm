@@ -5,20 +5,21 @@ import { OperationInfo } from "./components/OperationInfo";
 import { Config } from "./components/Config";
 import {PluginMessageTypes, useOperationData, usePluginMessaging} from "@microprojects/tools";
 
-function App(props) {
+function App() {
     const navigate = useNavigate();
     const [settings, setSettings] = useState()
     const info = useOperationData(PluginMessageTypes.INIT, undefined, 
         (i) => setSettings(JSON.parse(i.process.settings || "[]")))
     useOperationData(PluginMessageTypes.NAVIGATE, undefined, (m) => navigate(m))
     const [operationId] = useState(() => new URLSearchParams(document.location.search).get('id') || 0);
-    const postMessage = usePluginMessaging(window.parent)
+    const postMessage = usePluginMessaging(window.parent, undefined, import.meta.env.PUBLIC_APP_API_URL)
     const saveSettings = (s) => {
         postMessage({type: PluginMessageTypes.SETTINGS, data: s})
         setSettings(s)
     }
 
-    if (!info) return (<>Loading...</>)
+    if (!info) 
+        return <>Loading...</>
 
     return (
         <div className="App">
