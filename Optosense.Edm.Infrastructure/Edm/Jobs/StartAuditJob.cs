@@ -17,6 +17,7 @@ using System.Threading;
 using AdaptiveExpressions;
 using Microprojects.Edm.Utils;
 using AutoMapper;
+using Optosense.Edm.Infrastructure.Edm.Intercom;
 using Optosense.Edm.Infrastructure.Models;
 
 namespace Optosense.Edm.Jobs
@@ -54,17 +55,19 @@ namespace Optosense.Edm.Jobs
         public override Task<bool> InitAsync()
         {
             // Parameter subscriber must be initialized before executing to avoid loosing incoming parameters
-            _paramsSubscriber = Intercom.Subscribe<object>(Parameters.ParametersChannel,
-                onNext: json =>
+            _paramsSubscriber = Intercom.UseId(Parameters.Operation).HandleParameter(
+                param =>
                 {
-                    var param = JsonConvert.DeserializeObject<KeyValuePair<string, object>>(json.ToString());
                     if (param.Key == "Stop" && (bool)param.Value)
                     {
                         CancellationTokenSource.Cancel();
-                        return;
+                    }
+                    else
+                    {
+                        PushInputParameter(KeyValuePair.Create(param.Key, param.Value));
                     }
 
-                    PushInputParameter(param);
+                    return Task.CompletedTask;
                 });
             return Task.FromResult(true);
         }
@@ -78,8 +81,8 @@ namespace Optosense.Edm.Jobs
                 audit = await service.GetZones(Parameters.Audit);
             }
 
-            using var subscriber = Intercom.Subscribe<Record>(Parameters.Channel,
-                onNext: async rec =>
+            using var subscriber = Intercom.UseId(Parameters.Operation).HandleRecord(
+                async rec =>
                 {
                     try
                     {
@@ -169,12 +172,11 @@ namespace Optosense.Edm.Jobs
                                 await db.SaveChangesAsync();
                                 operationCriterion.AuditCriterion = (AuditCriterion)criterion.Copy();
                                 operationCriterion.AuditCriterion.Zone = null;
-                                var data = new OperationDataContainer
+                                var data = new AuditDataEvent
                                 {
-                                    Type = OperationDataType.Audit,
                                     Data = _mapper.Map<OperationAuditData>(operationCriterion)
                                 };
-                                await Intercom.Publish(Parameters.DataChannel, data);
+                                await Intercom.PublishOperationDataAsync(Parameters.Operation, data);
                             }
                         }
                     }
@@ -241,9 +243,6 @@ namespace Optosense.Edm.Jobs
         /// </summary>
         public int Device { get; set; }
         public DateTime StartAt { get; set; } = DateTime.UtcNow;
-        public string Channel { get; set; }
-        public string ParametersChannel { get; set; }
-        public string DataChannel { get; set; }
     }
 
 }

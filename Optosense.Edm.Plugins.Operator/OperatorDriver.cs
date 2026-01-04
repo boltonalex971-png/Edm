@@ -1,6 +1,8 @@
 ﻿using Microprojects.Edm.Drivers;
 using Microprojects.Edm.Intercom;
 using Newtonsoft.Json;
+using Optosense.Edm.Infrastructure.Edm.Intercom;
+using Optosense.Edm.Jobs;
 using Optosense.Edm.Profiles.Operator;
 
 namespace Optosense.Edm.Drivers.Operator
@@ -9,6 +11,7 @@ namespace Optosense.Edm.Drivers.Operator
     public class OperatorDriver : DriverBase, IDriverWithState, IReactiveDriver, INeedIntercom
     {
         protected OperatorDriverOptions BoardOptions => (OperatorDriverOptions) Options;
+        protected StartDeviceJobParameters JobParameters => (StartDeviceJobParameters) Parameters; 
 
         public Func<DriverResponse, bool, Task>? PushResponse { get; set; }
         public IIntercom Intercom { get; set; }
@@ -17,13 +20,11 @@ namespace Optosense.Edm.Drivers.Operator
         private DateTime _startTs = DateTime.UtcNow;
         private CancellationTokenSource _tokenSource;
         private DriverResponse _response;
-        private string _operatorChannel;
 
         public OperatorDriver() { }
 
         public OperatorDriver(DeviceParameters parameters) : base(parameters)
         {
-            _operatorChannel = $"{parameters.StoreChannel}-operator";
         }
 
         public override string Init()
@@ -47,7 +48,7 @@ namespace Optosense.Edm.Drivers.Operator
             
             var state = JsonConvert.DeserializeObject<OperatorState>(req.Parameters);
             SetState(state);
-            await Intercom.Publish(_operatorChannel, state);
+            await Intercom.PublishOperatorAsync(JobParameters.Operation, state);
             // Wait for response
             _tokenSource = new CancellationTokenSource();
             await Task.Delay(-1, _tokenSource.Token).ContinueWith((t) => { });

@@ -12,6 +12,7 @@ using Microprojects.Edm.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using Optosense.Edm.Core.Models;
 using Optosense.Edm.Infrastructure.Protos;
+using Optosense.Edm.Intercom.Events;
 using Enum = System.Enum;
 
 namespace Optosense.Edm.Jobs
@@ -28,8 +29,6 @@ namespace Optosense.Edm.Jobs
         protected IIntercom Intercom { get; init; }
         protected ILogger<StartOperationJob> Logger { get; init; }
         protected IServiceProvider ServiceProvider { get; init; }
-        protected string ParametersChannel { get; set; }
-        protected string LifecycleChannel { get; set; }
 
         private List<(string url, IJob job)> _devices = [];
         private List<IJob> _audits = [];
@@ -66,18 +65,9 @@ namespace Optosense.Edm.Jobs
                 DateTime.UtcNow.AddSeconds(1); // 1 seconds should be enough to init all devices before start
             _startTime = startTime > Parameters.StartAt ? startTime : Parameters.StartAt!.Value;
             // Prepare execution result storage
-            var storeChannel = $"Operation-{Parameters.Operation}";
-            var auditChannel = $"{storeChannel}-audit";
-            var dataChannel = $"{storeChannel}-data";
-            LifecycleChannel = $"{storeChannel}-lifecycle";
-            ParametersChannel = $"{storeChannel}-parameters";
             var storeJobParameters = new StoreOperationRecordsJobParameters
             {
                 Operation = Parameters.Operation,
-                Channel = storeChannel,
-                AuditChannel = auditChannel,
-                ParametersChannel = ParametersChannel,
-                DataChannel = dataChannel
             };
             _storageJob = await JobManager.GetJobAsync<StoreOperationRecordsJob>(ServiceScope, storeJobParameters);
 
@@ -97,9 +87,6 @@ namespace Optosense.Edm.Jobs
                         Audit = audit.Id,
                         Device = operationHostDevice.Id,
                         Operation = Parameters.Operation,
-                        Channel = auditChannel,
-                        ParametersChannel = ParametersChannel,
-                        DataChannel = dataChannel,
                         StartAt = startTime
                     };
                     var auditJob = await JobManager.GetJobAsync<StartAuditJob>(ServiceScope, auditParams);
@@ -121,9 +108,6 @@ namespace Optosense.Edm.Jobs
                     StartAt = startTime.AddSeconds(1),
                     Profile = operationHostDevice.Profile.TextJson,
                     Profiler = operationHostDevice.Profile.ProfilerGuid,
-                    StoreChannel = storeChannel,
-                    ParametersChannel = ParametersChannel,
-                    LifecycleChannel = LifecycleChannel,
                     InputParameters = operationHostDevice.Profile.Input,
                     OutputParameters = operationHostDevice.Profile.Output
                 };
@@ -165,11 +149,12 @@ namespace Optosense.Edm.Jobs
             foreach (var p in JsonConvert.DeserializeObject<Dictionary<string, object>>(
                          operation.Parameters ?? "{}"))
             {
-                await Intercom.Publish(ParametersChannel, p);
+                await Intercom.PublishParameterAsync(Parameters.Operation, 
+                    new ParameterEvent { Key = p.Key, Value = p.Value });
             }
 
-            await Intercom.Publish(LifecycleChannel, 
-                new { State = nameof(OperationState.InProgress), StateTimestamp = DateTime.UtcNow });
+            await Intercom.PublishLifecycleAsync(Parameters.Operation,  
+                new LifecycleEvent { State = nameof(OperationState.InProgress) });
 
             int count;
             do
@@ -216,17 +201,19 @@ namespace Optosense.Edm.Jobs
             } while (count < _devices.Count && !CancellationToken.IsCancellationRequested);
 
             // Stop audits and storage
-            await Intercom.Publish(ParametersChannel, KeyValuePair.Create("Stop", true));
+            await Intercom.PublishParameterAsync(Parameters.Operation, new ParameterEvent{ Key = "Stop", Value = true});
             await Task.Delay(1000);
             if (CancellationToken.IsCancellationRequested)
             {
                 await OperationService.StopOperation(Parameters.Operation);
-                await Intercom.Publish(LifecycleChannel, new { State = nameof(OperationState.Cancelled), StateTimestamp = DateTime.UtcNow });
+                await Intercom.PublishLifecycleAsync(Parameters.Operation,  
+                    new LifecycleEvent { State = nameof(OperationState.Cancelled) });
             }
             else
             {
                 await OperationService.CompleteOperation(Parameters.Operation);
-                await Intercom.Publish(LifecycleChannel, new { State = nameof(OperationState.Completed), StateTimestamp = DateTime.UtcNow });
+                await Intercom.PublishLifecycleAsync(Parameters.Operation,  
+                    new LifecycleEvent { State = nameof(OperationState.Completed) });
             }
 
             return JobStatus.SUCCESS;

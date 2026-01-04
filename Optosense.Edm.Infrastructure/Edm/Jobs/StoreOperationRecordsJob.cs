@@ -11,6 +11,7 @@ using Microprojects.Edm.Intercom;
 using Newtonsoft.Json;
 using Optosense.Edm.Domain.Models;
 using AutoMapper;
+using Optosense.Edm.Infrastructure.Edm.Intercom;
 using Optosense.Edm.Infrastructure.Models;
 
 namespace Optosense.Edm.Jobs
@@ -40,21 +41,21 @@ namespace Optosense.Edm.Jobs
 
         public override async Task<object> ExecuteAsync()
         {
-            using var paramsSubscriber = Intercom.Subscribe<object>(
-                Parameters.ParametersChannel,
-                onNext: json =>
+            using var paramsSubscriber = Intercom.UseId(Parameters.Operation).HandleParameter(
+                param =>
                 {
-                    var param = JsonConvert.DeserializeObject<KeyValuePair<string, object>>(json.ToString());
                     if (param.Key == "Stop" && (bool)param.Value)
                     {
                         CancellationTokenSource.Cancel();
                     }
+                    
+                    return Task.CompletedTask;
                 });
-            using var subscription = Intercom.Subscribe<DeviceResponse>(Parameters.Channel,
-                onNext: async r =>
+            using var subscription = Intercom.UseId(Parameters.Operation).HandleDeviceResponse(
+                async r =>
                 {
                     // TODO Cache coming record to avoid loosing it and handle them later
-                    var rec = new Record
+                    var rec = new RecordEvent
                     {
                         ScheduledAt = r.ScheduledAt,
                         ExecutedAt = r.ExecutedAt,
@@ -71,12 +72,11 @@ namespace Optosense.Edm.Jobs
                     {
                         context.Records.Add(rec);
                         await context.SaveChangesAsync();
-                        await Intercom.Publish(Parameters.AuditChannel, rec);
-                        var data = new OperationDataContainer {
-                            Type = OperationDataType.Device,
+                        await Intercom.PublishRecordAsync(Parameters.Operation, rec);
+                        var data = new RecordDataEvent {
                             Data = _mapper.Map<OperationDeviceData>(rec)
                         };
-                        await Intercom.Publish(Parameters.DataChannel, data);
+                        await Intercom.PublishOperationDataAsync(Parameters.Operation, data);
                         if (r.Request == "Stop")
                         {
                             await CancellationTokenSource.CancelAsync();
@@ -102,9 +102,5 @@ namespace Optosense.Edm.Jobs
     public class StoreOperationRecordsJobParameters : IJobParameters
     {
         public int Operation { get; set; }
-        public string Channel { get; set; }
-        public string AuditChannel { get; set; }
-        public string ParametersChannel { get; set; }
-        public string DataChannel { get; set; }
     }
 }

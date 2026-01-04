@@ -1,8 +1,8 @@
 using System;
 
-namespace Optosense.Edm.Events;
+namespace Optosense.Edm.Intercom.Events;
 
-public class InputParamArrivedEventArgs : EventArgs
+public class InputParamEvent
 {
     public string Param { get; set; }
     public object Value { get; set; }

@@ -13,35 +13,36 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Optosense.Edm.Core.Models;
-using Optosense.Edm.Events;
+using Optosense.Edm.Intercom.Events;
 
 namespace Optosense.Edm.Jobs
 {
     [Job(Name = "StartDevice", Lifetime = JobLifetime.LongRunning, Parameters = typeof(StartDeviceJobParameters))]
     public class StartDeviceJob : BaseJob, IContainDriver
     {
-        protected event EventHandler<InputParamArrivedEventArgs> InputParamArrived;
-        protected event EventHandler<LifecycleArrivedEventArgs> LifecycleArrived;
+        protected event EventHandler<InputParamEvent> InputParamArrived;
+        protected event EventHandler<LifecycleEvent> LifecycleArrived;
 
         protected IIntercom Intercom { get; init; }
         protected StartDeviceJobParameters Parameters => (StartDeviceJobParameters)JobParameters;
 
         private readonly ILogger<StartDeviceJob> _logger;
-        private IPluginContainer _plugins;
+        private readonly IPluginContainer _plugins;
         private IDriverPlugin _driverPlugin;
-        //private IProfilePlugin _profilePlugin;
         private IEnumerable<DriverRequest> _executionPlan;
         private IAsyncEnumerable<DriverRequest> _asyncPlan;
         private IDeviceDriver _driver;
         private IProfilePlugin _profilerPlugin;
+
         // List of profile parameters for internal use
         private Dictionary<string, object> _internalParams = [];
-        private ConcurrentDictionary<string, object> _inputParams = [];
+        private readonly ConcurrentDictionary<string, object> _inputParams = [];
         private Dictionary<string, object> _outputParams;
         private IDisposable _paramSubscriber;
-        private IDisposable _lifecycleSubscriber;
 
-        public StartDeviceJob() { }
+        public StartDeviceJob()
+        {
+        }
 
         public StartDeviceJob(ILogger<StartDeviceJob> logger, IPluginContainer plugins, IIntercom intercom)
         {
@@ -54,9 +55,10 @@ namespace Optosense.Edm.Jobs
         {
             try
             {
-                _profilerPlugin = _plugins.GetProfile(Parameters.Profiler) ?? throw new EdmException("Profiler plugin not found");
-                _driverPlugin = _plugins.GetDriver(Parameters.Driver) ?? throw new EdmException("Driver plugin not found");
-                //_profilePlugin = _plugins.GetProfile(_driverPlugin.ProfileGuid) ?? throw new EdmException("No profiler found");
+                _profilerPlugin = _plugins.GetProfile(Parameters.Profiler) ??
+                                  throw new EdmException("Profiler plugin not found");
+                _driverPlugin = _plugins.GetDriver(Parameters.Driver) ??
+                                throw new EdmException("Driver plugin not found");
                 _driver = _driverPlugin.GetDriver(Parameters);
                 if (_driver is IReactiveDriver reactiveDriver)
                 {
@@ -65,10 +67,11 @@ namespace Optosense.Edm.Jobs
 
                 if (_driver is INeedIntercom driverWithIntercom)
                 {
-                    driverWithIntercom.Intercom = Intercom;   
+                    driverWithIntercom.Intercom = Intercom;
                 }
 
-                var options = _driver.GetEffectiveOptions(); //DriverUtils.GetDriverOptions(DeviceModel.None); //Parameters.Driver);
+                var options =
+                    _driver.GetEffectiveOptions(); //DriverUtils.GetDriverOptions(DeviceModel.None); //Parameters.Driver);
                 if (Parameters.DriverOptions != null)
                 {
                     JsonConvert.PopulateObject(JsonConvert.SerializeObject(Parameters.DriverOptions), options);
@@ -77,13 +80,14 @@ namespace Optosense.Edm.Jobs
                 if (_driverPlugin is IAsyncPlanProvider asyncPlanProvider)
                 {
                     _asyncPlan = asyncPlanProvider.GetAsyncPlan(
-                        Parameters.Profile, 
+                        Parameters.Profile,
                         JsonConvert.SerializeObject(options),
                         Parameters.StartAt);
                 }
                 else
                 {
-                    _executionPlan = _driverPlugin.GetPlan(Parameters.Profile, JsonConvert.SerializeObject(options)).ToList();
+                    _executionPlan = _driverPlugin.GetPlan(Parameters.Profile, JsonConvert.SerializeObject(options))
+                        .ToList();
                 }
 
                 _driver.Options = options;
@@ -93,49 +97,41 @@ namespace Optosense.Edm.Jobs
                     .ToDictionary(k => k, e => default(object));
                 _internalParams = _profilerPlugin.GetParameters(Parameters.Profile)
                     .ToDictionary(k => k, e => default(object));
-                _paramSubscriber = Intercom.Subscribe<object>(Parameters.ParametersChannel,
-                    onNext: async json =>
+                _paramSubscriber = Intercom.UseId(Parameters.Operation).HandleParameter(async param =>
+                {
+                    if (param.Key == "Stop" && (bool)param.Value)
                     {
-                        if (json == null)
-                            return;
-                        
-                        _logger.LogDebug("Device {Device} received parameter {Param} at {Time}", _driver.GetType().Name, json, DateTime.UtcNow.ToString("hh:mm:ss.fff"));
-                        var param = JsonConvert.DeserializeObject<KeyValuePair<string, object>>(json.ToString());
-                        if (param.Key == "Stop" && (bool)param.Value)
-                        {
-                            if (!CancellationTokenSource.IsCancellationRequested)
-                                await CancellationTokenSource.CancelAsync()
-                                    .ContinueWith((t) => { }); // Ignore exceptions
-                            return;
-                        }
+                        if (!CancellationTokenSource.IsCancellationRequested)
+                            await CancellationTokenSource.CancelAsync()
+                                .ContinueWith((t) => { }); // Ignore exceptions
+                        return;
+                    }
 
-                        if (param.Key.StartsWith('?'))
-                        {
-                            var name = param.Key[1..];
-                            if (!Parameters.OutputParameters.Contains(name) || _driver is not IParamProvider) 
-                                return;
-                            
-                            var planned = DateTime.UtcNow;
-                            var result = await ((IParamProvider)_driver).GetParam(name);
-                            result.Planned = (long)(planned - Parameters.StartAt).TotalMilliseconds;
-                            result.Executed = (long)(DateTime.UtcNow - Parameters.StartAt).TotalMilliseconds;
-                            await PushResponse(result);
-
+                    if (param.Key.StartsWith('?'))
+                    {
+                        var name = param.Key[1..];
+                        if (!Parameters.OutputParameters.Contains(name) || _driver is not IParamProvider)
                             return;
-                        }
-                            
-                        if ((Parameters.InputParameters?.Contains(param.Key) ?? false) && _driver is IParamConsumer consumer)
-                        {
-                            await consumer.SetParamAsync(param.Key, param.Value);
-                        }
 
-                        PushInputParameter(param);
-                    });
-                _lifecycleSubscriber = Intercom.Subscribe<object>(Parameters.LifecycleChannel,
-                    onNext: json => LifecycleArrived?.Invoke(
-                        this,
-                        JsonConvert.DeserializeObject<LifecycleArrivedEventArgs>(json.ToString())));
-                _logger.LogDebug("Device {Device} inited at {Time}", _driver.GetType().Name, DateTime.UtcNow.ToString("hh:mm:ss.fff"));
+                        var planned = DateTime.UtcNow;
+                        var result = await ((IParamProvider)_driver).GetParam(name);
+                        result.Planned = (long)(planned - Parameters.StartAt).TotalMilliseconds;
+                        result.Executed = (long)(DateTime.UtcNow - Parameters.StartAt).TotalMilliseconds;
+                        await PushResponse(result);
+
+                        return;
+                    }
+
+                    if ((Parameters.InputParameters?.Contains(param.Key) ?? false) &&
+                        _driver is IParamConsumer consumer)
+                    {
+                        await consumer.SetParamAsync(param.Key, param.Value);
+                    }
+
+                    PushInputParameter(KeyValuePair.Create(param.Key, param.Value));
+                });
+                _logger.LogDebug("Device {Device} inited at {Time}", _driver.GetType().Name,
+                    DateTime.UtcNow.ToString("hh:mm:ss.fff"));
             }
             catch (Exception e)
             {
@@ -149,23 +145,26 @@ namespace Optosense.Edm.Jobs
         public override async Task<object> ExecuteAsync()
         {
             var startCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);
-            LifecycleArrived += (source, args) =>
+            using var lifecycle = Intercom.UseId(Parameters.Operation).HandleLifecycle(d =>
             {
-                switch (args.State)
+                switch (d.State)
                 {
-                    case OperationState.InProgress: 
-                        startCancellationTokenSource.Cancel(); 
+                    case nameof(OperationState.InProgress):
+                        startCancellationTokenSource.Cancel();
                         break;
-                    case OperationState.Cancelled:
+                    case nameof(OperationState.Cancelled):
                         CancellationTokenSource.Cancel();
                         break;
                 }
-            };
+                
+                return  Task.CompletedTask;
+            });
             try
             {
                 // Wait until operation lifecycle start event arrived
                 await Task.Delay(-1, startCancellationTokenSource.Token).ContinueWith((t) => { });
-                _logger.LogInformation("Device {Device} run to execute at {Time}", _driver.GetType().Name, DateTime.UtcNow.ToString("hh:mm:ss.fff"));
+                _logger.LogInformation("Device {Device} run to execute at {Time}", _driver.GetType().Name,
+                    DateTime.UtcNow.ToString("hh:mm:ss.fff"));
                 if (_asyncPlan != null)
                 {
                     await foreach (var request in _asyncPlan.WithCancellation(CancellationToken))
@@ -174,7 +173,7 @@ namespace Optosense.Edm.Jobs
                         {
                             await MeetCondition(request);
                         }
-                        
+
                         await ExecuteDeviceInstruction(_driver, request);
                     }
                 }
@@ -200,14 +199,14 @@ namespace Optosense.Edm.Jobs
         {
             base.Dispose(disposing);
             _paramSubscriber?.Dispose();
-            _lifecycleSubscriber?.Dispose();
             if (_driver is IDisposable disposableDriver)
             {
                 disposableDriver.Dispose();
             }
         }
 
-        private async Task ExecuteDeviceInstruction(IDeviceDriver driver, DriverRequest request, bool throwEx = false, int totalRetrials = 0)
+        private async Task ExecuteDeviceInstruction(IDeviceDriver driver, DriverRequest request, bool throwEx = false,
+            int totalRetrials = 0)
         {
             request.Parameters = SubstituteParameters(request.Parameters);
             // TODO cyclic commands here: add repeat interval and stop condition to DriverRequest
@@ -255,7 +254,7 @@ namespace Optosense.Edm.Jobs
 
         private async Task PushResponse(DriverResponse response, bool throwEx = false)
         {
-            var rec = new DeviceResponse
+            var rec = new DeviceResponseEvent
             {
                 ScheduledAt = Parameters.StartAt.AddMilliseconds(response.Planned),
                 ExecutedAt = DateTime.UtcNow,
@@ -267,7 +266,7 @@ namespace Optosense.Edm.Jobs
                 Status = response.State,
                 OperationHostDeviceId = Parameters.OperationHostDevice,
             };
-            await Intercom.Publish(Parameters.StoreChannel, rec);
+            await Intercom.PublishDeviceResponseAsync(Parameters.Operation, rec);
             var output = JsonConvert.DeserializeObject<IDictionary<string, object>>(
                 string.IsNullOrEmpty(response.Parameters) ? "{}" : response.Parameters);
             foreach (var param in output)
@@ -291,7 +290,7 @@ namespace Optosense.Edm.Jobs
         private void PushInputParameter(KeyValuePair<string, object> param)
         {
             _inputParams[param.Key] = param.Value;
-            InputParamArrived?.Invoke(this, new InputParamArrivedEventArgs
+            InputParamArrived?.Invoke(this, new InputParamEvent
             {
                 Param = param.Key,
                 Value = _inputParams[param.Key],
@@ -302,7 +301,8 @@ namespace Optosense.Edm.Jobs
         private async Task PushOutputParameterAsync(KeyValuePair<string, object> param)
         {
             _outputParams[param.Key] = param.Value;
-            await Intercom.Publish(Parameters.ParametersChannel, param);
+            await Intercom.PublishParameterAsync(Parameters.Operation,
+                new ParameterEvent { Key = param.Key, Value = param.Value });
         }
 
         private Task<bool> MeetCondition(DriverRequest req)
@@ -327,7 +327,7 @@ namespace Optosense.Edm.Jobs
             else if (expr.Type == ExpressionType.Accessor)
             {
                 var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);
-                EventHandler<InputParamArrivedEventArgs> handler = (source, args) =>
+                EventHandler<InputParamEvent> handler = (source, args) =>
                 {
                     if (args.Param == condition || CancellationToken.IsCancellationRequested)
                     {
@@ -342,19 +342,20 @@ namespace Optosense.Edm.Jobs
                         if (t is { Status: TaskStatus.Faulted, Exception: not null })
                             throw t.Exception;
                     });
-                
+
                 await Task.Delay(-1, cancellationSource.Token).ContinueWith(t => { });
                 InputParamArrived -= handler;
             }
             else if (!expr.TryEvaluate<bool>(_inputParams).value)
             {
                 var cancellationSource = new CancellationTokenSource();
-                EventHandler<InputParamArrivedEventArgs> handler = (source, args) =>
+                EventHandler<InputParamEvent> handler = (source, args) =>
                 {
                     var (confirmed, error) = expr.TryEvaluate<bool>(_inputParams);
                     if (error is not null)
                     {
-                        _logger.LogError(Parameters.Operation, "Cannot evaluate profile condition <{condition}>: {error}", condition, error);
+                        _logger.LogError(Parameters.Operation,
+                            "Cannot evaluate profile condition <{condition}>: {error}", condition, error);
                     }
 
                     if (confirmed || CancellationToken.IsCancellationRequested)
@@ -382,13 +383,10 @@ namespace Optosense.Edm.Jobs
 
     public class StartDeviceJobParameters : DeviceParameters, IJobParameters
     {
-        [JobParameter(Required = true)]
-        public int OperationHostDevice { get; set; }
-        [JobParameter(Required = true)]
-        public int Operation { get; set; }
+        [JobParameter(Required = true)] public int OperationHostDevice { get; set; }
+        [JobParameter(Required = true)] public int Operation { get; set; }
         public Guid Profiler { get; set; }
         public Guid Driver { get; set; }
         public DateTime StartAt { get; set; } = DateTime.UtcNow.AddSeconds(10);
     }
 }
-
