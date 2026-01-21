@@ -3,23 +3,19 @@ import {useRouteMatch} from "@logistics/hooks/routerHooks";
 import {PageTitle} from "@logistics/components/PageTitle";
 import {Nav, NavItem, NavLink} from "reactstrap";
 import {NavLink as Link} from "react-router";
-import {ResizableHandle, SmartScroll, SmartScrollContent} from "@logistics/components/SmartScroll";
-import {Splitter} from "@progress/kendo-react-layout";
 import {Button} from "@progress/kendo-react-buttons";
 import {Asterisk, ChevronLeft, Download, InfoCircle, Pen, Search, Star} from "react-bootstrap-icons";
 import {Input, InputPrefix, TextBox} from "@progress/kendo-react-inputs";
 import {SupplyEditorPanel} from "@logistics/components/supplies/SupplyEditorPanel";
-import {TreeViewMaster} from "@logistics/components/TreeViewMaster";
 import api from "@features/api/api";
 import {TreeViewLink} from "@logistics/components/TreeViewLink";
-import {Slide} from "@progress/kendo-react-animation";
-import {stringify} from "node:querystring";
 import {Grid, GridColumn} from "@progress/kendo-react-grid";
 import {LinkTextCell} from "@logistics/components/DropDownCell";
 import {useGet} from "@logistics/hooks/hooks";
 import {Item} from "@logistics/data/types";
 import {Loading} from "@features/utils/Utils.tsx";
 import {Error} from "@progress/kendo-react-labels";
+import {SmartScroll, SmartScrollContent} from "@microprojects/tools";
 
 export function Supplies() {
     let {path} = useRouteMatch();
@@ -49,10 +45,10 @@ export function Supplies() {
             </div>
             <hr/>
             <div>
-                <SmartScroll offtop={10}>
-                    <SmartScrollContent flex={1}
-                                        style={{
+                <SmartScroll offsetTop={10} style={{display: "flex", flexDirection: "row", alignItems: 'flex-start', gap: 20}}>
+                    <SmartScrollContent style={{
                                             display: 'flex',
+                                            flex: 1,
                                             flexDirection: 'column',
                                             alignItems: 'flex-start',
                                             gap: '1rem',
@@ -63,7 +59,7 @@ export function Supplies() {
                         <Button type={'button'} fillMode={'flat'} onClick={createClick}><Pen/> Create new</Button>
                         <Button fillMode={'flat'}><Download/> Get from accounting system</Button>
                     </SmartScrollContent>
-                    <SmartScrollContent flex={4}>
+                    <SmartScrollContent style={{flex: 4}} >
                         {panel === 'search' && <SearchPanel/>}
                         {panel === 'create' && !linkPanel &&
                             <SupplyEditorPanel onLink={setLinkPanel} api={api.supplies}/>}
@@ -121,7 +117,7 @@ function LinkPanel({api, onClose}: LinkPanelProps) {
             </p>
             <TreeViewLink api={api} onCurrentRootChanged={(root) => {
             }}/>
-            <SmartScrollContent flex={2} style={{paddingLeft: '2rem'}}>
+            <SmartScrollContent style={{flex: 2, paddingLeft: '2rem'}}>
                 <div style={{height: '1em'}}></div>
                 {/*{linkPanel && <LinkPanel api={linkPanel}/>}*/}
             </SmartScrollContent>

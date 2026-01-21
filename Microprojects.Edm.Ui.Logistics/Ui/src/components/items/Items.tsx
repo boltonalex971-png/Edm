@@ -3,14 +3,9 @@ import {useRouteMatch} from "@logistics/hooks/routerHooks";
 import {PageTitle} from "@logistics/components/PageTitle";
 import {Nav, NavItem, NavLink} from "reactstrap";
 import {NavLink as Link} from "react-router";
-import {SmartScroll, SmartScrollContent} from "@logistics/components/SmartScroll";
-import {ChevronLeft, InfoCircle} from "react-bootstrap-icons";
-import {TreeViewLink} from "@logistics/components/TreeViewLink";
 import {Search} from "@logistics/components/Search"
 import Api from "@features/api/api.ts";
 import {useParams} from "react-router-dom";
-import {OrderDetail} from "@logistics/components/orders/OrderDetail";
-import {OrderSearch} from "@logistics/components/orders/OrderSearch.tsx";
 import {ItemSearch} from "@logistics/components/items/ItemSearch.tsx";
 import {ItemDetail} from "@logistics/components/items/ItemDetail.tsx";
 import {ItemSearchQuery} from "@logistics/data/types";

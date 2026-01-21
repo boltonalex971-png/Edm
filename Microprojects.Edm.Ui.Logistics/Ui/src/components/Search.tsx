@@ -3,7 +3,6 @@ import {type MouseEventHandler, useState} from "react"
 import {Route, Routes, useNavigate, useParams} from "react-router-dom";
 import axios from 'axios';
 import {Button, ButtonGroup, type ButtonProps, Toolbar, ToolbarItem} from '@progress/kendo-react-buttons';
-import {SmartScroll, SmartScrollContent} from "./SmartScroll";
 import {useBasePath, useRouteMatch} from "../hooks/routerHooks";
 import type {DataItem, DetailEventHandler, Dictionary, Item, Process, TreeDataItem} from "../data/types"
 import type {TreeItemProps} from "./TreeViewMaster"
@@ -11,6 +10,7 @@ import {Diagram3, Download, Pen, Search as SearchIcon} from "react-bootstrap-ico
 import {useGet} from "@logistics/hooks/hooks.ts";
 import Api from "@features/api/api.ts";
 import {Detail, DetailProps, EMPTY_GUID} from "@logistics/components/MasterDetail.tsx";
+import {SmartScroll, SmartScrollContent} from "@microprojects/tools";
 
 export type SearchProps = {
     api: string,
@@ -33,10 +33,10 @@ export function Search(props: SearchProps) {
     }
 
     return (
-        <SmartScroll offtop={10}>
+        <SmartScroll offsetTop={10} style={{display: "flex", flexDirection: "row", alignItems: 'flex-start', gap: 20}}>
             <SmartScrollContent
-                flex={1}
                 style={{
+                    flex: 1,
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'flex-start',
@@ -48,15 +48,13 @@ export function Search(props: SearchProps) {
                 <Button type={'button'} fillMode={'flat'} onClick={createClick}><Pen/> Create new</Button>
                 <Button fillMode={'flat'}><Download/> Get from accounting system</Button>
             </SmartScrollContent>
-            <div style={{flex: 5, marginLeft: '1rem'}}>
-                <SmartScrollContent>
-                    {panel == 'create' && props.detail}
-                    {panel == 'search' && props.search}
-                    <div style={{height: '40vh'}}>
-                        { /*div to avoid ui jerking when switching cards at bottom*/}
-                    </div>
-                </SmartScrollContent>
-            </div>
+            <SmartScrollContent style={{flex: 5, marginLeft: '1rem'}}>
+                {panel == 'create' && props.detail}
+                {panel == 'search' && props.search}
+                <div style={{height: '40vh'}}>
+                    { /*div to avoid ui jerking when switching cards at bottom*/}
+                </div>
+            </SmartScrollContent>
         </SmartScroll>
     );
 }

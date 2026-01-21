@@ -3,7 +3,6 @@ import {useRouteMatch} from "@logistics/hooks/routerHooks";
 import {PageTitle} from "@logistics/components/PageTitle";
 import {Nav, NavItem, NavLink} from "reactstrap";
 import {NavLink as Link} from "react-router";
-import {SmartScrollContent} from "@logistics/components/SmartScroll";
 import {ChevronLeft, InfoCircle} from "react-bootstrap-icons";
 import {TreeViewLink} from "@logistics/components/TreeViewLink";
 import {Search} from "@logistics/components/Search"
@@ -12,6 +11,7 @@ import {useParams} from "react-router-dom";
 import {OrderDetail} from "@logistics/components/orders/OrderDetail";
 import {OrderSearch} from "@logistics/components/orders/OrderSearch.tsx";
 import {OrderSearchQuery} from "@logistics/data/types";
+import {SmartScrollContent} from "@microprojects/tools";
 
 export function Orders() {
     let {path, name} = useRouteMatch();
@@ -74,7 +74,7 @@ function LinkPanel({api, onClose}: LinkPanelProps) {
             </p>
             <TreeViewLink api={api} onCurrentRootChanged={(root) => {
             }}/>
-            <SmartScrollContent flex={2} style={{paddingLeft: '2rem'}}>
+            <SmartScrollContent style={{flex: 2, paddingLeft: '2rem'}}>
                 <div style={{height: '1em'}}></div>
                 {/*{linkPanel && <LinkPanel api={linkPanel}/>}*/}
             </SmartScrollContent>

@@ -6,7 +6,7 @@ import {Card, CardHeader, CardBody, CardTitle, CardSubtitle} from '@progress/ken
 import {Form, FormElement} from '@progress/kendo-react-form';
 import {Button, ButtonGroup, type ButtonProps, Toolbar, ToolbarItem} from '@progress/kendo-react-buttons';
 import {Alert} from 'reactstrap';
-import {SmartScroll, SmartScrollContent} from "./SmartScroll";
+//import {SmartScroll, SmartScrollContent} from "./SmartScroll";
 import {TreeViewMaster, refresh} from "./TreeViewMaster";
 import {Loading, DetailStub} from "../features/utils/Utils";
 import api from '../features/api/api';
@@ -15,6 +15,7 @@ import {useBasePath} from "../hooks/routerHooks";
 import type {DataItem, DetailEventHandler, Dictionary, TreeDataItem, UUID} from "../data/types"
 import type {TreeItemProps} from "./TreeViewMaster"
 import {AlertState, InlineAlert} from "@logistics/components/InlineAlert.tsx";
+import {SmartScroll, SmartScrollContent} from "@microprojects/tools";
 
 export const EMPTY_GUID = '00000000-0000-0000-0000-000000000000'
 
@@ -40,38 +41,34 @@ export function MasterDetail(props: MasterDetailProps) {
     const {path} = useBasePath();
     const navigate = useNavigate();
     return (
-        <SmartScroll offtop={10}>
-            <div style={{flex: 1}}>
-                <SmartScrollContent>
-                    <TreeViewMaster api={props.api}
-                                    onCurrentRootChanged={(root) => (_selectedItem = root)}
-                                    item={props.item}
-                    />
-                </SmartScrollContent>
-            </div>
-            <div style={{flex: 5, marginLeft: '1rem'}}>
-                <SmartScrollContent>
-                    <Routes>
-                        <Route index element={<DetailStub message={props.stubMessage}/>}/>
-                        <Route path={'folder/:id'} element={
-                            <Folder
-                                api={api.directories}
-                                type={props.type}
-                                path={path}
-                                onChange={() => reloadMaster()}
-                                onClose={() => navigate(path)}
-                            />
-                        }/>
-                        <Route path={':id'} element={
-                            <>
-                                {props.detail}
-                                <div
-                                    style={{height: '40vh'}}>{ /*div to avoid ui jerking when switching cards at bottom*/}</div>
-                            </>
-                        }/>
-                    </Routes>
-                </SmartScrollContent>
-            </div>
+        <SmartScroll offsetTop={10} style={{display: "flex", flexDirection: "row", alignItems: 'flex-start', gap: 20}}>
+            <SmartScrollContent style={{flex: 1}}>
+                <TreeViewMaster api={props.api}
+                                onCurrentRootChanged={(root) => (_selectedItem = root)}
+                                item={props.item}
+                />
+            </SmartScrollContent>
+            <SmartScrollContent style={{flex: 5, marginLeft: '1rem'}}>
+                <Routes>
+                    <Route index element={<DetailStub message={props.stubMessage}/>}/>
+                    <Route path={'folder/:id'} element={
+                        <Folder
+                            api={api.directories}
+                            type={props.type}
+                            path={path}
+                            onChange={() => reloadMaster()}
+                            onClose={() => navigate(path)}
+                        />
+                    }/>
+                    <Route path={':id'} element={
+                        <>
+                            {props.detail}
+                            <div
+                                style={{height: '40vh'}}>{ /*div to avoid ui jerking when switching cards at bottom*/}</div>
+                        </>
+                    }/>
+                </Routes>
+            </SmartScrollContent>
         </SmartScroll>
     );
 }
