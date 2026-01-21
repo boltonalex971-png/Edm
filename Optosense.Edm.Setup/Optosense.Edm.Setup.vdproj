@@ -33,6 +33,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_2F76AD6740204F4FBF056B5CCA1C812F"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_3B66ADF4D6C74F2CBEDDAFF070A5CF8F"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -40,6 +46,12 @@
         "Entry"
         {
         "MsmKey" = "8:_48115BB3E9374F259480F84A63A14BD2"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_6327C4D243264C9D9ED3D44C8D215B35"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -64,13 +76,19 @@
         "Entry"
         {
         "MsmKey" = "8:_80831C912AA02F312845F283ED7E4099"
-        "OwnerKey" = "8:_DD150EF497155A37EA51C63F254DEC23"
+        "OwnerKey" = "8:_48115BB3E9374F259480F84A63A14BD2"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_80831C912AA02F312845F283ED7E4099"
         "OwnerKey" = "8:_A7EAE4D95410E4C69BD856ECB8423A0C"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_80831C912AA02F312845F283ED7E4099"
+        "OwnerKey" = "8:_DD150EF497155A37EA51C63F254DEC23"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -147,6 +165,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_A7EAE4D95410E4C69BD856ECB8423A0C"
+        "OwnerKey" = "8:_48115BB3E9374F259480F84A63A14BD2"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_AA00FCD1CD1E4632A87C731FAE5E96D3"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -155,12 +179,6 @@
         {
         "MsmKey" = "8:_B5469623A3F4D72AEB334E557B0CAEC0"
         "OwnerKey" = "8:_012A26D5E241432D90283C4746228809"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_B5469623A3F4D72AEB334E557B0CAEC0"
-        "OwnerKey" = "8:_DD150EF497155A37EA51C63F254DEC23"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -190,25 +208,7 @@
         "Entry"
         {
         "MsmKey" = "8:_B5469623A3F4D72AEB334E557B0CAEC0"
-        "OwnerKey" = "8:_A7EAE4D95410E4C69BD856ECB8423A0C"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_B5469623A3F4D72AEB334E557B0CAEC0"
         "OwnerKey" = "8:_A2759FB1B7464D3990F485DB4345D59C"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_B5469623A3F4D72AEB334E557B0CAEC0"
-        "OwnerKey" = "8:_8881E31E440D056CCF547448A7ACF397"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_B5469623A3F4D72AEB334E557B0CAEC0"
-        "OwnerKey" = "8:_80831C912AA02F312845F283ED7E4099"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -220,7 +220,31 @@
         "Entry"
         {
         "MsmKey" = "8:_B5469623A3F4D72AEB334E557B0CAEC0"
+        "OwnerKey" = "8:_A7EAE4D95410E4C69BD856ECB8423A0C"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_B5469623A3F4D72AEB334E557B0CAEC0"
+        "OwnerKey" = "8:_8881E31E440D056CCF547448A7ACF397"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_B5469623A3F4D72AEB334E557B0CAEC0"
+        "OwnerKey" = "8:_DD150EF497155A37EA51C63F254DEC23"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_B5469623A3F4D72AEB334E557B0CAEC0"
         "OwnerKey" = "8:_3B66ADF4D6C74F2CBEDDAFF070A5CF8F"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_B5469623A3F4D72AEB334E557B0CAEC0"
+        "OwnerKey" = "8:_80831C912AA02F312845F283ED7E4099"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -269,12 +293,6 @@
         {
         "MsmKey" = "8:_DD150EF497155A37EA51C63F254DEC23"
         "OwnerKey" = "8:_B7BF6F14322C4A1583BC0D17D8C5AA7A"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_ED6A2AEBF09B48DA93492E82314B4F35"
-        "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -337,11 +355,6 @@
             "ComponentsUrl" = "8:"
                 "Items"
                 {
-                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:.NETFramework,Version=v4.7.2"
-                    {
-                    "Name" = "8:Microsoft .NET Framework 4.7.2 (x86 and x64)"
-                    "ProductCode" = "8:.NETFramework,Version=v4.7.2"
-                    }
                 }
             }
         }
@@ -350,35 +363,33 @@
     {
         "CustomAction"
         {
-            "{4AA51A2D-7D85-4A59-BA75-B0809FC8B380}:_7BA2A9E352294C0F9904D946F5487B85"
+            "{4AA51A2D-7D85-4A59-BA75-B0809FC8B380}:_92AC325875D34DE2AE5BAC842081429C"
             {
             "Name" = "8:Publish Items from Microprojects.Edm.Install (Active)"
             "Condition" = "8:"
-            "Object" = "8:_ED6A2AEBF09B48DA93492E82314B4F35"
+            "Object" = "8:_6327C4D243264C9D9ED3D44C8D215B35"
             "FileType" = "3:2"
             "InstallAction" = "3:4"
             "Arguments" = "8:/Uninstall /targetDir=\"[TARGETDIR]\""
             "EntryPoint" = "8:"
             "Sequence" = "3:1"
-            "Identifier" = "8:_58C85CEB_4C29_40BD_91C4_C95D9A8A9324"
+            "Identifier" = "8:_FB0BFC49_B0E6_4663_931E_7A08189BB69D"
             "InstallerClass" = "11:FALSE"
             "CustomActionData" = "8:"
-            "Run64Bit" = "11:TRUE"
             }
-            "{4AA51A2D-7D85-4A59-BA75-B0809FC8B380}:_904E430143F746C59CAA9F100162749E"
+            "{4AA51A2D-7D85-4A59-BA75-B0809FC8B380}:_D891C5CBBC914BA4AC78B194C7E10395"
             {
             "Name" = "8:Publish Items from Microprojects.Edm.Install (Active)"
             "Condition" = "8:"
-            "Object" = "8:_ED6A2AEBF09B48DA93492E82314B4F35"
+            "Object" = "8:_6327C4D243264C9D9ED3D44C8D215B35"
             "FileType" = "3:2"
             "InstallAction" = "3:1"
             "Arguments" = "8:/Install /targetDir=\"[TARGETDIR]\\\" /db=\"[DBCONNECTIONSTRING]\" /principalUrl=\"[PRINCIPALURL]\" /consoleUrl=\"[CONSOLEURL]\" /grpcUrl=\"[GRPCURL]\" /mode=\"[ROLE]\""
             "EntryPoint" = "8:"
             "Sequence" = "3:1"
-            "Identifier" = "8:_532257F8_D898_4DE7_A66A_3E76F125D44B"
+            "Identifier" = "8:_618C994D_36E1_46A2_8F3F_EF2631E74625"
             "InstallerClass" = "11:FALSE"
             "CustomActionData" = "8:/targetDir=\"[TARGETDIR]\\\" /db=\"[DBCONNECTIONSTRING]\" /pricipalUrl=\"[PRINCIPALURL]\" /consoleUrl=\"[CONSOLEURL]\" /grpcUrl=\"[GRPCURL]\""
-            "Run64Bit" = "11:TRUE"
             }
         }
         "DefaultFeature"
@@ -395,20 +406,12 @@
                 {
                 "Name" = "8:.NET Core"
                 "Message" = "8:[VSDNETCOREMSG]"
-                "FrameworkVersion" = "8:8.0     "
+                "FrameworkVersion" = "8:10.0      "
                 "AllowLaterVersions" = "11:FALSE"
                 "InstallUrl" = "8:https://dotnet.microsoft.com/download/dotnet-core/[NetCoreVerMajorDotMinor]"
                 "IsNETCore" = "11:TRUE"
                 "Architecture" = "2:0"
                 "Runtime" = "2:1"
-                }
-                "{A06ECF26-33A3-4562-8140-9B0E340D4F24}:_A3D66BA8B5F6421798A548C6DBAF28F1"
-                {
-                "Name" = "8:.NET Framework"
-                "Message" = "8:[VSDNETMSG]"
-                "FrameworkVersion" = "8:.NETFramework,Version=v4.7.2"
-                "AllowLaterVersions" = "11:FALSE"
-                "InstallUrl" = "8:http://go.microsoft.com/fwlink/?LinkId=863262"
                 }
             }
         }
@@ -1410,7 +1413,7 @@
                     }
                     "{688940B3-5CA9-4162-8DEE-2993FA9D8CBC}:_4468491F45434543811643F5EE40D2F9"
                     {
-                    "Sequence" = "3:400"
+                    "Sequence" = "3:300"
                     "DisplayName" = "8:Textboxes   (A)"
                     "UseDynamicProperties" = "11:TRUE"
                     "IsDependency" = "11:FALSE"
@@ -1666,7 +1669,7 @@
                     }
                     "{688940B3-5CA9-4162-8DEE-2993FA9D8CBC}:_5997B96A53CD4DA3BE07E66544FCBBAE"
                     {
-                    "Sequence" = "3:300"
+                    "Sequence" = "3:200"
                     "DisplayName" = "8:RadioButtons   (2 buttons)"
                     "UseDynamicProperties" = "11:TRUE"
                     "IsDependency" = "11:FALSE"
@@ -1792,7 +1795,7 @@
                     }
                     "{688940B3-5CA9-4162-8DEE-2993FA9D8CBC}:_DA4A4E7C36464F3095A7ADCF3286B348"
                     {
-                    "Sequence" = "3:200"
+                    "Sequence" = "3:400"
                     "DisplayName" = "8:Installation Folder"
                     "UseDynamicProperties" = "11:TRUE"
                     "IsDependency" = "11:FALSE"
@@ -1990,7 +1993,7 @@
         }
         "ProjectOutput"
         {
-            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_94DD7F8D28904D0FA7CB96979109C4F0"
+            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_2F76AD6740204F4FBF056B5CCA1C812F"
             {
             "SourcePath" = "8:..\\Optosense.Edm.WebApi\\bin\\Debug\\net10.0\\win-x64\\publish\\Optosense.Edm.WebApi.exe"
             "TargetName" = "8:"
@@ -2012,13 +2015,13 @@
             "ProjectOutputGroupRegister" = "3:1"
             "OutputConfiguration" = "8:"
             "OutputGroupCanonicalName" = "8:PublishItems"
-            "OutputProjectGuid" = "8:{EDF7FE78-ED90-4B36-A9DE-C75F86F0600B}"
+            "OutputProjectGuid" = "8:{13E01EC1-68A8-7D5D-E755-64ADECC2BD99}"
             "ShowKeyOutput" = "11:TRUE"
                 "ExcludeFilters"
                 {
                 }
             }
-            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_ED6A2AEBF09B48DA93492E82314B4F35"
+            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_6327C4D243264C9D9ED3D44C8D215B35"
             {
             "SourcePath" = "8:..\\Microprojects.Edm.Install\\bin\\Debug\\net10.0\\win-x64\\publish\\Microprojects.Edm.Install.exe"
             "TargetName" = "8:"
@@ -2040,9 +2043,8 @@
             "ProjectOutputGroupRegister" = "3:1"
             "OutputConfiguration" = "8:"
             "OutputGroupCanonicalName" = "8:PublishItems"
-            "OutputProjectGuid" = "8:{4DE52828-D425-4C0B-9082-064CB88423A1}"
+            "OutputProjectGuid" = "8:{6B43E72F-C818-9ACE-8E55-2ACA8C1B860F}"
             "ShowKeyOutput" = "11:TRUE"
-            "PublishProfilePath" = "8:Properties\\PublishProfiles\\FolderProfile.pubxml"
                 "ExcludeFilters"
                 {
                 }
