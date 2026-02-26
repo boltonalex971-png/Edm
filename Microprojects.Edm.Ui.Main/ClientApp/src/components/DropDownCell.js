@@ -11,12 +11,16 @@ export const DropDownComp = (props) => {
             dataItem: props.dataItem,
             field: props.field,
             syntheticEvent: e.syntheticEvent,
-            value: e.target.value[props.dataItemKey]
+            value: props.dataItemKey ? e.target.value[props.dataItemKey] : e.target.value
         });
     }
-    const value = (props.data || []).find(c => c[props.dataItemKey] === props.value) || {};
+    const data = props.data || [];
+    const value = props.dataItemKey ?
+        (data.find(c => c[props.dataItemKey] === props.value) || {}) :
+        (data.find(c => c === props.value) || props.value || "");
+
     return (
-        <DropDownList {...props} data={props.data || []} onChange={handleChange} value={value} />
+        <DropDownList {...props} data={data} onChange={handleChange} value={value} defaultItem={props.dataItemKey ? {} : ""} />
     );
 }
 

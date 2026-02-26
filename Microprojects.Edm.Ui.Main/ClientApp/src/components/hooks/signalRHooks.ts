@@ -1,5 +1,6 @@
 import {useState, useEffect, useCallback, useRef} from 'react';
 import {HubConnection, HubConnectionBuilder, LogLevel} from '@microsoft/signalr';
+import { getCookie } from './hooks.js';
 
 export enum PluginMessageTypes {
     init = 'Init',
@@ -54,8 +55,12 @@ const useSignalR =
         const [error, setError] = useState(null);
 
         useEffect(() => {
+            const token = getCookie('X-Auth-Token');
             const newConnection = new HubConnectionBuilder()
-                .withUrl(hubUrl, { withCredentials: false })
+                .withUrl(hubUrl, {
+                    withCredentials: false,
+                    accessTokenFactory: () => token
+                })
                 .withAutomaticReconnect() // Optional: Configure automatic reconnect
                 .configureLogging(LogLevel.Error) // Optional: Set logging level
                 .build();

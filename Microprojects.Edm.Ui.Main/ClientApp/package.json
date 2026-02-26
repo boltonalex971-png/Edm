@@ -36,6 +36,7 @@
     "@reduxjs/toolkit": "^2.2.6",
     "@telerik/kendo-intl": "^2.3.0",
     "axios": "^1.13.0",
+    "jwt-decode": "^4.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-redux": "^9.1.2",

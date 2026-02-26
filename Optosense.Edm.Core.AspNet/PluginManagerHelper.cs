@@ -35,65 +35,6 @@ public static class PluginManagerHelper
         public IConfiguration Configuration { get; set; }
     }
 
-    [SupportedOSPlatform("windows")]
-    public static IApplicationBuilder UseAuthenticatedUserInfo(this IApplicationBuilder builder)
-    {
-        builder.Use(async (context, next) =>
-        {
-            if (!context.User.Identity.IsAuthenticated && 
-                // Not Sensor API call
-                !context.Request.Path.StartsWithSegments($"/api/sensors") &&
-                // Not an intercom call
-                !context.Request.Path.StartsWithSegments($"/{IntercomHub.Hub}") &&
-                // Not a gRPC call
-                !context.Request.Path.StartsWithSegments($"/Optosense.Edm.JobExecutor"))
-            {
-                await context.ChallengeAsync();
-                return;
-            }
-            
-            await next();
-        });
-
-        return builder;
-    }
-
-    public static IApplicationBuilder UseFakeUserInfo(this IApplicationBuilder builder)
-    {
-        builder.Use(async (context, next) =>
-        {
-            if (!context.User.Identity.IsAuthenticated)
-            {
-                var authProperties = new AuthenticationProperties
-                {
-                    //IsPersistent = true
-                };
-                var claimsIdentity = new ClaimsIdentity(
-                    new List<Claim>
-                    {
-                        new Claim(ClaimTypes.Name, "User"),
-                        new Claim(ClaimTypes.Role, "Admin"),
-                        new Claim("Groups", "1"), // Group sid
-                        //new Claim("Groups", "Group 2"),
-                        //new Claim("Groups", "Group 3"),
-                    },
-                    CookieAuthenticationDefaults.AuthenticationScheme);
-                var configuration = builder.ApplicationServices.GetRequiredService<IConfiguration>();
-                var roles = configuration.GetSection("Edm:Auth:Roles").GetChildren()
-                    .Select(c => c.Key).ToList();
-                roles.ForEach(r => claimsIdentity.AddClaim(new Claim("Roles", r)));
-                await context.SignInAsync(
-                    CookieAuthenticationDefaults.AuthenticationScheme,
-                    new ClaimsPrincipal(claimsIdentity),
-                    authProperties);
-            }
-
-            await next(context);
-        });
-
-        return builder;
-    }
-
     public static void AddPlugins(this IServiceCollection services, Action<PluginsConfig> config)
     {
         if (config == null)
@@ -143,19 +84,36 @@ public static class PluginManagerHelper
         var packageName = name[(name.LastIndexOf('.') + 1)..];
         var pluginPath = attr.UiRoot != null ? new PathString($"/{attr.UiRoot}") : new PathString(); //$"/{attr.UiRoot}/{packageName.ToLower()}";
         var fileProvider = new ManifestEmbeddedFileProvider(plugin.Assembly, attr.SpaPath);
-        builder.Use((context, next) =>
+        builder.Use(async (context, next) =>
         {
             if (context.Request.Path.StartsWithSegments(pluginPath, out var remain))
             {
                 var fileInfo = fileProvider.GetFileInfo(remain);
-                if (!fileInfo.Exists)
+                if (!fileInfo.Exists || string.IsNullOrEmpty(remain) || remain == "/" || remain.Value.EndsWith("index.html"))
                 {
-                    context.Request.Path = new PathString($"{pluginPath}/index.html");
+                    if (!fileInfo.Exists)
+                    {
+                        context.Request.Path = new PathString($"{pluginPath}/index.html");
+                    }
+
+                    if (context.User.Identity?.IsAuthenticated == true &&
+                        context.User.Identity is System.Security.Principal.WindowsIdentity)
+                    {
+                        var jwtService = context.RequestServices.GetRequiredService<Auth.IJwtService>();
+                        var selectedRole = context.Session.GetString("SelectedRole");
+                        var token = jwtService.GenerateToken(context.User, selectedRole);
+                        context.Response.Cookies.Append("X-Auth-Token", token, new CookieOptions
+                        {
+                            HttpOnly = false,
+                            Secure = true,
+                            SameSite = SameSiteMode.Strict,
+                            Expires = DateTimeOffset.UtcNow.AddMinutes(10) // Short lived cookie for handoff
+                        });
+                    }
                 }
-                //return Task.CompletedTask;
             }
 
-            return next();
+            await next(context);
         });
 
         builder.UseStaticFiles(new StaticFileOptions

@@ -28,12 +28,14 @@ namespace Optosense.Edm.Core.AspNet.Controllers
         private readonly ILogger<AuthController> _logger;
         private readonly IMapper _mapper;
         private readonly IHostEnvironment _env;
+        private readonly IJwtService _jwtService;
 
-        public AuthController(ILogger<AuthController> logger, IMapper mapper, IConfiguration configuration, IHostEnvironment env) : base(configuration) 
+        public AuthController(ILogger<AuthController> logger, IMapper mapper, IConfiguration configuration, IHostEnvironment env, IJwtService jwtService) : base(configuration)
         {
             _logger = logger;
             _mapper = mapper;
             _env = env;
+            _jwtService = jwtService;
         }
 
         [HttpGet("user/name")]
@@ -43,26 +45,29 @@ namespace Optosense.Edm.Core.AspNet.Controllers
         }
 
         [HttpPut("user/role")]
-        public async Task<UserInfo> SetUserRole([FromBody] string role)
+        public async Task<IActionResult> SetUserRole([FromBody] string role)
         {
-            if (User.Identity.IsAuthenticated) {
-                var availableRole = User.Identity switch
+            if (User.Identity.IsAuthenticated)
+            {
+                var userInfo = UserInfo;
+                if (!userInfo.Roles.Contains(role))
                 {
-                    WindowsIdentity w => w.Groups.FirstOrDefault(w => w.Value == role)?.Value,
-                    ClaimsIdentity c => c.FindAll("Roles").FirstOrDefault(r => r.Value == role)?.Value,
-                    _ => default(string)
-                } ?? throw new Exception("No such role for the user");
+                    throw new Exception("No such role for the user");
+                }
 
-                (User.Identity as ClaimsIdentity).RemoveClaim(User.FindFirst(ClaimTypes.Role));
-                (User.Identity as ClaimsIdentity).AddClaim(new Claim(ClaimTypes.Role, role));
-                await HttpContext.SignOutAsync();
-                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, User);
-                    
-                //var userInfo = UserInfo with { Role = availableRole};
-                //HttpContext.Session.SetString("UserInfo", JsonConvert.SerializeObject(userInfo));
+                var token = _jwtService.GenerateToken(User, role);
+                HttpContext.Session.SetString("SelectedRole", role);
+                Response.Cookies.Append("X-Auth-Token", token, new CookieOptions
+                {
+                    HttpOnly = false,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTimeOffset.UtcNow.AddMinutes(10)
+                });
+                return Ok();
             }
 
-            return UserInfo;
+            return Unauthorized();
         }
     }
 }

@@ -11,7 +11,7 @@ import {NewOperationWizard} from "./components/operation/NewOperationWizard";
 import {Plugins} from "./components/plugins/Plugins";
 import {ApiContext, appRoles, UserContext} from './ApiContext';
 import api from "./components/api";
-import {useGet} from "./components/hooks/hooks";
+import {getUserFromToken} from "./components/hooks/hooks";
 import Operations from "./components/dashboard/Operations";
 import {OperationLayout} from "./components/operation/OperationLayout";
 import {useDispatch, useSelector} from "react-redux";
@@ -24,9 +24,13 @@ export default function App() {
     const userDispatch = useDispatch()
     //const [homebase] = useState(`${import.meta.env.ASSET_PREFIX || window.location.origin}`);
     const apiBase = api.baseUrl
-    const _ = useGet(`${api.auth}/user/name`, [], (u: UserState) => {
-        userDispatch(setUser(u))
-    })
+
+    React.useEffect(() => {
+        const u = getUserFromToken();
+        if (u) {
+            userDispatch(setUser(u));
+        }
+    }, [userDispatch]);
 
     return (
             <ApiContext.Provider value={apiBase}>

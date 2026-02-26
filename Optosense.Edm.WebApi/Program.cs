@@ -1,11 +1,14 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Microprojects.Edm;
 using Microprojects.Edm.Utils;
+using Microsoft.AspNetCore.Authentication.Certificate;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -19,6 +22,9 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Hosting.WindowsServices;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.EventLog;
+using System.Security.Claims;
+using System.Text;
+using Microsoft.IdentityModel.Tokens;
 using Optosense.Edm.Core.AspNet;
 using Optosense.Edm.Core.AspNet.Auth;
 using Optosense.Edm.Infrastructure.Models;
@@ -114,17 +120,104 @@ builder.Services.AddSession(session =>
     session.IdleTimeout = TimeSpan.FromMinutes(10);
     session.Cookie.IsEssential = true;
 });
-if (builder.Environment.IsProduction())
-{
-    builder.Services.AddSingleton<IAuthorizationHandler, HubAuthHandler>();
-    builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
-    builder.Services.AddAuthorization(options => { options.FallbackPolicy = options.DefaultPolicy; });
-}
-else
-{
-    builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
-}
+builder.Services.AddSingleton<IJwtService, JwtService>();
+builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = "SmartAuth";
+        options.DefaultChallengeScheme = NegotiateDefaults.AuthenticationScheme;
+    })
+    .AddPolicyScheme("SmartAuth", "SmartAuth", options =>
+    {
+        options.ForwardDefaultSelector = context =>
+        {
+            var authHeader = context.Request.Headers["Authorization"].ToString();
+            if (authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            {
+                return JwtBearerDefaults.AuthenticationScheme;
+            }
+            if (context.Request.Cookies.ContainsKey("X-Auth-Token"))
+            {
+                return JwtBearerDefaults.AuthenticationScheme;
+            }
 
+            var grpcSecureUrl = builder.Configuration.GetValue<string>("Kestrel:Endpoints:GrpcSecure:Url");
+            if (!string.IsNullOrEmpty(grpcSecureUrl) &&
+                Uri.TryCreate(grpcSecureUrl.Replace("*", "localhost"), UriKind.Absolute, out var uri) &&
+                context.Connection.LocalPort == uri.Port)
+            {
+                return CertificateAuthenticationDefaults.AuthenticationScheme;
+            }
+
+            return NegotiateDefaults.AuthenticationScheme;
+        };
+    })
+    .AddNegotiate()
+    .AddJwtBearer(options =>
+    {
+        var jwtSettings = builder.Configuration.GetSection("Edm:Auth:Jwt");
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtSettings["Issuer"],
+            ValidAudience = jwtSettings["Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"])),
+            NameClaimType = "name",
+            RoleClaimType = "role"
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                if (string.IsNullOrEmpty(context.Token))
+                {
+                    context.Token = context.Request.Cookies["X-Auth-Token"];
+                }
+                return Task.CompletedTask;
+            }
+        };
+    })
+    .AddCertificate(options =>
+    {
+        options.AllowedCertificateTypes = CertificateTypes.All;
+        options.Events = new CertificateAuthenticationEvents
+        {
+            OnCertificateValidated = context =>
+            {
+                var allowedServices = builder.Configuration.GetSection("Edm:Auth:RemoteServices").Get<List<string>>();
+                var subject = context.ClientCertificate.Subject;
+                var commonName = context.ClientCertificate.GetNameInfo(System.Security.Cryptography.X509Certificates.X509NameType.SimpleName, false);
+
+                if (allowedServices != null && (allowedServices.Contains(subject) || allowedServices.Contains(commonName)))
+                {
+                    var claims = new[]
+                    {
+                        new Claim(ClaimTypes.NameIdentifier, commonName ?? subject, ClaimValueTypes.String, context.Options.ClaimsIssuer),
+                        new Claim(ClaimTypes.Name, commonName ?? subject, ClaimValueTypes.String, context.Options.ClaimsIssuer),
+                        new Claim(ClaimTypes.Role, AuthDefaults.RemoteService, ClaimValueTypes.String, context.Options.ClaimsIssuer)
+                    };
+
+                    context.Principal = new ClaimsPrincipal(new ClaimsIdentity(claims, context.Scheme.Name));
+                    context.Success();
+                }
+                else
+                {
+                    context.Fail("Certificate not allowed");
+                }
+
+                return Task.CompletedTask;
+            }
+        };
+    });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.FallbackPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+});
 builder.Services.AddWindowsService();
 builder.Services.AddHostedService<Worker>()
     .Configure<EventLogSettings>(config =>
@@ -138,38 +231,31 @@ builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
-
-// if (builder.Configuration.GetValue<string>("Edm:Mode") == "admin" && app.Environment.IsDevelopment())
-// {
-//     using var scope = app.Services.CreateScope();
-//     var db = scope.ServiceProvider.GetRequiredService<EdmContext>();
-//     db.Database.Migrate();
-// }
-
 app.UsePeer();
 app.UseJobs();
 app.JsonConfigure();
-if (builder.Environment.IsDevelopment())
-{
-    app.UseCors(policy => policy
-        .WithOrigins("http://localhost:3000")
-        .AllowAnyMethod()
-        .AllowAnyHeader());
-}
-
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseSession();
-if (app.Environment.IsDevelopment())
+
+app.Use(async (context, next) =>
 {
-    app.UseCookiePolicy(new CookiePolicyOptions { });
-    app.UseFakeUserInfo();
-}
-else
-{
-    app.UseAuthenticatedUserInfo();
-}
+    if (context.User.Identity?.IsAuthenticated == true)
+    {
+        var jwtService = context.RequestServices.GetRequiredService<IJwtService>();
+        var selectedRole = context.Session.GetString("SelectedRole");
+        var token = jwtService.GenerateToken(context.User, selectedRole);
+        context.Response.Cookies.Append("X-Auth-Token", token, new CookieOptions
+        {
+            HttpOnly = false,
+            Secure = true,
+            SameSite = SameSiteMode.Strict,
+            Expires = DateTimeOffset.UtcNow.AddMinutes(60)
+        });
+    }
+    await next();
+});
 
 app.UseExceptionHandler();
 app.MapGrpcService<EdmJobService>().AllowAnonymous();

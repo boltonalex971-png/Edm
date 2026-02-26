@@ -63,8 +63,6 @@ export function Folder(props) {
                                         <DropDownComp {...compProps}
                                             loading={!user}
                                             data={user && user.divisions}
-                                            textField='name'
-                                            dataItemKey='sid'
                                         />
                                     }
                                 />

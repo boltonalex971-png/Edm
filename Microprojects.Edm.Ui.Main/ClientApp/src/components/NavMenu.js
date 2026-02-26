@@ -16,13 +16,12 @@ export const NavMenu = (props) => {
     const [collapsed, setCollapsed] = useState(true)
     const toggleNavbar = () => setCollapsed(s => !s)
     const setRole = (role) =>
-        axios.put(`${api.auth}/user/role`, role, { headers: { 'Content-Type': 'application/json' } })
+        axios.put(`${api.auth}/user/role`, JSON.stringify(role), { headers: { 'Content-Type': 'application/json' } })
             .then(r => {
-                dispatch(changeRole(r.data.role))
-                // Reload to get correct data for the role
+                // Reload to get correct data for the role from the cookie set by the server
                 window.location.reload()
             })
-            .catch(r => alert(r.response?.data?.detail))
+            .catch(r => alert(r.response?.data?.detail || r.message))
     return (
         <header>
             <Navbar className="navbar-expand-sm navbar-toggleable-sm border-bottom box-shadow mb-3" light>
