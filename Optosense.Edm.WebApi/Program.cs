@@ -97,6 +97,7 @@ builder.Services.AddPlugins(config =>
     config.PluginsPath = builder.Configuration.GetSection("Edm:Assemblies").GetChildren().Select(c => c.Value);
     config.Configuration = builder.Configuration;
 });
+builder.Services.AddHostedService<PluginLifecycleService>();
 builder.AddJobs();
 
 if (builder.Environment.IsDevelopment())
