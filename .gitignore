@@ -337,20 +337,19 @@ ASALocalRun/
 # Local History for Visual Studio
 .localhistory/
 
+# Kendo UI license files (create locally)
+/**/kendo-ui-license.txt
 # BeatPulse healthcheck temp database
 healthchecksdb
 /Optosense.Edm.Drivers.Null/ui/.eslintcache
 /Optosense.Edm.Drivers.Null/ui/yarn.lock
 /Optosense.Edm.Operations.Test/ui/.eslintcache
-/Optosense.Edm.Operations.Test/ui/kendo-ui-license.txt
 /Optosense.Edm.Operations.Test/ui/yarn.lock
 Optosense.Edm.Profiles.Board/Ui/yarn.lock
 /**/appsettings.**.json
 /Optosense.Edm.WebUi/Properties/launchSettings.json
 
 /Microprojects.Edm.Ui.Console/ui/yarn.lock
-/Microprojects.Edm.Ui.Console/ui/kendo-ui-license.txt
-Microprojects.Edm.Ui.Main/ClientApp/kendo-ui-license.txt
 /Microprojects.Edm.Ui.Main/ClientApp/package-lock.json
 /Optosense.Edm.Profiles.Board/MuxDriverUi/package-lock.json
 /Optosense.Edm.Profiles.Board/MuxDriverUi/yarn.lock
@@ -363,6 +362,5 @@ Microprojects.Edm.Ui.Main/ClientApp/kendo-ui-license.txt
 /Optosense.Edm.WebApi/.config
 /Optosense.Edm.WebApi/appsettings.Development.json
 /Optosense.Edm.Drivers.RestApi/ui-driver/package-lock.json
-/Optosense.Edm.Drivers.RestApi/ui-driver/kendo-ui-license.txt
 /Optosense.Edm.WebApi/Properties/launchSettings.json
 /Microprojects.Edm.Ui.Logistics/Properties/launchSettings.json

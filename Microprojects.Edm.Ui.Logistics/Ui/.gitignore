@@ -11,5 +11,4 @@ dist/
 .vscode/*
 !.vscode/extensions.json
 .idea
-/kendo-ui-license.txt
 /package-lock.json
