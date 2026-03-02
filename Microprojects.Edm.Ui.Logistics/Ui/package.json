@@ -37,6 +37,7 @@
     "@reduxjs/toolkit": "^2.5.1",
     "@telerik/kendo-intl": "^2.3.0",
     "axios": "^1.7.9",
+    "jwt-decode": "^4.0.0",
     "lodash.isequal": "^4.5.0",
     "react": "^18.3.1",
     "react-bootstrap-icons": "^1.11.5",

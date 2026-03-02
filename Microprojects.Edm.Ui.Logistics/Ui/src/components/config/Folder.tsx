@@ -5,7 +5,8 @@ import { Input } from '@progress/kendo-react-inputs';
 import {Detail, Info, Editor, EMPTY_GUID} from '../MasterDetail';
 import { useParams } from 'react-router-dom';
 import { DropDownComp } from '../DropDownCell';
-import { useGetUserQuery } from '../../features/api/apiSlice';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
 import type {TreeNode} from "../../data/types";  
 
 type FolderProps = {
@@ -17,7 +18,7 @@ type FolderProps = {
 }
 
 export function Folder(props : FolderProps) {
-    const { data: user, error : userError, isLoading } = useGetUserQuery()
+    const user = useSelector((state : RootState) => state.user)
     const { id } = useParams();
     let [[data, setData], loading, error] = useGet<TreeNode>(`${props.api}/${id}`, [id]);
     if (!data || data.id === EMPTY_GUID) {
@@ -29,7 +30,7 @@ export function Folder(props : FolderProps) {
             id={id}
             icon={<span className='k-icon k-i-folder' title='Folder' />}
             loading={loading}
-            error={userError?.toString()}
+            error={error}
             data={data}
             card={
                 <Info {...props}
@@ -75,4 +76,3 @@ export function Folder(props : FolderProps) {
         />
     );
 }
-

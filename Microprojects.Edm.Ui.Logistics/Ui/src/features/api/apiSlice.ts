@@ -18,13 +18,9 @@ export const apiSlice = createApi({
         getProcesses: builder.query<Process[], void>({
             // The URL for the request is '/api/processes'
             query: () => '/processes'
-        }),
-        getUser: builder.query<User, void>({
-            // The URL for the request is '/api/processes'
-            query: () => '/auth/user/name'
         })
     })
 })
 
 // Export the auto-generated hook for the `getProcesses` query endpoint
-export const { useGetProcessesQuery, useGetUserQuery } = apiSlice
+export const { useGetProcessesQuery } = apiSlice
