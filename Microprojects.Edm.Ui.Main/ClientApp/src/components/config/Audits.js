@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useGet } from '../hooks/hooks';
-import { Field } from '@progress/kendo-react-form';
-import { Input, NumericTextBox } from '@progress/kendo-react-inputs';
 import { useHistory, useParams } from 'react-router-dom';
 import { useRouteMatch } from 'react-router-dom';
-import { MasterDetail, reloadMaster, Detail, Info, Editor } from '../MasterDetail';
+import { MasterDetail, reloadMaster, Detail, Info, Editor, InfoItem } from '../MasterDetail';
 import { AuditTabs } from './audit/AuditTabs';
+import { TextField, Box } from '@mui/material';
+import { FactCheck as AuditIcon } from '@mui/icons-material';
+
 
 AuditDetail.propTypes = {
     onChange: PropTypes.func,
@@ -17,7 +18,8 @@ AuditDetail.propTypes = {
     onUpdate: PropTypes.func
 }
 
-export function AuditDetail({ auditId, ...props }) {
+export function AuditDetail({ auditId, parents, ...props }) {
+    const type = 'audit';
     let { id } = useParams();
     id = auditId || id;
     let [sub, setSub] = useState();
@@ -29,17 +31,22 @@ export function AuditDetail({ auditId, ...props }) {
     return (
         <Detail {...props}
             id={id}
+            type={type}
+            icon={<AuditIcon />}
+
             loading={loading}
             error={error}
             data={data}
+            parents={parents}
             subDetail={sub}
             card={
                 <Info {...props}
                     data={data}
                     content={
-                        <div>
-                            <p>{`${data.name}`}</p>
-                        </div>
+                        <>
+                            <InfoItem label="Audit Name" value={data.name} />
+                            <InfoItem label="Description" value={data.description} />
+                        </>
                     }
                 />
             }
@@ -48,19 +55,31 @@ export function AuditDetail({ auditId, ...props }) {
                     data={data}
                     setData={setData}
                     onUpdate={props.onUpdate}
-                    content={
-                        <fieldset className={'k-form-fieldset'}>
-                            <legend className={'k-form-legend'}>Edit profile data</legend>
-                            <div className="mb-3">
-                                <Field name={'name'} component={Input} label={'Name'} />
-                            </div>
-                            <div className="mb-3">
-                                <Field name={'description'} component={Input} label={'Description'} />
-                            </div>
-                        </fieldset>
-                    }
+                    content={({ values, handleChange }) => (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                            <TextField
+                                fullWidth
+                                label="Name"
+                                name="name"
+                                value={values.name || ''}
+                                onChange={handleChange}
+                                size="small"
+                            />
+                            <TextField
+                                fullWidth
+                                label="Description"
+                                name="description"
+                                value={values.description || ''}
+                                onChange={handleChange}
+                                size="small"
+                                multiline
+                                rows={2}
+                            />
+                        </Box>
+                    )}
                 />
             }
+
             relations={
                 <AuditTabs id={parseInt(id)} params={props.params} api={props.api} onDetailSelected={setSub} />
             }

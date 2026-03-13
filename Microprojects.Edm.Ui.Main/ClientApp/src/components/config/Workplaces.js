@@ -1,28 +1,25 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useGet } from '../hooks/hooks';
-import { Field } from '@progress/kendo-react-form';
-import { Input } from '@progress/kendo-react-inputs';
-import { useHistory, useParams } from 'react-router-dom';
-import { useRouteMatch } from 'react-router-dom';
-import { MasterDetail, reloadMaster, Detail, Info, Editor } from '../MasterDetail';
+import { useHistory, useParams, useRouteMatch } from 'react-router-dom';
+import { Business as BusinessIcon } from '@mui/icons-material';
+import { MasterDetail, reloadMaster, Detail, Info, Editor, InfoItem } from '../MasterDetail';
+import { TextField, Box } from '@mui/material';
 import { WorkplaceTabs } from './workplace/WorkplaceTabs';
 import Api from '../api';
 
+
 export function Workplaces() {
-    const type = 'workplace';
     let { path } = useRouteMatch();
     const history = useHistory();
     const api = Api.workplaces;
     return (
         <MasterDetail
-            type={type}
             api={api}
             path={path}
             stubMessage='Please select a workplace'
             detail={(
                 <WorkplaceDetail
-                    type={type}
                     api={api}
                     path={path}
                     onChange={() => reloadMaster()}
@@ -38,11 +35,11 @@ WorkplaceDetail.propTypes = {
     path: PropTypes.string,
     api: PropTypes.string,
     workplaceId: PropTypes.number,
-    type: PropTypes.string,
     onUpdate: PropTypes.func
 }
 
-export function WorkplaceDetail({ workplaceId, ...props }) {
+export function WorkplaceDetail({ workplaceId, parents, ...props }) {
+    const type = 'workplace';
     let { id } = useParams();
     id = workplaceId || parseInt(id);
     let [[data, setData], loading, error] = useGet(`${props.api}/${id}`, [id]);
@@ -54,39 +51,56 @@ export function WorkplaceDetail({ workplaceId, ...props }) {
     return (
         <Detail {...props}
             id={id}
-            icon={<span className='k-icon k-i-cogs' title='Workplace' />}
+            type={type}
+            icon={<BusinessIcon />}
+
             loading={loading}
             error={error}
             data={data}
+            parents={parents}
             subDetail={sub}
             card={
                 <Info {...props}
                     data={data}
-
                     content={
-                        <div>
-                        </div>
+                        <>
+                            <InfoItem label="Workplace Name" value={data.name} />
+                            <InfoItem label="Description" value={data.description} />
+                        </>
                     }
                 />
             }
+
             editor={
                 <Editor {...props}
                     data={data}
                     setData={setData}
                     onUpdate={props.onUpdate}
-                    content={
-                        <fieldset className={'k-form-fieldset'}>
-                            <legend className={'k-form-legend'}>Edit workplace data</legend>
-                            <div className="mb-3">
-                                <Field name={'name'} component={Input} label={'Name'} />
-                            </div>
-                            <div className="mb-3">
-                                <Field name={'description'} component={Input} label={'Description'} />
-                            </div>
-                        </fieldset>
-                    }
+                    content={({ values, handleChange }) => (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                            <TextField
+                                fullWidth
+                                label="Name"
+                                name="name"
+                                value={values.name || ''}
+                                onChange={handleChange}
+                                size="small"
+                            />
+                            <TextField
+                                fullWidth
+                                label="Description"
+                                name="description"
+                                value={values.description || ''}
+                                onChange={handleChange}
+                                size="small"
+                                multiline
+                                rows={2}
+                            />
+                        </Box>
+                    )}
                 />
             }
+
             relations={
                 <WorkplaceTabs id={parseInt(id)} api={props.api} onDetailSelected={setSub} />
             }

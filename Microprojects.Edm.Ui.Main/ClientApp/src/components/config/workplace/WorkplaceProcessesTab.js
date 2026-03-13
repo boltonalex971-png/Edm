@@ -1,13 +1,12 @@
 import React from 'react';
 import Api from '../../api';
 import PropTypes from 'prop-types';
-import { GridColumn } from '@progress/kendo-react-grid';
 import { RelationTable } from '../../RelationTable';
-import { DropDownCell, LinkTextCell } from '../../DropDownCell';
 import { useGet } from '../../hooks/hooks';
 import { ProcessDetail } from '../Processes';
 import { useHistory } from 'react-router-dom';
 import { ProcessWorkbenchesDetail } from './ProcessWorkbenches';
+import { Link, Select, MenuItem, FormControl } from '@mui/material';
 
 WorkplaceProcessesTab.propTypes = {
     id: PropTypes.number,
@@ -15,72 +14,103 @@ WorkplaceProcessesTab.propTypes = {
     onDetailSelected: PropTypes.func
 }
 
-export function WorkplaceProcessesTab({ id, api, onDetailSelected }) {
+export function WorkplaceProcessesTab({ id, api, onDetailSelected, parents }) {
     const history = useHistory();
     const [[data]] = useGet(`${api}/processes`);
-    const processClick = (processId) => {
-        const path = '/config/processes';
-        onDetailSelected(
-            <ProcessDetail
-                processId={processId}
-                api={Api.processes}
-                path={path}
-                onClose={() => onDetailSelected()}
-                onUp={() => history.push(`${path}/${processId}`)}
-            />
-        );
-    };
+
     const workbenchesClick = (wsPrId) => {
         onDetailSelected(
             <ProcessWorkbenchesDetail
                 workplaceProcessId={wsPrId}
                 api={`${api}/processes`}
                 onClose={() => onDetailSelected()}
+                parents={parents}
             />
         );
     };
-    return (
-        <RelationTable api={`${api}/${id}/processes`} removable >
-            <GridColumn
-                width={200}
-                field='processId'
-                title='Process'
-                cell={(cellProps) => data &&
-                    <DropDownCell {...cellProps}
-                        getData={() => data}
-                        id='id'
-                        text='name'
-                        fieldName='processName'
-                        onClick={(processId, itemUpdate) => {
-                            const path = '/config/processes'
+
+    const columns = [
+        {
+            field: 'processId',
+            headerName: 'Process',
+            width: 250,
+            editable: true,
+            renderCell: (params) => {
+                const processName = params.row.processName || 'Select Process';
+                return (
+                    <Link
+                        component="button"
+                        variant="body2"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            const path = '/config/processes';
                             onDetailSelected(
                                 <ProcessDetail
-                                    processId={processId}
+                                    processId={params.row.processId}
                                     api={Api.processes}
                                     path={path}
                                     onClose={() => onDetailSelected()}
-                                    onUp={() => history.push(`${path}/${processId}`)}
-                                    onUpdate={itemUpdate}
+                                    onUp={() => history.push(`${path}/${params.row.processId}`)}
+                                    parents={parents}
                                 />
-                            )
+                            );
                         }}
-                    />
-                }
-            />
-            <GridColumn
-                width={100}
-                field='workplaceProcessId'
-                title='Workbenches' //{<span className='k-icon k-i-cogs' title='Workbench lists' ></span>}
-                cell={(cellProps) =>
-                    <LinkTextCell {...cellProps}
-                        editable={false}
-                        onClick={workbenchesClick}
-                        template={<span title='Configure workbenches for the process' >Configure&hellip;</span>}
-                    />
-                }
-            />
-            <GridColumn title='Description' field='processDescription' editable={false} />
-        </RelationTable>
+                        sx={{ textDecoration: 'none', fontWeight: 500 }}
+                    >
+                        {processName}
+                    </Link>
+                );
+            },
+            renderEditCell: (params) => (
+                <FormControl fullWidth size="small">
+                    <Select
+                        value={params.value || ''}
+                        onChange={(e) => params.api.setEditCellValue({ id: params.id, field: params.field, value: e.target.value })}
+                        size="small"
+                        fullWidth
+                    >
+
+                        {data?.map((p) => (
+                            <MenuItem key={p.id} value={p.id}>{p.name}</MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
+            )
+        },
+        {
+            field: 'id',
+            headerName: 'Workbenches',
+            width: 150,
+            renderCell: (params) => {
+                return (
+                    <Link
+                        component="button"
+                        variant="body2"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            workbenchesClick(params.row.id);
+                        }}
+                        sx={{ textDecoration: 'none' }}
+                    >
+                        Configure...
+                    </Link>
+                );
+            }
+        },
+        {
+            field: 'processDescription',
+            headerName: 'Description',
+            flex: 1,
+            editable: false
+        }
+    ];
+
+    return (
+        <RelationTable 
+            api={`${api}/${id}/processes`} 
+            removable 
+            editable
+            columns={columns}
+        />
     );
 }
-

@@ -163,7 +163,16 @@ namespace Microprojects.Edm.Ui.Main.Controllers
             return _mapper.Map<ProfileViewModel>(profile);
         }
 
+        [HttpPut("{id:int}/profiles")]
+        public async Task<ProfileViewModel> SaveProfile(int id, ProfileViewModel model)
+        {
+            var profile = _mapper.Map<Optosense.Edm.Domain.Models.Profile>(model, o => o.AfterMap((s, d) => d.ProcessId = id));
+            var result = await _processService.SaveProfile(profile);
+            return _mapper.Map<ProfileViewModel>(result);
+        }
+
         [HttpDelete("{id:int}/profiles/{profileId:int}")]
+
         public async Task<bool> DeleteProfile(int id, int profileId)
         {
             var wasDetached = await _processService.DeleteProfile(id, profileId);

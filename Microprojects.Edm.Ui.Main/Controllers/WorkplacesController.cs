@@ -224,7 +224,17 @@ namespace Microprojects.Edm.Ui.Main.Controllers
             return _mapper.Map<WorkplaceProcessModel>(process);
         }
 
+        [HttpPut("{id:int}/processes")]
+        public async Task<WorkplaceProcessModel> SaveWorkplaceProcess(int id, WorkplaceProcessModel model)
+        {
+            var wpProcess = _mapper.Map<WorkplaceProcess>(model);
+            wpProcess.WorkplaceId = id;
+            var result = await _workplaceService.SaveWorkplaceProcess(wpProcess);
+            return _mapper.Map<WorkplaceProcessModel>(result);
+        }
+
         [HttpDelete("{id:int}/processes/{procId:int}")]
+
         public async Task<bool> DetachProcess(int id, int procId)
         {
             try

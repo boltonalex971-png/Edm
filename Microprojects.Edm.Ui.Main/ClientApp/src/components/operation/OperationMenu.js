@@ -1,191 +1,244 @@
-import React, {useRef} from 'react';
+import React, { useRef, useState, useEffect } from 'react';
+import { Link as RouterNavLink } from 'react-router-dom';
+import { 
+    AppBar, 
+    Toolbar, 
+    Typography, 
+    Box, 
+    TextField, 
+    Button, 
+    IconButton, 
+    Tooltip,
+    Stack
+} from '@mui/material';
 import {
-    Navbar,
-    NavbarBrand,
-    NavbarToggler,
-    NavItem,
-    Label,
-    NavbarText,
-    Input,
-    Nav
-} from 'reactstrap';
-import {Link as RouterNavLink} from 'react-router-dom';
-import {DateTimePicker} from '@progress/kendo-react-dateinputs';
-import './OperationMenu.css';
-import {Button} from '@progress/kendo-react-buttons';
-import {formatDate} from '@telerik/kendo-intl';
-import {useState} from 'react';
-import {useEffect} from 'react';
+    Home as HomeIcon,
+    Settings as SettingsIcon,
+    PlayArrow as PlayIcon,
+    Stop as StopIcon,
+    ContentCopy as CopyIcon,
+    Check as CheckIcon,
+    Close as CloseIcon
+} from '@mui/icons-material';
 import Axios from 'axios';
-import {useDialog} from "../hooks/DialogHooks";
+import { useDialog } from "../hooks/DialogHooks";
 import useSignalR from "../hooks/signalRHooks.ts";
 import api from "../api.js";
 
-export function OperationMenu({operation, to}) {
-    const [collapsed, setCollapsed] = useState(true);
-    const toggleNavbar = () => {
-        setCollapsed(!collapsed);
-    };
+export function OperationMenu({ operation, to }) {
     return (
-        <header style={{width: '100%'}}>
-            <Navbar color="light" expand="md" light className="d-inline-flex justify-content-between"
-                    style={{width: '100%', paddingRight: '40px'}}>
-                <NavbarBrand>#{operation.id}&nbsp;<strong>{operation.process.name}</strong></NavbarBrand>
-                <NavbarToggler onClick={toggleNavbar} className="mr-2"/>
-                {/* <Collapse className="d-inline-flex justify-content-between" isOpen={!collapsed} navbar> */}
-                <Nav>
-                    <NavItem>
-                        <RouterNavLink to='#' className='text-dark nav-link' onClick={() => to('')}>
-                            <span className='k-icon k-i-home'></span>
-                        </RouterNavLink>
-                    </NavItem>
-                    <NavItem>
-                        <RouterNavLink to='#' className='text-dark nav-link' onClick={() => to('config')}>
-                            <span className='k-icon k-i-gear'></span>
-                        </RouterNavLink>
-                    </NavItem>
-                </Nav>
-                <NavbarText>
-                    <Timer/>
-                </NavbarText>
-                <OperationToolbar operation={operation} />
-                {/* </Collapse> */}
-            </Navbar>
-        </header>
+        <AppBar position="static" color="default" elevation={1} sx={{ backgroundColor: '#fff', borderBottom: '1px solid #e0e0e0' }}>
+            <Toolbar variant="dense" sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                        #{operation.id} <strong>{operation.process.name}</strong>
+                    </Typography>
+                    
+                    <Stack direction="row" spacing={1}>
+                        <Tooltip title="Home">
+                            <IconButton size="small" onClick={() => to('')}>
+                                <HomeIcon fontSize="small" />
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Configuration">
+                            <IconButton size="small" onClick={() => to('config')}>
+                                <SettingsIcon fontSize="small" />
+                            </IconButton>
+                        </Tooltip>
+                    </Stack>
+                </Box>
+
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                    <Typography variant="body2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+                        <Timer />
+                    </Typography>
+                    <OperationToolbar operation={operation} />
+                </Box>
+            </Toolbar>
+        </AppBar>
     );
 }
-
-let timerInterval;
 
 function Timer() {
     const [timer, setTimer] = useState(new Date());
     useEffect(() => {
-        timerInterval = setInterval(() => setTimer(new Date()), 1000);
-        return () => clearInterval(timerInterval);
+        const interval = setInterval(() => setTimer(new Date()), 1000);
+        return () => clearInterval(interval);
     }, []);
-    return (
-        formatDate(timer, 'dd MMMM HH:mm:ss')
-    );
+    
+    return timer.toLocaleString('en-GB', { 
+        day: '2-digit', 
+        month: 'long', 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit' 
+    });
 }
 
-function OperationToolbar({operation}) {
-    const [status, setStatus] = 
-        useState({state: operation.state, stateTimestamp: operation.stateTimestamp})
-    const stopBtn = useRef(null);
-    const startBtn = useRef(null);
-    const copyBtn = useRef(null);
-    const statusLbl = useRef(null);
-    const startAtInput = useRef();
-    const {dialog, confirm, alert, warning} = useDialog()
-    useSignalR(`${api.baseUrl}/hub`, `Operation-${operation.id}-lifecycle`, (message) => setStatus(message))
-    const copy = (event) => {
-        copyBtn.current.element.setAttribute('disabled', 'disabled');
-        statusLbl.current.textContent = 'Copying...';
+function OperationToolbar({ operation }) {
+    const [status, setStatus] = useState({ state: operation.state, stateTimestamp: operation.stateTimestamp });
+    const [loading, setLoading] = useState(false);
+    const startAtRef = useRef();
+    const { dialog, confirm, alert, warning } = useDialog();
+    
+    useSignalR(`${api.baseUrl}/hub`, `Operation-${operation.id}-lifecycle`, (message) => setStatus(message));
+
+    const copy = () => {
+        setLoading(true);
         Axios.post(`${api.operations}/${operation.id}`)
             .then((response) => {
-                window.open(`/operations/${response.data.id}`, '_self')
+                window.open(`/operations/${response.data.id}`, '_self');
             })
             .catch((error) => {
-                copyBtn.current.element.removeAttribute('disabled');
-                statusLbl.current.textContent = 'Failed to copy';
-                alert({target: event.target, message: error.response?.data?.detail});
+                setLoading(false);
+                alert({ message: error.response?.data?.detail || 'Failed to copy' });
             });
     };
-    const start = (event) => {
-        const currentDate = new Date();
-        const specifiedDate = startAtInput.current.value;
-        const startAt = specifiedDate > currentDate ? specifiedDate : currentDate;
-        startBtn.current.element.setAttribute('disabled', 'disabled');
-        statusLbl.current.textContent = 'Starting...';
-        Axios.post(`${api.operations}/${operation.id}/start`, startAt)
-            .then((response) => {
-            })
-            .catch((error) => {
-                startBtn.current.element.removeAttribute('disabled');
-                statusLbl.current.textContent = 'Faulted';
-                alert({target: event.target, message: error.response?.data?.detail});
-            });
-    };
-    const stop = (event) => warning({
-            target: event.target,
-            message: 'Cancel the operation?',
-            onConfirm: () => {
-                stopBtn.current.element.setAttribute('disabled', 'disabled');
-                statusLbl.current.textContent = 'Cancelling...';
-                Axios.post(`${api.operations}/${operation.id}/stop`)
-                    .catch((error) => alert({
-                        target: event.target,
-                        message: error.response?.data?.detail
-                    }))
-            }
-        })
 
-const complete = (event) => confirm(
-    {
+    const start = () => {
+        const startAt = startAtRef.current?.value || new Date().toISOString();
+        setLoading(true);
+        Axios.post(`${api.operations}/${operation.id}/start`, startAt)
+            .then(() => setLoading(false))
+            .catch((error) => {
+                setLoading(false);
+                alert({ message: error.response?.data?.detail || 'Failed to start' });
+            });
+    };
+
+    const stop = (event) => warning({
+        target: event.target,
+        message: 'Cancel the operation?',
+        onConfirm: () => {
+            setLoading(true);
+            Axios.post(`${api.operations}/${operation.id}/stop`)
+                .then(() => setLoading(false))
+                .catch((error) => {
+                    setLoading(false);
+                    alert({ message: error.response?.data?.detail || 'Failed to stop' });
+                });
+        }
+    });
+
+    const complete = (event) => confirm({
         target: event.target,
         message: 'Complete the operation?',
         onConfirm: () => {
-            stopBtn.current.element.setAttribute('disabled', 'disabled');
-            statusLbl.current.textContent = 'Completing...';
+            setLoading(true);
             Axios.post(`${api.operations}/${operation.id}/complete`)
-                .catch((error) => alert({
-                    target: event.target,
-                    message: error.response?.data?.detail
-                }));
+                .then(() => setLoading(false))
+                .catch((error) => {
+                    setLoading(false);
+                    alert({ message: error.response?.data?.detail || 'Failed to complete' });
+                });
         }
-    })
-const close = () => window.close()
+    });
 
-return (
-    status &&
-    <div style={{display: 'flex', flexWrap: 'nowrap', alignItems: 'baseline'}}>
-        {dialog}
-        <form style={{display: 'flex', flexWrap: 'nowrap', alignItems: 'baseline'}}>
-            <Label>
-                    <span className='text-nowrap me-2'>
-                        {status.state === 'Idle' && 'Start at '}
-                        {status.state === 'Scheduled' && 'Will start at'}
-                        {status.state === 'InProgress' && 'Started at '}
-                        {status.state === 'Completed' && 'Completed at '}
-                        {status.state === 'Cancelled' && 'Cancelled at '}
-                        {status.state === 'Faulted' && 'Checked at '}
-                    </span>
-            </Label>
-            {status.state === 'Idle' &&
-                <DateTimePicker
-                    ref={startAtInput}
-                    placeholder={'Now'}
-                    format={'dd MMMM HH:mm'}
-                />
-            }
-            {!(status.state === 'Idle') &&
-                <Input value={formatDate(new Date(status.stateTimestamp), 'dd MMMM HH:mm:ss')} disabled></Input>
-            }
-            <span ref={statusLbl} className='mx-2'>
-                    {status?.state}
-                </span>
-        </form>
-        <Button icon='play' ref={startBtn}
-                hidden={!(status.state === 'Idle')}
-                className='ms-2'
-                onClick={start}>Start</Button>
-        <Button icon='stop' ref={stopBtn}
-                hidden={status.state !== 'InProgress'}
-                className='ms-2'
-                onClick={stop}>Stop</Button>
-        <Button icon='copy' ref={copyBtn} id={status}
-                hidden={status.state === 'InProgress' || status.state === 'Idle'}
-                className='ms-2'
-                onClick={copy}>Copy</Button>
-        <Button icon='check' ref={stopBtn}
-                hidden={!(status.state === 'Idle' || status.state === 'Faulted')}
-                className='ms-2'
-                onClick={complete}>Complete</Button>
-        <Button icon='x'
-                className='ms-2'
-                title='Close the window'
-                fillMode='flat'
-                onClick={close}></Button>
-    </div>
-);
+    const close = () => window.close();
+
+    const getStatusLabel = () => {
+        switch (status.state) {
+            case 'Idle': return 'Start at ';
+            case 'Scheduled': return 'Will start at ';
+            case 'InProgress': return 'Started at ';
+            case 'Completed': return 'Completed at ';
+            case 'Cancelled': return 'Cancelled at ';
+            case 'Faulted': return 'Checked at ';
+            default: return '';
+        }
+    };
+
+    const timestamp = status.stateTimestamp ? new Date(status.stateTimestamp).toLocaleString('en-GB', {
+        day: '2-digit',
+        month: 'long',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    }) : '';
+
+    return (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {dialog}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="body2" color="textSecondary">
+                    {getStatusLabel()}
+                </Typography>
+                {status.state === 'Idle' ? (
+                    <TextField
+                        inputRef={startAtRef}
+                        type="datetime-local"
+                        size="small"
+                        defaultValue={new Date().toISOString().slice(0, 16)}
+                        sx={{ width: 200 }}
+                    />
+                ) : (
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                        {timestamp}
+                    </Typography>
+                )}
+                <Typography variant="body2" sx={{ ml: 1, fontWeight: 600, color: 'primary.main' }}>
+                    {status.state}
+                </Typography>
+            </Box>
+
+            <Stack direction="row" spacing={1} sx={{ ml: 2 }}>
+                {status.state === 'Idle' && (
+                    <Button 
+                        variant="contained" 
+                        size="small" 
+                        startIcon={<PlayIcon />} 
+                        onClick={start}
+                        disabled={loading}
+                        sx={{ textTransform: 'none' }}
+                    >
+                        Start
+                    </Button>
+                )}
+                {status.state === 'InProgress' && (
+                    <Button 
+                        variant="contained" 
+                        color="error"
+                        size="small" 
+                        startIcon={<StopIcon />} 
+                        onClick={stop}
+                        disabled={loading}
+                        sx={{ textTransform: 'none' }}
+                    >
+                        Stop
+                    </Button>
+                )}
+                {(status.state !== 'InProgress' && status.state !== 'Idle') && (
+                    <Button 
+                        variant="outlined" 
+                        size="small" 
+                        startIcon={<CopyIcon />} 
+                        onClick={copy}
+                        disabled={loading}
+                        sx={{ textTransform: 'none' }}
+                    >
+                        Copy
+                    </Button>
+                )}
+                {(status.state === 'Idle' || status.state === 'Faulted') && (
+                    <Button 
+                        variant="outlined" 
+                        color="success"
+                        size="small" 
+                        startIcon={<CheckIcon />} 
+                        onClick={complete}
+                        disabled={loading}
+                        sx={{ textTransform: 'none' }}
+                    >
+                        Complete
+                    </Button>
+                )}
+                <Tooltip title="Close window">
+                    <IconButton size="small" onClick={close}>
+                        <CloseIcon fontSize="small" />
+                    </IconButton>
+                </Tooltip>
+            </Stack>
+        </Box>
+    );
 }
+

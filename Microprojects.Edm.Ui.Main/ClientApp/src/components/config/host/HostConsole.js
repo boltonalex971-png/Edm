@@ -11,7 +11,9 @@ HostConsole.propTypes = {
 export function HostConsole({ onClose, data }) {
     return (
         <Detail
+            type='host'
             data={data}
+
             icon={<span className='bi bi-terminal' title='Console' />}
             card={
                 <PluginContainer title='Host Console'

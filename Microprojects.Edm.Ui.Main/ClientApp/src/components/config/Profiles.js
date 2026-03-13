@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useGet } from '../hooks/hooks';
-import { Field } from '@progress/kendo-react-form';
-import { Input, NumericTextBox } from '@progress/kendo-react-inputs';
-import { useHistory, useParams } from 'react-router-dom';
-import { useRouteMatch } from 'react-router-dom';
-import { MasterDetail, reloadMaster, Detail, Info, Editor } from '../MasterDetail';
+import { useHistory, useParams, useRouteMatch } from 'react-router-dom';
+import { MasterDetail, reloadMaster, Detail, Info, Editor, InfoItem } from '../MasterDetail';
 import { ProfileTabs } from './profile/ProfileTabs';
-import { MultiSelect } from '@progress/kendo-react-dropdowns';
-import { Chip, ChipList } from '@progress/kendo-react-buttons';
+import { TextField, Box, Chip, Autocomplete } from '@mui/material';
+import { Description as ProfileIcon } from '@mui/icons-material';
+
 
 ProfileDetail.propTypes = {
     onChange: PropTypes.func,
@@ -18,7 +16,8 @@ ProfileDetail.propTypes = {
     onUpdate: PropTypes.func
 }
 
-export function ProfileDetail({ profileId, deletable = true, ...props }) {
+export function ProfileDetail({ profileId, parents, deletable = true, ...props }) {
+    const type = 'profile';
     let { id } = useParams();
     id = profileId || id;
     let [sub, setSub] = useState();
@@ -31,38 +30,38 @@ export function ProfileDetail({ profileId, deletable = true, ...props }) {
     return (
         <Detail {...props}
             id={id}
+            type={type}
+            icon={<ProfileIcon />}
+
             loading={loading}
             error={error}
             data={data}
+            parents={parents}
             subDetail={sub}
             deletable={deletable}
             card={
                 <Info {...props}
                     data={data}
                     content={
-                        <div>
-                            <p>{`${data.profilerName || 'No profiler attached'}`}</p>
-                            {data.input &&
-                                <div className='my-2'>
-                                    <span className='me-2'>Input parameters:</span>
-                                    <ChipList data={JSON.parse(data.input || '[]').map((el => ({ text: el, value: el })))}
-                                        chip={(chipProps) =>
-                                            <Chip {...chipProps} rounded={'small'} />
-                                        }
-                                    />
-                                </div>
-                            }
-                            {data.output &&
-                                <div className='my-2'>
-                                    <span className='me-2'>Output parameters:</span>
-                                    <ChipList data={JSON.parse(data.output || '[]').map((el => ({ text: el, value: el })))}
-                                        chip={(chipProps) =>
-                                            <Chip {...chipProps} rounded={'small'} />
-                                        }
-                                    />
-                                </div>
-                            }
-                        </div>
+                        <>
+                            <InfoItem label="Profiler" value={data.profilerName || 'No profiler attached'} />
+                            <InfoItem label="Input Parameters" xs={12}>
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                    {JSON.parse(data.input || '[]').map((param) => (
+                                        <Chip key={param} label={param} size="small" variant="outlined" sx={{ borderRadius: '4px' }} />
+                                    ))}
+                                    {JSON.parse(data.input || '[]').length === 0 && "—"}
+                                </Box>
+                            </InfoItem>
+                            <InfoItem label="Output Parameters" xs={12}>
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                    {JSON.parse(data.output || '[]').map((param) => (
+                                        <Chip key={param} label={param} size="small" variant="outlined" sx={{ borderRadius: '4px' }} />
+                                    ))}
+                                    {JSON.parse(data.output || '[]').length === 0 && "—"}
+                                </Box>
+                            </InfoItem>
+                        </>
                     }
                 />
             }
@@ -71,51 +70,77 @@ export function ProfileDetail({ profileId, deletable = true, ...props }) {
                     data={data}
                     setData={setData}
                     onUpdate={props.onUpdate}
-                    content={
-                        <fieldset className={'k-form-fieldset'}>
-                            <legend className={'k-form-legend'}>Edit profile data</legend>
-                            <div className="mb-3">
-                                <Field name={'name'} component={Input} label={'Name'} />
-                            </div>
-                            <div className="mb-3">
-                                <Field name={'description'} component={Input} label={'Description'} />
-                            </div>
-                            <div className="mb-3">
-                                <Field name={'input'}
-                                    component={(fieldProps) =>
-                                        <MultiSelect {...fieldProps}
-                                            allowCustom={true}
-                                            value={JSON.parse(fieldProps.value || '[]')}
-                                            onChange={(e) => fieldProps.onChange({
-                                                dataItem: fieldProps.dataItem,
-                                                field: fieldProps.field,
-                                                syntheticEvent: e.syntheticEvent,
-                                                value: JSON.stringify(e.value)
-                                            })}
+                    content={({ values, handleChange }) => (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                            <TextField
+                                fullWidth
+                                label="Name"
+                                name="name"
+                                value={values.name || ''}
+                                onChange={handleChange}
+                                size="small"
+                            />
+                            <TextField
+                                fullWidth
+                                label="Description"
+                                name="description"
+                                value={values.description || ''}
+                                onChange={handleChange}
+                                size="small"
+                                multiline
+                                rows={2}
+                            />
+                            <Autocomplete
+                                multiple
+                                freeSolo
+                                options={[]}
+                                value={JSON.parse(values.input || '[]')}
+                                onChange={(event, newValue) => {
+                                    handleChange({ target: { name: 'input', value: JSON.stringify(newValue) } });
+                                }}
+                                renderTags={(value, getTagProps) =>
+                                    value.map((option, index) => (
+                                        <Chip 
+                                            variant="outlined" 
+                                            label={option} 
+                                            size="small" 
+                                            sx={{ borderRadius: '4px' }} 
+                                            {...getTagProps({ index })} 
                                         />
-                                    }
-                                    label={'Input Parameters'} />
-                            </div>
-                            <div className="mb-3">
-                                <Field name={'output'}
-                                    component={(fieldProps) =>
-                                        <MultiSelect {...fieldProps}
-                                            allowCustom={true}
-                                            value={JSON.parse(fieldProps.value || '[]')}
-                                            onChange={(e) => fieldProps.onChange({
-                                                dataItem: fieldProps.dataItem,
-                                                field: fieldProps.field,
-                                                syntheticEvent: e.syntheticEvent,
-                                                value: JSON.stringify(e.value)
-                                            })}
+                                    ))
+                                }
+                                renderInput={(params) => (
+                                    <TextField {...params} label="Input Parameters" placeholder="Add parameters..." size="small" />
+                                )}
+                            />
+                            <Autocomplete
+                                multiple
+                                freeSolo
+                                options={[]}
+                                value={JSON.parse(values.output || '[]')}
+                                onChange={(event, newValue) => {
+                                    handleChange({ target: { name: 'output', value: JSON.stringify(newValue) } });
+                                }}
+                                renderTags={(value, getTagProps) =>
+                                    value.map((option, index) => (
+                                        <Chip 
+                                            variant="outlined" 
+                                            label={option} 
+                                            size="small" 
+                                            sx={{ borderRadius: '4px' }} 
+                                            {...getTagProps({ index })} 
                                         />
-                                    }
-                                    label={'Output Parameters'} />
-                            </div>
-                        </fieldset>
-                    }
+                                    ))
+                                }
+                                renderInput={(params) => (
+                                    <TextField {...params} label="Output Parameters" placeholder="Add parameters..." size="small" />
+                                )}
+                            />
+                        </Box>
+                    )}
                 />
             }
+
             relations={
                 <ProfileTabs id={parseInt(id)} api={props.api} onDetailSelected={setSub} profiler={data.profilerName} />
             }

@@ -1,15 +1,20 @@
-import {Popover} from "@mui/material";
-import {DialogActionsBar} from "@progress/kendo-react-dialogs";
-import {Button} from "@progress/kendo-react-buttons";
+import { 
+    Dialog as MuiDialog, 
+    DialogTitle, 
+    DialogContent, 
+    DialogContentText, 
+    DialogActions, 
+    Button 
+} from "@mui/material";
 import React from "react";
 
 export const useDialog = () => {
     const [props, setProps] = React.useState();
-    const dialog = Dialog(props && {close: setProps, ...props})
-    const alert = (p) => setProps({role: dialogRoles.fault,...p})
-    const confirm = (p) => setProps({role: dialogRoles.confirm,...p})
-    const warning = (p) => setProps({role: dialogRoles.warning,...p})
-    return {dialog, alert, warning, confirm}
+    const dialog = props ? <Dialog {...{ close: () => setProps(null), ...props }} /> : null;
+    const alert = (p) => setProps({ role: dialogRoles.fault, ...p })
+    const confirm = (p) => setProps({ role: dialogRoles.confirm, ...p })
+    const warning = (p) => setProps({ role: dialogRoles.warning, ...p })
+    return { dialog, alert, warning, confirm }
 }
 
 const dialogRoles = Object.freeze({
@@ -20,42 +25,45 @@ const dialogRoles = Object.freeze({
 
 function Dialog(props) {
     if (!props) return null;
-    const color =
-        props.role === dialogRoles.fault ? 'bg-danger text-light' :
-            props.role === dialogRoles.warning ? 'bg-warning text-dark' : 'bg-info text-dark'
+    
+    const isConfirm = props.role === dialogRoles.confirm || props.role === dialogRoles.warning;
+    
+    const handleConfirm = () => {
+        props.onConfirm && props.onConfirm();
+        props.close();
+    };
+
     return (
-        <Popover
+        <MuiDialog
             open={true}
-            anchorEl={props.target}
-            anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'left',
-            }}
-            transformOrigin={{
-                vertical: 'top',
-                horizontal: 'left',
-            }}
-            onClose={() => props.close()}
+            onClose={props.close}
+            disableScrollLock
+            aria-labelledby="alert-dialog-title"
+            aria-describedby="alert-dialog-description"
         >
-            <p style={{padding: '2rem', textAlign: 'center'}} className={'bg-gradient ' + color}>
-                {props.message}
-            </p>
-            <DialogActionsBar layout={'center'}>
-                <Button
-                    className="k-button"
-                    onClick={() => {
-                        props.onConfirm && props.onConfirm()
-                        props.close()
-                    }}
-                >
-                    <span style={{paddingInline: '2rem'}}>OK</span>
-                </Button>
-                {props.onConfirm &&
-                    <Button className="k-button" onClick={() => props.close()}>
-                        <span style={{paddingInline: '2rem'}}>CANCEL</span>
+            <DialogTitle id="alert-dialog-title" sx={{ fontWeight: 600 }}>
+                {props.role}
+            </DialogTitle>
+            <DialogContent>
+                <DialogContentText id="alert-dialog-description">
+                    {props.message}
+                </DialogContentText>
+            </DialogContent>
+            <DialogActions sx={{ p: 2 }}>
+                {isConfirm ? (
+                    <>
+                        <Button onClick={props.close} sx={{ textTransform: 'none' }}>Cancel</Button>
+                        <Button onClick={handleConfirm} variant="contained" autoFocus sx={{ textTransform: 'none' }}>
+                            Confirm
+                        </Button>
+                    </>
+                ) : (
+                    <Button onClick={props.close} variant="contained" autoFocus sx={{ textTransform: 'none' }}>
+                        OK
                     </Button>
-                }
-            </DialogActionsBar>
-        </Popover>
+                )}
+            </DialogActions>
+        </MuiDialog>
     );
 }
+

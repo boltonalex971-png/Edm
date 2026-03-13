@@ -17,7 +17,9 @@ namespace Optosense.Edm.Core.Contracts
         Task<bool> DetachDevice(int id, int devId);
         Task<IEnumerable<WorkplaceProcess>> GetProcesses(int workspaceId);
         Task<WorkplaceProcess> AttachProcess(WorkplaceProcess workplaceProcess);
+        Task<WorkplaceProcess> SaveWorkplaceProcess(WorkplaceProcess workplaceProcess);
         Task<bool> DetachProcess(int id, int procId);
+
         Task<IEnumerable<WorkplaceProcess>> GetAllowedProcesses(IEnumerable<string> groups);
         Task<IEnumerable<Process>> GetAvailableProcesses();
         Task<IEnumerable<Workbench>> GetWorkbenches(int workplaceProcessId);

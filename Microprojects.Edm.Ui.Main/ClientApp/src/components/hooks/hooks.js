@@ -14,7 +14,7 @@ const requestType = Object.freeze({
     delete: 'DELETE'
 });
 
-function useFetch(url, deps = [], type = requestType.get, data = null, afterLoad) {
+function useFetch(url, deps = [], type = requestType.get, data = null, afterLoad, quiet = false) {
     const [state, setState] = useReducer(
         (state, newState) => ({ ...state, ...newState }),
         { loading: true, data: null, error: null }
@@ -37,7 +37,12 @@ function useFetch(url, deps = [], type = requestType.get, data = null, afterLoad
     }
 
     useEffect(() => {
+        if (!url) {
+            setState({ loading: false });
+            return;
+        }
         const controller = new AbortController();
+
         async function fetchUrl() {
             try {
                 const response = await fetch(url, { ...options, signal: controller.signal });
@@ -51,17 +56,23 @@ function useFetch(url, deps = [], type = requestType.get, data = null, afterLoad
                 }
             }
         }
-        /*// Uncomment next line to make reloading visible
-        setState({ loading: true, data: null, error: null })*/
+        // Make reloading visible
+        if (!quiet) {
+            setState({ loading: true, data: null, error: null })
+        } else {
+            setState({ loading: true })
+        }
+
         fetchUrl();
         return () => { controller.abort(); }
-    }, [url, options.type, ...deps]);
+    }, [url, options.type, quiet, ...deps]);
     return [[state.data, setData], state.loading, state.error];
 }
 
-function useGet(url, deps, afterLoad) {
-    return useFetch(url, deps, requestType.get, null, afterLoad);
+function useGet(url, deps, afterLoad, quiet = false) {
+    return useFetch(url, deps, requestType.get, null, afterLoad, quiet);
 }
+
 
 function usePost(url, data, deps) {
     return useFetch(url, deps, requestType.post, data);

@@ -5,9 +5,11 @@ import { Detail } from '../../MasterDetail';
 import { LoadingContainer } from '../../utils/Utils';
 import { ApiContext } from '../../../ApiContext';
 import { PluginContainer } from '@microprojects/react-utils';
+import { Tune as TuneIcon } from '@mui/icons-material';
 import axios from 'axios';
 
 DeviceConfigEditor.propTypes = {
+
     onChange: PropTypes.func,
     path: PropTypes.string,
     api: PropTypes.string,
@@ -30,7 +32,10 @@ export function DeviceConfigEditor({ id, ...props }) {
     return (
         <>
             {data && <Detail {...props}
+                type='device'
+                icon={<TuneIcon />}
                 data={data}
+
                 card={
                     <div>
                         <PluginContainer title='Device Configuration'

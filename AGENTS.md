@@ -57,7 +57,11 @@ Commands should be run within the specific UI directory (e.g., `Optosense.Edm.Pr
   - Use **Redux Toolkit** for complex global state.
   - Use **ApiContext** to provide API base URLs to components.
   - Use `usePluginData` hook from `@microprojects/react-utils` for plugin-specific data.
-
+- **After Code Changed:**
+  1. Run RSBuild build after task completed
+  2. Build the .Net project holding changed SPA
+  3. Run solution in DEvelopment environment
+  4. Open the Chrome browser with the most relevant path referring to the changes made 
 ## 🔌 Plugin Development
 Plugins are categorized into three main types, each serving a distinct purpose in the EDM ecosystem.
 
@@ -112,3 +116,39 @@ public class MyPlugin : ProfilePluginBase { ... }
 - **Commits:** Keep commits atomic and descriptive. 
 - **Dependencies:** Verify if a library (NuGet or NPM) is already used in other plugins before adding a new one to keep the bundle size and dependency graph clean.
 - **Entities:** Inherit from `DomainObject` (for base entities with `Id`) or `TypeObject` (for entities requiring `Name`, `Description`, and soft delete support).
+
+# 🤖 Custom Agents
+
+### 1. 🎨 Design Agent
+- **Model:** Kimi k2.5
+- **Role:** Focuses on UI/UX, industrial design consistency, and visual polish.
+- **Workflow:** Proposes layouts, creates CSS/SASS standards, and ensures high-density professional aesthetics.
+
+### 2. ⚙️ Backend Agent
+- **Focus:** .NET 10.0, EF Core, Web API, and Core logic.
+- **Role:** Handles C# refactoring, database migrations, and business logic implementation.
+
+### 3. ⚛️ Frontend Agent
+- **Focus:** React SPAs, MUI, and Plugin UI.
+- **Role:** Implements UI components, manages state, and integrates with backend APIs.
+
+### 4. 📝 Plan Agent
+- **Role:** Task orchestrator and architect.
+- **Workflow:** 
+    1. Receives complex tasks.
+    2. Decomposes them into specific subtasks based on roles (Design, Backend, Frontend).
+    3. Delegates subtasks to the respective specialized agents.
+
+### 5. 🔍 Review Agent
+- **Role:** Acts as a rigorous auditor for proposals and changes.
+- **Responsibilities:**
+    - **Design Compliance:** Ensures UI changes follow industrial design tokens and stubs.
+    - **Code Quality:** Enforces project style (React/MUI standards, .NET 10.0, formatting).
+    - **Reusability:** Mandates use of established patterns (e.g., `SubRootPage`, `InfoItem`).
+    - **UX & Security:** Critiques data density, vertical alignment, and security practices.
+- **Workflow:** Issues "Review Reports" with specific complaints or approval status via Agent Mail.
+
+### 6. 📬 Agent Mail
+- **Purpose:** Inter-agent communication.
+- **Usage:** Agents use "Agent Mail" to share status updates, hand over subtasks, and coordinate complex multi-step implementations.
+

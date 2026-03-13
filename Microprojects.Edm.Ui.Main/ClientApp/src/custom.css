@@ -1,4 +1,23 @@
+html, body, #root {
+    margin: 0;
+    padding: 0;
+    font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+    scrollbar-gutter: stable both-edges; /* Reserve space for scrollbar on both sides to keep content centered if needed, or just 'stable' */
+}
+
+/* Prevent MUI from shifting content when opening modals/dropdowns */
+body {
+    padding-right: 0 !important;
+}
+
+/* Also prevent fixed elements (like NavMenu header) from shifting */
+.MuiAppBar-root, .MuiDialog-root {
+    padding-right: 0 !important;
+}
+
+
 /* Provide sufficient contrast against white background */
+
 a {
     color: #0366d6;
 }
@@ -26,7 +45,3 @@ code {
     /* Internet Explorer/Edge */
 }
 
-.k-label {
-    font-size: 0.9rem !important;
-    font-weight: lighter;
-}

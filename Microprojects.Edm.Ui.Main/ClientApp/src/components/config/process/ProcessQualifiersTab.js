@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { GridColumn } from '@progress/kendo-react-grid';
 import { RelationTable } from '../../RelationTable';
 
 ProcessQualifiersTab.propTypes = {
@@ -9,11 +8,19 @@ ProcessQualifiersTab.propTypes = {
 }
 
 export function ProcessQualifiersTab({ id, api }) {
+    const columns = [
+        { field: 'name', headerName: 'Name', width: 200, editable: true },
+        { field: 'description', headerName: 'Description', flex: 1, editable: true }
+    ];
+
     return (
-        <RelationTable api={`${api}/${id}/qualifiers`} removable editable>
-            <GridColumn field='name' title='Name' width={200} />
-            <GridColumn field='description' title='Description' width={'auto'} />
-        </RelationTable>
+        <RelationTable 
+            api={`${api}/${id}/qualifiers`} 
+            removable 
+            editable
+            columns={columns}
+        />
     );
 }
+
 

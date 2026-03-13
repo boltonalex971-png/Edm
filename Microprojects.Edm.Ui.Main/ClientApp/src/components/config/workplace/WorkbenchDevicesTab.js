@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Api from '../../api';
 import PropTypes from 'prop-types';
-import { GridColumn } from '@progress/kendo-react-grid';
 import { RelationTable } from '../../RelationTable';
 import { DropDownCell, LinkTextCell } from '../../DropDownCell';
 import { useGet } from '../../hooks/hooks';
@@ -23,6 +22,7 @@ export function WorkbenchDevicesTab({ id, api, processId, onDetailSelected }) {
     const [[profiles]] = useGet(`${Api.processes}/${processId}/profiles`, [processId]);
     const devicesPath = '/config/devices';
     let profilers = profiles;
+
     const configClick = (id) => {
         onDetailSelected(
             <DeviceConfigEditor
@@ -32,59 +32,91 @@ export function WorkbenchDevicesTab({ id, api, processId, onDetailSelected }) {
             />
         );
     };
+
     const handleDeviceChange = (e, onChange) => {
         onChange(e);
         const device = devices.find(d => d.id === e.value);
         profilers = profiles.filter(p => device.profilerGuid === '00000000-0000-0000-0000-000000000000' || p.profilerGuid === device.profilerGuid);
     };
 
-    return (
-        <RelationTable api={`${api}/${id}/devices`} removable >
-            <GridColumn title='Profile' field='profileId' editable={true} width={200}
-                cell={(cellProps) =>
-                    <DropDownCell {...cellProps}
-                        getData={() => profilers} id='id' text='name' fieldId='profileId' fieldName='profileName'
-                        onClick={(profileId, itemUpdate) => onDetailSelected(
-                            <ProfileDetail
-                                profileId={profileId}
-                                api={Api.profiles}
-                                deletable={false}
+    const columns = [
+        {
+            field: 'profileId',
+            headerName: 'Profile',
+            width: 200,
+            editable: true,
+            renderCell: (params) => (
+                <DropDownCell 
+                    {...params}
+                    getData={() => profilers || []} 
+                    dataKey='id' 
+                    text='name' 
+                    fieldId='profileId' 
+                    fieldName='profileName'
+                    onClick={(profileId, itemUpdate) => onDetailSelected(
+                        <ProfileDetail
+                            profileId={profileId}
+                            api={Api.profiles}
+                            deletable={false}
+                            onUpdate={itemUpdate}
+                        />)
+                    }
+                />
+            )
+        },
+        {
+            field: 'workplaceHostDeviceId',
+            headerName: 'Device',
+            width: 200,
+            editable: true,
+            renderCell: (params) => (
+                <DropDownCell 
+                    {...params}
+                    getData={() => devices || []} 
+                    dataKey='id' 
+                    text='device' 
+                    fieldId='deviceId' 
+                    fieldName='deviceName'
+                    onChange={(e) => handleDeviceChange(e, params.onChange)}
+                    onClick={(deviceId, itemUpdate) => devices && devices.length &&
+                        onDetailSelected(
+                            <DeviceDetail
+                                deviceId={deviceId}
+                                api={Api.devices}
+                                path={devicesPath}
+                                onClose={() => onDetailSelected()}
+                                onUp={() => history.push(`${devicesPath}/${deviceId}`)}
                                 onUpdate={itemUpdate}
                             />)
-                        }
-                    />
-                }
-            />
-            <GridColumn title='Device' field='workplaceHostDeviceId' editable={true} width={200}
-                cell={(cellProps) =>
-                    <DropDownCell {...cellProps}
-                        getData={() => devices} id='id' text='device' fieldId='deviceId' fieldName='deviceName'
-                        onChange={(e) => handleDeviceChange(e, cellProps.onChange)}
-                        onClick={(deviceId, itemUpdate) => devices && devices.length &&
-                            onDetailSelected(
-                                <DeviceDetail
-                                    deviceId={deviceId}
-                                    api={Api.devices}
-                                    path={devicesPath}
-                                    onClose={() => onDetailSelected()}
-                                    onUp={() => history.push(`${devicesPath}/${deviceId}`)}
-                                    onUpdate={itemUpdate}
-                                />)
-                        }
-                    />
-                }
-            />
-            <GridColumn title='Host' field='hostName' editable={false} />
-            <GridColumn title='Configuration' field='configuration' editable={false}
-                cell={(cellProps) =>
-                    <LinkTextCell {...cellProps}
-                        fieldId='id' onClick={configClick}
-                        editable={false}
-                        template={<span title='Edit device configuration'>Edit&hellip;</span>}
-                    />
-                }
-            />
-        </RelationTable>
+                    }
+                />
+            )
+        },
+        { field: 'hostName', headerName: 'Host', width: 150, editable: false },
+        {
+            field: 'configuration',
+            headerName: 'Configuration',
+            flex: 1,
+            editable: false,
+            renderCell: (params) => (
+                <LinkTextCell 
+                    {...params}
+                    fieldId='id' 
+                    onClick={configClick}
+                    editable={false}
+                    template={<span title='Edit device configuration'>Edit&hellip;</span>}
+                />
+            )
+        }
+    ];
+
+    return (
+        <RelationTable 
+            api={`${api}/${id}/devices`} 
+            removable 
+            columns={columns}
+        />
     );
 }
+
 

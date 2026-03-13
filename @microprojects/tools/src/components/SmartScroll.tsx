@@ -75,11 +75,12 @@ export function smartScroll(container: HTMLElement, marginTop: number) {
                 }
             }
 
-            // set state if a new one
-            if (element.getAttribute("data-scroll-state") !== state) {
+            // set state if a new one, including marginTop to handle dynamic header changes
+            const stateKey = `${state}_${marginTop}`;
+            if (element.getAttribute("data-scroll-state") !== stateKey) {
                 element.style.position = style.position;
                 element.style.top = style.top;
-                element.setAttribute("data-scroll-state", state);
+                element.setAttribute("data-scroll-state", stateKey);
             }
         }
 
@@ -96,14 +97,14 @@ export function smartScroll(container: HTMLElement, marginTop: number) {
         rafId = requestAnimationFrame(updateScrollPositions);
     }
 
-    // ResizeObserver with debouncing to handle dynamic content height changes
+    // ResizeObserver with minimal debouncing to handle dynamic content height changes
     const resizeObserver = new ResizeObserver(() => {
         if (resizeTimeout !== null) {
             clearTimeout(resizeTimeout);
         }
         resizeTimeout = window.setTimeout(() => {
             updateScrollPositions();
-        }, 150);
+        }, 16); // 1 frame at 60fps
     });
 
     // Observe container and all content elements
@@ -125,5 +126,12 @@ export function smartScroll(container: HTMLElement, marginTop: number) {
         }
         window.removeEventListener("scroll", scrolled);
         resizeObserver.disconnect();
+
+        // Reset styles on cleanup to ensure fresh start on re-initialization
+        contents.forEach(element => {
+            element.style.position = "";
+            element.style.top = "";
+            element.removeAttribute("data-scroll-state");
+        });
     }
 }

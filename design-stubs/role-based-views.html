@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EDM Platform - Role-Based Views</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f5f5f5;
+            color: #212121;
+            overflow: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+            color: white;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #3949ab 0%, #5c6bc0 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .logo-text h1 {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            margin: 0;
+        }
+
+        .logo-text span {
+            font-size: 11px;
+            opacity: 0.7;
+            letter-spacing: 0.5px;
+        }
+
+        .nav {
+            display: flex;
+            gap: 8px;
+            margin-left: 32px;
+            flex: 1;
+        }
+
+        .nav-item {
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .nav-item.active {
+            background: rgba(255,255,255,0.15);
+            color: white;
+            font-weight: 500;
+        }
+
+        .nav-item.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .nav-item.disabled:hover {
+            background: transparent;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .role-selector {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 4px;
+            padding: 6px 12px;
+            font-size: 13px;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .role-badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .role-badge.admin {
+            background: #d32f2f;
+        }
+
+        .role-badge.technologist {
+            background: #f57c00;
+        }
+
+        .role-badge.operator {
+            background: #388e3c;
+        }
+
+        .icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: rgba(255,255,255,0.8);
+            transition: all 0.2s;
+        }
+
+        .icon-btn:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 4px 12px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 24px;
+            cursor: pointer;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: #5c6bc0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-info {
+            line-height: 1.2;
+        }
+
+        .user-info .name {
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .user-info .email {
+            font-size: 11px;
+            opacity: 0.7;
+        }
+
+        /* Main Container */
+        .main-container {
+            display: flex;
+            height: calc(100vh - 64px);
+            margin-top: 64px;
+        }
+
+        /* Master Panel */
+        .master-panel {
+            width: 320px;
+            background: #fafafa;
+            border-right: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .master-header {
+            padding: 12px 16px;
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            gap: 8px;
+        }
+
+        .search-box {
+            flex: 1;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 8px 12px 8px 36px;
+            border: none;
+            background: #f5f5f5;
+            border-radius: 4px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .search-box .material-icons {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9e9e9e;
+            font-size: 18px;
+        }
+
+        .action-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: transparent;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #616161;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .action-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .tree-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 0;
+        }
+
+        .tree-item {
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            transition: all 0.15s;
+        }
+
+        .tree-item:hover {
+            background: #f5f5f5;
+        }
+
+        .tree-item.selected {
+            background: #e3f2fd;
+            border-left-color: #1976d2;
+        }
+
+        .tree-item .icon {
+            color: #ffa726;
+            font-size: 20px;
+        }
+
+        .tree-item-content {
+            flex: 1;
+        }
+
+        .tree-item-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #212121;
+            margin-bottom: 2px;
+        }
+
+        .tree-item-subtitle {
+            font-size: 12px;
+            color: #9e9e9e;
+        }
+
+        .status-badge {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .status-badge.active {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #a5d6a7;
+        }
+
+        .status-badge.inactive {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ef9a9a;
+        }
+
+        .master-footer {
+            padding: 10px 16px;
+            background: #f5f5f5;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #757575;
+        }
+
+        /* Detail Panel - Read Only Mode */
+        .detail-panel {
+            flex: 1;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .detail-header {
+            padding: 16px 24px;
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .detail-header-content {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .entity-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+
+        .entity-icon.process {
+            background: #e3f2fd;
+            color: #1976d2;
+            border: 2px solid #bbdefb;
+        }
+
+        .detail-title {
+            flex: 1;
+        }
+
+        .detail-title h2 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #212121;
+        }
+
+        .detail-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .detail-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .detail-action-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: transparent;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #616161;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .detail-action-btn:hover:not(:disabled) {
+            background: #f5f5f5;
+        }
+
+        .detail-action-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* Info Box */
+        .info-box {
+            background: #fff3e0;
+            border-left: 4px solid #f57c00;
+            padding: 12px 16px;
+            margin: 16px 24px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            color: #e65100;
+        }
+
+        .info-box.readonly {
+            background: #e3f2fd;
+            border-left-color: #1976d2;
+            color: #1565c0;
+        }
+
+        /* Tabs */
+        .tabs-container {
+            background: #fafafa;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 0 24px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #616161;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab:hover {
+            color: #1976d2;
+        }
+
+        .tab.active {
+            color: #1976d2;
+            border-bottom-color: #1976d2;
+            font-weight: 500;
+        }
+
+        .tab.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* Tab Content */
+        .tab-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+        }
+
+        .section-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+        }
+
+        .section-header {
+            padding: 16px;
+            background: #fafafa;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #212121;
+        }
+
+        .section-body {
+            padding: 24px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .info-item.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .info-item label {
+            font-size: 12px;
+            font-weight: 500;
+            color: #616161;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-item .value {
+            font-size: 14px;
+            color: #212121;
+            padding: 10px 12px;
+            background: #fafafa;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+        }
+
+        /* Relations List */
+        .relations-list {
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .relation-item {
+            padding: 16px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .relation-item:last-child {
+            border-bottom: none;
+        }
+
+        .relation-icon {
+            width: 40px;
+            height: 40px;
+            background: #e3f2fd;
+            color: #1976d2;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .relation-content {
+            flex: 1;
+        }
+
+        .relation-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .relation-title h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #212121;
+        }
+
+        .relation-desc {
+            font-size: 13px;
+            color: #616161;
+            margin-bottom: 4px;
+        }
+
+        .relation-meta {
+            font-size: 12px;
+            color: #9e9e9e;
+        }
+
+        .relation-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1976d2;
+        }
+
+        /* Read Only Overlay */
+        .readonly-overlay {
+            position: relative;
+        }
+
+        .readonly-overlay::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.6);
+            cursor: not-allowed;
+        }
+
+        /* Permission Notice */
+        .permission-notice {
+            background: #f5f5f5;
+            border: 1px dashed #bdbdbd;
+            border-radius: 4px;
+            padding: 32px;
+            text-align: center;
+            color: #757575;
+        }
+
+        .permission-notice .material-icons {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .permission-notice h4 {
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: #616161;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f5f5f5;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #bdbdbd;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #9e9e9e;
+        }
+
+        /* View Selector */
+        .view-selector {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            padding: 8px;
+            display: flex;
+            gap: 8px;
+            z-index: 1000;
+        }
+
+        .view-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            background: transparent;
+            color: #616161;
+        }
+
+        .view-btn:hover {
+            background: #f5f5f5;
+        }
+
+        .view-btn.active {
+            background: #1976d2;
+            color: white;
+        }
+
+        .view-btn .badge {
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .view-btn.admin .badge {
+            background: #d32f2f;
+        }
+
+        .view-btn.technologist .badge {
+            background: #f57c00;
+        }
+
+        .view-btn.operator .badge {
+            background: #388e3c;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">
+            <div class="logo-icon">EDM</div>
+            <div class="logo-text">
+                <h1>EDM Platform</h1>
+                <span>Enterprise Data Management</span>
+            </div>
+        </div>
+
+        <nav class="nav">
+            <div class="nav-item">
+                <span class="material-icons" style="font-size: 18px;">dashboard</span>
+                Dashboard
+            </div>
+            <div class="nav-item active">
+                <span class="material-icons" style="font-size: 18px;">settings_applications</span>
+                Configuration
+            </div>
+            <div class="nav-item">
+                <span class="material-icons" style="font-size: 18px;">extension</span>
+                Plugins
+            </div>
+            <div class="nav-item disabled">
+                <span class="material-icons" style="font-size: 18px;">admin_panel_settings</span>
+                Admin
+                <span class="material-icons" style="font-size: 14px; margin-left: 4px;">lock</span>
+            </div>
+        </nav>
+
+        <div class="header-actions">
+            <div class="role-selector">
+                <span class="material-icons" style="font-size: 16px;">engineering</span>
+                <span id="currentRole">Technologist</span>
+                <span class="role-badge technologist" id="roleBadge">TECH</span>
+                <span class="material-icons" style="font-size: 16px;">expand_more</span>
+            </div>
+
+            <div class="icon-btn">
+                <span class="material-icons">notifications</span>
+            </div>
+
+            <div class="user-menu">
+                <div class="user-avatar">JD</div>
+                <span class="material-icons" style="font-size: 16px; opacity: 0.7;">expand_more</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Master Panel -->
+        <aside class="master-panel">
+            <div class="master-header">
+                <div class="search-box">
+                    <span class="material-icons">search</span>
+                    <input type="text" placeholder="Search entities...">
+                </div>
+                <button class="action-btn" id="addFolderBtn" title="Add Folder">
+                    <span class="material-icons">create_new_folder</span>
+                </button>
+                <button class="action-btn" id="addItemBtn" title="Add Item">
+                    <span class="material-icons">add</span>
+                </button>
+            </div>
+
+            <div class="tree-list">
+                <div class="tree-item folder">
+                    <span class="material-icons icon">folder</span>
+                    <div class="tree-item-content">
+                        <div class="tree-item-title">Process Group 1</div>
+                        <div class="tree-item-subtitle">Contains 5 items</div>
+                    </div>
+                </div>
+
+                <div class="tree-item selected">
+                    <span class="material-icons icon" style="color: #757575;">description</span>
+                    <div class="tree-item-content">
+                        <div class="tree-item-title">Process 001</div>
+                        <div class="tree-item-subtitle">Last updated: 02/03/2026</div>
+                    </div>
+                    <span class="status-badge active">active</span>
+                </div>
+
+                <div class="tree-item">
+                    <span class="material-icons icon" style="color: #757575;">description</span>
+                    <div class="tree-item-content">
+                        <div class="tree-item-title">Process 002</div>
+                        <div class="tree-item-subtitle">Last updated: 02/03/2026</div>
+                    </div>
+                    <span class="status-badge inactive">inactive</span>
+                </div>
+
+                <div class="tree-item folder">
+                    <span class="material-icons icon">folder</span>
+                    <div class="tree-item-content">
+                        <div class="tree-item-title">Device Group 1</div>
+                        <div class="tree-item-subtitle">Contains 8 items</div>
+                    </div>
+                </div>
+
+                <div class="tree-item">
+                    <span class="material-icons icon" style="color: #757575;">memory</span>
+                    <div class="tree-item-content">
+                        <div class="tree-item-title">Device 001</div>
+                        <div class="tree-item-subtitle">Last updated: 02/03/2026</div>
+                    </div>
+                    <span class="status-badge active">active</span>
+                </div>
+            </div>
+
+            <div class="master-footer">
+                <span>5 items</span>
+                <span>2 folders</span>
+            </div>
+        </aside>
+
+        <!-- Detail Panel - Technologist View -->
+        <main class="detail-panel">
+            <!-- Info Box -->
+            <div class="info-box" id="permissionInfo">
+                <span class="material-icons">info</span>
+                <span><strong>Technologist View:</strong> You can view and edit process configurations, but cannot delete items or access admin settings.</span>
+            </div>
+
+            <!-- Detail Header -->
+            <div class="detail-header">
+                <div class="detail-header-content">
+                    <div class="entity-icon process">
+                        <span class="material-icons">settings</span>
+                    </div>
+                    <div class="detail-title">
+                        <h2>Process 001</h2>
+                        <div class="detail-meta">
+                            <span class="status-badge active">active</span>
+                            <span style="color: #616161; font-size: 14px;">Manufacturing process for component assembly</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="detail-actions">
+                    <button class="detail-action-btn" id="editBtn" title="Edit">
+                        <span class="material-icons">edit</span>
+                    </button>
+                    <button class="detail-action-btn" id="copyBtn" title="Copy">
+                        <span class="material-icons">content_copy</span>
+                    </button>
+                    <button class="detail-action-btn" id="deleteBtn" title="Delete" disabled>
+                        <span class="material-icons">delete</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs-container">
+                <div class="tabs">
+                    <div class="tab active">General</div>
+                    <div class="tab">Relations</div>
+                    <div class="tab">History</div>
+                    <div class="tab disabled">
+                        Settings
+                        <span class="material-icons" style="font-size: 14px; vertical-align: middle; margin-left: 4px;">lock</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <!-- Section 1: Basic Information -->
+                <div class="section-card">
+                    <div class="section-header">
+                        <h3>Basic Information</h3>
+                    </div>
+                    <div class="section-body">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label>Name</label>
+                                <div class="value">Process 001</div>
+                            </div>
+                            <div class="info-item">
+                                <label>Type</label>
+                                <div class="value">process</div>
+                            </div>
+                            <div class="info-item full-width">
+                                <label>Description</label>
+                                <div class="value">Manufacturing process for component assembly with automated quality control checkpoints and real-time monitoring capabilities.</div>
+                            </div>
+                            <div class="info-item">
+                                <label>Status</label>
+                                <div class="value">Active</div>
+                            </div>
+                            <div class="info-item">
+                                <label>Priority</label>
+                                <div class="value">Medium</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Metadata -->
+                <div class="section-card">
+                    <div class="section-header">
+                        <h3>Metadata</h3>
+                    </div>
+                    <div class="section-body">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label>Created At</label>
+                                <div class="value">02/03/2026, 10:30:45 AM</div>
+                            </div>
+                            <div class="info-item">
+                                <label>Last Modified</label>
+                                <div class="value">02/03/2026, 2:15:22 PM</div>
+                            </div>
+                            <div class="info-item">
+                                <label>Created By</label>
+                                <div class="value">Admin User</div>
+                            </div>
+                            <div class="info-item">
+                                <label>ID</label>
+                                <div class="value">PROC-2026-001</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 3: Related Items -->
+                <div class="section-card">
+                    <div class="section-header">
+                        <h3>Related Items</h3>
+                        <span style="color: #757575; font-size: 14px;">5 items</span>
+                    </div>
+                    <div class="relations-list">
+                        <div class="relation-item">
+                            <div class="relation-icon">
+                                <span class="material-icons">memory</span>
+                            </div>
+                            <div class="relation-content">
+                                <div class="relation-title">
+                                    <h4>Device 001</h4>
+                                    <span class="status-badge active">active</span>
+                                </div>
+                                <div class="relation-desc">Primary assembly station controller</div>
+                                <div class="relation-meta">Last modified: 02/03/2026, 1:45 PM</div>
+                            </div>
+                            <div class="relation-value">Online</div>
+                        </div>
+
+                        <div class="relation-item">
+                            <div class="relation-icon">
+                                <span class="material-icons">computer</span>
+                            </div>
+                            <div class="relation-content">
+                                <div class="relation-title">
+                                    <h4>Host Server A</h4>
+                                    <span class="status-badge active">active</span>
+                                </div>
+                                <div class="relation-desc">Production database server</div>
+                                <div class="relation-meta">Last modified: 02/03/2026, 11:20 AM</div>
+                            </div>
+                            <div class="relation-value">Running</div>
+                        </div>
+
+                        <div class="relation-item">
+                            <div class="relation-icon">
+                                <span class="material-icons">work</span>
+                            </div>
+                            <div class="relation-content">
+                                <div class="relation-title">
+                                    <h4>Workplace Assembly Line 1</h4>
+                                    <span class="status-badge active">active</span>
+                                </div>
+                                <div class="relation-desc">Main production line</div>
+                                <div class="relation-meta">Last modified: 02/03/2026, 9:00 AM</div>
+                            </div>
+                            <div class="relation-value">Active</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- View Selector -->
+    <div class="view-selector">
+        <button class="view-btn admin" onclick="setRole('admin')">
+            <span class="material-icons" style="font-size: 16px;">business</span>
+            Admin
+            <span class="badge admin">ADM</span>
+        </button>
+        <button class="view-btn technologist active" onclick="setRole('technologist')">
+            <span class="material-icons" style="font-size: 16px;">engineering</span>
+            Technologist
+            <span class="badge technologist">TECH</span>
+        </button>
+        <button class="view-btn operator" onclick="setRole('operator')">
+            <span class="material-icons" style="font-size: 16px;">person_outline</span>
+            Operator
+            <span class="badge operator">OP</span>
+        </button>
+    </div>
+
+    <script>
+        function setRole(role) {
+            // Update view selector
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`.view-btn.${role}`).classList.add('active');
+
+            // Update role badge in header
+            const roleBadge = document.getElementById('roleBadge');
+            const currentRole = document.getElementById('currentRole');
+            const permissionInfo = document.getElementById('permissionInfo');
+            
+            // Update header
+            roleBadge.className = `role-badge ${role}`;
+            roleBadge.textContent = role === 'admin' ? 'ADM' : role === 'technologist' ? 'TECH' : 'OP';
+            currentRole.textContent = role.charAt(0).toUpperCase() + role.slice(1);
+
+            // Update permissions UI
+            const addFolderBtn = document.getElementById('addFolderBtn');
+            const addItemBtn = document.getElementById('addItemBtn');
+            const editBtn = document.getElementById('editBtn');
+            const copyBtn = document.getElementById('copyBtn');
+            const deleteBtn = document.getElementById('deleteBtn');
+
+            if (role === 'admin') {
+                permissionInfo.innerHTML = '<span class="material-icons">info</span><span><strong>Administrator View:</strong> Full access to all features including user management, system settings, and deletion privileges.</span>';
+                permissionInfo.className = 'info-box';
+                addFolderBtn.disabled = false;
+                addItemBtn.disabled = false;
+                editBtn.disabled = false;
+                copyBtn.disabled = false;
+                deleteBtn.disabled = false;
+            } else if (role === 'technologist') {
+                permissionInfo.innerHTML = '<span class="material-icons">info</span><span><strong>Technologist View:</strong> You can view and edit process configurations, but cannot delete items or access admin settings.</span>';
+                permissionInfo.className = 'info-box readonly';
+                addFolderBtn.disabled = false;
+                addItemBtn.disabled = false;
+                editBtn.disabled = false;
+                copyBtn.disabled = false;
+                deleteBtn.disabled = true;
+            } else if (role === 'operator') {
+                permissionInfo.innerHTML = '<span class="material-icons">info</span><span><strong>Operator View:</strong> Read-only access. You can view process status and monitor operations but cannot make changes.</span>';
+                permissionInfo.className = 'info-box readonly';
+                addFolderBtn.disabled = true;
+                addItemBtn.disabled = true;
+                editBtn.disabled = true;
+                copyBtn.disabled = true;
+                deleteBtn.disabled = true;
+            }
+        }
+    </script>
+</body>
+</html>

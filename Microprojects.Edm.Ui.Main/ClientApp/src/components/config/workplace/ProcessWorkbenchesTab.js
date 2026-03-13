@@ -1,12 +1,7 @@
 import React from 'react';
-import Api from '../../api';
 import PropTypes from 'prop-types';
-import { GridColumn } from '@progress/kendo-react-grid';
 import { RelationTable } from '../../RelationTable';
 import { LinkTextCell } from '../../DropDownCell';
-import { useGet } from '../../hooks/hooks';
-import { ProcessDetail } from '../Processes';
-import { useHistory } from 'react-router-dom';
 import { WorkbenchDetail } from '../Workbenches';
 
 ProcessWorkbenchesTab.propTypes = {
@@ -15,28 +10,41 @@ ProcessWorkbenchesTab.propTypes = {
     onDetailSelected: PropTypes.func
 }
 
-export function ProcessWorkbenchesTab({ id, api, onDetailSelected }) {
+export function ProcessWorkbenchesTab({ id, api, onDetailSelected, parents }) {
+    const columns = [
+        {
+            field: 'name',
+            headerName: 'Name',
+            width: 200,
+            editable: true,
+            renderCell: (params) => (
+                <LinkTextCell 
+                    {...params}
+                    fieldId='id'
+                    onClick={(wbId, itemUpdate) => {
+                        onDetailSelected(
+                            <WorkbenchDetail
+                                workbenchId={wbId}
+                                api={`${api}/workbenches`}
+                                onClose={() => onDetailSelected()}
+                                onUpdate={itemUpdate}
+                                parents={parents}
+                            />
+                        );
+                    }}
+                />
+            )
+        },
+        { field: 'description', headerName: 'Description', flex: 1, editable: true }
+    ];
+
     return (
-        <RelationTable api={`${api}/${id}/workbenches`} removable >
-            <GridColumn title='Name' field='name' editable={true}
-                cell={(cellProps) =>
-                    <LinkTextCell {...cellProps}
-                        fieldId='id'
-                        onClick={(wbId, itemUpdate) => {
-                            onDetailSelected(
-                                <WorkbenchDetail
-                                    workbenchId={wbId}
-                                    api={`${api}/workbenches`}
-                                    onClose={() => onDetailSelected()}
-                                    onUpdate={itemUpdate}
-                                />
-                            );
-                        }}
-                    />
-                }
-            />
-            <GridColumn title='Description' field='description' editable={true} />
-        </RelationTable>
+        <RelationTable 
+            api={`${api}/${id}/workbenches`} 
+            removable 
+            columns={columns}
+        />
     );
 }
+
 

@@ -118,7 +118,14 @@ namespace Optosense.Edm.Core.Services
             return result.Entity;
         }
 
+        public async Task<WorkplaceProcess> SaveWorkplaceProcess(WorkplaceProcess workplaceProcess)
+        {
+            var result = await Save(workplaceProcess);
+            return result;
+        }
+
         public async Task<bool> DetachProcess(int id, int procId)
+
         {
             var dev = await Db.WorkplaceProcesses.FindAsync(procId);
             Db.WorkplaceProcesses.Remove(dev);

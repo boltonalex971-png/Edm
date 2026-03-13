@@ -1,182 +1,265 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import PropTypes from 'prop-types';
-import { Grid, GridColumn, GridToolbar } from '@progress/kendo-react-grid';
-import { FloatingActionButton } from '@progress/kendo-react-buttons';
+import { 
+    Table, 
+    TableBody, 
+    TableCell, 
+    TableContainer, 
+    TableHead, 
+    TableRow, 
+    Paper,
+    IconButton,
+    Tooltip,
+    Box,
+    Typography,
+    Fab,
+    CircularProgress,
+    Alert,
+    Button,
+    Divider,
+    Link
+} from '@mui/material';
+import {
+    Add as AddIcon,
+    Edit as EditIcon,
+    Delete as DeleteIcon
+} from '@mui/icons-material';
 import { useGet } from '../../hooks/hooks';
-import { Alert } from 'bootstrap';
 import { Loading } from '../../utils/Utils';
-import { Button } from 'reactstrap';
 import { CriterionEditor, ZoneEditor } from './AuditZoneEditor';
 
 AuditEditorTab.propTypes = {
     id: PropTypes.number,
     api: PropTypes.string,
-    zones: PropTypes.object,
     params: PropTypes.array
 }
 
 export function AuditEditorTab({ id, api, params }) {
     const [[functions]] = useGet(`${api}/functions`, []);
     const [[zones, setZones], loading, error] = useGet(`${api}/${id}/zones`, [id]);
-    const [active, setActive] = useState({});
+    const [hoveredCell, setHoveredCell] = useState(null);
     const [showCriterionEditor, setShowCriterionEditor] = useState();
     const [showZoneEditor, setShowZoneEditor] = useState();
+
     let parameters = zones && [...new Set(zones.flatMap(z => (z.criteria || []).map(p => p.param)))].sort((a, b) => `${a}`.localeCompare(`${b}`));
     parameters = (parameters && parameters.length) ? parameters : [' '];
 
-    let criterionAnchor = null;
     const getCriteria = (param, zone) => zone.criteria && zone.criteria.filter(c => c.param === param) || [];
+    
     const addZone = () => {
-        //const newZone = { id: 0, offset: 0, duration: 0 };
         axios.post(`${api}/${id}/zones`, {}).then((response) => {
             setZones([response.data, ...zones]);
         });
     };
+
     const saveZone = (data) => {
         axios.put(`${api}/zones/${data.id}`, data).then((response) => {
-            const zone = zones.filter(z => z.id === response.data.id)[0];
-            zone.no = response.data.no;
-            zone.offset = response.data.offset;
-            zone.duration = response.data.duration;
-            zone.activeWhen = response.data.activeWhen;
+            const newZones = zones.map(z => z.id === response.data.id ? { ...z, ...response.data } : z);
             toggleZoneEditor();
-            setZones([...zones]);
+            setZones(newZones);
         });
     };
+
     const deleteZone = (data) => {
-        axios.delete(`${api}/zones/${data.id}`).then((response) => {
-            const newZones = zones.filter(z => z.id !== response.data.id);
+        axios.delete(`${api}/zones/${data.id}`).then(() => {
+            const newZones = zones.filter(z => z.id !== data.id);
             toggleZoneEditor();
-            setZones([...newZones]);
+            setZones(newZones);
         });
     };
+
     const addCriterion = (criterion) => {
         if (criterion.id) {
             axios.put(`${api}/criteria/${criterion.id}`, criterion).then((response) => {
-                const zone = zones.filter(z => z.id === response.data.zoneId)[0];
-                const index = zone.criteria.findIndex(c => c.id === criterion.id);
-                zone.criteria[index] = response.data;
+                const newZones = zones.map(z => {
+                    if (z.id === response.data.zoneId) {
+                        const index = z.criteria.findIndex(c => c.id === criterion.id);
+                        const newCriteria = [...z.criteria];
+                        newCriteria[index] = response.data;
+                        return { ...z, criteria: newCriteria };
+                    }
+                    return z;
+                });
                 toggleCriterionEditor();
-                setZones([...zones]);
+                setZones(newZones);
             });
         } else {
             axios.post(`${api}/zones/${criterion.zoneId}/criteria`, { ...criterion, id: 0 }).then((response) => {
-                const zone = zones.filter(z => z.id === response.data.zoneId)[0];
-                zone.criteria = zone.criteria && zone.criteria.length ? [response.data, ...zone.criteria] : [response.data];
+                const newZones = zones.map(z => {
+                    if (z.id === response.data.zoneId) {
+                        return { ...z, criteria: z.criteria ? [response.data, ...z.criteria] : [response.data] };
+                    }
+                    return z;
+                });
                 toggleCriterionEditor();
-                setZones([...zones]);
+                setZones(newZones);
             });
         }
     };
+
     const deleteCriterion = (criterion) => {
-        axios.delete(`${api}/criteria/${criterion.id}`, criterion).then((response) => {
-            const zone = zones.filter(z => z.id === response.data.zoneId)[0];
-            zone.criteria = zone.criteria.filter(c => c.id !== response.data.id);
+        axios.delete(`${api}/criteria/${criterion.id}`, criterion).then(() => {
+            const newZones = zones.map(z => {
+                if (z.id === criterion.zoneId) {
+                    return { ...z, criteria: z.criteria.filter(c => c.id !== criterion.id) };
+                }
+                return z;
+            });
             toggleCriterionEditor();
-            setZones([...zones]);
+            setZones(newZones);
         });
     };
+
     const toggleCriterionEditor = (target) => {
         setShowZoneEditor();
         setShowCriterionEditor(target);
     };
+
     const toggleZoneEditor = (target) => {
         setShowCriterionEditor();
         setShowZoneEditor(target);
     };
+
     const funcFormat = (c) => {
-        const func = functions.filter(f => f.name === c.function)[0];
+        const func = functions?.filter(f => f.name === c.function)[0];
         const format = func ?
             func.format.replace('{0}', c.arg1).replace('{1}', c.arg2) :
             `${c.function}(${c.arg1 || ''}, ${c.arg2 || ''})`;
         return format;
     };
+
+    if (error) return <Alert severity="error">{error}</Alert>;
+    if (loading && !zones) return <Loading />;
+
     return (
-        <div>
+        <Box>
             {showCriterionEditor &&
-                <CriterionEditor data={showCriterionEditor} functions={functions} params={params}
+                <CriterionEditor 
+                    data={showCriterionEditor} 
+                    functions={functions || []} 
+                    params={params || []}
                     onClose={() => toggleCriterionEditor()}
                     onSave={addCriterion}
                     onDelete={deleteCriterion}
                 />
             }
             {showZoneEditor &&
-                <ZoneEditor data={showZoneEditor}
+                <ZoneEditor 
+                    data={showZoneEditor}
                     onClose={() => toggleZoneEditor()}
                     onSave={saveZone}
                     onDelete={deleteZone}
                 />
             }
-            {error && <Alert color='danger' style={{ display: 'flex', justifyContent: 'space-around' }}>{error}</Alert>}
-            {loading && <Loading />}
-            {!loading &&
-                <Grid data={zones.sort((a, b) => a.offset - b.offset)} >
-                    <GridToolbar>
-                        <Button title="Add new zone" className="k-button k-secondary" onClick={addZone} >
-                            <span className="k-icon k-i-add"></span>
-                        </Button>
-                    </GridToolbar>
-                    <GridColumn title='Zone'>
-                        <GridColumn field='no' title='#' width={40}
-                            cell={(cellProps) =>
-                                <td onMouseDown={() => toggleZoneEditor(cellProps.dataItem)} style={{ cursor: 'pointer' }}>
-                                    {cellProps.dataItem[cellProps.field]}
-                                </td>
-                            }
-                        />
-                        <GridColumn title='Interval' width={100}
-                            cell={(cellProps) =>
-                                <td onMouseDown={() => toggleZoneEditor(cellProps.dataItem)} style={{ cursor: 'pointer' }}>
-                                    {`${cellProps.dataItem.offset} : ${cellProps.dataItem.offset + cellProps.dataItem.duration}`}
-                                </td>
-                            }
-                        />
-                        <GridColumn title='Active When'
-                            field='activeWhen'
-                            cell={(cellProps) =>
-                                <td onMouseDown={() => toggleZoneEditor(cellProps.dataItem)} style={{ cursor: 'pointer' }}>
-                                    {cellProps.dataItem[cellProps.field]}
-                                </td>
-                            }
-                        />
-                    </GridColumn>
-                    <GridColumn title='Parameters' >
-                        {parameters.map(p =>
-                            <GridColumn key={p} field={p}
-                                cell={(cellProps) =>
-                                    <td style={{ position: 'relative' }}
-                                        onMouseEnter={() => setActive({ param: p, zoneId: cellProps.dataItem.id })}
-                                        onMouseLeave={() => setActive({})}
+
+            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-start' }}>
+                <Button 
+                    variant="contained" 
+                    size="small" 
+                    startIcon={<AddIcon />} 
+                    onClick={addZone}
+                    sx={{ textTransform: 'none', borderRadius: '4px' }}
+                >
+                    Add Zone
+                </Button>
+            </Box>
+
+            <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: '4px', boxShadow: 'none' }}>
+                <Table size="small" aria-label="audit zones table">
+                    <TableHead>
+                        <TableRow sx={{ backgroundColor: '#fafafa' }}>
+                            <TableCell colSpan={3} align="center" sx={{ fontWeight: 700, borderRight: '1px solid #e0e0e0', fontSize: '12px', py: 1 }}>ZONE</TableCell>
+                            <TableCell colSpan={parameters.length} align="center" sx={{ fontWeight: 700, fontSize: '12px', py: 1 }}>PARAMETERS</TableCell>
+                        </TableRow>
+                        <TableRow sx={{ backgroundColor: '#fafafa' }}>
+                            <TableCell sx={{ fontWeight: 600, fontSize: '11px', width: 50 }}>#</TableCell>
+                            <TableCell sx={{ fontWeight: 600, fontSize: '11px', width: 120 }}>INTERVAL</TableCell>
+                            <TableCell sx={{ fontWeight: 600, fontSize: '11px', borderRight: '1px solid #e0e0e0' }}>ACTIVE WHEN</TableCell>
+                            {parameters.map(p => (
+                                <TableCell key={p} sx={{ fontWeight: 600, fontSize: '11px' }}>{p}</TableCell>
+                            ))}
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {zones?.sort((a, b) => a.offset - b.offset).map((zone) => (
+                            <TableRow key={zone.id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                                <TableCell 
+                                    onClick={() => toggleZoneEditor(zone)} 
+                                    sx={{ cursor: 'pointer', color: 'primary.main', fontWeight: 500 }}
+                                >
+                                    {zone.no}
+                                </TableCell>
+                                <TableCell 
+                                    onClick={() => toggleZoneEditor(zone)} 
+                                    sx={{ cursor: 'pointer' }}
+                                >
+                                    <Typography variant="body2" sx={{ fontSize: '13px' }}>
+                                        {`${zone.offset} : ${zone.offset + zone.duration}`}
+                                    </Typography>
+                                </TableCell>
+                                <TableCell 
+                                    onClick={() => toggleZoneEditor(zone)} 
+                                    sx={{ cursor: 'pointer', borderRight: '1px solid #e0e0e0' }}
+                                >
+                                    <Typography variant="body2" sx={{ fontSize: '13px' }}>
+                                        {zone.activeWhen}
+                                    </Typography>
+                                </TableCell>
+                                {parameters.map(p => (
+                                    <TableCell 
+                                        key={p} 
+                                        onMouseEnter={() => setHoveredCell(`${zone.id}-${p}`)}
+                                        onMouseLeave={() => setHoveredCell(null)}
+                                        sx={{ position: 'relative', minWidth: 120 }}
                                     >
-                                        {getCriteria(p, cellProps.dataItem)
-                                            .map(c =>
-                                                <div key={c.id}>
-                                                    <a type='button' onMouseDown={() => toggleCriterionEditor(c)}>
+                                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                                            {getCriteria(p, zone).map(c => (
+                                                <Box key={c.id}>
+                                                    <Link
+                                                        component="button"
+                                                        variant="body2"
+                                                        onClick={() => toggleCriterionEditor(c)}
+                                                        sx={{ 
+                                                            fontSize: '12px', 
+                                                            textAlign: 'left', 
+                                                            textDecoration: 'none',
+                                                            color: 'primary.main',
+                                                            '&:hover': { textDecoration: 'underline' }
+                                                        }}
+                                                    >
                                                         {funcFormat(c)}
-                                                    </a>
-                                                </div>
-                                            )
-                                        }
-                                        {(active.param === p && active.zoneId === cellProps.dataItem.id) &&
-                                            <div ref={(a) => { criterionAnchor = a; }}>
-                                                <FloatingActionButton
-                                                    positionMode='absolute'
-                                                    icon='add'
-                                                    size='small'
-                                                    alignOffset={{ x: 10, y: 10 }}
-                                                    onMouseDown={() => toggleCriterionEditor({ zoneId: cellProps.dataItem.id, param: p })}
-                                                />
-                                            </div>
-                                        }
-                                    </td>
-                                }
-                            />
-                        )}
-                    </GridColumn>
-                </Grid>
-            }
-        </div>
+                                                    </Link>
+                                                </Box>
+                                            ))}
+                                        </Box>
+                                        {hoveredCell === `${zone.id}-${p}` && (
+                                            <Fab 
+                                                size="small" 
+                                                color="primary" 
+                                                sx={{ 
+                                                    position: 'absolute', 
+                                                    right: 4, 
+                                                    top: '50%', 
+                                                    transform: 'translateY(-50%)',
+                                                    width: 32,
+                                                    height: 32,
+                                                    minHeight: 32
+                                                }}
+                                                onClick={() => toggleCriterionEditor({ zoneId: zone.id, param: p })}
+                                            >
+                                                <AddIcon fontSize="small" />
+                                            </Fab>
+                                        )}
+                                    </TableCell>
+                                ))}
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </TableContainer>
+        </Box>
     );
 }
+
 

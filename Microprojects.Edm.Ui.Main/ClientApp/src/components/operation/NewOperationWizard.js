@@ -1,50 +1,121 @@
 /* eslint-disable no-mixed-operators */
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext, useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
-import { Container, Row, Col, Alert } from 'reactstrap';
+import { 
+    Container, 
+    Box, 
+    Typography, 
+    Divider, 
+    Grid, 
+    Alert, 
+    Button, 
+    IconButton,
+    Tooltip,
+    TextField,
+    FormControl,
+    InputLabel,
+    Select,
+    MenuItem,
+    Paper,
+    CircularProgress
+} from '@mui/material';
+import {
+    Info as InfoIcon,
+    Edit as EditIcon,
+    PlayArrow as PlayIcon,
+    CheckCircle as CheckCircleIcon,
+    ArrowForward as ArrowForwardIcon
+} from '@mui/icons-material';
 import api from '../api';
 import { useGet } from '../hooks/hooks';
-import { DropDownList, DropDownTree } from '@progress/kendo-react-dropdowns';
-import { Button } from '@progress/kendo-react-buttons';
-import { SmartScroll, SmartScrollContent } from '../SmartScroll';
+import { SmartScroll, SmartScrollContent } from '@microprojects/tools';
 import { Loading } from '../utils/Utils';
-import { Field, FormElement, Form } from '@progress/kendo-react-form';
-import { Input } from '@progress/kendo-react-inputs';
 import { PluginContainer } from '@microprojects/react-utils';
 import { ApiContext } from '../../ApiContext';
 import { useDispatch, useSelector } from 'react-redux';
-import { clearDevices, clearProcess, reset, setDevice, setDriverOptions, setParameters, setProcess, setProfiles, setWorkbench } from '../../slices/newOperationSlice.ts';
+import { clearDevices, reset, setDevice, setDriverOptions, setParameters, setProcess, setProfiles, setWorkbench } from '../../slices/newOperationSlice.ts';
 import axios from 'axios';
+import { SubRootPage } from '../SubRootPage';
 
 export function NewOperationWizard() {
     const params = useSelector(s => s.newOperation)
     const dispatch = useDispatch()
     const [error, setError] = useState();
     const [started] = useState(false);
-    const [[processList]] = useGet(`${api.workplaces}/processes/allowed`);
-    const [detail, setDetail] = useState(ProcessDetailStub)
-    const step2Disabled = !params.process && true;
+    const [[processList]] = useGet(`${api.workplaces}/processes/allowed`, [], data => {
+        const flatten = (items, level = 0) => {
+            return items?.reduce((acc, item) => {
+                // Robust check for Workplace (HierarchyType 2)
+                const isWorkplace = item.hierarchyType === 2 || 
+                                    item.hierarchyType === 'Workplace' || 
+                                    item.itemType === 'workplace';
+                const isNode = item.isNode || isWorkplace;
+                
+                return [
+                    ...acc,
+                    { ...item, level, isNode },
+                    ...flatten(item.items, level + 1)
+                ];
+            }, []) || [];
+        };
+
+        let list = flatten(data);
+        // Remove root node if it exists (usually id 0 or parentId 0 for the first element)
+        if (list.length > 0 && (list[0].id === 0 || list[0].parentId === 0)) {
+            list = list.slice(1).map(item => ({ ...item, level: Math.max(0, item.level - 1) }));
+        }
+        return list;
+    });
+    const [detail, setDetail] = useState(<ProcessDetailStub />)
+    const [dynamicOffset, setDynamicOffset] = useState(10);
+
+    const step2Disabled = !params.process;
     const step3Disabled = !(params.devices && params.options && params.profiles?.every(p => params.devices[p] && params.options[p]))
     const step4Disabled = !params.parameters || step3Disabled;
+
+    useEffect(() => {
+        const updateOffset = () => {
+            const stickyHeaders = document.querySelectorAll('[data-sticky-header="true"]');
+            let maxBottom = 0;
+            stickyHeaders.forEach(header => {
+                const rect = header.getBoundingClientRect();
+                maxBottom = Math.max(maxBottom, rect.bottom);
+            });
+            setDynamicOffset(maxBottom + 10);
+        };
+        const observer = new ResizeObserver(updateOffset);
+        document.querySelectorAll('[data-sticky-header="true"]').forEach(h => observer.observe(h));
+        updateOffset();
+        window.addEventListener('scroll', updateOffset, { passive: true });
+        return () => {
+            observer.disconnect();
+            window.removeEventListener('scroll', updateOffset);
+        };
+    }, []);
+
     const onProcessChange = (e) => {
-        dispatch(reset())
-        if (e.value.isNode) {
-            setDetail(ProcessDetailStub)
-            return false
+        const processId = e.target.value;
+        dispatch(reset());
+        const selectedProcess = processList.find(p => p.id === processId);
+        
+        if (!selectedProcess || selectedProcess.isNode) {
+            setDetail(<ProcessDetailStub />);
+            return false;
         } else {
-            setDetail(<ProcessDetail id={e.value.id} />)
+            setDetail(<ProcessDetail id={processId} />);
         }
-    }
+    };
+
     const onOperationStart = () => {
         const data = {
             id: 0,
             workplaceProcessId: params.process.id,
             parameters: params.parameters && JSON.stringify(params.parameters),
-            devices: Object.entries(params.devices).map((d) => {
-                const id = parseInt(d)
+            devices: Object.entries(params.devices).map(([profileId, device]) => {
+                const id = parseInt(profileId);
                 return {
                     profileId: id,
-                    hostDeviceId: params.devices[id].hostDeviceId,
+                    hostDeviceId: device.hostDeviceId,
                     options: JSON.stringify(params.options[id]?.options || {})
                 }
             }),
@@ -53,114 +124,140 @@ export function NewOperationWizard() {
             .then((op) => {
                 window.open(`${api.baseUrl}/operations/${op.data.id}`, '_blank')
             })
-            .catch((error) => setError(error));
+            .catch((error) => setError(error.message || error));
     };
 
     return (
-        <Container>
-            <style>
-                {`
-                    .disabled {
-                        pointer-events: none;
-                        opacity: 0.4;
-                    }
-                `}
-            </style>
-            <h3>Configure new operation</h3>
-            <hr />
-            <SmartScroll offtop={10}>
-                <Col>
-                    <SmartScrollContent>
-                        <Step
-                            step={1}
-                        >
-                            <span>Select appropriate process to run</span>
-                            <div className='d-inline-flex' style={{ marginTop: 10 }}>
-                                <DropDownTree
-                                    value={{ id: params.process?.id, name: params.process?.processName }}
-                                    data={processList || []}
-                                    dataItemKey='id'
-                                    textField='name'
-                                    loading={!processList}
-                                    onChange={onProcessChange}
-                                    style={{ minWidth: '300px' }}
-                                />
-                                {params.process &&
-                                    <Button
-                                        onClick={() => setDetail(<ProcessDetail id={params.process.id} />)}
-                                        icon='info'
-                                        className='text-info'
-                                        fillMode='flat'
-                                        style={{ outline: 'none', marginLeft: 5 }}>
-                                    </Button>
-                                }
-                            </div>
+        <SubRootPage 
+            title="New operation" 
+            menuItems={[]}
+        >
+            <SmartScroll offsetTop={dynamicOffset} style={{ display: "flex", flexDirection: "row", alignItems: 'flex-start', gap: 4 }}>
+                <SmartScrollContent style={{ flex: 1, minWidth: '400px' }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <Step step={1} active={true}>
+                            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                                Select appropriate process to run
+                            </Typography>
+                            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                                <FormControl fullWidth size="small">
+                                    <InputLabel>Process</InputLabel>
+                                    <Select
+                                        sx={{ width: '100%' }}
+                                        value={params.process?.id || ''}
+                                        label="Process"
+                                        onChange={onProcessChange}
+                                    >
+                                        <MenuItem value=""><em>None</em></MenuItem>
+                                        {processList?.map((p) => (
+                                            <MenuItem
+                                                key={p.id}
+                                                value={p.id}
+                                                disabled={p.isNode}
+                                                sx={{
+                                                    pl: (p.level || 0) * 2 + (p.isNode ? 2 : 4),
+                                                    fontWeight: p.isNode ? 700 : 400,
+                                                    color: p.isNode ? 'text.primary' : 'inherit',
+                                                    '&.Mui-disabled': {
+                                                        opacity: 1, // Keep folders legible even when disabled
+                                                        backgroundColor: 'rgba(0,0,0,0.02)'
+                                                    }
+                                                }}
+                                            >
+                                                {p.name}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                                {params.process && (
+                                    <Tooltip title="View Info">
+                                        <IconButton 
+                                            size="small" 
+                                            color="info"
+                                            onClick={() => setDetail(<ProcessDetail id={params.process.id} />)}
+                                        >
+                                            <InfoIcon fontSize="small" />
+                                        </IconButton>
+                                    </Tooltip>
+                                )}
+                            </Box>
                         </Step>
-                        <Step
-                            step={2}
+
+                        <Step 
+                            step={2} 
                             disabled={step2Disabled}
-                            description='Select devices for chosen process'
+                            description="Select devices for chosen process"
                         >
-                            {!step2Disabled &&
+                            {!step2Disabled && (
                                 <DevicesStep
                                     changeDetail={setDetail}
                                     workplaceId={params.process.workplaceId}
                                     process={params.process}
                                 />
-                            }
+                            )}
                         </Step>
-                        <Step
-                            step={3}
+
+                        <Step 
+                            step={3} 
                             disabled={step3Disabled}
-                            description='Specify required input parameters'
+                            description="Specify required input parameters"
                         >
-                            {!step3Disabled &&
+                            {!step3Disabled && (
                                 <InputsStep
                                     id={params.process.processId}
                                     changeDetail={setDetail}
                                 />
-                            }
+                            )}
                         </Step>
-                        <Step
-                            step={4}
+
+                        <Step 
+                            step={4} 
                             disabled={step4Disabled}
-                            description='Start operation'
+                            description="Start operation"
                         >
-                            {started && <span>Operation has been started successfully!</span>}
-                            {!started &&
-                                <>
-                                    <p>Finally, you can create the operation</p>
-                                    {error &&
-                                        <Alert color='danger' style={{ display: 'flex', justifyContent: 'space-around' }}>{error}</Alert>
-                                    }
+                            {started ? (
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'success.main' }}>
+                                    <CheckCircleIcon />
+                                    <Typography>Operation has been started successfully!</Typography>
+                                </Box>
+                            ) : (
+                                <Box>
+                                    <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
+                                        Finally, you can create the operation
+                                    </Typography>
+                                    {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
                                     <Button
-                                        themeColor={'primary'}
+                                        variant="contained"
+                                        color="primary"
+                                        fullWidth
+                                        startIcon={<PlayIcon />}
                                         onClick={onOperationStart}
-                                        style={{ width: '300px' }}>
+                                        sx={{ textTransform: 'none', py: 1 }}
+                                    >
                                         Create operation now
                                     </Button>
-                                </>
-                            }
+                                </Box>
+                            )}
                         </Step>
-                    </SmartScrollContent>
-                </Col>
-                <Col>
-                    <SmartScrollContent>
+                    </Box>
+                </SmartScrollContent>
+
+                <SmartScrollContent style={{ flex: 1 }}>
+                    <Paper variant="outlined" sx={{ p: 3, borderRadius: '4px', minHeight: '400px', backgroundColor: '#fafafa' }}>
                         {detail}
-                    </SmartScrollContent>
-                </Col>
+                    </Paper>
+                </SmartScrollContent>
             </SmartScroll>
-        </Container >
+        </SubRootPage>
     );
 }
 
-const ProcessDetailStub = () => {
-    return (
-        <div style={{ display: 'flex', width: '100%' }}>
-            Select process to start
-        </div>
-    )
-}
+const ProcessDetailStub = () => (
+    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'text.disabled', py: 8 }}>
+        <InfoIcon sx={{ fontSize: 48, mb: 2, opacity: 0.5 }} />
+        <Typography variant="body1">Select process to start</Typography>
+    </Box>
+);
 
 const ProcessDetail = ({ id }) => {
     const process = useSelector(state => state.newOperation.process)
@@ -168,59 +265,78 @@ const ProcessDetail = ({ id }) => {
     useGet(`${api.workplaces}/processes/${id}`, [], data => {
         dispatch(setProcess(data))
     })
-    if (!process) return <ProcessDetailStub />
+    if (!process) return <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}><CircularProgress size={24} /></Box>
     return (
-        <div>
-            <h6>Selected process info</h6>
-            <hr />
-            <p>Name: {process.processName} </p>
-            <p>Description: {process.processDescription} </p>
-        </div>
-    )
-}
-
-Step.propTypes = {
-    step: PropTypes.number,
-    children: PropTypes.any,
-    disabled: PropTypes.bool,
-    description: PropTypes.string
-}
-
-function Step({ step, children, disabled, description }) {
-    const enabled = !disabled;
-    return (
-        <Row style={{ paddingTop: '20px', minHeight: '50px' }} className={`${disabled && 'disabled'}`}>
-            <div className='col-1' style={{ display: 'flex', justifyContent: 'center' }}>
-                <span className='text-secondary' style={{ fontSize: 'x-large' }}>
-                    {step}
-                </span>
-            </div>
-            <div className='col-10' style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                {disabled && <span>{description || 'Select the options above'}</span>}
-                {enabled && children}
-            </div>
-        </Row>
+        <Box>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>Selected process info</Typography>
+            <Divider sx={{ mb: 2 }} />
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                <Box>
+                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase' }}>Name</Typography>
+                    <Typography variant="body2">{process.processName}</Typography>
+                </Box>
+                <Box>
+                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase' }}>Description</Typography>
+                    <Typography variant="body2">{process.processDescription || '—'}</Typography>
+                </Box>
+            </Box>
+        </Box>
     );
 }
 
-DevicesStep.propTypes = {
-    changeDetail: PropTypes.func
+function Step({ step, children, disabled, description, active }) {
+    return (
+        <Paper 
+            variant="outlined" 
+            sx={{ 
+                p: 2, 
+                borderRadius: '4px',
+                opacity: disabled ? 0.5 : 1,
+                pointerEvents: disabled ? 'none' : 'auto',
+                borderLeft: active || !disabled ? '4px solid #1976d2' : undefined,
+                transition: 'all 0.2s'
+            }}
+        >
+            <Grid container spacing={2}>
+                <Grid item sx={{ display: 'flex', alignItems: 'flex-start', pt: '4px !important' }}>
+                    <Typography 
+                        variant="h4" 
+                        sx={{ 
+                            fontWeight: 700, 
+                            color: disabled ? 'text.disabled' : 'primary.main',
+                            lineHeight: 1,
+                            width: '24px'
+                        }}
+                    >
+                        {step}
+                    </Typography>
+                </Grid>
+                <Grid item xs sx={{width:'80%'}}>
+                    {disabled ? (
+                        <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
+                            {description || 'Select the options above'}
+                        </Typography>
+                    ) : children}
+                </Grid>
+            </Grid>
+        </Paper>
+    );
 }
 
 function DevicesStep({ changeDetail }) {
     const process = useSelector(state => state.newOperation.process)
     const workbench = useSelector(state => state.newOperation.workbench)
-    //const devices = useSelector(state => state.newOperation.devices)
     const dispatch = useDispatch()
     const [[workbenches]] = useGet(`${api.workplaces}/processes/${process.id}/workbenches`)
     const [[profiles]] = useGet(`${api.processes}/${process.processId}/profiles`, [], data => {
         dispatch(setProfiles(data.map(p => p.id)))
     })
+
     const workbenchChosen = (w) => {
         axios.get(`${api.workplaces}/processes/workbenches/${w.id}/devices`).then(response => {
             dispatch(clearDevices())
             dispatch(setWorkbench(w))
-            response.data.map(d => {
+            response.data.forEach(d => {
                 dispatch(setDevice({
                     profileId: d.profileId,
                     id: d.workplaceHostDeviceId,
@@ -236,59 +352,64 @@ function DevicesStep({ changeDetail }) {
             })
         })
     }
-    useEffect(() => workbench && workbenchChosen(workbench), [])
 
-    if (!profiles || !workbenches)
-        return (<>Loading ...</>)
+    useEffect(() => {
+        if (workbench) workbenchChosen(workbench);
+    }, []);
+
+    if (!profiles || !workbenches) return <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}><CircularProgress size={16} /><Typography variant="caption">Loading profiles...</Typography></Box>
+
     return (
-        <>
-            <span style={{ marginBottom: 10 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                 {profiles.length > 0 ?
-                    `Please choose the workbench or appropriate device${profiles.length > 1 && 's'} and set options` :
+                    `Please choose the workbench or appropriate device${profiles.length > 1 ? 's' : ''} and set options` :
                     `${process.processName} does not require any device`
                 }
-            </span>
-            <div>
-                {workbenches?.length &&
-                    <DropDownList
-                        data={workbenches}
-                        value={workbench}
-                        dataItemKey='id'
-                        textField='name'
-                        label='Workbench'
-                        style={{ minWidth: '300px' }}
-                        onChange={(e) => workbenchChosen(e.value)}
-                    />
-                }
-                {profiles.map((el) =>
+            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                {workbenches?.length > 0 && (
+                    <FormControl fullWidth size="small">
+                        <InputLabel>Workbench</InputLabel>
+                        <Select
+                            value={workbench?.id || ''}
+                            label="Workbench"
+                            onChange={(e) => {
+                                const w = workbenches.find(item => item.id === e.target.value);
+                                workbenchChosen(w);
+                            }}
+                        >
+                            {workbenches.map(w => (
+                                <MenuItem key={w.id} value={w.id}>{w.name}</MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                )}
+                {profiles.map((el) => (
                     <DeviceDropDown
                         key={el.id}
                         api={`${api.workplaces}/${process.workplaceId}/devices/${el.profilerGuid}`}
                         type={el.profilerName}
                         profileId={el.id}
-                        onChange={(event) => {
+                        onChange={(device) => {
                             changeDetail(
                                 <DeviceDetail
-                                    id={event.value.id}
+                                    id={device.id}
                                     profile={el}
                                 />
                             )
                         }}
                     />
-                )}
-            </div>
-        </>
+                ))}
+            </Box>
+        </Box>
     );
-}
-
-InputsStep.propTypes = {
-    id: PropTypes.number,
-    changeDetail: PropTypes.func
 }
 
 function InputsStep({ id, changeDetail }) {
     const [[inputs]] = useGet(`${api.processes}/${id}/inputs`)
     const dispatch = useDispatch()
+    
     useEffect(() => {
         if (inputs) {
             if (inputs.length) {
@@ -297,164 +418,160 @@ function InputsStep({ id, changeDetail }) {
                 dispatch(setParameters({}))
             }
         }
-    }, [inputs])
+    }, [inputs, changeDetail, dispatch])
 
-    if (!inputs) {
-        return (<span>Check missing inputs...</span>)
-    } else if (!inputs.length) {
-        return (<span>No missing parameters in this process</span>)
-    }
+    if (!inputs) return <Typography variant="body2">Check missing inputs...</Typography>
+    if (!inputs.length) return <Typography variant="body2">No missing parameters in this process</Typography>
 
     return (
-        <div>
-            <span>
-                Now specify {inputs.length} input parameter{inputs.length > 1 && 's'} for the process
-            </span>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Typography variant="body2">
+                Specify {inputs.length} input parameter{inputs.length > 1 ? 's' : ''}
+            </Typography>
             <Button
-                onClick={(e) => changeDetail(
-                    <InputsDetail
-                        inputs={inputs}
-                    />
-                )}
-                icon='edit'
-                className='text-info'
-                fillMode='flat'
-                style={{ outline: 'none', marginLeft: 5 }}>
+                variant="outlined"
+                size="small"
+                startIcon={<EditIcon />}
+                onClick={() => changeDetail(<InputsDetail inputs={inputs} />)}
+                sx={{ textTransform: 'none', borderRadius: '4px' }}
+            >
+                Edit Parameters
             </Button>
-        </div>
+        </Box>
     );
-}
-
-DeviceDropDown.propTypes = {
-    api: PropTypes.string,
-    type: PropTypes.string,
-    profileId: PropTypes.number,
-    onChange: PropTypes.func
 }
 
 function DeviceDropDown({ api, type, profileId, onChange }) {
     const device = useSelector(state => state.newOperation.devices[profileId])
     const [[data]] = useGet(api);
-    const onDeviceChanged = (event) => {
-        onChange(event);
-    };
+    
     return (
-        <div style={{ marginTop: 10, marginRight: 10, display: 'flex', flexDirection: 'column' }}>
-            <div className='d-inline-flex' style={{ alignItems: 'baseline' }}>
-                <DropDownList
-                    value={{ id: device?.id, device: device?.device }}
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+            <FormControl fullWidth size="small">
+                <InputLabel>{type}</InputLabel>
+                <Select
+                    value={device?.id || ''}
                     label={type}
-                    data={data || []}
-                    loading={!data}
-                    dataItemKey='id'
-                    textField='device'
-                    onChange={onDeviceChanged}
-                    style={{ minWidth: '300px' }}
-                />
-                {device && <Button
-                    onClick={(e) => onChange({ ...e, value: device })}
-                    icon='edit'
-                    className='text-info'
-                    fillMode='flat'
-                    style={{ marginLeft: 5 }}>
-                </Button>}
-            </div>
-        </div>
+                    onChange={(e) => {
+                        const selected = data.find(d => d.id === e.target.value);
+                        onChange(selected);
+                    }}
+                >
+                    {data?.map(d => (
+                        <MenuItem key={d.id} value={d.id}>{d.device}</MenuItem>
+                    ))}
+                </Select>
+            </FormControl>
+            {device && (
+                <Tooltip title="Edit Options">
+                    <IconButton 
+                        size="small" 
+                        color="primary"
+                        onClick={() => onChange(device)}
+                    >
+                        <EditIcon fontSize="small" />
+                    </IconButton>
+                </Tooltip>
+            )}
+        </Box>
     );
 }
-
-DeviceDetail.propTypes = {
-    id: PropTypes.number,
-    profile: PropTypes.object
-};
 
 function DeviceDetail({ id, profile }) {
     const device = useSelector(state => state.newOperation.devices[profile.id])
     const options = useSelector(state => state.newOperation.options[profile.id])
     const dispatch = useDispatch()
     const apiContext = useContext(ApiContext)
-    useGet(`${api.workplaces}/devices/${id}`, [],
-        data => {
-            dispatch(setDevice({ profileId: profile.id, ...data }))
-            if (!options || Object.entries(options).length === 0) {
-                dispatch(setDriverOptions({ 
-                    id, 
-                    profileId: profile.id, 
-                    options: JSON.parse(data.configuration || "{}"),
-                    output: JSON.parse(data.profileOutput || '[]')
-                }))
-            }
-        })
-    const loaded = device && true
+    
+    useGet(`${api.workplaces}/devices/${id}`, [], data => {
+        dispatch(setDevice({ profileId: profile.id, ...data }))
+        if (!options || Object.entries(options).length === 0) {
+            dispatch(setDriverOptions({ 
+                id, 
+                profileId: profile.id, 
+                options: JSON.parse(data.configuration || "{}"),
+                output: JSON.parse(data.profileOutput || '[]')
+            }))
+        }
+    })
+
+    if (!device) return <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}><CircularProgress size={24} /></Box>
+
     return (
-        <>
-            {!loaded && <Loading />}
-            {loaded &&
-                <div>
-                    <h6>Selected device info</h6>
-                    <hr />
-                    <p>Device: {device.device}</p>
-                    <p>Model: {device.driverName}</p>
-                    <p>Type: {device.profilerName}</p>
-                    <p>Located on: {device.host} </p>
-                    <div>
-                        <PluginContainer title='Device Configuration'
-                            data={options}
-                            width='100%'
-                            src={`${apiContext}/${device.driverHomepage}/options`}
-                            onDataReceived={o => dispatch(setDriverOptions(o))}
-                        />
-                    </div>
-                </div>
-            }
-        </>
+        <Box>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>Selected device info</Typography>
+            <Divider sx={{ mb: 2 }} />
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 3 }}>
+                <Grid container spacing={2}>
+                    <Grid item xs={6}>
+                        <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase' }}>Device</Typography>
+                        <Typography variant="body2">{device.device}</Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                        <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase' }}>Model</Typography>
+                        <Typography variant="body2">{device.driverName}</Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                        <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase' }}>Type</Typography>
+                        <Typography variant="body2">{device.profilerName}</Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                        <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase' }}>Host</Typography>
+                        <Typography variant="body2">{device.host}</Typography>
+                    </Grid>
+                </Grid>
+            </Box>
+            <Box sx={{ mt: 2 }}>
+                <PluginContainer 
+                    title="Device Configuration"
+                    data={options}
+                    width="100%"
+                    src={`${apiContext}/${device.driverHomepage}/options`}
+                    onDataReceived={o => dispatch(setDriverOptions(o))}
+                />
+            </Box>
+        </Box>
     );
 }
 
 function InputsDetail({ inputs }) {
-    const [submitted, setSubmitted] = React.useState(false);
     const parameters = useSelector(state => state.newOperation.parameters)
+    const [localParams, setLocalParams] = useState(parameters || {});
     const dispatch = useDispatch()
-    const handleSubmit = (p) => {
-        dispatch(setParameters({...p})) // Cannot use From values directly
-        setSubmitted(true);
-    };
-    if (!inputs) return <Loading />
-    return (
-        <div>
-            <h6>Process missing input parameters</h6>
-            <hr />
 
-            <Form
-                // key={data.id}
-                initialValues={parameters}
-                onSubmit={handleSubmit}
-                render={(formProps) => (
-                    <FormElement>
-                        <fieldset className={"k-form-fieldset"}>
-                            <legend className={"k-form-legend"}>Enter input values</legend>
-                            {inputs.map((i) =>
-                                <div key={i} className="mb-1" style={{ width: 200 }}>
-                                    <Field name={i} component={Input} label={i} />
-                                </div>
-                            )}
-                        </fieldset>
-                        <div className="k-form-buttons" style={{ position: 'sticky', bottom: 10, display: 'flex', justifyContent: 'flex-start', backgroundColor: 'white' }}>
-                            <Button
-                                disabled={!formProps.allowSubmit}
-                                title='Save'
-                                name='save'
-                                themeColor={formProps.allowSubmit ? 'primary' : 'base'}
-                                icon='save'
-                                type={'submit'}
-                            >
-                                Accept
-                            </Button>
-                        </div>
-                    </FormElement>
-                )}
-            />
-        </div>
+    const handleInputChange = (name, value) => {
+        setLocalParams(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleAccept = () => {
+        dispatch(setParameters(localParams));
+    };
+
+    return (
+        <Box>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>Process missing input parameters</Typography>
+            <Divider sx={{ mb: 2 }} />
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                {inputs.map((i) => (
+                    <TextField
+                        key={i}
+                        fullWidth
+                        label={i}
+                        value={localParams[i] || ''}
+                        onChange={(e) => handleInputChange(i, e.target.value)}
+                        size="small"
+                    />
+                ))}
+                <Button
+                    variant="contained"
+                    color="primary"
+                    startIcon={<CheckCircleIcon />}
+                    onClick={handleAccept}
+                    sx={{ mt: 2, textTransform: 'none', borderRadius: '4px' }}
+                >
+                    Accept Parameters
+                </Button>
+            </Box>
+        </Box>
     );
 }
-

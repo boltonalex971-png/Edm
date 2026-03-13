@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EDM Platform - Master-Detail Design</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f5f5f5;
+            color: #212121;
+            overflow: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+            color: white;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #3949ab 0%, #5c6bc0 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .logo-text h1 {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            margin: 0;
+        }
+
+        .logo-text span {
+            font-size: 11px;
+            opacity: 0.7;
+            letter-spacing: 0.5px;
+        }
+
+        .nav {
+            display: flex;
+            gap: 8px;
+            margin-left: 32px;
+            flex: 1;
+        }
+
+        .nav-item {
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .nav-item.active {
+            background: rgba(255,255,255,0.15);
+            color: white;
+            font-weight: 500;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .role-selector {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 4px;
+            padding: 6px 12px;
+            font-size: 13px;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .role-badge {
+            background: #d32f2f;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: rgba(255,255,255,0.8);
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .icon-btn:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .badge {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: #f44336;
+            color: white;
+            font-size: 10px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 4px 12px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 24px;
+            cursor: pointer;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: #5c6bc0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-info {
+            line-height: 1.2;
+        }
+
+        .user-info .name {
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .user-info .email {
+            font-size: 11px;
+            opacity: 0.7;
+        }
+
+        /* Main Layout */
+        .main-container {
+            display: flex;
+            height: calc(100vh - 64px);
+            margin-top: 64px;
+        }
+
+        /* Master Panel */
+        .master-panel {
+            width: 320px;
+            min-width: 280px;
+            background: #fafafa;
+            border-right: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .master-header {
+            padding: 12px 16px;
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            gap: 8px;
+        }
+
+        .search-box {
+            flex: 1;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 8px 12px 8px 36px;
+            border: none;
+            background: #f5f5f5;
+            border-radius: 4px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .search-box input:focus {
+            background: white;
+            box-shadow: 0 0 0 2px #1976d2;
+        }
+
+        .search-box .material-icons {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9e9e9e;
+            font-size: 18px;
+        }
+
+        .action-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: transparent;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #616161;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .tree-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 0;
+        }
+
+        .tree-item {
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            transition: all 0.15s;
+        }
+
+        .tree-item:hover {
+            background: #f5f5f5;
+        }
+
+        .tree-item.selected {
+            background: #e3f2fd;
+            border-left-color: #1976d2;
+        }
+
+        .tree-item .icon {
+            color: #ffa726;
+            font-size: 20px;
+        }
+
+        .tree-item .icon.file {
+            color: #757575;
+        }
+
+        .tree-item-content {
+            flex: 1;
+        }
+
+        .tree-item-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #212121;
+            margin-bottom: 2px;
+        }
+
+        .tree-item.folder .tree-item-title {
+            font-weight: 600;
+        }
+
+        .tree-item-subtitle {
+            font-size: 12px;
+            color: #9e9e9e;
+        }
+
+        .status-badge {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .status-badge.active {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #a5d6a7;
+        }
+
+        .status-badge.inactive {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ef9a9a;
+        }
+
+        .master-footer {
+            padding: 10px 16px;
+            background: #f5f5f5;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #757575;
+        }
+
+        /* Resize Handle */
+        .resize-handle {
+            width: 6px;
+            cursor: col-resize;
+            background: transparent;
+            transition: background 0.2s;
+        }
+
+        .resize-handle:hover {
+            background: #1976d2;
+        }
+
+        /* Detail Panel */
+        .detail-panel {
+            flex: 1;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .detail-header {
+            padding: 16px 24px;
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .detail-header-content {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .entity-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+
+        .entity-icon.process {
+            background: #e3f2fd;
+            color: #1976d2;
+            border: 2px solid #bbdefb;
+        }
+
+        .entity-icon.device {
+            background: #f3e5f5;
+            color: #7b1fa2;
+            border: 2px solid #e1bee7;
+        }
+
+        .detail-title {
+            flex: 1;
+        }
+
+        .breadcrumbs {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            color: #757575;
+            margin-bottom: 4px;
+        }
+
+        .breadcrumbs a {
+            color: #757575;
+            text-decoration: none;
+        }
+
+        .breadcrumbs a:hover {
+            color: #1976d2;
+        }
+
+        .detail-title h2 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #212121;
+        }
+
+        .detail-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .detail-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .detail-action-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: transparent;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #616161;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .detail-action-btn:hover {
+            background: #f5f5f5;
+        }
+
+        .detail-action-btn.primary {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .detail-action-btn.primary:hover {
+            background: #bbdefb;
+        }
+
+        /* Tabs */
+        .tabs-container {
+            background: #fafafa;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 0 24px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #616161;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .tab:hover {
+            color: #1976d2;
+        }
+
+        .tab.active {
+            color: #1976d2;
+            border-bottom-color: #1976d2;
+            font-weight: 500;
+        }
+
+        /* Tab Content */
+        .tab-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+        }
+
+        .section-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+        }
+
+        .section-header {
+            padding: 16px;
+            background: #fafafa;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #212121;
+        }
+
+        .section-body {
+            padding: 24px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group label {
+            font-size: 12px;
+            font-weight: 500;
+            color: #616161;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            padding: 10px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+            background: #fafafa;
+            transition: all 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #1976d2;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(25,118,210,0.1);
+        }
+
+        .form-group input:disabled,
+        .form-group textarea:disabled,
+        .form-group select:disabled {
+            background: #f5f5f5;
+            cursor: not-allowed;
+            color: #9e9e9e;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        /* Relations List */
+        .relations-list {
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .relation-item {
+            padding: 16px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .relation-item:hover {
+            background: #f5f5f5;
+        }
+
+        .relation-item:last-child {
+            border-bottom: none;
+        }
+
+        .relation-icon {
+            width: 40px;
+            height: 40px;
+            background: #e3f2fd;
+            color: #1976d2;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .relation-content {
+            flex: 1;
+        }
+
+        .relation-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .relation-title h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #212121;
+        }
+
+        .relation-desc {
+            font-size: 13px;
+            color: #616161;
+            margin-bottom: 4px;
+        }
+
+        .relation-meta {
+            font-size: 12px;
+            color: #9e9e9e;
+        }
+
+        .relation-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1976d2;
+        }
+
+        /* Empty State */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #9e9e9e;
+            padding: 48px;
+        }
+
+        .empty-state .material-icons {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        .empty-state h3 {
+            font-size: 18px;
+            color: #616161;
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f5f5f5;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #bdbdbd;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #9e9e9e;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">
+            <div class="logo-icon">EDM</div>
+            <div class="logo-text">
+                <h1>EDM Platform</h1>
+                <span>Enterprise Data Management</span>
+            </div>
+        </div>
+
+        <nav class="nav">
+            <div class="nav-item">
+                <span class="material-icons" style="font-size: 18px;">dashboard</span>
+                Dashboard
+            </div>
+            <div class="nav-item active">
+                <span class="material-icons" style="font-size: 18px;">settings_applications</span>
+                Configuration
+            </div>
+            <div class="nav-item">
+                <span class="material-icons" style="font-size: 18px;">extension</span>
+                Plugins
+            </div>
+            <div class="nav-item">
+                <span class="material-icons" style="font-size: 18px;">settings</span>
+                Settings
+            </div>
+        </nav>
+
+        <div class="header-actions">
+            <div class="role-selector">
+                <span class="material-icons" style="font-size: 16px;">business</span>
+                Administrator
+                <span class="material-icons" style="font-size: 16px;">expand_more</span>
+            </div>
+
+            <div class="icon-btn">
+                <span class="material-icons">notifications</span>
+                <span class="badge">3</span>
+            </div>
+
+            <div class="icon-btn">
+                <span class="material-icons">help</span>
+            </div>
+
+            <div class="user-menu">
+                <div class="user-avatar">JD</div>
+                <div class="user-info">
+                    <div class="name">John Doe</div>
+                    <div class="email">john.doe@company.com</div>
+                </div>
+                <span class="material-icons" style="font-size: 16px; opacity: 0.7;">expand_more</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Master Panel -->
+        <aside class="master-panel">
+            <div class="master-header">
+                <div class="search-box">
+                    <span class="material-icons">search</span>
+                    <input type="text" placeholder="Search entities...">
+                </div>
+                <button class="action-btn">
+                    <span class="material-icons">create_new_folder</span>
+                </button>
+                <button class="action-btn">
+                    <span class="material-icons">add</span>
+                </button>
+            </div>
+
+            <div class="tree-list">
+                <div class="tree-item folder">
+                    <span class="material-icons icon">folder</span>
+                    <div class="tree-item-content">
+                        <div class="tree-item-title">Process Group 1</div>
+                        <div class="tree-item-subtitle">Contains 5 items</div>
+                    </div>
+                </div>
+
+                <div class="tree-item selected">
+                    <span class="material-icons icon file">description</span>
+                    <div class="tree-item-content">
+                        <div class="tree-item-title">Process 001</div>
+                        <div class="tree-item-subtitle">Last updated: 02/03/2026</div>
+                    </div>
+                    <span class="status-badge active">active</span>
+                </div>
+
+                <div class="tree-item">
+                    <span class="material-icons icon file">description</span>
+                    <div class="tree-item-content">
+                        <div class="tree-item-title">Process 002</div>
+                        <div class="tree-item-subtitle">Last updated: 02/03/2026</div>
+                    </div>
+                    <span class="status-badge inactive">inactive</span>
+                </div>
+
+                <div class="tree-item folder">
+                    <span class="material-icons icon">folder</span>
+                    <div class="tree-item-content">
+                        <div class="tree-item-title">Process Group 2</div>
+                        <div class="tree-item-subtitle">Contains 3 items</div>
+                    </div>
+                </div>
+
+                <div class="tree-item">
+                    <span class="material-icons icon file">description</span>
+                    <div class="tree-item-content">
+                        <div class="tree-item-title">Process 003</div>
+                        <div class="tree-item-subtitle">Last updated: 02/03/2026</div>
+                    </div>
+                    <span class="status-badge active">active</span>
+                </div>
+
+                <div class="tree-item">
+                    <span class="material-icons icon file">description</span>
+                    <div class="tree-item-content">
+                        <div class="tree-item-title">Process 004</div>
+                        <div class="tree-item-subtitle">Last updated: 02/03/2026</div>
+                    </div>
+                    <span class="status-badge active">active</span>
+                </div>
+
+                <div class="tree-item folder">
+                    <span class="material-icons icon">folder_open</span>
+                    <div class="tree-item-content">
+                        <div class="tree-item-title">Device Group 1</div>
+                        <div class="tree-item-subtitle">Contains 8 items</div>
+                    </div>
+                </div>
+
+                <div class="tree-item">
+                    <span class="material-icons icon file">memory</span>
+                    <div class="tree-item-content">
+                        <div class="tree-item-title">Device 001</div>
+                        <div class="tree-item-subtitle">Last updated: 02/03/2026</div>
+                    </div>
+                    <span class="status-badge active">active</span>
+                </div>
+
+                <div class="tree-item">
+                    <span class="material-icons icon file">memory</span>
+                    <div class="tree-item-content">
+                        <div class="tree-item-title">Device 002</div>
+                        <div class="tree-item-subtitle">Last updated: 02/03/2026</div>
+                    </div>
+                    <span class="status-badge active">active</span>
+                </div>
+
+                <div class="tree-item folder">
+                    <span class="material-icons icon">folder</span>
+                    <div class="tree-item-content">
+                        <div class="tree-item-title">Host Group 1</div>
+                        <div class="tree-item-subtitle">Contains 4 items</div>
+                    </div>
+                </div>
+
+                <div class="tree-item">
+                    <span class="material-icons icon file">computer</span>
+                    <div class="tree-item-content">
+                        <div class="tree-item-title">Host 001</div>
+                        <div class="tree-item-subtitle">Last updated: 02/03/2026</div>
+                    </div>
+                    <span class="status-badge active">active</span>
+                </div>
+
+                <div class="tree-item">
+                    <span class="material-icons icon file">computer</span>
+                    <div class="tree-item-content">
+                        <div class="tree-item-title">Host 002</div>
+                        <div class="tree-item-subtitle">Last updated: 02/03/2026</div>
+                    </div>
+                    <span class="status-badge inactive">inactive</span>
+                </div>
+            </div>
+
+            <div class="master-footer">
+                <span>12 items</span>
+                <span>3 folders</span>
+            </div>
+        </aside>
+
+        <!-- Resize Handle -->
+        <div class="resize-handle"></div>
+
+        <!-- Detail Panel -->
+        <main class="detail-panel">
+            <!-- Detail Header -->
+            <div class="detail-header">
+                <div class="detail-header-content">
+                    <div class="entity-icon process">
+                        <span class="material-icons">settings</span>
+                    </div>
+                    <div class="detail-title">
+                        <div class="breadcrumbs">
+                            <a href="#">Processes</a>
+                            <span class="material-icons" style="font-size: 14px;">chevron_right</span>
+                            <span>Process 001</span>
+                        </div>
+                        <h2>Process 001</h2>
+                        <div class="detail-meta">
+                            <span class="status-badge active">active</span>
+                            <span style="color: #616161; font-size: 14px;">Manufacturing process for component assembly</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="detail-actions">
+                    <button class="detail-action-btn primary">
+                        <span class="material-icons">edit</span>
+                    </button>
+                    <button class="detail-action-btn">
+                        <span class="material-icons">content_copy</span>
+                    </button>
+                    <button class="detail-action-btn">
+                        <span class="material-icons">delete</span>
+                    </button>
+                    <button class="detail-action-btn">
+                        <span class="material-icons">more_vert</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs-container">
+                <div class="tabs">
+                    <div class="tab active">General</div>
+                    <div class="tab">Relations</div>
+                    <div class="tab">History</div>
+                    <div class="tab">Settings</div>
+                </div>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <!-- Section 1: Basic Information -->
+                <div class="section-card">
+                    <div class="section-header">
+                        <h3>Basic Information</h3>
+                    </div>
+                    <div class="section-body">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Name</label>
+                                <input type="text" value="Process 001" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label>Type</label>
+                                <input type="text" value="process" disabled>
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Description</label>
+                                <textarea disabled>Manufacturing process for component assembly with automated quality control checkpoints and real-time monitoring capabilities.</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Status</label>
+                                <select disabled>
+                                    <option value="active" selected>Active</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Metadata -->
+                <div class="section-card">
+                    <div class="section-header">
+                        <h3>Metadata</h3>
+                    </div>
+                    <div class="section-body">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Created At</label>
+                                <input type="text" value="02/03/2026, 10:30:45 AM" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label>Last Modified</label>
+                                <input type="text" value="02/03/2026, 2:15:22 PM" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label>Created By</label>
+                                <input type="text" value="Admin User" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label>ID</label>
+                                <input type="text" value="PROC-2026-001" disabled>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 3: Related Items (Endless Scroll Demo) -->
+                <div class="section-card">
+                    <div class="section-header">
+                        <h3>Related Items</h3>
+                        <span style="color: #757575; font-size: 14px;">20 items</span>
+                    </div>
+                    <div class="relations-list">
+                        <div class="relation-item">
+                            <div class="relation-icon">
+                                <span class="material-icons">memory</span>
+                            </div>
+                            <div class="relation-content">
+                                <div class="relation-title">
+                                    <h4>Device 001</h4>
+                                    <span class="status-badge active">active</span>
+                                </div>
+                                <div class="relation-desc">Primary assembly station controller</div>
+                                <div class="relation-meta">Last modified: 02/03/2026, 1:45 PM</div>
+                            </div>
+                            <div class="relation-value">Online</div>
+                        </div>
+
+                        <div class="relation-item">
+                            <div class="relation-icon">
+                                <span class="material-icons">computer</span>
+                            </div>
+                            <div class="relation-content">
+                                <div class="relation-title">
+                                    <h4>Host Server A</h4>
+                                    <span class="status-badge active">active</span>
+                                </div>
+                                <div class="relation-desc">Production database server</div>
+                                <div class="relation-meta">Last modified: 02/03/2026, 11:20 AM</div>
+                            </div>
+                            <div class="relation-value">Running</div>
+                        </div>
+
+                        <div class="relation-item">
+                            <div class="relation-icon">
+                                <span class="material-icons">work</span>
+                            </div>
+                            <div class="relation-content">
+                                <div class="relation-title">
+                                    <h4>Workplace Assembly Line 1</h4>
+                                    <span class="status-badge active">active</span>
+                                </div>
+                                <div class="relation-desc">Main production line</div>
+                                <div class="relation-meta">Last modified: 02/03/2026, 9:00 AM</div>
+                            </div>
+                            <div class="relation-value">Active</div>
+                        </div>
+
+                        <div class="relation-item">
+                            <div class="relation-icon">
+                                <span class="material-icons">tune</span>
+                            </div>
+                            <div class="relation-content">
+                                <div class="relation-title">
+                                    <h4>Parameter Set A</h4>
+                                    <span class="status-badge inactive">inactive</span>
+                                </div>
+                                <div class="relation-desc">Quality control thresholds</div>
+                                <div class="relation-meta">Last modified: 02/02/2026, 4:30 PM</div>
+                            </div>
+                            <div class="relation-value">42</div>
+                        </div>
+
+                        <div class="relation-item">
+                            <div class="relation-icon">
+                                <span class="material-icons">history</span>
+                            </div>
+                            <div class="relation-content">
+                                <div class="relation-title">
+                                    <h4>Log Entry #12847</h4>
+                                    <span class="status-badge active">info</span>
+                                </div>
+                                <div class="relation-desc">Process completed successfully</div>
+                                <div class="relation-meta">02/03/2026, 2:00 PM</div>
+                            </div>
+                            <div class="relation-value">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

@@ -1,22 +1,20 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { useGet } from '../hooks/hooks';
-import { Field } from '@progress/kendo-react-form';
-import { Input } from '@progress/kendo-react-inputs';
-import { Detail, Info, Editor } from '../MasterDetail';
+import { Detail, Info, Editor, InfoItem } from '../MasterDetail';
 import { useParams } from 'react-router-dom';
-import { DropDownComp } from '../DropDownCell';
-import { UserContext } from '../../ApiContext';
 import { useSelector } from 'react-redux';
+import { TextField, FormControl, InputLabel, Select, MenuItem, Box } from '@mui/material';
+import { Folder as FolderIcon } from '@mui/icons-material';
 
 Folder.propTypes = {
     onChange: PropTypes.func,
     path: PropTypes.string,
-    api: PropTypes.string,
-    type: PropTypes.string
+    api: PropTypes.string
 }
 
 export function Folder(props) {
+    const type = 'folder';
     const user = useSelector(s => s.user)
     let { id } = useParams();
     id = parseInt(id);
@@ -26,9 +24,10 @@ export function Folder(props) {
     }
     return (
         <Detail {...props}
+            type={type}
             copyable={false}
             id={id}
-            icon={<span className='k-icon k-i-folder' title='Folder' />}
+            icon={<FolderIcon />}
             loading={loading}
             error={error}
             data={data}
@@ -36,42 +35,59 @@ export function Folder(props) {
                 <Info {...props}
                     data={data}
                     content={
-                        <div>
-                            <p>{`${data.name}`}</p>
-                            <small>{`${data.description}`}</small>
-                        </div>
+                        <>
+                            <InfoItem label="Folder Name" value={data.name} />
+                            <InfoItem label="Description" value={data.description} />
+                            {data.group && <InfoItem label="Division" value={data.group} />}
+                        </>
                     }
                 />
             }
             editor={
                 <Editor {...props}
-                    type={props.type}
+                    type={type}
                     data={data}
                     setData={setData}
-                    content={
-                        <fieldset className={'k-form-fieldset'}>
-                            <legend className={'k-form-legend'}>Edit folder</legend>
-                            <div className="mb-3">
-                                <Field name={'name'} component={Input} label={'Name'} />
-                            </div>
-                            <div className="mb-3">
-                                <Field name={'description'} component={Input} label={'Description'} />
-                            </div>
-                            <div className="mb-3" style={{ width: '400px' }}>
-                                <Field name={'group'} label={'Division'}
-                                    component={(compProps) =>
-                                        <DropDownComp {...compProps}
-                                            loading={!user}
-                                            data={user && user.divisions}
-                                        />
-                                    }
-                                />
-                            </div>
-                        </fieldset>
-                    }
+                    content={({ values, handleChange }) => (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                            <TextField
+                                fullWidth
+                                label="Name"
+                                name="name"
+                                value={values.name || ''}
+                                onChange={handleChange}
+                                size="small"
+                            />
+                            <TextField
+                                fullWidth
+                                label="Description"
+                                name="description"
+                                value={values.description || ''}
+                                onChange={handleChange}
+                                size="small"
+                                multiline
+                                rows={2}
+                            />
+                            <FormControl fullWidth size="small">
+                                <InputLabel>Division</InputLabel>
+                                <Select
+                                    name="group"
+                                    value={values.group || ''}
+                                    onChange={handleChange}
+                                    label="Division"
+                                >
+                                    <MenuItem value=""><em>None</em></MenuItem>
+                                    {user?.divisions?.map((division) => (
+                                        <MenuItem key={division} value={division}>
+                                            {division}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        </Box>
+                    )}
                 />
             }
         />
     );
 }
-

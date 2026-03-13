@@ -4,7 +4,8 @@ import {useGet} from '../hooks/hooks';
 import api from '../api';
 import {OperationPluginContainer} from './OperationPluginContainer';
 import {OperationMenu} from './OperationMenu.js';
-import {Button} from '@progress/kendo-react-buttons';
+import { IconButton, Box, Divider, Typography } from '@mui/material';
+import { KeyboardArrowUp as ArrowUpIcon, KeyboardArrowDown as ArrowDownIcon } from '@mui/icons-material';
 import axios from 'axios';
 
 export function OperationLayout() {
@@ -18,22 +19,27 @@ export function OperationLayout() {
     const saveSettings = (msg) => msg.type === 'Settings' && axios.put(`${api.operations}/${id}/settings`, msg.data)
     
     return (
-        <>
-            {(info && options) &&
-                <div className='mx-2' style={{display: 'flex', flexDirection: 'column', height: '100vh'}}>
-                    <Button
-                        fillMode={'flat'}
-                        icon={hidden ? 'arrow-60-down' : 'arrow-60-up'}
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100%', position: 'relative' }}>
+            {(info && options) && (
+                <>
+                    <IconButton
                         onClick={() => setHidden((h) => !h)}
-                        style={{position: 'absolute', top: 8, right: 15, opacity: 90, zIndex: 1}}
-                    ></Button>
-                    <div style={{display: hidden ? 'none' : 'inherit'}}>
-                        <OperationMenu
-                            operation={info}
-                            to={setTo}
-                        />
-                    </div>
-                    <div style={{flex: 'auto', display: 'flex'}}>
+                        sx={{ position: 'absolute', top: 8, right: 15, zIndex: 1301, backgroundColor: 'rgba(255,255,255,0.8)', '&:hover': { backgroundColor: '#fff' } }}
+                        size="small"
+                    >
+                        {hidden ? <ArrowDownIcon /> : <ArrowUpIcon />}
+                    </IconButton>
+                    
+                    {!hidden && (
+                        <Box sx={{ zIndex: 1300 }}>
+                            <OperationMenu
+                                operation={info}
+                                to={setTo}
+                            />
+                        </Box>
+                    )}
+
+                    <Box sx={{ flex: 1, display: 'flex', minHeight: 0 }}>
                         <OperationPluginContainer
                             title='Operation Console'
                             id={id}
@@ -42,16 +48,19 @@ export function OperationLayout() {
                             src={`${api.baseUrl}/${options.homepage}?id=${id}`}
                             onMessage={saveSettings}
                         />
-                    </div>
-                    <div style={{display: hidden ? 'none' : ''}}>
-                        <footer>
-                            <hr style={{margin: '2px'}}/>
-                            <span>&#169; Microprojects {new Date().getFullYear()}</span>
-                        </footer>
-                    </div>
-                </div>
-            }
-        </>
+                    </Box>
+
+                    {!hidden && (
+                        <Box sx={{ p: 1, borderTop: '1px solid #e0e0e0' }}>
+                            <Typography variant="caption" color="textSecondary">
+                                &#169; Microprojects {new Date().getFullYear()}
+                            </Typography>
+                        </Box>
+                    )}
+                </>
+            )}
+        </Box>
     )
 }
+
 

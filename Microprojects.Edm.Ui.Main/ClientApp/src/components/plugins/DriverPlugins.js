@@ -1,28 +1,40 @@
-import React, { useContext } from 'react';
-import { useRouteMatch } from 'react-router-dom';
-import { Alert } from 'reactstrap';
+import React from 'react';
+import { Alert, Box, CircularProgress, Typography } from '@mui/material';
 import { useGet } from '../hooks/hooks';
-import { Grid, GridColumn } from '@progress/kendo-react-grid';
+import { RelationTable } from '../RelationTable';
 import api from '../api';
 
 export const DriverPlugins = (props) => {
     const [[drivers], loading, error] = useGet(`${api.plugins}/drivers`, []);
+
+    const columns = [
+        { field: 'guid', headerName: 'Global Unique Identifier', width: 350 },
+        { field: 'name', headerName: 'Driver Name', width: 200 },
+        { field: 'profileName', headerName: 'Profiler Name', width: 200 },
+        { field: 'description', headerName: 'Description', flex: 1 }
+    ];
+
     return (
-        <>
-            {loading && <h5>Loading drivers...</h5>}
-            {error && <Alert color='red'>{error}</Alert>}
-            {drivers &&
-                <div style={{ margin: 10 }}>
-                    <h5>Driver Plugins</h5>
-                    <Grid data={drivers} scrollable='none'>
-                        <GridColumn field='guid' title='Global Unique Identifier' width={400} />
-                        <GridColumn field='name' title='Driver Name' width={200} />
-                        <GridColumn field='profileName' title='Profiler Name' />
-                        <GridColumn field='description' title='Description' />
-                    </Grid>
-                </div>
-            }
-        </>
+        <Box sx={{ p: 2 }}>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                Driver Plugins
+            </Typography>
+            {error && <Alert severity="error">{error}</Alert>}
+            {loading && !drivers && (
+                <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                    <CircularProgress size={32} />
+                </Box>
+            )}
+            {drivers && (
+                <RelationTable 
+                    data={drivers} 
+                    columns={columns} 
+                    editable={false} 
+                    removable={false} 
+                />
+            )}
+        </Box>
     );
 };
+
 

@@ -1,7 +1,12 @@
 import React from 'react';
-import { PageTitle } from "../PageTitle";
-import { Switch, Route, useRouteMatch } from 'react-router-dom';
-import { DashboardMenu } from './DashboardMenu';
+import { Switch, Route, useRouteMatch, Redirect } from 'react-router-dom';
+import { SubRootPage } from '../SubRootPage';
+import {
+    PlayCircleOutline as PlayCircleOutlineIcon,
+    WorkOutline as WorkOutlineIcon,
+    PeopleOutline as PeopleOutlineIcon,
+    EventNote as EventNoteIcon
+} from '@mui/icons-material';
 import Schedule from './Schedule';
 import Users from './Users';
 import Operations from './Operations';
@@ -10,32 +15,32 @@ import Workplaces from './Workplaces';
 export function Dashboard() {
     let { path } = useRouteMatch();
 
+    const menuItems = [
+        { label: 'Operations', path: `${path}/operations`, icon: <PlayCircleOutlineIcon fontSize="small" /> },
+        { label: 'Workplaces', path: `${path}/workplaces`, icon: <WorkOutlineIcon fontSize="small" /> },
+        { label: 'Users', path: `${path}/users`, icon: <PeopleOutlineIcon fontSize="small" /> },
+        { label: 'Schedule', path: `${path}/schedule`, icon: <EventNoteIcon fontSize="small" /> }
+    ];
+
     return (
-        <>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <PageTitle title="Dashboard" />
-                <DashboardMenu />
-            </div>
-            <hr />
-            <div>
-                <Switch>
-                    <Route exact path={path}>
-                        <p>Select one of the options above</p>
-                    </Route>
-                    <Route path={`${path}/operations/:when?`}>
-                        <Operations />
-                    </Route>
-                    <Route path={`${path}/workplaces`}>
-                        <Workplaces />
-                    </Route>
-                    <Route path={`${path}/users`}>
-                        <Users />
-                    </Route>
-                    <Route path={`${path}/schedule`}>
-                        <Schedule />
-                    </Route>
-                </Switch>
-            </div>
-        </>
+        <SubRootPage title="Dashboard" menuItems={menuItems}>
+            <Switch>
+                <Route exact path={path}>
+                    <Redirect to={`${path}/operations`} />
+                </Route>
+                <Route path={`${path}/operations/:when?`}>
+                    <Operations />
+                </Route>
+                <Route path={`${path}/workplaces`}>
+                    <Workplaces />
+                </Route>
+                <Route path={`${path}/users`}>
+                    <Users />
+                </Route>
+                <Route path={`${path}/schedule`}>
+                    <Schedule />
+                </Route>
+            </Switch>
+        </SubRootPage>
     );
 }

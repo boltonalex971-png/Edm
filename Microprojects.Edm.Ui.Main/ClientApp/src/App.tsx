@@ -5,12 +5,11 @@ import {Home} from "./components/home/Home";
 import {Dashboard} from "./components/dashboard/Dashboard";
 import {Config} from "./components/config/Config";
 import "./custom.css";
-import '@progress/kendo-react-animation';
-import '@progress/kendo-theme-bootstrap/dist/all.css';
 import {NewOperationWizard} from "./components/operation/NewOperationWizard";
 import {Plugins} from "./components/plugins/Plugins";
-import {ApiContext, appRoles, UserContext} from './ApiContext';
+import {ApiContext, appRoles} from './ApiContext';
 import api from "./components/api";
+
 import {getUserFromToken} from "./components/hooks/hooks";
 import Operations from "./components/dashboard/Operations";
 import {OperationLayout} from "./components/operation/OperationLayout";

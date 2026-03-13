@@ -1,43 +1,56 @@
-import React, { useContext } from 'react';
-import { Link, useRouteMatch } from 'react-router-dom';
-import { Alert } from 'reactstrap';
+import React from 'react';
+import { Alert, Box, CircularProgress, Typography, Link } from '@mui/material';
 import { useGet } from '../hooks/hooks';
-import { Grid, GridColumn } from '@progress/kendo-react-grid';
+import { RelationTable } from '../RelationTable';
 import api from '../api';
-import { Button } from '@progress/kendo-react-buttons';
 
 export const OperationPlugins = (props) => {
     const [[ops], loading, error] = useGet(`${api.plugins}/operations`, []);
+
+    const columns = [
+        { field: 'guid', headerName: 'Global Unique Identifier', width: 350 },
+        { 
+            field: 'name', 
+            headerName: 'Operation Name', 
+            width: 250,
+            renderCell: (params) => (
+                <Link
+                    component="button"
+                    variant="body2"
+                    onClick={(e) => {
+                        window.open(`/${params.row.homepage}`, '_blank');
+                        e.target.blur();
+                    }}
+                    sx={{ textDecoration: 'none', fontWeight: 500, textAlign: 'left' }}
+                >
+                    {params.value}
+                </Link>
+            )
+        },
+        { field: 'description', headerName: 'Description', flex: 1 }
+    ];
+
     return (
-        <>
-            {loading && <h5>Loading operations...</h5>}
-            {error && <Alert color='red'>{error}</Alert>}
-            {ops &&
-                <div style={{ margin: 10 }}>
-                    <h5>Operation Plugins</h5>
-                    <Grid data={ops} scrollable='none'>
-                        <GridColumn field='guid' title='Global Unique Identifier' width={400} />
-                        <GridColumn field='name' title='Operation Name' width={200}
-                            cell={(cellProps) =>
-                                <td>
-                                    <button type='button' className='btn btn-link'
-                                        onClick={
-                                            (e) => {
-                                                window.open(`/${cellProps.dataItem.homepage}`, '_blank');
-                                                e.target.blur();
-                                            }
-                                        }
-                                    >
-                                        {cellProps.dataItem.name}
-                                    </button>
-                                </td>
-                            }
-                        />
-                        <GridColumn field='description' title='Description' />
-                    </Grid>
-                </div>
-            }
-        </>
+        <Box sx={{ p: 2 }}>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                Operation Plugins
+            </Typography>
+            {error && <Alert severity="error">{error}</Alert>}
+            {loading && !ops && (
+                <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                    <CircularProgress size={32} />
+                </Box>
+            )}
+            {ops && (
+                <RelationTable 
+                    data={ops} 
+                    columns={columns} 
+                    editable={false} 
+                    removable={false} 
+                />
+            )}
+        </Box>
     );
 };
+
 

@@ -1,13 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useGet } from '../../hooks/hooks';
-import { Field } from '@progress/kendo-react-form';
-import { Input, NumericTextBox } from '@progress/kendo-react-inputs';
-import { useHistory, useParams } from 'react-router-dom';
-import { useRouteMatch } from 'react-router-dom';
 import { MasterDetail, reloadMaster, Detail, Info, Editor } from '../../MasterDetail';
-import { TabStrip, TabStripTab } from '@progress/kendo-react-layout';
 import { ProcessWorkbenchesTab } from './ProcessWorkbenchesTab';
+import { Handyman as WorkbenchIcon } from '@mui/icons-material';
+
 
 ProcessWorkbenchesDetail.propTypes = {
     onChange: PropTypes.func,
@@ -16,7 +13,8 @@ ProcessWorkbenchesDetail.propTypes = {
     workplaceProcessId: PropTypes.number
 }
 
-export function ProcessWorkbenchesDetail({ workplaceProcessId, ...props }) {
+export function ProcessWorkbenchesDetail({ workplaceProcessId, parents, ...props }) {
+    const type = 'workbench';
     const id = workplaceProcessId;
     let [sub, setSub] = useState();
     useEffect(setSub, [id]);
@@ -26,12 +24,15 @@ export function ProcessWorkbenchesDetail({ workplaceProcessId, ...props }) {
         { ...data, name: `Workbenches`, description: `For ${data.processName} on ${data.workplaceName}` };
     return (
         <Detail {...props}
+            type={type}
+            icon={<WorkbenchIcon />}
             data={data}
+            parents={parents}
+
             subDetail={sub}
             card={
-                <ProcessWorkbenchesTab id={parseInt(id)} api={props.api} onDetailSelected={setSub} />
+                <ProcessWorkbenchesTab id={parseInt(id)} api={props.api} onDetailSelected={setSub} parents={[...(parents || []), { name: data.name, icon: <WorkbenchIcon />, ref: { current: null } }]} />
             }
         />
     );
 }
-

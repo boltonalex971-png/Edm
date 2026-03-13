@@ -1,10 +1,16 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { Window } from '@progress/kendo-react-dialogs';
-import { ComboBox } from '@progress/kendo-react-dropdowns';
-import { Button } from '@progress/kendo-react-buttons';
-import { NumericTextBox, Input } from '@progress/kendo-react-inputs';
-import { useGet } from '../../hooks/hooks';
+import { 
+    Dialog, 
+    DialogTitle, 
+    DialogContent, 
+    DialogActions, 
+    TextField, 
+    Button, 
+    Autocomplete,
+    Box,
+    Typography
+} from '@mui/material';
 
 ZoneEditor.propTypes = {
     data: PropTypes.object,
@@ -15,57 +21,70 @@ ZoneEditor.propTypes = {
 
 export function ZoneEditor(props) {
     const [fields, setFields] = useState(props.data);
+    
+    const handleSave = (e) => {
+        e.preventDefault();
+        props.onSave(fields);
+    };
+
     return (
-        <Window title='Zone' style={{ position: 'fixed', height: 'auto' }}
-            width={250}
-            modal={true}
-            maximizeButton={() => null}
-            minimizeButton={() => null}
-            onClose={props.onClose}
-        >
-            <form className="k-form" style={{
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                height: '100%'
-            }}>
-                <div>
-                    <input type='hidden' readOnly name='id' value={props.data.id} />
-                    <Input
-                        label='Zone #'
-                        value={fields.no}
-                        onChange={(e) => setFields({ ...fields, no: e.value })}
+        <Dialog open={true} onClose={props.onClose} maxWidth="xs" fullWidth>
+            <DialogTitle sx={{ fontWeight: 600, fontSize: '16px' }}>Zone</DialogTitle>
+            <DialogContent>
+                <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+                    <TextField
+                        label="Zone #"
+                        value={fields.no || ''}
+                        onChange={(e) => setFields({ ...fields, no: e.target.value })}
+                        size="small"
+                        fullWidth
                     />
-                    <Input
-                        label='Active When'
-                        value={fields.activeWhen}
-                        onChange={(e) => setFields({ ...fields, activeWhen: e.value })}
+                    <TextField
+                        label="Active When"
+                        value={fields.activeWhen || ''}
+                        onChange={(e) => setFields({ ...fields, activeWhen: e.target.value })}
+                        size="small"
+                        fullWidth
                     />
-                    <NumericTextBox className='k-textbox'
-                        label='Offset (min)'
-                        value={fields.offset}
-                        onChange={(e) => setFields({ ...fields, offset: e.value })}
+                    <TextField
+                        label="Offset (min)"
+                        type="number"
+                        value={fields.offset || 0}
+                        onChange={(e) => setFields({ ...fields, offset: parseFloat(e.target.value) })}
+                        size="small"
+                        fullWidth
                     />
-                    <NumericTextBox className='k-textbox'
-                        label='Duration (min)'
-                        value={fields.duration}
-                        onChange={(e) => setFields({ ...fields, duration: e.value })}
+                    <TextField
+                        label="Duration (min)"
+                        type="number"
+                        value={fields.duration || 0}
+                        onChange={(e) => setFields({ ...fields, duration: parseFloat(e.target.value) })}
+                        size="small"
+                        fullWidth
                     />
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
-                    <Button
-                        style={fields.id ? {} : { visibility: 'hidden' }}
-                        type='button'
-                        onClick={(e) => { e.preventDefault(); props.onDelete(fields); }}
-                    >Delete</Button>
-                    <Button
-                        type='submit'
-                        themeColor="primary"
-                        onClick={(e) => { e.preventDefault(); props.onSave(fields); }}
-                    >Save</Button>
-                </div>
-            </form>
-        </Window>
+                </Box>
+            </DialogContent>
+            <DialogActions sx={{ p: 2, px: 3 }}>
+                {fields.id !== 0 && (
+                    <Button 
+                        color="error" 
+                        onClick={() => props.onDelete(fields)}
+                        sx={{ textTransform: 'none' }}
+                    >
+                        Delete
+                    </Button>
+                )}
+                <Box sx={{ flex: 1 }} />
+                <Button onClick={props.onClose} sx={{ textTransform: 'none' }}>Cancel</Button>
+                <Button 
+                    variant="contained" 
+                    onClick={handleSave}
+                    sx={{ textTransform: 'none', borderRadius: '4px' }}
+                >
+                    Save
+                </Button>
+            </DialogActions>
+        </Dialog>
     );
 }
 
@@ -81,63 +100,82 @@ CriterionEditor.propTypes = {
 export function CriterionEditor(props) {
     const [fields, setFields] = useState(props.data);
     const selectedFunc = props.functions.filter(f => f.name === fields.function)[0];
+
+    const handleSave = (e) => {
+        e.preventDefault();
+        props.onSave(fields);
+    };
+
     return (
-        <Window title='Criterion' style={{ position: "fixed", height: 'auto' }}
-            width={250}
-            modal={true}
-            maximizeButton={() => null}
-            minimizeButton={() => null}
-            onClose={props.onClose}
-        >
-            <form className="k-form" style={{
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                height: '100%'
-            }}>
-                <div>
-                    <input type='hidden' readOnly name='zoneId' value={props.data.zoneId} />
-                    <input type='hidden' readOnly name='id' value={props.data.id} />
-                    <ComboBox label="Parameter" value={fields.param}
-                        data={props.params}
-                        onChange={(e) => setFields({ ...fields, param: e.value })}
+        <Dialog open={true} onClose={props.onClose} maxWidth="xs" fullWidth>
+            <DialogTitle sx={{ fontWeight: 600, fontSize: '16px' }}>Criterion</DialogTitle>
+            <DialogContent>
+                <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+                    <Autocomplete
+                        options={props.params || []}
+                        value={fields.param || null}
+                        onChange={(event, newValue) => setFields({ ...fields, param: newValue })}
+                        renderInput={(params) => <TextField {...params} label="Parameter" size="small" />}
+                        fullWidth
                     />
-                    <ComboBox label="Function" value={fields.function}
-                        data={props.functions.map(f => f.name)}
-                        onChange={(e) => setFields({ ...fields, function: e.value })}
+                    <Autocomplete
+                        options={props.functions.map(f => f.name) || []}
+                        value={fields.function || null}
+                        onChange={(event, newValue) => setFields({ ...fields, function: newValue })}
+                        renderInput={(params) => <TextField {...params} label="Function" size="small" />}
+                        fullWidth
                     />
-                    <fieldset className={'k-form-fieldset'}>
-                        <legend className={'k-form-legend'}>Arguments</legend>
-                        {(selectedFunc && selectedFunc.args && selectedFunc.args[0]) &&
-                            <Input autoFocus={true}
-                                label={`${selectedFunc.args[0].name}, ${selectedFunc.args[0].type}`}
-                                value={fields.arg1}
-                                onChange={(e) => setFields({ ...fields, arg1: e.value })}
-                            />
-                        }
-                        {(selectedFunc && selectedFunc.args && selectedFunc.args[1]) &&
-                            <Input
-                                label={`${selectedFunc.args[1].name}, ${selectedFunc.args[1].type}`}
-                                value={fields.arg2}
-                                onChange={(e) => setFields({ ...fields, arg2: e.value })}
-                            />
-                        }
-                    </fieldset>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
-                    <Button
-                        style={fields.id ? {} : { visibility: 'hidden' }}
-                        type='button'
-                        onClick={(e) => { e.preventDefault(); props.onDelete(fields); }}
-                    >Delete</Button>
-                    <Button
-                        type='submit'
-                        themeColor={'primary'}
-                        onClick={(e) => { e.preventDefault(); props.onSave(fields); }}
-                    >Save</Button>
-                </div>
-            </form>
-        </Window>
+                    
+                    {selectedFunc && selectedFunc.args && (
+                        <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase' }}>
+                                Arguments
+                            </Typography>
+                            {selectedFunc.args[0] && (
+                                <TextField
+                                    autoFocus
+                                    label={`${selectedFunc.args[0].name} (${selectedFunc.args[0].type})`}
+                                    value={fields.arg1 || ''}
+                                    onChange={(e) => setFields({ ...fields, arg1: e.target.value })}
+                                    size="small"
+                                    fullWidth
+                                />
+                            )}
+                            {selectedFunc.args[1] && (
+                                <TextField
+                                    label={`${selectedFunc.args[1].name} (${selectedFunc.args[1].type})`}
+                                    value={fields.arg2 || ''}
+                                    onChange={(e) => setFields({ ...fields, arg2: e.target.value })}
+                                    size="small"
+                                    fullWidth
+                                />
+                            )}
+                        </Box>
+                    )}
+                </Box>
+            </DialogContent>
+            <DialogActions sx={{ p: 2, px: 3 }}>
+                {fields.id !== 0 && (
+                    <Button 
+                        color="error" 
+                        onClick={() => props.onDelete(fields)}
+                        sx={{ textTransform: 'none' }}
+                    >
+                        Delete
+                    </Button>
+                )}
+                <Box sx={{ flex: 1 }} />
+                <Button onClick={props.onClose} sx={{ textTransform: 'none' }}>Cancel</Button>
+                <Button 
+                    variant="contained" 
+                    onClick={handleSave}
+                    sx={{ textTransform: 'none', borderRadius: '4px' }}
+                >
+                    Save
+                </Button>
+            </DialogActions>
+        </Dialog>
     );
 }
+
 

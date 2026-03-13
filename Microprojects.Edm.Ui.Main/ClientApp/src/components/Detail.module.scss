@@ -1,0 +1,284 @@
+@import '../styles/variables';
+
+.detailContainer {
+  display: flex;
+  flex-direction: column;
+  background-color: $white;
+  border: 1px solid $border-color;
+  border-radius: 4px;
+  overflow-y: auto;
+  position: relative;
+  scrollbar-gutter: stable;
+  min-height: 400px; // Ensure a minimum height even when empty/loading
+}
+
+.stickyHeader {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: $white;
+  border-bottom: 1px solid $border-color;
+  padding: 12px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+
+  &.process { background-color: $bg-process; }
+  &.device { background-color: $bg-device; }
+  &.host { background-color: $bg-host; }
+  &.workplace { background-color: $bg-workplace; }
+  &.workbench { background-color: $bg-workbench; }
+  &.operation { background-color: $bg-operation; }
+  &.audit { background-color: $bg-audit; }
+  &.profile { background-color: $bg-profile; }
+  &.driver { background-color: $bg-driver; }
+  &.plugin { background-color: $bg-plugin; }
+  &.folder { background-color: $bg-folder; }
+}
+
+.headerContent {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.iconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  background-color: #f5f5f5;
+  color: $text-secondary;
+  
+  :global(.MuiSvgIcon-root) {
+    font-size: 28px;
+  }
+
+  &.orange {
+    background-color: #fff3e0;
+    color: #ffa726;
+    border: 1px solid #ffe0b2;
+  }
+
+  &.gray {
+    background-color: #f5f5f5;
+    color: #757575;
+    border: 1px solid #e0e0e0;
+  }
+}
+
+.titleArea {
+  display: flex;
+  flex-direction: column;
+}
+
+.breadcrumbs {
+  margin-bottom: 4px;
+  
+  :global {
+    .MuiBreadcrumbs-ol {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .MuiBreadcrumbs-li {
+      display: inline-flex;
+      align-items: center;
+      vertical-align: middle;
+    }
+
+    .MuiTypography-root, 
+    .MuiLink-root {
+      font-size: 11px !important;
+      color: $text-secondary !important;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      height: 14px;
+      line-height: 14px;
+    }
+
+    .MuiBreadcrumbs-separator {
+      margin: 0 4px;
+      display: inline-flex;
+      align-items: center;
+      
+      .MuiSvgIcon-root {
+        color: $text-secondary;
+      }
+    }
+    
+    .MuiLink-root:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.title {
+  color: $text-primary;
+}
+
+.description {
+  color: $text-secondary;
+}
+
+.actions {
+  display: flex;
+  gap: 4px;
+}
+
+.actionBtn {
+  color: $text-secondary !important;
+  &:hover {
+    background-color: rgba(25, 118, 210, 0.08) !important;
+    color: $primary-main !important;
+  }
+  
+  &.delete:hover {
+    background-color: rgba(211, 47, 47, 0.08) !important;
+    color: #d32f2f !important;
+  }
+}
+
+.contentBody {
+  padding: 24px;
+  flex: 1;
+}
+
+.infoItem {
+  margin-bottom: 16px;
+  
+  label {
+    display: block;
+    font-family: "Roboto", "Helvetica", "Arial", sans-serif !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: $text-secondary;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    margin-bottom: 4px;
+  }
+
+  
+  .value {
+    color: $text-primary;
+    padding: 8px 12px;
+    background-color: #f9f9f9;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+  }
+}
+
+.stickyFooter {
+  position: sticky;
+  bottom: 0;
+  z-index: 100;
+  background-color: $white;
+  border-top: 1px solid $border-color;
+  padding: 12px 24px;
+  display: flex;
+  justify-content: flex-end;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.subDetailWrapper {
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+.loadingOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  z-index: 100;
+  background-color: rgba(255, 255, 255, 0.3);
+  pointer-events: none;
+}
+
+.stickyIndicator {
+  position: sticky;
+  top: 50%;
+  height: min-content;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateY(-50%);
+}
+
+.transitionDim {
+  opacity: 0.4;
+  filter: grayscale(0.5);
+  pointer-events: none;
+  transition: all 0.2s ease;
+}
+
+
+// Shallow Migration: Kendo Overrides
+.muiFormWrapper {
+  display: block;
+  width: 100%;
+
+  :global {
+    .MuiInputBase-input {
+      font-size: 14px;
+    }
+    .MuiSelect-select {
+      font-size: 14px;
+    }
+    .MuiInputLabel-root {
+      font-size: 14px;
+    }
+    .MuiMenuItem-root {
+      font-size: 14px;
+    }
+
+    .k-form-fieldset {
+      margin: 0;
+      padding: 0;
+      border: none;
+    }
+    
+    .k-form-legend {
+      display: none;
+    }
+    
+    .k-textbox, .k-input-inner {
+      padding: 8px 12px;
+      font-size: 14px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      width: 100%;
+      
+      &:focus {
+        border-color: $primary-main;
+        box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.1);
+      }
+    }
+    
+    .k-dropdownlist {
+      border-radius: 4px;
+      .k-input-inner {
+        padding: 4px 12px;
+      }
+    }
+    
+    .k-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: $text-secondary;
+      margin-bottom: 4px;
+    }
+  }
+}

@@ -87,7 +87,14 @@ namespace Optosense.Edm.Core.Services
             return profile;
         }
 
+        public async Task<Profile> SaveProfile(Profile profile)
+        {
+            var result = await Save(profile);
+            return result;
+        }
+
         public async Task<bool> DeleteProfile(int id, int profileId)
+
         {
             var process = await Db.Processes
                 .Include(p => p.Profiles)

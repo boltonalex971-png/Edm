@@ -1,13 +1,11 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { GridColumn } from '@progress/kendo-react-grid';
 import { RelationTable } from '../../RelationTable';
 import { DropDownCell } from '../../DropDownCell';
 import { useGet } from '../../hooks/hooks';
 import { HostDetail } from '../Hosts';
 import Api from '../../api';
 import { useHistory } from 'react-router-dom';
-import { Button } from 'reactstrap';
 
 DeviceHostsTab.propTypes = {
     id: PropTypes.number,
@@ -15,39 +13,51 @@ DeviceHostsTab.propTypes = {
     onDetailSelected: PropTypes.func
 }
 
-export function DeviceHostsTab({ id, api, onDetailSelected }) {
+export function DeviceHostsTab({ id, api, onDetailSelected, parents }) {
     const history = useHistory();
     const [[data]] = useGet(`${api}/hosts`);
-    return (
-        <RelationTable api={`${api}/${id}/hosts`} removable >
-            <GridColumn
-                width={200}
-                field='hostId'
-                title='Host'
-                cell={(cellProps) => data &&
-                    <DropDownCell {...cellProps}
-                        getData={() => data}
-                        id='id'
-                        text='name'
-                        fieldName='hostName'
-                        fieldId='hostId'
-                        onClick={(hostId, itemUpdate) => {
-                            const path = '/config/hosts';
-                            onDetailSelected(<HostDetail
+
+    const columns = [
+        {
+            field: 'hostId',
+            headerName: 'Host',
+            width: 200,
+            renderCell: (params) => (
+                <DropDownCell 
+                    {...params}
+                    getData={() => data || []}
+                    dataKey='id'
+                    text='name'
+                    fieldName='hostName'
+                    fieldId='hostId'
+                    onClick={(hostId, itemUpdate) => {
+                        const path = '/config/hosts';
+                        onDetailSelected(
+                            <HostDetail
+                                type='host'
                                 hostId={hostId}
                                 api={Api.hosts}
                                 path={path}
                                 onClose={() => onDetailSelected()}
                                 onUp={() => history.push(`${path}/${hostId}`)}
                                 onUpdate={itemUpdate}
-                            />);
-                        }}
-                    />
-                }
-            />
-            <GridColumn field={'hostUrl'} title={'Address'} editable={false} />
-        </RelationTable>
+                                parents={parents}
+                            />
+                        );
+                    }}
+                />
+            )
+        },
+        { field: 'hostUrl', headerName: 'Address', flex: 1, editable: false }
+    ];
 
+    return (
+        <RelationTable 
+            api={`${api}/${id}/hosts`} 
+            removable 
+            columns={columns}
+        />
     );
 }
+
 
