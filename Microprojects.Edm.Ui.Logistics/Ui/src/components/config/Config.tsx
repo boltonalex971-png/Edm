@@ -17,7 +17,13 @@ export function Config() {
                 <PageTitle title="Configurations" />
                 <Nav pills>
                     <NavItem>
-                        <NavLink tag={Link} to={`${path}/processes`} >Processes</NavLink>
+                        <NavLink tag={Link} to={`${path}/manufacturing`} >Manufacturing</NavLink>
+                    </NavItem>
+                    <NavItem>
+                        <NavLink tag={Link} to={`${path}/technology`} >Technology</NavLink>
+                    </NavItem>
+                    <NavItem>
+                        <NavLink tag={Link} to={`${path}/operations`} >Operations</NavLink>
                     </NavItem>
                     <NavItem>
                         <NavLink tag={Link} to={`${path}/nomenclatures`} >Nomenclatures</NavLink>
@@ -31,7 +37,9 @@ export function Config() {
             <div>
                 <Routes>
                     <Route index element={<p>Select one of the options above</p>} />
-                    <Route path='processes/*' element={<Processes />} />
+                    <Route path='manufacturing/*' element={<Processes kind='Manufacturing' />} />
+                    <Route path='technology/*' element={<Processes kind='Technology' />} />
+                    <Route path='operations/*' element={<Processes kind='Operation' />} />
                     <Route path='nomenclatures/*' element={<Nomenclatures />} />
                     <Route path='taretypes/*' element={<TareTypes />} />
                     <Route path='*' element={<span>Page not exists</span>} />

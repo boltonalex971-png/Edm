@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using System.Linq.Expressions;
 using Microprojects.Edm.Ui.Logistics.Contracts;
 using Microprojects.Edm.Ui.Logistics.Models;
 using Microprojects.Edm.Ui.Logistics.Persistence;
@@ -28,17 +30,20 @@ public class ItemService : ServiceBase<Item>, IItemService
         return result;
     }
 
-    public override async Task<IEnumerable<Item>> GetAll()
+    public override async Task<IEnumerable<Item>> GetAll(Expression<Func<Item, bool>>? predicate = null)
     {
-        var query = Set().AsNoTracking();
-        var result = await query
+        var query = Set().AsNoTracking()
             .Include(i => i.Tare.TareType)
             .Include(i => i.Nomenclature)
             .Include(e => e.Meta)
-            .Where(e => e.Meta.Deleted == null)
-            .ToListAsync();
+            .Where(e => e.Meta.Deleted == null);
 
-        return result;
+        if (predicate != null)
+        {
+            query = query.Where(predicate);
+        }
+
+        return await query.ToListAsync();
     }
 
     public override async Task<Item> Save(Item item)

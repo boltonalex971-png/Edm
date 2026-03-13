@@ -1,4 +1,4 @@
-import React, { useState} from 'react';
+import React, { useEffect, useState} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Alert, InputGroup, Input as BootInput, InputGroupText } from 'reactstrap';
 import {TreeView, TreeViewDragClue, moveTreeViewItem, TreeViewDragAnalyzer } from '@progress/kendo-react-treeview';
@@ -17,8 +17,10 @@ import './TreeViewMaster.css'
 
 export type TreeViewMasterProps = {
     api: string,
+    kind?: string,
     onCurrentRootChanged: (item : TreeDataItem) => void,
     item?: (props: TreeItemProps) => React.ReactElement,
+    onRootLoaded?: (item: TreeDataItem) => void,
 }
 
 export function TreeViewMaster(props : TreeViewMasterProps) {
@@ -30,10 +32,22 @@ export function TreeViewMaster(props : TreeViewMasterProps) {
     // const { pathname } = useLocation();
     // const url = params && pathname.replace(`/${params['*']}`, '')
     const { path: url } = useBasePath()
-    const [[data, setData], loading, error] = useGet<TreeDataItem[]>(`${props.api}/hierarchy`, [render]);
+    const hierarchyUrl = props.kind ? `${props.api}/hierarchy?kind=${props.kind}` : `${props.api}/hierarchy`;
+    const [[data, setData], loading, error] = useGet<TreeDataItem[]>(hierarchyUrl, [render]);
     const dragClue = React.useRef<TreeViewDragClue>({} as TreeViewDragClue)
     const [filter, setFilter] = useState('');
-    const filteredData = data?.filter((el) => el.name.toUpperCase().includes(filter.toUpperCase()));
+
+    const visibleRoots = data && data.length === 1 && data[0].items
+        ? data[0].items
+        : data;
+
+    const filteredData = visibleRoots?.filter((el) => el.name.toUpperCase().includes(filter.toUpperCase()));
+
+    useEffect(() => {
+        if (data && data.length > 0) {
+            props.onRootLoaded?.(data[0]);
+        }
+    }, [data]);
 
     const onItemSelected = (e : TreeViewItemClickEvent) => {
         props.onCurrentRootChanged?.(e.item);

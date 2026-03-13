@@ -9,7 +9,7 @@ namespace Microprojects.Edm.Ui.Logistics.Contracts;
 
 public interface IGenericService<T>
 {
-    Task<IEnumerable<T>> GetAll();
+    Task<IEnumerable<T>> GetAll(Expression<Func<T, bool>>? predicate = null);
     Task<T> Get(Guid id);
     Task<T> Get<T1>(Guid id, Expression<Func<T, T1>> include);
     Task<T> Get<T1, T2>(Guid id, Expression<Func<T, T1>> include, Expression<Func<T, T2>> include2);

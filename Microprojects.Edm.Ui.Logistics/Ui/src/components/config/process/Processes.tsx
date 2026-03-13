@@ -11,7 +11,7 @@ import {Detail, type DetailProps, Editor, EMPTY_GUID, Info, MasterDetail, reload
 import { ProcessTabs } from './ProcessTabs'
 import {Diagram3} from "react-bootstrap-icons";
 
-export function Processes() {
+export function Processes({ kind }: { kind?: ProcessKind }) {
     const type = 'process';
     const { path } = useBasePath();
     const navigate = useNavigate();
@@ -20,6 +20,7 @@ export function Processes() {
         <MasterDetail
             type={type}
             api={api}
+            kind={kind}
             path={path || ''}
             stubMessage='Please select a process'
             detail={
@@ -160,7 +161,7 @@ export function ProcessDetail({ processId, ...props } :ProcessDetailProps) {
                 />
             }
             relations={
-                <ProcessTabs id={id} api={props.api} missedInputs={missedInputs} onDetailSelected={setSub} />
+                <ProcessTabs id={id} api={props.api} kind={data.kind as ProcessKind} missedInputs={missedInputs} onDetailSelected={setSub} />
             }
         />
     );

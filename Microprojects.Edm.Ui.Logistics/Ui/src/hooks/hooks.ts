@@ -59,7 +59,7 @@ function useFetch<T>(
         return () => {
             controller.abort()
         }
-    }, [...deps])
+    }, [url, ...deps])
     return [[state.data, setData], state.loading, state.error]
 }
 

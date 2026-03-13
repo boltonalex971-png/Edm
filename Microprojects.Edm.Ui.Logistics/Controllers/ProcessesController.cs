@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microprojects.Edm.Ui.Logistics.Contracts;
@@ -25,6 +26,56 @@ public class ProcessesController : EntriesControllerBase<Process, ProcessViewMod
         IProcessService service, IDirectoryService directoryService, IConfiguration configuration) :
         base(mapper, service, directoryService, configuration)
     {
+    }
+
+    [HttpGet]
+    public override async Task<IEnumerable<ProcessViewModel>> GetAllEntries([FromQuery] string? kind = null)
+    {
+        ProcessKinds? kindFilter = null;
+
+        if (string.IsNullOrEmpty(kind))
+        {
+            kindFilter = ProcessKinds.Manufacturing;
+        }
+        else if (Enum.TryParse<ProcessKinds>(kind, true, out var parsedKind))
+        {
+            kindFilter = parsedKind;
+        }
+
+        Expression<Func<Process, bool>>? predicate = null;
+        if (kindFilter.HasValue)
+        {
+            var value = kindFilter.Value;
+            predicate = e => e.Kind == value;
+        }
+
+        var entries = await Service.GetAll(predicate);
+        return Mapper.Map<IEnumerable<ProcessViewModel>>(entries);
+    }
+
+    [HttpGet("hierarchy")]
+    public override async Task<IEnumerable<DirectoryEntryViewModel>> GetEntryHierarchy([FromQuery] string? kind = null)
+    {
+        ProcessKinds? kindFilter = null;
+
+        if (string.IsNullOrEmpty(kind))
+        {
+            kindFilter = ProcessKinds.Manufacturing;
+        }
+        else if (Enum.TryParse<ProcessKinds>(kind, true, out var parsedKind))
+        {
+            kindFilter = parsedKind;
+        }
+
+        Expression<Func<Process, bool>>? predicate = null;
+        if (kindFilter.HasValue)
+        {
+            var value = kindFilter.Value;
+            predicate = e => e.Kind == value;
+        }
+
+        var entries = await Service.GetAll(predicate);
+        return await BuildEntryHierarchy(entries);
     }
 
     [HttpGet("kinds")]

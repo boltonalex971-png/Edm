@@ -2,7 +2,7 @@ namespace Microprojects.Edm.Ui.Logistics.Models;
 
 public enum ProcessKinds
 {
-    Production,
+    Manufacturing,
     Technology,
     Operation
 }

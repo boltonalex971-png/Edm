@@ -102,21 +102,40 @@ public class ServiceBase<TEntity> : IGenericService<TEntity> where TEntity : cla
 
     /// <summary>
     /// Retrieves all entities of the specified type from the database.
-    /// Optionally includes metadata fields for entities implementing the <see cref="IWithMeta"/> interface
-    /// and excludes entities marked as deleted.
+    /// Optionally includes metadata fields for entities implementing the <see cref="IWithMeta"/> interface,
+    /// excludes entities marked as deleted, and filters by the current user's groups.
     /// </summary>
+    /// <param name="predicate">An optional predicate to further filter the results.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains a collection of entities of type <typeparamref name="TEntity"/>.</returns>
-    public virtual async Task<IEnumerable<TEntity>> GetAll()
+    public virtual async Task<IEnumerable<TEntity>> GetAll(Expression<Func<TEntity, bool>>? predicate = null)
     {
         var query = Set().AsNoTracking();
-        var result = await (typeof(TEntity).IsAssignableTo(typeof(IWithMeta)) ? 
-                query
-                    .Include(e => ((IWithMeta)e).Meta)
-                    .Where(e => ((IWithMeta)e).Meta.Deleted == null) : 
-                query)
-            .ToListAsync();
-        
-        return result;
+
+        if (typeof(TEntity).IsAssignableTo(typeof(IWithMeta)))
+        {
+            var userGroups = UserService.GetUserGroups();
+            query = query
+                .Include(e => ((IWithMeta)e).Meta)
+                .Where(e => ((IWithMeta)e).Meta.Deleted == null);
+
+            // Filter by user groups: Meta.Groups is empty OR contains any of user's groups
+            if (userGroups is { Length: > 0 })
+            {
+                // Note: EF Core translation for array intersection might depend on provider.
+                // Assuming PostgreSQL (npgsql) or similar that supports array contains/overlaps.
+                // If it's standard SQL, we might need a different approach.
+                // Given the context (ASP.NET Core with PostgreSQL), this is common.
+                query = query.Where(e => ((IWithMeta)e).Meta.Groups.Length == 0 ||
+                                         ((IWithMeta)e).Meta.Groups.Any(g => userGroups.Contains(g)));
+            }
+        }
+
+        if (predicate != null)
+        {
+            query = query.Where(predicate);
+        }
+
+        return await query.ToListAsync();
     }
 
     /// <summary>

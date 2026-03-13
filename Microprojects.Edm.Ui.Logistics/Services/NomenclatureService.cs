@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq.Expressions;
 using Microprojects.Edm.Ui.Logistics.Contracts;
 using Microprojects.Edm.Ui.Logistics.Models;
 using Microprojects.Edm.Ui.Logistics.Persistence;
@@ -23,15 +24,19 @@ public class NomenclatureService : ServiceBase<Nomenclature>, INomenclatureServi
             .FirstOrDefaultAsync(o => o.Id == id);
         return nomenclature;
     }
-    public override async Task<IEnumerable<Nomenclature>> GetAll()
+
+    public override async Task<IEnumerable<Nomenclature>> GetAll(Expression<Func<Nomenclature, bool>>? predicate = null)
     {
-        var query = Set().AsNoTracking();
-        var result = await query
+        var query = Set().AsNoTracking()
             .Include(i => i.DefaultTareType)
             .Include(e => e.Meta)
-            .Where(e => e.Meta.Deleted == null)
-            .ToListAsync();
+            .Where(e => e.Meta.Deleted == null);
 
-        return result;    
+        if (predicate != null)
+        {
+            query = query.Where(predicate);
+        }
+
+        return await query.ToListAsync();
     }
 }

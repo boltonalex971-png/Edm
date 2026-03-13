@@ -90,7 +90,4 @@ export interface User extends DataItem {
 
 export type DetailEventHandler = (data?: TreeNode) => void;
 
-export type ProcessKind = {
-    name: string
-    id: string
-}
+export type ProcessKind = 'Manufacturing' | 'Technology' | 'Operation'

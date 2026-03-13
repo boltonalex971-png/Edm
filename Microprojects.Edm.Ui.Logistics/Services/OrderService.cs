@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq.Expressions;
 using AutoMapper;
 using Microprojects.Edm.Ui.Logistics.Contracts;
 using Microprojects.Edm.Ui.Logistics.Models;
@@ -29,16 +30,19 @@ public class OrderService : ServiceBase<Order>, IOrderService
         return order;
     }
 
-    public override async Task<IEnumerable<Order>> GetAll()
+    public override async Task<IEnumerable<Order>> GetAll(Expression<Func<Order, bool>>? predicate = null)
     {
-        var query = Set().AsNoTracking();
-        var result = await query
+        var query = Set().AsNoTracking()
             .Include(i => i.Process.Nomenclature)
             .Include(e => e.Meta)
-            .Where(e => e.Meta.Deleted == null)
-            .ToListAsync();
+            .Where(e => e.Meta.Deleted == null);
 
-        return result;
+        if (predicate != null)
+        {
+            query = query.Where(predicate);
+        }
+
+        return await query.ToListAsync();
     }
 
     public override async Task<Order> Save(Order order)

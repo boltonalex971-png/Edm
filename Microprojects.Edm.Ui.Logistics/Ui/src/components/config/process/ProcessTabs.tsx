@@ -3,12 +3,13 @@ import PropTypes from 'prop-types';
 import { TabStrip, TabStripTab } from '@progress/kendo-react-layout';
 import { ProcessSubProcessesTab } from './ProcessSubProcessesTab.tsx';
 import { ProcessQualifiersTab } from './ProcessQualifiersTab';
-import {UUID} from "@logistics/data/types";
+import {ProcessKind, UUID} from "@logistics/data/types";
 import {ProcessSpecificationTab} from "@logistics/components/config/process/ProcessSpecificationTab.tsx";
 
 type ProcessTabsProps = {
     api: string,
     id: UUID,
+    kind?: ProcessKind,
     missedInputs: string[],
     onDetailSelected: Function
 }

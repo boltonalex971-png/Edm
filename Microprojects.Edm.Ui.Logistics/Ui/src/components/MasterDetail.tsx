@@ -25,11 +25,13 @@ export function reloadMaster() {
 }
 
 let _selectedItem: TreeDataItem;
+let _rootItem: TreeDataItem;
 let _render = 0;
 let _renderFunc: (r: number) => void;
 
 export type MasterDetailProps = {
     api: string,
+    kind?: string,
     item?: (props: TreeItemProps) => React.ReactElement,
     stubMessage: string,
     type: string,
@@ -44,7 +46,9 @@ export function MasterDetail(props: MasterDetailProps) {
         <SmartScroll offsetTop={10} style={{display: "flex", flexDirection: "row", alignItems: 'flex-start', gap: 20}}>
             <SmartScrollContent style={{flex: 1}}>
                 <TreeViewMaster api={props.api}
+                                kind={props.kind}
                                 onCurrentRootChanged={(root) => (_selectedItem = root)}
+                                onRootLoaded={(root) => (_rootItem = root)}
                                 item={props.item}
                 />
             </SmartScrollContent>
@@ -252,7 +256,8 @@ export function Editor(props: EditorProps) {
                     setAlert({message: 'Updated successfully'});
                 }).catch(r => setAlert({status: 'danger', message: r.response?.data?.detail || 'Unknown error'}))
         } else {
-            const parentId = _selectedItem?.isFolder ? _selectedItem.id : _selectedItem?.directoryId;
+            const parent = _selectedItem || _rootItem;
+            const parentId = parent?.isFolder ? parent.id : parent?.directoryId;
             axios.post(`${props.api}`, {...foreignData, directoryId: parentId})
                 .then((response) => {
                     props.onUpdate?.(response.data);

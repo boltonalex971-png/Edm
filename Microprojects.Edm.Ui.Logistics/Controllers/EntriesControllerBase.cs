@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microprojects.Edm.Ui.Logistics.Contracts;
@@ -34,24 +35,17 @@ public class EntriesControllerBase<TEntry, TEntryViewModel, TService> : AuthCont
     }
 
     [HttpGet]
-    public async Task<IEnumerable<TEntryViewModel>> GetAllEntries()
+    public virtual async Task<IEnumerable<TEntryViewModel>> GetAllEntries([FromQuery] string? kind = null)
     {
         var entries = await Service.GetAll();
         return Mapper.Map<IEnumerable<TEntryViewModel>>(entries);
     }
 
     [HttpGet("hierarchy")]
-    public async Task<IEnumerable<DirectoryEntryViewModel>> GetEntryHierarchy()
+    public virtual async Task<IEnumerable<DirectoryEntryViewModel>> GetEntryHierarchy([FromQuery] string? kind = null)
     {
-        var entries = Mapper.Map<IEnumerable<DirectoryEntryViewModel>>(
-            await Service.GetAll());
-        var folders = Mapper.Map<IEnumerable<DirectoryEntryViewModel>>(
-            await DirectoryService.GetTree(typeof(TEntry).Name));
-        var tree = folders.Concat(entries)
-            .ToList()
-            .ToTree();
-
-        return tree;
+        var entries = await Service.GetAll();
+        return await BuildEntryHierarchy(entries);
     }
 
     [HttpGet("{id:guid}")]
@@ -104,5 +98,99 @@ public class EntriesControllerBase<TEntry, TEntryViewModel, TService> : AuthCont
     {
         var result = await Service.ChangeParent<TEntry>(id, parent.Id);
         return Mapper.Map<TEntryViewModel>(result);
+    }
+
+    protected async Task<IEnumerable<DirectoryEntryViewModel>> BuildEntryHierarchy(IEnumerable<TEntry> entries)
+    {
+        var entryViewModels = Mapper.Map<IEnumerable<DirectoryEntryViewModel>>(entries);
+        var folders = Mapper.Map<IEnumerable<DirectoryEntryViewModel>>(
+            await DirectoryService.GetTree(typeof(TEntry).Name));
+
+        var items = folders.Concat(entryViewModels).ToList();
+        var tree = items.ToTree().ToList();
+
+        var roots = PruneAndCompress(tree).ToList();
+
+        var result = new List<DirectoryEntryViewModel>();
+        foreach (var root in roots)
+        {
+            var children = items.ToDeepTree(root.Id).ToArray();
+            root.Items = children;
+            result.Add(root);
+        }
+
+        return result;
+    }
+
+    private static IEnumerable<DirectoryEntryViewModel> PruneAndCompress(ICollection<DirectoryEntryViewModel> roots)
+    {
+        var result = new List<DirectoryEntryViewModel>();
+
+        foreach (var root in roots)
+        {
+            var pruned = PruneNode(root, out var hasEntries);
+            if (!hasEntries || pruned is null)
+            {
+                continue;
+            }
+
+            var compressed = CompressRoot(pruned);
+            result.Add(compressed);
+        }
+
+        return result;
+    }
+
+    private static DirectoryEntryViewModel? PruneNode(DirectoryEntryViewModel node, out bool hasEntries)
+    {
+        var isEntry = !node.IsFolder;
+        hasEntries = isEntry;
+
+        if (node.Items is null || node.Items.Length == 0)
+        {
+            return hasEntries ? node : null;
+        }
+
+        var newChildren = new List<DirectoryEntryViewModel>();
+        var childHasEntries = false;
+
+        foreach (var child in node.Items)
+        {
+            var prunedChild = PruneNode(child, out var childHas);
+            if (prunedChild is not null)
+            {
+                newChildren.Add(prunedChild);
+            }
+
+            if (childHas)
+            {
+                childHasEntries = true;
+            }
+        }
+
+        hasEntries = hasEntries || childHasEntries;
+
+        if (!hasEntries && node.IsFolder)
+        {
+            return null;
+        }
+
+        node.Items = newChildren.ToArray();
+        return node;
+    }
+
+    private static DirectoryEntryViewModel CompressRoot(DirectoryEntryViewModel root)
+    {
+        var current = root;
+
+        while (current.IsFolder &&
+               current.Items is not null &&
+               current.Items.Length == 1 &&
+               current.Items[0].IsFolder)
+        {
+            current = current.Items[0];
+        }
+
+        return current;
     }
 }
