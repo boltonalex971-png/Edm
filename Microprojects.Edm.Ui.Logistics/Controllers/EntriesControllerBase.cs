@@ -102,95 +102,170 @@ public class EntriesControllerBase<TEntry, TEntryViewModel, TService> : AuthCont
 
     protected async Task<IEnumerable<DirectoryEntryViewModel>> BuildEntryHierarchy(IEnumerable<TEntry> entries)
     {
-        var entryViewModels = Mapper.Map<IEnumerable<DirectoryEntryViewModel>>(entries);
-        var folders = Mapper.Map<IEnumerable<DirectoryEntryViewModel>>(
-            await DirectoryService.GetTree(typeof(TEntry).Name));
-
-        var items = folders.Concat(entryViewModels).ToList();
-        var tree = items.ToTree().ToList();
-
-        var roots = PruneAndCompress(tree).ToList();
-
-        var result = new List<DirectoryEntryViewModel>();
-        foreach (var root in roots)
+        // 1) find all entries of target type (already provided as `entries`)
+        var entryViewModels = Mapper.Map<IEnumerable<DirectoryEntryViewModel>>(entries).ToList();
+        if (entryViewModels.Count == 0)
         {
-            var children = items.ToDeepTree(root.Id).ToArray();
-            root.Items = children;
-            result.Add(root);
+            return Array.Empty<DirectoryEntryViewModel>();
+        }
+
+        var allFolders = Mapper.Map<IEnumerable<DirectoryEntryViewModel>>(
+            await DirectoryService.GetTree(typeof(TEntry).Name)).ToList();
+        var foldersById = allFolders.ToDictionary(f => f.Id);
+
+        // 2) find the first common root of all found entries (lowest common ancestor of their directories)
+        Guid? fallbackRootId = allFolders.FirstOrDefault(f => f.DirectoryId is null)?.Id;
+        DirectoryEntryViewModel? rootFolder = null;
+
+        var rootFolderModel = await DirectoryService.GetRoot(typeof(TEntry).Name);
+        if (rootFolderModel is not null)
+        {
+            rootFolder = Mapper.Map<DirectoryEntryViewModel>(rootFolderModel);
+            fallbackRootId = rootFolder.Id;
+        }
+
+        var commonRootId = FindCommonRootId(entryViewModels, foldersById, fallbackRootId);
+
+        // 3) retrieve the root with all its subdirectories
+        HashSet<Guid> subtreeFolderIds;
+        List<DirectoryEntryViewModel> subtreeFolders;
+
+        if (commonRootId.HasValue && foldersById.ContainsKey(commonRootId.Value))
+        {
+            subtreeFolderIds = CollectSubtreeFolderIds(commonRootId.Value, allFolders);
+            subtreeFolders = allFolders.Where(f => subtreeFolderIds.Contains(f.Id)).ToList();
+        }
+        else
+        {
+            // no folders/root available; return entries as a flat "tree"
+            var entryOnly = entryViewModels.ToList();
+            return entryOnly.ToTree();
+        }
+
+        // 4) merge the directory tree and entries (exclude other entry types by construction)
+        var subtreeEntries = entryViewModels
+            .Where(e => e.DirectoryId is null || subtreeFolderIds.Contains(e.DirectoryId.Value))
+            .ToList();
+
+        var items = subtreeFolders.Concat(subtreeEntries).ToList();
+
+        // ensure the requested common root is returned (even if it has a parent outside the subtree)
+        var commonRoot = items.First(i => i.IsFolder && i.Id == commonRootId.Value);
+        commonRoot.Items = items.ToDeepTree(commonRootId.Value).ToArray();
+        commonRoot.DirectoryId = null;
+
+        return new[] { commonRoot };
+    }
+
+    private static Guid? FindCommonRootId(
+        IReadOnlyCollection<DirectoryEntryViewModel> entries,
+        IDictionary<Guid, DirectoryEntryViewModel> foldersById,
+        Guid? fallbackRootId)
+    {
+        HashSet<Guid>? common = null;
+
+        foreach (var entry in entries)
+        {
+            var ancestors = GetAncestorFolderIds(entry.DirectoryId, foldersById, fallbackRootId);
+
+            if (common is null)
+            {
+                common = ancestors;
+            }
+            else
+            {
+                common.IntersectWith(ancestors);
+            }
+
+            if (common.Count == 0)
+            {
+                break;
+            }
+        }
+
+        if (common is null || common.Count == 0)
+        {
+            return fallbackRootId;
+        }
+
+        return common
+            .OrderByDescending(id => GetFolderDepth(id, foldersById))
+            .First();
+    }
+
+    private static HashSet<Guid> GetAncestorFolderIds(
+        Guid? startDirectoryId,
+        IDictionary<Guid, DirectoryEntryViewModel> foldersById,
+        Guid? fallbackRootId)
+    {
+        var result = new HashSet<Guid>();
+        if (fallbackRootId.HasValue)
+        {
+            result.Add(fallbackRootId.Value);
+        }
+
+        var current = startDirectoryId;
+        while (current.HasValue && foldersById.TryGetValue(current.Value, out var folder))
+        {
+            if (!result.Add(folder.Id))
+            {
+                break;
+            }
+
+            current = folder.DirectoryId;
         }
 
         return result;
     }
 
-    private static IEnumerable<DirectoryEntryViewModel> PruneAndCompress(ICollection<DirectoryEntryViewModel> roots)
+    private static int GetFolderDepth(Guid folderId, IDictionary<Guid, DirectoryEntryViewModel> foldersById)
     {
-        var result = new List<DirectoryEntryViewModel>();
+        var depth = 0;
+        var current = folderId;
+        var guard = 0;
 
-        foreach (var root in roots)
+        while (guard++ < 10_000 &&
+               foldersById.TryGetValue(current, out var folder) &&
+               folder.DirectoryId.HasValue &&
+               foldersById.ContainsKey(folder.DirectoryId.Value))
         {
-            var pruned = PruneNode(root, out var hasEntries);
-            if (!hasEntries || pruned is null)
+            depth++;
+            current = folder.DirectoryId.Value;
+        }
+
+        return depth;
+    }
+
+    private static HashSet<Guid> CollectSubtreeFolderIds(Guid rootId, IReadOnlyCollection<DirectoryEntryViewModel> allFolders)
+    {
+        var childrenLookup = allFolders
+            .Where(f => f.DirectoryId.HasValue)
+            .GroupBy(f => f.DirectoryId!.Value)
+            .ToDictionary(g => g.Key, g => g.Select(x => x.Id).ToList());
+
+        var result = new HashSet<Guid>();
+        var queue = new Queue<Guid>();
+
+        result.Add(rootId);
+        queue.Enqueue(rootId);
+
+        while (queue.Count > 0)
+        {
+            var current = queue.Dequeue();
+            if (!childrenLookup.TryGetValue(current, out var children))
             {
                 continue;
             }
 
-            var compressed = CompressRoot(pruned);
-            result.Add(compressed);
+            foreach (var childId in children)
+            {
+                if (result.Add(childId))
+                {
+                    queue.Enqueue(childId);
+                }
+            }
         }
 
         return result;
-    }
-
-    private static DirectoryEntryViewModel? PruneNode(DirectoryEntryViewModel node, out bool hasEntries)
-    {
-        var isEntry = !node.IsFolder;
-        hasEntries = isEntry;
-
-        if (node.Items is null || node.Items.Length == 0)
-        {
-            return hasEntries ? node : null;
-        }
-
-        var newChildren = new List<DirectoryEntryViewModel>();
-        var childHasEntries = false;
-
-        foreach (var child in node.Items)
-        {
-            var prunedChild = PruneNode(child, out var childHas);
-            if (prunedChild is not null)
-            {
-                newChildren.Add(prunedChild);
-            }
-
-            if (childHas)
-            {
-                childHasEntries = true;
-            }
-        }
-
-        hasEntries = hasEntries || childHasEntries;
-
-        if (!hasEntries && node.IsFolder)
-        {
-            return null;
-        }
-
-        node.Items = newChildren.ToArray();
-        return node;
-    }
-
-    private static DirectoryEntryViewModel CompressRoot(DirectoryEntryViewModel root)
-    {
-        var current = root;
-
-        while (current.IsFolder &&
-               current.Items is not null &&
-               current.Items.Length == 1 &&
-               current.Items[0].IsFolder)
-        {
-            current = current.Items[0];
-        }
-
-        return current;
     }
 }

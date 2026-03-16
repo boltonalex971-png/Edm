@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microprojects.Edm.Ui.Logistics.ViewModels;
 using Directory = Microprojects.Edm.Ui.Logistics.Models.Directory;
 
@@ -21,9 +21,13 @@ public static class DirectoryHelper
     public static IEnumerable<DirectoryEntryViewModel> ToDeepTree(this ICollection<DirectoryEntryViewModel> items, Guid? rootId = null)
     {
         var children = items.Where(c => c.DirectoryId == rootId || rootId == null && !items.Any(i => i.Id == c.DirectoryId));
+
+        var result = new List<DirectoryEntryViewModel>();
+
         foreach (var c in children)
         {
-            yield return new DirectoryEntryViewModel
+            var childrenItems = items.ToDeepTree(c.Id).ToArray();
+            result.Add(new DirectoryEntryViewModel
             {
                 Id = c.Id,
                 DirectoryId = c.DirectoryId,
@@ -31,9 +35,11 @@ public static class DirectoryHelper
                 IsFolder = c.IsFolder,
                 Name = c.Name,
                 Expanded = true,
-                Items = c.Items ?? items.ToDeepTree(c.Id).ToArray()
-            };
+                Items = childrenItems
+            });
         }
+
+        return result;
     }
 
     public static DirectoryEntryViewModel FillFrom(this DirectoryEntryViewModel item, ICollection<DirectoryEntryViewModel> items)
