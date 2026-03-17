@@ -28,6 +28,7 @@ export function Processes({ kind }: { kind?: ProcessKind }) {
                     type={type}
                     api={api}
                     path={path || ''}
+                    kind={kind}
                     onChange={() => reloadMaster()}
                     onClose={() => navigate(path)}
                 />
@@ -44,18 +45,22 @@ export interface ProcessDetailProps extends DetailProps {
     api: string,
     processId?: UUID,
     type?: string,
+    kind?: ProcessKind,
 }
 
-export function ProcessDetail({ processId, ...props } :ProcessDetailProps) {
+export function ProcessDetail({ processId, kind, ...props } :ProcessDetailProps) {
     const params = useParams<{id: string}>();
     const id = processId?.toString() || params.id;
     const [sub, setSub] = useState<React.ReactElement>();
     useEffect(setSub as EffectCallback, [id]);
-    const [[kinds]] = useGet<string[]>(`${Api.processes}/kinds`, []);
     const [[noms]] = useGet<Item[]>(`${Api.nomenclatures}`, []);
     let [[data, setData], loading, error] = useGet<Process>(`${props.api}/${id}`, [id]);
     if (!data || data.id === EMPTY_GUID) {
         data = { ...data, name: '', description: '' } as Process
+    }
+
+    if (kind && !data.kind) {
+        data = { ...data, kind };
     }
 
     const missedInputs = JSON.parse(data.message || '[]');
@@ -115,15 +120,19 @@ export function ProcessDetail({ processId, ...props } :ProcessDetailProps) {
                             {/*    <Field name={'commonUid'} component={Input} label={'Common UID'} />*/}
                             {/*</div>*/}
                             <div className="mb-3" style={{ width: '400px' }}>
-                                <Field name={'kind'} label={'Process kind'}
-                                    component={(compProps) =>
-                                        <DropDownComp {...compProps}
-                                            loading={!kinds}
-                                            data={kinds && [{name: ''}, ...kinds?.map(k => ({ name: k }))]}
-                                            textField='name'
-                                            dataItemKey='name'
-                                        />
-                                    }
+                                <Field
+                                    name={'kind'}
+                                    component={(fieldProps) => (
+                                        <>
+                                            <label className="k-label mb-1">Process kind</label>
+                                            <Input
+                                                name={fieldProps.name}
+                                                value={kind}
+                                                disabled
+                                                readOnly
+                                            />
+                                        </>
+                                    )}
                                 />
                             </div>
                             <div className="mb-3" style={{ width: '400px' }}>

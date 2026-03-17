@@ -25,7 +25,7 @@ export interface TreeNode extends TreeDataItem {
 
 export interface Process extends DataItem {
     message: string
-    kind: string,
+    kind: ProcessKind,
     nomenclatureName?: string,
     nomenclatureId?: number,
 }

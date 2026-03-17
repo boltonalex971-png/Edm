@@ -1,5 +1,6 @@
 import React from 'react';
 import { Processes } from "./process/Processes";
+import {MANUFACTURING, OPERATION, TECHNOLOGY} from "@logistics/data/processKinds";
 import {useRouteMatch} from "@logistics/hooks/routerHooks";
 import {Route, Routes} from "react-router-dom";
 import {PageTitle} from "@logistics/components/PageTitle";
@@ -37,9 +38,9 @@ export function Config() {
             <div>
                 <Routes>
                     <Route index element={<p>Select one of the options above</p>} />
-                    <Route path='manufacturing/*' element={<Processes kind='Manufacturing' />} />
-                    <Route path='technology/*' element={<Processes kind='Technology' />} />
-                    <Route path='operations/*' element={<Processes kind='Operation' />} />
+                    <Route path='manufacturing/*' element={<Processes kind={MANUFACTURING} />} />
+                    <Route path='technology/*' element={<Processes kind={TECHNOLOGY} />} />
+                    <Route path='operations/*' element={<Processes kind={OPERATION} />} />
                     <Route path='nomenclatures/*' element={<Nomenclatures />} />
                     <Route path='taretypes/*' element={<TareTypes />} />
                     <Route path='*' element={<span>Page not exists</span>} />

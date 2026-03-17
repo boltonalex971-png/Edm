@@ -8,7 +8,7 @@ import { Button } from '@progress/kendo-react-buttons';
 import { Card, CardBody, CardHeader } from '@progress/kendo-react-layout';
 import { Loading } from "../features/utils/Utils";
 import { useBasePath } from "../hooks/routerHooks";
-import { TreeDataItem} from "../data/types";
+import { ProcessKind, TreeDataItem} from "../data/types";
 import axios from "axios";
 import api from "../features/api/api";
 import {EMPTY_GUID} from "./MasterDetail.tsx";
@@ -17,7 +17,7 @@ import './TreeViewMaster.css'
 
 export type TreeViewMasterProps = {
     api: string,
-    kind?: string,
+    kind?: ProcessKind,
     onCurrentRootChanged: (item : TreeDataItem) => void,
     item?: (props: TreeItemProps) => React.ReactElement,
     onRootLoaded?: (item: TreeDataItem) => void,

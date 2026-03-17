@@ -6,13 +6,12 @@ import {Card, CardHeader, CardBody, CardTitle, CardSubtitle} from '@progress/ken
 import {Form, FormElement} from '@progress/kendo-react-form';
 import {Button, ButtonGroup, type ButtonProps, Toolbar, ToolbarItem} from '@progress/kendo-react-buttons';
 import {Alert} from 'reactstrap';
-//import {SmartScroll, SmartScrollContent} from "./SmartScroll";
 import {TreeViewMaster, refresh} from "./TreeViewMaster";
 import {Loading, DetailStub} from "../features/utils/Utils";
 import api from '../features/api/api';
 import {Folder} from "./config/Folder";
 import {useBasePath} from "../hooks/routerHooks";
-import type {DataItem, DetailEventHandler, Dictionary, TreeDataItem, UUID} from "../data/types"
+import type {DataItem, DetailEventHandler, Dictionary, TreeDataItem, UUID, ProcessKind} from "../data/types"
 import type {TreeItemProps} from "./TreeViewMaster"
 import {AlertState, InlineAlert} from "@logistics/components/InlineAlert.tsx";
 import {SmartScroll, SmartScrollContent} from "@microprojects/tools";
@@ -31,7 +30,7 @@ let _renderFunc: (r: number) => void;
 
 export type MasterDetailProps = {
     api: string,
-    kind?: string,
+    kind?: ProcessKind,
     item?: (props: TreeItemProps) => React.ReactElement,
     stubMessage: string,
     type: string,
