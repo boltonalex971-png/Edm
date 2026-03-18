@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using System;
 using Microprojects.Edm.Ui.Logistics.Contracts;
@@ -119,6 +119,50 @@ public class ProcessService : ServiceBase<Process>, IProcessService
     {
         var sup = Set<SpecificationNomenclature>().Attach(new SpecificationNomenclature {Id = rowId});
         sup.State = EntityState.Deleted;
+        await Db.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<IEnumerable<Grade>> GetGrades(Guid processId)
+    {
+        var result = await Set<Grade>()
+            .AsNoTracking()
+            .Where(g => g.ProcessId == processId)
+            .ToListAsync();
+        return result;
+    }
+
+    public async Task<Grade> AddGrade(Guid processId, Grade grade)
+    {
+        ArgumentNullException.ThrowIfNull(grade);
+        grade.ProcessId = processId;
+        grade.Description ??= string.Empty;
+        grade.QualifierName ??= string.Empty;
+        grade.Process = null!;
+
+        var entry = Set<Grade>().Add(grade);
+        await Db.SaveChangesAsync();
+        return entry.Entity;
+    }
+
+    public async Task<Grade> SaveGrade(Guid processId, Grade grade)
+    {
+        ArgumentNullException.ThrowIfNull(grade);
+        grade.ProcessId = processId;
+        grade.Description ??= string.Empty;
+        grade.QualifierName ??= string.Empty;
+        grade.Process = null!;
+
+        var entry = Set<Grade>().Attach(grade);
+        entry.State = EntityState.Modified;
+        await Db.SaveChangesAsync();
+        return entry.Entity;
+    }
+
+    public async Task<bool> DeleteGrade(Guid processId, Guid gradeId)
+    {
+        var entry = Set<Grade>().Attach(new Grade {Id = gradeId});
+        entry.State = EntityState.Deleted;
         await Db.SaveChangesAsync();
         return true;
     }

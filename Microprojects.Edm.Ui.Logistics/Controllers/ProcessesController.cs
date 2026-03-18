@@ -123,6 +123,49 @@ public class ProcessesController : EntriesControllerBase<Process, ProcessViewMod
 
     #endregion
 
+    #region grades
+
+    [HttpGet("{id:guid}/grades")]
+    public async Task<IEnumerable<GradeViewModel>> GetGrades(Guid id)
+    {
+        if (id == Guid.Empty)
+        {
+            return [];
+        }
+
+        var grades = await Service.GetGrades(id);
+        return Mapper.Map<IEnumerable<GradeViewModel>>(grades);
+    }
+
+    [HttpPost("{id:guid}/grades")]
+    public async Task<GradeViewModel> AddGrade(Guid id, [FromBody] GradeViewModel model)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+
+        var grade = Mapper.Map<Grade>(model);
+        var result = await Service.AddGrade(id, grade);
+        return Mapper.Map<GradeViewModel>(result);
+    }
+
+    [HttpPut("{id:guid}/grades")]
+    public async Task<GradeViewModel> SaveGrade(Guid id, [FromBody] GradeViewModel model)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+
+        var grade = Mapper.Map<Grade>(model);
+        var result = await Service.SaveGrade(id, grade);
+        return Mapper.Map<GradeViewModel>(result);
+    }
+
+    [HttpDelete("{id:guid}/grades/{gradeId:guid}")]
+    public async Task<bool> DeleteGrade(Guid id, Guid gradeId)
+    {
+        var result = await Service.DeleteGrade(id, gradeId);
+        return result;
+    }
+
+    #endregion
+
     #region  specification
 
     [HttpGet("{id:guid}/specification")]

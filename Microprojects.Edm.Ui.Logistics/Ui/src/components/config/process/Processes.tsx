@@ -127,7 +127,7 @@ export function ProcessDetail({ processId, kind, ...props } :ProcessDetailProps)
                                             <label className="k-label mb-1">Process kind</label>
                                             <Input
                                                 name={fieldProps.name}
-                                                value={kind}
+                                                value={kind} 
                                                 disabled
                                                 readOnly
                                             />

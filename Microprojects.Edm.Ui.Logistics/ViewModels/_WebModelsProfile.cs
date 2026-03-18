@@ -1,4 +1,4 @@
-﻿using Microprojects.Edm.Ui.Logistics.Models;
+using Microprojects.Edm.Ui.Logistics.Models;
 using Newtonsoft.Json;
 using Optosense.Edm.Plugins;
 using Directory = Microprojects.Edm.Ui.Logistics.Models.Directory;
@@ -29,6 +29,9 @@ public class WebModelsProfile : AutoMapper.Profile
 
         CreateMap<SubProcess, SubProcessViewModel>();
         CreateMap<SubProcessViewModel, SubProcess>();
+
+        CreateMap<Grade, GradeViewModel>();
+        CreateMap<GradeViewModel, Grade>();
         
         CreateMap<Nomenclature, NomenclatureViewModel>();
         CreateMap<NomenclatureViewModel, Nomenclature>();

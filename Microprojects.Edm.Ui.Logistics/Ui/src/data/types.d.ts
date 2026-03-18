@@ -30,6 +30,12 @@ export interface Process extends DataItem {
     nomenclatureId?: number,
 }
 
+export interface Grade extends DataItem {
+    processId: UUID
+    description?: string
+    qualifierName?: string
+}
+
 export interface Nomenclature extends DataItem {
     category: string
     defaultTareTypeId: UUID

@@ -4,6 +4,7 @@ import {TabStrip, TabStripTab} from '@progress/kendo-react-layout';
 import {ProcessSubProcessesTab} from './ProcessSubProcessesTab.tsx';
 import {ProcessKind, UUID} from "@logistics/data/types";
 import {ProcessSpecificationTab} from "@logistics/components/config/process/ProcessSpecificationTab.tsx";
+import {ProcessGradesTab} from "@logistics/components/config/process/ProcessGradesTab.tsx";
 import {OPERATION} from "@logistics/data/processKinds";
 
 type ProcessTabsProps = {
@@ -25,6 +26,9 @@ export function ProcessTabs(props: ProcessTabsProps) {
             }
             <TabStripTab title={'Specification'}>
                 <ProcessSpecificationTab {...props} />
+            </TabStripTab>
+            <TabStripTab title={'Grades'}>
+                <ProcessGradesTab {...props} />
             </TabStripTab>
         </TabStrip>
     );

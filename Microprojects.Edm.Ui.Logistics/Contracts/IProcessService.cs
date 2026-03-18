@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,4 +17,9 @@ public interface IProcessService : IGenericService<Process>
     Task<SpecificationNomenclature> AddSpecificationRow(Guid processId, SpecificationNomenclature row);
     Task<bool> DeleteSpecificationRow(Guid processId, Guid rowId);
     Task<SpecificationNomenclature> SaveSpecificationRow(Guid processId, SpecificationNomenclature row);
+
+    Task<IEnumerable<Grade>> GetGrades(Guid processId);
+    Task<Grade> AddGrade(Guid processId, Grade grade);
+    Task<Grade> SaveGrade(Guid processId, Grade grade);
+    Task<bool> DeleteGrade(Guid processId, Guid gradeId);
 }

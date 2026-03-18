@@ -13,6 +13,7 @@ public class LogisticsContext : DbContext
     public DbSet<Item> Items { get; set; }
     public DbSet<Nomenclature> Nomenclatures { get; set; }
     public DbSet<Process> Processes { get; set; }
+    public DbSet<Grade> Grades { get; set; }
     public DbSet<SubProcess> SubProcesses { get; set; }
     public DbSet<Specification> Specifications { get; set; }
     public DbSet<SpecificationNomenclature> SpecificationNomenclatures { get; set; }
