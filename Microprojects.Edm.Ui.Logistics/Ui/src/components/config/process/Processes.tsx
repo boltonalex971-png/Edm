@@ -11,6 +11,26 @@ import {Detail, type DetailProps, Editor, EMPTY_GUID, Info, MasterDetail, reload
 import { ProcessTabs } from './ProcessTabs'
 import {Diagram3} from "react-bootstrap-icons";
 
+
+function KindField({fieldProps, kind}: { fieldProps: any, kind?: ProcessKind }) {
+    useEffect(() => {
+        if (kind && fieldProps.value !== kind) {
+            fieldProps.onChange({value: kind})
+        }
+    }, [kind, fieldProps.value])
+
+    return (
+        <>
+            <label className="k-label mb-1">Process kind</label>
+            <div className="k-form-field-wrap">
+                <div style={{padding: '6px 10px', border: '1px solid #ced4da', borderRadius: 4, background: '#f8f9fa'}}>
+                    {kind || ''}
+                </div>
+            </div>
+        </>
+    )
+}
+
 export function Processes({ kind }: { kind?: ProcessKind }) {
     const type = 'process';
     const { path } = useBasePath();
@@ -20,7 +40,7 @@ export function Processes({ kind }: { kind?: ProcessKind }) {
         <MasterDetail
             type={type}
             api={api}
-            kind={kind}
+            getHierarchyQuery={kind ? () => ({kind}) : undefined}
             path={path || ''}
             stubMessage='Please select a process'
             detail={
@@ -122,17 +142,7 @@ export function ProcessDetail({ processId, kind, ...props } :ProcessDetailProps)
                             <div className="mb-3" style={{ width: '400px' }}>
                                 <Field
                                     name={'kind'}
-                                    component={(fieldProps) => (
-                                        <>
-                                            <label className="k-label mb-1">Process kind</label>
-                                            <Input
-                                                name={fieldProps.name}
-                                                value={kind} 
-                                                disabled
-                                                readOnly
-                                            />
-                                        </>
-                                    )}
+                                    component={(fieldProps) => <KindField fieldProps={fieldProps} kind={kind} />}
                                 />
                             </div>
                             <div className="mb-3" style={{ width: '400px' }}>

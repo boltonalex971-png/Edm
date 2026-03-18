@@ -1,6 +1,6 @@
 import type React from "react";
 import {type MouseEventHandler, useState} from "react"
-import {Route, Routes, useNavigate} from "react-router-dom";
+import {Route, Routes, useLocation, useNavigate} from "react-router-dom";
 import axios from 'axios';
 import {Card, CardHeader, CardBody, CardTitle, CardSubtitle} from '@progress/kendo-react-layout';
 import {Form, FormElement} from '@progress/kendo-react-form';
@@ -11,7 +11,7 @@ import {Loading, DetailStub} from "../features/utils/Utils";
 import api from '../features/api/api';
 import {Folder} from "./config/Folder";
 import {useBasePath} from "../hooks/routerHooks";
-import type {DataItem, DetailEventHandler, Dictionary, TreeDataItem, UUID, ProcessKind} from "../data/types"
+import type {DataItem, DetailEventHandler, Dictionary, TreeDataItem, UUID} from "../data/types"
 import type {TreeItemProps} from "./TreeViewMaster"
 import {AlertState, InlineAlert} from "@logistics/components/InlineAlert.tsx";
 import {SmartScroll, SmartScrollContent} from "@microprojects/tools";
@@ -23,14 +23,13 @@ export function reloadMaster() {
     _renderFunc(++_render);
 }
 
-let _selectedItem: TreeDataItem;
 let _rootItem: TreeDataItem;
 let _render = 0;
 let _renderFunc: (r: number) => void;
 
 export type MasterDetailProps = {
     api: string,
-    kind?: ProcessKind,
+    getHierarchyQuery?: () => Record<string, string | undefined>,
     item?: (props: TreeItemProps) => React.ReactElement,
     stubMessage: string,
     type: string,
@@ -45,8 +44,7 @@ export function MasterDetail(props: MasterDetailProps) {
         <SmartScroll offsetTop={10} style={{display: "flex", flexDirection: "row", alignItems: 'flex-start', gap: 20}}>
             <SmartScrollContent style={{flex: 1}}>
                 <TreeViewMaster api={props.api}
-                                kind={props.kind}
-                                onCurrentRootChanged={(root) => (_selectedItem = root)}
+                                getHierarchyQuery={props.getHierarchyQuery}
                                 onRootLoaded={(root) => (_rootItem = root)}
                                 item={props.item}
                 />
@@ -236,6 +234,7 @@ interface EditorProps extends InfoProps {
 
 export function Editor(props: EditorProps) {
     const navigate = useNavigate();
+    const location = useLocation();
     const [alert, setAlert] = useState<AlertState>();
     const mode = props.data.id && props.data.id !== EMPTY_GUID && 'Update' || 'Create';
     const handleSubmit = (data: Dictionary) => {
@@ -255,8 +254,8 @@ export function Editor(props: EditorProps) {
                     setAlert({message: 'Updated successfully'});
                 }).catch(r => setAlert({status: 'danger', message: r.response?.data?.detail || 'Unknown error'}))
         } else {
-            const parent = _selectedItem || _rootItem;
-            const parentId = parent?.isFolder ? parent.id : parent?.directoryId;
+            const stateParentId = (location.state as any)?.parentId as UUID | undefined;
+            const parentId = stateParentId || _rootItem?.id;
             axios.post(`${props.api}`, {...foreignData, directoryId: parentId})
                 .then((response) => {
                     props.onUpdate?.(response.data);

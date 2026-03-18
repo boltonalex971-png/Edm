@@ -8,19 +8,33 @@ import { Button } from '@progress/kendo-react-buttons';
 import { Card, CardBody, CardHeader } from '@progress/kendo-react-layout';
 import { Loading } from "../features/utils/Utils";
 import { useBasePath } from "../hooks/routerHooks";
-import { ProcessKind, TreeDataItem} from "../data/types";
+import {TreeDataItem} from "../data/types";
 import axios from "axios";
 import api from "../features/api/api";
 import {EMPTY_GUID} from "./MasterDetail.tsx";
 import {FileText, Folder2, Folder2Open, FolderPlus} from "react-bootstrap-icons";
 import './TreeViewMaster.css'
 
+type QueryParams = Record<string, string | undefined>;
+
 export type TreeViewMasterProps = {
     api: string,
-    kind?: ProcessKind,
-    onCurrentRootChanged: (item : TreeDataItem) => void,
+    getHierarchyQuery?: () => QueryParams,
+    onCurrentRootChanged?: (item : TreeDataItem) => void,
     item?: (props: TreeItemProps) => React.ReactElement,
     onRootLoaded?: (item: TreeDataItem) => void,
+}
+
+function buildUrl(base: string, query: QueryParams) {
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(query)) {
+        if (value != null && value !== '') {
+            params.set(key, value);
+        }
+    }
+
+    const qs = params.toString();
+    return qs ? `${base}?${qs}` : base;
 }
 
 export function TreeViewMaster(props : TreeViewMasterProps) {
@@ -32,10 +46,12 @@ export function TreeViewMaster(props : TreeViewMasterProps) {
     // const { pathname } = useLocation();
     // const url = params && pathname.replace(`/${params['*']}`, '')
     const { path: url } = useBasePath()
-    const hierarchyUrl = props.kind ? `${props.api}/hierarchy?kind=${props.kind}` : `${props.api}/hierarchy`;
+    const hierarchyUrl = buildUrl(`${props.api}/hierarchy`, props.getHierarchyQuery?.() || {});
     const [[data, setData], loading, error] = useGet<TreeDataItem[]>(hierarchyUrl, [render]);
     const dragClue = React.useRef<TreeViewDragClue>({} as TreeViewDragClue)
     const [filter, setFilter] = useState('');
+    const [selectedItem, setSelectedItem] = useState<TreeDataItem>();
+    const [rootItem, setRootItem] = useState<TreeDataItem>();
 
     const visibleRoots = data && data.length === 1 && data[0].items
         ? data[0].items
@@ -45,14 +61,24 @@ export function TreeViewMaster(props : TreeViewMasterProps) {
 
     useEffect(() => {
         if (data && data.length > 0) {
+            setRootItem(data[0]);
             props.onRootLoaded?.(data[0]);
         }
     }, [data]);
 
     const onItemSelected = (e : TreeViewItemClickEvent) => {
+        setSelectedItem(e.item);
         props.onCurrentRootChanged?.(e.item);
         navigate(`${url}${e.item.isFolder ? '/folder' : ''}/${e.item.id}`);
     };
+
+    const addNewItem = () => {
+        const parentId = selectedItem?.isFolder
+            ? selectedItem.id
+            : selectedItem?.directoryId || rootItem?.id
+
+        navigate(`${url}/${EMPTY_GUID}`, {state: {parentId}})
+    }
 
     const getClueClassName = (event: TreeViewItemDragOverEvent) => {
         const eventAnalyzer = new TreeViewDragAnalyzer(event).init();
@@ -121,7 +147,7 @@ export function TreeViewMaster(props : TreeViewMasterProps) {
                         <FolderPlus/>
                     </Button>
                     <Button fillMode='flat' title='Add new item' style={{ justifySelf: 'end' }}
-                        onClick={() => navigate(`${url}/${EMPTY_GUID}`)}
+                        onClick={addNewItem}
                     >
                         <span className="k-icon k-i-file-add" />
                     </Button>
