@@ -5,7 +5,7 @@ import {ProcessSubProcessesTab} from './ProcessSubProcessesTab.tsx';
 import {ProcessKind, UUID} from "@logistics/data/types";
 import {ProcessSpecificationTab} from "@logistics/components/config/process/ProcessSpecificationTab.tsx";
 import {ProcessGradesTab} from "@logistics/components/config/process/ProcessGradesTab.tsx";
-import {OPERATION} from "@logistics/data/processKinds";
+import {MANUFACTURING, OPERATION} from "@logistics/data/processKinds";
 
 type ProcessTabsProps = {
     api: string,
@@ -17,19 +17,24 @@ type ProcessTabsProps = {
 
 export function ProcessTabs(props: ProcessTabsProps) {
     const [selected, setSelected] = useState(0);
+    const showSpecAndGrades = props.kind !== OPERATION && props.kind !== MANUFACTURING;
+    if (props.kind === OPERATION)
+        return;
     return (
         <TabStrip selected={selected} onSelect={(e) => setSelected(e.selected)}>
-            {props.kind !== OPERATION &&
-                <TabStripTab title={'Processes'}>
-                    <ProcessSubProcessesTab {...props} />
+            <TabStripTab title={'Processes'}>
+                <ProcessSubProcessesTab {...props} />
+            </TabStripTab>
+            {showSpecAndGrades && (
+                <TabStripTab title={'Specification'}>
+                    <ProcessSpecificationTab {...props} />
                 </TabStripTab>
-            }
-            <TabStripTab title={'Specification'}>
-                <ProcessSpecificationTab {...props} />
-            </TabStripTab>
-            <TabStripTab title={'Grades'}>
-                <ProcessGradesTab {...props} />
-            </TabStripTab>
+            )}
+            {showSpecAndGrades && (
+                <TabStripTab title={'Grades'}>
+                    <ProcessGradesTab {...props} />
+                </TabStripTab>
+            )}
         </TabStrip>
     );
 }
