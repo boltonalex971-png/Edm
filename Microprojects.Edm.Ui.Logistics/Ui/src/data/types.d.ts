@@ -38,6 +38,7 @@ export interface Grade extends DataItem {
 
 export interface Nomenclature extends DataItem {
     category: string
+    countable: boolean
     defaultTareTypeId: UUID
     defaultTareTypeName?: string
 }
@@ -55,12 +56,36 @@ export interface Item  extends DataItem {
     nomenclatureName: string
     nomenclatureId: UUID
     children: Item[]
-    tareBarcode: string
-    tareTareTypeId: UUID
-    tareTareTypeName: string
-    tareTareTypeUnits: string
+    serialNo?: string
+    shipment?: string
+    shipmentExternalId?: string
+    tareBarcode?: string
+    tareTareTypeId?: UUID
+    tareTareTypeName?: string
+    tareTareTypeUnits?: string
+    address?: number
     capacity: number
     quantity:  number
+}
+
+export interface ItemLinkRow {
+    id: UUID
+    orderProcessId: UUID
+
+    sourceItemId: UUID
+    sourceSerialNo?: string
+    sourceNomenclatureName?: string
+    sourceTareBarcode?: string
+    sourceTareTypeName?: string
+    sourceTareTypeUnits?: string
+    sourceAddress?: number
+
+    targetItemId: UUID
+    targetNomenclatureName?: string
+    targetTareBarcode?: string
+    targetAddress?: number
+
+    consumedQuantity: number
 }
 
 export interface ItemSearchQuery {

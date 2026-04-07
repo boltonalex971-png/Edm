@@ -17,6 +17,7 @@ import axios from "axios";
 import {AlertState, InlineAlert} from "@logistics/components/InlineAlert.tsx";
 import {ComboBox, ComboBoxProps} from "@progress/kendo-react-dropdowns";
 import {LinkableComboBox} from "@logistics/components/DropDowns.tsx";
+import { ItemLinksTable } from '@logistics/components/items/ItemLinksTable.tsx'
 
 export interface ItemDetailProps extends DetailProps {
     onUpdate?: DetailEventHandler
@@ -34,6 +35,12 @@ export function ItemDetail({id, title = 'Item', ...props}: ItemDetailProps) {
     if (!data || data.id === EMPTY_GUID) {
         data = {...data, name: '', description: ''} as Item
     }
+
+    const selectedNomenclature = nomenclatures?.find(n => n.id === data?.nomenclatureId);
+    const selectedTareType = taretypes?.find(t => t.id === data?.tareTareTypeId);
+    const showAddress =
+        (selectedTareType?.dimensions ?? 0) > 0 &&
+        (selectedNomenclature?.countable ?? false) === true;
 
     // Reset alert after open item changed
     useEffect(() => setAlert(undefined), [id]);
@@ -73,6 +80,14 @@ export function ItemDetail({id, title = 'Item', ...props}: ItemDetailProps) {
                                             )}
                                         /> {data.quantity} pcs
                                         </p>
+                                        {data.tareBarcode && (
+                                            <p>
+                                                Tare: {data.tareTareTypeName} / {data.tareBarcode}
+                                            </p>
+                                        )}
+                                        {showAddress && data.address != null && (
+                                            <p>Address: {data.address}</p>
+                                        )}
                                         {/*<p>using <DetailLinkText*/}
                                         {/*    id={data.processId}*/}
                                         {/*    text={data.processName}*/}
@@ -140,6 +155,11 @@ export function ItemDetail({id, title = 'Item', ...props}: ItemDetailProps) {
                                 <div className="mb-2">
                                     <Field name={'tareBarcode'} component={Input} label={'Tare Barcode'}/>
                                 </div>
+                                {showAddress && (
+                                    <div className="mb-2">
+                                        <Field name={'address'} component={NumericTextBox} label={'Address'}/>
+                                    </div>
+                                )}
                                 <div className="mb-2">
                                     <Field name={'serialNo'} component={Input} label={'Serial No'}/>
                                 </div>
@@ -150,6 +170,7 @@ export function ItemDetail({id, title = 'Item', ...props}: ItemDetailProps) {
                         }
                     />
                 }
+                relations={<ItemLinksTable itemId={id as any} />}
         />
     );
 }

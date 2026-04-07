@@ -13,10 +13,11 @@ public class ItemViewModel
     public string? NomenclatureName { get; set; }
     public string? NomenclatureDescription { get; set; }
     public string? NomenclatureCategory { get; set; }
-    public Guid TareId { get; set; }
+    public Guid? TareId { get; set; }
     public string? TareBarcode { get; set; }
-    public Guid TareTareTypeId { get; set; }
+    public Guid? TareTareTypeId { get; set; }
     public string? TareTareTypeName { get; set; }
     public string? TareTareTypeUnits { get; set; }
+    public int? Address { get; set; }
     public DateTime MetaCreated { get; set; }
 }

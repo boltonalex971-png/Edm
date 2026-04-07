@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -32,5 +32,11 @@ public class ItemsController : CrudControllerBase<Item, ItemViewModel, IItemServ
     {
         var result = await Service.Search(query);
         return Mapper.Map<IEnumerable<ItemViewModel>>(result);
+    }
+
+    [HttpGet("{id:guid}/links")]
+    public async Task<IEnumerable<ItemLinkViewModel>> GetLinksForTarget([FromRoute] Guid id)
+    {
+        return await Service.GetLinksForTarget(id);
     }
 }

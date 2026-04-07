@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq.Expressions;
 using AutoMapper;
 using Microprojects.Edm.Ui.Logistics.Contracts;
@@ -83,7 +83,8 @@ public class OrderService : ServiceBase<Order>, IOrderService
             .SelectMany(p => p.Process.Specifications)
             .ToListAsync();
         var items = await Set<Item>().AsNoTracking()
-            .Where(i => i.OrderId == orderId)
+            .Include(i => i.Meta)
+            .Where(i => i.OrderId == orderId && i.Meta.Deleted == null)
             .ToListAsync();
         var rows = await Set<SpecificationNomenclature>().AsNoTracking()
             .Include(sn => sn.Nomenclature)
@@ -167,59 +168,165 @@ public class OrderService : ServiceBase<Order>, IOrderService
         var order = await Set()
             .Include(o => o.Meta)
             .FirstOrDefaultAsync(o => o.Id == id);
-        var processes = (await GetOrderProcesses(id, asNoTracking: false)) //order.Processes
+
+        if (order == null)
+        {
+            throw new EdmException($"Order with id {id} not found");
+        }
+
+        IEnumerable<OrderProcess> processesQuery = (await GetOrderProcesses(id, asNoTracking: false))
             .Where(p => p.StartTime == null)
             .OrderBy(p => p.Ordering);
-        foreach (var process in processes)
+
+        if (processId != null)
         {
-            var specification = (await GetSpecifications(id, process.ProcessId))
+            processesQuery = processesQuery.Where(p => p.ProcessId == processId);
+        }
+
+        var eps = 1e-9;
+
+        foreach (var process in processesQuery)
+        {
+            var specifications = (await GetSpecifications(id, process.ProcessId))
                 .ToList();
+
             // Check if all required components for the process are allocated
-            if (specification.Any(n => n.Total < n.Amount))
+            if (specifications.Any(n => n.Total + eps < n.Amount))
                 throw new EdmException("Not all required components are available");
 
-            // Set operation started 
+            // Set operation started
             process.StartTime = DateTime.UtcNow;
+
+            var targetOutputItems = new List<Item>();
             if (process.Process.NomenclatureId != null)
             {
-                // Create new output item
-                // TODO Operation can be
-                //      bulk-to-bulk: takes all income items and convert them to single large outcome item (the same op-parameters for all)
-                //      bulk-to-many: takes all income and shards it to many one-pcs items (splitting smth to pieces)
-                //      many-to-many: take at least one one-pcs nomenclature item and convert it to one-pcs output item
-                //          m-2-m operation is usually is one piece operation (e.g., measuring parameters of a single component)
-                // WARNING at the moment only bulk-to-bulk implemented
-                var outputItem = await _itemService.Save(new Item
+                var targetNomenclature = process.Process.Nomenclature
+                                         ?? await Set<Nomenclature>()
+                                             .AsNoTracking()
+                                             .FirstAsync(n => n.Id == process.Process.NomenclatureId.Value);
+
+                if (targetNomenclature.Countable)
                 {
-                    NomenclatureId = process.Process.NomenclatureId!.Value,
-                    OrderId = id,
-                    ProcessId = process.ProcessId,
-                    Quantity = order.Amount,
-                    Tare = new Tare
+                    var rounded = Math.Round(order.Amount);
+                    if (Math.Abs(order.Amount - rounded) > eps)
                     {
-                        TareTypeId = process.Process.Nomenclature!.DefaultTareTypeId!.Value,
-                        Barcode = $"{id}"
+                        throw new EdmException("Order amount must be an integer for countable output nomenclature.");
                     }
-                });
+
+                    var outputCount = (int)rounded;
+                    for (var i = 0; i < outputCount; i++)
+                    {
+                        var outputItem = await _itemService.Save(new Item
+                        {
+                            NomenclatureId = targetNomenclature.Id,
+                            OrderId = id,
+                            ProcessId = process.ProcessId,
+                            Quantity = 1,
+                            Tare = null,
+                            TareId = null,
+                            Address = null
+                        });
+                        targetOutputItems.Add(outputItem);
+                    }
+                }
+                else
+                {
+                    var outputItem = await _itemService.Save(new Item
+                    {
+                        NomenclatureId = targetNomenclature.Id,
+                        OrderId = id,
+                        ProcessId = process.ProcessId,
+                        Quantity = order.Amount,
+                        Tare = null,
+                        TareId = null,
+                        Address = null
+                    });
+                    targetOutputItems.Add(outputItem);
+                }
             }
 
-            // Archive specification items
-            foreach (var specItem in specification)
+            // Allocate inputs to produced outputs and persist links.
+            foreach (var spec in specifications)
             {
-                var items = await Set<Item>()
+                var inputItems = await Set<Item>()
                     .Include(i => i.Meta)
-                    .Where(i => i.OrderId == order.Id && i.NomenclatureId == specItem.NomenclatureId &&
-                                i.Meta.Deleted == null)
-                    .OrderBy(i => i.Meta.Created)
+                    .Where(i =>
+                        i.OrderId == order.Id &&
+                        i.NomenclatureId == spec.NomenclatureId &&
+                        i.Meta.Deleted == null)
+                    .OrderBy(i => i.Id) // UUIDv7 ordering: FIFO by creation time
                     .ToListAsync();
-                double total = 0;
-                foreach (var item in items)
+
+                if (targetOutputItems.Count == 0)
                 {
-                    // TODO split item if it is not fully consumed
-                    total += item.Quantity;
-                    item.Meta.Deleted = DateTime.UtcNow;
-                    if (total >= specItem.Amount)
-                        break;
+                    // No output items -> consume the required quantity without persisting links.
+                    var remaining = spec.Amount;
+                    foreach (var item in inputItems)
+                    {
+                        if (remaining <= eps)
+                            break;
+
+                        var consumed = Math.Min(item.Quantity, remaining);
+                        item.Quantity -= consumed;
+                        remaining -= consumed;
+                        if (item.Quantity <= eps)
+                        {
+                            item.Quantity = 0;
+                            item.Meta.Deleted = DateTime.UtcNow;
+                        }
+                    }
+
+                    if (remaining > eps)
+                    {
+                        throw new EdmException("Not enough input quantity to consume.");
+                    }
+
+                    continue;
+                }
+
+                var inputIndex = 0;
+                foreach (var targetItem in targetOutputItems)
+                {
+                    var requiredForThisTarget = spec.Quantity * targetItem.Quantity;
+                    while (requiredForThisTarget > eps)
+                    {
+                        if (inputIndex >= inputItems.Count)
+                        {
+                            throw new EdmException("Not enough input quantity to allocate required output.");
+                        }
+
+                        var inputItem = inputItems[inputIndex];
+
+                        var available = inputItem.Quantity;
+                        if (available <= eps)
+                        {
+                            inputItem.Meta.Deleted = DateTime.UtcNow;
+                            inputItem.Quantity = 0;
+                            inputIndex++;
+                            continue;
+                        }
+
+                        var consumed = Math.Min(available, requiredForThisTarget);
+
+                        Db.ItemLinks.Add(new ItemLink
+                        {
+                            Id = DomainObject.NewGuid(),
+                            OrderProcessId = process.Id,
+                            SourceItemId = inputItem.Id,
+                            TargetItemId = targetItem.Id,
+                            ConsumedQuantity = consumed
+                        });
+
+                        inputItem.Quantity -= consumed;
+                        requiredForThisTarget -= consumed;
+
+                        if (inputItem.Quantity <= eps)
+                        {
+                            inputItem.Quantity = 0;
+                            inputItem.Meta.Deleted = DateTime.UtcNow;
+                            inputIndex++;
+                        }
+                    }
                 }
             }
 

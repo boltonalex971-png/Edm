@@ -38,6 +38,12 @@ public class Item : DomainObject, IWithMeta
     /// </summary>
     public Tare? Tare { get; set; }
     public Guid? TareId { get; set; }
+
+    /// <summary>
+    /// Address inside tare when <see cref="TareType.Dimensions"/> > 0.
+    /// Must be unique per tare among active items (validated in service).
+    /// </summary>
+    public int? Address { get; set; }
     
     /// <summary>
     /// Parent item the current one is part of

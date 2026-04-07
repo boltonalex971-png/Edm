@@ -1,5 +1,5 @@
 import { Field } from '@progress/kendo-react-form'
-import { Input } from '@progress/kendo-react-inputs'
+import { Checkbox, Input } from '@progress/kendo-react-inputs'
 import {type EffectCallback, useEffect, useState} from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import type {DetailEventHandler, Nomenclature, TareType, UUID} from "../../../data/types"
@@ -115,6 +115,9 @@ export function NomenclatureDetail({ id, ...props } : NomenclatureDetailProps) {
                                            />
                                        }
                                 />
+                            </div>
+                            <div className="mb-3">
+                                <Field name={'countable'} component={Checkbox} label={'Countable'} />
                             </div>
                         </fieldset>
                     }

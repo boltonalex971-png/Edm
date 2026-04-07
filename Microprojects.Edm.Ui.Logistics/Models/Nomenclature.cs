@@ -13,6 +13,12 @@ public class Nomenclature : DirectoryEntry
     /// Nomenclature category
     /// </summary>
     public NomenclatureCategories Category { get; set; }
+
+    /// <summary>
+    /// If true, quantities are expected to represent whole pieces (but allocation can still
+    /// produce fractional remainders when technology ratios are decimal).
+    /// </summary>
+    public bool Countable { get; set; } = true;
     
     public TareType? DefaultTareType { get; set; }
     public Guid? DefaultTareTypeId { get; set; }

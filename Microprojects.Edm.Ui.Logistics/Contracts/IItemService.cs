@@ -6,4 +6,5 @@ namespace Microprojects.Edm.Ui.Logistics.Contracts;
 public interface IItemService : IGenericService<Item>
 {
     Task<IEnumerable<Item>> Search(ItemSearchQuery parameters);
+    Task<IEnumerable<ItemLinkViewModel>> GetLinksForTarget(Guid targetItemId);
 }

@@ -20,6 +20,7 @@ public class LogisticsContext : DbContext
     public DbSet<Tare> Tares { get; set; }
     public DbSet<TareType> TareTypes { get; set; }
     public DbSet<Assignment> Tasks { get; set; }
+    public DbSet<ItemLink> ItemLinks { get; set; }
     
     public LogisticsContext(DbContextOptions<LogisticsContext> options) : base(options)
     {
@@ -79,6 +80,22 @@ public class LogisticsContext : DbContext
             .HasOne(o => o.Order)
             .WithMany()
             .HasForeignKey(op => op.OrderId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        builder.Entity<ItemLink>()
+            .HasOne(l => l.OrderProcess)
+            .WithMany()
+            .HasForeignKey(l => l.OrderProcessId)
+            .OnDelete(DeleteBehavior.NoAction);
+        builder.Entity<ItemLink>()
+            .HasOne(l => l.SourceItem)
+            .WithMany()
+            .HasForeignKey(l => l.SourceItemId)
+            .OnDelete(DeleteBehavior.NoAction);
+        builder.Entity<ItemLink>()
+            .HasOne(l => l.TargetItem)
+            .WithMany()
+            .HasForeignKey(l => l.TargetItemId)
             .OnDelete(DeleteBehavior.NoAction);
     }
 
