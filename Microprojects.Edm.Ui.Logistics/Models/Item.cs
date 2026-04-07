@@ -3,24 +3,9 @@ namespace Microprojects.Edm.Ui.Logistics.Models;
 public class Item : DomainObject, IWithMeta
 {
     /// <summary>
-    /// Name of shipment for incoming items
-    /// </summary>
-    public string? Shipment { get; set; }
-    
-    /// <summary>
-    /// Shipment external id for integration with accounting system  
-    /// </summary>
-    public string? ShipmentExternalId { get; set; }
-    
-    /// <summary>
     /// Serial number of item if any
     /// </summary>
     public string? SerialNo { get; set; }   
-    
-    /// <summary>
-    /// Barcode of item if any
-    /// </summary>
-    public string? Barcode { get; set; }
     
     /// <summary>
     /// Number of available units
@@ -62,6 +47,9 @@ public class Item : DomainObject, IWithMeta
     /// </summary>
     public Order? Order { get; set; }
     public Guid? OrderId { get; set; }
+
+    public Supply? Supply { get; set; }
+    public Guid? SupplyId { get; set; }
     
     public ICollection<Item> Items { get; set; } = new List<Item>();
     public Meta Meta { get; set; }

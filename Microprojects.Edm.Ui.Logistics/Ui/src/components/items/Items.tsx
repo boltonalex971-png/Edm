@@ -31,7 +31,7 @@ export function Items() {
     return (
         <>
             <div style={{display: 'flex', justifyContent: 'space-between'}}>
-                <PageTitle title="Supplies"/>
+                <PageTitle title="Items"/>
                 <Nav pills>
                     <NavItem>
                         <NavLink tag={Link} to={`${path}/remaining`}>Available</NavLink>
@@ -43,11 +43,11 @@ export function Items() {
             </div>
             <hr/>
             <div>
-                <Search api={Api.supplies}
+                <Search api={Api.items}
                         stubMessage={'Select an action'}
                         type={'none'}
                         search={<ItemSearch query={query} />}
-                        detail={<ItemDetail title='New Item' editMode={true} api={Api.supplies}/>}
+                        detail={<ItemDetail title='New Item' editMode={true} api={Api.items}/>}
                 />
             </div>
         </>

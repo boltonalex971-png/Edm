@@ -1,34 +1,25 @@
-import React, {MouseEventHandler, useState} from 'react';
+import React, {type EffectCallback, useEffect, useMemo, useState} from 'react';
 import {useRouteMatch} from "@logistics/hooks/routerHooks";
 import {PageTitle} from "@logistics/components/PageTitle";
 import {Nav, NavItem, NavLink} from "reactstrap";
 import {NavLink as Link} from "react-router";
-import {Button} from "@progress/kendo-react-buttons";
-import {Asterisk, ChevronLeft, Download, InfoCircle, Pen, Search, Star} from "react-bootstrap-icons";
-import {Input, InputPrefix, TextBox} from "@progress/kendo-react-inputs";
-import {SupplyEditorPanel} from "@logistics/components/supplies/SupplyEditorPanel";
+import {Diagram3, Search as SearchIcon} from "react-bootstrap-icons";
+import {InputPrefix, TextBox, type TextBoxChangeEvent} from "@progress/kendo-react-inputs";
 import api from "@features/api/api";
 import {TreeViewLink} from "@logistics/components/TreeViewLink";
-import {Grid, GridColumn} from "@progress/kendo-react-grid";
+import {Grid, GridColumn, type GridPageChangeEvent, type GridRowClickEvent} from "@progress/kendo-react-grid";
 import {LinkTextCell} from "@logistics/components/DropDownCell";
 import {useGet} from "@logistics/hooks/hooks";
-import {Item} from "@logistics/data/types";
+import {Supply} from "@logistics/data/types";
 import {Loading} from "@features/utils/Utils.tsx";
 import {Error} from "@progress/kendo-react-labels";
-import {SmartScroll, SmartScrollContent} from "@microprojects/tools";
+import {Search} from "@logistics/components/Search";
+import {process} from "@progress/kendo-data-query";
+import {Detail} from "@logistics/components/MasterDetail";
+import {SupplyDetail} from "@logistics/components/supplies/SupplyDetail";
 
 export function Supplies() {
     let {path} = useRouteMatch();
-    const [panel, setPanel] = useState<'search' | 'create'>('search')
-    const [linkPanel, setLinkPanel] = useState<string>()
-    const searchClick = (e) => {
-        setPanel('search')
-        setLinkPanel(undefined)
-    }
-    const createClick = (e) => {
-        setPanel('create')
-        setLinkPanel(undefined)
-    }
 
     return (
         <>
@@ -45,82 +36,115 @@ export function Supplies() {
             </div>
             <hr/>
             <div>
-                <SmartScroll offsetTop={10} style={{display: "flex", flexDirection: "row", alignItems: 'flex-start', gap: 20}}>
-                    <SmartScrollContent style={{
-                                            display: 'flex',
-                                            flex: 1,
-                                            flexDirection: 'column',
-                                            alignItems: 'flex-start',
-                                            gap: '1rem',
-                                        }}
-                    >
-                        <div style={{height: '1em'}}></div>
-                        <Button type={'button'} fillMode={'flat'} onClick={searchClick}><Search/> Search</Button>
-                        <Button type={'button'} fillMode={'flat'} onClick={createClick}><Pen/> Create new</Button>
-                        <Button fillMode={'flat'}><Download/> Get from accounting system</Button>
-                    </SmartScrollContent>
-                    <SmartScrollContent style={{flex: 4}} >
-                        {panel === 'search' && <SearchPanel/>}
-                        {panel === 'create' && !linkPanel &&
-                            <SupplyEditorPanel onLink={setLinkPanel} api={api.supplies}/>}
-                        {panel === 'create' && linkPanel &&
-                            <LinkPanel api={linkPanel} onClose={() => setLinkPanel(undefined)}/>}
-                    </SmartScrollContent>
-                </SmartScroll>
+                <Search
+                    api={api.supplies}
+                    stubMessage={'Select an action'}
+                    type={'none'}
+                    path={path}
+                    search={<SupplySearch/>}
+                    detail={<SupplyDetail title='New Supply' editMode={true} api={api.supplies}/>}
+                />
             </div>
         </>
     );
 }
 
-function SearchPanel() {
-    const [[data], loading, error] = useGet<Item[]>(`${api.supplies}`, [api]);
-    return (
-        <>
-            <TextBox inputMode={'text'}
-                     placeholder={'Search by shipment or barcode'}
-                     prefix={() =>
-                         <InputPrefix>
-                             <Search width={30}/>
-                         </InputPrefix>
-                     }
-                     style={{marginBottom: '1rem'}}
+function SupplySearch() {
+    const [[data], loading, error] = useGet<Supply[]>(`${api.supplies}`, [api]);
+    const [page, setPage] = useState({skip: 0, take: 10});
+    const [filter, setFilter] = useState<string>('');
+    const [subDetail, setSubDetail] = useState<React.ReactElement>()
+
+    useEffect(setSubDetail as EffectCallback, []);
+
+    const filteredData = useMemo(() => {
+        const lower = filter.toLowerCase();
+        if (!lower) {
+            return data || [];
+        }
+
+        return (data || []).filter(s =>
+            s.barcode?.toLowerCase().includes(lower) ||
+            s.shipment?.toLowerCase().includes(lower) ||
+            s.shipmentExternalId?.toLowerCase().includes(lower)
+        );
+    }, [data, filter]);
+
+    const gridData = process(filteredData, {skip: page.skip, take: page.take});
+
+    const pageChange = (event: GridPageChangeEvent) => {
+        const take = 10;
+        setPage({
+            ...event.page,
+            take
+        });
+    };
+
+    const filterChange = (event: TextBoxChangeEvent) => {
+        setPage({skip: 0, take: 10});
+        setFilter(event.value?.toString() || '');
+    };
+
+    const rowClicked = (event: GridRowClickEvent) => {
+        const id = event.dataItem?.id
+        if (!id) {
+            return
+        }
+        setSubDetail(
+            <SupplyDetail
+                readonly={true}
+                id={id}
+                api={api.supplies}
+                onClose={() => setSubDetail(undefined)}
             />
-            {loading && <Loading />}
-            {error && <Error>{error}</Error>}
-            {data &&
-                <Grid data={data} scrollable='none'>
-                    <GridColumn field='nomenclatureName' title='Nomenclature' cell={p => <LinkTextCell {...p}/>}/>
-                    <GridColumn field='tareTareTypeName' title='Tare' />
-                    <GridColumn field='quantity' title='Quantity' />
-                    <GridColumn field='tareTareTypeUnit' title='Units' />
-                    <GridColumn field='metaCreated' title='Created' />
-                </Grid>
-            }
-        </>
-    )
-}
+        )
+    }
 
-type LinkPanelProps = {
-    onClose: () => void;
-    api: string
-}
-
-function LinkPanel({api, onClose}: LinkPanelProps) {
     return (
-        <>
-            <button onClick={onClose}
-                    style={{backgroundColor: 'transparent', border: 'transparent'}}>
-                <ChevronLeft/> Back
-            </button>
-            <p className={'small'} style={{textAlign: 'center'}}>
-                <InfoCircle/> Double click on item to link
-            </p>
-            <TreeViewLink api={api} onCurrentRootChanged={(root) => {
-            }}/>
-            <SmartScrollContent style={{flex: 2, paddingLeft: '2rem'}}>
-                <div style={{height: '1em'}}></div>
-                {/*{linkPanel && <LinkPanel api={linkPanel}/>}*/}
-            </SmartScrollContent>
-        </>
+        <Detail
+            onClose={() => {}}
+            icon={<Diagram3 title='Supplies'/>}
+            loading={loading}
+            error={error as any}
+            data={{
+                name: 'Supply search',
+                description: 'Search for supplies'
+            } as any}
+            subDetail={subDetail}
+            card={
+                <>
+                    <TextBox inputMode={'text'}
+                             placeholder={'Search by shipment or barcode'}
+                             prefix={() =>
+                                 <InputPrefix>
+                                     <SearchIcon width={30}/>
+                                 </InputPrefix>
+                             }
+                             style={{marginBottom: '1rem'}}
+                             onChange={filterChange}
+                    />
+                    {loading && <Loading />}
+                    {error && <Error>{error}</Error>}
+                    {data &&
+                        <Grid
+                            data={gridData}
+                            scrollable='none'
+                            pageable={true}
+                            pageSize={10}
+                            skip={page.skip}
+                            take={page.take}
+                            total={gridData.total}
+                            onPageChange={pageChange}
+                            onRowClick={rowClicked}
+                        >
+                            <GridColumn field='barcode' title='Barcode' />
+                            <GridColumn field='shipment' title='Shipment' />
+                            <GridColumn field='shipmentExternalId' title='Shipment Id' />
+                            <GridColumn field='metaCreated' title='Created' />
+                        </Grid>
+                    }
+                </>
+            }
+        />
     )
 }

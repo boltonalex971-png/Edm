@@ -11,6 +11,7 @@ public class LogisticsContext : DbContext
     public DbSet<Meta> Meta { get; set; }
     public DbSet<Directory> Directories { get; set; }
     public DbSet<Item> Items { get; set; }
+    public DbSet<Supply> Supplies { get; set; }
     public DbSet<Nomenclature> Nomenclatures { get; set; }
     public DbSet<Process> Processes { get; set; }
     public DbSet<Grade> Grades { get; set; }
@@ -69,6 +70,12 @@ public class LogisticsContext : DbContext
             .HasOne(o => o.Process)
             .WithMany()
             .HasForeignKey(op => op.ProcessId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        builder.Entity<Supply>()
+            .HasMany(s => s.Items)
+            .WithOne(i => i.Supply)
+            .HasForeignKey(i => i.SupplyId)
             .OnDelete(DeleteBehavior.NoAction);
 
         builder.Entity<OrderProcess>()

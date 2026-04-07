@@ -262,7 +262,9 @@ export function Editor(props: EditorProps) {
                     props.onChange?.(response.data)
                     props.setData(response.data);
                     setAlert({message: 'Created successfully'});
-                    navigate(`${props.path}${response.data.isFolder ? '/folder' : ''}/${response.data.id}`);
+                    if (props.path) {
+                        navigate(`${props.path}${response.data.isFolder ? '/folder' : ''}/${response.data.id}`);
+                    }
                 }).catch(r => setAlert({status: 'danger', message: r.response?.data?.detail || 'Unknown error'}))
         }
     };

@@ -26,6 +26,8 @@ public class ItemService : ServiceBase<Item>, IItemService
     {
         var result = await Set().AsNoTracking()
             .Include(i => i.Nomenclature)
+            .Include(i => i.Tare.TareType)
+            .Include(i => i.Meta)
             .FirstOrDefaultAsync(i => id == i.Id);
         return result;
     }
@@ -211,8 +213,6 @@ public class ItemService : ServiceBase<Item>, IItemService
                 TareId = i.TareId,
                 Address = i.Address,
                 SerialNo = i.SerialNo,
-                Shipment = i.Shipment,
-                ShipmentExternalId = i.ShipmentExternalId,
                 Nomenclature = i.Nomenclature,
                 Tare = i.Tare,
                 Meta = i.Meta,

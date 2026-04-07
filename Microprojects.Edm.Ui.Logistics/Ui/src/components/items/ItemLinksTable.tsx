@@ -17,7 +17,7 @@ export function ItemLinksTable({ itemId }: ItemLinksTableProps) {
     }
 
     const [[links], loading, error] = useGet<ItemLinkRow[]>(
-        `${Api.supplies}/${itemId}/links`,
+        `${Api.items}/${itemId}/links`,
         [itemId]
     )
 

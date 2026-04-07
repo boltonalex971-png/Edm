@@ -33,7 +33,7 @@ let refresh: boolean = false;
 
 export const ItemSearch = (props: ItemSearchProps) => {
     const [[items], loading, error] = usePost<Item[]>(
-        `${api.supplies}/search`, props.query || {}, 
+        `${api.items}/search`, props.query || {}, 
         [props.query?.nomenclatureId, props.query?.active, refresh]);
     const [subDetail, setSubDetail] = useState<ReactElement | undefined>();
     const [page, setPage] = React.useState<PageState>(initialDataState);
@@ -76,6 +76,21 @@ export const ItemSearch = (props: ItemSearchProps) => {
         }
     }
 
+    const rowClickOpenDetail = (event: GridRowClickEvent) => {
+        if (props.lookup) {
+            return
+        }
+
+        setSubDetail(
+            <ItemDetail
+                readonly={true}
+                id={event.dataItem.id}
+                api={Api.items}
+                onClose={() => setSubDetail(undefined)}
+            />
+        )
+    }
+
     return (
         <Detail
             onClose={props.onClose}
@@ -113,14 +128,7 @@ export const ItemSearch = (props: ItemSearchProps) => {
                                   total={data.total}
                                   onPageChange={pageChange}
                                   onRowDoubleClick={rowClicked}
-                                  // onRowClick={(event) => setSubDetail(
-                                  //     <ItemDetail
-                                  //         id={event.dataItem.id}
-                                  //         api={Api.supplies}
-                                  //         onClose={() => setSubDetail(undefined)}
-                                  //         //onUpdate={event.itemUpdate}
-                                  //     />
-                                  // )}
+                                  onRowClick={rowClickOpenDetail}
                             >
                                 <GridColumn field='serialNo' title='Serial No' width='100'/>
                                 <GridColumn field='nomenclatureName' title='Nomenclature' cell={p =>

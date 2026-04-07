@@ -53,12 +53,11 @@ export interface TareType extends DataItem {
 export interface Item  extends DataItem {
     id: UUID
     originId: UUID
+    supplyId?: UUID
     nomenclatureName: string
     nomenclatureId: UUID
     children: Item[]
     serialNo?: string
-    shipment?: string
-    shipmentExternalId?: string
     tareBarcode?: string
     tareTareTypeId?: UUID
     tareTareTypeName?: string
@@ -66,6 +65,14 @@ export interface Item  extends DataItem {
     address?: number
     capacity: number
     quantity:  number
+}
+
+export interface Supply extends DataItem {
+    id: UUID
+    barcode?: string
+    shipment?: string
+    shipmentExternalId?: string
+    metaCreated?: string
 }
 
 export interface ItemLinkRow {

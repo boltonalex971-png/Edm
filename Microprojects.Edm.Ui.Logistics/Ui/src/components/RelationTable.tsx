@@ -1,4 +1,4 @@
-import React, {Children, cloneElement, createContext, useState} from 'react';
+import React, {useState} from 'react';
 import axios from 'axios';
 import {
     Grid,
@@ -16,13 +16,28 @@ import {Loading} from "../features/utils/Utils";
 import {ParentContext} from "./ParentContext";
 import {UUID} from "@logistics/data/types";
 
+export type RelationTableAddMode = 'inline' | 'subdetail'
+
 type RelationTableProps = {
-    id: UUID,
+    id?: UUID,
     api: string,
     editable: boolean,
     removable: boolean,
     creatable?: boolean,
-    onRowSelected: Function,
+    addMode?: RelationTableAddMode,
+    createSubDetail?: (args: {
+        api: string,
+        onClose: () => void,
+        onCreated: (created: any) => void
+    }) => React.ReactElement,
+    subDetail?: (args: {
+        mode: 'create' | 'edit',
+        api: string,
+        dataItem?: any,
+        onClose: () => void,
+        onSaved: (saved: any) => void
+    }) => React.ReactElement,
+    onRowSelected?: Function,
     onRowClick?: ((event: GridRowClickEvent) => void),
     onRowDoubleClick?: ((event: GridRowDoubleClickEvent) => void),
     children: React.ReactElement
@@ -31,6 +46,7 @@ type RelationTableProps = {
 export function RelationTable({api, children, ...props}: RelationTableProps) {
     const [reload, setReload] = useState(false); // used to force fetching table data
     const [editItem, setEditItem] = useState<any>(null);
+    const [subDetail, setSubDetail] = useState<React.ReactElement>();
     let [[data, setData], loading, error] = useGet<any[]>(`${api}`, [reload, api]);
 
     const rowClick = (event: GridRowClickEvent | { dataItem: any }) => {
@@ -70,7 +86,46 @@ export function RelationTable({api, children, ...props}: RelationTableProps) {
             setEditItem(null);
         });
     };
+
+    const openSubDetail = (mode: 'create' | 'edit', dataItem?: any) => {
+        const factory = props.subDetail;
+        if (factory) {
+            setSubDetail(factory({
+                mode,
+                api,
+                dataItem,
+                onClose: () => setSubDetail(undefined),
+                onSaved: (saved) => {
+                    itemUpdate(saved);
+                    setSubDetail(undefined);
+                }
+            }));
+            return true;
+        }
+
+        if (mode === 'create' && props.createSubDetail) {
+            setSubDetail(props.createSubDetail({
+                api,
+                onClose: () => setSubDetail(undefined),
+                onCreated: (created) => {
+                    itemUpdate(created);
+                    setSubDetail(undefined);
+                }
+            }));
+            return true;
+        }
+
+        return false;
+    }
+
     const addRecord = () => {
+        if ((props.addMode || 'inline') === 'subdetail') {
+            if (!openSubDetail('create')) {
+                throw new Error('RelationTable addMode=subdetail requires subDetail or createSubDetail');
+            }
+            return;
+        }
+
         setData([{inEdit: true}, ...data || []]);
         setEditItem({});
     };
@@ -123,41 +178,48 @@ export function RelationTable({api, children, ...props}: RelationTableProps) {
             {loading && <Loading/>}
             {data &&
                 <ParentContext.Provider value={{itemUpdate: itemUpdate}}>
-                    <Grid
-                        data={data}
-                        editField="inEdit"
-                        scrollable='none'
-                        onRowClick={rowClick}
-                        onRowDoubleClick={props.onRowDoubleClick}
-                        onItemChange={itemChange}
-                    >
-                        {props.creatable &&
-                            <GridToolbar>
-                                <Button title="Add new record" className="k-button k-secondary" onClick={addRecord}
-                                        disabled={editItem != null}>
-                                    <span className="k-icon k-i-add"></span>
-                                </Button>
-                            </GridToolbar>
-                        }
-                        {children}
-                        {/* {Children.map(children, c => c?.type?.displayName === 'SubDetailColumn' ?
-                        <GridColumn {...c.props} cell={(cellProps) => c.props.cell({ itemUpdate, ...cellProps })} /> : c)
-                    } */}
-                        <GridColumn title=''
-                                    width='2rem'
-                                    cell={(cellProps) =>
-                                        <ActionCell {...cellProps}
-                                                    edit={props.editable ? ((item) => enterEdit({
-                                                        dataItem: item,
-                                                        syntheticEvent: undefined
-                                                    })) : undefined}
-                                                    remove={props.removable ? ((item) => removeRecord({dataItem: item})) : undefined}
-                                                    save={(item) => saveEdit({dataItem: item})}
-                                                    discard={(item) => discardEdit({dataItem: item})}
-                                        />
-                                    }
-                        />
-                    </Grid>
+                    <>
+                        <Grid
+                            data={data}
+                            editField="inEdit"
+                            scrollable='none'
+                            onRowClick={rowClick}
+                            onRowDoubleClick={props.onRowDoubleClick}
+                            onItemChange={itemChange}
+                        >
+                            {props.creatable &&
+                                <GridToolbar>
+                                    <Button title="Add new record" className="k-button k-secondary" onClick={addRecord}
+                                            disabled={editItem != null}>
+                                        <span className="k-icon k-i-add"></span>
+                                    </Button>
+                                </GridToolbar>
+                            }
+                            {children}
+                            <GridColumn title=''
+                                        width='2rem'
+                                        cell={(cellProps) =>
+                                            <ActionCell {...cellProps}
+                                                    edit={props.editable ? ((item) => {
+                                                        if ((props.addMode || 'inline') === 'subdetail') {
+                                                            if (!openSubDetail('edit', item)) {
+                                                                // Fallback to inline edit if no factory provided.
+                                                                enterEdit({dataItem: item, syntheticEvent: undefined})
+                                                            }
+                                                        } else {
+                                                            enterEdit({dataItem: item, syntheticEvent: undefined})
+                                                        }
+                                                    }) : undefined}
+                                                        remove={props.removable ? ((item) => removeRecord({dataItem: item})) : undefined}
+                                                        save={(item) => saveEdit({dataItem: item})}
+                                                        discard={(item) => discardEdit({dataItem: item})}
+                                            />
+                                        }
+                            />
+                        </Grid>
+                        <div className="mt-2"/>
+                        {subDetail}
+                    </>
                 </ParentContext.Provider>
             }
         </>

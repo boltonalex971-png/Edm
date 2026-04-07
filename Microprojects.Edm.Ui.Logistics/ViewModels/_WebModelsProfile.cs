@@ -38,11 +38,14 @@ public class WebModelsProfile : AutoMapper.Profile
         CreateMap<TareType, TareTypeViewModel>();
         CreateMap<TareTypeViewModel, TareType>();
         CreateMap<Item, ItemViewModel>().ReverseMap()
-            .ForMember(d => d.Nomenclature, o => o.Ignore());
+            .ForMember(d => d.Nomenclature, o => o.Ignore())
+            .ForMember(d => d.Supply, o => o.Ignore());
         CreateMap<Tare, TareViewModel>().ReverseMap()
             .ForMember(d => d.TareType, o => o.Ignore());
         CreateMap<SpecificationNomenclature, SpecificationRowViewModel>().ReverseMap();
         CreateMap<Order, OrderViewModel>().ReverseMap();
+
+        CreateMap<Supply, SupplyViewModel>().ReverseMap();
 
         CreateMap<OrderSpecificationNomenclature, OrderSpecificationViewModel>();
         CreateMap<OrderProcess, OrderProcessViewModel>();

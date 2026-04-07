@@ -31,7 +31,7 @@ export function ItemDetail({id, title = 'Item', ...props}: ItemDetailProps) {
     //const [[processes]] = useGet<any[]>(api.processes, []);
     const [[taretypes]] = useGet<TareType[]>(`${Api.taretypes}`, []);
     const [[nomenclatures]] = useGet<Nomenclature[]>(`${Api.nomenclatures}`, []);
-    let [[data, setData], loading, error] = useGet<Item>(`${Api.supplies}/${id || EMPTY_GUID}`, [id]);
+    let [[data, setData], loading, error] = useGet<Item>(`${Api.items}/${id || EMPTY_GUID}`, [id]);
     if (!data || data.id === EMPTY_GUID) {
         data = {...data, name: '', description: ''} as Item
     }
@@ -145,12 +145,6 @@ export function ItemDetail({id, title = 'Item', ...props}: ItemDetailProps) {
                                     {/*        style={{backgroundColor: 'transparent', border: 'transparent'}}>*/}
                                     {/*    <Link45deg size={'1.4em'}/>*/}
                                     {/*</button>*/}
-                                </div>
-                                <div className="mb-2">
-                                    <Field name={'shipment'} component={Input} label={'Shipment'}/>
-                                </div>
-                                <div className="mb-2">
-                                    <Field name={'shipmentExternalId'} component={Input} label={'Shipment Id'}/>
                                 </div>
                                 <div className="mb-2">
                                     <Field name={'tareBarcode'} component={Input} label={'Tare Barcode'}/>

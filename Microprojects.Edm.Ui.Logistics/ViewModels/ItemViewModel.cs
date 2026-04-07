@@ -5,8 +5,7 @@ public class ItemViewModel
     public Guid Id { get; set; }
     public Guid? OriginId { get; set; }
     
-    public string? Shipment { get; set; }
-    public string? ShipmentExternalId { get; set; }
+    public Guid? SupplyId { get; set; }
     public string? SerialNo { get; set; }   
     public double Quantity { get; set; }
     public Guid NomenclatureId { get; set; }

@@ -1,4 +1,4 @@
-﻿using Optosense.Edm.Plugins;
+using Optosense.Edm.Plugins;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -31,6 +31,7 @@ namespace Microprojects.Edm.Ui.Logistics
 
             services.AddScoped<IDirectoryService, DirectoryService>();
             services.AddScoped<IItemService, ItemService>();
+            services.AddScoped<ISupplyService, SupplyService>();
             services.AddScoped<INomenclatureService, NomenclatureService>();
             services.AddScoped<IOrderService, OrderService>();
             services.AddScoped<IProcessService, ProcessService>();

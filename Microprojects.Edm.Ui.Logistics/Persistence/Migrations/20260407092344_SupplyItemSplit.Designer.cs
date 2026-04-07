@@ -4,6 +4,7 @@ using Microprojects.Edm.Ui.Logistics.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 {
     [DbContext(typeof(LogisticsContext))]
-    partial class LogisticsContextModelSnapshot : ModelSnapshot
+    [Migration("20260407092344_SupplyItemSplit")]
+    partial class SupplyItemSplit
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -152,6 +155,9 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
                     b.Property<int?>("Address")
                         .HasColumnType("int");
 
+                    b.Property<string>("Barcode")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<Guid>("NomenclatureId")
                         .HasColumnType("uniqueidentifier");
 
@@ -168,6 +174,12 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
                         .HasColumnType("float");
 
                     b.Property<string>("SerialNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Shipment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ShipmentExternalId")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid?>("SupplyId")
@@ -462,9 +474,6 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Barcode")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Shipment")
                         .HasColumnType("nvarchar(max)");
