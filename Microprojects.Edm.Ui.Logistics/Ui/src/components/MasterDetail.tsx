@@ -243,7 +243,9 @@ export function Editor(props: EditorProps) {
             .reduce((r, d, i, a) =>
                 ({
                     ...r,
-                    [d]: data[d] && typeof data[d] === 'object' && !(data[d] instanceof Date) ? data[d]['id'] : data[d]
+                    [d]: data[d] && typeof data[d] === 'object' && !(data[d] instanceof Date) && !Array.isArray(data[d])
+                        ? data[d]['id']
+                        : data[d]
                 }), {})
         if (data.id && data.id !== EMPTY_GUID) {
             axios.put(`${props.api}/${props.data.id}`, foreignData)

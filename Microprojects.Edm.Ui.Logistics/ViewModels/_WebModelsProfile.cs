@@ -15,7 +15,9 @@ public class WebModelsProfile : AutoMapper.Profile
             .ForMember(d => d.Items, o => o.MapFrom(s => s.Children));
         CreateMap<Directory, DirectoryViewModel>()
             .ForMember(d => d.IsFolder, o => o.MapFrom(s => true))
-            .ForMember(d => d.Items, o => o.MapFrom(s => s.Children));
+            .ForMember(d => d.Items, o => o.MapFrom(s => s.Children))
+            .ForMember(d => d.Groups, o => o.MapFrom(s => s.Meta != null ? s.Meta.Groups : null))
+            .ForMember(d => d.IsPublic, o => o.MapFrom(s => s.Meta == null || s.Meta.Groups.Length == 0));
         CreateMap<DirectoryViewModel, Directory>();
 
         CreateMap<DirectoryEntryViewModel, DirectoryEntryViewModel>();

@@ -4,7 +4,7 @@ import { Field } from '@progress/kendo-react-form';
 import { Input } from '@progress/kendo-react-inputs';
 import {Detail, Info, Editor, EMPTY_GUID} from '../MasterDetail';
 import { useParams } from 'react-router-dom';
-import { DropDownComp } from '../DropDownCell';
+import { MultiSelectComp } from '../DropDownCell';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import type {TreeNode} from "../../data/types";  
@@ -17,6 +17,30 @@ type FolderProps = {
     type: string
 }
 
+function formatGroups(groups: unknown): string | null {
+    if (groups == null) {
+        return null
+    }
+    if (Array.isArray(groups)) {
+        const parts = groups
+            .map((g) => {
+                if (typeof g === 'string') {
+                    return g
+                }
+                if (g && typeof g === 'object' && 'name' in (g as any) && typeof (g as any).name === 'string') {
+                    return (g as any).name
+                }
+                return null
+            })
+            .filter((x): x is string => Boolean(x && x.trim()))
+        return parts.length ? parts.join(', ') : null
+    }
+    if (typeof groups === 'string') {
+        return groups.trim() || null
+    }
+    return String(groups)
+}
+
 export function Folder(props : FolderProps) {
     const user = useSelector((state : RootState) => state.user)
     const { id } = useParams();
@@ -24,6 +48,7 @@ export function Folder(props : FolderProps) {
     if (!data || data.id === EMPTY_GUID) {
         data = { ...data, name: '', description: '', url: '' } as TreeNode
     }
+    const groupsText = formatGroups((data as any)?.groups)
     return (
         <Detail {...props}
             copyable={false}
@@ -39,6 +64,9 @@ export function Folder(props : FolderProps) {
                         <div>
                             <p>{`${data.name}`}</p>
                             <small>{`${data.description}`}</small>
+                            <div style={{marginTop: 8}}>
+                                <small><b>Groups:</b> {groupsText || 'All'}</small>
+                            </div>
                         </div>
                     }
                 />
@@ -60,12 +88,7 @@ export function Folder(props : FolderProps) {
                             <div className="mb-3" style={{ width: '400px' }}>
                                 <Field name={'groups'} label={'Groups'}
                                     component={(compProps) =>
-                                        <DropDownComp {...compProps}
-                                            loading={!user}
-                                            data={user?.groups}
-                                            textField='name'
-                                            dataItemKey='sid'
-                                        />
+                                        <MultiSelectComp {...compProps} data={user?.groups || []} />
                                     }
                                 />
                             </div>

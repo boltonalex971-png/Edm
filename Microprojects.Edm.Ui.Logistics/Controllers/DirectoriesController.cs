@@ -94,11 +94,15 @@ public class DirectoriesController : AuthControllerBase
         // If parent is not defined select default one
         model.DirectoryId ??= Directory.GeneralRootId;
         var directory = _mapper.Map<Directory>(model);
+        var groups = (model.Groups ?? [])
+            .Where(g => !string.IsNullOrWhiteSpace(g))
+            .Select(g => g.Trim())
+            .ToArray();
         directory.Meta = new Meta
         {
             Owner = UserInfo.Name,
             Metatype = nameof(Directory),
-            Groups = model.Groups == null ? [] : [model.Groups]
+            Groups = groups
         };
         var saved = await _directoryService.Save(directory);
         return _mapper.Map<DirectoryViewModel>(saved);
@@ -108,11 +112,15 @@ public class DirectoriesController : AuthControllerBase
     public async Task<DirectoryViewModel> Save(Guid id, [FromBody] DirectoryViewModel model)
     {
         var directory = _mapper.Map<Directory>(model);
+        var groups = (model.Groups ?? [])
+            .Where(g => !string.IsNullOrWhiteSpace(g))
+            .Select(g => g.Trim())
+            .ToArray();
         directory.Meta = new Meta
         {
             Owner = UserInfo.Name,
             Metatype = nameof(Directory),
-            Groups = model.Groups == null ? [] : [model.Groups]
+            Groups = groups
         };
         var saved = await _directoryService.Save(directory);
         return _mapper.Map<DirectoryViewModel>(saved);

@@ -17,6 +17,7 @@ export interface TreeDataItem extends DataItem {
     isFolder: boolean
     items: TreeDataItem[]
     expanded: boolean
+    groups?: string[] | null
 }
 
 export interface TreeNode extends TreeDataItem {

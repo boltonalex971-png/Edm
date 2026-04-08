@@ -1,5 +1,5 @@
 import React, {useContext} from 'react';
-import {DropDownList} from '@progress/kendo-react-dropdowns';
+import {DropDownList, MultiSelect} from '@progress/kendo-react-dropdowns';
 import {Input, InputChangeEvent} from '@progress/kendo-react-inputs';
 import {ParentContext} from './ParentContext';
 import {DropDownListChangeEvent} from "@progress/kendo-react-dropdowns/dist/npm/DropDownList/DropDownListProps";
@@ -13,25 +13,67 @@ type DropDownCompProps = {
     onChange: Function,
     field: string,
     dataItem: any,
-    dataItemKey: string,
-    data: [],
-    value: any
+    dataItemKey?: string,
+    data: any[],
+    value: any,
+    textField?: string,
 }
 
 export const DropDownComp = (props: DropDownCompProps) => {
     const handleChange = (e: DropDownListChangeEvent): void => {
+        const selected = e.target.value
+        const nextValue =
+            props.dataItemKey && selected && typeof selected === 'object'
+                ? selected[props.dataItemKey]
+                : selected
         props.onChange({
             dataItem: props.dataItem,
             field: props.field,
             syntheticEvent: e.syntheticEvent,
-            value: e.target.value[props.dataItemKey]
+            value: nextValue
         });
     }
-    const value = (props.data || []).find(c => c[props.dataItemKey] === props.value) || {};
+    const list = props.data || []
+    const value =
+        props.dataItemKey
+            ? (list.find((c) => c && typeof c === 'object' && c[props.dataItemKey as string] === props.value) || null)
+            : (props.value ?? null)
     return (
-        <DropDownList {...props} data={props.data || []} onChange={handleChange} value={value}/>
+        <DropDownList
+            {...props}
+            data={list}
+            onChange={handleChange}
+            value={value}
+        />
     );
 };
+
+type MultiSelectCompProps = {
+    onChange: Function,
+    field: string,
+    dataItem: any,
+    data: string[],
+    value: string[] | null | undefined,
+}
+
+export const MultiSelectComp = (props: MultiSelectCompProps) => {
+    const handleChange = (e: any) => {
+        props.onChange({
+            dataItem: props.dataItem,
+            field: props.field,
+            syntheticEvent: e.syntheticEvent,
+            value: e.target.value || []
+        })
+    }
+
+    return (
+        <MultiSelect
+            data={props.data || []}
+            value={props.value || []}
+            onChange={handleChange}
+        />
+    )
+}
 
 interface DropDownCellProps extends EditableCellProps {
     getData: Function,
