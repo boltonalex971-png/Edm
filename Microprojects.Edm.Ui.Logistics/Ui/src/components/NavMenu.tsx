@@ -57,7 +57,7 @@ export const NavMenu = () => {
                                 </NavLink>
                             </NavItem>
                             <NavItem>
-                                <NavLink tag={Link} className="text-dark" to="/config/processes">
+                                <NavLink tag={Link} className="text-dark" to="/config/manufacturing">
                                     <Gear/>&nbsp;Settings
                                 </NavLink>
                             </NavItem>
