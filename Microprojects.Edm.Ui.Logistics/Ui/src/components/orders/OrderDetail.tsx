@@ -1,9 +1,9 @@
-import React, {type EffectCallback, useEffect, useState} from 'react';
+import React, {type EffectCallback, useEffect, useMemo, useState} from 'react';
 import {Button} from "@progress/kendo-react-buttons";
 import {Diagram3} from "react-bootstrap-icons";
 import api from "@features/api/api.ts";
 import {useGet} from "@logistics/hooks/hooks.ts";
-import {type DetailEventHandler, Order} from "@logistics/data/types";
+import {type DetailEventHandler, Order, TreeDataItem, UUID} from "@logistics/data/types";
 import {Input, NumericTextBox, TextArea} from "@progress/kendo-react-inputs";
 import {DetailLinkText} from "@logistics/components/DropDownCell.tsx";
 import Api from "@features/api/api.ts";
@@ -13,9 +13,41 @@ import {Detail, type DetailProps, Editor, EMPTY_GUID, Info} from "@logistics/com
 import {Field} from "@progress/kendo-react-form";
 import {DatePicker, DateTimePicker} from "@progress/kendo-react-dateinputs";
 import {OrderTabs} from "@logistics/components/orders/OrderTabs.tsx";
-import {LinkableComboBox} from "@logistics/components/DropDowns.tsx";
+import {DropDownTree, DropDownTreeChangeEvent, DropDownTreeCloseEvent} from "@progress/kendo-react-dropdowns";
 import axios from "axios";
 import {AlertState, InlineAlert} from "@logistics/components/InlineAlert.tsx";
+
+type ProcessTreeItem = TreeDataItem & {
+    disabled?: boolean
+    items?: ProcessTreeItem[]
+}
+
+function markFoldersDisabled(nodes: TreeDataItem[] | undefined): ProcessTreeItem[] {
+    if (!nodes) {
+        return []
+    }
+    return nodes.map((n) => ({
+        ...(n as any),
+        disabled: (n as any).isFolder === true,
+        items: markFoldersDisabled((n as any).items),
+    }))
+}
+
+function findTreeItemById(nodes: ProcessTreeItem[] | undefined, id: UUID | undefined): ProcessTreeItem | null {
+    if (!nodes || !id) {
+        return null
+    }
+    for (const n of nodes) {
+        if ((n as any).id === id) {
+            return n
+        }
+        const child = findTreeItemById(n.items, id)
+        if (child) {
+            return child
+        }
+    }
+    return null
+}
 
 export interface OrderDetailProps extends DetailProps {
     onUpdate?: DetailEventHandler
@@ -26,7 +58,8 @@ export function OrderDetail({id, title = 'Order', ...props}: OrderDetailProps) {
     const [alert, setAlert] = useState<AlertState>();
     const [subDetail, setSubDetail] = useState<React.ReactElement>();
     useEffect(setSubDetail as EffectCallback, [id]);
-    const [[processes]] = useGet<any[]>(api.processes, []);
+    const [[hierarchy]] = useGet<TreeDataItem[]>(`${Api.processes}/hierarchy?kind=Technology`, []);
+    //const processTree = useMemo(() => markFoldersDisabled(hierarchy), [hierarchy])
     // const [[kinds]] = useGet<string[]>(`${Api.processes}/kinds`, []);
     // const [[noms]] = useGet<Item[]>(`${Api.nomenclatures}`, []);
     let [[data, setData], loading, error] = useGet<Order>(`${Api.orders}/${id || EMPTY_GUID}`, [id]);
@@ -119,7 +152,23 @@ export function OrderDetail({id, title = 'Order', ...props}: OrderDetailProps) {
                                 <div className="mb-2" style={{display: 'flex', alignItems: 'baseline', width: '600px'}}>
                                     <Field name={'processId'}
                                            component={(p) =>
-                                               <LinkableComboBox {...p} data={processes}/>
+                                               <DropDownTree
+                                                   {...p}
+                                                   data={hierarchy}
+                                                   dataItemKey={'id'}
+                                                   textField={'name'}
+                                                   subItemsField={'items'}
+                                                   expandField={'expanded'}
+                                                   value={findTreeItemById(hierarchy, p.value as any)}
+                                                   onChange={(e: DropDownTreeChangeEvent) => {
+                                                       const selected = e.value as ProcessTreeItem | null
+                                                       if (!selected || selected?.isFolder) {
+                                                           return
+                                                       }
+                                                       
+                                                       p.onChange({value: (selected as any).id as UUID})
+                                                   }}
+                                               />
                                            }
                                            label='Process'
                                     />
