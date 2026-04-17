@@ -39,4 +39,23 @@ public class ItemsController : CrudControllerBase<Item, ItemViewModel, IItemServ
     {
         return await Service.GetLinksForTarget(id);
     }
+
+    [HttpGet("tare/{tareId:guid}")]
+    public async Task<IEnumerable<ItemViewModel>> GetByTare([FromRoute] Guid tareId)
+    {
+        var items = await Service.GetByTare(tareId);
+        return Mapper.Map<IEnumerable<ItemViewModel>>(items);
+    }
+
+    [HttpPost("batch")]
+    public async Task<BatchCreateItemResult> BatchCreate([FromBody] BatchCreateItemRequest request)
+    {
+        return await Service.BatchCreate(request);
+    }
+
+    [HttpPost("repack")]
+    public async Task<RepackResult> Repack([FromBody] RepackRequest request)
+    {
+        return await Service.Repack(request);
+    }
 }

@@ -1,29 +1,40 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import { GridColumn } from '@progress/kendo-react-grid';
-import {DropDownCell} from "@logistics/components/DropDownCell.tsx";
-import {Dictionary, Nomenclature, UUID} from "@logistics/data/types";
-import {useGet} from "@logistics/hooks/hooks.ts";
-import Api from "@features/api/api.ts";
-import {RelationTable} from "@logistics/components/RelationTable.tsx";
+import React from 'react'
+import type {UUID} from '@logistics/data/types'
+import {TareItemsPanel} from '@logistics/components/tare/TareItemsPanel'
+import {TareDetail} from '@logistics/components/tare/TareDetail'
+import {ItemDetail} from '@logistics/components/items/ItemDetail'
+import Api from '@features/api/api'
 
 type OrderComponentTabProps = {
     id: UUID
     api: string
+    onDetailSelected?: Function
 }
 
-export function OrderComponentTab({ id, api } : OrderComponentTabProps) {
-    //const [[noms]] = useGet<Nomenclature>(`${Api.nomenclatures}`)
+export function OrderComponentTab({id, api, onDetailSelected}: OrderComponentTabProps) {
     return (
-        <RelationTable api={`${api}/${id}/items`} removable >
-            <GridColumn field='nomenclatureCategory' title='Category' width='100' editable={false} />
-            <GridColumn field='nomenclatureName' title='Name' width='200' />
-            <GridColumn field='nomenclatureDescription' title='Description' width='auto' editable={false}/>
-            <GridColumn field='tareTareTypeName' title='Tare' width='auto' />
-            <GridColumn field='quantity' title='Quantity' width='auto' />
-            <GridColumn field='tareTareTypeUnits' title='Units' width='auto' />
-            <GridColumn field='tareBarcode' title='Barcode' width='auto' />
-        </RelationTable>
-    );
+        <TareItemsPanel
+            api={`${api}/${id}/items`}
+            onTareClick={(group) => {
+                onDetailSelected?.(
+                    <TareDetail
+                        tareId={group.tare.id}
+                        label={group.tare.barcode}
+                        onClose={() => onDetailSelected?.(undefined)}
+                    />
+                )
+            }}
+            onItemClick={(item) => {
+                onDetailSelected?.(
+                    <ItemDetail
+                        readonly={true}
+                        id={item.id}
+                        api={Api.items}
+                        onClose={() => onDetailSelected?.(undefined)}
+                    />
+                )
+            }}
+        />
+    )
 }
 

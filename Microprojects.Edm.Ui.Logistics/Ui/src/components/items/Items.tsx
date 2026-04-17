@@ -7,7 +7,7 @@ import {Search} from "@logistics/components/Search"
 import Api from "@features/api/api.ts";
 import {useParams} from "react-router-dom";
 import {ItemSearch} from "@logistics/components/items/ItemSearch.tsx";
-import {ItemDetail} from "@logistics/components/items/ItemDetail.tsx";
+import {BatchItemCreate} from "@logistics/components/items/BatchItemCreate.tsx";
 import {ItemSearchQuery} from "@logistics/data/types";
 
 export function Items() {
@@ -47,7 +47,7 @@ export function Items() {
                         stubMessage={'Select an action'}
                         type={'none'}
                         search={<ItemSearch query={query} />}
-                        detail={<ItemDetail title='New Item' editMode={true} api={Api.items}/>}
+                        detail={<BatchItemCreate />}
                 />
             </div>
         </>

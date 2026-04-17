@@ -4,7 +4,7 @@ import {Link} from 'react-router-dom'
 import './NavMenu.css'
 import {useSelector} from "react-redux";
 import {RootState} from "../store";
-import {Box2, Gear, House, ListTask} from "react-bootstrap-icons";
+import {ArrowRepeat, Box2, Gear, House, ListTask} from "react-bootstrap-icons";
 import logo from '../../public/applogo.svg'
 import { DropDownList } from '@progress/kendo-react-dropdowns';
 import axios from 'axios';
@@ -54,6 +54,11 @@ export const NavMenu = () => {
                             <NavItem>
                                 <NavLink tag={Link} className="text-dark" to="/items/remaining">
                                     <Box2/>&nbsp;Items
+                                </NavLink>
+                            </NavItem>
+                            <NavItem>
+                                <NavLink tag={Link} className="text-dark" to="/repacking">
+                                    <ArrowRepeat/>&nbsp;Repacking
                                 </NavLink>
                             </NavItem>
                             <NavItem>

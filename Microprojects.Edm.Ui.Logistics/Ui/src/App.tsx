@@ -8,6 +8,7 @@ import {Config} from "@logistics/components/config/Config.tsx";
 import {Orders} from "@logistics/components/orders/Orders.tsx";
 import {Supplies} from "@logistics/components/supplies/Supplies.tsx";
 import {Items} from "@logistics/components/items/Items.tsx";
+import {Repacking} from "@logistics/components/repacking/Repacking.tsx";
 import {useDispatch, useSelector} from "react-redux";
 import {RootState} from "@logistics/store.ts";
 import {getUserFromToken} from "./features/auth/authUtils";
@@ -36,6 +37,7 @@ export function App() {
                         <Route path='/orders/*' element={<Orders />} />
                         <Route path='/supplies/*' element={<Supplies />} />
                         <Route path='/items/*' element={<Items />} />
+                        <Route path='/repacking' element={<Repacking />} />
                         <Route path='*' element={<span>Page not exist</span>} />
                     </Routes>
             }

@@ -1,0 +1,95 @@
+.k-animation-container-relative {
+    width: 100%;
+}
+
+.tare-items-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: 100%;
+}
+
+.tare-items-empty {
+    color: #999;
+    font-style: italic;
+    padding: 1rem 0;
+}
+
+.tare-row-group {
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.tare-row-group + .tare-row-group {
+    margin-top: 2px;
+}
+
+.tare-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    background: #fafafa;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.12s;
+}
+
+.tare-row:hover {
+    background: #f0f4ff;
+}
+
+.tare-expand-btn {
+    background: none;
+    border: none;
+    padding: 2px;
+    cursor: pointer;
+    color: #666;
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.tare-expand-btn:hover {
+    color: #1976d2;
+}
+
+.tare-row-barcode {
+    font-weight: 600;
+    font-size: 0.9rem;
+    min-width: 120px;
+}
+
+.tare-row-type {
+    color: #666;
+    font-size: 0.82rem;
+    min-width: 100px;
+}
+
+.tare-row-nomenclatures {
+    font-size: 0.82rem;
+    color: #555;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+}
+
+.tare-row-summary {
+    font-size: 0.82rem;
+    color: #333;
+    flex-shrink: 0;
+}
+
+.tare-row-units {
+    font-size: 0.78rem;
+    color: #999;
+}
+
+.tare-row-detail {
+    padding: 0.5rem 0.75rem 0.75rem 2.25rem;
+    border-top: 1px solid #eee;
+    background: #fff;
+}

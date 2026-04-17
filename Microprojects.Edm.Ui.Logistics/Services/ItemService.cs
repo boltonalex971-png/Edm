@@ -224,6 +224,338 @@ public class ItemService : ServiceBase<Item>, IItemService
         return items;
     }
 
+    public async Task<BatchCreateItemResult> BatchCreate(BatchCreateItemRequest request)
+    {
+        var eps = 1e-9;
+
+        var nomenclature = await Set<Nomenclature>().AsNoTracking()
+            .FirstOrDefaultAsync(n => n.Id == request.NomenclatureId)
+            ?? throw new EdmException("Nomenclature not found.");
+
+        var tareType = await Set<TareType>().AsNoTracking()
+            .FirstOrDefaultAsync(t => t.Id == request.TareTypeId)
+            ?? throw new EdmException("Tare type not found.");
+
+        if (request.Quantity <= 0)
+        {
+            throw new EdmException("Quantity must be greater than zero.");
+        }
+
+        var isCountableBulkTare = tareType.Countable && tareType.Dimensions <= 0;
+        if (isCountableBulkTare)
+        {
+            var rounded = Math.Round(request.Quantity);
+            if (Math.Abs(request.Quantity - rounded) > eps)
+            {
+                throw new EdmException("Quantity must be an integer for countable bulk tares.");
+            }
+        }
+
+        Tare tare;
+        double used;
+
+        if (request.TareId.HasValue && request.TareId != Guid.Empty)
+        {
+            tare = await Set<Tare>().AsNoTracking()
+                .FirstOrDefaultAsync(t => t.Id == request.TareId.Value)
+                ?? throw new EdmException("Tare not found.");
+
+            if (tare.TareTypeId != request.TareTypeId)
+            {
+                throw new EdmException("Tare type mismatch.");
+            }
+
+            var itemsInTare = await Set<Item>().AsNoTracking()
+                .Include(i => i.Meta)
+                .Where(i => i.TareId == tare.Id && i.Meta.Deleted == null)
+                .ToListAsync();
+
+            used = tareType.Dimensions > 0 && tareType.Countable
+                ? itemsInTare.Count
+                : itemsInTare.Sum(i => i.Quantity);
+        }
+        else
+        {
+            tare = new Tare
+            {
+                Id = Guid.Empty,
+                Barcode = request.Barcode,
+                TareTypeId = request.TareTypeId,
+            };
+            tare = await _tareService.Save(tare);
+            used = 0;
+        }
+
+        var remaining = tareType.Capacity - used;
+        if (request.Quantity > remaining)
+        {
+            throw new EdmException(
+                $"Quantity {request.Quantity} exceeds remaining capacity {remaining}.");
+        }
+
+        var createdItems = new List<Item>();
+
+        if (nomenclature.Countable && tareType.Dimensions > 0)
+        {
+            var count = (int)Math.Round(request.Quantity);
+            if (Math.Abs(request.Quantity - count) > eps)
+            {
+                throw new EdmException("Quantity must be an integer for addressed countable tares.");
+            }
+            var occupiedAddresses = await Set<Item>().AsNoTracking()
+                .Include(i => i.Meta)
+                .Where(i => i.TareId == tare.Id && i.Meta.Deleted == null && i.Address != null)
+                .Select(i => i.Address!.Value)
+                .ToListAsync();
+
+            var nextAddress = 1;
+            for (var i = 0; i < count; i++)
+            {
+                while (occupiedAddresses.Contains(nextAddress))
+                {
+                    nextAddress++;
+                }
+
+                var item = new Item
+                {
+                    Id = Guid.Empty,
+                    NomenclatureId = request.NomenclatureId,
+                    TareId = tare.Id,
+                    Address = nextAddress,
+                    Quantity = 1,
+                    SupplyId = request.SupplyId,
+                };
+                await base.Save(item);
+                createdItems.Add(item);
+                occupiedAddresses.Add(nextAddress);
+                nextAddress++;
+            }
+        }
+        else
+        {
+            if (nomenclature.Countable && isCountableBulkTare)
+            {
+                var rounded = Math.Round(request.Quantity);
+                if (Math.Abs(request.Quantity - rounded) > eps)
+                {
+                    throw new EdmException("Quantity must be an integer for countable bulk tares.");
+                }
+                request.Quantity = rounded;
+            }
+
+            var item = new Item
+            {
+                Id = Guid.Empty,
+                NomenclatureId = request.NomenclatureId,
+                TareId = tare.Id,
+                Address = null,
+                Quantity = request.Quantity,
+                SupplyId = request.SupplyId,
+            };
+            await base.Save(item);
+            createdItems.Add(item);
+        }
+
+        var finalRemaining = remaining - request.Quantity;
+
+        return new BatchCreateItemResult
+        {
+            CreatedCount = createdItems.Count,
+            TareId = tare.Id,
+            TareBarcode = tare.Barcode,
+            TareTypeName = tareType.Name,
+            Remaining = finalRemaining,
+            Items = createdItems.Select(i => new ItemViewModel
+            {
+                Id = i.Id,
+                NomenclatureId = i.NomenclatureId,
+                NomenclatureName = nomenclature.Name,
+                NomenclatureCategory = nomenclature.Category.ToString(),
+                TareId = i.TareId,
+                TareBarcode = tare.Barcode,
+                TareTareTypeId = tareType.Id,
+                TareTareTypeName = tareType.Name,
+                TareTareTypeUnits = tareType.Units,
+                TareTareTypeSizeX = tareType.SizeX,
+                TareTareTypeSizeY = tareType.SizeY,
+                TareTareTypeSizeZ = tareType.SizeZ,
+                TareTareTypeDimensions = tareType.Dimensions,
+                TareTareTypeCapacity = tareType.Capacity,
+                Address = i.Address,
+                Quantity = i.Quantity,
+                SupplyId = i.SupplyId,
+            }),
+        };
+    }
+
+    public async Task<IEnumerable<Item>> GetByTare(Guid tareId)
+    {
+        return await Set().AsNoTracking()
+            .Include(i => i.Nomenclature)
+            .Include(i => i.Tare.TareType)
+            .Include(i => i.Meta)
+            .Where(i => i.TareId == tareId && i.Meta.Deleted == null)
+            .ToListAsync();
+    }
+
+    public async Task<RepackResult> Repack(RepackRequest request)
+    {
+        var eps = 1e-9;
+
+        var errors = new List<string>();
+        var movedCount = 0;
+
+        await using var transaction = await Db.Database.BeginTransactionAsync();
+        try
+        {
+            foreach (var move in request.Moves)
+            {
+                var item = await Set()
+                    .Include(i => i.Meta)
+                    .Include(i => i.Nomenclature)
+                    .Include(i => i.Tare).ThenInclude(t => t.TareType)
+                    .FirstOrDefaultAsync(i => i.Id == move.SourceItemId && i.Meta.Deleted == null);
+
+                if (item == null)
+                {
+                    errors.Add($"Item {move.SourceItemId} not found or deleted.");
+                    continue;
+                }
+
+                if (item.NomenclatureId != request.NomenclatureId)
+                {
+                    errors.Add($"Item {move.SourceItemId} does not match target nomenclature.");
+                    continue;
+                }
+
+                if (move.Quantity <= 0)
+                {
+                    errors.Add($"Move quantity must be greater than zero for item {move.SourceItemId}.");
+                    continue;
+                }
+
+                var tare = await Set<Tare>().AsNoTracking()
+                    .Include(t => t.TareType)
+                    .FirstOrDefaultAsync(t => t.Id == move.TargetTareId);
+
+                if (tare == null)
+                {
+                    errors.Add($"Target tare {move.TargetTareId} not found.");
+                    continue;
+                }
+
+                var targetType = tare.TareType ?? throw new EdmException("Target tare type not found.");
+                var sourceType = item.Tare?.TareType;
+                var isTargetAddressed = targetType.Dimensions > 0;
+
+                // Enforce integer-only quantities for countable bulk tares (source and target).
+                var sourceIsCountableBulkTare = sourceType != null && sourceType.Countable && sourceType.Dimensions <= 0;
+                var targetIsCountableBulkTare = targetType.Countable && targetType.Dimensions <= 0;
+                if (sourceIsCountableBulkTare || targetIsCountableBulkTare)
+                {
+                    var rounded = Math.Round(move.Quantity);
+                    if (Math.Abs(move.Quantity - rounded) > eps)
+                    {
+                        errors.Add($"Quantity must be an integer for countable bulk tare move (item {move.SourceItemId}).");
+                        continue;
+                    }
+                }
+
+                if (move.TargetAddress.HasValue && tare.TareType.Dimensions > 0)
+                {
+                    var addressTaken = await Set()
+                        .Include(i => i.Meta)
+                        .AnyAsync(i =>
+                            i.TareId == move.TargetTareId &&
+                            i.Address == move.TargetAddress &&
+                            i.Id != item.Id &&
+                            i.Meta.Deleted == null);
+
+                    if (addressTaken)
+                    {
+                        errors.Add($"Address {move.TargetAddress} in tare {tare.Barcode} is already occupied.");
+                        continue;
+                    }
+                }
+
+                // Capacity check for target tare (for bulk tares).
+                if (!isTargetAddressed)
+                {
+                    var itemsInTarget = await Set<Item>().AsNoTracking()
+                        .Include(i => i.Meta)
+                        .Where(i => i.TareId == move.TargetTareId && i.Meta.Deleted == null)
+                        .ToListAsync();
+
+                    var used = targetType.Countable && targetType.Dimensions > 0
+                        ? itemsInTarget.Count
+                        : itemsInTarget.Sum(i => i.Quantity);
+
+                    var remaining = targetType.Capacity - used;
+                    if (move.Quantity > remaining + eps)
+                    {
+                        errors.Add($"Target tare {tare.Barcode} has insufficient remaining capacity ({remaining}).");
+                        continue;
+                    }
+                }
+
+                // Addressed tares: move whole item only (quantity=1) and require address for countable nomenclature.
+                if (isTargetAddressed && item.Nomenclature?.Countable == true)
+                {
+                    if (!move.TargetAddress.HasValue)
+                    {
+                        errors.Add($"Target address is required for countable item {move.SourceItemId}.");
+                        continue;
+                    }
+
+                    if (Math.Abs(item.Quantity - 1) > eps || Math.Abs(move.Quantity - 1) > eps)
+                    {
+                        errors.Add($"Addressed tares require whole-item moves (quantity=1) for item {move.SourceItemId}.");
+                        continue;
+                    }
+
+                    item.TareId = move.TargetTareId;
+                    item.Address = move.TargetAddress;
+                    movedCount++;
+                    continue;
+                }
+
+                // Bulk move: allow partial quantity by splitting the item.
+                if (move.Quantity >= item.Quantity - eps)
+                {
+                    item.TareId = move.TargetTareId;
+                    item.Address = null;
+                    movedCount++;
+                    continue;
+                }
+
+                var newItem = new Item
+                {
+                    Id = Guid.Empty,
+                    OriginId = item.Id,
+                    NomenclatureId = item.NomenclatureId,
+                    TareId = move.TargetTareId,
+                    Address = null,
+                    Quantity = move.Quantity,
+                    SupplyId = item.SupplyId,
+                };
+                await base.Save(newItem);
+
+                item.Quantity -= move.Quantity;
+                movedCount++;
+            }
+
+            await Db.SaveChangesAsync();
+            await transaction.CommitAsync();
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            errors.Add($"Transaction failed: {ex.Message}");
+        }
+
+        return new RepackResult { MovedCount = movedCount, Errors = errors.ToArray() };
+    }
+
     public async Task<IEnumerable<ItemLinkViewModel>> GetLinksForTarget(Guid targetItemId)
     {
         return await Db.Set<ItemLink>()

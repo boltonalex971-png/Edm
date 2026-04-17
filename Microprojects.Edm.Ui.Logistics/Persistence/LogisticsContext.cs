@@ -45,6 +45,8 @@ public class LogisticsContext : DbContext
         //         s => JsonConvert.DeserializeObject<string[]>(s ?? "[]")
         //     );
 
+        builder.Entity<TareType>().Ignore(t => t.Dimensions);
+
         // Foreign keys for tables with metainfo
         ConfigureMetaEntities(builder);
 

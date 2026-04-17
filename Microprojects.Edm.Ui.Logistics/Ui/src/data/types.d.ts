@@ -47,6 +47,9 @@ export interface Nomenclature extends DataItem {
 export interface TareType extends DataItem {
     units: string
     countable: boolean
+    sizeX?: number
+    sizeY?: number
+    sizeZ?: number
     dimensions: number
     capacity: number
 }
@@ -59,12 +62,17 @@ export interface Item  extends DataItem {
     nomenclatureId: UUID
     children: Item[]
     serialNo?: string
+    tareId?: UUID
     tareBarcode?: string
     tareTareTypeId?: UUID
     tareTareTypeName?: string
     tareTareTypeUnits?: string
+    tareTareTypeSizeX?: number
+    tareTareTypeSizeY?: number
+    tareTareTypeSizeZ?: number
+    tareTareTypeDimensions: number
+    tareTareTypeCapacity: number
     address?: number
-    capacity: number
     quantity:  number
 }
 
@@ -100,6 +108,78 @@ export interface ItemSearchQuery {
     originId?: UUID
     nomenclatureId?: UUID
     active?: boolean
+}
+
+export interface TareInfo {
+    id: UUID
+    barcode?: string
+    tareTypeId: UUID
+    tareTypeName?: string
+    tareTypeUnits?: string
+    sizeX?: number
+    sizeY?: number
+    sizeZ?: number
+    dimensions: number
+    capacity: number
+}
+
+export interface RepackMove {
+    sourceItemId: UUID
+    targetTareId: UUID
+    targetAddress?: number
+    quantity: number
+}
+
+export interface RepackRequest {
+    nomenclatureId: UUID
+    moves: RepackMove[]
+}
+
+export interface RepackResult {
+    movedCount: number
+    errors: string[]
+}
+
+export interface AvailableTare {
+    id: UUID
+    barcode?: string
+    tareTypeId: UUID
+    tareTypeName?: string
+    tareTypeUnits?: string
+    sizeX?: number
+    sizeY?: number
+    sizeZ?: number
+    dimensions: number
+    capacity: number
+    remaining: number
+}
+
+export interface BatchCreateItemRequest {
+    nomenclatureId: UUID
+    tareTypeId: UUID
+    tareId?: UUID
+    barcode?: string
+    quantity: number
+    supplyId?: UUID
+}
+
+export interface BatchCreateItemResult {
+    createdCount: number
+    tareId: UUID
+    tareBarcode?: string
+    tareTypeName?: string
+    remaining: number
+    items: Item[]
+}
+
+export interface AllocateItemsRequest {
+    itemIds: UUID[]
+}
+
+export interface AllocateItemsResult {
+    allocatedCount: number
+    allocatedQuantity: number
+    stoppedReason?: string
 }
 
 export interface OrderSearchQuery {

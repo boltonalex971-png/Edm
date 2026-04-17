@@ -48,6 +48,12 @@ public class OrdersController : CrudControllerBase<Order, OrderViewModel, IOrder
         var orderItem = await Service.AddItem(id, item);
         return Mapper.Map<ItemViewModel>(orderItem);
     }
+
+    [HttpPost("{id:Guid}/items/batch")]
+    public async Task<AllocateItemsResult> AddItems(Guid id, [FromBody] AllocateItemsRequest request)
+    {
+        return await Service.AddItems(id, request.ItemIds);
+    }
     
     [HttpGet("{id:Guid}/operations")]
     public async Task<IEnumerable<OrderProcessViewModel>> GetOrderProcesses(Guid id)

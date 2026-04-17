@@ -1,126 +1,143 @@
-﻿// using System;
-// using System.Collections.Generic;
-// using System.Linq;
-// using System.Threading.Tasks;
-// using AutoMapper;
-// using Microprojects.Edm.Ui.Logistics.Contracts;
-// using Microprojects.Edm.Ui.Logistics.Models;
-// using Microprojects.Edm.Ui.Logistics.Utils;
-// using Microsoft.AspNetCore.Mvc;
-// using Microsoft.Extensions.Logging;
-// using Microprojects.Edm.Ui.Logistics.ViewModels;
-// using Optosense.Edm.Core.AspNet.Controllers;
-// using Optosense.Edm.Plugins;
-//
-// namespace Microprojects.Edm.Ui.Logistics.Controllers;
-//
-// [ApiController]
-// [Route("api/logistics/[controller]")]
-// public class NomenclaturesController : AuthControllerBase
-// {
-//     private readonly ILogger<NomenclaturesController> _logger;
-//     private readonly IMapper _mapper;
-//     private readonly INomenclatureService _service;
-//     private readonly IDirectoryService _directoryService;
-//
-//     public NomenclaturesController(ILogger<NomenclaturesController> logger, IMapper mapper,
-//         INomenclatureService service, IDirectoryService directoryService, IConfiguration configuration) :
-//         base(configuration)
-//     {
-//         _logger = logger;
-//         _mapper = mapper;
-//         _service = service;
-//         _directoryService = directoryService;
-//     }
-//
-//     [HttpGet]
-//     public async Task<IEnumerable<Nomenclature>> Get()
-//     {
-//         return await _service.GetAll();
-//     }
-//
-//     [HttpGet("hierarchy")]
-//     public async Task<IEnumerable<DirectoryEntryViewModel>> GetHierarchy()
-//     {
-//         var entries = _mapper.Map<IEnumerable<DirectoryEntryViewModel>>(
-//             await _service.GetAll());
-//         var folders = _mapper.Map<IEnumerable<DirectoryEntryViewModel>>(
-//             await _directoryService.GetTree(nameof(Nomenclature), UserInfo.Groups));
-//         var tree = folders.Concat(entries)
-//             .ToList()
-//             .ToTree();
-//         // always expand root if just one
-//         // if (tree.Count() == 1)
-//         // {
-//         //     tree.First().expanded = true;
-//         // }
-//
-//         return tree;
-//     }
-//
-//     [HttpGet("{id:guid}")]
-//     public async Task<NomenclatureViewModel> GetById(Guid id)
-//     {
-//         if (id != Guid.Empty)
-//         {
-//             var nomenclature = await _service.Get(id);
-//             var model = _mapper.Map<NomenclatureViewModel>(nomenclature);
-//             return model;
-//         }
-//
-//         return new NomenclatureViewModel
-//         {
-//             Name = string.Empty,
-//             Description = string.Empty,
-//         };
-//     }
-//
-//     [HttpPut("{id:guid}")]
-//     public async Task<Nomenclature> Save(Guid id, [FromBody] NomenclatureViewModel model)
-//     {
-//         var nomenclature = _mapper.Map<Nomenclature>(model);
-//         if (id != nomenclature.Id)
-//         {
-//             throw new Exception("Process id is ambiguous");
-//         }
-//
-//         nomenclature.Meta = new Meta
-//         {
-//             Owner = UserInfo.Name,
-//             Metatype = nameof(Process)
-//         };
-//         var result = await _service.Save(nomenclature);
-//         return result;
-//     }
-//
-//     [HttpDelete("{id:guid}")]
-//     public async Task<Nomenclature> Delete(Guid id)
-//     {
-//         var nomenclature = await _service.Delete(id);
-//         return nomenclature;
-//     }
-//
-//     [HttpPost]
-//     public async Task<Nomenclature> Create([FromBody] NomenclatureViewModel model)
-//     {
-//         var nomenclature = _mapper.Map<Nomenclature>(model);
-//         nomenclature.Meta = new Meta
-//         {
-//             Owner = UserInfo.Name,
-//             Metatype = nameof(Process),
-//             //Groups = model.Division == null ? [] : [model.Division]
-//         };
-//         var result = await _service.Save(nomenclature);
-//         return result;
-//     }
-//
-//     [HttpPut("{id:guid}/parent")]
-//     public async Task<NomenclatureViewModel> ChangeParent(Guid id, [FromBody] DirectoryViewModel parent)
-//     {
-//         var result = await _service.ChangeParent<Nomenclature>(id, parent.Id);
-//         return _mapper.Map<NomenclatureViewModel>(result);
-//     }
-//
-//     [HttpGet("categories")]
-//     public string[] GetCategories() => Enum.GetNames(typeof(NomenclatureCategories));
-// }
+﻿using AutoMapper;
+using Microprojects.Edm.Ui.Logistics.Contracts;
+using Microprojects.Edm.Ui.Logistics.Models;
+using Microprojects.Edm.Ui.Logistics.ViewModels;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microprojects.Edm.Ui.Logistics.Persistence;
+using Optosense.Edm.Core.AspNet.Controllers;
+
+namespace Microprojects.Edm.Ui.Logistics.Controllers;
+
+[ApiController]
+[Route("api/logistics/[controller]")]
+public class TaresController : AuthControllerBase
+{
+    private readonly IMapper _mapper;
+    private readonly LogisticsContext _db;
+
+    public TaresController(IMapper mapper, LogisticsContext db, IConfiguration configuration)
+        : base(configuration)
+    {
+        _mapper = mapper;
+        _db = db;
+    }
+
+    [HttpGet("search")]
+    public async Task<IEnumerable<TareViewModel>> Search([FromQuery] string? barcode)
+    {
+        var query = _db.Tares.AsNoTracking()
+            .Include(t => t.TareType)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(barcode))
+        {
+            var bc = barcode.Trim();
+            query = query.Where(t => t.Barcode != null && t.Barcode.Contains(bc));
+        }
+
+        var result = await query.Take(50).ToListAsync();
+        return result.Select(t => new TareViewModel
+        {
+            Id = t.Id,
+            Barcode = t.Barcode,
+            TareTypeId = t.TareTypeId,
+            TareTypeName = t.TareType?.Name,
+            TareTypeUnits = t.TareType?.Units,
+            SizeX = t.TareType?.SizeX,
+            SizeY = t.TareType?.SizeY,
+            SizeZ = t.TareType?.SizeZ,
+            Dimensions = t.TareType?.Dimensions ?? 0,
+            Capacity = t.TareType?.Capacity ?? 0,
+        });
+    }
+
+    /// <summary>
+    /// Returns tares of the given type that still have free slots/capacity,
+    /// together with the number of remaining available slots.
+    /// </summary>
+    [HttpGet("available")]
+    public async Task<IEnumerable<AvailableTareViewModel>> GetAvailable([FromQuery] Guid tareTypeId)
+    {
+        var tareType = await _db.TareTypes.AsNoTracking()
+            .FirstOrDefaultAsync(t => t.Id == tareTypeId)
+            ?? throw new EdmException("Tare type not found.");
+
+        var tares = await _db.Tares.AsNoTracking()
+            .Where(t => t.TareTypeId == tareTypeId)
+            .ToListAsync();
+
+        var tareIds = tares.Select(t => t.Id).ToList();
+
+        var activeItems = await _db.Items.AsNoTracking()
+            .Include(i => i.Meta)
+            .Where(i => i.TareId != null && tareIds.Contains(i.TareId.Value) && i.Meta.Deleted == null)
+            .ToListAsync();
+
+        var result = new List<AvailableTareViewModel>();
+        foreach (var tare in tares)
+        {
+            var itemsInTare = activeItems.Where(i => i.TareId == tare.Id).ToList();
+
+            double used = tareType.Dimensions > 0 && tareType.Countable
+                ? itemsInTare.Count
+                : itemsInTare.Sum(i => i.Quantity);
+
+            var remaining = tareType.Capacity - used;
+            if (remaining <= 0)
+            {
+                continue;
+            }
+
+            result.Add(new AvailableTareViewModel
+            {
+                Id = tare.Id,
+                Barcode = tare.Barcode,
+                TareTypeId = tare.TareTypeId,
+                TareTypeName = tareType.Name,
+                TareTypeUnits = tareType.Units,
+                SizeX = tareType.SizeX,
+                SizeY = tareType.SizeY,
+                SizeZ = tareType.SizeZ,
+                Dimensions = tareType.Dimensions,
+                Capacity = tareType.Capacity,
+                Remaining = remaining,
+            });
+        }
+
+        return result;
+    }
+
+    [HttpPost]
+    public async Task<TareViewModel> Create([FromBody] CreateTareRequest model)
+    {
+        var tareType = await _db.TareTypes.AsNoTracking()
+            .FirstOrDefaultAsync(t => t.Id == model.TareTypeId)
+            ?? throw new EdmException("Tare type not found.");
+
+        var tare = new Tare
+        {
+            Id = Guid.Empty,
+            Barcode = model.Barcode,
+            TareTypeId = model.TareTypeId,
+        };
+
+        _db.Tares.Add(tare);
+        tare.Id = DomainObject.NewGuid();
+        await _db.SaveChangesAsync();
+
+        return new TareViewModel
+        {
+            Id = tare.Id,
+            Barcode = tare.Barcode,
+            TareTypeId = tare.TareTypeId,
+            TareTypeName = tareType.Name,
+            TareTypeUnits = tareType.Units,
+            SizeX = tareType.SizeX,
+            SizeY = tareType.SizeY,
+            SizeZ = tareType.SizeZ,
+            Dimensions = tareType.Dimensions,
+            Capacity = tareType.Capacity,
+        };
+    }
+}

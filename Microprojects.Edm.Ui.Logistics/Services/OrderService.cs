@@ -76,12 +76,23 @@ public class OrderService : ServiceBase<Order>, IOrderService
         Guid? processId = null)
     {
         var order = await Get(orderId);
-        var specifications = await Set<OrderProcess>().AsNoTracking()
-            .Include(p => p.Process.Specifications
-                .Where(s => s.Active))
-            .Where(p => p.OrderId == orderId && (processId == null || p.ProcessId == processId))
-            .SelectMany(p => p.Process.Specifications)
-            .ToListAsync();
+
+        List<Specification> specifications;
+        if (processId == null)
+        {
+            specifications = await Set<Specification>().AsNoTracking()
+                .Where(s => s.ProcessId == order.ProcessId && s.Active)
+                .ToListAsync();
+        }
+        else
+        {
+            specifications = await Set<OrderProcess>().AsNoTracking()
+                .Include(p => p.Process.Specifications
+                    .Where(s => s.Active))
+                .Where(p => p.OrderId == orderId && p.ProcessId == processId)
+                .SelectMany(p => p.Process.Specifications)
+                .ToListAsync();
+        }
         var items = await Set<Item>().AsNoTracking()
             .Include(i => i.Meta)
             .Where(i => i.OrderId == orderId && i.Meta.Deleted == null)
@@ -161,6 +172,43 @@ public class OrderService : ServiceBase<Order>, IOrderService
         }
 
         return storeItem;
+    }
+
+    public async Task<AllocateItemsResult> AddItems(Guid orderId, IEnumerable<Guid> itemIds)
+    {
+        var allocated = 0;
+        var totalQty = 0.0;
+        string? stoppedReason = null;
+
+        foreach (var itemId in itemIds)
+        {
+            var storeItem = await Set<Item>().AsNoTracking()
+                .FirstOrDefaultAsync(i => i.Id == itemId);
+
+            if (storeItem == null)
+            {
+                continue;
+            }
+
+            try
+            {
+                var result = await AddItem(orderId, storeItem);
+                allocated++;
+                totalQty += result.Quantity;
+            }
+            catch (EdmException ex)
+            {
+                stoppedReason = ex.Message;
+                break;
+            }
+        }
+
+        return new AllocateItemsResult
+        {
+            AllocatedCount = allocated,
+            AllocatedQuantity = totalQty,
+            StoppedReason = stoppedReason,
+        };
     }
 
     public async Task<bool> Execute(Guid id, Guid? processId)
@@ -250,12 +298,15 @@ public class OrderService : ServiceBase<Order>, IOrderService
             {
                 var inputItems = await Set<Item>()
                     .Include(i => i.Meta)
+                    .Include(i => i.Tare).ThenInclude(t => t.TareType)
                     .Where(i =>
                         i.OrderId == order.Id &&
                         i.NomenclatureId == spec.NomenclatureId &&
                         i.Meta.Deleted == null)
                     .OrderBy(i => i.Id) // UUIDv7 ordering: FIFO by creation time
                     .ToListAsync();
+
+                static bool IsInteger(double v, double eps) => Math.Abs(v - Math.Round(v)) <= eps;
 
                 if (targetOutputItems.Count == 0)
                 {
@@ -266,7 +317,21 @@ public class OrderService : ServiceBase<Order>, IOrderService
                         if (remaining <= eps)
                             break;
 
+                        var tareType = item.Tare?.TareType;
+                        var isCountableBulkTare = tareType != null && tareType.Countable && tareType.Dimensions <= 0;
+                        if (isCountableBulkTare)
+                        {
+                            if (!IsInteger(item.Quantity, eps) || !IsInteger(remaining, eps))
+                            {
+                                throw new EdmException("Countable bulk tare operations require integer quantities.");
+                            }
+                        }
+
                         var consumed = Math.Min(item.Quantity, remaining);
+                        if (isCountableBulkTare && !IsInteger(consumed, eps))
+                        {
+                            throw new EdmException("Countable bulk tare operations require integer quantities.");
+                        }
                         item.Quantity -= consumed;
                         remaining -= consumed;
                         if (item.Quantity <= eps)
@@ -288,6 +353,12 @@ public class OrderService : ServiceBase<Order>, IOrderService
                 foreach (var targetItem in targetOutputItems)
                 {
                     var requiredForThisTarget = spec.Quantity * targetItem.Quantity;
+                    var currentTareType = inputIndex < inputItems.Count ? inputItems[inputIndex].Tare?.TareType : null;
+                    var isCountableBulkTare = currentTareType != null && currentTareType.Countable && currentTareType.Dimensions <= 0;
+                    if (isCountableBulkTare && !IsInteger(requiredForThisTarget, eps))
+                    {
+                        throw new EdmException("Countable bulk tare operations require integer quantities.");
+                    }
                     while (requiredForThisTarget > eps)
                     {
                         if (inputIndex >= inputItems.Count)
@@ -306,7 +377,18 @@ public class OrderService : ServiceBase<Order>, IOrderService
                             continue;
                         }
 
+                        currentTareType = inputItem.Tare?.TareType;
+                        isCountableBulkTare = currentTareType != null && currentTareType.Countable && currentTareType.Dimensions <= 0;
+                        if (isCountableBulkTare && (!IsInteger(available, eps) || !IsInteger(requiredForThisTarget, eps)))
+                        {
+                            throw new EdmException("Countable bulk tare operations require integer quantities.");
+                        }
+
                         var consumed = Math.Min(available, requiredForThisTarget);
+                        if (isCountableBulkTare && !IsInteger(consumed, eps))
+                        {
+                            throw new EdmException("Countable bulk tare operations require integer quantities.");
+                        }
 
                         Db.ItemLinks.Add(new ItemLink
                         {

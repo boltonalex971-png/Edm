@@ -10,6 +10,9 @@ namespace Microprojects.Edm.Ui.Logistics.ViewModels
     {
         public string? Units { get; set; }
         public bool Countable { get; set; }
+        public int? SizeX { get; set; }
+        public int? SizeY { get; set; }
+        public int? SizeZ { get; set; }
         public int Dimensions { get; set; }
         public double Capacity { get; set; } 
     }

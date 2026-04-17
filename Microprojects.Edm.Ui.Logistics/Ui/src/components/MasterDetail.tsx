@@ -210,14 +210,14 @@ function ToolbarButton({visible, ...props}: ToolbarButtonProps) {
 }
 
 type InfoProps = {
-    content: React.ReactNode,
+    content: React.ReactNode | ((formRenderProps: any) => React.ReactNode),
     //data: TreeNode
 }
 
 export function Info(props: InfoProps) {
     return (
         <>
-            {props.content}
+            {typeof props.content === 'function' ? props.content(undefined) : props.content}
         </>
     );
 }
@@ -280,7 +280,7 @@ export function Editor(props: EditorProps) {
                 onSubmit={handleSubmit}
                 render={(formRenderProps) => (
                     <FormElement>
-                        {props.content}
+                        {typeof props.content === 'function' ? props.content(formRenderProps) : props.content}
                         <div className="k-form-buttons" style={{
                             position: 'sticky',
                             bottom: 10,

@@ -2,13 +2,15 @@ import React, {type EffectCallback, useEffect, useState} from 'react'
 import {Diagram3} from 'react-bootstrap-icons'
 import {Field} from '@progress/kendo-react-form'
 import {Input} from '@progress/kendo-react-inputs'
+import {Button} from '@progress/kendo-react-buttons'
 import api from '@features/api/api'
 import {useGet} from '@logistics/hooks/hooks'
 import {type DetailEventHandler, type Supply, type UUID} from '@logistics/data/types'
 import {Detail, type DetailProps, Editor, EMPTY_GUID, Info} from '@logistics/components/MasterDetail'
-import {RelationTable} from '@logistics/components/RelationTable'
-import {GridColumn} from '@progress/kendo-react-grid'
 import {ItemDetail} from '@logistics/components/items/ItemDetail'
+import {BatchItemCreate} from '@logistics/components/items/BatchItemCreate'
+import {TareItemsPanel} from '@logistics/components/tare/TareItemsPanel'
+import {TareDetail} from '@logistics/components/tare/TareDetail'
 import Api from '@features/api/api'
 
 export interface SupplyDetailProps extends DetailProps {
@@ -77,42 +79,46 @@ export function SupplyDetail({id, title = 'Supply', ...props}: SupplyDetailProps
             }
             relations={
                 supplyId && supplyId !== EMPTY_GUID ? (
-                    <RelationTable
+                    <TareItemsPanel
                         api={`${api.supplies}/${supplyId}/items`}
-                        removable={true}
-                        editable={true}
-                        creatable={true}
-                        addMode='subdetail'
-                        onRowSelected={(row) =>
+                        onTareClick={(group) =>
+                            setSubDetail(
+                                <TareDetail
+                                    tareId={group.tare.id}
+                                    label={group.tare.barcode}
+                                    onClose={() => setSubDetail(undefined)}
+                                />
+                            )
+                        }
+                        onItemClick={(item) =>
                             setSubDetail(
                                 <ItemDetail
                                     readonly={true}
-                                    id={row?.id}
+                                    id={item.id}
                                     api={Api.items}
                                     onClose={() => setSubDetail(undefined)}
                                 />
                             )
                         }
-                        subDetail={({ mode, api: relApi, dataItem, onClose, onSaved }) => (
-                            <ItemDetail
-                                title={mode === 'create' ? 'New Item' : 'Item'}
-                                editMode={true}
-                                readonly={false}
-                                id={mode === 'edit' ? dataItem?.id : undefined}
-                                api={mode === 'create' ? relApi : Api.items}
-                                onClose={onClose as any}
-                                onUpdate={onSaved as any}
-                            />
-                        )}
-                    >
-                        <GridColumn field='nomenclatureName' title='Nomenclature' width='auto'/>
-                        <GridColumn field='tareTareTypeName' title='Tare' width='150'/>
-                        <GridColumn field='tareBarcode' title='Tare barcode' width='140'/>
-                        <GridColumn field='address' title='Address' width='90'/>
-                        <GridColumn field='serialNo' title='Serial No' width='140'/>
-                        <GridColumn field='quantity' title='Quantity' width='110'/>
-                        <GridColumn field='tareTareTypeUnits' title='Units' width='100'/>
-                    </RelationTable>
+                        toolbar={
+                            <div className="mb-2">
+                                <Button
+                                    themeColor="primary"
+                                    size="small"
+                                    onClick={() =>
+                                        setSubDetail(
+                                            <BatchItemCreate
+                                                supplyId={supplyId as UUID}
+                                                onClose={() => setSubDetail(undefined)}
+                                            />
+                                        )
+                                    }
+                                >
+                                    <span className="k-icon k-i-add" /> Add items
+                                </Button>
+                            </div>
+                        }
+                    />
                 ) : null
             }
         />

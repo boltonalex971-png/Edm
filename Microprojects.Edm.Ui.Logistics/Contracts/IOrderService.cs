@@ -12,6 +12,7 @@ public interface IOrderService : IGenericService<Order>
     Task<IEnumerable<OrderSpecificationNomenclature>> GetSpecifications(Guid id, Guid? processId = null);
     Task<IEnumerable<OrderProcess>> GetOrderProcesses(Guid id, bool asNoTracking = true);
     Task<Item> AddItem(Guid id, Item item);
+    Task<AllocateItemsResult> AddItems(Guid orderId, IEnumerable<Guid> itemIds);
     Task<bool> Execute(Guid id, Guid? processId);
     Task<IEnumerable<Order>> Search(OrderSearchQuery query);
 }

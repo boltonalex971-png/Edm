@@ -1,0 +1,196 @@
+.tare-header {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.tare-label {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.tare-info {
+    color: #777;
+    font-size: 0.8rem;
+}
+
+.tare-grid {
+    display: grid;
+    gap: 3px;
+}
+
+.tare-flex-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+}
+
+.tare-slot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    min-width: 52px;
+    min-height: 44px;
+    padding: 2px 4px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    user-select: none;
+    font-size: 0.78rem;
+}
+
+.tare-slot.occupied {
+    background: #e3f2fd;
+    border-color: #90caf9;
+}
+
+.tare-slot.empty {
+    background: #fff;
+    border-color: #e0e0e0;
+}
+
+.tare-slot.selected {
+    border-color: #1976d2;
+    box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.3);
+    background: #bbdefb;
+}
+
+.tare-slot.highlight-empty {
+    border-color: #66bb6a;
+    background: #e8f5e9;
+}
+
+.tare-slot:hover {
+    border-color: #64b5f6;
+    background: #e1f5fe;
+}
+
+.slot-address {
+    font-size: 0.65rem;
+    color: #999;
+}
+
+.slot-serial {
+    font-weight: 600;
+    font-size: 0.75rem;
+    color: #333;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 60px;
+}
+
+.tare-schematic {
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+/* 3D layout: layer tabs on the left, grid on the right */
+.tare-3d-layout {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-start;
+}
+
+.tare-layer-tabs {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.tare-layer-btn {
+    width: 28px;
+    height: 28px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #f5f5f5;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: #555;
+    transition: background 0.15s, border-color 0.15s;
+    padding: 0;
+    line-height: 28px;
+    text-align: center;
+}
+
+.tare-layer-btn:hover {
+    background: #e1f5fe;
+    border-color: #64b5f6;
+}
+
+.tare-layer-btn.active {
+    background: #1976d2;
+    color: #fff;
+    border-color: #1565c0;
+}
+
+.slot-tooltip {
+    position: absolute;
+    transform: translate(-50%, -100%);
+    background: #fff;
+    border: 1px solid #bbb;
+    border-radius: 6px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+    padding: 0.5rem 0.75rem;
+    z-index: 20;
+    pointer-events: none;
+    white-space: nowrap;
+    font-size: 0.82rem;
+    min-width: 160px;
+}
+
+.slot-tooltip-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    line-height: 1.6;
+}
+
+.slot-tooltip-label {
+    color: #888;
+    font-size: 0.78rem;
+}
+
+.tare-bulk-bar {
+    position: relative;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    overflow: hidden;
+    min-height: 36px;
+    background: #fff;
+}
+
+.tare-bulk-fill {
+    position: absolute;
+    inset: 0;
+    width: 0;
+    transition: width 0.3s ease;
+    opacity: 0.45;
+}
+
+.tare-bulk-content {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.85rem;
+    gap: 0.75rem;
+}
+
+.tare-bulk-content .bulk-names {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+.tare-bulk-content .bulk-qty {
+    font-weight: 600;
+    flex-shrink: 0;
+}

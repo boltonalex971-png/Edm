@@ -39,7 +39,7 @@ export function ItemDetail({id, title = 'Item', ...props}: ItemDetailProps) {
     const selectedNomenclature = nomenclatures?.find(n => n.id === data?.nomenclatureId);
     const selectedTareType = taretypes?.find(t => t.id === data?.tareTareTypeId);
     const showAddress =
-        (selectedTareType?.dimensions ?? 0) > 0 &&
+        (selectedTareType?.sizeX ?? 0) > 0 &&
         (selectedNomenclature?.countable ?? false) === true;
 
     // Reset alert after open item changed
