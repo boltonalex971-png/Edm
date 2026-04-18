@@ -11,21 +11,26 @@ namespace Microprojects.Edm.Ui.Logistics.Services;
 
 public class OrderService : ServiceBase<Order>, IOrderService
 {
+    private const double Eps = 1e-9;
+
     private IItemService _itemService;
+    private IMapper? _mapper;
 
     public OrderService()
     {
     }
 
-    public OrderService(LogisticsContext db, IUserService userService, IItemService itemService) : base(db, userService)
+    public OrderService(LogisticsContext db, IUserService userService, IItemService itemService, IMapper mapper) : base(db, userService)
     {
         _itemService = itemService;
+        _mapper = mapper;
     }
 
     public override async Task<Order> Get(Guid id)
     {
         var order = await Set().AsNoTracking()
             .Include(o => o.Process.Nomenclature)
+            .Include(o => o.Meta)
             .FirstOrDefaultAsync(o => o.Id == id);
         return order;
     }
@@ -35,7 +40,7 @@ public class OrderService : ServiceBase<Order>, IOrderService
         var query = Set().AsNoTracking()
             .Include(i => i.Process.Nomenclature)
             .Include(e => e.Meta)
-            .Where(e => e.Meta.Deleted == null);
+            .Where(e => e.Meta.Deleted == null && e.Meta.Completed == null);
 
         if (predicate != null)
         {
@@ -53,19 +58,16 @@ public class OrderService : ServiceBase<Order>, IOrderService
         await base.Save(order);
         if (create)
         {
-            var process = await Set<Process>().FirstAsync(p => p.Id == order.ProcessId);
-            var processes = await GetOperationProcesses(process);
-            Db.AddRange(
-                processes
-                    .Select((p, i) => new OrderProcess
-                        {
-                            Id = DomainObject.NewGuid(),
-                            OrderId = order.Id,
-                            ProcessId = p,
-                            Ordering = (i + 1) * 10
-                        }
-                    )
-            );
+            // One order -> one process. Operations within a technology process are
+            // represented by OrderProcess rows only for the future integration phase;
+            // today we always use a single row matching the order's root process.
+            Db.Add(new OrderProcess
+            {
+                Id = DomainObject.NewGuid(),
+                OrderId = order.Id,
+                ProcessId = order.ProcessId,
+                Ordering = 10,
+            });
             await Db.SaveChangesAsync();
         }
 
@@ -95,7 +97,7 @@ public class OrderService : ServiceBase<Order>, IOrderService
         }
         var items = await Set<Item>().AsNoTracking()
             .Include(i => i.Meta)
-            .Where(i => i.OrderId == orderId && i.Meta.Deleted == null)
+            .Where(i => i.OrderId == orderId && i.Meta.Deleted == null && i.Meta.Completed == null)
             .ToListAsync();
         var rows = await Set<SpecificationNomenclature>().AsNoTracking()
             .Include(sn => sn.Nomenclature)
@@ -120,7 +122,7 @@ public class OrderService : ServiceBase<Order>, IOrderService
             .Include(i => i.Nomenclature)
             .Include(i => i.Tare.TareType)
             .Include(i => i.Meta)
-            .Where(i => i.OrderId == id && i.Meta.Deleted == null)
+            .Where(i => i.OrderId == id && i.Meta.Deleted == null && i.Meta.Completed == null)
             .ToListAsync();
 
         return items;
@@ -211,10 +213,11 @@ public class OrderService : ServiceBase<Order>, IOrderService
         };
     }
 
-    public async Task<bool> Execute(Guid id, Guid? processId)
+    public async Task<ExecuteResult> Execute(Guid id)
     {
         var order = await Set()
             .Include(o => o.Meta)
+            .Include(o => o.Process).ThenInclude(p => p.Nomenclature)
             .FirstOrDefaultAsync(o => o.Id == id);
 
         if (order == null)
@@ -222,69 +225,59 @@ public class OrderService : ServiceBase<Order>, IOrderService
             throw new EdmException($"Order with id {id} not found");
         }
 
-        IEnumerable<OrderProcess> processesQuery = (await GetOrderProcesses(id, asNoTracking: false))
-            .Where(p => p.StartTime == null)
-            .OrderBy(p => p.Ordering);
-
-        if (processId != null)
+        if (order.Meta.Completed != null)
         {
-            processesQuery = processesQuery.Where(p => p.ProcessId == processId);
+            throw new EdmException("Order is already completed.");
         }
 
-        var eps = 1e-9;
+        var orderProcess = await Set<OrderProcess>()
+            .Include(op => op.Process).ThenInclude(p => p.Nomenclature)
+            .Where(op => op.OrderId == id)
+            .OrderBy(op => op.Ordering)
+            .FirstOrDefaultAsync()
+            ?? throw new EdmException("Order has no process.");
 
-        foreach (var process in processesQuery)
+        if (orderProcess.StartTime != null)
         {
-            var specifications = (await GetSpecifications(id, process.ProcessId))
-                .ToList();
+            throw new EdmException("Order has already been executed.");
+        }
 
-            // Check if all required components for the process are allocated
-            if (specifications.Any(n => n.Total + eps < n.Amount))
-                throw new EdmException("Not all required components are available");
+        var specifications = (await GetSpecifications(id))
+            .ToList();
 
-            // Set operation started
-            process.StartTime = DateTime.UtcNow;
+        // Check if all required components for the process are allocated
+        if (specifications.Any(n => n.Total + Eps < n.Amount))
+            throw new EdmException("Not all required components are available");
 
-            var targetOutputItems = new List<Item>();
-            if (process.Process.NomenclatureId != null)
+        var now = DateTime.UtcNow;
+        orderProcess.StartTime = now;
+
+        // Produce outputs from the root process nomenclature.
+        var targetOutputItems = new List<Item>();
+        var targetNomenclature = orderProcess.Process.Nomenclature
+                                 ?? (order.Process?.NomenclatureId != null
+                                     ? await Set<Nomenclature>().AsNoTracking()
+                                         .FirstAsync(n => n.Id == order.Process.NomenclatureId.Value)
+                                     : null);
+        if (targetNomenclature != null)
+        {
+            if (targetNomenclature.Countable)
             {
-                var targetNomenclature = process.Process.Nomenclature
-                                         ?? await Set<Nomenclature>()
-                                             .AsNoTracking()
-                                             .FirstAsync(n => n.Id == process.Process.NomenclatureId.Value);
-
-                if (targetNomenclature.Countable)
+                var rounded = Math.Round(order.Amount);
+                if (Math.Abs(order.Amount - rounded) > Eps)
                 {
-                    var rounded = Math.Round(order.Amount);
-                    if (Math.Abs(order.Amount - rounded) > eps)
-                    {
-                        throw new EdmException("Order amount must be an integer for countable output nomenclature.");
-                    }
-
-                    var outputCount = (int)rounded;
-                    for (var i = 0; i < outputCount; i++)
-                    {
-                        var outputItem = await _itemService.Save(new Item
-                        {
-                            NomenclatureId = targetNomenclature.Id,
-                            OrderId = id,
-                            ProcessId = process.ProcessId,
-                            Quantity = 1,
-                            Tare = null,
-                            TareId = null,
-                            Address = null
-                        });
-                        targetOutputItems.Add(outputItem);
-                    }
+                    throw new EdmException("Order amount must be an integer for countable output nomenclature.");
                 }
-                else
+
+                var outputCount = (int)rounded;
+                for (var i = 0; i < outputCount; i++)
                 {
                     var outputItem = await _itemService.Save(new Item
                     {
                         NomenclatureId = targetNomenclature.Id,
                         OrderId = id,
-                        ProcessId = process.ProcessId,
-                        Quantity = order.Amount,
+                        ProcessId = orderProcess.ProcessId,
+                        Quantity = 1,
                         Tare = null,
                         TareId = null,
                         Address = null
@@ -292,138 +285,267 @@ public class OrderService : ServiceBase<Order>, IOrderService
                     targetOutputItems.Add(outputItem);
                 }
             }
-
-            // Allocate inputs to produced outputs and persist links.
-            foreach (var spec in specifications)
+            else
             {
-                var inputItems = await Set<Item>()
-                    .Include(i => i.Meta)
-                    .Include(i => i.Tare).ThenInclude(t => t.TareType)
-                    .Where(i =>
-                        i.OrderId == order.Id &&
-                        i.NomenclatureId == spec.NomenclatureId &&
-                        i.Meta.Deleted == null)
-                    .OrderBy(i => i.Id) // UUIDv7 ordering: FIFO by creation time
-                    .ToListAsync();
-
-                static bool IsInteger(double v, double eps) => Math.Abs(v - Math.Round(v)) <= eps;
-
-                if (targetOutputItems.Count == 0)
+                var outputItem = await _itemService.Save(new Item
                 {
-                    // No output items -> consume the required quantity without persisting links.
-                    var remaining = spec.Amount;
-                    foreach (var item in inputItems)
+                    NomenclatureId = targetNomenclature.Id,
+                    OrderId = id,
+                    ProcessId = orderProcess.ProcessId,
+                    Quantity = order.Amount,
+                    Tare = null,
+                    TareId = null,
+                    Address = null
+                });
+                targetOutputItems.Add(outputItem);
+            }
+        }
+
+        // Allocate inputs to produced outputs and persist links.
+        foreach (var spec in specifications)
+        {
+            var inputItems = await Set<Item>()
+                .Include(i => i.Meta)
+                .Include(i => i.Tare).ThenInclude(t => t.TareType)
+                .Where(i =>
+                    i.OrderId == order.Id &&
+                    i.NomenclatureId == spec.NomenclatureId &&
+                    i.Meta.Deleted == null &&
+                    i.Meta.Completed == null)
+                .OrderBy(i => i.Id) // UUIDv7 ordering: FIFO by creation time
+                .ToListAsync();
+
+            static bool IsInteger(double v, double eps) => Math.Abs(v - Math.Round(v)) <= eps;
+
+            if (targetOutputItems.Count == 0)
+            {
+                // No output items -> consume the required quantity without persisting links.
+                var remaining = spec.Amount;
+                foreach (var item in inputItems)
+                {
+                    if (remaining <= Eps)
+                        break;
+
+                    var tareType = item.Tare?.TareType;
+                    var isCountableBulkTare = tareType != null && tareType.Countable && tareType.Dimensions <= 0;
+                    if (isCountableBulkTare)
                     {
-                        if (remaining <= eps)
-                            break;
-
-                        var tareType = item.Tare?.TareType;
-                        var isCountableBulkTare = tareType != null && tareType.Countable && tareType.Dimensions <= 0;
-                        if (isCountableBulkTare)
-                        {
-                            if (!IsInteger(item.Quantity, eps) || !IsInteger(remaining, eps))
-                            {
-                                throw new EdmException("Countable bulk tare operations require integer quantities.");
-                            }
-                        }
-
-                        var consumed = Math.Min(item.Quantity, remaining);
-                        if (isCountableBulkTare && !IsInteger(consumed, eps))
+                        if (!IsInteger(item.Quantity, Eps) || !IsInteger(remaining, Eps))
                         {
                             throw new EdmException("Countable bulk tare operations require integer quantities.");
                         }
-                        item.Quantity -= consumed;
-                        remaining -= consumed;
-                        if (item.Quantity <= eps)
-                        {
-                            item.Quantity = 0;
-                            item.Meta.Deleted = DateTime.UtcNow;
-                        }
                     }
 
-                    if (remaining > eps)
-                    {
-                        throw new EdmException("Not enough input quantity to consume.");
-                    }
-
-                    continue;
-                }
-
-                var inputIndex = 0;
-                foreach (var targetItem in targetOutputItems)
-                {
-                    var requiredForThisTarget = spec.Quantity * targetItem.Quantity;
-                    var currentTareType = inputIndex < inputItems.Count ? inputItems[inputIndex].Tare?.TareType : null;
-                    var isCountableBulkTare = currentTareType != null && currentTareType.Countable && currentTareType.Dimensions <= 0;
-                    if (isCountableBulkTare && !IsInteger(requiredForThisTarget, eps))
+                    var consumed = Math.Min(item.Quantity, remaining);
+                    if (isCountableBulkTare && !IsInteger(consumed, Eps))
                     {
                         throw new EdmException("Countable bulk tare operations require integer quantities.");
                     }
-                    while (requiredForThisTarget > eps)
+                    item.Quantity -= consumed;
+                    remaining -= consumed;
+                    if (item.Quantity <= Eps)
                     {
-                        if (inputIndex >= inputItems.Count)
-                        {
-                            throw new EdmException("Not enough input quantity to allocate required output.");
-                        }
+                        item.Quantity = 0;
+                        item.Meta.Completed = now;
+                    }
+                }
 
-                        var inputItem = inputItems[inputIndex];
+                if (remaining > Eps)
+                {
+                    throw new EdmException("Not enough input quantity to consume.");
+                }
 
-                        var available = inputItem.Quantity;
-                        if (available <= eps)
-                        {
-                            inputItem.Meta.Deleted = DateTime.UtcNow;
-                            inputItem.Quantity = 0;
-                            inputIndex++;
-                            continue;
-                        }
+                continue;
+            }
 
-                        currentTareType = inputItem.Tare?.TareType;
-                        isCountableBulkTare = currentTareType != null && currentTareType.Countable && currentTareType.Dimensions <= 0;
-                        if (isCountableBulkTare && (!IsInteger(available, eps) || !IsInteger(requiredForThisTarget, eps)))
-                        {
-                            throw new EdmException("Countable bulk tare operations require integer quantities.");
-                        }
+            var inputIndex = 0;
+            foreach (var targetItem in targetOutputItems)
+            {
+                var requiredForThisTarget = spec.Quantity * targetItem.Quantity;
+                var currentTareType = inputIndex < inputItems.Count ? inputItems[inputIndex].Tare?.TareType : null;
+                var isCountableBulkTare = currentTareType != null && currentTareType.Countable && currentTareType.Dimensions <= 0;
+                if (isCountableBulkTare && !IsInteger(requiredForThisTarget, Eps))
+                {
+                    throw new EdmException("Countable bulk tare operations require integer quantities.");
+                }
+                while (requiredForThisTarget > Eps)
+                {
+                    if (inputIndex >= inputItems.Count)
+                    {
+                        throw new EdmException("Not enough input quantity to allocate required output.");
+                    }
 
-                        var consumed = Math.Min(available, requiredForThisTarget);
-                        if (isCountableBulkTare && !IsInteger(consumed, eps))
-                        {
-                            throw new EdmException("Countable bulk tare operations require integer quantities.");
-                        }
+                    var inputItem = inputItems[inputIndex];
 
-                        Db.ItemLinks.Add(new ItemLink
-                        {
-                            Id = DomainObject.NewGuid(),
-                            OrderProcessId = process.Id,
-                            SourceItemId = inputItem.Id,
-                            TargetItemId = targetItem.Id,
-                            ConsumedQuantity = consumed
-                        });
+                    var available = inputItem.Quantity;
+                    if (available <= Eps)
+                    {
+                        inputItem.Meta.Completed = now;
+                        inputItem.Quantity = 0;
+                        inputIndex++;
+                        continue;
+                    }
 
-                        inputItem.Quantity -= consumed;
-                        requiredForThisTarget -= consumed;
+                    currentTareType = inputItem.Tare?.TareType;
+                    isCountableBulkTare = currentTareType != null && currentTareType.Countable && currentTareType.Dimensions <= 0;
+                    if (isCountableBulkTare && (!IsInteger(available, Eps) || !IsInteger(requiredForThisTarget, Eps)))
+                    {
+                        throw new EdmException("Countable bulk tare operations require integer quantities.");
+                    }
 
-                        if (inputItem.Quantity <= eps)
-                        {
-                            inputItem.Quantity = 0;
-                            inputItem.Meta.Deleted = DateTime.UtcNow;
-                            inputIndex++;
-                        }
+                    var consumed = Math.Min(available, requiredForThisTarget);
+                    if (isCountableBulkTare && !IsInteger(consumed, Eps))
+                    {
+                        throw new EdmException("Countable bulk tare operations require integer quantities.");
+                    }
+
+                    Db.ItemLinks.Add(new ItemLink
+                    {
+                        Id = DomainObject.NewGuid(),
+                        OrderProcessId = orderProcess.Id,
+                        SourceItemId = inputItem.Id,
+                        TargetItemId = targetItem.Id,
+                        ConsumedQuantity = consumed
+                    });
+
+                    inputItem.Quantity -= consumed;
+                    requiredForThisTarget -= consumed;
+
+                    if (inputItem.Quantity <= Eps)
+                    {
+                        inputItem.Quantity = 0;
+                        inputItem.Meta.Completed = now;
+                        inputIndex++;
                     }
                 }
             }
-
-            // Set operation completed
-            process.EndTime = DateTime.UtcNow;
-            await Db.SaveChangesAsync();
         }
 
-        // Complete order
-        order.Meta.Deleted = DateTime.UtcNow;
+        orderProcess.EndTime = now;
+
+        // If there are no pending (untared) output items, close the order immediately.
+        var pendingCount = targetOutputItems.Count(oi => oi.TareId == null || oi.TareId == Guid.Empty);
+        if (pendingCount == 0)
+        {
+            order.Meta.Completed = now;
+        }
+
         await Db.SaveChangesAsync();
 
-        return true;
+        return new ExecuteResult
+        {
+            Completed = pendingCount == 0,
+            PendingCount = pendingCount,
+        };
     }
 
+    public async Task<OrderOutputItems> GetOutputItems(Guid orderId)
+    {
+        var items = await Set<Item>().AsNoTracking()
+            .Include(i => i.Nomenclature)
+            .Include(i => i.Tare).ThenInclude(t => t.TareType)
+            .Include(i => i.Meta)
+            .Where(i =>
+                i.OrderId == orderId &&
+                i.ProcessId != null &&
+                i.Meta.Deleted == null &&
+                i.Meta.Completed == null)
+            .ToListAsync();
+
+        var allocated = items.Where(i => i.TareId != null).ToList();
+        var unallocated = items.Where(i => i.TareId == null).ToList();
+
+        return new OrderOutputItems
+        {
+            Allocated = _mapper != null
+                ? _mapper.Map<IEnumerable<ItemViewModel>>(allocated)
+                : [],
+            Unallocated = _mapper != null
+                ? _mapper.Map<IEnumerable<ItemViewModel>>(unallocated)
+                : [],
+        };
+    }
+
+    public async Task<AllocateOutputsResult> AllocateOutputs(Guid orderId, IEnumerable<OutputAllocation> allocations)
+    {
+        var errors = new List<string>();
+        var allocated = 0;
+
+        foreach (var allocation in allocations)
+        {
+            var item = await Set<Item>()
+                .Include(i => i.Meta)
+                .FirstOrDefaultAsync(i =>
+                    i.Id == allocation.ItemId &&
+                    i.OrderId == orderId &&
+                    i.ProcessId != null &&
+                    i.Meta.Deleted == null &&
+                    i.Meta.Completed == null);
+
+            if (item == null)
+            {
+                errors.Add($"Output item {allocation.ItemId} not found or not owned by the order.");
+                continue;
+            }
+
+            var tare = await Set<Tare>().AsNoTracking()
+                .FirstOrDefaultAsync(t => t.Id == allocation.TareId);
+
+            if (tare == null)
+            {
+                errors.Add($"Tare {allocation.TareId} not found.");
+                continue;
+            }
+
+            item.TareId = allocation.TareId;
+            item.Address = allocation.Address;
+            allocated++;
+        }
+
+        await Db.SaveChangesAsync();
+
+        return new AllocateOutputsResult
+        {
+            AllocatedCount = allocated,
+            Errors = errors.ToArray(),
+        };
+    }
+
+    public async Task CompleteOrder(Guid orderId)
+    {
+        var order = await Set()
+            .Include(o => o.Meta)
+            .FirstOrDefaultAsync(o => o.Id == orderId)
+            ?? throw new EdmException($"Order with id {orderId} not found");
+
+        if (order.Meta.Completed != null)
+        {
+            throw new EdmException("Order is already completed.");
+        }
+
+        var hasPending = await Set<Item>().AsNoTracking()
+            .Include(i => i.Meta)
+            .AnyAsync(i =>
+                i.OrderId == orderId &&
+                i.ProcessId != null &&
+                i.TareId == null &&
+                i.Meta.Deleted == null &&
+                i.Meta.Completed == null);
+
+        if (hasPending)
+        {
+            throw new EdmException("Cannot complete the order: some outputs are still unallocated.");
+        }
+
+        order.Meta.Completed = DateTime.UtcNow;
+        await Db.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// Kept for the future integration phase when operations within a technology
+    /// process will contribute their own grade to outputs. Not called from
+    /// <see cref="Save"/> or <see cref="Execute"/> today.
+    /// </summary>
     private async Task<IEnumerable<Guid>> GetOperationProcesses(Process process)
     {
         var result = new List<Guid>();
@@ -448,12 +570,16 @@ public class OrderService : ServiceBase<Order>, IOrderService
 
     public async Task<IEnumerable<Order>> Search(OrderSearchQuery query)
     {
-        // TODO Use materialized view to gain performance
+        // TODO Use materialized view to gain performance.
+        // Active: no Deleted AND no Completed. Completed view: Completed != null AND Deleted == null.
         var orders = await Set().AsNoTracking()
             .Include(o => o.Process.Nomenclature)
             .Include(o => o.Meta)
-            .Where(i => (query.Active && i.Meta.Deleted == null || !query.Active && i.Meta.Deleted != null)
-                        && (query.NomenclatureId == null || query.NomenclatureId == i.Process.NomenclatureId))
+            .Where(i =>
+                (query.Active
+                    ? (i.Meta.Deleted == null && i.Meta.Completed == null)
+                    : (i.Meta.Deleted == null && i.Meta.Completed != null))
+                && (query.NomenclatureId == null || query.NomenclatureId == i.Process.NomenclatureId))
             .ToListAsync();
 
         return orders;

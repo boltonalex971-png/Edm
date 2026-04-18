@@ -1,9 +1,9 @@
-import React from 'react'
-import type {UUID} from '@logistics/data/types'
-import {TareItemsPanel} from '@logistics/components/tare/TareItemsPanel'
-import {TareDetail} from '@logistics/components/tare/TareDetail'
-import {ItemDetail} from '@logistics/components/items/ItemDetail'
 import Api from '@features/api/api'
+import { ItemDetail } from '@logistics/components/items/ItemDetail'
+import { TareDetail } from '@logistics/components/tare/TareDetail'
+import { TareItemsPanel } from '@logistics/components/tare/TareItemsPanel'
+import type { UUID } from '@logistics/data/types'
+import React from 'react'
 
 type OrderComponentTabProps = {
     id: UUID
@@ -11,7 +11,11 @@ type OrderComponentTabProps = {
     onDetailSelected?: Function
 }
 
-export function OrderComponentTab({id, api, onDetailSelected}: OrderComponentTabProps) {
+export function OrderComponentTab({
+    id,
+    api,
+    onDetailSelected,
+}: OrderComponentTabProps) {
     return (
         <TareItemsPanel
             api={`${api}/${id}/items`}
@@ -21,7 +25,7 @@ export function OrderComponentTab({id, api, onDetailSelected}: OrderComponentTab
                         tareId={group.tare.id}
                         label={group.tare.barcode}
                         onClose={() => onDetailSelected?.(undefined)}
-                    />
+                    />,
                 )
             }}
             onItemClick={(item) => {
@@ -31,10 +35,9 @@ export function OrderComponentTab({id, api, onDetailSelected}: OrderComponentTab
                         id={item.id}
                         api={Api.items}
                         onClose={() => onDetailSelected?.(undefined)}
-                    />
+                    />,
                 )
             }}
         />
     )
 }
-

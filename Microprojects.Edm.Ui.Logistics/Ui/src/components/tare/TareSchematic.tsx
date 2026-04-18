@@ -1,5 +1,6 @@
-import React, {useCallback, useMemo, useRef, useState} from 'react'
-import type {Item, TareInfo} from '@logistics/data/types'
+import type { Item, TareInfo } from '@logistics/data/types'
+import type React from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import './TareSchematic.css'
 
 export type SlotData = {
@@ -24,9 +25,9 @@ type TooltipState = {
     y: number
 }
 
-function SlotTooltip({item, address, x, y}: TooltipState) {
+function SlotTooltip({ item, address, x, y }: TooltipState) {
     return (
-        <div className="slot-tooltip" style={{left: x, top: y}}>
+        <div className="slot-tooltip" style={{ left: x, top: y }}>
             <div className="slot-tooltip-row">
                 <span className="slot-tooltip-label">Address</span>
                 <span>{address}</span>
@@ -49,17 +50,17 @@ function SlotTooltip({item, address, x, y}: TooltipState) {
     )
 }
 
-function BulkTareView({tare, items}: {tare: TareInfo; items: Item[]}) {
+function BulkTareView({ tare, items }: { tare: TareInfo; items: Item[] }) {
     const totalQty = items.reduce((s, i) => s + i.quantity, 0)
     const pct = tare.capacity > 0 ? Math.min(totalQty / tare.capacity, 1) : 0
     const fillColor = '#90caf9'
-    const names = [...new Set(items.map(i => i.nomenclatureName))].join(', ')
+    const names = [...new Set(items.map((i) => i.nomenclatureName))].join(', ')
 
     return (
         <div className="tare-bulk-bar">
             <div
                 className="tare-bulk-fill"
-                style={{width: `${pct * 100}%`, backgroundColor: fillColor}}
+                style={{ width: `${pct * 100}%`, backgroundColor: fillColor }}
             />
             <div className="tare-bulk-content">
                 {items.length > 0 ? (
@@ -71,7 +72,7 @@ function BulkTareView({tare, items}: {tare: TareInfo; items: Item[]}) {
                         </span>
                     </>
                 ) : (
-                    <span style={{color: '#999'}}>Empty</span>
+                    <span style={{ color: '#999' }}>Empty</span>
                 )}
             </div>
         </div>
@@ -79,7 +80,12 @@ function BulkTareView({tare, items}: {tare: TareInfo; items: Item[]}) {
 }
 
 function SlotCell({
-    slot, selected, highlightEmpty, onSlotClick, onMouseEnter, onMouseLeave,
+    slot,
+    selected,
+    highlightEmpty,
+    onSlotClick,
+    onMouseEnter,
+    onMouseLeave,
 }: {
     slot: SlotData
     selected: boolean
@@ -111,7 +117,15 @@ function SlotCell({
 }
 
 export const TareSchematic = (props: TareSchematicProps) => {
-    const {tare, items, selectedSlot, selectedSlots, onSlotClick, highlightEmpty, label} = props
+    const {
+        tare,
+        items,
+        selectedSlot,
+        selectedSlots,
+        onSlotClick,
+        highlightEmpty,
+        label,
+    } = props
     const sx = tare.sizeX ?? 0
     const sy = tare.sizeY ?? 0
     const sz = tare.sizeZ ?? 0
@@ -145,8 +159,8 @@ export const TareSchematic = (props: TareSchematicProps) => {
         if (!isDimensional) return []
         const result: SlotData[] = []
         for (let addr = 1; addr <= capacity; addr++) {
-            const item = items.find(i => i.address === addr)
-            result.push({address: addr, item})
+            const item = items.find((i) => i.address === addr)
+            result.push({ address: addr, item })
         }
         return result
     }, [items, capacity, isDimensional])
@@ -168,13 +182,15 @@ export const TareSchematic = (props: TareSchematicProps) => {
         selectedSlot === addr || (selectedSlots?.has(addr) ?? false)
 
     const sizeLabel = [sx, sy > 0 ? sy : null, sz > 0 ? sz : null]
-        .filter(v => v != null)
+        .filter((v) => v != null)
         .join('\u00d7')
 
     return (
         <div className="tare-schematic" ref={containerRef}>
             <div className="tare-header">
-                <span className="tare-label">{label || tare.barcode || 'Tare'}</span>
+                <span className="tare-label">
+                    {label || tare.barcode || 'Tare'}
+                </span>
                 <small className="tare-info">
                     {tare.tareTypeName} &middot; {capacity} slots
                     {sizeLabel && <> ({sizeLabel})</>}
@@ -184,7 +200,10 @@ export const TareSchematic = (props: TareSchematicProps) => {
                 <div className={has3d ? 'tare-3d-layout' : undefined}>
                     {has3d && (
                         <div className="tare-layer-tabs">
-                            {Array.from({length: layers}, (_, i) => i + 1).map(l => (
+                            {Array.from(
+                                { length: layers },
+                                (_, i) => i + 1,
+                            ).map((l) => (
                                 <button
                                     key={l}
                                     type="button"
@@ -198,9 +217,15 @@ export const TareSchematic = (props: TareSchematicProps) => {
                     )}
                     <div
                         className={is1d ? 'tare-flex-grid' : 'tare-grid'}
-                        style={is1d ? undefined : {gridTemplateColumns: `repeat(${cols}, 1fr)`}}
+                        style={
+                            is1d
+                                ? undefined
+                                : {
+                                      gridTemplateColumns: `repeat(${cols}, 1fr)`,
+                                  }
+                        }
                     >
-                        {layerSlots.map(slot => (
+                        {layerSlots.map((slot) => (
                             <SlotCell
                                 key={slot.address}
                                 slot={slot}

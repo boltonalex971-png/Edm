@@ -1,162 +1,178 @@
-import React, {useState} from 'react';
-import axios from 'axios';
+import type { UUID } from '@logistics/data/types'
+import { Button, ButtonGroup } from '@progress/kendo-react-buttons'
 import {
     Grid,
-    GridColumn,
-    GridToolbar,
     GridCell,
-    GridRowClickEvent,
-    GridItemChangeEvent, GridCellProps, GridRowDoubleClickEvent
-} from '@progress/kendo-react-grid';
-import {Alert} from 'reactstrap';
-import {ButtonGroup, Button} from '@progress/kendo-react-buttons';
-import {useGet} from "../hooks/hooks"
+    type GridCellProps,
+    GridColumn,
+    type GridItemChangeEvent,
+    type GridRowClickEvent,
+    type GridRowDoubleClickEvent,
+    GridToolbar,
+} from '@progress/kendo-react-grid'
+import axios from 'axios'
 import isEqual from 'lodash.isequal'
-import {Loading} from "../features/utils/Utils";
-import {ParentContext} from "./ParentContext";
-import {UUID} from "@logistics/data/types";
+import type React from 'react'
+import { useState } from 'react'
+import { Alert } from 'reactstrap'
+import { Loading } from '../features/utils/Utils'
+import { useGet } from '../hooks/hooks'
+import { ParentContext } from './ParentContext'
 
 export type RelationTableAddMode = 'inline' | 'subdetail'
 
 type RelationTableProps = {
-    id?: UUID,
-    api: string,
-    editable: boolean,
-    removable: boolean,
-    creatable?: boolean,
-    addMode?: RelationTableAddMode,
+    id?: UUID
+    api: string
+    editable: boolean
+    removable: boolean
+    creatable?: boolean
+    addMode?: RelationTableAddMode
     createSubDetail?: (args: {
-        api: string,
-        onClose: () => void,
+        api: string
+        onClose: () => void
         onCreated: (created: any) => void
-    }) => React.ReactElement,
+    }) => React.ReactElement
     subDetail?: (args: {
-        mode: 'create' | 'edit',
-        api: string,
-        dataItem?: any,
-        onClose: () => void,
+        mode: 'create' | 'edit'
+        api: string
+        dataItem?: any
+        onClose: () => void
         onSaved: (saved: any) => void
-    }) => React.ReactElement,
-    onRowSelected?: Function,
-    onRowClick?: ((event: GridRowClickEvent) => void),
-    onRowDoubleClick?: ((event: GridRowDoubleClickEvent) => void),
+    }) => React.ReactElement
+    onRowSelected?: Function
+    onRowClick?: (event: GridRowClickEvent) => void
+    onRowDoubleClick?: (event: GridRowDoubleClickEvent) => void
     children: React.ReactElement
 }
 
-export function RelationTable({api, children, ...props}: RelationTableProps) {
-    const [reload, setReload] = useState(false); // used to force fetching table data
-    const [editItem, setEditItem] = useState<any>(null);
-    const [subDetail, setSubDetail] = useState<React.ReactElement>();
-    let [[data, setData], loading, error] = useGet<any[]>(`${api}`, [reload, api]);
+export function RelationTable({ api, children, ...props }: RelationTableProps) {
+    const [reload, setReload] = useState(false) // used to force fetching table data
+    const [editItem, setEditItem] = useState<any>(null)
+    const [subDetail, setSubDetail] = useState<React.ReactElement>()
+    let [[data, setData], loading, error] = useGet<any[]>(`${api}`, [
+        reload,
+        api,
+    ])
 
     const rowClick = (event: GridRowClickEvent | { dataItem: any }) => {
         if (props.onRowSelected) {
-            props.onRowSelected(event.dataItem, itemUpdate);
+            props.onRowSelected(event.dataItem, itemUpdate)
         }
-    };
+    }
     const enterEdit = (event: GridRowClickEvent | { dataItem: any }) => {
-        const edit = data!.filter(i => i.inEdit)
+        const edit = data!.filter((i) => i.inEdit)
         for (const item of edit) {
-            if (!discardEdit({dataItem: item})) {
+            if (!discardEdit({ dataItem: item })) {
                 return
             }
         }
 
-        const item = data!.find(i => i.id === event.dataItem.id)
+        const item = data!.find((i) => i.id === event.dataItem.id)
         if (item) {
-            setEditItem({...event.dataItem});
-            item.inEdit = true;
+            setEditItem({ ...event.dataItem })
+            item.inEdit = true
             setData([...data!])
         }
-    };
+    }
     const itemUpdate = (item: any) => {
-        setReload(r => !r)
+        setReload((r) => !r)
         //// Update grid method below is faster but item and data format can be different
         // const newData = data.map(i => i.id === item.Id ? { ...item } : item)
         // setData(newData)
     }
     const itemChange = (event: GridItemChangeEvent) => {
-        const newData = data!.map(item => item.inEdit ? {...item, [event.field!]: event.value} : item);
-        setData(newData);
-    };
+        const newData = data!.map((item) =>
+            item.inEdit ? { ...item, [event.field!]: event.value } : item,
+        )
+        setData(newData)
+    }
     const saveEdit = (event: { dataItem: any }) => {
-        const promise = editItem.id ? axios.put(`${api}`, event.dataItem) : axios.post(`${api}`, event.dataItem);
+        const promise = editItem.id
+            ? axios.put(`${api}`, event.dataItem)
+            : axios.post(`${api}`, event.dataItem)
         promise.then(() => {
-            setReload(!reload);
-            setEditItem(null);
-        });
-    };
+            setReload(!reload)
+            setEditItem(null)
+        })
+    }
 
     const openSubDetail = (mode: 'create' | 'edit', dataItem?: any) => {
-        const factory = props.subDetail;
+        const factory = props.subDetail
         if (factory) {
-            setSubDetail(factory({
-                mode,
-                api,
-                dataItem,
-                onClose: () => setSubDetail(undefined),
-                onSaved: (saved) => {
-                    itemUpdate(saved);
-                    setSubDetail(undefined);
-                }
-            }));
-            return true;
+            setSubDetail(
+                factory({
+                    mode,
+                    api,
+                    dataItem,
+                    onClose: () => setSubDetail(undefined),
+                    onSaved: (saved) => {
+                        itemUpdate(saved)
+                        setSubDetail(undefined)
+                    },
+                }),
+            )
+            return true
         }
 
         if (mode === 'create' && props.createSubDetail) {
-            setSubDetail(props.createSubDetail({
-                api,
-                onClose: () => setSubDetail(undefined),
-                onCreated: (created) => {
-                    itemUpdate(created);
-                    setSubDetail(undefined);
-                }
-            }));
-            return true;
+            setSubDetail(
+                props.createSubDetail({
+                    api,
+                    onClose: () => setSubDetail(undefined),
+                    onCreated: (created) => {
+                        itemUpdate(created)
+                        setSubDetail(undefined)
+                    },
+                }),
+            )
+            return true
         }
 
-        return false;
+        return false
     }
 
     const addRecord = () => {
         if ((props.addMode || 'inline') === 'subdetail') {
             if (!openSubDetail('create')) {
-                throw new Error('RelationTable addMode=subdetail requires subDetail or createSubDetail');
+                throw new Error(
+                    'RelationTable addMode=subdetail requires subDetail or createSubDetail',
+                )
             }
-            return;
+            return
         }
 
-        setData([{inEdit: true}, ...data || []]);
-        setEditItem({});
-    };
+        setData([{ inEdit: true }, ...(data || [])])
+        setEditItem({})
+    }
     const removeRecord = (event: { dataItem: any }) => {
         if (window.confirm('Confirm deleting record')) {
-            const id = event.dataItem.id;
-            axios.delete(`${api}/${id}`)
-                .then(() => setReload(!reload));
+            const id = event.dataItem.id
+            axios.delete(`${api}/${id}`).then(() => setReload(!reload))
         }
-    };
+    }
     const discardEdit = (event: { dataItem: any }) => {
-        const {inEdit, ...item} = event.dataItem;
-        if (isEqual(editItem, item) || window.confirm('Confirm discarding changed data')) {
+        const { inEdit, ...item } = event.dataItem
+        if (
+            isEqual(editItem, item) ||
+            window.confirm('Confirm discarding changed data')
+        ) {
             //let discardedData = { ...data };
             if (isEqual(editItem, {})) {
-                data = data!.filter((el) => !el.inEdit);
+                data = data!.filter((el) => !el.inEdit)
             } else {
-                const index = data!.findIndex((el) => el.inEdit);
-                data![index] = editItem;
+                const index = data!.findIndex((el) => el.inEdit)
+                data![index] = editItem
             }
 
-            setData(data!);
-            setEditItem(null);
+            setData(data!)
+            setEditItem(null)
             return true
         }
 
         return false
-    };
-    const linkItem = (item: any, itemUpdate: (item: any) => void) => {
-        
     }
+    const linkItem = (item: any, itemUpdate: (item: any) => void) => {}
 
     return (
         <>
@@ -174,56 +190,102 @@ export function RelationTable({api, children, ...props}: RelationTableProps) {
                     }
                 `}
             </style>
-            {error && <Alert color='danger' style={{display: 'flex', justifyContent: 'space-around'}}>{error}</Alert>}
-            {loading && <Loading/>}
-            {data &&
-                <ParentContext.Provider value={{itemUpdate: itemUpdate}}>
+            {error && (
+                <Alert
+                    color="danger"
+                    style={{ display: 'flex', justifyContent: 'space-around' }}
+                >
+                    {error}
+                </Alert>
+            )}
+            {loading && <Loading />}
+            {data && (
+                <ParentContext.Provider value={{ itemUpdate: itemUpdate }}>
                     <>
                         <Grid
                             data={data}
                             editField="inEdit"
-                            scrollable='none'
+                            scrollable="none"
                             onRowClick={rowClick}
                             onRowDoubleClick={props.onRowDoubleClick}
                             onItemChange={itemChange}
                         >
-                            {props.creatable &&
+                            {props.creatable && (
                                 <GridToolbar>
-                                    <Button title="Add new record" className="k-button k-secondary" onClick={addRecord}
-                                            disabled={editItem != null}>
+                                    <Button
+                                        title="Add new record"
+                                        className="k-button k-secondary"
+                                        onClick={addRecord}
+                                        disabled={editItem != null}
+                                    >
                                         <span className="k-icon k-i-add"></span>
                                     </Button>
                                 </GridToolbar>
-                            }
+                            )}
                             {children}
-                            <GridColumn title=''
-                                        width='2rem'
-                                        cell={(cellProps) =>
-                                            <ActionCell {...cellProps}
-                                                    edit={props.editable ? ((item) => {
-                                                        if ((props.addMode || 'inline') === 'subdetail') {
-                                                            if (!openSubDetail('edit', item)) {
-                                                                // Fallback to inline edit if no factory provided.
-                                                                enterEdit({dataItem: item, syntheticEvent: undefined})
-                                                            }
-                                                        } else {
-                                                            enterEdit({dataItem: item, syntheticEvent: undefined})
-                                                        }
-                                                    }) : undefined}
-                                                        remove={props.removable ? ((item) => removeRecord({dataItem: item})) : undefined}
-                                                        save={(item) => saveEdit({dataItem: item})}
-                                                        discard={(item) => discardEdit({dataItem: item})}
-                                            />
+                            <GridColumn
+                                title=""
+                                width="2rem"
+                                cell={(cellProps) => (
+                                    <ActionCell
+                                        {...cellProps}
+                                        edit={
+                                            props.editable
+                                                ? (item) => {
+                                                      if (
+                                                          (props.addMode ||
+                                                              'inline') ===
+                                                          'subdetail'
+                                                      ) {
+                                                          if (
+                                                              !openSubDetail(
+                                                                  'edit',
+                                                                  item,
+                                                              )
+                                                          ) {
+                                                              // Fallback to inline edit if no factory provided.
+                                                              enterEdit({
+                                                                  dataItem:
+                                                                      item,
+                                                                  syntheticEvent:
+                                                                      undefined,
+                                                              })
+                                                          }
+                                                      } else {
+                                                          enterEdit({
+                                                              dataItem: item,
+                                                              syntheticEvent:
+                                                                  undefined,
+                                                          })
+                                                      }
+                                                  }
+                                                : undefined
                                         }
+                                        remove={
+                                            props.removable
+                                                ? (item) =>
+                                                      removeRecord({
+                                                          dataItem: item,
+                                                      })
+                                                : undefined
+                                        }
+                                        save={(item) =>
+                                            saveEdit({ dataItem: item })
+                                        }
+                                        discard={(item) =>
+                                            discardEdit({ dataItem: item })
+                                        }
+                                    />
+                                )}
                             />
                         </Grid>
-                        <div className="mt-2"/>
+                        <div className="mt-2" />
                         {subDetail}
                     </>
                 </ParentContext.Provider>
-            }
+            )}
         </>
-    );
+    )
 }
 
 type ActionCellProps = {
@@ -234,92 +296,91 @@ type ActionCellProps = {
     link?: (item: any) => void
     dataItem: any
 }
-export const ActionCell = ({edit, remove, save, link, discard, ...props}: ActionCellProps) => {
-    const inEdit = props.dataItem.inEdit;
+export const ActionCell = ({
+    edit,
+    remove,
+    save,
+    link,
+    discard,
+    ...props
+}: ActionCellProps) => {
+    const inEdit = props.dataItem.inEdit
     return (
         <td>
             <ButtonGroup>
                 <Button
                     hidden={!inEdit}
-                    title='Save record'
-                    style={{padding: '6px'}}
-                    fillMode='flat'
-                    className='k-button k-grid-save-command'
+                    title="Save record"
+                    style={{ padding: '6px' }}
+                    fillMode="flat"
+                    className="k-button k-grid-save-command"
                     onClick={() => {
-                        save(props.dataItem);
+                        save(props.dataItem)
                     }}
                 >
-                    <span className='k-icon k-i-save'></span>
+                    <span className="k-icon k-i-save"></span>
                 </Button>
                 <Button
                     hidden={!inEdit}
-                    title='Discard changes'
-                    style={{padding: '6px'}}
-                    fillMode='flat'
+                    title="Discard changes"
+                    style={{ padding: '6px' }}
+                    fillMode="flat"
                     className="k-button k-grid-close-command"
                     onClick={() => {
-                        discard(props.dataItem);
+                        discard(props.dataItem)
                     }}
                 >
-                    <span className='k-icon k-i-close'></span>
+                    <span className="k-icon k-i-close"></span>
                 </Button>
                 <Button
                     hidden={!edit || inEdit}
-                    title='Edit record'
-                    style={{padding: '6px'}}
-                    fillMode='flat'
-                    className='k-button k-grid-edit-command'
+                    title="Edit record"
+                    style={{ padding: '6px' }}
+                    fillMode="flat"
+                    className="k-button k-grid-edit-command"
                     onClick={() => {
-                        edit!(props.dataItem);
+                        edit!(props.dataItem)
                     }}
                 >
-                    <span className='k-icon k-i-edit'></span>
+                    <span className="k-icon k-i-edit"></span>
                 </Button>
                 <Button
                     hidden={!link || inEdit}
-                    title='Choose entity'
-                    style={{padding: '6px'}}
-                    fillMode='flat'
-                    className='k-button k-grid-edit-command'
+                    title="Choose entity"
+                    style={{ padding: '6px' }}
+                    fillMode="flat"
+                    className="k-button k-grid-edit-command"
                     onClick={() => {
-                        link!(props.dataItem);
+                        link!(props.dataItem)
                     }}
                 >
-                    <span className='k-icon k-i-plus'></span>
+                    <span className="k-icon k-i-plus"></span>
                 </Button>
                 <Button
                     hidden={!remove || inEdit}
-                    title='Delete record'
-                    style={{padding: '6px'}}
-                    fillMode='flat'
+                    title="Delete record"
+                    style={{ padding: '6px' }}
+                    fillMode="flat"
                     className="k-button k-grid-remove-command"
                     onClick={() => {
-                        remove!(props.dataItem);
+                        remove!(props.dataItem)
                     }}
                 >
-                    <span className='k-icon k-i-delete'></span>
+                    <span className="k-icon k-i-delete"></span>
                 </Button>
             </ButtonGroup>
         </td>
-    );
+    )
 }
 
-export const DateCell = (props: GridCellProps)=> {
+export const DateCell = (props: GridCellProps) => {
     const value = props.dataItem[props.field!]
     const date = value && new Date(value).toLocaleDateString()
-    return (
-        <td>
-            {date}
-        </td>
-    )
+    return <td>{date}</td>
 }
 
-export const DateTimeCell = (props: GridCellProps)=> {
+export const DateTimeCell = (props: GridCellProps) => {
     const value = props.dataItem[props.field!]
     const date = value && new Date(value).toLocaleString()
-    return (
-        <td>
-            {date}
-        </td>
-    )
+    return <td>{date}</td>
 }

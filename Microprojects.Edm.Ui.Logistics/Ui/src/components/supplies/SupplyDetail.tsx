@@ -1,30 +1,44 @@
-import React, {type EffectCallback, useEffect, useState} from 'react'
-import {Diagram3} from 'react-bootstrap-icons'
-import {Field} from '@progress/kendo-react-form'
-import {Input} from '@progress/kendo-react-inputs'
-import {Button} from '@progress/kendo-react-buttons'
 import api from '@features/api/api'
-import {useGet} from '@logistics/hooks/hooks'
-import {type DetailEventHandler, type Supply, type UUID} from '@logistics/data/types'
-import {Detail, type DetailProps, Editor, EMPTY_GUID, Info} from '@logistics/components/MasterDetail'
-import {ItemDetail} from '@logistics/components/items/ItemDetail'
-import {BatchItemCreate} from '@logistics/components/items/BatchItemCreate'
-import {TareItemsPanel} from '@logistics/components/tare/TareItemsPanel'
-import {TareDetail} from '@logistics/components/tare/TareDetail'
 import Api from '@features/api/api'
+import {
+    Detail,
+    type DetailProps,
+    EMPTY_GUID,
+    Editor,
+    Info,
+} from '@logistics/components/MasterDetail'
+import { BatchItemCreate } from '@logistics/components/items/BatchItemCreate'
+import { ItemDetail } from '@logistics/components/items/ItemDetail'
+import { TareDetail } from '@logistics/components/tare/TareDetail'
+import { TareItemsPanel } from '@logistics/components/tare/TareItemsPanel'
+import type { DetailEventHandler, Supply, UUID } from '@logistics/data/types'
+import { useGet } from '@logistics/hooks/hooks'
+import { Button } from '@progress/kendo-react-buttons'
+import { Field } from '@progress/kendo-react-form'
+import { Input } from '@progress/kendo-react-inputs'
+import type React from 'react'
+import { type EffectCallback, useEffect, useState } from 'react'
+import { Diagram3 } from 'react-bootstrap-icons'
 
 export interface SupplyDetailProps extends DetailProps {
     onUpdate?: DetailEventHandler
     type?: string
 }
 
-export function SupplyDetail({id, title = 'Supply', ...props}: SupplyDetailProps) {
+export function SupplyDetail({
+    id,
+    title = 'Supply',
+    ...props
+}: SupplyDetailProps) {
     const [subDetail, setSubDetail] = useState<React.ReactElement>()
     useEffect(setSubDetail as EffectCallback, [id])
 
-    let [[data, setData], loading, error] = useGet<Supply>(`${api.supplies}/${id || EMPTY_GUID}`, [id])
+    let [[data, setData], loading, error] = useGet<Supply>(
+        `${api.supplies}/${id || EMPTY_GUID}`,
+        [id],
+    )
     if (!data || data.id === EMPTY_GUID) {
-        data = {...data, name: '', description: ''} as any
+        data = { ...data, name: '', description: '' } as any
     }
 
     const supplyId = (id as UUID) || (data.id as UUID)
@@ -33,7 +47,7 @@ export function SupplyDetail({id, title = 'Supply', ...props}: SupplyDetailProps
         <Detail
             {...props}
             id={id}
-            icon={<Diagram3 title='Supply'/>}
+            icon={<Diagram3 title="Supply" />}
             title={title}
             subTitle={data.shipment || data.barcode}
             loading={loading}
@@ -46,8 +60,12 @@ export function SupplyDetail({id, title = 'Supply', ...props}: SupplyDetailProps
                         <>
                             {data.barcode && <p>Barcode: {data.barcode}</p>}
                             {data.shipment && <p>Shipment: {data.shipment}</p>}
-                            {data.shipmentExternalId && <p>Shipment Id: {data.shipmentExternalId}</p>}
-                            {(data as any).metaCreated && <p>Created: {(data as any).metaCreated}</p>}
+                            {data.shipmentExternalId && (
+                                <p>Shipment Id: {data.shipmentExternalId}</p>
+                            )}
+                            {(data as any).metaCreated && (
+                                <p>Created: {(data as any).metaCreated}</p>
+                            )}
                         </>
                     }
                 />
@@ -63,15 +81,29 @@ export function SupplyDetail({id, title = 'Supply', ...props}: SupplyDetailProps
                     onUpdate={props.onUpdate}
                     content={
                         <fieldset className={'k-form-fieldset'}>
-                            <legend className={'k-form-legend'}>Enter supply data</legend>
+                            <legend className={'k-form-legend'}>
+                                Enter supply data
+                            </legend>
                             <div className="mb-2">
-                                <Field name={'barcode'} component={Input} label={'Barcode'}/>
+                                <Field
+                                    name={'barcode'}
+                                    component={Input}
+                                    label={'Barcode'}
+                                />
                             </div>
                             <div className="mb-2">
-                                <Field name={'shipment'} component={Input} label={'Shipment'}/>
+                                <Field
+                                    name={'shipment'}
+                                    component={Input}
+                                    label={'Shipment'}
+                                />
                             </div>
                             <div className="mb-2">
-                                <Field name={'shipmentExternalId'} component={Input} label={'Shipment Id'}/>
+                                <Field
+                                    name={'shipmentExternalId'}
+                                    component={Input}
+                                    label={'Shipment Id'}
+                                />
                             </div>
                         </fieldset>
                     }
@@ -87,7 +119,7 @@ export function SupplyDetail({id, title = 'Supply', ...props}: SupplyDetailProps
                                     tareId={group.tare.id}
                                     label={group.tare.barcode}
                                     onClose={() => setSubDetail(undefined)}
-                                />
+                                />,
                             )
                         }
                         onItemClick={(item) =>
@@ -97,7 +129,7 @@ export function SupplyDetail({id, title = 'Supply', ...props}: SupplyDetailProps
                                     id={item.id}
                                     api={Api.items}
                                     onClose={() => setSubDetail(undefined)}
-                                />
+                                />,
                             )
                         }
                         toolbar={
@@ -109,12 +141,15 @@ export function SupplyDetail({id, title = 'Supply', ...props}: SupplyDetailProps
                                         setSubDetail(
                                             <BatchItemCreate
                                                 supplyId={supplyId as UUID}
-                                                onClose={() => setSubDetail(undefined)}
-                                            />
+                                                onClose={() =>
+                                                    setSubDetail(undefined)
+                                                }
+                                            />,
                                         )
                                     }
                                 >
-                                    <span className="k-icon k-i-add" /> Add items
+                                    <span className="k-icon k-i-add" /> Add
+                                    items
                                 </Button>
                             </div>
                         }
@@ -124,4 +159,3 @@ export function SupplyDetail({id, title = 'Supply', ...props}: SupplyDetailProps
         />
     )
 }
-

@@ -1,5 +1,5 @@
-const baseUrl = import.meta.env.PUBLIC_APP_API_URL || window.location.origin;
-const appApiUrl = 'api/logistics';
+const baseUrl = import.meta.env.PUBLIC_APP_API_URL || window.location.origin
+const appApiUrl = 'api/logistics'
 
 const api = {
     baseUrl: baseUrl,
@@ -12,6 +12,6 @@ const api = {
     tares: `${baseUrl}/${appApiUrl}/tares`,
     taretypes: `${baseUrl}/${appApiUrl}/taretypes`,
     orders: `${baseUrl}/${appApiUrl}/orders`,
-};
+}
 
-export default api;
+export default api

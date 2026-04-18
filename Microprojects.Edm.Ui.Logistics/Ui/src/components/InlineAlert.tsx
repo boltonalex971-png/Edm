@@ -1,5 +1,5 @@
-import {Alert} from "reactstrap";
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from 'react'
+import { Alert } from 'reactstrap'
 
 export type AlertState = {
     message: string
@@ -7,28 +7,35 @@ export type AlertState = {
 }
 
 type InlineAlertProps = {
-    id?: any;
+    id?: any
     state?: AlertState
     onClose?: () => void
 }
 export const InlineAlert = (props: InlineAlertProps) => {
     const closeAlert = () => {
-        props.onClose?.();
+        props.onClose?.()
     }
     return (
-        props.state &&
-        <div style={{position: 'absolute', top: 0, right: 0, zIndex: 1}}>
-            <style>
-                {`
+        props.state && (
+            <div style={{ position: 'absolute', top: 0, right: 0, zIndex: 1 }}>
+                <style>
+                    {`
                     .alertCloseBtn {
                         top: 0.5rem !important;
                         right: 0.5rem !important;
                     } 
                 `}
-            </style>
-            <Alert id={props.id} color={props.state.status} fade={true} toggle={closeAlert} closeClassName='alertCloseBtn'>
-                {props.state.message}
-            </Alert>
-        </div>
+                </style>
+                <Alert
+                    id={props.id}
+                    color={props.state.status}
+                    fade={true}
+                    toggle={closeAlert}
+                    closeClassName="alertCloseBtn"
+                >
+                    {props.state.message}
+                </Alert>
+            </div>
+        )
     )
 }

@@ -1,10 +1,10 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+import { type PayloadAction, createSlice } from '@reduxjs/toolkit'
 
 export interface UserState {
-    name: string,
-    role: string,
-    roles?: string[],
-    divisions?: string[],
+    name: string
+    role: string
+    roles?: string[]
+    divisions?: string[]
     groups?: string[]
 }
 
@@ -18,12 +18,12 @@ export const userSlice = createSlice({
             if (action.payload) {
                 return { ...state, ...action.payload }
             }
-            return initialState;
+            return initialState
         },
         changeRole: (state, action: PayloadAction<string>) => {
             state.role = action.payload
-        }
-    }
+        },
+    },
 })
 
 export const { setUser, changeRole } = userSlice.actions

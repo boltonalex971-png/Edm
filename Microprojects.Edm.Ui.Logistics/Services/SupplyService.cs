@@ -47,7 +47,7 @@ public class SupplyService : ServiceBase<Supply>, ISupplyService
             .Include(i => i.Nomenclature)
             .Include(i => i.Tare.TareType)
             .Include(i => i.Meta)
-            .Where(i => i.SupplyId == supplyId && i.Meta.Deleted == null)
+            .Where(i => i.SupplyId == supplyId && i.Meta.Deleted == null && i.Meta.Completed == null)
             .ToListAsync();
 
         return items;

@@ -1,21 +1,38 @@
+import Api from '@features/api/api'
+import { useGet } from '@logistics/hooks/hooks'
+import { useBasePath } from '@logistics/hooks/routerHooks'
 import { Field } from '@progress/kendo-react-form'
 import { Input } from '@progress/kendo-react-inputs'
-import {type EffectCallback, useEffect, useState} from 'react'
+import { type EffectCallback, useEffect, useState } from 'react'
+import { Diagram3 } from 'react-bootstrap-icons'
 import { useNavigate, useParams } from 'react-router-dom'
-import type {DetailEventHandler, Item, Operation, Process, ProcessKind, UUID} from "../../../data/types"
-import Api from '@features/api/api'
-import {useGet} from "@logistics/hooks/hooks";
-import { useBasePath } from "@logistics/hooks/routerHooks"
+import type {
+    DetailEventHandler,
+    Item,
+    Operation,
+    Process,
+    ProcessKind,
+    UUID,
+} from '../../../data/types'
 import { DropDownComp } from '../../DropDownCell'
-import {Detail, type DetailProps, Editor, EMPTY_GUID, Info, MasterDetail, reloadMaster} from '../../MasterDetail'
+import {
+    Detail,
+    type DetailProps,
+    EMPTY_GUID,
+    Editor,
+    Info,
+    MasterDetail,
+    reloadMaster,
+} from '../../MasterDetail'
 import { ProcessTabs } from './ProcessTabs'
-import {Diagram3} from "react-bootstrap-icons";
 
-
-function KindField({fieldProps, kind}: { fieldProps: any, kind?: ProcessKind }) {
+function KindField({
+    fieldProps,
+    kind,
+}: { fieldProps: any; kind?: ProcessKind }) {
     useEffect(() => {
         if (kind && fieldProps.value !== kind) {
-            fieldProps.onChange({value: kind})
+            fieldProps.onChange({ value: kind })
         }
     }, [kind, fieldProps.value])
 
@@ -23,7 +40,14 @@ function KindField({fieldProps, kind}: { fieldProps: any, kind?: ProcessKind }) 
         <>
             <label className="k-label mb-1">Process kind</label>
             <div className="k-form-field-wrap">
-                <div style={{padding: '6px 10px', border: '1px solid #ced4da', borderRadius: 4, background: '#f8f9fa'}}>
+                <div
+                    style={{
+                        padding: '6px 10px',
+                        border: '1px solid #ced4da',
+                        borderRadius: 4,
+                        background: '#f8f9fa',
+                    }}
+                >
                     {kind || ''}
                 </div>
             </div>
@@ -32,17 +56,17 @@ function KindField({fieldProps, kind}: { fieldProps: any, kind?: ProcessKind }) 
 }
 
 export function Processes({ kind }: { kind?: ProcessKind }) {
-    const type = 'process';
-    const { path } = useBasePath();
-    const navigate = useNavigate();
-    const api = Api.processes;
+    const type = 'process'
+    const { path } = useBasePath()
+    const navigate = useNavigate()
+    const api = Api.processes
     return (
         <MasterDetail
             type={type}
             api={api}
-            getHierarchyQuery={kind ? () => ({kind}) : undefined}
+            getHierarchyQuery={kind ? () => ({ kind }) : undefined}
             path={path || ''}
-            stubMessage='Please select a process'
+            stubMessage="Please select a process"
             detail={
                 <ProcessDetail
                     type={type}
@@ -54,57 +78,67 @@ export function Processes({ kind }: { kind?: ProcessKind }) {
                 />
             }
         />
-    );
+    )
 }
 
 export interface ProcessDetailProps extends DetailProps {
-    onChange?: DetailEventHandler,
+    onChange?: DetailEventHandler
     onUpdate?: DetailEventHandler
-    onClose: () => void,
-    path?: string,
-    api: string,
-    processId?: UUID,
-    type?: string,
-    kind?: ProcessKind,
+    onClose: () => void
+    path?: string
+    api: string
+    processId?: UUID
+    type?: string
+    kind?: ProcessKind
 }
 
-export function ProcessDetail({ processId, kind, ...props } :ProcessDetailProps) {
-    const params = useParams<{id: string}>();
-    const id = processId?.toString() || params.id;
-    const [sub, setSub] = useState<React.ReactElement>();
-    useEffect(setSub as EffectCallback, [id]);
-    const [[noms]] = useGet<Item[]>(`${Api.nomenclatures}`, []);
-    let [[data, setData], loading, error] = useGet<Process>(`${props.api}/${id}`, [id]);
+export function ProcessDetail({
+    processId,
+    kind,
+    ...props
+}: ProcessDetailProps) {
+    const params = useParams<{ id: string }>()
+    const id = processId?.toString() || params.id
+    const [sub, setSub] = useState<React.ReactElement>()
+    useEffect(setSub as EffectCallback, [id])
+    const [[noms]] = useGet<Item[]>(`${Api.nomenclatures}`, [])
+    let [[data, setData], loading, error] = useGet<Process>(
+        `${props.api}/${id}`,
+        [id],
+    )
     if (!data || data.id === EMPTY_GUID) {
         data = { ...data, name: '', description: '' } as Process
     }
 
     if (kind && !data.kind) {
-        data = { ...data, kind };
+        data = { ...data, kind }
     }
 
-    const missedInputs = JSON.parse(data.message || '[]');
+    const missedInputs = JSON.parse(data.message || '[]')
     return (
-        <Detail {...props}
+        <Detail
+            {...props}
             id={id}
-            icon={<Diagram3 title='Process' />}
+            icon={<Diagram3 title="Process" />}
             loading={loading}
             error={error as string}
             validation={
-                missedInputs.length > 0 ?
-                    `Parameter${missedInputs.length > 1 ? 's' : ''} ${missedInputs.join(', ')} ${missedInputs.length > 1 ? 'are' : 'is'} not available as output parameters` : ''
+                missedInputs.length > 0
+                    ? `Parameter${missedInputs.length > 1 ? 's' : ''} ${missedInputs.join(', ')} ${missedInputs.length > 1 ? 'are' : 'is'} not available as output parameters`
+                    : ''
             }
             data={data}
             subDetail={sub}
             card={
-                <Info 
-                    content={data &&
-                        <>
-                            <div>
-                                <p>{data.kind} process</p>
-                                <p>{data.nomenclatureName}</p>
-                            </div>
-                            {/* {data.qualifiers &&
+                <Info
+                    content={
+                        data && (
+                            <>
+                                <div>
+                                    <p>{data.kind} process</p>
+                                    <p>{data.nomenclatureName}</p>
+                                </div>
+                                {/* {data.qualifiers &&
                                 <div className='my-2'>
                                     <span className='me-2'>Qualifiers:</span>
                                     <ChipList data={data.qualifiers.map((el => ({ text: el.name, value: el.id })))}
@@ -114,12 +148,13 @@ export function ProcessDetail({ processId, kind, ...props } :ProcessDetailProps)
                                     />
                                 </div>
                             } */}
-                        </>
+                            </>
+                        )
                     }
                 />
             }
             editor={
-                <Editor 
+                <Editor
                     type={props.type}
                     api={props.api}
                     path={props.path}
@@ -129,12 +164,22 @@ export function ProcessDetail({ processId, kind, ...props } :ProcessDetailProps)
                     onUpdate={props.onUpdate}
                     content={
                         <fieldset className={'k-form-fieldset'}>
-                            <legend className={'k-form-legend'}>Edit process data</legend>
+                            <legend className={'k-form-legend'}>
+                                Edit process data
+                            </legend>
                             <div className="mb-3">
-                                <Field name={'name'} component={Input} label={'Name'} />
+                                <Field
+                                    name={'name'}
+                                    component={Input}
+                                    label={'Name'}
+                                />
                             </div>
                             <div className="mb-3">
-                                <Field name={'description'} component={Input} label={'Description'} />
+                                <Field
+                                    name={'description'}
+                                    component={Input}
+                                    label={'Description'}
+                                />
                             </div>
                             {/*<div className="mb-3">*/}
                             {/*    <Field name={'commonUid'} component={Input} label={'Common UID'} />*/}
@@ -142,20 +187,28 @@ export function ProcessDetail({ processId, kind, ...props } :ProcessDetailProps)
                             <div className="mb-3" style={{ width: '400px' }}>
                                 <Field
                                     name={'kind'}
-                                    component={(fieldProps) => <KindField fieldProps={fieldProps} kind={kind} />}
+                                    component={(fieldProps) => (
+                                        <KindField
+                                            fieldProps={fieldProps}
+                                            kind={kind}
+                                        />
+                                    )}
                                 />
                             </div>
                             <div className="mb-3" style={{ width: '400px' }}>
-                                <Field name={'nomenclatureId'} label={'Nomenclature'}
-                                       component={(compProps) =>
-                                           <DropDownComp {...compProps}
-                                                         loading={!noms}
-                                                         data={noms}
-                                                         textField='name'
-                                                         dataItemKey='id'
-                                                         valueField='nomenclatureId'
-                                           />
-                                       }
+                                <Field
+                                    name={'nomenclatureId'}
+                                    label={'Nomenclature'}
+                                    component={(compProps) => (
+                                        <DropDownComp
+                                            {...compProps}
+                                            loading={!noms}
+                                            data={noms}
+                                            textField="name"
+                                            dataItemKey="id"
+                                            valueField="nomenclatureId"
+                                        />
+                                    )}
                                 />
                             </div>
                             {/* <div className="mb-3">
@@ -180,9 +233,14 @@ export function ProcessDetail({ processId, kind, ...props } :ProcessDetailProps)
                 />
             }
             relations={
-                <ProcessTabs id={id} api={props.api} kind={data.kind as ProcessKind} missedInputs={missedInputs} onDetailSelected={setSub} />
+                <ProcessTabs
+                    id={id}
+                    api={props.api}
+                    kind={data.kind as ProcessKind}
+                    missedInputs={missedInputs}
+                    onDetailSelected={setSub}
+                />
             }
         />
-    );
+    )
 }
-

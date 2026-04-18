@@ -63,18 +63,44 @@ public class OrdersController : CrudControllerBase<Order, OrderViewModel, IOrder
     }
 
     /// <summary>
-    /// Execute the next order process if available
+    /// Execute the order's (single) process. Returns completion state and the
+    /// number of outputs awaiting tare allocation.
     /// </summary>
-    /// <param name="id"></param>
-    /// <param name="process"></param>
-    /// <returns></returns>
     [HttpPost("{id:Guid}/execute")]
-    public async Task<bool> Execute(Guid id, [FromBody] ProcessViewModel? process)
+    public async Task<ExecuteResult> Execute(Guid id)
     {
-        var result = await Service.Execute(id, process?.Id);
-        return result;
+        return await Service.Execute(id);
     }
-    
+
+    /// <summary>
+    /// Returns the items produced by the order's execution, split into
+    /// <c>allocated</c> (already placed into a tare) and <c>unallocated</c>.
+    /// </summary>
+    [HttpGet("{id:Guid}/output-items")]
+    public async Task<OrderOutputItems> GetOutputItems(Guid id)
+    {
+        return await Service.GetOutputItems(id);
+    }
+
+    /// <summary>
+    /// Batch-assign outputs of the order to selected tares.
+    /// </summary>
+    [HttpPost("{id:Guid}/allocate-outputs")]
+    public async Task<AllocateOutputsResult> AllocateOutputs(Guid id, [FromBody] AllocateOutputsRequest request)
+    {
+        return await Service.AllocateOutputs(id, request.Allocations);
+    }
+
+    /// <summary>
+    /// Marks the order as completed. Fails if any output is still unallocated.
+    /// </summary>
+    [HttpPost("{id:Guid}/complete")]
+    public async Task<IActionResult> Complete(Guid id)
+    {
+        await Service.CompleteOrder(id);
+        return Ok();
+    }
+
     [HttpPost("search")]
     public async Task<IEnumerable<OrderViewModel>> Search([FromBody] OrderSearchQuery query)
     {

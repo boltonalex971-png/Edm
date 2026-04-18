@@ -1,18 +1,18 @@
 .master {
-  /* left: 0%;
+    /* left: 0%;
   width: 30%; */
-  background-color: aqua;
+    background-color: aqua;
 }
 
 .detail {
-  /* left: 35%;
+    /* left: 35%;
   width: 65%; */
-  background-color: burlywood;
+    background-color: burlywood;
 }
 
 .detail-stub {
-  /* position: absolute;
+    /* position: absolute;
   width: 65%;
   left: 35%; */
-  text-align: center;
+    text-align: center;
 }

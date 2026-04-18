@@ -1,17 +1,17 @@
-import type React from "react";
-import { NavMenu } from './NavMenu';
+import type React from 'react'
+import { NavMenu } from './NavMenu'
 
 type LayoutProps = {
-    children: React.ReactNode;
+    children: React.ReactNode
 }
 
-export const Layout = ({ children } : LayoutProps) => {
-    const currYear = new Date().getFullYear();
+export const Layout = ({ children }: LayoutProps) => {
+    const currYear = new Date().getFullYear()
     return (
         <div>
             <NavMenu />
             <div style={{ margin: '0 1rem 0 1rem' }}>
-                <div style={{ minHeight: 'calc(100vh - 150px)' }} >
+                <div style={{ minHeight: 'calc(100vh - 150px)' }}>
                     {children}
                 </div>
                 <footer>
@@ -20,5 +20,5 @@ export const Layout = ({ children } : LayoutProps) => {
                 </footer>
             </div>
         </div>
-    );
+    )
 }

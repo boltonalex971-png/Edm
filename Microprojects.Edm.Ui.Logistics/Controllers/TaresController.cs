@@ -15,12 +15,14 @@ public class TaresController : AuthControllerBase
 {
     private readonly IMapper _mapper;
     private readonly LogisticsContext _db;
+    private readonly ITareService _tareService;
 
-    public TaresController(IMapper mapper, LogisticsContext db, IConfiguration configuration)
+    public TaresController(IMapper mapper, LogisticsContext db, ITareService tareService, IConfiguration configuration)
         : base(configuration)
     {
         _mapper = mapper;
         _db = db;
+        _tareService = tareService;
     }
 
     [HttpGet("search")]
@@ -71,7 +73,7 @@ public class TaresController : AuthControllerBase
 
         var activeItems = await _db.Items.AsNoTracking()
             .Include(i => i.Meta)
-            .Where(i => i.TareId != null && tareIds.Contains(i.TareId.Value) && i.Meta.Deleted == null)
+            .Where(i => i.TareId != null && tareIds.Contains(i.TareId.Value) && i.Meta.Deleted == null && i.Meta.Completed == null)
             .ToListAsync();
 
         var result = new List<AvailableTareViewModel>();
@@ -115,16 +117,14 @@ public class TaresController : AuthControllerBase
             .FirstOrDefaultAsync(t => t.Id == model.TareTypeId)
             ?? throw new EdmException("Tare type not found.");
 
-        var tare = new Tare
+        // Route through the service so the required Meta row is created (Tare
+        // now implements IWithMeta and has an FK on Meta.Id).
+        var tare = await _tareService.Save(new Tare
         {
             Id = Guid.Empty,
             Barcode = model.Barcode,
             TareTypeId = model.TareTypeId,
-        };
-
-        _db.Tares.Add(tare);
-        tare.Id = DomainObject.NewGuid();
-        await _db.SaveChangesAsync();
+        });
 
         return new TareViewModel
         {

@@ -1,10 +1,14 @@
-import React, {useMemo, useState} from 'react'
-import {useGet} from '@logistics/hooks/hooks'
-import type {Item, TareInfo, UUID} from '@logistics/data/types'
-import {TareSchematic, type SlotData} from '@logistics/components/tare/TareSchematic'
-import {Loading} from '@features/utils/Utils'
-import {Alert} from 'reactstrap'
-import {ChevronDown, ChevronRight} from 'react-bootstrap-icons'
+import { Loading } from '@features/utils/Utils'
+import {
+    type SlotData,
+    TareSchematic,
+} from '@logistics/components/tare/TareSchematic'
+import type { Item, TareInfo, UUID } from '@logistics/data/types'
+import { useGet } from '@logistics/hooks/hooks'
+import type React from 'react'
+import { useMemo, useState } from 'react'
+import { ChevronDown, ChevronRight } from 'react-bootstrap-icons'
+import { Alert } from 'reactstrap'
 import './TareItemsPanel.css'
 
 export type TareGroup = {
@@ -46,7 +50,7 @@ export function groupByTare(items: Item[]): TareGroup[] {
 }
 
 export function tareSummary(group: TareGroup): string {
-    const {tare, items} = group
+    const { tare, items } = group
     const totalQty = items.reduce((s, i) => s + i.quantity, 0)
     if ((tare.sizeX ?? 0) > 0) {
         return `${items.length} / ${Math.floor(tare.capacity)} slots`
@@ -54,7 +58,12 @@ export function tareSummary(group: TareGroup): string {
     return `${totalQty} / ${tare.capacity}`
 }
 
-export function TareItemsPanel({api, onTareClick, onItemClick, toolbar}: TareItemsPanelProps) {
+export function TareItemsPanel({
+    api,
+    onTareClick,
+    onItemClick,
+    toolbar,
+}: TareItemsPanelProps) {
     const [reload, setReload] = useState(false)
     const [[data], loading, error] = useGet<Item[]>(api, [reload, api])
     const [expandedTares, setExpandedTares] = useState<Set<string>>(new Set())
@@ -62,7 +71,7 @@ export function TareItemsPanel({api, onTareClick, onItemClick, toolbar}: TareIte
     const groups = useMemo(() => groupByTare(data || []), [data])
 
     const toggleExpand = (tareId: string) => {
-        setExpandedTares(prev => {
+        setExpandedTares((prev) => {
             const next = new Set(prev)
             if (next.has(tareId)) {
                 next.delete(tareId)
@@ -81,7 +90,7 @@ export function TareItemsPanel({api, onTareClick, onItemClick, toolbar}: TareIte
             {!loading && groups.length === 0 && (
                 <div className="tare-items-empty">No items</div>
             )}
-            {groups.map(group => {
+            {groups.map((group) => {
                 const key = group.tare.id || 'no-tare'
                 const expanded = expandedTares.has(key)
                 return (
@@ -98,7 +107,11 @@ export function TareItemsPanel({api, onTareClick, onItemClick, toolbar}: TareIte
                                     toggleExpand(key)
                                 }}
                             >
-                                {expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                                {expanded ? (
+                                    <ChevronDown size={14} />
+                                ) : (
+                                    <ChevronRight size={14} />
+                                )}
                             </button>
                             <span className="tare-row-barcode">
                                 {group.tare.barcode || '(no barcode)'}
@@ -107,7 +120,13 @@ export function TareItemsPanel({api, onTareClick, onItemClick, toolbar}: TareIte
                                 {group.tare.tareTypeName}
                             </span>
                             <span className="tare-row-nomenclatures">
-                                {[...new Set(group.items.map(i => i.nomenclatureName))].join(', ')}
+                                {[
+                                    ...new Set(
+                                        group.items.map(
+                                            (i) => i.nomenclatureName,
+                                        ),
+                                    ),
+                                ].join(', ')}
                             </span>
                             <span className="tare-row-summary">
                                 {tareSummary(group)}
@@ -123,7 +142,10 @@ export function TareItemsPanel({api, onTareClick, onItemClick, toolbar}: TareIte
                                 <TareSchematic
                                     tare={group.tare}
                                     items={group.items}
-                                    onSlotClick={(slot: SlotData, _e: React.MouseEvent) => {
+                                    onSlotClick={(
+                                        slot: SlotData,
+                                        _e: React.MouseEvent,
+                                    ) => {
                                         if (slot.item && onItemClick) {
                                             onItemClick(slot.item)
                                         }

@@ -1,16 +1,14 @@
-import React from "react";
-import PropTypes from 'prop-types';
+import PropTypes from 'prop-types'
+import React from 'react'
 
 type PageTitleProps = {
     title: string
 }
 
-export function PageTitle({ title } : PageTitleProps) {
+export function PageTitle({ title }: PageTitleProps) {
     return (
         <>
-            <h3>
-                {title}
-            </h3>
+            <h3>{title}</h3>
         </>
-    );
+    )
 }

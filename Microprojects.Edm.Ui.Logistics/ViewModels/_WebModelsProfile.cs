@@ -45,7 +45,11 @@ public class WebModelsProfile : AutoMapper.Profile
         CreateMap<Tare, TareViewModel>().ReverseMap()
             .ForMember(d => d.TareType, o => o.Ignore());
         CreateMap<SpecificationNomenclature, SpecificationRowViewModel>().ReverseMap();
-        CreateMap<Order, OrderViewModel>().ReverseMap();
+        CreateMap<Order, OrderViewModel>()
+            .ForMember(d => d.Completed, o => o.MapFrom(s => s.Meta != null ? s.Meta.Completed : null))
+            .ForMember(d => d.Deleted, o => o.MapFrom(s => s.Meta != null ? s.Meta.Deleted : null))
+            .ReverseMap()
+            .ForMember(d => d.Meta, o => o.Ignore());
 
         CreateMap<Supply, SupplyViewModel>().ReverseMap();
 

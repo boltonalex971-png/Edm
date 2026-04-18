@@ -1,9 +1,9 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 
+import Api from '@features/api/api'
 // Use the `Post` type we've already defined in `postsSlice`,
 // and then re-export it for ease of use
-import type {User, Process} from "../../data/types";
-import Api from "@features/api/api";
+import type { Process, User } from '../../data/types'
 export type { User, Process }
 
 // Define our single API slice object
@@ -13,13 +13,13 @@ export const apiSlice = createApi({
     // All of our requests will have URLs starting with '/fakeApi'
     baseQuery: fetchBaseQuery({ baseUrl: `${Api.baseUrl}/api` }),
     // The "endpoints" represent operations and requests for this server
-    endpoints: builder => ({
+    endpoints: (builder) => ({
         // The `getProcesses` endpoint is a "query" operation that returns data.
         getProcesses: builder.query<Process[], void>({
             // The URL for the request is '/api/processes'
-            query: () => '/processes'
-        })
-    })
+            query: () => '/processes',
+        }),
+    }),
 })
 
 // Export the auto-generated hook for the `getProcesses` query endpoint

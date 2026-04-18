@@ -1,12 +1,25 @@
-import React, {type ReactElement, useEffect, useMemo, useRef, useState} from 'react'
-import {Diagram3, Search} from 'react-bootstrap-icons'
-import {Button} from '@progress/kendo-react-buttons'
 import api from '@features/api/api'
-import {usePost} from '@logistics/hooks/hooks'
-import type {DataItem, Item, ItemSearchQuery, UUID} from '@logistics/data/types'
-import {InputPrefix, TextBox, type TextBoxChangeEvent} from '@progress/kendo-react-inputs'
-import {Loading} from '@features/utils/Utils'
-import {Error} from '@progress/kendo-react-labels'
+import Api from '@features/api/api'
+import { Loading } from '@features/utils/Utils'
+import { type AlertState, InlineAlert } from '@logistics/components/InlineAlert'
+import { Detail } from '@logistics/components/MasterDetail'
+import { ItemDetail } from '@logistics/components/items/ItemDetail'
+import { TareDetail } from '@logistics/components/tare/TareDetail'
+import {
+    type TareGroup,
+    groupByTare,
+    tareSummary,
+} from '@logistics/components/tare/TareItemsPanel'
+import { TareSchematic } from '@logistics/components/tare/TareSchematic'
+import type {
+    DataItem,
+    Item,
+    ItemSearchQuery,
+    UUID,
+} from '@logistics/data/types'
+import { usePost } from '@logistics/hooks/hooks'
+import { process } from '@progress/kendo-data-query'
+import { Button } from '@progress/kendo-react-buttons'
 import {
     Grid,
     GridColumn,
@@ -15,38 +28,48 @@ import {
     type GridPageChangeEvent,
     type GridRowClickEvent,
 } from '@progress/kendo-react-grid'
-import {process} from '@progress/kendo-data-query'
-import Api from '@features/api/api'
-import {Detail} from '@logistics/components/MasterDetail'
-import {type AlertState, InlineAlert} from '@logistics/components/InlineAlert'
-import {ItemDetail} from '@logistics/components/items/ItemDetail'
-import {TareDetail} from '@logistics/components/tare/TareDetail'
-import {TareSchematic} from '@logistics/components/tare/TareSchematic'
-import {groupByTare, tareSummary, type TareGroup} from '@logistics/components/tare/TareItemsPanel'
+import {
+    InputPrefix,
+    TextBox,
+    type TextBoxChangeEvent,
+} from '@progress/kendo-react-inputs'
+import { Error } from '@progress/kendo-react-labels'
+import type React from 'react'
+import { type ReactElement, useEffect, useMemo, useRef, useState } from 'react'
+import { Diagram3, Search } from 'react-bootstrap-icons'
 
 type ItemSearchProps = {
     onClose: () => void
     query?: ItemSearchQuery
     lookup?: React.ReactElement | boolean
-    selected?: (items: Item[], setAlert: (alertState: AlertState) => void, onDone: () => void) => void
+    selected?: (
+        items: Item[],
+        setAlert: (alertState: AlertState) => void,
+        onDone: () => void,
+    ) => void
 }
 
-let refresh: boolean = false
+let refresh = false
 
-type TareRow = TareGroup & {expanded?: boolean}
+type TareRow = TareGroup & { expanded?: boolean }
 
 export const ItemSearch = (props: ItemSearchProps) => {
     const [[items], loading, error] = usePost<Item[]>(
-        `${api.items}/search`, props.query || {},
+        `${api.items}/search`,
+        props.query || {},
         [props.query?.nomenclatureId, props.query?.active, refresh],
     )
     const [subDetail, setSubDetail] = useState<ReactElement | undefined>()
     const [filter, setFilter] = useState<string>('')
     const [alert, setAlert] = useState<AlertState>()
     const [expandedTares, setExpandedTares] = useState<Set<string>>(new Set())
-    const [page, setPage] = useState({skip: 0, take: 10})
-    const [selectedItemIds, setSelectedItemIds] = useState<Set<string>>(new Set())
-    const lastClickedRef = useRef<{tareId: string; itemId: string} | null>(null)
+    const [page, setPage] = useState({ skip: 0, take: 10 })
+    const [selectedItemIds, setSelectedItemIds] = useState<Set<string>>(
+        new Set(),
+    )
+    const lastClickedRef = useRef<{ tareId: string; itemId: string } | null>(
+        null,
+    )
 
     useEffect(() => {
         setAlert(undefined)
@@ -56,35 +79,36 @@ export const ItemSearch = (props: ItemSearchProps) => {
         if (!items) return []
         const lc = filter.toLowerCase()
         const filtered = lc
-            ? items.filter(o =>
-                o.nomenclatureName?.toLowerCase().includes(lc) ||
-                o.tareTareTypeName?.toLowerCase().includes(lc) ||
-                o.tareBarcode?.toLowerCase().includes(lc)
-            )
+            ? items.filter(
+                  (o) =>
+                      o.nomenclatureName?.toLowerCase().includes(lc) ||
+                      o.tareTareTypeName?.toLowerCase().includes(lc) ||
+                      o.tareBarcode?.toLowerCase().includes(lc),
+              )
             : items
-        return groupByTare(filtered).map(g => ({
+        return groupByTare(filtered).map((g) => ({
             ...g,
             expanded: expandedTares.has(g.tare.id || 'no-tare'),
         }))
     }, [filter, items, expandedTares])
 
     const pagedData = useMemo(
-        () => process(tareRows, {skip: page.skip, take: page.take}),
+        () => process(tareRows, { skip: page.skip, take: page.take }),
         [tareRows, page.skip, page.take],
     )
 
     const filterChange = (event: TextBoxChangeEvent) => {
         setFilter(event.value?.toString() || '')
-        setPage({skip: 0, take: 10})
+        setPage({ skip: 0, take: 10 })
     }
 
     const pageChange = (event: GridPageChangeEvent) => {
-        setPage({...event.page, take: 10})
+        setPage({ ...event.page, take: 10 })
     }
 
     const onExpandChange = (event: GridExpandChangeEvent) => {
         const tareId = event.dataItem.tare.id || 'no-tare'
-        setExpandedTares(prev => {
+        setExpandedTares((prev) => {
             const next = new Set(prev)
             if (next.has(tareId)) {
                 next.delete(tareId)
@@ -105,23 +129,35 @@ export const ItemSearch = (props: ItemSearchProps) => {
                 tareId={row.tare.id}
                 label={row.tare.barcode}
                 onClose={() => setSubDetail(undefined)}
-            />
+            />,
         )
     }
 
-    const handleSlotSelect = (item: Item, tareId: string, shiftKey: boolean) => {
-        if (shiftKey && lastClickedRef.current && lastClickedRef.current.tareId === tareId) {
-            const group = tareRows.find(r => (r.tare.id || 'no-tare') === tareId)
+    const handleSlotSelect = (
+        item: Item,
+        tareId: string,
+        shiftKey: boolean,
+    ) => {
+        if (
+            shiftKey &&
+            lastClickedRef.current &&
+            lastClickedRef.current.tareId === tareId
+        ) {
+            const group = tareRows.find(
+                (r) => (r.tare.id || 'no-tare') === tareId,
+            )
             if (group) {
                 const sorted = [...group.items]
-                    .filter(i => i.address != null)
+                    .filter((i) => i.address != null)
                     .sort((a, b) => a.address! - b.address!)
-                const lastIdx = sorted.findIndex(i => i.id === lastClickedRef.current!.itemId)
-                const curIdx = sorted.findIndex(i => i.id === item.id)
+                const lastIdx = sorted.findIndex(
+                    (i) => i.id === lastClickedRef.current!.itemId,
+                )
+                const curIdx = sorted.findIndex((i) => i.id === item.id)
                 if (lastIdx >= 0 && curIdx >= 0) {
                     const lo = Math.min(lastIdx, curIdx)
                     const hi = Math.max(lastIdx, curIdx)
-                    setSelectedItemIds(prev => {
+                    setSelectedItemIds((prev) => {
                         const next = new Set(prev)
                         for (let i = lo; i <= hi; i++) {
                             next.add(sorted[i].id)
@@ -132,7 +168,7 @@ export const ItemSearch = (props: ItemSearchProps) => {
                 }
             }
         }
-        setSelectedItemIds(prev => {
+        setSelectedItemIds((prev) => {
             const next = new Set(prev)
             if (next.has(item.id)) {
                 next.delete(item.id)
@@ -141,13 +177,13 @@ export const ItemSearch = (props: ItemSearchProps) => {
             }
             return next
         })
-        lastClickedRef.current = {tareId, itemId: item.id}
+        lastClickedRef.current = { tareId, itemId: item.id }
     }
 
     const doRefresh = () => {
         refresh = !refresh
         setSelectedItemIds(new Set())
-        setAlert(a => a)
+        setAlert((a) => a)
     }
 
     const allocateSelected = () => {
@@ -155,15 +191,21 @@ export const ItemSearch = (props: ItemSearchProps) => {
             return
         }
         const selected = items
-            .filter(i => selectedItemIds.has(i.id))
+            .filter((i) => selectedItemIds.has(i.id))
             .sort((a, b) => (a.address ?? 0) - (b.address ?? 0))
         props.selected(selected, setAlert, doRefresh)
     }
 
     const rowDoubleClick = (event: GridRowClickEvent) => {
-        if (typeof props.lookup === 'boolean' && props.lookup && props.selected) {
+        if (
+            typeof props.lookup === 'boolean' &&
+            props.lookup &&
+            props.selected
+        ) {
             const row = event.dataItem as TareRow
-            const sorted = [...row.items].sort((a, b) => (a.address ?? 0) - (b.address ?? 0))
+            const sorted = [...row.items].sort(
+                (a, b) => (a.address ?? 0) - (b.address ?? 0),
+            )
             props.selected(sorted, setAlert, doRefresh)
         }
     }
@@ -173,8 +215,8 @@ export const ItemSearch = (props: ItemSearchProps) => {
         const tareKey = row.tare.id || 'no-tare'
         const selectedAddresses = new Set(
             row.items
-                .filter(i => selectedItemIds.has(i.id))
-                .map(i => i.address)
+                .filter((i) => selectedItemIds.has(i.id))
+                .map((i) => i.address)
                 .filter((a): a is number => a != null),
         )
         return (
@@ -192,7 +234,7 @@ export const ItemSearch = (props: ItemSearchProps) => {
                                 id={slot.item.id}
                                 api={Api.items}
                                 onClose={() => setSubDetail(undefined)}
-                            />
+                            />,
                         )
                     }
                 }}
@@ -206,26 +248,38 @@ export const ItemSearch = (props: ItemSearchProps) => {
             icon={<Diagram3 title="Components" />}
             loading={loading}
             error={error as string}
-            data={{
-                name: `Component ${props.lookup ? 'lookup' : 'search'}`,
-                description: props.lookup ? 'Binding component to the order' : 'Search for components',
-            } as DataItem}
+            data={
+                {
+                    name: `Component ${props.lookup ? 'lookup' : 'search'}`,
+                    description: props.lookup
+                        ? 'Binding component to the order'
+                        : 'Search for components',
+                } as DataItem
+            }
             subDetail={subDetail}
             card={
                 <>
                     <TextBox
                         inputMode="text"
                         placeholder="Search by nomenclature, tare or barcode"
-                        prefix={() =>
+                        prefix={() => (
                             <InputPrefix>
                                 <Search width={30} />
                             </InputPrefix>
-                        }
-                        style={{marginBottom: '1rem'}}
+                        )}
+                        style={{ marginBottom: '1rem' }}
                         onChange={filterChange}
                     />
                     {props.lookup && selectedItemIds.size > 0 && (
-                        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem', marginBottom: '0.5rem'}}>
+                        <div
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'flex-end',
+                                gap: '0.5rem',
+                                marginBottom: '0.5rem',
+                            }}
+                        >
                             <Button
                                 themeColor="primary"
                                 size="small"
@@ -245,7 +299,10 @@ export const ItemSearch = (props: ItemSearchProps) => {
                     {error && <Error>{error}</Error>}
                     {tareRows && (
                         <>
-                            <InlineAlert state={alert} onClose={() => setAlert(undefined)} />
+                            <InlineAlert
+                                state={alert}
+                                onClose={() => setAlert(undefined)}
+                            />
                             <Grid
                                 data={pagedData}
                                 scrollable="none"
@@ -265,32 +322,49 @@ export const ItemSearch = (props: ItemSearchProps) => {
                                     field="tare.barcode"
                                     title="Barcode"
                                     width="150"
-                                    cell={(p) => <td>{p.dataItem.tare.barcode || '(none)'}</td>}
+                                    cell={(p) => (
+                                        <td>
+                                            {p.dataItem.tare.barcode ||
+                                                '(none)'}
+                                        </td>
+                                    )}
                                 />
                                 <GridColumn
                                     field="tare.tareTypeName"
                                     title="Tare Type"
                                     width="130"
-                                    cell={(p) => <td>{p.dataItem.tare.tareTypeName}</td>}
+                                    cell={(p) => (
+                                        <td>{p.dataItem.tare.tareTypeName}</td>
+                                    )}
                                 />
                                 <GridColumn
                                     title="Nomenclatures"
                                     cell={(p) => {
                                         const row = p.dataItem as TareRow
-                                        const names = [...new Set(row.items.map(i => i.nomenclatureName))]
+                                        const names = [
+                                            ...new Set(
+                                                row.items.map(
+                                                    (i) => i.nomenclatureName,
+                                                ),
+                                            ),
+                                        ]
                                         return <td>{names.join(', ')}</td>
                                     }}
                                 />
                                 <GridColumn
                                     title="Fill"
                                     width="120"
-                                    cell={(p) => <td>{tareSummary(p.dataItem)}</td>}
+                                    cell={(p) => (
+                                        <td>{tareSummary(p.dataItem)}</td>
+                                    )}
                                 />
                                 <GridColumn
                                     field="tare.tareTypeUnits"
                                     title="Units"
                                     width="80"
-                                    cell={(p) => <td>{p.dataItem.tare.tareTypeUnits}</td>}
+                                    cell={(p) => (
+                                        <td>{p.dataItem.tare.tareTypeUnits}</td>
+                                    )}
                                 />
                             </Grid>
                         </>

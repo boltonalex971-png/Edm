@@ -1,11 +1,6 @@
-import React, {useEffect, useMemo, useState} from 'react'
-import axios from 'axios'
-import {ComboBox, type ComboBoxChangeEvent} from '@progress/kendo-react-dropdowns'
-import {NumericTextBox} from '@progress/kendo-react-inputs'
-import {Button} from '@progress/kendo-react-buttons'
-import {Alert} from 'reactstrap'
 import Api from '@features/api/api'
-import {useGet} from '@logistics/hooks/hooks'
+import { Loading } from '@features/utils/Utils'
+import { LinkableComboBox } from '@logistics/components/DropDowns'
 import type {
     AvailableTare,
     BatchCreateItemRequest,
@@ -14,8 +9,16 @@ import type {
     TareType,
     UUID,
 } from '@logistics/data/types'
-import {LinkableComboBox} from '@logistics/components/DropDowns'
-import {Loading} from '@features/utils/Utils'
+import { useGet } from '@logistics/hooks/hooks'
+import { Button } from '@progress/kendo-react-buttons'
+import {
+    ComboBox,
+    type ComboBoxChangeEvent,
+} from '@progress/kendo-react-dropdowns'
+import { NumericTextBox } from '@progress/kendo-react-inputs'
+import axios from 'axios'
+import React, { useEffect, useMemo, useState } from 'react'
+import { Alert } from 'reactstrap'
 
 type BatchItemCreateProps = {
     supplyId?: UUID
@@ -23,7 +26,11 @@ type BatchItemCreateProps = {
     onClose?: () => void
 }
 
-export function BatchItemCreate({supplyId, onCreated, onClose}: BatchItemCreateProps) {
+export function BatchItemCreate({
+    supplyId,
+    onCreated,
+    onClose,
+}: BatchItemCreateProps) {
     const [[nomenclatures]] = useGet<Nomenclature[]>(Api.nomenclatures, [])
     const [[tareTypes]] = useGet<TareType[]>(Api.taretypes, [])
 
@@ -36,8 +43,10 @@ export function BatchItemCreate({supplyId, onCreated, onClose}: BatchItemCreateP
     const [error, setError] = useState<string>()
     const [result, setResult] = useState<BatchCreateItemResult>()
 
-    const selectedNomenclature = nomenclatures?.find(n => n.id === nomenclatureId)
-    const selectedTareType = tareTypes?.find(t => t.id === tareTypeId)
+    const selectedNomenclature = nomenclatures?.find(
+        (n) => n.id === nomenclatureId,
+    )
+    const selectedTareType = tareTypes?.find((t) => t.id === tareTypeId)
 
     useEffect(() => {
         if (selectedNomenclature?.defaultTareTypeId) {
@@ -75,18 +84,21 @@ export function BatchItemCreate({supplyId, onCreated, onClose}: BatchItemCreateP
         }
     }, [maxQuantity])
 
-    const isCountableAddressed = (selectedNomenclature?.countable ?? false)
-        && (selectedTareType?.sizeX ?? 0) > 0
+    const isCountableAddressed =
+        (selectedNomenclature?.countable ?? false) &&
+        (selectedTareType?.sizeX ?? 0) > 0
 
-    const isCountableBulk = (selectedNomenclature?.countable ?? false)
-        && (selectedTareType?.countable ?? false)
-        && (selectedTareType?.sizeX ?? 0) <= 0
+    const isCountableBulk =
+        (selectedNomenclature?.countable ?? false) &&
+        (selectedTareType?.countable ?? false) &&
+        (selectedTareType?.sizeX ?? 0) <= 0
 
-    const canSubmit = nomenclatureId
-        && tareTypeId
-        && quantity > 0
-        && quantity <= maxQuantity
-        && !loading
+    const canSubmit =
+        nomenclatureId &&
+        tareTypeId &&
+        quantity > 0 &&
+        quantity <= maxQuantity &&
+        !loading
 
     const handleSubmit = async () => {
         if (!canSubmit) return
@@ -98,7 +110,7 @@ export function BatchItemCreate({supplyId, onCreated, onClose}: BatchItemCreateP
             nomenclatureId: nomenclatureId!,
             tareTypeId: tareTypeId!,
             tareId: selectedTare?.id,
-            barcode: selectedTare ? undefined : (barcodeText || undefined),
+            barcode: selectedTare ? undefined : barcodeText || undefined,
             quantity,
             supplyId,
         }
@@ -122,22 +134,26 @@ export function BatchItemCreate({supplyId, onCreated, onClose}: BatchItemCreateP
             <div className="p-3">
                 <Alert color="success" fade>
                     <strong>Created {result.createdCount} item(s)</strong> in
-                    tare <strong>{result.tareBarcode || '(no barcode)'}</strong>
-                    {' '}({result.tareTypeName}).
+                    tare <strong>{result.tareBarcode || '(no barcode)'}</strong>{' '}
+                    ({result.tareTypeName}).
                     {result.remaining > 0 && (
                         <> Remaining capacity: {result.remaining}.</>
                     )}
                 </Alert>
-                <div className="mt-2" style={{display: 'flex', gap: '0.5rem'}}>
-                    <Button themeColor="primary" onClick={() => {
-                        setResult(undefined)
-                        setQuantity(1)
-                    }}>
+                <div
+                    className="mt-2"
+                    style={{ display: 'flex', gap: '0.5rem' }}
+                >
+                    <Button
+                        themeColor="primary"
+                        onClick={() => {
+                            setResult(undefined)
+                            setQuantity(1)
+                        }}
+                    >
                         Create more
                     </Button>
-                    {onClose && (
-                        <Button onClick={onClose}>Close</Button>
-                    )}
+                    {onClose && <Button onClick={onClose}>Close</Button>}
                 </div>
             </div>
         )
@@ -146,7 +162,11 @@ export function BatchItemCreate({supplyId, onCreated, onClose}: BatchItemCreateP
     return (
         <div className="p-3">
             <h6>Batch Create Items</h6>
-            {error && <Alert color="danger" fade>{error}</Alert>}
+            {error && (
+                <Alert color="danger" fade>
+                    {error}
+                </Alert>
+            )}
 
             <div className="mb-2">
                 <label className="k-label">Nomenclature</label>
@@ -193,29 +213,42 @@ export function BatchItemCreate({supplyId, onCreated, onClose}: BatchItemCreateP
                 />
                 {selectedTare && (
                     <small className="text-muted">
-                        Existing tare &mdash; remaining: {selectedTare.remaining}
+                        Existing tare &mdash; remaining:{' '}
+                        {selectedTare.remaining}
                     </small>
                 )}
                 {isNewTare && (
                     <small className="text-muted">
-                        New tare will be created{barcodeText ? ` with barcode “${barcodeText}”` : ' without barcode'}.
+                        New tare will be created
+                        {barcodeText
+                            ? ` with barcode “${barcodeText}”`
+                            : ' without barcode'}
+                        .
                     </small>
                 )}
             </div>
 
-            <div className="mb-2" style={{maxWidth: '200px'}}>
+            <div className="mb-2" style={{ maxWidth: '200px' }}>
                 <label className="k-label">
-                    {isCountableAddressed || isCountableBulk ? 'Number of items' : 'Quantity'}
+                    {isCountableAddressed || isCountableBulk
+                        ? 'Number of items'
+                        : 'Quantity'}
                 </label>
                 <NumericTextBox
                     value={quantity}
                     min={isCountableAddressed || isCountableBulk ? 1 : 0.001}
                     max={maxQuantity > 0 ? maxQuantity : undefined}
                     step={isCountableAddressed || isCountableBulk ? 1 : 0.1}
-                    format={isCountableAddressed || isCountableBulk ? 'n0' : 'n3'}
+                    format={
+                        isCountableAddressed || isCountableBulk ? 'n0' : 'n3'
+                    }
                     onChange={(e) => {
                         const v = e.value ?? 1
-                        setQuantity(isCountableAddressed || isCountableBulk ? Math.round(v) : v)
+                        setQuantity(
+                            isCountableAddressed || isCountableBulk
+                                ? Math.round(v)
+                                : v,
+                        )
                     }}
                 />
                 {maxQuantity > 0 && (
@@ -223,7 +256,7 @@ export function BatchItemCreate({supplyId, onCreated, onClose}: BatchItemCreateP
                 )}
             </div>
 
-            <div className="mt-3" style={{display: 'flex', gap: '0.5rem'}}>
+            <div className="mt-3" style={{ display: 'flex', gap: '0.5rem' }}>
                 <Button
                     themeColor="primary"
                     disabled={!canSubmit}
@@ -231,11 +264,9 @@ export function BatchItemCreate({supplyId, onCreated, onClose}: BatchItemCreateP
                 >
                     {loading ? 'Creating...' : 'Create'}
                 </Button>
-                {onClose && (
-                    <Button onClick={onClose}>Cancel</Button>
-                )}
+                {onClose && <Button onClick={onClose}>Cancel</Button>}
             </div>
-            {loading && <Loading/>}
+            {loading && <Loading />}
         </div>
     )
 }

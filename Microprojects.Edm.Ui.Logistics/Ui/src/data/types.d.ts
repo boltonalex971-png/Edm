@@ -1,4 +1,12 @@
-export type Any = bigint | boolean | number | string | [] | object | null | undefined
+export type Any =
+    | bigint
+    | boolean
+    | number
+    | string
+    | []
+    | object
+    | null
+    | undefined
 export type UUID = `${string}-${string}-${string}-${string}-${string}`
 
 export interface Dictionary {
@@ -8,7 +16,7 @@ export interface Dictionary {
 export interface DataItem {
     id: UUID
     name: string
-    description?: string,
+    description?: string
     isActive: boolean
 }
 
@@ -26,9 +34,9 @@ export interface TreeNode extends TreeDataItem {
 
 export interface Process extends DataItem {
     message: string
-    kind: ProcessKind,
-    nomenclatureName?: string,
-    nomenclatureId?: number,
+    kind: ProcessKind
+    nomenclatureName?: string
+    nomenclatureId?: number
 }
 
 export interface Grade extends DataItem {
@@ -54,7 +62,7 @@ export interface TareType extends DataItem {
     capacity: number
 }
 
-export interface Item  extends DataItem {
+export interface Item extends DataItem {
     id: UUID
     originId: UUID
     supplyId?: UUID
@@ -73,7 +81,7 @@ export interface Item  extends DataItem {
     tareTareTypeDimensions: number
     tareTareTypeCapacity: number
     address?: number
-    quantity:  number
+    quantity: number
 }
 
 export interface Supply extends DataItem {
@@ -187,6 +195,31 @@ export interface OrderSearchQuery {
     active?: boolean
 }
 
+export interface ExecuteResult {
+    completed: boolean
+    pendingCount: number
+}
+
+export interface OrderOutputItems {
+    allocated: Item[]
+    unallocated: Item[]
+}
+
+export interface OutputAllocation {
+    itemId: UUID
+    tareId: UUID
+    address?: number
+}
+
+export interface AllocateOutputsRequest {
+    allocations: OutputAllocation[]
+}
+
+export interface AllocateOutputsResult {
+    allocatedCount: number
+    errors: string[]
+}
+
 export interface Order extends DataItem {
     processId: UUID
     processName: string
@@ -195,10 +228,23 @@ export interface Order extends DataItem {
     amount: number
     startDate: Date
     dueDate: Date
+    completed?: string
+    deleted?: string
 }
 
-export interface Operation extends DataItem {
+export interface OrderProcess {
+    id: UUID
+    orderId: UUID
+    startTime?: string
+    endTime?: string
+    processId?: UUID
+    processName?: string
+    processKind?: string
+    processNomenclatureId?: UUID
+    processNomenclatureName?: string
 }
+
+export interface Operation extends DataItem {}
 
 export interface User extends DataItem {
     roles: string[]
@@ -207,6 +253,6 @@ export interface User extends DataItem {
     groups: string[]
 }
 
-export type DetailEventHandler = (data?: TreeNode) => void;
+export type DetailEventHandler = (data?: TreeNode) => void
 
 export type ProcessKind = 'Manufacturing' | 'Technology' | 'Operation'

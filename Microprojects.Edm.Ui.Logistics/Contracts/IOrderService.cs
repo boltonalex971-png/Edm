@@ -13,6 +13,9 @@ public interface IOrderService : IGenericService<Order>
     Task<IEnumerable<OrderProcess>> GetOrderProcesses(Guid id, bool asNoTracking = true);
     Task<Item> AddItem(Guid id, Item item);
     Task<AllocateItemsResult> AddItems(Guid orderId, IEnumerable<Guid> itemIds);
-    Task<bool> Execute(Guid id, Guid? processId);
+    Task<ExecuteResult> Execute(Guid id);
+    Task<OrderOutputItems> GetOutputItems(Guid orderId);
+    Task<AllocateOutputsResult> AllocateOutputs(Guid orderId, IEnumerable<OutputAllocation> allocations);
+    Task CompleteOrder(Guid orderId);
     Task<IEnumerable<Order>> Search(OrderSearchQuery query);
 }

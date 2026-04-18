@@ -18,13 +18,16 @@ function useFetch<T>(
     url: string,
     deps: any[] = [],
     type: RequestType = RequestType.GET,
-    data : any = null
+    data: any = null,
 ): UseFetchResult<T> {
     const [state, setState] = useReducer(
-        (state: FetchState<T>, newState: Partial<FetchState<T>>): FetchState<T> => ({ ...state, ...newState }),
+        (
+            state: FetchState<T>,
+            newState: Partial<FetchState<T>>,
+        ): FetchState<T> => ({ ...state, ...newState }),
         {
             loading: true,
-        }
+        },
     )
     const setData = (data: T) => setState({ data: data })
     const options: RequestInit = {
@@ -37,19 +40,30 @@ function useFetch<T>(
         },
         //redirect: 'follow', // manual, *follow, error
         referrerPolicy: 'no-referrer', // no-referrer, *client
-        body: data && JSON.stringify(data) // body data type must match "Content-Type" header
+        body: data && JSON.stringify(data), // body data type must match "Content-Type" header
     }
 
     useEffect(() => {
         const controller = new AbortController()
         async function fetchUrl() {
             try {
-                const response = await fetch(url, { ...options, signal: controller.signal })
+                const response = await fetch(url, {
+                    ...options,
+                    signal: controller.signal,
+                })
                 const json = await response.json()
-                setState({ loading: false, data: response.ok && json, error: !response.ok && json.detail })
-            } catch (err : any) {
+                setState({
+                    loading: false,
+                    data: response.ok && json,
+                    error: !response.ok && json.detail,
+                })
+            } catch (err: any) {
                 if (err.name !== 'AbortError') {
-                    setState({ loading: false, data: undefined, error: 'Cannot load the data' })
+                    setState({
+                        loading: false,
+                        data: undefined,
+                        error: 'Cannot load the data',
+                    })
                 }
             }
         }
@@ -67,7 +81,11 @@ function useGet<T>(url: string, deps: any[] = []): UseFetchResult<T> {
     return useFetch<T>(url, deps, RequestType.GET)
 }
 
-function usePost<T>(url: string, data: any, deps: any[] = []): UseFetchResult<T> {
+function usePost<T>(
+    url: string,
+    data: any,
+    deps: any[] = [],
+): UseFetchResult<T> {
     return useFetch(url, deps, RequestType.POST, data)
 }
 
@@ -76,9 +94,14 @@ export { useFetch, useGet, usePost }
 /* new data fetch api */
 export const getData = <T>(url: string): Promise<T> => query(url)
 
-export const postData = <T>(url: string, body: any): Promise<T> => query(url, 'POST', body)
+export const postData = <T>(url: string, body: any): Promise<T> =>
+    query(url, 'POST', body)
 
-export const query = async <T>(url: string, method: 'GET' | 'POST' = 'GET', body?: any): Promise<T> => {
+export const query = async <T>(
+    url: string,
+    method: 'GET' | 'POST' = 'GET',
+    body?: any,
+): Promise<T> => {
     const props: RequestInit = {
         method: method,
         headers: {

@@ -38,7 +38,7 @@ public class ItemService : ServiceBase<Item>, IItemService
             .Include(i => i.Tare.TareType)
             .Include(i => i.Nomenclature)
             .Include(e => e.Meta)
-            .Where(e => e.Meta.Deleted == null);
+            .Where(e => e.Meta.Deleted == null && e.Meta.Completed == null);
 
         if (predicate != null)
         {
@@ -166,7 +166,8 @@ public class ItemService : ServiceBase<Item>, IItemService
                             i.TareId == item.TareId &&
                             i.Address == item.Address &&
                             i.Id != item.Id &&
-                            i.Meta.Deleted == null);
+                            i.Meta.Deleted == null &&
+                            i.Meta.Completed == null);
 
                     if (alreadyUsed)
                     {
@@ -200,7 +201,10 @@ public class ItemService : ServiceBase<Item>, IItemService
             .Include(i => i.Nomenclature)
             .Include(e => e.Meta)
             .Include(i => i.Items)
-            .Where(i => (query.Active && i.Meta.Deleted == null || !query.Active && i.Meta.Deleted != null)
+            .Where(i =>
+                        (query.Active
+                            ? (i.Meta.Deleted == null && i.Meta.Completed == null)
+                            : (i.Meta.Deleted != null || i.Meta.Completed != null))
                         && (query.NomenclatureId == null || query.NomenclatureId == i.NomenclatureId)
                         && (query.OriginId == null || query.OriginId == i.OriginId)
                         && i.OrderId == null)
@@ -267,7 +271,7 @@ public class ItemService : ServiceBase<Item>, IItemService
 
             var itemsInTare = await Set<Item>().AsNoTracking()
                 .Include(i => i.Meta)
-                .Where(i => i.TareId == tare.Id && i.Meta.Deleted == null)
+                .Where(i => i.TareId == tare.Id && i.Meta.Deleted == null && i.Meta.Completed == null)
                 .ToListAsync();
 
             used = tareType.Dimensions > 0 && tareType.Countable
@@ -304,7 +308,7 @@ public class ItemService : ServiceBase<Item>, IItemService
             }
             var occupiedAddresses = await Set<Item>().AsNoTracking()
                 .Include(i => i.Meta)
-                .Where(i => i.TareId == tare.Id && i.Meta.Deleted == null && i.Address != null)
+                .Where(i => i.TareId == tare.Id && i.Meta.Deleted == null && i.Meta.Completed == null && i.Address != null)
                 .Select(i => i.Address!.Value)
                 .ToListAsync();
 
@@ -394,7 +398,7 @@ public class ItemService : ServiceBase<Item>, IItemService
             .Include(i => i.Nomenclature)
             .Include(i => i.Tare.TareType)
             .Include(i => i.Meta)
-            .Where(i => i.TareId == tareId && i.Meta.Deleted == null)
+            .Where(i => i.TareId == tareId && i.Meta.Deleted == null && i.Meta.Completed == null)
             .ToListAsync();
     }
 
@@ -414,7 +418,7 @@ public class ItemService : ServiceBase<Item>, IItemService
                     .Include(i => i.Meta)
                     .Include(i => i.Nomenclature)
                     .Include(i => i.Tare).ThenInclude(t => t.TareType)
-                    .FirstOrDefaultAsync(i => i.Id == move.SourceItemId && i.Meta.Deleted == null);
+                    .FirstOrDefaultAsync(i => i.Id == move.SourceItemId && i.Meta.Deleted == null && i.Meta.Completed == null);
 
                 if (item == null)
                 {
@@ -469,7 +473,8 @@ public class ItemService : ServiceBase<Item>, IItemService
                             i.TareId == move.TargetTareId &&
                             i.Address == move.TargetAddress &&
                             i.Id != item.Id &&
-                            i.Meta.Deleted == null);
+                            i.Meta.Deleted == null &&
+                            i.Meta.Completed == null);
 
                     if (addressTaken)
                     {
@@ -483,7 +488,7 @@ public class ItemService : ServiceBase<Item>, IItemService
                 {
                     var itemsInTarget = await Set<Item>().AsNoTracking()
                         .Include(i => i.Meta)
-                        .Where(i => i.TareId == move.TargetTareId && i.Meta.Deleted == null)
+                        .Where(i => i.TareId == move.TargetTareId && i.Meta.Deleted == null && i.Meta.Completed == null)
                         .ToListAsync();
 
                     var used = targetType.Countable && targetType.Dimensions > 0

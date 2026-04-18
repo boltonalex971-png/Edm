@@ -1,13 +1,29 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { ComboBox, ComboBoxFilterChangeEvent } from '@progress/kendo-react-dropdowns'
-import { Button } from '@progress/kendo-react-buttons'
-import { TextBox } from '@progress/kendo-react-inputs'
-import { PageTitle } from '@logistics/components/PageTitle'
-import { TareSchematic, type SlotData } from '@logistics/components/tare/TareSchematic'
 import api from '@features/api/api'
-import { useGet, usePost, postData, getData } from '@logistics/hooks/hooks'
-import type { Item, Nomenclature, TareInfo, TareType, RepackMove, RepackRequest, RepackResult, UUID } from '@logistics/data/types'
+import { PageTitle } from '@logistics/components/PageTitle'
+import {
+    type SlotData,
+    TareSchematic,
+} from '@logistics/components/tare/TareSchematic'
+import type {
+    Item,
+    Nomenclature,
+    RepackMove,
+    RepackRequest,
+    RepackResult,
+    TareInfo,
+    TareType,
+    UUID,
+} from '@logistics/data/types'
+import { getData, postData, useGet, usePost } from '@logistics/hooks/hooks'
 import { SmartScroll, SmartScrollContent } from '@microprojects/tools'
+import { Button } from '@progress/kendo-react-buttons'
+import {
+    ComboBox,
+    type ComboBoxFilterChangeEvent,
+} from '@progress/kendo-react-dropdowns'
+import { TextBox } from '@progress/kendo-react-inputs'
+import type React from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import './Repacking.css'
 
 type TargetTareState = TareInfo & {
@@ -27,7 +43,10 @@ export function Repacking() {
 
     const [targetTares, setTargetTares] = useState<TargetTareState[]>([])
     const [selectedSourceItem, setSelectedSourceItem] = useState<Item>()
-    const [selectedTargetSlot, setSelectedTargetSlot] = useState<{ tareId: UUID; address: number }>()
+    const [selectedTargetSlot, setSelectedTargetSlot] = useState<{
+        tareId: UUID
+        address: number
+    }>()
 
     const [newTareBarcode, setNewTareBarcode] = useState('')
     const [newTareTypeId, setNewTareTypeId] = useState<UUID>()
@@ -41,14 +60,14 @@ export function Repacking() {
         if (!nomenclatures) return []
         if (!nomenclatureFilter) return nomenclatures
         const lc = nomenclatureFilter.toLowerCase()
-        return nomenclatures.filter(n => n.name.toLowerCase().includes(lc))
+        return nomenclatures.filter((n) => n.name.toLowerCase().includes(lc))
     }, [nomenclatures, nomenclatureFilter])
 
     const filteredTareTypes = useMemo(() => {
         if (!tareTypes) return []
         if (!tareTypeFilter) return tareTypes
         const lc = tareTypeFilter.toLowerCase()
-        return tareTypes.filter(t => t.name.toLowerCase().includes(lc))
+        return tareTypes.filter((t) => t.name.toLowerCase().includes(lc))
     }, [tareTypes, tareTypeFilter])
 
     const loadSourceItems = useCallback(async () => {
@@ -58,7 +77,10 @@ export function Repacking() {
         }
         setSourceLoading(true)
         try {
-            const query: any = { nomenclatureId: selectedNomenclatureId, active: true }
+            const query: any = {
+                nomenclatureId: selectedNomenclatureId,
+                active: true,
+            }
             const items = await postData<Item[]>(`${api.items}/search`, query)
             setSourceItems(items || [])
         } catch {
@@ -75,22 +97,28 @@ export function Repacking() {
         if (!tareBarcode.trim()) return
         try {
             const tares = await getData<TareInfo[]>(
-                `${api.tares}/search?barcode=${encodeURIComponent(tareBarcode.trim())}`
+                `${api.tares}/search?barcode=${encodeURIComponent(tareBarcode.trim())}`,
             )
             if (tares && tares.length > 0) {
                 const tare = tares[0]
-                const items = await getData<Item[]>(`${api.items}/tare/${tare.id}`)
+                const items = await getData<Item[]>(
+                    `${api.items}/tare/${tare.id}`,
+                )
                 if (selectedNomenclatureId) {
-                    setSourceItems(prev => {
-                        const existing = new Set(prev.map(i => i.id))
+                    setSourceItems((prev) => {
+                        const existing = new Set(prev.map((i) => i.id))
                         const filtered = (items || []).filter(
-                            i => i.nomenclatureId === selectedNomenclatureId && !existing.has(i.id)
+                            (i) =>
+                                i.nomenclatureId === selectedNomenclatureId &&
+                                !existing.has(i.id),
                         )
                         return [...prev, ...filtered]
                     })
                 }
             }
-        } catch { /* ignore */ }
+        } catch {
+            /* ignore */
+        }
     }, [tareBarcode, selectedNomenclatureId])
 
     const sourceTares = useMemo(() => {
@@ -110,7 +138,10 @@ export function Repacking() {
                         sizeY: item.tareTareTypeSizeY,
                         sizeZ: item.tareTareTypeSizeZ,
                         dimensions: item.tareTareTypeDimensions ?? 1,
-                        capacity: item.tareTareTypeCapacity || sourceItems.filter(i => i.tareBarcode === tareKey).length,
+                        capacity:
+                            item.tareTareTypeCapacity ||
+                            sourceItems.filter((i) => i.tareBarcode === tareKey)
+                                .length,
                     },
                     items: [],
                 })
@@ -134,23 +165,30 @@ export function Repacking() {
         }
     }
 
-    const moveItemToSlot = (item: Item, targetTareId: UUID, targetAddress: number) => {
+    const moveItemToSlot = (
+        item: Item,
+        targetTareId: UUID,
+        targetAddress: number,
+    ) => {
         const move: RepackMove = {
             sourceItemId: item.id,
             targetTareId,
             targetAddress,
             quantity: item.quantity,
         }
-        setPendingMoves(prev => [...prev.filter(m => m.sourceItemId !== item.id), move])
+        setPendingMoves((prev) => [
+            ...prev.filter((m) => m.sourceItemId !== item.id),
+            move,
+        ])
 
-        setSourceItems(prev => prev.filter(i => i.id !== item.id))
+        setSourceItems((prev) => prev.filter((i) => i.id !== item.id))
 
-        setTargetTares(prev =>
-            prev.map(t => {
+        setTargetTares((prev) =>
+            prev.map((t) => {
                 if (t.id !== targetTareId) return t
                 const movedItem: Item = { ...item, address: targetAddress }
                 return { ...t, items: [...t.items, movedItem] }
-            })
+            }),
         )
 
         setSelectedSourceItem(undefined)
@@ -160,14 +198,18 @@ export function Repacking() {
     const autoFill = () => {
         if (targetTares.length === 0 || sourceItems.length === 0) return
 
-        let remaining = [...sourceItems]
+        const remaining = [...sourceItems]
         const newMoves: RepackMove[] = [...pendingMoves]
-        const updatedTargets = targetTares.map(t => {
+        const updatedTargets = targetTares.map((t) => {
             const capacity = Math.floor(t.capacity)
-            const occupiedAddresses = new Set(t.items.map(i => i.address))
+            const occupiedAddresses = new Set(t.items.map((i) => i.address))
             const newItems = [...t.items]
 
-            for (let addr = 1; addr <= capacity && remaining.length > 0; addr++) {
+            for (
+                let addr = 1;
+                addr <= capacity && remaining.length > 0;
+                addr++
+            ) {
                 if (occupiedAddresses.has(addr)) continue
                 const item = remaining.shift()!
                 newItems.push({ ...item, address: addr })
@@ -188,9 +230,14 @@ export function Repacking() {
 
     const addTargetTare = async (existing?: TareInfo) => {
         if (existing) {
-            if (targetTares.some(t => t.id === existing.id)) return
-            const items = await getData<Item[]>(`${api.items}/tare/${existing.id}`)
-            setTargetTares(prev => [...prev, { ...existing, items: items || [] }])
+            if (targetTares.some((t) => t.id === existing.id)) return
+            const items = await getData<Item[]>(
+                `${api.items}/tare/${existing.id}`,
+            )
+            setTargetTares((prev) => [
+                ...prev,
+                { ...existing, items: items || [] },
+            ])
             return
         }
 
@@ -201,7 +248,7 @@ export function Repacking() {
                 tareTypeId: newTareTypeId,
             })
             if (created) {
-                setTargetTares(prev => [...prev, { ...created, items: [] }])
+                setTargetTares((prev) => [...prev, { ...created, items: [] }])
                 setNewTareBarcode('')
                 setNewTareTypeId(undefined)
             }
@@ -214,7 +261,7 @@ export function Repacking() {
         if (!newTareBarcode.trim()) return
         try {
             const tares = await getData<TareInfo[]>(
-                `${api.tares}/search?barcode=${encodeURIComponent(newTareBarcode.trim())}`
+                `${api.tares}/search?barcode=${encodeURIComponent(newTareBarcode.trim())}`,
             )
             if (tares && tares.length > 0) {
                 await addTargetTare(tares[0])
@@ -230,14 +277,14 @@ export function Repacking() {
     }
 
     const removeTargetTare = (tareId: UUID) => {
-        const tare = targetTares.find(t => t.id === tareId)
+        const tare = targetTares.find((t) => t.id === tareId)
         if (!tare) return
-        const movedBackItems = tare.items.filter(i =>
-            pendingMoves.some(m => m.sourceItemId === i.id)
+        const movedBackItems = tare.items.filter((i) =>
+            pendingMoves.some((m) => m.sourceItemId === i.id),
         )
-        setSourceItems(prev => [...prev, ...movedBackItems])
-        setPendingMoves(prev => prev.filter(m => m.targetTareId !== tareId))
-        setTargetTares(prev => prev.filter(t => t.id !== tareId))
+        setSourceItems((prev) => [...prev, ...movedBackItems])
+        setPendingMoves((prev) => prev.filter((m) => m.targetTareId !== tareId))
+        setTargetTares((prev) => prev.filter((t) => t.id !== tareId))
     }
 
     const submitRepack = async () => {
@@ -248,20 +295,28 @@ export function Repacking() {
                 nomenclatureId: selectedNomenclatureId,
                 moves: pendingMoves,
             }
-            const result = await postData<RepackResult>(`${api.items}/repack`, request)
+            const result = await postData<RepackResult>(
+                `${api.items}/repack`,
+                request,
+            )
             setSubmitResult(result)
             if (result.errors.length === 0) {
                 setPendingMoves([])
                 loadSourceItems()
                 const refreshed: TargetTareState[] = []
                 for (const t of targetTares) {
-                    const items = await getData<Item[]>(`${api.items}/tare/${t.id}`)
+                    const items = await getData<Item[]>(
+                        `${api.items}/tare/${t.id}`,
+                    )
                     refreshed.push({ ...t, items: items || [] })
                 }
                 setTargetTares(refreshed)
             }
         } catch (e: any) {
-            setSubmitResult({ movedCount: 0, errors: [e.message || 'Request failed'] })
+            setSubmitResult({
+                movedCount: 0,
+                errors: [e.message || 'Request failed'],
+            })
         }
         setSubmitting(false)
     }
@@ -275,158 +330,224 @@ export function Repacking() {
         loadSourceItems()
     }
 
-    const selectedNomenclature = nomenclatures?.find(n => n.id === selectedNomenclatureId)
+    const selectedNomenclature = nomenclatures?.find(
+        (n) => n.id === selectedNomenclatureId,
+    )
 
     return (
-        <div className='repacking-page'>
-            <PageTitle title='Repacking' />
+        <div className="repacking-page">
+            <PageTitle title="Repacking" />
             <hr />
 
-            <SmartScroll offsetTop={10} style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', gap: 20 }}>
+            <SmartScroll
+                offsetTop={10}
+                style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'flex-start',
+                    gap: 20,
+                }}
+            >
                 <SmartScrollContent style={{ flex: 1 }}>
-                    <div className='column-toolbar'>
-                        <div className='field-group'>
+                    <div className="column-toolbar">
+                        <div className="field-group">
                             <label>Search source tare by barcode</label>
                             <div style={{ display: 'flex', gap: '0.5rem' }}>
                                 <TextBox
                                     value={tareBarcode}
-                                    onChange={e => setTareBarcode(e.value?.toString() || '')}
-                                    placeholder='Scan or type barcode...'
+                                    onChange={(e) =>
+                                        setTareBarcode(
+                                            e.value?.toString() || '',
+                                        )
+                                    }
+                                    placeholder="Scan or type barcode..."
                                     style={{ width: 200 }}
                                 />
-                                <Button onClick={loadTareByBarcode} disabled={!selectedNomenclatureId}>
+                                <Button
+                                    onClick={loadTareByBarcode}
+                                    disabled={!selectedNomenclatureId}
+                                >
                                     Find
                                 </Button>
                             </div>
                         </div>
-                        <div className='field-group'>
+                        <div className="field-group">
                             <label>Nomenclature</label>
                             <ComboBox
                                 data={filteredNomenclatures}
-                                dataItemKey='id'
-                                textField='name'
+                                dataItemKey="id"
+                                textField="name"
                                 value={selectedNomenclature || null}
                                 filterable
-                                onFilterChange={(e: ComboBoxFilterChangeEvent) =>
+                                onFilterChange={(
+                                    e: ComboBoxFilterChangeEvent,
+                                ) =>
                                     setNomenclatureFilter(e.filter?.value || '')
                                 }
-                                onChange={e => {
+                                onChange={(e) => {
                                     setSelectedNomenclatureId(e.value?.id)
                                     reset()
                                 }}
                                 style={{ width: 300 }}
-                                placeholder='Select nomenclature...'
+                                placeholder="Select nomenclature..."
                             />
                         </div>
                     </div>
-                    <div className='repacking-panel source'>
+                    <div className="repacking-panel source">
                         <h3>Source tares</h3>
-                    {sourceLoading && <span>Loading...</span>}
-                    {!sourceLoading && sourceTares.length === 0 && (
-                        <div className='no-items-message'>
-                            {selectedNomenclatureId
-                                ? 'No items found for this nomenclature'
-                                : 'Select a nomenclature to see source items'}
-                        </div>
-                    )}
-                    {sourceTares.map(({ tare, items }) => (
-                        <TareSchematic
-                            key={tare.barcode}
-                            tare={tare}
-                            items={items}
-                            selectedSlot={
-                                selectedSourceItem &&
-                                items.some(i => i.id === selectedSourceItem.id)
-                                    ? selectedSourceItem.address
-                                    : undefined
-                            }
-                            onSlotClick={handleSourceSlotClick}
-                        />
-                    ))}
-                    {selectedSourceItem && (
-                        <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: '#1976d2' }}>
-                            Selected: {selectedSourceItem.serialNo || selectedSourceItem.nomenclatureName}
-                            {' '}(qty: {selectedSourceItem.quantity})
-                            &mdash; click an empty target slot to place it
-                        </div>
-                    )}
+                        {sourceLoading && <span>Loading...</span>}
+                        {!sourceLoading && sourceTares.length === 0 && (
+                            <div className="no-items-message">
+                                {selectedNomenclatureId
+                                    ? 'No items found for this nomenclature'
+                                    : 'Select a nomenclature to see source items'}
+                            </div>
+                        )}
+                        {sourceTares.map(({ tare, items }) => (
+                            <TareSchematic
+                                key={tare.barcode}
+                                tare={tare}
+                                items={items}
+                                selectedSlot={
+                                    selectedSourceItem &&
+                                    items.some(
+                                        (i) => i.id === selectedSourceItem.id,
+                                    )
+                                        ? selectedSourceItem.address
+                                        : undefined
+                                }
+                                onSlotClick={handleSourceSlotClick}
+                            />
+                        ))}
+                        {selectedSourceItem && (
+                            <div
+                                style={{
+                                    marginTop: '0.5rem',
+                                    fontSize: '0.85rem',
+                                    color: '#1976d2',
+                                }}
+                            >
+                                Selected:{' '}
+                                {selectedSourceItem.serialNo ||
+                                    selectedSourceItem.nomenclatureName}{' '}
+                                (qty: {selectedSourceItem.quantity}) &mdash;
+                                click an empty target slot to place it
+                            </div>
+                        )}
                     </div>
                 </SmartScrollContent>
 
                 <SmartScrollContent style={{ flex: 1 }}>
-                    <div className='column-toolbar'>
-                        <div className='field-group'>
+                    <div className="column-toolbar">
+                        <div className="field-group">
                             <label>Add target tare</label>
                             <div style={{ display: 'flex', gap: '0.5rem' }}>
                                 <TextBox
                                     value={newTareBarcode}
-                                    onChange={e => setNewTareBarcode(e.value?.toString() || '')}
-                                    placeholder='Tare barcode...'
+                                    onChange={(e) =>
+                                        setNewTareBarcode(
+                                            e.value?.toString() || '',
+                                        )
+                                    }
+                                    placeholder="Tare barcode..."
                                     style={{ width: 180 }}
                                 />
                                 <ComboBox
                                     data={filteredTareTypes}
-                                    dataItemKey='id'
-                                    textField='name'
-                                    value={tareTypes?.find(t => t.id === newTareTypeId) || null}
+                                    dataItemKey="id"
+                                    textField="name"
+                                    value={
+                                        tareTypes?.find(
+                                            (t) => t.id === newTareTypeId,
+                                        ) || null
+                                    }
                                     filterable
-                                    onFilterChange={(e: ComboBoxFilterChangeEvent) =>
+                                    onFilterChange={(
+                                        e: ComboBoxFilterChangeEvent,
+                                    ) =>
                                         setTareTypeFilter(e.filter?.value || '')
                                     }
-                                    onChange={e => setNewTareTypeId(e.value?.id)}
+                                    onChange={(e) =>
+                                        setNewTareTypeId(e.value?.id)
+                                    }
                                     style={{ width: 200 }}
-                                    placeholder='Type (for new)...'
+                                    placeholder="Type (for new)..."
                                 />
-                                <Button themeColor='primary' onClick={searchAndAddTare}>
+                                <Button
+                                    themeColor="primary"
+                                    onClick={searchAndAddTare}
+                                >
                                     Add tare
                                 </Button>
                             </div>
                         </div>
-                        <div className='repacking-actions'>
+                        <div className="repacking-actions">
                             <Button
-                                themeColor='info'
+                                themeColor="info"
                                 onClick={autoFill}
-                                disabled={sourceItems.length === 0 || targetTares.length === 0}
+                                disabled={
+                                    sourceItems.length === 0 ||
+                                    targetTares.length === 0
+                                }
                             >
                                 Auto-fill
                             </Button>
                             <Button
-                                themeColor='success'
+                                themeColor="success"
                                 onClick={submitRepack}
-                                disabled={pendingMoves.length === 0 || submitting}
+                                disabled={
+                                    pendingMoves.length === 0 || submitting
+                                }
                             >
-                                {submitting ? 'Saving...' : `Apply (${pendingMoves.length} moves)`}
+                                {submitting
+                                    ? 'Saving...'
+                                    : `Apply (${pendingMoves.length} moves)`}
                             </Button>
-                            <Button onClick={reset} disabled={pendingMoves.length === 0}>
+                            <Button
+                                onClick={reset}
+                                disabled={pendingMoves.length === 0}
+                            >
                                 Reset
                             </Button>
-                            {submitResult && (
-                                submitResult.errors.length === 0 ? (
-                                    <span style={{ color: '#388e3c', fontSize: '0.85rem' }}>
+                            {submitResult &&
+                                (submitResult.errors.length === 0 ? (
+                                    <span
+                                        style={{
+                                            color: '#388e3c',
+                                            fontSize: '0.85rem',
+                                        }}
+                                    >
                                         Moved {submitResult.movedCount} items.
                                     </span>
                                 ) : (
-                                    <span style={{ color: '#d32f2f', fontSize: '0.85rem' }}>
+                                    <span
+                                        style={{
+                                            color: '#d32f2f',
+                                            fontSize: '0.85rem',
+                                        }}
+                                    >
                                         {submitResult.errors[0]}
                                     </span>
-                                )
-                            )}
+                                ))}
                         </div>
                     </div>
-                    <div className='repacking-panel target'>
+                    <div className="repacking-panel target">
                         <h3>Target tares</h3>
                         {targetTares.length === 0 && (
-                            <div className='no-items-message'>
-                                Add target tares by barcode search or create new ones
+                            <div className="no-items-message">
+                                Add target tares by barcode search or create new
+                                ones
                             </div>
                         )}
-                        {targetTares.map(t => (
+                        {targetTares.map((t) => (
                             <div key={t.id} style={{ position: 'relative' }}>
                                 <TareSchematic
                                     tare={t}
                                     items={t.items}
                                     highlightEmpty
-                                    onSlotClick={(slot, _e) => handleTargetSlotClick(t.id, slot)}
+                                    onSlotClick={(slot, _e) =>
+                                        handleTargetSlotClick(t.id, slot)
+                                    }
                                     selectedSlot={
                                         selectedTargetSlot?.tareId === t.id
                                             ? selectedTargetSlot.address
@@ -434,10 +555,14 @@ export function Repacking() {
                                     }
                                 />
                                 <Button
-                                    size='small'
-                                    fillMode='flat'
+                                    size="small"
+                                    fillMode="flat"
                                     onClick={() => removeTargetTare(t.id)}
-                                    style={{ position: 'absolute', top: 0, right: 0 }}
+                                    style={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        right: 0,
+                                    }}
                                 >
                                     Remove
                                 </Button>
@@ -446,7 +571,6 @@ export function Repacking() {
                     </div>
                 </SmartScrollContent>
             </SmartScroll>
-
         </div>
     )
 }

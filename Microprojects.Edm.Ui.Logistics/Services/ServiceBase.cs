@@ -116,7 +116,7 @@ public class ServiceBase<TEntity> : IGenericService<TEntity> where TEntity : cla
             var userGroups = UserService.GetUserGroups();
             query = query
                 .Include(e => ((IWithMeta)e).Meta)
-                .Where(e => ((IWithMeta)e).Meta.Deleted == null);
+                .Where(e => ((IWithMeta)e).Meta.Deleted == null && ((IWithMeta)e).Meta.Completed == null);
 
             // Filter by user groups: Meta.Groups is empty OR contains any of user's groups
             if (userGroups is { Length: > 0 })
