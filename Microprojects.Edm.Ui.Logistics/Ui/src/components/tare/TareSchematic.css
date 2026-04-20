@@ -141,14 +141,11 @@
 }
 
 .slot-tooltip {
-    position: absolute;
-    transform: translate(-50%, -100%);
     background: #fff;
     border: 1px solid #bbb;
     border-radius: 6px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
     padding: 0.5rem 0.75rem;
-    z-index: 20;
     pointer-events: none;
     white-space: nowrap;
     font-size: 0.82rem;

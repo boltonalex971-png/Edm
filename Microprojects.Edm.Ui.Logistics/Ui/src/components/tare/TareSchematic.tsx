@@ -1,7 +1,9 @@
-import type { Item, TareInfo } from '@logistics/data/types'
+import type { Item, TareInfo, UUID } from '@logistics/data/types'
 import { colorForGradeId } from '@logistics/utils/gradePalette'
+import { Popup } from '@progress/kendo-react-popup'
 import type React from 'react'
 import { useCallback, useMemo, useRef, useState } from 'react'
+import { ItemSlotTooltip } from './ItemSlotTooltip'
 import './TareSchematic.css'
 
 export type SlotData = {
@@ -26,42 +28,7 @@ type TareSchematicProps = {
 type TooltipState = {
     item: Item
     address: number
-    x: number
-    y: number
-}
-
-function SlotTooltip({ item, address, x, y }: TooltipState) {
-    const hideQty = item.nomenclatureCountable && item.quantity === 1
-    return (
-        <div className="slot-tooltip" style={{ left: x, top: y }}>
-            <div className="slot-tooltip-row">
-                <span className="slot-tooltip-label">Address</span>
-                <span>{address}</span>
-            </div>
-            <div className="slot-tooltip-row">
-                <span className="slot-tooltip-label">Nomenclature</span>
-                <span>{item.nomenclatureName}</span>
-            </div>
-            {item.serialNo && (
-                <div className="slot-tooltip-row">
-                    <span className="slot-tooltip-label">Serial No</span>
-                    <span>{item.serialNo}</span>
-                </div>
-            )}
-            {!hideQty && (
-                <div className="slot-tooltip-row">
-                    <span className="slot-tooltip-label">Quantity</span>
-                    <span>{item.quantity}</span>
-                </div>
-            )}
-            {item.gradeName && (
-                <div className="slot-tooltip-row">
-                    <span className="slot-tooltip-label">Grade</span>
-                    <span>{item.gradeName}</span>
-                </div>
-            )}
-        </div>
-    )
+    anchor: HTMLElement
 }
 
 function BulkTareView({ tare, items }: { tare: TareInfo; items: Item[] }) {
@@ -162,7 +129,6 @@ export const TareSchematic = (props: TareSchematicProps) => {
         selectedSlots,
         onSlotClick,
         highlightEmpty,
-        label,
         slotColor,
         dimItem,
     } = props
@@ -180,14 +146,10 @@ export const TareSchematic = (props: TareSchematicProps) => {
     const showTooltip = useCallback((slot: SlotData, e: React.MouseEvent) => {
         if (!slot.item) return
         clearTimeout(hideTimer.current)
-        const rect = containerRef.current?.getBoundingClientRect()
-        const target = (e.currentTarget as HTMLElement).getBoundingClientRect()
-        if (!rect) return
         setTooltip({
             item: slot.item,
             address: slot.address,
-            x: target.left - rect.left + target.width / 2,
-            y: target.top - rect.top - 4,
+            anchor: e.currentTarget as HTMLElement,
         })
     }, [])
 
@@ -221,21 +183,53 @@ export const TareSchematic = (props: TareSchematicProps) => {
     const isSelected = (addr: number) =>
         selectedSlot === addr || (selectedSlots?.has(addr) ?? false)
 
-    const sizeLabel = [sx, sy > 0 ? sy : null, sz > 0 ? sz : null]
-        .filter((v) => v != null)
-        .join('\u00d7')
+    const presentGrades = useMemo(() => {
+        const map = new Map<UUID, string>()
+        for (const it of items) {
+            if (it.gradeId && it.gradeName && !map.has(it.gradeId)) {
+                map.set(it.gradeId, it.gradeName)
+            }
+        }
+        return [...map.entries()]
+    }, [items])
 
     return (
         <div className="tare-schematic" ref={containerRef}>
-            <div className="tare-header">
-                <span className="tare-label">
-                    {label || tare.barcode || 'Tare'}
-                </span>
-                <small className="tare-info">
-                    {tare.tareTypeName} &middot; {capacity} slots
-                    {sizeLabel && <> ({sizeLabel})</>}
-                </small>
-            </div>
+            {presentGrades.length > 0 && (
+                <div
+                    style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: '0.5rem',
+                        marginBottom: '0.4rem',
+                        fontSize: '0.78rem',
+                        color: '#555',
+                    }}
+                >
+                    {presentGrades.map(([id, name]) => (
+                        <span
+                            key={id}
+                            style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.3rem',
+                            }}
+                        >
+                            <span
+                                style={{
+                                    width: 10,
+                                    height: 10,
+                                    borderRadius: 2,
+                                    background:
+                                        colorForGradeId(id) ?? '#eee',
+                                    border: '1px solid rgba(0,0,0,0.15)',
+                                }}
+                            />
+                            {name}
+                        </span>
+                    ))}
+                </div>
+            )}
             {isDimensional ? (
                 <div className={has3d ? 'tare-3d-layout' : undefined}>
                     {has3d && (
@@ -293,7 +287,21 @@ export const TareSchematic = (props: TareSchematicProps) => {
             ) : (
                 <BulkTareView tare={tare} items={items} />
             )}
-            {tooltip && <SlotTooltip {...tooltip} />}
+            <Popup
+                anchor={tooltip?.anchor}
+                show={!!tooltip}
+                anchorAlign={{ horizontal: 'center', vertical: 'top' }}
+                popupAlign={{ horizontal: 'center', vertical: 'bottom' }}
+                collision={{ horizontal: 'fit', vertical: 'flip' }}
+                animate={false}
+            >
+                {tooltip && (
+                    <ItemSlotTooltip
+                        item={tooltip.item}
+                        address={tooltip.address}
+                    />
+                )}
+            </Popup>
         </div>
     )
 }

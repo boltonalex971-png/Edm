@@ -178,8 +178,10 @@ export function RelationTable({ api, children, ...props }: RelationTableProps) {
         <>
             <style>
                 {`
-                    /* TODO Fix for Kendo Grid width in container */
-                    .k-animation-container-relative {
+                    /* Scoped to grid-internal popups only — a global rule here
+                       would make every Kendo popup (tooltip, datepicker, combobox)
+                       stretch to full viewport width. */
+                    .k-grid .k-animation-container-relative {
                         width: 100%;
                     }
                     .k-grid td {

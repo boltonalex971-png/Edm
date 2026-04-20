@@ -18,6 +18,7 @@ import { OrderTabs } from '@logistics/components/orders/OrderTabs.tsx'
 import type {
     DetailEventHandler,
     Order,
+    OrderOutputItems,
     OrderProcess,
     TreeDataItem,
     UUID,
@@ -97,9 +98,10 @@ export function OrderDetail({
     //const processTree = useMemo(() => markFoldersDisabled(hierarchy), [hierarchy])
     // const [[kinds]] = useGet<string[]>(`${Api.processes}/kinds`, []);
     // const [[noms]] = useGet<Item[]>(`${Api.nomenclatures}`, []);
+    const [reloadToken, setReloadToken] = useState(0)
     let [[data, setData], loading, error] = useGet<Order>(
         `${Api.orders}/${id || EMPTY_GUID}`,
-        [id],
+        [id, reloadToken],
     )
     // After a Create, the prop `id` stays undefined (the panel is not
     // route-driven), but `data.id` is set to the new GUID via setData.
@@ -111,7 +113,13 @@ export function OrderDetail({
         effectiveId
             ? `${Api.orders}/${effectiveId}/operations`
             : `${Api.orders}/${EMPTY_GUID}/operations`,
-        [effectiveId],
+        [effectiveId, reloadToken],
+    )
+    const [[outputItems]] = useGet<OrderOutputItems>(
+        effectiveId
+            ? `${Api.orders}/${effectiveId}/output-items`
+            : `${Api.orders}/${EMPTY_GUID}/output-items`,
+        [effectiveId, reloadToken],
     )
     if (!data || data.id === EMPTY_GUID) {
         data = { ...data, name: '', description: '' } as Order
@@ -121,6 +129,8 @@ export function OrderDetail({
     const isDeleted = !!data?.deleted
     const mainProcess = orderProcesses?.[0]
     const processCompleted = !!mainProcess?.endTime
+    const unallocatedCount = outputItems?.unallocated?.length ?? 0
+    const allAllocated = processCompleted && unallocatedCount === 0
     const startDisabled =
         !effectiveId || isCompleted || isDeleted || processCompleted
     const startDisabledReason = isDeleted
@@ -139,6 +149,7 @@ export function OrderDetail({
                     navigate(`/orders/allocate-output/${effectiveId}`)
                     return
                 }
+                setReloadToken((x) => x + 1)
                 setAlert({
                     message: completed
                         ? 'The order executed and completed'
@@ -151,6 +162,25 @@ export function OrderDetail({
                         e.response.data.detail ||
                         e.response.statusText ||
                         'Error',
+                    status: 'danger',
+                })
+            })
+    }
+
+    const completeOrder = () => {
+        axios
+            .post(`${Api.orders}/${effectiveId}/complete`, {})
+            .then(() => {
+                props.onClose?.(
+                    undefined as unknown as React.MouseEvent<HTMLElement>,
+                )
+            })
+            .catch((e) => {
+                setAlert({
+                    message:
+                        e.response?.data?.detail ||
+                        e.response?.statusText ||
+                        'Failed to complete the order',
                     status: 'danger',
                 })
             })
@@ -243,17 +273,75 @@ export function OrderDetail({
                                         {/*{data.dueDate && <p>must be done until {data.dueDate?.toLocaleDateString()}</p> }*/}
                                     </div>
                                     <div>
-                                        <Button
-                                            type="button"
-                                            themeColor="primary"
-                                            icon="play"
-                                            className="mb-2"
-                                            onClick={startOrder}
-                                            disabled={startDisabled}
-                                            title={startDisabledReason}
-                                        >
-                                            Start operation
-                                        </Button>
+                                        {!processCompleted && (
+                                            <Button
+                                                type="button"
+                                                themeColor="primary"
+                                                icon="play"
+                                                className="mb-2"
+                                                onClick={startOrder}
+                                                disabled={startDisabled}
+                                                title={startDisabledReason}
+                                            >
+                                                Start operation
+                                            </Button>
+                                        )}
+                                        {processCompleted &&
+                                            !isCompleted &&
+                                            !allAllocated && (
+                                                <Button
+                                                    type="button"
+                                                    themeColor="primary"
+                                                    icon="grid-layout"
+                                                    className="mb-2"
+                                                    onClick={() =>
+                                                        navigate(
+                                                            `/orders/allocate-output/${effectiveId}`,
+                                                        )
+                                                    }
+                                                    disabled={isDeleted}
+                                                    title={
+                                                        isDeleted
+                                                            ? 'Order is deleted'
+                                                            : undefined
+                                                    }
+                                                >
+                                                    Allocate output
+                                                </Button>
+                                            )}
+                                        {processCompleted &&
+                                            !isCompleted &&
+                                            allAllocated && (
+                                                <Button
+                                                    type="button"
+                                                    themeColor="success"
+                                                    icon="check"
+                                                    className="mb-2"
+                                                    onClick={completeOrder}
+                                                    disabled={isDeleted}
+                                                    title={
+                                                        isDeleted
+                                                            ? 'Order is deleted'
+                                                            : undefined
+                                                    }
+                                                >
+                                                    Complete order
+                                                </Button>
+                                            )}
+                                        {isCompleted && (
+                                            <Button
+                                                type="button"
+                                                icon="preview"
+                                                className="mb-2"
+                                                onClick={() =>
+                                                    navigate(
+                                                        `/orders/allocate-output/${effectiveId}`,
+                                                    )
+                                                }
+                                            >
+                                                View allocation
+                                            </Button>
+                                        )}
                                     </div>
                                 </div>
                             </>

@@ -202,7 +202,8 @@ public class ItemService : ServiceBase<Item>, IItemService
         var linkSet = Db.Set<ItemLink>();
         var items = await Set().AsNoTracking()
             .Include(i => i.Tare.TareType)
-            .Include(i => i.Nomenclature)
+            .Include(i => i.Nomenclature).ThenInclude(n => n.DefaultTareType)
+            .Include(i => i.Grade)
             .Include(e => e.Meta)
             .Where(i =>
                         (query.Active
@@ -225,6 +226,8 @@ public class ItemService : ServiceBase<Item>, IItemService
                 SerialNo = i.SerialNo,
                 Nomenclature = i.Nomenclature,
                 Tare = i.Tare,
+                GradeId = i.GradeId,
+                Grade = i.Grade,
                 Meta = i.Meta,
                 // Subtract quantity that was already "split off" by Repack/allocation
                 // into child items through non-execution ItemLinks.

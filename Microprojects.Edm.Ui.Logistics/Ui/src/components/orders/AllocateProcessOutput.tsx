@@ -17,6 +17,7 @@ import type {
     AssignGradesResult,
     Grade,
     Item,
+    Order,
     OrderOutputItems,
     OutputAllocation,
     TareInfo,
@@ -54,6 +55,10 @@ export function AllocateProcessOutput() {
     const [reloadToken, setReloadToken] = useState(0)
     const [[output], loading] = useGet<OrderOutputItems>(
         `${api.orders}/${orderId}/output-items`,
+        [orderId, reloadToken],
+    )
+    const [[order]] = useGet<Order>(
+        orderId ? `${api.orders}/${orderId}` : '',
         [orderId, reloadToken],
     )
 
@@ -477,6 +482,57 @@ export function AllocateProcessOutput() {
             <PageTitle title="Allocate process output" />
             <hr />
 
+            <div
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '1rem',
+                    marginBottom: '0.75rem',
+                }}
+            >
+                <Button
+                    onClick={() => navigate(-1)}
+                    disabled={submitting || completing}
+                >
+                    Back
+                </Button>
+                <div
+                    style={{
+                        flex: 1,
+                        fontSize: '1rem',
+                        fontWeight: 500,
+                        display: 'flex',
+                        alignItems: 'baseline',
+                        gap: '0.5rem',
+                    }}
+                >
+                    {order && (
+                        <>
+                            <span>{order.processName}</span>
+                            {order.processNomenclatureName && (
+                                <small style={{ color: '#777' }}>
+                                    &middot; {order.processNomenclatureName}
+                                </small>
+                            )}
+                            {order.completed && (
+                                <small style={{ color: '#2e7d32' }}>
+                                    &middot; Completed
+                                </small>
+                            )}
+                        </>
+                    )}
+                </div>
+                {order && !order.completed && (
+                    <Button
+                        themeColor="primary"
+                        onClick={completeOrder}
+                        disabled={!canComplete || completing}
+                    >
+                        {completing ? 'Completing...' : 'Complete order'}
+                    </Button>
+                )}
+            </div>
+
             {error && (
                 <div style={{ color: '#d32f2f', marginBottom: '0.5rem' }}>
                     {error}
@@ -701,30 +757,6 @@ export function AllocateProcessOutput() {
                     </div>
                 </SmartScrollContent>
             </SmartScroll>
-
-            <hr />
-            <div
-                style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                }}
-            >
-                <Button
-                    onClick={() => navigate(-1)}
-                    disabled={submitting || completing}
-                >
-                    Back
-                </Button>
-                <Button
-                    themeColor="primary"
-                    size="large"
-                    onClick={completeOrder}
-                    disabled={!canComplete || completing}
-                >
-                    {completing ? 'Completing...' : 'Complete order'}
-                </Button>
-            </div>
 
             {ctxMenu && (
                 <AllocateContextMenu

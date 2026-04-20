@@ -1,60 +1,24 @@
+import { ItemSlotTooltip } from '@logistics/components/tare/ItemSlotTooltip'
 import '@logistics/components/tare/TareSchematic.css'
 import type { Item, UUID } from '@logistics/data/types'
 import { formatQuantity } from '@logistics/utils/format'
 import { colorForGradeId } from '@logistics/utils/gradePalette'
+import { Popup } from '@progress/kendo-react-popup'
 import type React from 'react'
 import { useCallback, useMemo, useRef, useState } from 'react'
 
 type OutputItemsPanelProps = {
     items: Item[]
-    selectedIds: Set<UUID>
     onSlotClick: (item: Item, e: React.MouseEvent) => void
-    onToggleAll: () => void
+    /** Selection state — omit in read-only usages (the header checkbox is hidden). */
+    selectedIds?: Set<UUID>
+    onToggleAll?: () => void
     onItemContextMenu?: (item: Item, e: React.MouseEvent) => void
 }
 
 type TooltipState = {
     item: Item
-    x: number
-    y: number
-}
-
-function ItemTooltip({ item, x, y }: TooltipState) {
-    const hideQty = item.nomenclatureCountable && item.quantity === 1
-    return (
-        <div className="slot-tooltip" style={{ left: x, top: y }}>
-            <div className="slot-tooltip-row">
-                <span className="slot-tooltip-label">Nomenclature</span>
-                <span>{item.nomenclatureName}</span>
-            </div>
-            {item.serialNo && (
-                <div className="slot-tooltip-row">
-                    <span className="slot-tooltip-label">Serial No</span>
-                    <span>{item.serialNo}</span>
-                </div>
-            )}
-            {!hideQty && (
-                <div className="slot-tooltip-row">
-                    <span className="slot-tooltip-label">Quantity</span>
-                    <span>
-                        {formatQuantity(
-                            item.quantity,
-                            item.nomenclatureCountable,
-                        )}
-                        {item.nomenclatureUnits
-                            ? ` ${item.nomenclatureUnits}`
-                            : ''}
-                    </span>
-                </div>
-            )}
-            {item.gradeName && (
-                <div className="slot-tooltip-row">
-                    <span className="slot-tooltip-label">Grade</span>
-                    <span>{item.gradeName}</span>
-                </div>
-            )}
-        </div>
-    )
+    anchor: HTMLElement
 }
 
 function renderSlotLabel(item: Item) {
@@ -77,28 +41,22 @@ export function OutputItemsPanel({
     onToggleAll,
     onItemContextMenu,
 }: OutputItemsPanelProps) {
-    const containerRef = useRef<HTMLDivElement>(null)
     const [tooltip, setTooltip] = useState<TooltipState | null>(null)
     const hideTimer = useRef<ReturnType<typeof setTimeout>>()
 
     const showTooltip = useCallback((item: Item, e: React.MouseEvent) => {
         clearTimeout(hideTimer.current)
-        const rect = containerRef.current?.getBoundingClientRect()
-        const target = (e.currentTarget as HTMLElement).getBoundingClientRect()
-        if (!rect) return
-        setTooltip({
-            item,
-            x: target.left - rect.left + target.width / 2,
-            y: target.top - rect.top - 4,
-        })
+        setTooltip({ item, anchor: e.currentTarget as HTMLElement })
     }, [])
 
     const hideTooltip = useCallback(() => {
         hideTimer.current = setTimeout(() => setTooltip(null), 120)
     }, [])
 
-    const allSelected = items.length > 0 && selectedIds.size === items.length
-    const someSelected = selectedIds.size > 0 && !allSelected
+    const selectable = !!onToggleAll
+    const selectedSet = selectedIds ?? new Set<UUID>()
+    const allSelected = items.length > 0 && selectedSet.size === items.length
+    const someSelected = selectedSet.size > 0 && !allSelected
 
     const headerLabel = useMemo(() => {
         if (items.length === 0) return ''
@@ -107,38 +65,48 @@ export function OutputItemsPanel({
     }, [items])
 
     return (
-        <div className="tare-schematic" ref={containerRef}>
+        <div className="tare-schematic">
             <div
                 className="tare-header"
                 style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}
             >
-                <label
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.4rem',
-                        cursor: items.length === 0 ? 'default' : 'pointer',
-                    }}
-                >
-                    <input
-                        type="checkbox"
-                        disabled={items.length === 0}
-                        checked={allSelected}
-                        ref={(el) => {
-                            if (el) el.indeterminate = someSelected
+                {selectable ? (
+                    <label
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.4rem',
+                            cursor: items.length === 0 ? 'default' : 'pointer',
                         }}
-                        onChange={onToggleAll}
-                    />
-                    <span className="tare-label">{headerLabel || 'Outputs'}</span>
-                </label>
+                    >
+                        <input
+                            type="checkbox"
+                            disabled={items.length === 0}
+                            checked={allSelected}
+                            ref={(el) => {
+                                if (el) el.indeterminate = someSelected
+                            }}
+                            onChange={onToggleAll}
+                        />
+                        <span className="tare-label">
+                            {headerLabel || 'Outputs'}
+                        </span>
+                    </label>
+                ) : (
+                    <span className="tare-label">
+                        {headerLabel || 'Outputs'}
+                    </span>
+                )}
                 <small className="tare-info">
-                    {selectedIds.size} of {items.length} selected
+                    {selectable
+                        ? `${selectedSet.size} of ${items.length} selected`
+                        : `${items.length} item${items.length === 1 ? '' : 's'}`}
                 </small>
             </div>
             <div className="tare-flex-grid">
                 {items.map((item) => {
                     const color = colorForGradeId(item.gradeId)
-                    const selected = selectedIds.has(item.id)
+                    const selected = selectedSet.has(item.id)
                     return (
                         <div
                             key={item.id}
@@ -171,7 +139,16 @@ export function OutputItemsPanel({
                     )
                 })}
             </div>
-            {tooltip && <ItemTooltip {...tooltip} />}
+            <Popup
+                anchor={tooltip?.anchor}
+                show={!!tooltip}
+                anchorAlign={{ horizontal: 'center', vertical: 'top' }}
+                popupAlign={{ horizontal: 'center', vertical: 'bottom' }}
+                collision={{ horizontal: 'fit', vertical: 'flip' }}
+                animate={false}
+            >
+                {tooltip && <ItemSlotTooltip item={tooltip.item} />}
+            </Popup>
         </div>
     )
 }
