@@ -20,7 +20,12 @@ import {
 } from '@progress/kendo-react-layout'
 import axios from 'axios'
 import type React from 'react'
-import { createContext, type MouseEventHandler, useContext, useState } from 'react'
+import {
+    type MouseEventHandler,
+    createContext,
+    useContext,
+    useState,
+} from 'react'
 import { Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { Alert } from 'reactstrap'
 import type {

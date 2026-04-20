@@ -1,4 +1,5 @@
 import type { Item, TareInfo } from '@logistics/data/types'
+import { colorForGradeId } from '@logistics/utils/gradePalette'
 import type React from 'react'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import './TareSchematic.css'
@@ -16,6 +17,10 @@ type TareSchematicProps = {
     onSlotClick?: (slot: SlotData, event: React.MouseEvent) => void
     highlightEmpty?: boolean
     label?: string
+    /** Optional tint for occupied slots based on item (e.g. grade color). */
+    slotColor?: (item: Item) => string | undefined
+    /** Optional predicate to dim slots whose item is "foreign" (e.g. another process). */
+    dimItem?: (item: Item) => boolean
 }
 
 type TooltipState = {
@@ -26,6 +31,7 @@ type TooltipState = {
 }
 
 function SlotTooltip({ item, address, x, y }: TooltipState) {
+    const hideQty = item.nomenclatureCountable && item.quantity === 1
     return (
         <div className="slot-tooltip" style={{ left: x, top: y }}>
             <div className="slot-tooltip-row">
@@ -42,10 +48,18 @@ function SlotTooltip({ item, address, x, y }: TooltipState) {
                     <span>{item.serialNo}</span>
                 </div>
             )}
-            <div className="slot-tooltip-row">
-                <span className="slot-tooltip-label">Quantity</span>
-                <span>{item.quantity}</span>
-            </div>
+            {!hideQty && (
+                <div className="slot-tooltip-row">
+                    <span className="slot-tooltip-label">Quantity</span>
+                    <span>{item.quantity}</span>
+                </div>
+            )}
+            {item.gradeName && (
+                <div className="slot-tooltip-row">
+                    <span className="slot-tooltip-label">Grade</span>
+                    <span>{item.gradeName}</span>
+                </div>
+            )}
         </div>
     )
 }
@@ -83,6 +97,8 @@ function SlotCell({
     slot,
     selected,
     highlightEmpty,
+    slotColor,
+    dimmed,
     onSlotClick,
     onMouseEnter,
     onMouseLeave,
@@ -90,12 +106,33 @@ function SlotCell({
     slot: SlotData
     selected: boolean
     highlightEmpty: boolean
+    slotColor?: string
+    dimmed?: boolean
     onSlotClick?: (slot: SlotData, event: React.MouseEvent) => void
     onMouseEnter: (slot: SlotData, e: React.MouseEvent) => void
     onMouseLeave: () => void
 }) {
     const occupied = !!slot.item
     const empty = !occupied && highlightEmpty
+    const baseStyle: React.CSSProperties | undefined =
+        occupied && slotColor
+            ? { background: slotColor, borderColor: slotColor }
+            : undefined
+    const ownEmphasis: React.CSSProperties =
+        occupied && !dimmed
+            ? {
+                  boxShadow: 'inset 0 0 0 1.5px rgba(0,0,0,0.32)',
+                  borderColor: 'rgba(0,0,0,0.32)',
+              }
+            : {}
+    const style: React.CSSProperties | undefined = dimmed
+        ? {
+              filter: 'grayscale(1)',
+              opacity: 0.55,
+          }
+        : occupied
+          ? { ...(baseStyle ?? {}), ...ownEmphasis }
+          : baseStyle
     return (
         <div
             className={[
@@ -104,6 +141,7 @@ function SlotCell({
                 selected ? 'selected' : '',
                 empty ? 'highlight-empty' : '',
             ].join(' ')}
+            style={style}
             onClick={(e) => onSlotClick?.(slot, e)}
             onMouseEnter={(e) => onMouseEnter(slot, e)}
             onMouseLeave={onMouseLeave}
@@ -125,6 +163,8 @@ export const TareSchematic = (props: TareSchematicProps) => {
         onSlotClick,
         highlightEmpty,
         label,
+        slotColor,
+        dimItem,
     } = props
     const sx = tare.sizeX ?? 0
     const sy = tare.sizeY ?? 0
@@ -231,6 +271,18 @@ export const TareSchematic = (props: TareSchematicProps) => {
                                 slot={slot}
                                 selected={isSelected(slot.address)}
                                 highlightEmpty={highlightEmpty ?? false}
+                                slotColor={
+                                    slot.item
+                                        ? (slotColor
+                                              ? slotColor(slot.item)
+                                              : colorForGradeId(slot.item.gradeId))
+                                        : undefined
+                                }
+                                dimmed={
+                                    slot.item && dimItem
+                                        ? dimItem(slot.item)
+                                        : false
+                                }
                                 onSlotClick={onSlotClick}
                                 onMouseEnter={showTooltip}
                                 onMouseLeave={hideTooltip}

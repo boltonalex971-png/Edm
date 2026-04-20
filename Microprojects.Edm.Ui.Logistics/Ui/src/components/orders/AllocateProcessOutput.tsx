@@ -1,12 +1,21 @@
 import api from '@features/api/api'
 import { PageTitle } from '@logistics/components/PageTitle'
 import {
+    AllocateContextMenu,
+    type ContextTareOption,
+} from '@logistics/components/orders/AllocateContextMenu'
+import { GradeLegend } from '@logistics/components/orders/GradeLegend'
+import { OutputItemsPanel } from '@logistics/components/orders/OutputItemsPanel'
+import {
     type SlotData,
     TareSchematic,
 } from '@logistics/components/tare/TareSchematic'
 import type {
     AllocateOutputsRequest,
     AllocateOutputsResult,
+    AssignGradesRequest,
+    AssignGradesResult,
+    Grade,
     Item,
     OrderOutputItems,
     OutputAllocation,
@@ -15,6 +24,7 @@ import type {
     UUID,
 } from '@logistics/data/types'
 import { getData, postData, useGet } from '@logistics/hooks/hooks'
+import { useSlotSelection } from '@logistics/hooks/useSlotSelection'
 import { SmartScroll, SmartScrollContent } from '@microprojects/tools'
 import { Button } from '@progress/kendo-react-buttons'
 import {
@@ -22,12 +32,18 @@ import {
     type ComboBoxFilterChangeEvent,
 } from '@progress/kendo-react-dropdowns'
 import { TextBox } from '@progress/kendo-react-inputs'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import '@logistics/components/repacking/Repacking.css'
 
 type TargetTareState = TareInfo & {
     items: Item[]
+}
+
+type ContextMenuState = {
+    x: number
+    y: number
+    itemId: UUID
 }
 
 export function AllocateProcessOutput() {
@@ -41,7 +57,21 @@ export function AllocateProcessOutput() {
         [orderId, reloadToken],
     )
 
-    const [selectedItemIds, setSelectedItemIds] = useState<Set<UUID>>(new Set())
+    const unallocated = output?.unallocated ?? []
+    const processId = output?.processId
+
+    const [[grades]] = useGet<Grade[]>(
+        processId ? `${api.processes}/${processId}/grades` : '',
+        [processId],
+    )
+
+    const {
+        selected: selectedItemIds,
+        setSelected: setSelectedItemIds,
+        handleClick: onOutputSlotClick,
+        toggleAll: onToggleAll,
+    } = useSlotSelection(unallocated)
+
     const [targetTares, setTargetTares] = useState<TargetTareState[]>([])
 
     const [newTareBarcode, setNewTareBarcode] = useState('')
@@ -53,13 +83,91 @@ export function AllocateProcessOutput() {
     const [submitResult, setSubmitResult] = useState<AllocateOutputsResult>()
     const [completing, setCompleting] = useState(false)
     const [error, setError] = useState<string>()
+    const [ctxMenu, setCtxMenu] = useState<ContextMenuState | null>(null)
+    const [expandedTareIds, setExpandedTareIds] = useState<Set<UUID>>(new Set())
+
+    const expandTare = (tareId: UUID) =>
+        setExpandedTareIds((prev) => {
+            if (prev.has(tareId)) return prev
+            const next = new Set(prev)
+            next.add(tareId)
+            return next
+        })
+
+    const toggleTareExpanded = (tareId: UUID) =>
+        setExpandedTareIds((prev) => {
+            const next = new Set(prev)
+            if (next.has(tareId)) next.delete(tareId)
+            else next.add(tareId)
+            return next
+        })
 
     useEffect(() => {
         setSelectedItemIds(new Set())
         setPending([])
-    }, [reloadToken, orderId])
+    }, [reloadToken, orderId, setSelectedItemIds])
 
-    const unallocated = output?.unallocated ?? []
+    // Pre-populate the target-tares list with every tare that already holds at
+    // least one output item from this order. On each refresh, re-fetch each
+    // tare's contents so the display reflects the server's truth (including
+    // items from other orders that happen to share the tare). Tares added
+    // manually but still empty are preserved.
+    useEffect(() => {
+        if (!output?.allocated || output.allocated.length === 0) return
+
+        const seeds = new Map<UUID, Item>()
+        for (const item of output.allocated) {
+            if (item.tareId && item.tareTareTypeId && !seeds.has(item.tareId)) {
+                seeds.set(item.tareId, item)
+            }
+        }
+        if (seeds.size === 0) return
+
+        let cancelled = false
+        ;(async () => {
+            const fetched = new Map<UUID, Item[]>()
+            for (const id of seeds.keys()) {
+                try {
+                    const items = await getData<Item[]>(
+                        `${api.items}/tare/${id}`,
+                    )
+                    fetched.set(id, items ?? [])
+                } catch {
+                    fetched.set(id, [])
+                }
+            }
+            if (cancelled) return
+            setTargetTares((prev) => {
+                const next = [...prev]
+                for (const [id, sample] of seeds) {
+                    const items = fetched.get(id) ?? []
+                    const info: TareInfo = {
+                        id,
+                        barcode: sample.tareBarcode,
+                        tareTypeId: sample.tareTareTypeId as UUID,
+                        tareTypeName: sample.tareTareTypeName,
+                        tareTypeUnits: sample.tareTareTypeUnits,
+                        sizeX: sample.tareTareTypeSizeX,
+                        sizeY: sample.tareTareTypeSizeY,
+                        sizeZ: sample.tareTareTypeSizeZ,
+                        dimensions: sample.tareTareTypeDimensions,
+                        capacity: sample.tareTareTypeCapacity,
+                    }
+                    const idx = next.findIndex((t) => t.id === id)
+                    if (idx >= 0) {
+                        next[idx] = { ...next[idx], ...info, items }
+                    } else {
+                        next.push({ ...info, items })
+                    }
+                }
+                return next
+            })
+        })()
+
+        return () => {
+            cancelled = true
+        }
+    }, [output])
 
     const filteredTareTypes = useMemo(() => {
         if (!tareTypes) return []
@@ -70,7 +178,10 @@ export function AllocateProcessOutput() {
 
     const addTargetTare = async (existing?: TareInfo) => {
         if (existing) {
-            if (targetTares.some((t) => t.id === existing.id)) return
+            if (targetTares.some((t) => t.id === existing.id)) {
+                expandTare(existing.id)
+                return
+            }
             const items = await getData<Item[]>(
                 `${api.items}/tare/${existing.id}`,
             )
@@ -78,6 +189,7 @@ export function AllocateProcessOutput() {
                 ...prev,
                 { ...existing, items: items || [] },
             ])
+            expandTare(existing.id)
             return
         }
 
@@ -89,6 +201,7 @@ export function AllocateProcessOutput() {
             })
             if (created) {
                 setTargetTares((prev) => [...prev, { ...created, items: [] }])
+                expandTare(created.id)
                 setNewTareBarcode('')
                 setNewTareTypeId(undefined)
             }
@@ -127,6 +240,12 @@ export function AllocateProcessOutput() {
         )
         setPending((prev) => prev.filter((m) => m.tareId !== tareId))
         setTargetTares((prev) => prev.filter((t) => t.id !== tareId))
+        setExpandedTareIds((prev) => {
+            if (!prev.has(tareId)) return prev
+            const next = new Set(prev)
+            next.delete(tareId)
+            return next
+        })
         setSelectedItemIds((prev) => {
             const next = new Set(prev)
             movedBackIds.forEach((id) => next.delete(id))
@@ -134,18 +253,14 @@ export function AllocateProcessOutput() {
         })
     }
 
-    const toggleItemSelected = (id: UUID) => {
-        setSelectedItemIds((prev) => {
-            const next = new Set(prev)
-            if (next.has(id)) next.delete(id)
-            else next.add(id)
-            return next
-        })
-    }
-
     const selectedItems: Item[] = useMemo(
         () => unallocated.filter((i) => selectedItemIds.has(i.id)),
         [unallocated, selectedItemIds],
+    )
+
+    const pendingItemIds = useMemo(
+        () => new Set(pending.map((p) => p.itemId)),
+        [pending],
     )
 
     const handleTargetSlotClick = (tareId: UUID, slot: SlotData) => {
@@ -173,14 +288,25 @@ export function AllocateProcessOutput() {
         })
     }
 
-    const autoFill = () => {
-        if (targetTares.length === 0 || selectedItems.length === 0) return
-        const remaining = [...selectedItems]
+    const distribute = (itemIds: UUID[], onlyTareId?: UUID) => {
+        const itemsToFill = unallocated.filter(
+            (i) => itemIds.includes(i.id) && !pendingItemIds.has(i.id),
+        )
+        if (itemsToFill.length === 0) return
+        const tareIdsInScope = onlyTareId
+            ? new Set([onlyTareId])
+            : new Set(targetTares.map((t) => t.id))
+        if (tareIdsInScope.size === 0) return
+
+        const remaining = [...itemsToFill]
         const newPending: OutputAllocation[] = [...pending]
+        const filledTareIds = new Set<UUID>()
         const updated = targetTares.map((t) => {
+            if (!tareIdsInScope.has(t.id)) return t
             const capacity = Math.floor(t.capacity)
             const occupied = new Set(t.items.map((i) => i.address))
             const items = [...t.items]
+            const sizeBefore = items.length
             for (
                 let addr = 1;
                 addr <= capacity && remaining.length > 0;
@@ -195,21 +321,31 @@ export function AllocateProcessOutput() {
                     address: addr,
                 })
             }
+            if (items.length > sizeBefore) filledTareIds.add(t.id)
             return { ...t, items }
         })
         setPending(newPending)
         setTargetTares(updated)
         const movedIds = new Set(
-            selectedItems
-                .filter((si) => !remaining.includes(si))
-                .map((i) => i.id),
+            itemsToFill.filter((si) => !remaining.includes(si)).map((i) => i.id),
         )
         setSelectedItemIds((prev) => {
             const next = new Set(prev)
             movedIds.forEach((id) => next.delete(id))
             return next
         })
+        if (filledTareIds.size > 0) {
+            setExpandedTareIds((prev) => {
+                const next = new Set(prev)
+                filledTareIds.forEach((id) => next.add(id))
+                return next
+            })
+        }
     }
+
+    const autoFillItems = (itemIds: UUID[]) => distribute(itemIds)
+    const fillTareWithItems = (itemIds: UUID[], tareId: UUID) =>
+        distribute(itemIds, tareId)
 
     const submit = async () => {
         if (pending.length === 0) return
@@ -249,6 +385,27 @@ export function AllocateProcessOutput() {
         )
     }
 
+    const callAssignGrades = async (
+        gradeId: UUID | undefined,
+        itemIds: UUID[],
+    ) => {
+        if (itemIds.length === 0) return
+        setError(undefined)
+        try {
+            const request: AssignGradesRequest = { gradeId, itemIds }
+            const result = await postData<AssignGradesResult>(
+                `${api.orders}/${orderId}/assign-grades`,
+                request,
+            )
+            if (result.errors && result.errors.length > 0) {
+                setError(result.errors[0])
+            }
+            setReloadToken((x) => x + 1)
+        } catch (e: any) {
+            setError(e.message || 'Grade assignment failed')
+        }
+    }
+
     const completeOrder = async () => {
         setError(undefined)
         setCompleting(true)
@@ -263,6 +420,57 @@ export function AllocateProcessOutput() {
 
     const canComplete =
         unallocated.length === 0 && pending.length === 0 && !loading
+
+    const openContextMenu = (item: Item, e: React.MouseEvent) => {
+        e.preventDefault()
+        setCtxMenu({ x: e.clientX, y: e.clientY, itemId: item.id })
+    }
+
+    const ctxTargetIds = useMemo<UUID[]>(() => {
+        if (!ctxMenu) return []
+        return selectedItemIds.has(ctxMenu.itemId)
+            ? [...selectedItemIds]
+            : [ctxMenu.itemId]
+    }, [ctxMenu, selectedItemIds])
+
+    const ctxEligibleIds = useMemo(
+        () => ctxTargetIds.filter((id) => !pendingItemIds.has(id)),
+        [ctxTargetIds, pendingItemIds],
+    )
+
+    const onCtxAutofill = () => {
+        autoFillItems(ctxEligibleIds)
+        setCtxMenu(null)
+    }
+
+    const onCtxFillTare = (tareId: UUID) => {
+        fillTareWithItems(ctxEligibleIds, tareId)
+        setCtxMenu(null)
+    }
+
+    const onCtxAssignGrade = async (gradeId: UUID | undefined) => {
+        setCtxMenu(null)
+        await callAssignGrades(gradeId, ctxEligibleIds)
+    }
+
+    const ctxTareOptions = useMemo<ContextTareOption[]>(
+        () =>
+            targetTares.map((t) => ({
+                ...t,
+                occupied: t.items.length,
+                capacity: Math.floor(t.capacity),
+            })),
+        [targetTares],
+    )
+
+    const selectByGrade = (gradeId: UUID | null) => {
+        const ids = new Set(
+            unallocated
+                .filter((i) => (i.gradeId ?? null) === gradeId)
+                .map((i) => i.id),
+        )
+        setSelectedItemIds(ids)
+    }
 
     return (
         <div className="repacking-page">
@@ -287,6 +495,12 @@ export function AllocateProcessOutput() {
                 <SmartScrollContent style={{ flex: 1 }}>
                     <div className="repacking-panel source">
                         <h3>Unallocated outputs</h3>
+                        {grades && grades.length > 0 && (
+                            <GradeLegend
+                                grades={grades}
+                                onPick={selectByGrade}
+                            />
+                        )}
                         {loading && <span>Loading...</span>}
                         {!loading && unallocated.length === 0 && (
                             <div className="no-items-message">
@@ -294,50 +508,13 @@ export function AllocateProcessOutput() {
                             </div>
                         )}
                         {unallocated.length > 0 && (
-                            <table
-                                className="k-table k-table-md"
-                                style={{ width: '100%' }}
-                            >
-                                <thead>
-                                    <tr>
-                                        <th style={{ width: 40 }} />
-                                        <th style={{ textAlign: 'left' }}>
-                                            Nomenclature
-                                        </th>
-                                        <th
-                                            style={{
-                                                textAlign: 'right',
-                                                width: 100,
-                                            }}
-                                        >
-                                            Quantity
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {unallocated.map((item) => (
-                                        <tr key={item.id}>
-                                            <td>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selectedItemIds.has(
-                                                        item.id,
-                                                    )}
-                                                    onChange={() =>
-                                                        toggleItemSelected(
-                                                            item.id,
-                                                        )
-                                                    }
-                                                />
-                                            </td>
-                                            <td>{item.nomenclatureName}</td>
-                                            <td style={{ textAlign: 'right' }}>
-                                                {item.quantity}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                            <OutputItemsPanel
+                                items={unallocated}
+                                selectedIds={selectedItemIds}
+                                onSlotClick={onOutputSlotClick}
+                                onToggleAll={onToggleAll}
+                                onItemContextMenu={openContextMenu}
+                            />
                         )}
                         {selectedItems.length > 0 && (
                             <div
@@ -348,7 +525,8 @@ export function AllocateProcessOutput() {
                                 }}
                             >
                                 {selectedItems.length} selected &mdash; click an
-                                empty target slot to place, or use Auto-fill.
+                                empty target slot to place, or right-click for
+                                more.
                             </div>
                         )}
                     </div>
@@ -400,16 +578,6 @@ export function AllocateProcessOutput() {
                         </div>
                         <div className="repacking-actions">
                             <Button
-                                themeColor="info"
-                                onClick={autoFill}
-                                disabled={
-                                    selectedItems.length === 0 ||
-                                    targetTares.length === 0
-                                }
-                            >
-                                Auto-fill
-                            </Button>
-                            <Button
                                 themeColor="success"
                                 onClick={submit}
                                 disabled={pending.length === 0 || submitting}
@@ -444,30 +612,92 @@ export function AllocateProcessOutput() {
                                 ones
                             </div>
                         )}
-                        {targetTares.map((t) => (
-                            <div key={t.id} style={{ position: 'relative' }}>
-                                <TareSchematic
-                                    tare={t}
-                                    items={t.items}
-                                    highlightEmpty
-                                    onSlotClick={(slot) =>
-                                        handleTargetSlotClick(t.id, slot)
-                                    }
-                                />
-                                <Button
-                                    size="small"
-                                    fillMode="flat"
-                                    onClick={() => removeTargetTare(t.id)}
+                        {targetTares.map((t) => {
+                            const isExpanded = expandedTareIds.has(t.id)
+                            const cap = Math.floor(t.capacity)
+                            const hasCommittedFromOrder = t.items.some(
+                                (i) =>
+                                    i.orderId === orderId &&
+                                    !pendingItemIds.has(i.id),
+                            )
+                            return (
+                                <div
+                                    key={t.id}
                                     style={{
-                                        position: 'absolute',
-                                        top: 0,
-                                        right: 0,
+                                        border: '1px solid #e0e0e0',
+                                        borderRadius: 6,
+                                        marginBottom: 8,
+                                        background: '#fafafa',
                                     }}
                                 >
-                                    Remove
-                                </Button>
-                            </div>
-                        ))}
+                                    <div
+                                        onClick={() =>
+                                            toggleTareExpanded(t.id)
+                                        }
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '0.5rem',
+                                            padding: '0.4rem 0.6rem',
+                                            cursor: 'pointer',
+                                            userSelect: 'none',
+                                        }}
+                                    >
+                                        <span
+                                            style={{
+                                                width: 14,
+                                                color: '#666',
+                                            }}
+                                        >
+                                            {isExpanded ? '\u25be' : '\u25b8'}
+                                        </span>
+                                        <strong style={{ fontSize: '0.9rem' }}>
+                                            {t.barcode || 'Tare'}
+                                        </strong>
+                                        <small style={{ color: '#777' }}>
+                                            {t.tareTypeName}
+                                            {' \u00b7 '}
+                                            {t.items.length}/{cap}
+                                        </small>
+                                        <span style={{ flex: 1 }} />
+                                        {!hasCommittedFromOrder && (
+                                            <Button
+                                                size="small"
+                                                fillMode="flat"
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    removeTargetTare(t.id)
+                                                }}
+                                            >
+                                                Remove
+                                            </Button>
+                                        )}
+                                    </div>
+                                    {isExpanded && (
+                                        <div
+                                            style={{
+                                                padding: '0 0.6rem 0.6rem',
+                                            }}
+                                        >
+                                            <TareSchematic
+                                                tare={t}
+                                                items={t.items}
+                                                highlightEmpty
+                                                onSlotClick={(slot) =>
+                                                    handleTargetSlotClick(
+                                                        t.id,
+                                                        slot,
+                                                    )
+                                                }
+                                                dimItem={(item) =>
+                                                    item.orderId !== orderId
+                                                }
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                            )
+                        })}
                     </div>
                 </SmartScrollContent>
             </SmartScroll>
@@ -495,6 +725,23 @@ export function AllocateProcessOutput() {
                     {completing ? 'Completing...' : 'Complete order'}
                 </Button>
             </div>
+
+            {ctxMenu && (
+                <AllocateContextMenu
+                    x={ctxMenu.x}
+                    y={ctxMenu.y}
+                    grades={grades ?? []}
+                    tares={ctxTareOptions}
+                    targetCount={ctxEligibleIds.length}
+                    canAutofill={
+                        targetTares.length > 0 && ctxEligibleIds.length > 0
+                    }
+                    onAutofillAll={onCtxAutofill}
+                    onFillTare={onCtxFillTare}
+                    onAssignGrade={onCtxAssignGrade}
+                    onClose={() => setCtxMenu(null)}
+                />
+            )}
         </div>
     )
 }

@@ -17,8 +17,26 @@ public class ExecuteResult
 /// </summary>
 public class OrderOutputItems
 {
+    /// <summary>Root process of the order — used by UI to load applicable grades.</summary>
+    public Guid? ProcessId { get; set; }
     public IEnumerable<ItemViewModel> Allocated { get; set; } = [];
     public IEnumerable<ItemViewModel> Unallocated { get; set; } = [];
+}
+
+/// <summary>
+/// Batch-assign <see cref="GradeId"/> (null = clear) to unallocated output items.
+/// Items already in a tare are rejected.
+/// </summary>
+public class AssignGradesRequest
+{
+    public Guid? GradeId { get; set; }
+    public Guid[] ItemIds { get; set; } = [];
+}
+
+public class AssignGradesResult
+{
+    public int UpdatedCount { get; set; }
+    public string[] Errors { get; set; } = [];
 }
 
 /// <summary>

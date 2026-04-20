@@ -45,5 +45,12 @@ public class Item : DomainObject, IWithMeta
     public Supply? Supply { get; set; }
     public Guid? SupplyId { get; set; }
 
+    /// <summary>
+    /// Optional process grade assigned to this output item. Only meaningful when
+    /// <see cref="ProcessId"/> is set. Locked once the item enters a tare.
+    /// </summary>
+    public Grade? Grade { get; set; }
+    public Guid? GradeId { get; set; }
+
     public Meta Meta { get; set; }
 }

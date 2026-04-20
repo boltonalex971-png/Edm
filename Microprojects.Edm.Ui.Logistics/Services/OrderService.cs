@@ -439,9 +439,13 @@ public class OrderService : ServiceBase<Order>, IOrderService
 
     public async Task<OrderOutputItems> GetOutputItems(Guid orderId)
     {
+        var order = await Set().AsNoTracking()
+            .FirstOrDefaultAsync(o => o.Id == orderId);
+
         var items = await Set<Item>().AsNoTracking()
-            .Include(i => i.Nomenclature)
+            .Include(i => i.Nomenclature).ThenInclude(n => n.DefaultTareType)
             .Include(i => i.Tare).ThenInclude(t => t.TareType)
+            .Include(i => i.Grade)
             .Include(i => i.Meta)
             .Where(i =>
                 i.OrderId == orderId &&
@@ -455,6 +459,7 @@ public class OrderService : ServiceBase<Order>, IOrderService
 
         return new OrderOutputItems
         {
+            ProcessId = order?.ProcessId,
             Allocated = _mapper != null
                 ? _mapper.Map<IEnumerable<ItemViewModel>>(allocated)
                 : [],
@@ -505,6 +510,70 @@ public class OrderService : ServiceBase<Order>, IOrderService
         return new AllocateOutputsResult
         {
             AllocatedCount = allocated,
+            Errors = errors.ToArray(),
+        };
+    }
+
+    public async Task<AssignGradesResult> AssignGrades(Guid orderId, AssignGradesRequest request)
+    {
+        var errors = new List<string>();
+
+        if (request.ItemIds.Length == 0)
+        {
+            return new AssignGradesResult { UpdatedCount = 0, Errors = [] };
+        }
+
+        var order = await Set().AsNoTracking()
+            .FirstOrDefaultAsync(o => o.Id == orderId)
+            ?? throw new EdmException($"Order with id {orderId} not found");
+
+        if (request.GradeId != null)
+        {
+            var gradeBelongs = await Set<Grade>().AsNoTracking()
+                .AnyAsync(g => g.Id == request.GradeId && g.ProcessId == order.ProcessId);
+            if (!gradeBelongs)
+            {
+                throw new EdmException(
+                    $"Grade {request.GradeId} does not belong to the order's process.");
+            }
+        }
+
+        var items = await Set<Item>()
+            .Include(i => i.Meta)
+            .Where(i =>
+                request.ItemIds.Contains(i.Id) &&
+                i.OrderId == orderId &&
+                i.ProcessId != null &&
+                i.Meta.Deleted == null &&
+                i.Meta.Completed == null)
+            .ToListAsync();
+
+        var foundIds = new HashSet<Guid>(items.Select(i => i.Id));
+        foreach (var missing in request.ItemIds.Where(id => !foundIds.Contains(id)))
+        {
+            errors.Add($"Output item {missing} not found or not owned by the order.");
+        }
+
+        var updated = 0;
+        foreach (var item in items)
+        {
+            if (item.TareId != null)
+            {
+                errors.Add($"Item {item.Id} is already allocated to a tare; grade is locked.");
+                continue;
+            }
+            item.GradeId = request.GradeId;
+            updated++;
+        }
+
+        if (updated > 0)
+        {
+            await Db.SaveChangesAsync();
+        }
+
+        return new AssignGradesResult
+        {
+            UpdatedCount = updated,
             Errors = errors.ToArray(),
         };
     }

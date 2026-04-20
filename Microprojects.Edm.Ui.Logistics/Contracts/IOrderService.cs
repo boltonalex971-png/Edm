@@ -16,6 +16,7 @@ public interface IOrderService : IGenericService<Order>
     Task<ExecuteResult> Execute(Guid id);
     Task<OrderOutputItems> GetOutputItems(Guid orderId);
     Task<AllocateOutputsResult> AllocateOutputs(Guid orderId, IEnumerable<OutputAllocation> allocations);
+    Task<AssignGradesResult> AssignGrades(Guid orderId, AssignGradesRequest request);
     Task CompleteOrder(Guid orderId);
     Task<IEnumerable<Order>> Search(OrderSearchQuery query);
 }

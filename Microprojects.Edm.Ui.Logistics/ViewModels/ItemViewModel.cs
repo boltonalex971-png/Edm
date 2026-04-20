@@ -10,6 +10,9 @@ public class ItemViewModel
     public string? NomenclatureName { get; set; }
     public string? NomenclatureDescription { get; set; }
     public string? NomenclatureCategory { get; set; }
+    public bool NomenclatureCountable { get; set; }
+    /// <summary>Units label, sourced from nomenclature's default tare type.</summary>
+    public string? NomenclatureUnits { get; set; }
     public Guid? TareId { get; set; }
     public string? TareBarcode { get; set; }
     public Guid? TareTareTypeId { get; set; }
@@ -37,6 +40,11 @@ public class ItemViewModel
     public Guid? ProcessId { get; set; }
     /// <summary>Display label for the process — DirectoryEntry.Name.</summary>
     public string? ProcessName { get; set; }
+
+    /// <summary>Process grade assigned to this output item (nullable).</summary>
+    public Guid? GradeId { get; set; }
+    /// <summary>Display label for the grade — Grade.Name.</summary>
+    public string? GradeName { get; set; }
 
     /// <summary>
     /// True when this item is an order execution output (produced by a process),

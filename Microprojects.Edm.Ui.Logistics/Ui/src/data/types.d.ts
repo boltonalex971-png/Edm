@@ -72,8 +72,14 @@ export interface Item extends DataItem {
     processName?: string
     /** True when this item is an order execution output (ProcessId != null). */
     isOutput?: boolean
+    /** Process grade assigned to this output item, nullable. */
+    gradeId?: UUID
+    gradeName?: string
     nomenclatureName: string
     nomenclatureId: UUID
+    nomenclatureCountable?: boolean
+    /** Units label sourced from the nomenclature's default tare type. */
+    nomenclatureUnits?: string
     children: Item[]
     serialNo?: string
     tareId?: UUID
@@ -227,8 +233,21 @@ export interface ExecuteResult {
 }
 
 export interface OrderOutputItems {
+    /** Root process of the order — used by UI to load applicable grades. */
+    processId?: UUID
     allocated: Item[]
     unallocated: Item[]
+}
+
+export interface AssignGradesRequest {
+    /** null to clear the grade on selected items. */
+    gradeId?: UUID
+    itemIds: UUID[]
+}
+
+export interface AssignGradesResult {
+    updatedCount: number
+    errors: string[]
 }
 
 export interface OutputAllocation {

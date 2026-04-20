@@ -622,8 +622,9 @@ public class ItemService : ServiceBase<Item>, IItemService
     public async Task<IEnumerable<Item>> GetByTare(Guid tareId)
     {
         return await Set().AsNoTracking()
-            .Include(i => i.Nomenclature)
+            .Include(i => i.Nomenclature).ThenInclude(n => n.DefaultTareType)
             .Include(i => i.Tare.TareType)
+            .Include(i => i.Grade)
             .Include(i => i.Meta)
             .Where(i => i.TareId == tareId && i.Meta.Deleted == null && i.Meta.Completed == null)
             .ToListAsync();

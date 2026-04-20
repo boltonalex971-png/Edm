@@ -54,12 +54,21 @@ public class WebModelsProfile : AutoMapper.Profile
                         : s.Order.Description)))
             .ForMember(d => d.ProcessName, o => o.MapFrom(s =>
                 s.Process == null ? null : s.Process.Name))
+            .ForMember(d => d.GradeName, o => o.MapFrom(s =>
+                s.Grade == null ? null : s.Grade.Name))
+            .ForMember(d => d.NomenclatureCountable, o => o.MapFrom(s =>
+                s.Nomenclature != null && s.Nomenclature.Countable))
+            .ForMember(d => d.NomenclatureUnits, o => o.MapFrom(s =>
+                s.Nomenclature != null && s.Nomenclature.DefaultTareType != null
+                    ? s.Nomenclature.DefaultTareType.Units
+                    : null))
             .ForMember(d => d.IsOutput, o => o.MapFrom(s => s.ProcessId != null))
             .ReverseMap()
             .ForMember(d => d.Nomenclature, o => o.Ignore())
             .ForMember(d => d.Supply, o => o.Ignore())
             .ForMember(d => d.Order, o => o.Ignore())
-            .ForMember(d => d.Process, o => o.Ignore());
+            .ForMember(d => d.Process, o => o.Ignore())
+            .ForMember(d => d.Grade, o => o.Ignore());
         CreateMap<Tare, TareViewModel>().ReverseMap()
             .ForMember(d => d.TareType, o => o.Ignore());
         CreateMap<SpecificationNomenclature, SpecificationRowViewModel>().ReverseMap();

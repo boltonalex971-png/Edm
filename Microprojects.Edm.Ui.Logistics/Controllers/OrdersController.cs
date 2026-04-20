@@ -92,6 +92,16 @@ public class OrdersController : CrudControllerBase<Order, OrderViewModel, IOrder
     }
 
     /// <summary>
+    /// Batch-assign a process grade (or clear it) on the selected output items.
+    /// Items already placed in a tare are rejected — grade is locked after allocation.
+    /// </summary>
+    [HttpPost("{id:Guid}/assign-grades")]
+    public async Task<AssignGradesResult> AssignGrades(Guid id, [FromBody] AssignGradesRequest request)
+    {
+        return await Service.AssignGrades(id, request);
+    }
+
+    /// <summary>
     /// Marks the order as completed. Fails if any output is still unallocated.
     /// </summary>
     [HttpPost("{id:Guid}/complete")]

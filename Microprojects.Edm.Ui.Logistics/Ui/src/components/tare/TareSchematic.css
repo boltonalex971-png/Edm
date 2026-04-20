@@ -47,6 +47,17 @@
     border-color: #90caf9;
 }
 
+.tare-slot.occupied .slot-address {
+    color: #424242;
+    font-weight: 600;
+}
+
+.tare-slot.occupied .slot-serial {
+    color: #111;
+    font-weight: 700;
+    text-shadow: 0 0 1px rgba(255, 255, 255, 0.5);
+}
+
 .tare-slot.empty {
     background: #fff;
     border-color: #e0e0e0;
