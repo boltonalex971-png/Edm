@@ -28,6 +28,9 @@ public class ItemService : ServiceBase<Item>, IItemService
             .Include(i => i.Nomenclature)
             .Include(i => i.Tare.TareType)
             .Include(i => i.Meta)
+            .Include(i => i.Supply)
+            .Include(i => i.Order).ThenInclude(o => o.Process)
+            .Include(i => i.Process)
             .FirstOrDefaultAsync(i => id == i.Id);
         return result;
     }
@@ -196,37 +199,261 @@ public class ItemService : ServiceBase<Item>, IItemService
     public async Task<IEnumerable<Item>> Search(ItemSearchQuery query)
     {
         // TODO Use materialized view to gain performance
+        var linkSet = Db.Set<ItemLink>();
         var items = await Set().AsNoTracking()
             .Include(i => i.Tare.TareType)
             .Include(i => i.Nomenclature)
             .Include(e => e.Meta)
-            .Include(i => i.Items)
             .Where(i =>
                         (query.Active
                             ? (i.Meta.Deleted == null && i.Meta.Completed == null)
                             : (i.Meta.Deleted != null || i.Meta.Completed != null))
                         && (query.NomenclatureId == null || query.NomenclatureId == i.NomenclatureId)
-                        && (query.OriginId == null || query.OriginId == i.OriginId)
-                        && i.OrderId == null)
+                        // Exclude items that are currently reserved for / assigned to another
+                        // order (inputs that haven't been consumed yet), but keep execution
+                        // outputs: those have ProcessId != null and are available stock again.
+                        && (i.OrderId == null || i.ProcessId != null))
             .Select(i => new Item
             {
                 Id = i.Id,
                 NomenclatureId = i.NomenclatureId,
-                OriginId = i.OriginId,
                 OrderId = i.OrderId,
+                ProcessId = i.ProcessId,
+                SupplyId = i.SupplyId,
                 TareId = i.TareId,
                 Address = i.Address,
                 SerialNo = i.SerialNo,
                 Nomenclature = i.Nomenclature,
                 Tare = i.Tare,
                 Meta = i.Meta,
-                Quantity = i.Quantity - i.Items.Sum(i => i.Quantity),
+                // Subtract quantity that was already "split off" by Repack/allocation
+                // into child items through non-execution ItemLinks.
+                Quantity = i.Quantity - linkSet
+                    .Where(l => l.SourceItemId == i.Id && l.OrderProcessId == null)
+                    .Sum(l => (double?)l.ConsumedQuantity) ?? 0,
             })
             .Where(i => i.Quantity > 0)
             .ToListAsync();
-            
+
         return items;
     }
+
+    public async Task<ItemGenealogy> GetGenealogy(Guid rootItemId, int depth)
+    {
+        const int MaxNodes = 200;
+        // A non-positive depth means "whole tree"; capped by MaxNodes for safety.
+        var effectiveDepth = depth <= 0 ? int.MaxValue : depth;
+
+        var root = await Set().AsNoTracking()
+            .Include(i => i.Nomenclature)
+            .Include(i => i.Tare).ThenInclude(t => t!.TareType)
+            .Include(i => i.Meta)
+            .FirstOrDefaultAsync(i => i.Id == rootItemId);
+
+        if (root == null)
+        {
+            throw new EdmException($"Item {rootItemId} not found.");
+        }
+
+        var links = Db.Set<ItemLink>().AsNoTracking();
+
+        var nodes = new Dictionary<Guid, ItemNode>
+        {
+            [root.Id] = ToNode(root, 0),
+        };
+        var edges = new List<GenealogyEdge>();
+        var truncated = false;
+
+        // BFS ancestors (SourceItemId -> TargetItemId), moving UP from root.
+        var frontier = new HashSet<Guid> { root.Id };
+        for (var d = 1; d <= effectiveDepth; d++)
+        {
+            if (frontier.Count == 0) { break; }
+
+            var captured = frontier;
+            var parentLinks = await links
+                .Where(l => captured.Contains(l.TargetItemId))
+                .Select(l => new
+                {
+                    l.SourceItemId,
+                    l.TargetItemId,
+                    l.ConsumedQuantity,
+                    l.OrderProcessId,
+                    ProcessName = l.OrderProcess != null && l.OrderProcess.Process != null
+                        ? l.OrderProcess.Process.Name
+                        : null,
+                })
+                .ToListAsync();
+
+            if (parentLinks.Count == 0) { break; }
+
+            var newFrontier = new HashSet<Guid>();
+            foreach (var pl in parentLinks)
+            {
+                edges.Add(new GenealogyEdge
+                {
+                    SourceItemId = pl.SourceItemId,
+                    TargetItemId = pl.TargetItemId,
+                    ConsumedQuantity = pl.ConsumedQuantity,
+                    OrderProcessId = pl.OrderProcessId,
+                    ProcessName = pl.ProcessName,
+                });
+
+                if (!nodes.ContainsKey(pl.SourceItemId))
+                {
+                    newFrontier.Add(pl.SourceItemId);
+                }
+            }
+
+            if (newFrontier.Count == 0) { break; }
+
+            var parents = await Set().AsNoTracking()
+                .Include(i => i.Nomenclature)
+                .Include(i => i.Tare).ThenInclude(t => t!.TareType)
+                .Include(i => i.Meta)
+                .Where(i => newFrontier.Contains(i.Id))
+                .ToListAsync();
+
+            foreach (var p in parents)
+            {
+                nodes[p.Id] = ToNode(p, -d);
+                if (nodes.Count >= MaxNodes)
+                {
+                    truncated = true;
+                    break;
+                }
+            }
+
+            if (truncated) { break; }
+            frontier = newFrontier;
+        }
+
+        if (!truncated)
+        {
+            // Probe one level beyond to flag truncation on ancestor side.
+            var beyond = await links
+                .Where(l => frontier.Contains(l.TargetItemId))
+                .Select(l => l.SourceItemId)
+                .AnyAsync();
+            if (beyond && effectiveDepth != int.MaxValue)
+            {
+                truncated = true;
+                foreach (var id in frontier)
+                {
+                    if (nodes.TryGetValue(id, out var n) && n.Depth < 0) { n.HasMore = true; }
+                }
+            }
+        }
+
+        // BFS descendants (SourceItemId -> TargetItemId), moving DOWN from root.
+        frontier = new HashSet<Guid> { root.Id };
+        for (var d = 1; d <= effectiveDepth; d++)
+        {
+            if (frontier.Count == 0) { break; }
+
+            var captured = frontier;
+            var childLinks = await links
+                .Where(l => captured.Contains(l.SourceItemId))
+                .Select(l => new
+                {
+                    l.SourceItemId,
+                    l.TargetItemId,
+                    l.ConsumedQuantity,
+                    l.OrderProcessId,
+                    ProcessName = l.OrderProcess != null && l.OrderProcess.Process != null
+                        ? l.OrderProcess.Process.Name
+                        : null,
+                })
+                .ToListAsync();
+
+            if (childLinks.Count == 0) { break; }
+
+            var newFrontier = new HashSet<Guid>();
+            foreach (var cl in childLinks)
+            {
+                edges.Add(new GenealogyEdge
+                {
+                    SourceItemId = cl.SourceItemId,
+                    TargetItemId = cl.TargetItemId,
+                    ConsumedQuantity = cl.ConsumedQuantity,
+                    OrderProcessId = cl.OrderProcessId,
+                    ProcessName = cl.ProcessName,
+                });
+
+                if (!nodes.ContainsKey(cl.TargetItemId))
+                {
+                    newFrontier.Add(cl.TargetItemId);
+                }
+            }
+
+            if (newFrontier.Count == 0) { break; }
+
+            var children = await Set().AsNoTracking()
+                .Include(i => i.Nomenclature)
+                .Include(i => i.Tare).ThenInclude(t => t!.TareType)
+                .Include(i => i.Meta)
+                .Where(i => newFrontier.Contains(i.Id))
+                .ToListAsync();
+
+            foreach (var c in children)
+            {
+                nodes[c.Id] = ToNode(c, d);
+                if (nodes.Count >= MaxNodes)
+                {
+                    truncated = true;
+                    break;
+                }
+            }
+
+            if (truncated) { break; }
+            frontier = newFrontier;
+        }
+
+        if (!truncated)
+        {
+            var beyond = await links
+                .Where(l => frontier.Contains(l.SourceItemId))
+                .Select(l => l.TargetItemId)
+                .AnyAsync();
+            if (beyond && effectiveDepth != int.MaxValue)
+            {
+                truncated = true;
+                foreach (var id in frontier)
+                {
+                    if (nodes.TryGetValue(id, out var n) && n.Depth > 0) { n.HasMore = true; }
+                }
+            }
+        }
+
+        return new ItemGenealogy
+        {
+            RootId = root.Id,
+            Depth = depth,
+            Truncated = truncated,
+            Nodes = nodes.Values.OrderBy(n => n.Depth).ToList(),
+            Edges = edges,
+        };
+    }
+
+    private static ItemNode ToNode(Item i, int depth) => new()
+    {
+        Id = i.Id,
+        SerialNo = i.SerialNo,
+        Quantity = i.Quantity,
+        NomenclatureId = i.NomenclatureId,
+        NomenclatureName = i.Nomenclature?.Name,
+        NomenclatureCategory = i.Nomenclature?.Category.ToString(),
+        NomenclatureCountable = i.Nomenclature?.Countable ?? false,
+        TareId = i.TareId,
+        TareBarcode = i.Tare?.Barcode,
+        TareTypeName = i.Tare?.TareType?.Name,
+        TareTypeUnits = i.Tare?.TareType?.Units,
+        Address = i.Address,
+        OrderId = i.OrderId,
+        IsOutput = i.ProcessId != null,
+        Depth = depth,
+        Inactive = i.Meta?.Deleted != null || i.Meta?.Completed != null,
+    };
 
     public async Task<BatchCreateItemResult> BatchCreate(BatchCreateItemRequest request)
     {
@@ -536,7 +763,6 @@ public class ItemService : ServiceBase<Item>, IItemService
                 var newItem = new Item
                 {
                     Id = Guid.Empty,
-                    OriginId = item.Id,
                     NomenclatureId = item.NomenclatureId,
                     TareId = move.TargetTareId,
                     Address = null,
@@ -544,6 +770,17 @@ public class ItemService : ServiceBase<Item>, IItemService
                     SupplyId = item.SupplyId,
                 };
                 await base.Save(newItem);
+
+                // Lineage edge: the new child was split off the original item.
+                // No OrderProcess because repack is not part of order execution.
+                Db.Add(new ItemLink
+                {
+                    Id = DomainObject.NewGuid(),
+                    SourceItemId = item.Id,
+                    TargetItemId = newItem.Id,
+                    ConsumedQuantity = move.Quantity,
+                    OrderProcessId = null,
+                });
 
                 item.Quantity -= move.Quantity;
                 movedCount++;
@@ -561,30 +798,4 @@ public class ItemService : ServiceBase<Item>, IItemService
         return new RepackResult { MovedCount = movedCount, Errors = errors.ToArray() };
     }
 
-    public async Task<IEnumerable<ItemLinkViewModel>> GetLinksForTarget(Guid targetItemId)
-    {
-        return await Db.Set<ItemLink>()
-            .AsNoTracking()
-            .Where(l => l.TargetItemId == targetItemId)
-            .Select(l => new ItemLinkViewModel
-            {
-                Id = l.Id,
-                OrderProcessId = l.OrderProcessId,
-                SourceItemId = l.SourceItemId,
-                SourceSerialNo = l.SourceItem.SerialNo,
-                SourceNomenclatureName = l.SourceItem.Nomenclature.Name,
-                SourceTareBarcode = l.SourceItem.Tare != null ? l.SourceItem.Tare.Barcode : null,
-                SourceTareTypeName = l.SourceItem.Tare != null ? l.SourceItem.Tare.TareType.Name : null,
-                SourceTareTypeUnits = l.SourceItem.Tare != null ? l.SourceItem.Tare.TareType.Units : null,
-                SourceAddress = l.SourceItem.Address,
-
-                TargetItemId = l.TargetItemId,
-                TargetNomenclatureName = l.TargetItem.Nomenclature.Name,
-                TargetTareBarcode = l.TargetItem.Tare != null ? l.TargetItem.Tare.Barcode : null,
-                TargetAddress = l.TargetItem.Address,
-
-                ConsumedQuantity = l.ConsumedQuantity
-            })
-            .ToListAsync();
-    }
 }

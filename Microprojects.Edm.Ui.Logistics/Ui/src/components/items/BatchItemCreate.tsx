@@ -62,7 +62,6 @@ export function BatchItemCreate({
     useEffect(() => {
         setSelectedTare(null)
         setBarcodeText('')
-        setQuantity(1)
     }, [tareTypeId])
 
     // If no existing tare selected, the backend will create a new tare.
@@ -78,20 +77,14 @@ export function BatchItemCreate({
         return 0
     }, [selectedTare, isNewTare, selectedTareType])
 
+    // Default the quantity to the tare's max capacity whenever that max
+    // changes (tare type picked, existing tare selected, etc).
+    const isCountable = selectedNomenclature?.countable ?? false
     useEffect(() => {
-        if (quantity > maxQuantity && maxQuantity > 0) {
-            setQuantity(maxQuantity)
+        if (maxQuantity > 0) {
+            setQuantity(isCountable ? Math.floor(maxQuantity) : maxQuantity)
         }
-    }, [maxQuantity])
-
-    const isCountableAddressed =
-        (selectedNomenclature?.countable ?? false) &&
-        (selectedTareType?.sizeX ?? 0) > 0
-
-    const isCountableBulk =
-        (selectedNomenclature?.countable ?? false) &&
-        (selectedTareType?.countable ?? false) &&
-        (selectedTareType?.sizeX ?? 0) <= 0
+    }, [maxQuantity, isCountable])
 
     const canSubmit =
         nomenclatureId &&
@@ -230,25 +223,17 @@ export function BatchItemCreate({
 
             <div className="mb-2" style={{ maxWidth: '200px' }}>
                 <label className="k-label">
-                    {isCountableAddressed || isCountableBulk
-                        ? 'Number of items'
-                        : 'Quantity'}
+                    {isCountable ? 'Number of items' : 'Quantity'}
                 </label>
                 <NumericTextBox
                     value={quantity}
-                    min={isCountableAddressed || isCountableBulk ? 1 : 0.001}
+                    min={isCountable ? 1 : 0.001}
                     max={maxQuantity > 0 ? maxQuantity : undefined}
-                    step={isCountableAddressed || isCountableBulk ? 1 : 0.1}
-                    format={
-                        isCountableAddressed || isCountableBulk ? 'n0' : 'n3'
-                    }
+                    step={isCountable ? 1 : 0.1}
+                    format={isCountable ? 'n0' : 'n3'}
                     onChange={(e) => {
                         const v = e.value ?? 1
-                        setQuantity(
-                            isCountableAddressed || isCountableBulk
-                                ? Math.round(v)
-                                : v,
-                        )
+                        setQuantity(isCountable ? Math.round(v) : v)
                     }}
                 />
                 {maxQuantity > 0 && (

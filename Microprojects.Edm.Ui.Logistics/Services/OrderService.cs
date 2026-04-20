@@ -162,15 +162,28 @@ public class OrderService : ServiceBase<Order>, IOrderService
         }
         else
         {
+            var splitQty = Math.Min(storeItem.Quantity, requiredAmount);
+            var parentId = storeItem.Id;
             storeItem = await _itemService.Save(new Item
             {
                 OrderId = id,
-                OriginId = storeItem.Id,
                 NomenclatureId = storeItem.NomenclatureId,
-                Quantity = Math.Min(storeItem.Quantity, requiredAmount),
+                Quantity = splitQty,
                 TareId = storeItem.TareId
             });
             storeItem.Tare = tare;
+
+            // Lineage edge: child item was split off the parent store item during
+            // allocation. No OrderProcess since this is not order execution.
+            Db.Add(new ItemLink
+            {
+                Id = DomainObject.NewGuid(),
+                SourceItemId = parentId,
+                TargetItemId = storeItem.Id,
+                ConsumedQuantity = splitQty,
+                OrderProcessId = null,
+            });
+            await Db.SaveChangesAsync();
         }
 
         return storeItem;

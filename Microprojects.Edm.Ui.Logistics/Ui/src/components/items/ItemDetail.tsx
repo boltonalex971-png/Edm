@@ -15,8 +15,11 @@ import {
 } from '@logistics/components/MasterDetail.tsx'
 import { NomenclatureDetail } from '@logistics/components/config/nomenclature/Nomenclatures.tsx'
 import { ProcessDetail } from '@logistics/components/config/process/Processes.tsx'
-import { ItemLinksTable } from '@logistics/components/items/ItemLinksTable.tsx'
+import { ItemGenealogyTree } from '@logistics/components/items/ItemGenealogyTree.tsx'
+import '@logistics/components/items/ItemGenealogyTree.css'
+import { OrderDetail } from '@logistics/components/orders/OrderDetail.tsx'
 import { OrderTabs } from '@logistics/components/orders/OrderTabs.tsx'
+import { SupplyDetail } from '@logistics/components/supplies/SupplyDetail.tsx'
 import {
     type DetailEventHandler,
     type Item,
@@ -25,6 +28,7 @@ import {
     type TareType,
 } from '@logistics/data/types'
 import { useGet } from '@logistics/hooks/hooks.ts'
+import { formatUnits } from '@logistics/utils/format.ts'
 import { Button } from '@progress/kendo-react-buttons'
 import { DatePicker, DateTimePicker } from '@progress/kendo-react-dateinputs'
 import { ComboBox, ComboBoxProps } from '@progress/kendo-react-dropdowns'
@@ -88,17 +92,13 @@ export function ItemDetail({ id, title = 'Item', ...props }: ItemDetailProps) {
                                     state={alert}
                                     id={id}
                                     onClose={() => setAlert(undefined)}
-                                ></InlineAlert>
-                                <div
-                                    style={{
-                                        display: 'flex',
-                                        justifyContent: 'space-between',
-                                        alignContent: 'baseline',
-                                    }}
-                                >
-                                    <div>
-                                        <p>
-                                            Nomenclature{' '}
+                                />
+                                <dl className="item-info">
+                                    <dt className="item-info-label">
+                                        Nomenclature
+                                    </dt>
+                                    <dd className="item-info-value">
+                                        {data.nomenclatureName ? (
                                             <DetailLinkText
                                                 id={data.nomenclatureId}
                                                 text={data.nomenclatureName}
@@ -117,41 +117,252 @@ export function ItemDetail({ id, title = 'Item', ...props }: ItemDetailProps) {
                                                                     undefined,
                                                                 )
                                                             }
-                                                            //onUpdate={itemUpdate}
                                                         />,
                                                     )
                                                 }
-                                            />{' '}
-                                            {data.quantity} pcs
-                                        </p>
-                                        {data.tareBarcode && (
-                                            <p>
-                                                Tare: {data.tareTareTypeName} /{' '}
-                                                {data.tareBarcode}
-                                            </p>
+                                            />
+                                        ) : (
+                                            <span className="item-info-value--muted">
+                                                —
+                                            </span>
                                         )}
-                                        {showAddress &&
-                                            data.address != null && (
-                                                <p>Address: {data.address}</p>
-                                            )}
-                                        {/*<p>using <DetailLinkText*/}
-                                        {/*    id={data.processId}*/}
-                                        {/*    text={data.processName}*/}
-                                        {/*    onClick={(procId, onUpdate) => setSubDetail(*/}
-                                        {/*        <ProcessDetail*/}
-                                        {/*            readonly={true}*/}
-                                        {/*            processId={procId}*/}
-                                        {/*            api={Api.processes}*/}
-                                        {/*            onClose={() => setSubDetail(undefined)}*/}
-                                        {/*            //onUpdate={onUpdate}*/}
-                                        {/*        />*/}
-                                        {/*    )}*/}
-                                        {/*/> process*/}
-                                        {/*</p>*/}
-                                        {/*{data.startDate && <p>Start {data.startDate?.toLocaleDateString()}</p> }*/}
-                                        {/*{data.dueDate && <p>must be done until {data.dueDate?.toLocaleDateString()}</p> }*/}
-                                    </div>
-                                </div>
+                                        {selectedNomenclature?.category && (
+                                            <span
+                                                className="item-info-value--muted"
+                                                style={{ marginLeft: 8 }}
+                                            >
+                                                ·{' '}
+                                                {selectedNomenclature.category}
+                                            </span>
+                                        )}
+                                        {data.isOutput ? (
+                                            <span
+                                                className="item-source-badge item-source-badge--output"
+                                                style={{ marginLeft: 8 }}
+                                                title="Produced by an order execution."
+                                            >
+                                                Output
+                                            </span>
+                                        ) : data.supplyId ? (
+                                            <span
+                                                className="item-source-badge item-source-badge--supply"
+                                                style={{ marginLeft: 8 }}
+                                                title="Received through a supply."
+                                            >
+                                                Supply
+                                            </span>
+                                        ) : null}
+                                    </dd>
+
+                                    <dt className="item-info-label">
+                                        Quantity
+                                    </dt>
+                                    <dd className="item-info-value item-info-mono">
+                                        {formatUnits(
+                                            data.quantity,
+                                            data.tareTareTypeUnits ??
+                                                selectedTareType?.units,
+                                            selectedNomenclature?.countable,
+                                        )}
+                                    </dd>
+
+                                    {data.serialNo && (
+                                        <>
+                                            <dt className="item-info-label">
+                                                Serial No
+                                            </dt>
+                                            <dd className="item-info-value item-info-mono">
+                                                {data.serialNo}
+                                            </dd>
+                                        </>
+                                    )}
+
+                                    {(data.tareBarcode ||
+                                        data.tareTareTypeName) && (
+                                        <>
+                                            <dt className="item-info-label">
+                                                Tare
+                                            </dt>
+                                            <dd className="item-info-value">
+                                                {data.tareTareTypeName && (
+                                                    <span>
+                                                        {data.tareTareTypeName}
+                                                    </span>
+                                                )}
+                                                {data.tareBarcode && (
+                                                    <span className="item-info-mono">
+                                                        {data.tareTareTypeName
+                                                            ? ' · '
+                                                            : ''}
+                                                        {data.tareBarcode}
+                                                    </span>
+                                                )}
+                                            </dd>
+                                        </>
+                                    )}
+
+                                    {showAddress && data.address != null && (
+                                        <>
+                                            <dt className="item-info-label">
+                                                Address
+                                            </dt>
+                                            <dd className="item-info-value item-info-mono">
+                                                #{data.address}
+                                            </dd>
+                                        </>
+                                    )}
+
+                                    {data.supplyId && (
+                                        <>
+                                            <dt className="item-info-label">
+                                                Supply
+                                            </dt>
+                                            <dd className="item-info-value">
+                                                <DetailLinkText
+                                                    id={data.supplyId}
+                                                    text={
+                                                        data.supplyName ||
+                                                        `${String(
+                                                            data.supplyId,
+                                                        ).slice(0, 8)}…`
+                                                    }
+                                                    onClick={() =>
+                                                        setSubDetail(
+                                                            <SupplyDetail
+                                                                readonly={true}
+                                                                id={
+                                                                    data.supplyId
+                                                                }
+                                                                api={
+                                                                    Api.supplies
+                                                                }
+                                                                onClose={() =>
+                                                                    setSubDetail(
+                                                                        undefined,
+                                                                    )
+                                                                }
+                                                            />,
+                                                        )
+                                                    }
+                                                />
+                                            </dd>
+                                        </>
+                                    )}
+
+                                    {(() => {
+                                        const orderBlock = data.orderId && (
+                                            <>
+                                                <dt className="item-info-label">
+                                                    Order
+                                                </dt>
+                                                <dd className="item-info-value">
+                                                    <DetailLinkText
+                                                        id={data.orderId}
+                                                        text={
+                                                            data.orderName ||
+                                                            `${String(
+                                                                data.orderId,
+                                                            ).slice(0, 8)}…`
+                                                        }
+                                                        onClick={() =>
+                                                            setSubDetail(
+                                                                <OrderDetail
+                                                                    readonly={
+                                                                        true
+                                                                    }
+                                                                    id={
+                                                                        data.orderId
+                                                                    }
+                                                                    api={
+                                                                        Api.orders
+                                                                    }
+                                                                    path={
+                                                                        props.path
+                                                                    }
+                                                                    type="order"
+                                                                    onClose={() =>
+                                                                        setSubDetail(
+                                                                            undefined,
+                                                                        )
+                                                                    }
+                                                                />,
+                                                            )
+                                                        }
+                                                    />
+                                                </dd>
+                                            </>
+                                        )
+                                        const processBlock = data.processId && (
+                                            <>
+                                                <dt className="item-info-label">
+                                                    {data.isOutput
+                                                        ? 'Produced by'
+                                                        : 'Process'}
+                                                </dt>
+                                                <dd className="item-info-value">
+                                                    <DetailLinkText
+                                                        id={data.processId}
+                                                        text={
+                                                            data.processName ||
+                                                            `${String(
+                                                                data.processId,
+                                                            ).slice(0, 8)}…`
+                                                        }
+                                                        onClick={() =>
+                                                            setSubDetail(
+                                                                <ProcessDetail
+                                                                    readonly={
+                                                                        true
+                                                                    }
+                                                                    processId={
+                                                                        data.processId
+                                                                    }
+                                                                    api={
+                                                                        Api.processes
+                                                                    }
+                                                                    onClose={() =>
+                                                                        setSubDetail(
+                                                                            undefined,
+                                                                        )
+                                                                    }
+                                                                />,
+                                                            )
+                                                        }
+                                                    />
+                                                </dd>
+                                            </>
+                                        )
+                                        return data.isOutput ? (
+                                            <>
+                                                {processBlock}
+                                                {orderBlock}
+                                            </>
+                                        ) : (
+                                            <>
+                                                {orderBlock}
+                                                {processBlock}
+                                            </>
+                                        )
+                                    })()}
+
+                                    <dt className="item-info-label">Id</dt>
+                                    <dd className="item-info-value item-info-mono item-info-value--muted">
+                                        {String(data.id)}
+                                    </dd>
+
+                                    {data.isActive === false && (
+                                        <>
+                                            <dt className="item-info-label">
+                                                Status
+                                            </dt>
+                                            <dd className="item-info-value">
+                                                <span className="item-info-badge">
+                                                    Inactive
+                                                </span>
+                                            </dd>
+                                        </>
+                                    )}
+                                </dl>
                             </>
                         )
                     }
@@ -249,7 +460,23 @@ export function ItemDetail({ id, title = 'Item', ...props }: ItemDetailProps) {
                     }
                 />
             }
-            relations={<ItemLinksTable itemId={id as any} />}
+            relations={
+                <ItemGenealogyTree
+                    itemId={id as any}
+                    onSelect={(selectedId) =>
+                        setSubDetail(
+                            <ItemDetail
+                                readonly={true}
+                                id={selectedId}
+                                api={props.api}
+                                path={props.path}
+                                type={props.type}
+                                onClose={() => setSubDetail(undefined)}
+                            />,
+                        )
+                    }
+                />
+            }
         />
     )
 }

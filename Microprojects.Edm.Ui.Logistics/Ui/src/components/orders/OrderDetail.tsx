@@ -101,9 +101,17 @@ export function OrderDetail({
         `${Api.orders}/${id || EMPTY_GUID}`,
         [id],
     )
+    // After a Create, the prop `id` stays undefined (the panel is not
+    // route-driven), but `data.id` is set to the new GUID via setData.
+    // Fall back to data.id so the Tabs and the operations fetch see it.
+    const effectiveId =
+        id ||
+        (data?.id && data.id !== EMPTY_GUID ? (data.id as UUID) : undefined)
     const [[orderProcesses]] = useGet<OrderProcess[]>(
-        id ? `${Api.orders}/${id}/operations` : `${Api.orders}/${EMPTY_GUID}/operations`,
-        [id],
+        effectiveId
+            ? `${Api.orders}/${effectiveId}/operations`
+            : `${Api.orders}/${EMPTY_GUID}/operations`,
+        [effectiveId],
     )
     if (!data || data.id === EMPTY_GUID) {
         data = { ...data, name: '', description: '' } as Order
@@ -114,21 +122,21 @@ export function OrderDetail({
     const mainProcess = orderProcesses?.[0]
     const processCompleted = !!mainProcess?.endTime
     const startDisabled =
-        !id || id === EMPTY_GUID || isCompleted || isDeleted || processCompleted
+        !effectiveId || isCompleted || isDeleted || processCompleted
     const startDisabledReason = isDeleted
         ? 'Order is deleted'
         : isCompleted
-            ? 'Order is completed'
-            : processCompleted
-                ? 'Process is already completed'
-                : undefined
+          ? 'Order is completed'
+          : processCompleted
+            ? 'Process is already completed'
+            : undefined
     const startOrder = () => {
         axios
-            .post<ExecuteResult>(`${Api.orders}/${id}/execute`)
+            .post<ExecuteResult>(`${Api.orders}/${effectiveId}/execute`)
             .then((r) => {
                 const { completed, pendingCount } = r.data
                 if (pendingCount > 0) {
-                    navigate(`/orders/allocate-output/${id}`)
+                    navigate(`/orders/allocate-output/${effectiveId}`)
                     return
                 }
                 setAlert({
@@ -368,7 +376,7 @@ export function OrderDetail({
             }
             relations={
                 <OrderTabs
-                    id={id}
+                    id={effectiveId as UUID}
                     api={props.api}
                     order={data}
                     onDetailSelected={setSubDetail}

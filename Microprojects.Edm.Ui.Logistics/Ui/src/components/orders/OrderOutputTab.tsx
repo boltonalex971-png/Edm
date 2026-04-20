@@ -52,10 +52,10 @@ export function OrderOutputTab({
     const allocateDisabledReason = isDeleted
         ? 'Order is deleted'
         : isCompleted
-            ? 'Order is completed'
-            : allAllocated
-                ? 'All outputs are already allocated'
-                : undefined
+          ? 'Order is completed'
+          : allAllocated
+            ? 'All outputs are already allocated'
+            : undefined
 
     const toggleExpand = (key: string) => {
         setExpanded((prev) => {

@@ -95,6 +95,7 @@ public class LogisticsContext : DbContext
             .HasOne(l => l.OrderProcess)
             .WithMany()
             .HasForeignKey(l => l.OrderProcessId)
+            .IsRequired(false)
             .OnDelete(DeleteBehavior.NoAction);
         builder.Entity<ItemLink>()
             .HasOne(l => l.SourceItem)

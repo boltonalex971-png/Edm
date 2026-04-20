@@ -34,10 +34,10 @@ public class ItemsController : CrudControllerBase<Item, ItemViewModel, IItemServ
         return Mapper.Map<IEnumerable<ItemViewModel>>(result);
     }
 
-    [HttpGet("{id:guid}/links")]
-    public async Task<IEnumerable<ItemLinkViewModel>> GetLinksForTarget([FromRoute] Guid id)
+    [HttpGet("{id:guid}/genealogy")]
+    public async Task<ItemGenealogy> GetGenealogy([FromRoute] Guid id, [FromQuery] int depth = 2)
     {
-        return await Service.GetLinksForTarget(id);
+        return await Service.GetGenealogy(id, depth);
     }
 
     [HttpGet("tare/{tareId:guid}")]

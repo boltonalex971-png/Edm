@@ -1,0 +1,336 @@
+/* Genealogy tree visual tokens + layout. */
+
+.geneal-root {
+    --geneal-card-bg: #fafafa;
+    --geneal-card-border: #e2e2e2;
+    --geneal-pivot-caption: #2a6;
+    --geneal-node-hover-bg: #f0f4f8;
+    --geneal-primary: #2a2d33;
+    --geneal-secondary: #8a8f97;
+    --geneal-inactive: #b0b3ba;
+    --geneal-edge-exec-bg: #e2f3ea;
+    --geneal-edge-exec-text: #1f6e45;
+    --geneal-edge-split-bg: #fdf1d6;
+    --geneal-edge-split-text: #8a5a00;
+
+    --geneal-row-h: 30px;
+    --geneal-card-radius: 6px;
+
+    font-size: 14px;
+    color: var(--geneal-primary);
+}
+
+.geneal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    gap: 16px;
+}
+
+.geneal-title {
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.geneal-controls {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--geneal-secondary);
+}
+
+.geneal-depth-label {
+    color: var(--geneal-primary);
+    font-weight: 500;
+}
+
+/* Segmented depth control styled as a compact button group. */
+.geneal-depth {
+    display: inline-flex;
+    border: 1px solid var(--geneal-card-border);
+    border-radius: 6px;
+    overflow: hidden;
+    background: #fff;
+    margin: 0;
+}
+
+.geneal-depth button {
+    border: 0;
+    background: transparent;
+    padding: 2px 12px;
+    font-size: 13px;
+    line-height: 22px;
+    color: var(--geneal-secondary);
+    cursor: pointer;
+    min-width: 42px;
+}
+
+.geneal-depth button + button {
+    border-left: 1px solid var(--geneal-card-border);
+}
+
+.geneal-depth button.active {
+    background: #edf7f0;
+    color: var(--geneal-pivot-caption);
+    font-weight: 600;
+}
+
+.geneal-depth button:hover:not(.active) {
+    background: #f3f5f7;
+}
+
+/* Two equal bordered cards side by side. */
+.geneal-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 16px;
+    align-items: stretch;
+}
+
+.geneal-card {
+    background: var(--geneal-card-bg);
+    border: 1px solid var(--geneal-card-border);
+    border-radius: var(--geneal-card-radius);
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    min-height: 72px;
+}
+
+.geneal-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    color: var(--geneal-secondary);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.geneal-card-header .count {
+    color: var(--geneal-secondary);
+    font-weight: 400;
+    letter-spacing: normal;
+    text-transform: none;
+    font-size: 12px;
+}
+
+.geneal-empty {
+    color: var(--geneal-secondary);
+    font-style: italic;
+    font-size: 13px;
+    text-align: center;
+    padding: 10px 0;
+}
+
+/* Kendo TreeView inner overrides so our rows sit on a fixed grid. */
+.geneal-card .k-treeview {
+    font-size: 14px;
+    background: transparent;
+}
+
+.geneal-card .k-treeview .k-treeview-top,
+.geneal-card .k-treeview .k-treeview-mid,
+.geneal-card .k-treeview .k-treeview-bot {
+    min-height: var(--geneal-row-h);
+}
+
+.geneal-card .k-treeview .k-in {
+    padding: 3px 4px;
+    border-radius: 4px;
+    width: 100%;
+}
+
+.geneal-card .k-treeview .k-in:hover,
+.geneal-card .k-treeview .k-in.k-state-hover {
+    background: var(--geneal-node-hover-bg);
+}
+
+.geneal-card .k-treeview .k-in.k-state-selected,
+.geneal-card .k-treeview .k-in.k-selected {
+    background: var(--geneal-node-hover-bg);
+    color: inherit;
+}
+
+/* Node row: just edge pill + primary name/qty. */
+.geneal-node {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-height: calc(var(--geneal-row-h) - 4px);
+    line-height: 1.3;
+}
+
+.geneal-node-edge {
+    flex-shrink: 0;
+}
+
+.geneal-node-primary {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.geneal-node-more {
+    flex-shrink: 0;
+    color: var(--geneal-edge-split-text);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.geneal-node--inactive .geneal-node-primary {
+    color: var(--geneal-inactive);
+    font-style: italic;
+}
+
+/* Edge pills next to the child node, direction-aware. */
+.geneal-edge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 1px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.6;
+    white-space: nowrap;
+    user-select: none;
+}
+
+.geneal-edge--exec {
+    background: var(--geneal-edge-exec-bg);
+    color: var(--geneal-edge-exec-text);
+}
+
+.geneal-edge--split {
+    background: var(--geneal-edge-split-bg);
+    color: var(--geneal-edge-split-text);
+}
+
+.geneal-edge .arrow {
+    font-size: 9px;
+    opacity: 0.7;
+}
+
+/* Truncation hint. */
+.geneal-truncated {
+    color: var(--geneal-edge-split-text);
+    font-size: 12px;
+}
+
+/* Item Detail info section — a two-column grid with muted labels. */
+.item-info {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    column-gap: 16px;
+    row-gap: 6px;
+    align-items: baseline;
+    font-size: 14px;
+}
+
+.item-info-label {
+    color: var(--geneal-secondary, #8a8f97);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.item-info-value {
+    color: var(--geneal-primary, #2a2d33);
+    min-width: 0;
+}
+
+.item-info-value--muted {
+    color: var(--geneal-secondary, #8a8f97);
+    font-style: italic;
+}
+
+.item-info-badge {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: #fdecea;
+    color: #a12a1f;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.item-info-mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas,
+        "Liberation Mono", monospace;
+}
+
+/* Shared "origin" badges — used on the Info card and the Items grid. */
+.item-info-badge--output,
+.item-source-badge--output {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: var(--geneal-edge-exec-bg, #e2f3ea);
+    color: var(--geneal-edge-exec-text, #1f6e45);
+}
+
+.item-info-badge--supply,
+.item-source-badge--supply {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: #e8eefa;
+    color: #2a4b8a;
+}
+
+.item-source-badge {
+    white-space: nowrap;
+}
+
+.item-source-badge--muted {
+    color: var(--geneal-secondary, #8a8f97);
+}
+
+.item-source-badge--output {
+    /* reuse color tokens above */
+}
+.item-source-badge--supply {
+    /* reuse color tokens above */
+}
+
+.geneal-node-badge {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 0 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    line-height: 16px;
+    vertical-align: baseline;
+}
+
+.geneal-node-badge--output {
+    background: var(--geneal-edge-exec-bg, #e2f3ea);
+    color: var(--geneal-edge-exec-text, #1f6e45);
+}

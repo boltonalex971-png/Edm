@@ -39,9 +39,27 @@ public class WebModelsProfile : AutoMapper.Profile
         CreateMap<NomenclatureViewModel, Nomenclature>();
         CreateMap<TareType, TareTypeViewModel>();
         CreateMap<TareTypeViewModel, TareType>();
-        CreateMap<Item, ItemViewModel>().ReverseMap()
+        CreateMap<Item, ItemViewModel>()
+            .ForMember(d => d.SupplyName, o => o.MapFrom(s =>
+                s.Supply == null
+                    ? null
+                    : (!string.IsNullOrWhiteSpace(s.Supply.Shipment)
+                        ? s.Supply.Shipment
+                        : s.Supply.Barcode)))
+            .ForMember(d => d.OrderName, o => o.MapFrom(s =>
+                s.Order == null
+                    ? null
+                    : (s.Order.Process != null && !string.IsNullOrWhiteSpace(s.Order.Process.Name)
+                        ? s.Order.Process.Name
+                        : s.Order.Description)))
+            .ForMember(d => d.ProcessName, o => o.MapFrom(s =>
+                s.Process == null ? null : s.Process.Name))
+            .ForMember(d => d.IsOutput, o => o.MapFrom(s => s.ProcessId != null))
+            .ReverseMap()
             .ForMember(d => d.Nomenclature, o => o.Ignore())
-            .ForMember(d => d.Supply, o => o.Ignore());
+            .ForMember(d => d.Supply, o => o.Ignore())
+            .ForMember(d => d.Order, o => o.Ignore())
+            .ForMember(d => d.Process, o => o.Ignore());
         CreateMap<Tare, TareViewModel>().ReverseMap()
             .ForMember(d => d.TareType, o => o.Ignore());
         CreateMap<SpecificationNomenclature, SpecificationRowViewModel>().ReverseMap();

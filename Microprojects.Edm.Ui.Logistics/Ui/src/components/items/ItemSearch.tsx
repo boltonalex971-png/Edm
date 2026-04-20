@@ -4,6 +4,7 @@ import { Loading } from '@features/utils/Utils'
 import { type AlertState, InlineAlert } from '@logistics/components/InlineAlert'
 import { Detail } from '@logistics/components/MasterDetail'
 import { ItemDetail } from '@logistics/components/items/ItemDetail'
+import '@logistics/components/items/ItemGenealogyTree.css'
 import { TareDetail } from '@logistics/components/tare/TareDetail'
 import {
     type TareGroup,
@@ -357,6 +358,45 @@ export const ItemSearch = (props: ItemSearchProps) => {
                                     cell={(p) => (
                                         <td>{tareSummary(p.dataItem)}</td>
                                     )}
+                                />
+                                <GridColumn
+                                    title="Source"
+                                    width="110"
+                                    cell={(p) => {
+                                        const row = p.dataItem as TareRow
+                                        const hasOutput = row.items.some(
+                                            (i) => i.isOutput,
+                                        )
+                                        const hasSupply = row.items.some(
+                                            (i) => i.supplyId && !i.isOutput,
+                                        )
+                                        if (hasOutput) {
+                                            return (
+                                                <td title="This tare contains items produced by an order execution.">
+                                                    <span className="item-source-badge item-source-badge--output">
+                                                        Output
+                                                    </span>
+                                                </td>
+                                            )
+                                        }
+                                        if (hasSupply) {
+                                            return (
+                                                <td title="This tare contains items received through a supply.">
+                                                    <span className="item-source-badge item-source-badge--supply">
+                                                        Supply
+                                                    </span>
+                                                </td>
+                                            )
+                                        }
+                                        return (
+                                            <td
+                                                className="item-source-badge--muted"
+                                                title="No supply or process recorded."
+                                            >
+                                                —
+                                            </td>
+                                        )
+                                    }}
                                 />
                                 <GridColumn
                                     field="tare.tareTypeUnits"

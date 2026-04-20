@@ -31,12 +31,6 @@ public class Item : DomainObject, IWithMeta
     public int? Address { get; set; }
     
     /// <summary>
-    /// Parent item the current one is part of
-    /// </summary>
-    public Item Origin { get; set; }
-    public Guid? OriginId { get; set; }
-    
-    /// <summary>
     /// The process where the item has been assembled
     /// </summary>
     public Process? Process { get; set; }
@@ -50,7 +44,6 @@ public class Item : DomainObject, IWithMeta
 
     public Supply? Supply { get; set; }
     public Guid? SupplyId { get; set; }
-    
-    public ICollection<Item> Items { get; set; } = new List<Item>();
+
     public Meta Meta { get; set; }
 }

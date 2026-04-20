@@ -110,11 +110,36 @@ export const query = async <T>(
         body: JSON.stringify(body),
     }
     const response = await fetch(url, props)
+    const text = await response.text()
+
     if (!response.ok) {
-        throw new Error(response.statusText)
+        // Prefer a server-provided message: ProblemDetails { title, detail }
+        // produced by GlobalExceptionHandler for EdmException and similar.
+        let message = response.statusText
+        if (text) {
+            try {
+                const problem = JSON.parse(text)
+                message =
+                    problem?.detail ||
+                    problem?.title ||
+                    problem?.message ||
+                    text ||
+                    message
+            } catch {
+                // Non-JSON body — surface it verbatim.
+                message = text
+            }
+        }
+        throw new Error(
+            message || `Request failed with status ${response.status}`,
+        )
     }
-    const data = response.ok && (await response.json())
-    return data as T
+
+    // Tolerate empty bodies (e.g. 200 OK with no content, or 204 No Content).
+    if (response.status === 204 || !text) {
+        return undefined as T
+    }
+    return JSON.parse(text) as T
 }
 
 export function startLoading(...elements: HTMLElement[]) {

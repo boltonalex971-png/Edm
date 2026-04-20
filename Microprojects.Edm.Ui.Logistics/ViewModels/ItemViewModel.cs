@@ -3,10 +3,8 @@ namespace Microprojects.Edm.Ui.Logistics.ViewModels;
 public class ItemViewModel
 {
     public Guid Id { get; set; }
-    public Guid? OriginId { get; set; }
-    
-    public Guid? SupplyId { get; set; }
-    public string? SerialNo { get; set; }   
+
+    public string? SerialNo { get; set; }
     public double Quantity { get; set; }
     public Guid NomenclatureId { get; set; }
     public string? NomenclatureName { get; set; }
@@ -24,4 +22,26 @@ public class ItemViewModel
     public double TareTareTypeCapacity { get; set; }
     public int? Address { get; set; }
     public DateTime MetaCreated { get; set; }
+
+    /// <summary>Supply the item was received with (incoming / warehouse items).</summary>
+    public Guid? SupplyId { get; set; }
+    /// <summary>Display label for the supply — shipment name falling back to barcode.</summary>
+    public string? SupplyName { get; set; }
+
+    /// <summary>Order this item was produced for (outputs) or assigned to (inputs).</summary>
+    public Guid? OrderId { get; set; }
+    /// <summary>Display label for the order — uses process name falling back to description.</summary>
+    public string? OrderName { get; set; }
+
+    /// <summary>Process that produced this item (set for execution outputs).</summary>
+    public Guid? ProcessId { get; set; }
+    /// <summary>Display label for the process — DirectoryEntry.Name.</summary>
+    public string? ProcessName { get; set; }
+
+    /// <summary>
+    /// True when this item is an order execution output (produced by a process),
+    /// i.e. <c>ProcessId != null</c>. Useful for UI to distinguish output stock
+    /// from supply-only stock without relying on field combinations.
+    /// </summary>
+    public bool IsOutput { get; set; }
 }

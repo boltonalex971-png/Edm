@@ -64,8 +64,14 @@ export interface TareType extends DataItem {
 
 export interface Item extends DataItem {
     id: UUID
-    originId: UUID
     supplyId?: UUID
+    supplyName?: string
+    orderId?: UUID
+    orderName?: string
+    processId?: UUID
+    processName?: string
+    /** True when this item is an order execution output (ProcessId != null). */
+    isOutput?: boolean
     nomenclatureName: string
     nomenclatureId: UUID
     children: Item[]
@@ -92,28 +98,48 @@ export interface Supply extends DataItem {
     metaCreated?: string
 }
 
-export interface ItemLinkRow {
+export interface ItemNode {
     id: UUID
-    orderProcessId: UUID
+    serialNo?: string
+    quantity: number
+    nomenclatureId?: UUID
+    nomenclatureName?: string
+    nomenclatureCategory?: string
+    nomenclatureCountable?: boolean
+    /** True when this item is an order execution output (ProcessId != null). */
+    isOutput?: boolean
+    tareId?: UUID
+    tareBarcode?: string
+    tareTypeName?: string
+    tareTypeUnits?: string
+    address?: number
+    orderId?: UUID
+    /** Signed distance from the root. <0 = ancestor, 0 = root, >0 = descendant. */
+    depth: number
+    /** Soft-deleted or completed — render greyed. */
+    inactive: boolean
+    /** True when there are more links beyond this node beyond the depth cap. */
+    hasMore: boolean
+}
 
+export interface GenealogyEdge {
     sourceItemId: UUID
-    sourceSerialNo?: string
-    sourceNomenclatureName?: string
-    sourceTareBarcode?: string
-    sourceTareTypeName?: string
-    sourceTareTypeUnits?: string
-    sourceAddress?: number
-
     targetItemId: UUID
-    targetNomenclatureName?: string
-    targetTareBarcode?: string
-    targetAddress?: number
-
     consumedQuantity: number
+    /** Null for non-execution edges (repack bulk split, allocation split). */
+    orderProcessId?: UUID
+    processName?: string
+}
+
+export interface ItemGenealogy {
+    rootId: UUID
+    nodes: ItemNode[]
+    edges: GenealogyEdge[]
+    truncated: boolean
+    depth: number
 }
 
 export interface ItemSearchQuery {
-    originId?: UUID
     nomenclatureId?: UUID
     active?: boolean
 }

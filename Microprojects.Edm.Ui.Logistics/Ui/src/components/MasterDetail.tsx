@@ -20,7 +20,7 @@ import {
 } from '@progress/kendo-react-layout'
 import axios from 'axios'
 import type React from 'react'
-import { type MouseEventHandler, useState } from 'react'
+import { createContext, type MouseEventHandler, useContext, useState } from 'react'
 import { Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { Alert } from 'reactstrap'
 import type {
@@ -38,6 +38,12 @@ import type { TreeItemProps } from './TreeViewMaster'
 import { Folder } from './config/Folder'
 
 export const EMPTY_GUID = '00000000-0000-0000-0000-000000000000'
+
+// Lets a nested Editor flip its parent Detail out of edit mode after a
+// successful save. Detail provides it; Editor consumes it.
+const DetailEditModeContext = createContext<
+    ((editMode: boolean) => void) | undefined
+>(undefined)
 
 export function reloadMaster() {
     refresh()
@@ -159,7 +165,7 @@ export function Detail({
             {props.error}
         </Alert>
     ) : (
-        <>
+        <DetailEditModeContext.Provider value={setEditMode}>
             <Card className="animated">
                 {props.loading && props.id && (
                     <CardBody>
@@ -304,7 +310,7 @@ export function Detail({
             </Card>
             <div className="mt-2" />
             {props.subDetail}
-        </>
+        </DetailEditModeContext.Provider>
     )
 }
 
@@ -345,6 +351,7 @@ export function Editor(props: EditorProps) {
     const navigate = useNavigate()
     const location = useLocation()
     const [alert, setAlert] = useState<AlertState>()
+    const setDetailEditMode = useContext(DetailEditModeContext)
     const mode =
         (props.data.id && props.data.id !== EMPTY_GUID && 'Update') || 'Create'
     const handleSubmit = (data: Dictionary) => {
@@ -370,6 +377,7 @@ export function Editor(props: EditorProps) {
                     props.onChange?.(response.data)
                     props.setData(response.data)
                     setAlert({ message: 'Updated successfully' })
+                    setDetailEditMode?.(false)
                 })
                 .catch((r) =>
                     setAlert({
@@ -389,6 +397,7 @@ export function Editor(props: EditorProps) {
                     props.onChange?.(response.data)
                     props.setData(response.data)
                     setAlert({ message: 'Created successfully' })
+                    setDetailEditMode?.(false)
                     if (props.path) {
                         navigate(
                             `${props.path}${response.data.isFolder ? '/folder' : ''}/${response.data.id}`,
