@@ -262,6 +262,13 @@ public class OrderService : ServiceBase<Order>, IOrderService
         if (specifications.Any(n => n.Total + Eps < n.Amount))
             throw new EdmException("Not all required components are available");
 
+        // Wrap the entire execution (output creation + input allocation + links
+        // + completion state) into a single DB transaction so any failure rolls
+        // back every row, including outputs persisted eagerly via
+        // _itemService.Save. Otherwise a late validation error would leave
+        // orphan output items and a half-started orderProcess.
+        await using var transaction = await Db.Database.BeginTransactionAsync();
+
         var now = DateTime.UtcNow;
         orderProcess.StartTime = now;
 
@@ -319,7 +326,6 @@ public class OrderService : ServiceBase<Order>, IOrderService
         {
             var inputItems = await Set<Item>()
                 .Include(i => i.Meta)
-                .Include(i => i.Tare).ThenInclude(t => t.TareType)
                 .Where(i =>
                     i.OrderId == order.Id &&
                     i.NomenclatureId == spec.NomenclatureId &&
@@ -327,8 +333,6 @@ public class OrderService : ServiceBase<Order>, IOrderService
                     i.Meta.Completed == null)
                 .OrderBy(i => i.Id) // UUIDv7 ordering: FIFO by creation time
                 .ToListAsync();
-
-            static bool IsInteger(double v, double eps) => Math.Abs(v - Math.Round(v)) <= eps;
 
             if (targetOutputItems.Count == 0)
             {
@@ -339,21 +343,14 @@ public class OrderService : ServiceBase<Order>, IOrderService
                     if (remaining <= Eps)
                         break;
 
-                    var tareType = item.Tare?.TareType;
-                    var isCountableBulkTare = tareType != null && tareType.Countable && tareType.Dimensions <= 0;
-                    if (isCountableBulkTare)
-                    {
-                        if (!IsInteger(item.Quantity, Eps) || !IsInteger(remaining, Eps))
-                        {
-                            throw new EdmException("Countable bulk tare operations require integer quantities.");
-                        }
-                    }
-
+                    // Execute is a logical, ratio-based consumption step. It
+                    // does not reshape tare contents, so we do not enforce the
+                    // "integer pieces" rule here even when the input sits on a
+                    // countable bulk tare. Decimal residuals are allowed — see
+                    // the comment on Nomenclature.Countable. Physical
+                    // piece-count integrity is enforced by tare operations
+                    // (BatchCreate, Move, Repack).
                     var consumed = Math.Min(item.Quantity, remaining);
-                    if (isCountableBulkTare && !IsInteger(consumed, Eps))
-                    {
-                        throw new EdmException("Countable bulk tare operations require integer quantities.");
-                    }
                     item.Quantity -= consumed;
                     remaining -= consumed;
                     if (item.Quantity <= Eps)
@@ -375,12 +372,6 @@ public class OrderService : ServiceBase<Order>, IOrderService
             foreach (var targetItem in targetOutputItems)
             {
                 var requiredForThisTarget = spec.Quantity * targetItem.Quantity;
-                var currentTareType = inputIndex < inputItems.Count ? inputItems[inputIndex].Tare?.TareType : null;
-                var isCountableBulkTare = currentTareType != null && currentTareType.Countable && currentTareType.Dimensions <= 0;
-                if (isCountableBulkTare && !IsInteger(requiredForThisTarget, Eps))
-                {
-                    throw new EdmException("Countable bulk tare operations require integer quantities.");
-                }
                 while (requiredForThisTarget > Eps)
                 {
                     if (inputIndex >= inputItems.Count)
@@ -399,18 +390,11 @@ public class OrderService : ServiceBase<Order>, IOrderService
                         continue;
                     }
 
-                    currentTareType = inputItem.Tare?.TareType;
-                    isCountableBulkTare = currentTareType != null && currentTareType.Countable && currentTareType.Dimensions <= 0;
-                    if (isCountableBulkTare && (!IsInteger(available, Eps) || !IsInteger(requiredForThisTarget, Eps)))
-                    {
-                        throw new EdmException("Countable bulk tare operations require integer quantities.");
-                    }
-
+                    // See the sibling loop above: Execute consumes by ratio
+                    // and does not reshape tare contents, so the countable-bulk
+                    // integer rule is not enforced here. Tare integrity is
+                    // enforced at tare-touching operations instead.
                     var consumed = Math.Min(available, requiredForThisTarget);
-                    if (isCountableBulkTare && !IsInteger(consumed, Eps))
-                    {
-                        throw new EdmException("Countable bulk tare operations require integer quantities.");
-                    }
 
                     Db.ItemLinks.Add(new ItemLink
                     {
@@ -444,6 +428,7 @@ public class OrderService : ServiceBase<Order>, IOrderService
         }
 
         await Db.SaveChangesAsync();
+        await transaction.CommitAsync();
 
         return new ExecuteResult
         {
