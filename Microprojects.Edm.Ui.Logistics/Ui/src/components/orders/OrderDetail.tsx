@@ -14,6 +14,7 @@ import {
 } from '@logistics/components/MasterDetail.tsx'
 import { NomenclatureDetail } from '@logistics/components/config/nomenclature/Nomenclatures.tsx'
 import { ProcessDetail } from '@logistics/components/config/process/Processes.tsx'
+import { AllocateOutputWindow } from '@logistics/components/orders/AllocateOutputWindow.tsx'
 import { OrderTabs } from '@logistics/components/orders/OrderTabs.tsx'
 import type {
     DetailEventHandler,
@@ -89,6 +90,7 @@ export function OrderDetail({
 }: OrderDetailProps) {
     const [alert, setAlert] = useState<AlertState>()
     const [subDetail, setSubDetail] = useState<React.ReactElement>()
+    const [allocateOpen, setAllocateOpen] = useState(false)
     const navigate = useNavigate()
     useEffect(setSubDetail as EffectCallback, [id])
     const [[hierarchy]] = useGet<TreeDataItem[]>(
@@ -145,11 +147,11 @@ export function OrderDetail({
             .post<ExecuteResult>(`${Api.orders}/${effectiveId}/execute`)
             .then((r) => {
                 const { completed, pendingCount } = r.data
+                setReloadToken((x) => x + 1)
                 if (pendingCount > 0) {
-                    navigate(`/orders/allocate-output/${effectiveId}`)
+                    setAllocateOpen(true)
                     return
                 }
-                setReloadToken((x) => x + 1)
                 setAlert({
                     message: completed
                         ? 'The order executed and completed'
@@ -189,6 +191,14 @@ export function OrderDetail({
     useEffect(() => setAlert(undefined), [id])
 
     return (
+        <>
+        {allocateOpen && effectiveId && (
+            <AllocateOutputWindow
+                orderId={effectiveId}
+                onClose={() => setAllocateOpen(false)}
+                onChanged={() => setReloadToken((x) => x + 1)}
+            />
+        )}
         <Detail
             {...props}
             id={id}
@@ -295,9 +305,7 @@ export function OrderDetail({
                                                     icon="grid-layout"
                                                     className="mb-2"
                                                     onClick={() =>
-                                                        navigate(
-                                                            `/orders/allocate-output/${effectiveId}`,
-                                                        )
+                                                        setAllocateOpen(true)
                                                     }
                                                     disabled={isDeleted}
                                                     title={
@@ -334,9 +342,7 @@ export function OrderDetail({
                                                 icon="preview"
                                                 className="mb-2"
                                                 onClick={() =>
-                                                    navigate(
-                                                        `/orders/allocate-output/${effectiveId}`,
-                                                    )
+                                                    setAllocateOpen(true)
                                                 }
                                             >
                                                 View allocation
@@ -471,5 +477,6 @@ export function OrderDetail({
                 />
             }
         />
+        </>
     )
 }

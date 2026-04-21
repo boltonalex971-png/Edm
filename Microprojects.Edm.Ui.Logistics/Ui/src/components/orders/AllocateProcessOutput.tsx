@@ -1,5 +1,4 @@
 import api from '@features/api/api'
-import { PageTitle } from '@logistics/components/PageTitle'
 import {
     AllocateContextMenu,
     type ContextTareOption,
@@ -34,7 +33,6 @@ import {
 } from '@progress/kendo-react-dropdowns'
 import { TextBox } from '@progress/kendo-react-inputs'
 import React, { useEffect, useMemo, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
 import '@logistics/components/repacking/Repacking.css'
 
 type TargetTareState = TareInfo & {
@@ -47,9 +45,17 @@ type ContextMenuState = {
     itemId: UUID
 }
 
-export function AllocateProcessOutput() {
-    const { orderId } = useParams()
-    const navigate = useNavigate()
+type AllocateProcessOutputProps = {
+    orderId: UUID
+    onClose?: () => void
+    onChanged?: () => void
+}
+
+export function AllocateProcessOutput({
+    orderId,
+    onClose,
+    onChanged,
+}: AllocateProcessOutputProps) {
     const [[tareTypes]] = useGet<TareType[]>(api.taretypes, [])
 
     const [reloadToken, setReloadToken] = useState(0)
@@ -366,6 +372,7 @@ export function AllocateProcessOutput() {
             if (result.errors.length === 0) {
                 setPending([])
                 setReloadToken((x) => x + 1)
+                onChanged?.()
             }
         } catch (e: any) {
             setError(e.message || 'Allocation request failed')
@@ -406,6 +413,7 @@ export function AllocateProcessOutput() {
                 setError(result.errors[0])
             }
             setReloadToken((x) => x + 1)
+            onChanged?.()
         } catch (e: any) {
             setError(e.message || 'Grade assignment failed')
         }
@@ -416,7 +424,8 @@ export function AllocateProcessOutput() {
         setCompleting(true)
         try {
             await postData(`${api.orders}/${orderId}/complete`, {})
-            navigate('/orders/ongoing')
+            onChanged?.()
+            onClose?.()
         } catch (e: any) {
             setError(e?.message || 'Failed to complete the order')
         }
@@ -477,25 +486,94 @@ export function AllocateProcessOutput() {
         setSelectedItemIds(ids)
     }
 
+    const targetToolbar = (
+        <div className="column-toolbar">
+            <div className="field-group">
+                <label>Add target tare</label>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <TextBox
+                        value={newTareBarcode}
+                        onChange={(e) =>
+                            setNewTareBarcode(e.value?.toString() || '')
+                        }
+                        placeholder="Tare barcode..."
+                        style={{ width: 180 }}
+                    />
+                    <ComboBox
+                        data={filteredTareTypes}
+                        dataItemKey="id"
+                        textField="name"
+                        value={
+                            tareTypes?.find((t) => t.id === newTareTypeId) ||
+                            null
+                        }
+                        filterable
+                        onFilterChange={(e: ComboBoxFilterChangeEvent) =>
+                            setTareTypeFilter(e.filter?.value || '')
+                        }
+                        onChange={(e) => setNewTareTypeId(e.value?.id)}
+                        style={{ width: 200 }}
+                        placeholder="Type (for new)..."
+                    />
+                    <Button themeColor="primary" onClick={searchAndAddTare}>
+                        Add tare
+                    </Button>
+                </div>
+            </div>
+            <div className="repacking-actions">
+                <Button
+                    themeColor="success"
+                    onClick={submit}
+                    disabled={pending.length === 0 || submitting}
+                >
+                    {submitting ? 'Saving...' : `Apply (${pending.length})`}
+                </Button>
+                <Button onClick={reset} disabled={pending.length === 0}>
+                    Reset
+                </Button>
+                {submitResult && submitResult.errors.length > 0 && (
+                    <span
+                        style={{
+                            color: '#d32f2f',
+                            fontSize: '0.85rem',
+                        }}
+                    >
+                        {submitResult.errors[0]}
+                    </span>
+                )}
+                {order && !order.completed && (
+                    <Button
+                        themeColor="primary"
+                        onClick={completeOrder}
+                        disabled={!canComplete || completing}
+                        style={{ marginLeft: 'auto' }}
+                    >
+                        {completing ? 'Completing...' : 'Complete order'}
+                    </Button>
+                )}
+            </div>
+        </div>
+    )
+
     return (
         <div className="repacking-page">
-            <PageTitle title="Allocate process output" />
-            <hr />
+            {error && (
+                <div style={{ color: '#d32f2f', marginBottom: '0.5rem' }}>
+                    {error}
+                </div>
+            )}
 
             <div
                 style={{
                     display: 'flex',
+                    flexDirection: 'row',
+                    gap: 20,
+                    marginBottom: 0,
+                    background: '#fff',
                     alignItems: 'center',
-                    gap: '1rem',
-                    marginBottom: '0.75rem',
+                    flexShrink: 0,
                 }}
             >
-                <Button
-                    onClick={() => navigate(-1)}
-                    disabled={submitting || completing}
-                >
-                    Back
-                </Button>
                 <div
                     style={{
                         flex: 1,
@@ -503,7 +581,7 @@ export function AllocateProcessOutput() {
                         fontWeight: 500,
                         display: 'flex',
                         alignItems: 'baseline',
-                        gap: '0.5rem',
+                        gap: '0.4rem',
                     }}
                 >
                     {order && (
@@ -522,25 +600,18 @@ export function AllocateProcessOutput() {
                         </>
                     )}
                 </div>
-                {order && !order.completed && (
-                    <Button
-                        themeColor="primary"
-                        onClick={completeOrder}
-                        disabled={!canComplete || completing}
-                    >
-                        {completing ? 'Completing...' : 'Complete order'}
-                    </Button>
-                )}
+                <div style={{ flex: 1 }}>{targetToolbar}</div>
             </div>
 
-            {error && (
-                <div style={{ color: '#d32f2f', marginBottom: '0.5rem' }}>
-                    {error}
-                </div>
-            )}
-
+            <div
+                style={{
+                    flex: 1,
+                    minHeight: 0,
+                    overflow: 'auto',
+                }}
+            >
             <SmartScroll
-                offsetTop={10}
+                offsetTop={0}
                 style={{
                     display: 'flex',
                     flexDirection: 'row',
@@ -589,77 +660,6 @@ export function AllocateProcessOutput() {
                 </SmartScrollContent>
 
                 <SmartScrollContent style={{ flex: 1 }}>
-                    <div className="column-toolbar">
-                        <div className="field-group">
-                            <label>Add target tare</label>
-                            <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                <TextBox
-                                    value={newTareBarcode}
-                                    onChange={(e) =>
-                                        setNewTareBarcode(
-                                            e.value?.toString() || '',
-                                        )
-                                    }
-                                    placeholder="Tare barcode..."
-                                    style={{ width: 180 }}
-                                />
-                                <ComboBox
-                                    data={filteredTareTypes}
-                                    dataItemKey="id"
-                                    textField="name"
-                                    value={
-                                        tareTypes?.find(
-                                            (t) => t.id === newTareTypeId,
-                                        ) || null
-                                    }
-                                    filterable
-                                    onFilterChange={(
-                                        e: ComboBoxFilterChangeEvent,
-                                    ) =>
-                                        setTareTypeFilter(e.filter?.value || '')
-                                    }
-                                    onChange={(e) =>
-                                        setNewTareTypeId(e.value?.id)
-                                    }
-                                    style={{ width: 200 }}
-                                    placeholder="Type (for new)..."
-                                />
-                                <Button
-                                    themeColor="primary"
-                                    onClick={searchAndAddTare}
-                                >
-                                    Add tare
-                                </Button>
-                            </div>
-                        </div>
-                        <div className="repacking-actions">
-                            <Button
-                                themeColor="success"
-                                onClick={submit}
-                                disabled={pending.length === 0 || submitting}
-                            >
-                                {submitting
-                                    ? 'Saving...'
-                                    : `Apply (${pending.length})`}
-                            </Button>
-                            <Button
-                                onClick={reset}
-                                disabled={pending.length === 0}
-                            >
-                                Reset
-                            </Button>
-                            {submitResult && submitResult.errors.length > 0 && (
-                                <span
-                                    style={{
-                                        color: '#d32f2f',
-                                        fontSize: '0.85rem',
-                                    }}
-                                >
-                                    {submitResult.errors[0]}
-                                </span>
-                            )}
-                        </div>
-                    </div>
                     <div className="repacking-panel target">
                         <h3>Target tares</h3>
                         {targetTares.length === 0 && (
@@ -757,6 +757,7 @@ export function AllocateProcessOutput() {
                     </div>
                 </SmartScrollContent>
             </SmartScroll>
+            </div>
 
             {ctxMenu && (
                 <AllocateContextMenu

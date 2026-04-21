@@ -2,7 +2,6 @@ import './App.css'
 import { Config } from '@logistics/components/config/Config.tsx'
 import { Home } from '@logistics/components/homepages/Home.tsx'
 import { Items } from '@logistics/components/items/Items.tsx'
-import { AllocateProcessOutput } from '@logistics/components/orders/AllocateProcessOutput.tsx'
 import { Orders } from '@logistics/components/orders/Orders.tsx'
 import { Repacking } from '@logistics/components/repacking/Repacking.tsx'
 import { Supplies } from '@logistics/components/supplies/Supplies.tsx'
@@ -35,10 +34,6 @@ export function App() {
                 <Routes>
                     <Route index element={<Home />} />
                     <Route path="/config/*" element={<Config />} />
-                    <Route
-                        path="/orders/allocate-output/:orderId"
-                        element={<AllocateProcessOutput />}
-                    />
                     <Route path="/orders/*" element={<Orders />} />
                     <Route path="/supplies/*" element={<Supplies />} />
                     <Route path="/items/*" element={<Items />} />
