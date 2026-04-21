@@ -322,7 +322,6 @@ export const ItemSearch = (props: ItemSearchProps) => {
                                 <GridColumn
                                     field="tare.barcode"
                                     title="Barcode"
-                                    width="150"
                                     cell={(p) => (
                                         <td>
                                             {p.dataItem.tare.barcode ||
@@ -333,7 +332,6 @@ export const ItemSearch = (props: ItemSearchProps) => {
                                 <GridColumn
                                     field="tare.tareTypeName"
                                     title="Tare Type"
-                                    width="130"
                                     cell={(p) => (
                                         <td>{p.dataItem.tare.tareTypeName}</td>
                                     )}
@@ -354,14 +352,12 @@ export const ItemSearch = (props: ItemSearchProps) => {
                                 />
                                 <GridColumn
                                     title="Fill"
-                                    width="120"
                                     cell={(p) => (
                                         <td>{tareSummary(p.dataItem)}</td>
                                     )}
                                 />
                                 <GridColumn
                                     title="Source"
-                                    width="110"
                                     cell={(p) => {
                                         const row = p.dataItem as TareRow
                                         const hasOutput = row.items.some(
@@ -401,7 +397,6 @@ export const ItemSearch = (props: ItemSearchProps) => {
                                 <GridColumn
                                     field="tare.tareTypeUnits"
                                     title="Units"
-                                    width="80"
                                     cell={(p) => (
                                         <td>{p.dataItem.tare.tareTypeUnits}</td>
                                     )}
