@@ -18,7 +18,12 @@ import logo from '../../public/applogo.svg'
 import api from '../features/api/api'
 import type { RootState } from '../store'
 
-export const NavMenu = () => {
+type NavMenuProps = {
+    /** Hide the navigation links list (brand and user/role block remain visible). */
+    hideMenu?: boolean
+}
+
+export const NavMenu = ({ hideMenu }: NavMenuProps = {}) => {
     const user = useSelector((state: RootState) => state.user)
     const [collapsed, setCollapsed] = useState(true)
     const toggleNavbar = () => setCollapsed((s) => !s)
@@ -29,8 +34,15 @@ export const NavMenu = () => {
                 headers: { 'Content-Type': 'application/json' },
             })
             .then(() => {
-                // Reload to get correct data for the role from the cookie set by the server
-                window.location.reload()
+                // Land on the plugin root so the new role's shell starts fresh
+                // (the previous URL may not be a valid route under the other
+                // role — e.g. /desktop/* doesn't exist for Admin). The plugin
+                // is mounted at `import.meta.env.ASSET_PREFIX`; a hard
+                // navigation is required so the auth cookie set by the server
+                // is picked up.
+                const base = import.meta.env.ASSET_PREFIX || '/'
+                const target = base.endsWith('/') ? base : `${base}/`
+                window.location.assign(target)
             })
             .catch((err) => alert(err.response?.data?.detail || err.message))
     }
@@ -53,7 +65,10 @@ export const NavMenu = () => {
                         <img src={logo} alt={'EDμ'} />
                         &nbsp;Logistics
                     </NavbarBrand>
-                    <NavbarToggler onClick={toggleNavbar} className="mr-2" />
+                    {!hideMenu && (
+                        <NavbarToggler onClick={toggleNavbar} className="mr-2" />
+                    )}
+                    {!hideMenu && (
                     <Collapse
                         className="d-sm-inline-flex"
                         isOpen={!collapsed}
@@ -122,17 +137,26 @@ export const NavMenu = () => {
                             </NavItem>
                         </ul>
                     </Collapse>
-                    <NavbarText className="me-2">
-                        <div>{user?.name}</div>
-                    </NavbarText>
-                    {user?.roles && user.roles.length > 1 && (
-                        <DropDownList
-                            style={{ width: '150px' }}
-                            data={user.roles}
-                            value={user.role}
-                            onChange={(e) => setRole(e.value)}
-                        />
                     )}
+                    <div
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.6rem',
+                        }}
+                    >
+                        <NavbarText className="me-1">
+                            <div>{user?.name}</div>
+                        </NavbarText>
+                        {user?.roles && user.roles.length > 1 && (
+                            <DropDownList
+                                style={{ width: '150px' }}
+                                data={user.roles}
+                                value={user.role}
+                                onChange={(e) => setRole(e.value)}
+                            />
+                        )}
+                    </div>
                 </div>
             </Navbar>
         </header>

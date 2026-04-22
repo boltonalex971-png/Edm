@@ -1,20 +1,18 @@
 import Api from '@features/api/api'
 import { Loading } from '@features/utils/Utils'
 import { LinkableComboBox } from '@logistics/components/DropDowns'
+import { TareBarcodePicker } from '@logistics/components/tare/TareBarcodePicker'
 import type {
     AvailableTare,
     BatchCreateItemRequest,
     BatchCreateItemResult,
     Nomenclature,
+    TareInfo,
     TareType,
     UUID,
 } from '@logistics/data/types'
 import { useGet } from '@logistics/hooks/hooks'
 import { Button } from '@progress/kendo-react-buttons'
-import {
-    ComboBox,
-    type ComboBoxChangeEvent,
-} from '@progress/kendo-react-dropdowns'
 import { NumericTextBox } from '@progress/kendo-react-inputs'
 import axios from 'axios'
 import React, { useEffect, useMemo, useState } from 'react'
@@ -38,7 +36,9 @@ export function BatchItemCreate({
     const [tareTypeId, setTareTypeId] = useState<UUID>()
     const [selectedTare, setSelectedTare] = useState<AvailableTare | null>(null)
     const [barcodeText, setBarcodeText] = useState('')
-    const [quantity, setQuantity] = useState<number>(1)
+    // Quantity stays empty until a Tare Type is chosen — there is no
+    // meaningful default before then.
+    const [quantity, setQuantity] = useState<number | undefined>(undefined)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string>()
     const [result, setResult] = useState<BatchCreateItemResult>()
@@ -57,6 +57,17 @@ export function BatchItemCreate({
     const [[availableTares], taresLoading] = useGet<AvailableTare[]>(
         `${Api.tares}/available?tareTypeId=${tareTypeId || ''}`,
         [tareTypeId],
+    )
+
+    // Normalise so the barcode-textfield ComboBox never sees an undefined
+    // `barcode` (Kendo calls .toString() on it and crashes).
+    const tareOptions = useMemo(
+        () =>
+            (availableTares ?? []).map((t) => ({
+                ...t,
+                barcode: t.barcode ?? '',
+            })),
+        [availableTares],
     )
 
     useEffect(() => {
@@ -78,17 +89,23 @@ export function BatchItemCreate({
     }, [selectedTare, isNewTare, selectedTareType])
 
     // Default the quantity to the tare's max capacity whenever that max
-    // changes (tare type picked, existing tare selected, etc).
+    // changes (tare type picked, existing tare selected, etc). Reset to
+    // undefined when no Tare Type is selected so the field appears empty.
     const isCountable = selectedNomenclature?.countable ?? false
     useEffect(() => {
+        if (!tareTypeId) {
+            setQuantity(undefined)
+            return
+        }
         if (maxQuantity > 0) {
             setQuantity(isCountable ? Math.floor(maxQuantity) : maxQuantity)
         }
-    }, [maxQuantity, isCountable])
+    }, [tareTypeId, maxQuantity, isCountable])
 
     const canSubmit =
         nomenclatureId &&
         tareTypeId &&
+        quantity !== undefined &&
         quantity > 0 &&
         quantity <= maxQuantity &&
         !loading
@@ -104,7 +121,7 @@ export function BatchItemCreate({
             tareTypeId: tareTypeId!,
             tareId: selectedTare?.id,
             barcode: selectedTare ? undefined : barcodeText || undefined,
-            quantity,
+            quantity: quantity!,
             supplyId,
         }
 
@@ -141,7 +158,7 @@ export function BatchItemCreate({
                         themeColor="primary"
                         onClick={() => {
                             setResult(undefined)
-                            setQuantity(1)
+                            setQuantity(undefined)
                         }}
                     >
                         Create more
@@ -184,22 +201,22 @@ export function BatchItemCreate({
                     Tare Barcode
                     {taresLoading && <span className="ms-2">(loading...)</span>}
                 </label>
-                <ComboBox
-                    data={availableTares || []}
-                    textField="barcode"
-                    dataItemKey="id"
-                    allowCustom={true}
+                <TareBarcodePicker
+                    //data={tareOptions as unknown as TareInfo[]}
+                    
                     value={selectedTare ?? barcodeText}
-                    onChange={(e: ComboBoxChangeEvent) => {
-                        if (typeof e.value === 'string') {
-                            setSelectedTare(null)
-                            setBarcodeText(e.value)
-                        } else if (e.value && e.value.id) {
-                            setSelectedTare(e.value as AvailableTare)
-                            setBarcodeText(e.value.barcode || '')
+                    onChange={({ tare, barcode }) => {
+                        if (tare) {
+                            // Re-anchor to the AvailableTare row so the
+                            // remaining-capacity logic keeps working.
+                            const match = tareOptions.find(
+                                (t) => t.id === tare.id,
+                            )
+                            setSelectedTare(match ?? null)
+                            setBarcodeText(barcode)
                         } else {
                             setSelectedTare(null)
-                            setBarcodeText('')
+                            setBarcodeText(barcode)
                         }
                     }}
                     placeholder="Select existing, type new, or leave empty"
@@ -227,12 +244,17 @@ export function BatchItemCreate({
                 </label>
                 <NumericTextBox
                     value={quantity}
+                    disabled={!tareTypeId}
                     min={isCountable ? 1 : 0.001}
                     max={maxQuantity > 0 ? maxQuantity : undefined}
                     step={isCountable ? 1 : 0.1}
                     format={isCountable ? 'n0' : 'n3'}
                     onChange={(e) => {
-                        const v = e.value ?? 1
+                        const v = e.value
+                        if (v == null) {
+                            setQuantity(undefined)
+                            return
+                        }
                         setQuantity(isCountable ? Math.round(v) : v)
                     }}
                 />

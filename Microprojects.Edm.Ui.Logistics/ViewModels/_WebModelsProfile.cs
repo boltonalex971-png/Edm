@@ -75,6 +75,10 @@ public class WebModelsProfile : AutoMapper.Profile
         CreateMap<Order, OrderViewModel>()
             .ForMember(d => d.Completed, o => o.MapFrom(s => s.Meta != null ? s.Meta.Completed : null))
             .ForMember(d => d.Deleted, o => o.MapFrom(s => s.Meta != null ? s.Meta.Deleted : null))
+            .ForMember(d => d.Executor, o => o.MapFrom(s => s.Meta != null ? s.Meta.Executor : null))
+            // Status and Mine are derived server-side in OrderService; leave them out of the map.
+            .ForMember(d => d.Status, o => o.Ignore())
+            .ForMember(d => d.Mine, o => o.Ignore())
             .ReverseMap()
             .ForMember(d => d.Meta, o => o.Ignore());
 

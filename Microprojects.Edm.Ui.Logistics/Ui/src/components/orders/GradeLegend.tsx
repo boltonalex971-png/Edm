@@ -37,7 +37,9 @@ export function GradeLegend({ grades, onPick }: GradeLegendProps) {
                     key={g.id}
                     style={CHIP_STYLE(interactive)}
                     onClick={onPick ? () => onPick(g.id) : undefined}
-                    title={interactive ? 'Select items with this grade' : undefined}
+                    title={
+                        interactive ? 'Select items with this grade' : undefined
+                    }
                 >
                     <span
                         style={{

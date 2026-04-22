@@ -220,8 +220,7 @@ export const TareSchematic = (props: TareSchematicProps) => {
                                     width: 10,
                                     height: 10,
                                     borderRadius: 2,
-                                    background:
-                                        colorForGradeId(id) ?? '#eee',
+                                    background: colorForGradeId(id) ?? '#eee',
                                     border: '1px solid rgba(0,0,0,0.15)',
                                 }}
                             />
@@ -267,9 +266,9 @@ export const TareSchematic = (props: TareSchematicProps) => {
                                 highlightEmpty={highlightEmpty ?? false}
                                 slotColor={
                                     slot.item
-                                        ? (slotColor
-                                              ? slotColor(slot.item)
-                                              : colorForGradeId(slot.item.gradeId))
+                                        ? slotColor
+                                            ? slotColor(slot.item)
+                                            : colorForGradeId(slot.item.gradeId)
                                         : undefined
                                 }
                                 dimmed={

@@ -1,5 +1,6 @@
 import './App.css'
 import { Config } from '@logistics/components/config/Config.tsx'
+import { OperatorDesktop } from '@logistics/components/desktop/OperatorDesktop'
 import { Home } from '@logistics/components/homepages/Home.tsx'
 import { Items } from '@logistics/components/items/Items.tsx'
 import { Orders } from '@logistics/components/orders/Orders.tsx'
@@ -8,9 +9,8 @@ import { Supplies } from '@logistics/components/supplies/Supplies.tsx'
 import type { RootState } from '@logistics/store.ts'
 import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { Link, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
-import { Processes } from './components/config/process/Processes'
 import { getUserFromToken } from './features/auth/authUtils'
 import { setUser } from './features/auth/userSlice'
 
@@ -27,6 +27,24 @@ export function App() {
 
     const isAuthenticated = user.name !== 'Guest'
     const hasRole = !!user.role && user.role !== 'Guest'
+    const isOperator = user.role === 'Operator'
+
+    if (isOperator) {
+        // Operators get the standard Logistics shell with header + footer but
+        // without the navigation menu (the desktop is the only surface they
+        // can act on).
+        return (
+            <Layout hideMenu>
+                <Routes>
+                    <Route path="/desktop/*" element={<OperatorDesktop />} />
+                    <Route
+                        path="*"
+                        element={<Navigate to="/desktop" replace />}
+                    />
+                </Routes>
+            </Layout>
+        )
+    }
 
     return (
         <Layout>

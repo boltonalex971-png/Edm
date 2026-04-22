@@ -192,291 +192,342 @@ export function OrderDetail({
 
     return (
         <>
-        {allocateOpen && effectiveId && (
-            <AllocateOutputWindow
-                orderId={effectiveId}
-                onClose={() => setAllocateOpen(false)}
-                onChanged={() => setReloadToken((x) => x + 1)}
-            />
-        )}
-        <Detail
-            {...props}
-            id={id}
-            icon={<Diagram3 title="Order" />}
-            title={title}
-            subTitle={data.description}
-            loading={loading}
-            error={error as string}
-            data={data}
-            subDetail={subDetail}
-            card={
-                <Info
-                    content={
-                        data && (
-                            <>
-                                <InlineAlert
-                                    state={alert}
-                                    id={id}
-                                    onClose={() => setAlert(undefined)}
-                                ></InlineAlert>
-                                <div
-                                    style={{
-                                        display: 'flex',
-                                        justifyContent: 'space-between',
-                                        alignContent: 'baseline',
-                                    }}
-                                >
-                                    <div>
-                                        <p>
-                                            Nomenclature{' '}
-                                            <DetailLinkText
-                                                id={data.processNomenclatureId}
-                                                text={
-                                                    data.processNomenclatureName
-                                                }
-                                                onClick={() =>
-                                                    setSubDetail(
-                                                        <NomenclatureDetail
-                                                            readonly={true}
-                                                            id={
-                                                                data.processNomenclatureId
-                                                            }
-                                                            api={
-                                                                Api.nomenclatures
-                                                            }
-                                                            onClose={() =>
-                                                                setSubDetail(
-                                                                    undefined,
-                                                                )
-                                                            }
-                                                            //onUpdate={itemUpdate}
-                                                        />,
-                                                    )
-                                                }
-                                            />{' '}
-                                            {data.amount} pcs
-                                        </p>
-                                        <p>
-                                            using{' '}
-                                            <DetailLinkText
-                                                id={data.processId}
-                                                text={data.processName}
-                                                onClick={(procId, onUpdate) =>
-                                                    setSubDetail(
-                                                        <ProcessDetail
-                                                            readonly={true}
-                                                            processId={procId}
-                                                            api={Api.processes}
-                                                            onClose={() =>
-                                                                setSubDetail(
-                                                                    undefined,
-                                                                )
-                                                            }
-                                                            //onUpdate={onUpdate}
-                                                        />,
-                                                    )
-                                                }
-                                            />{' '}
-                                            process
-                                        </p>
-                                        {/*{data.startDate && <p>Start {data.startDate?.toLocaleDateString()}</p> }*/}
-                                        {/*{data.dueDate && <p>must be done until {data.dueDate?.toLocaleDateString()}</p> }*/}
-                                    </div>
-                                    <div>
-                                        {!processCompleted && (
-                                            <Button
-                                                type="button"
-                                                themeColor="primary"
-                                                icon="play"
-                                                className="mb-2"
-                                                onClick={startOrder}
-                                                disabled={startDisabled}
-                                                title={startDisabledReason}
-                                            >
-                                                Start operation
-                                            </Button>
-                                        )}
-                                        {processCompleted &&
-                                            !isCompleted &&
-                                            !allAllocated && (
+            {allocateOpen && effectiveId && (
+                <AllocateOutputWindow
+                    orderId={effectiveId}
+                    onClose={() => setAllocateOpen(false)}
+                    onChanged={() => setReloadToken((x) => x + 1)}
+                />
+            )}
+            <Detail
+                {...props}
+                id={id}
+                icon={<Diagram3 title="Order" />}
+                title={title}
+                subTitle={data.description}
+                loading={loading}
+                error={error as string}
+                data={data}
+                subDetail={subDetail}
+                card={
+                    <Info
+                        content={
+                            data && (
+                                <>
+                                    <InlineAlert
+                                        state={alert}
+                                        id={id}
+                                        onClose={() => setAlert(undefined)}
+                                    ></InlineAlert>
+                                    {data?.status && (
+                                        <div
+                                            style={{
+                                                display: 'flex',
+                                                gap: '0.6rem',
+                                                alignItems: 'center',
+                                                padding: '0.3rem 0.6rem',
+                                                marginBottom: '0.5rem',
+                                                borderRadius: 4,
+                                                background: '#f5f5f5',
+                                                fontSize: '0.9rem',
+                                            }}
+                                        >
+                                            <strong>
+                                                {data.status ===
+                                                'OutputsPending'
+                                                    ? 'Outputs pending'
+                                                    : data.status}
+                                            </strong>
+                                            {data.executor && (
+                                                <span style={{ color: '#555' }}>
+                                                    · Executed by{' '}
+                                                    <strong>
+                                                        {data.executor}
+                                                    </strong>
+                                                </span>
+                                            )}
+                                        </div>
+                                    )}
+                                    <div
+                                        style={{
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignContent: 'baseline',
+                                        }}
+                                    >
+                                        <div>
+                                            <p>
+                                                Nomenclature{' '}
+                                                <DetailLinkText
+                                                    id={
+                                                        data.processNomenclatureId
+                                                    }
+                                                    text={
+                                                        data.processNomenclatureName
+                                                    }
+                                                    onClick={() =>
+                                                        setSubDetail(
+                                                            <NomenclatureDetail
+                                                                readonly={true}
+                                                                id={
+                                                                    data.processNomenclatureId
+                                                                }
+                                                                api={
+                                                                    Api.nomenclatures
+                                                                }
+                                                                onClose={() =>
+                                                                    setSubDetail(
+                                                                        undefined,
+                                                                    )
+                                                                }
+                                                                //onUpdate={itemUpdate}
+                                                            />,
+                                                        )
+                                                    }
+                                                />{' '}
+                                                {data.amount} pcs
+                                            </p>
+                                            <p>
+                                                using{' '}
+                                                <DetailLinkText
+                                                    id={data.processId}
+                                                    text={data.processName}
+                                                    onClick={(
+                                                        procId,
+                                                        onUpdate,
+                                                    ) =>
+                                                        setSubDetail(
+                                                            <ProcessDetail
+                                                                readonly={true}
+                                                                processId={
+                                                                    procId
+                                                                }
+                                                                api={
+                                                                    Api.processes
+                                                                }
+                                                                onClose={() =>
+                                                                    setSubDetail(
+                                                                        undefined,
+                                                                    )
+                                                                }
+                                                                //onUpdate={onUpdate}
+                                                            />,
+                                                        )
+                                                    }
+                                                />{' '}
+                                                process
+                                            </p>
+                                            {/*{data.startDate && <p>Start {data.startDate?.toLocaleDateString()}</p> }*/}
+                                            {/*{data.dueDate && <p>must be done until {data.dueDate?.toLocaleDateString()}</p> }*/}
+                                        </div>
+                                        <div>
+                                            {!processCompleted && (
                                                 <Button
                                                     type="button"
                                                     themeColor="primary"
-                                                    icon="grid-layout"
+                                                    icon="play"
+                                                    className="mb-2"
+                                                    onClick={startOrder}
+                                                    disabled={startDisabled}
+                                                    title={startDisabledReason}
+                                                >
+                                                    Start operation
+                                                </Button>
+                                            )}
+                                            {processCompleted &&
+                                                !isCompleted &&
+                                                !allAllocated && (
+                                                    <Button
+                                                        type="button"
+                                                        themeColor="primary"
+                                                        icon="grid-layout"
+                                                        className="mb-2"
+                                                        onClick={() =>
+                                                            setAllocateOpen(
+                                                                true,
+                                                            )
+                                                        }
+                                                        disabled={isDeleted}
+                                                        title={
+                                                            isDeleted
+                                                                ? 'Order is deleted'
+                                                                : undefined
+                                                        }
+                                                    >
+                                                        Allocate output
+                                                    </Button>
+                                                )}
+                                            {processCompleted &&
+                                                !isCompleted &&
+                                                allAllocated && (
+                                                    <Button
+                                                        type="button"
+                                                        themeColor="success"
+                                                        icon="check"
+                                                        className="mb-2"
+                                                        onClick={completeOrder}
+                                                        disabled={isDeleted}
+                                                        title={
+                                                            isDeleted
+                                                                ? 'Order is deleted'
+                                                                : undefined
+                                                        }
+                                                    >
+                                                        Complete order
+                                                    </Button>
+                                                )}
+                                            {isCompleted && (
+                                                <Button
+                                                    type="button"
+                                                    icon="preview"
                                                     className="mb-2"
                                                     onClick={() =>
                                                         setAllocateOpen(true)
                                                     }
-                                                    disabled={isDeleted}
-                                                    title={
-                                                        isDeleted
-                                                            ? 'Order is deleted'
-                                                            : undefined
-                                                    }
                                                 >
-                                                    Allocate output
+                                                    View allocation
                                                 </Button>
                                             )}
-                                        {processCompleted &&
-                                            !isCompleted &&
-                                            allAllocated && (
-                                                <Button
-                                                    type="button"
-                                                    themeColor="success"
-                                                    icon="check"
-                                                    className="mb-2"
-                                                    onClick={completeOrder}
-                                                    disabled={isDeleted}
-                                                    title={
-                                                        isDeleted
-                                                            ? 'Order is deleted'
-                                                            : undefined
-                                                    }
-                                                >
-                                                    Complete order
-                                                </Button>
-                                            )}
-                                        {isCompleted && (
-                                            <Button
-                                                type="button"
-                                                icon="preview"
-                                                className="mb-2"
-                                                onClick={() =>
-                                                    setAllocateOpen(true)
-                                                }
-                                            >
-                                                View allocation
-                                            </Button>
-                                        )}
+                                        </div>
                                     </div>
-                                </div>
-                            </>
-                        )
-                    }
-                />
-            }
-            editor={
-                <Editor
-                    type={props.type}
-                    api={props.api}
-                    path={props.path}
-                    onChange={props.onChange}
-                    data={data}
-                    setData={setData}
-                    onUpdate={props.onUpdate}
-                    content={
-                        <fieldset className={'k-form-fieldset'}>
-                            <legend className={'k-form-legend'}>
-                                Enter order data
-                            </legend>
-                            <div
-                                className="mb-2"
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'baseline',
-                                    width: '600px',
-                                }}
-                            >
-                                <Field
-                                    name={'processId'}
-                                    component={(p) => (
-                                        <DropDownTree
-                                            {...p}
-                                            data={hierarchy}
-                                            dataItemKey={'id'}
-                                            textField={'name'}
-                                            subItemsField={'items'}
-                                            expandField={'expanded'}
-                                            value={findTreeItemById(
-                                                hierarchy,
-                                                p.value as any,
-                                            )}
-                                            onChange={(
-                                                e: DropDownTreeChangeEvent,
-                                            ) => {
-                                                const selected =
-                                                    e.value as ProcessTreeItem | null
-                                                if (
-                                                    !selected ||
-                                                    selected?.isFolder
-                                                ) {
-                                                    return
-                                                }
+                                </>
+                            )
+                        }
+                    />
+                }
+                editor={
+                    <Editor
+                        type={props.type}
+                        api={props.api}
+                        path={props.path}
+                        onChange={props.onChange}
+                        data={data}
+                        setData={setData}
+                        onUpdate={props.onUpdate}
+                        content={
+                            <fieldset className={'k-form-fieldset'}>
+                                <legend className={'k-form-legend'}>
+                                    Enter order data
+                                </legend>
+                                <div
+                                    className="mb-2"
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'baseline',
+                                        width: '600px',
+                                    }}
+                                >
+                                    <Field
+                                        name={'processId'}
+                                        component={(p) => (
+                                            <DropDownTree
+                                                {...p}
+                                                data={hierarchy}
+                                                dataItemKey={'id'}
+                                                textField={'name'}
+                                                subItemsField={'items'}
+                                                expandField={'expanded'}
+                                                value={findTreeItemById(
+                                                    hierarchy,
+                                                    p.value as any,
+                                                )}
+                                                onChange={(
+                                                    e: DropDownTreeChangeEvent,
+                                                ) => {
+                                                    const selected =
+                                                        e.value as ProcessTreeItem | null
+                                                    if (
+                                                        !selected ||
+                                                        selected?.isFolder
+                                                    ) {
+                                                        return
+                                                    }
 
-                                                p.onChange({
-                                                    value: (selected as any)
-                                                        .id as UUID,
-                                                })
-                                            }}
-                                        />
-                                    )}
-                                    label="Process"
-                                />
-                                {/*<button onClick={() => props.onLink(api.processes)}*/}
-                                {/*        style={{backgroundColor: 'transparent', border: 'transparent'}}>*/}
-                                {/*    <Link45deg size={'1.4em'}/>*/}
-                                {/*</button>*/}
-                            </div>
-                            <div className="mb-2">
-                                <label className="k-label">Description</label>
-                                <Field
-                                    name={'description'}
-                                    component={TextArea}
-                                    label={'Description'}
-                                />
-                            </div>
-                            <div className="mb-2" style={{ width: '400px' }}>
-                                <Field
-                                    name={'amount'}
-                                    component={NumericTextBox}
-                                    label={'Amount'}
-                                />
-                            </div>
-                            <div className="mb-2" style={{ width: '400px' }}>
-                                <Field
-                                    name={'startDate'}
-                                    component={(o) => (
-                                        <DatePicker
-                                            {...o}
-                                            placeholder={''}
-                                            value={
-                                                data?.startDate &&
-                                                new Date(data.startDate)
-                                            }
-                                        />
-                                    )}
-                                    label={'Start Date'}
-                                />
-                            </div>
-                            <div className="mb-2" style={{ width: '400px' }}>
-                                <Field
-                                    name={'dueDate'}
-                                    component={(o) => (
-                                        <DatePicker
-                                            {...o}
-                                            placeholder={''}
-                                            value={
-                                                data?.dueDate &&
-                                                new Date(data.dueDate)
-                                            }
-                                        />
-                                    )}
-                                    label={'Due Date'}
-                                />
-                            </div>
-                        </fieldset>
-                    }
-                />
-            }
-            relations={
-                <OrderTabs
-                    id={effectiveId as UUID}
-                    api={props.api}
-                    order={data}
-                    onDetailSelected={setSubDetail}
-                />
-            }
-        />
+                                                    p.onChange({
+                                                        value: (selected as any)
+                                                            .id as UUID,
+                                                    })
+                                                }}
+                                            />
+                                        )}
+                                        label="Process"
+                                    />
+                                    {/*<button onClick={() => props.onLink(api.processes)}*/}
+                                    {/*        style={{backgroundColor: 'transparent', border: 'transparent'}}>*/}
+                                    {/*    <Link45deg size={'1.4em'}/>*/}
+                                    {/*</button>*/}
+                                </div>
+                                <div className="mb-2">
+                                    <label className="k-label">
+                                        Description
+                                    </label>
+                                    <Field
+                                        name={'description'}
+                                        component={TextArea}
+                                        label={'Description'}
+                                    />
+                                </div>
+                                <div
+                                    className="mb-2"
+                                    style={{ width: '400px' }}
+                                >
+                                    <Field
+                                        name={'amount'}
+                                        component={NumericTextBox}
+                                        label={'Amount'}
+                                    />
+                                </div>
+                                <div
+                                    className="mb-2"
+                                    style={{ width: '400px' }}
+                                >
+                                    <Field
+                                        name={'startDate'}
+                                        component={(o) => (
+                                            <DatePicker
+                                                {...o}
+                                                placeholder={''}
+                                                value={
+                                                    data?.startDate &&
+                                                    new Date(data.startDate)
+                                                }
+                                            />
+                                        )}
+                                        label={'Start Date'}
+                                    />
+                                </div>
+                                <div
+                                    className="mb-2"
+                                    style={{ width: '400px' }}
+                                >
+                                    <Field
+                                        name={'dueDate'}
+                                        component={(o) => (
+                                            <DatePicker
+                                                {...o}
+                                                placeholder={''}
+                                                value={
+                                                    data?.dueDate &&
+                                                    new Date(data.dueDate)
+                                                }
+                                            />
+                                        )}
+                                        label={'Due Date'}
+                                    />
+                                </div>
+                            </fieldset>
+                        }
+                    />
+                }
+                relations={
+                    <OrderTabs
+                        id={effectiveId as UUID}
+                        api={props.api}
+                        order={data}
+                        onDetailSelected={setSubDetail}
+                    />
+                }
+            />
         </>
     )
 }

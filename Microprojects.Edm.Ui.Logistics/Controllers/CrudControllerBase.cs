@@ -39,7 +39,7 @@ public class CrudControllerBase<TObject, TObjectViewModel, TService> : AuthContr
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<TObjectViewModel> GetObjectById(Guid id)
+    public virtual async Task<TObjectViewModel> GetObjectById(Guid id)
     {
         if (id != Guid.Empty)
         {

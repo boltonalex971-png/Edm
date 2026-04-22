@@ -14,6 +14,13 @@ public class Meta : DomainObject
     public required string Owner { get; set; } = string.Empty;
 
     /// <summary>
+    /// Name of the user who took responsibility for executing the entity
+    /// (currently: the operator who launched the order's process). Null until
+    /// execution starts.
+    /// </summary>
+    public string? Executor { get; set; }
+
+    /// <summary>
     /// Group names having access to the entity
     /// </summary>
     public string[] Groups { get; set; } = [];

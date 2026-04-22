@@ -1,5 +1,6 @@
 import api from '@features/api/api'
 import { PageTitle } from '@logistics/components/PageTitle'
+import { TareBarcodePicker } from '@logistics/components/tare/TareBarcodePicker'
 import {
     type SlotData,
     TareSchematic,
@@ -21,7 +22,6 @@ import {
     ComboBox,
     type ComboBoxFilterChangeEvent,
 } from '@progress/kendo-react-dropdowns'
-import { TextBox } from '@progress/kendo-react-inputs'
 import type React from 'react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import './Repacking.css'
@@ -49,6 +49,8 @@ export function Repacking() {
     }>()
 
     const [newTareBarcode, setNewTareBarcode] = useState('')
+    const [newTarePicked, setNewTarePicked] = useState<TareInfo | undefined>()
+    const [tarePicked, setTarePicked] = useState<TareInfo | undefined>()
     const [newTareTypeId, setNewTareTypeId] = useState<UUID>()
     const [tareTypeFilter, setTareTypeFilter] = useState('')
 
@@ -353,15 +355,14 @@ export function Repacking() {
                         <div className="field-group">
                             <label>Search source tare by barcode</label>
                             <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                <TextBox
-                                    value={tareBarcode}
-                                    onChange={(e) =>
-                                        setTareBarcode(
-                                            e.value?.toString() || '',
-                                        )
-                                    }
-                                    placeholder="Scan or type barcode..."
-                                    style={{ width: 200 }}
+                                <TareBarcodePicker
+                                    value={tarePicked ?? tareBarcode}
+                                    onChange={({ tare, barcode }) => {
+                                        setTarePicked(tare)
+                                        setTareBarcode(barcode)
+                                    }}
+                                    placeholder="Scan or type barcode…"
+                                    style={{ width: 240 }}
                                 />
                                 <Button
                                     onClick={loadTareByBarcode}
@@ -442,15 +443,14 @@ export function Repacking() {
                         <div className="field-group">
                             <label>Add target tare</label>
                             <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                <TextBox
-                                    value={newTareBarcode}
-                                    onChange={(e) =>
-                                        setNewTareBarcode(
-                                            e.value?.toString() || '',
-                                        )
-                                    }
-                                    placeholder="Tare barcode..."
-                                    style={{ width: 180 }}
+                                <TareBarcodePicker
+                                    value={newTarePicked ?? newTareBarcode}
+                                    onChange={({ tare, barcode }) => {
+                                        setNewTarePicked(tare)
+                                        setNewTareBarcode(barcode)
+                                    }}
+                                    placeholder="Tare barcode…"
+                                    style={{ width: 220 }}
                                 />
                                 <ComboBox
                                     data={filteredTareTypes}

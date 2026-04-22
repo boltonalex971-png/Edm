@@ -3,6 +3,7 @@ using Microprojects.Edm.Ui.Logistics.Contracts;
 using Microprojects.Edm.Ui.Logistics.Models;
 using Microprojects.Edm.Ui.Logistics.ViewModels;
 using Microsoft.AspNetCore.Mvc;
+using Optosense.Edm.Core.AspNet.Auth;
 using Microsoft.EntityFrameworkCore;
 using Microprojects.Edm.Ui.Logistics.Persistence;
 using Optosense.Edm.Core.AspNet.Controllers;
@@ -26,6 +27,7 @@ public class TaresController : AuthControllerBase
     }
 
     [HttpGet("search")]
+    [RequireRoles("Operator", "Technologist", "Admin")]
     public async Task<IEnumerable<TareViewModel>> Search([FromQuery] string? barcode)
     {
         var query = _db.Tares.AsNoTracking()
@@ -59,14 +61,23 @@ public class TaresController : AuthControllerBase
     /// together with the number of remaining available slots.
     /// </summary>
     [HttpGet("available")]
-    public async Task<IEnumerable<AvailableTareViewModel>> GetAvailable([FromQuery] Guid tareTypeId)
+    [RequireRoles("Operator", "Technologist", "Admin")]
+    public async Task<IEnumerable<AvailableTareViewModel>> GetAvailable([FromQuery] Guid? tareTypeId)
     {
+        // Callers may issue this lookup before the user has chosen a tare
+        // type (e.g. dropdowns mount before selection). Treat the missing
+        // case as "no available tares" instead of returning 400.
+        if (tareTypeId == null || tareTypeId == Guid.Empty)
+        {
+            return Array.Empty<AvailableTareViewModel>();
+        }
+
         var tareType = await _db.TareTypes.AsNoTracking()
-            .FirstOrDefaultAsync(t => t.Id == tareTypeId)
+            .FirstOrDefaultAsync(t => t.Id == tareTypeId.Value)
             ?? throw new EdmException("Tare type not found.");
 
         var tares = await _db.Tares.AsNoTracking()
-            .Where(t => t.TareTypeId == tareTypeId)
+            .Where(t => t.TareTypeId == tareTypeId.Value)
             .ToListAsync();
 
         var tareIds = tares.Select(t => t.Id).ToList();
@@ -111,6 +122,7 @@ public class TaresController : AuthControllerBase
     }
 
     [HttpPost]
+    [RequireRoles("Operator", "Technologist", "Admin")]
     public async Task<TareViewModel> Create([FromBody] CreateTareRequest model)
     {
         var tareType = await _db.TareTypes.AsNoTracking()

@@ -3,13 +3,15 @@ import { NavMenu } from './NavMenu'
 
 type LayoutProps = {
     children: React.ReactNode
+    /** Hide the navigation menu items (keeps the brand and user/role block). */
+    hideMenu?: boolean
 }
 
-export const Layout = ({ children }: LayoutProps) => {
+export const Layout = ({ children, hideMenu }: LayoutProps) => {
     const currYear = new Date().getFullYear()
     return (
         <div>
-            <NavMenu />
+            <NavMenu hideMenu={hideMenu} />
             <div style={{ margin: '0 1rem 0 1rem' }}>
                 <div style={{ minHeight: 'calc(100vh - 150px)' }}>
                     {children}

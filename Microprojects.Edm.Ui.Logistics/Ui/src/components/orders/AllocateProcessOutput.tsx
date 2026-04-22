@@ -5,6 +5,7 @@ import {
 } from '@logistics/components/orders/AllocateContextMenu'
 import { GradeLegend } from '@logistics/components/orders/GradeLegend'
 import { OutputItemsPanel } from '@logistics/components/orders/OutputItemsPanel'
+import { TareBarcodePicker } from '@logistics/components/tare/TareBarcodePicker'
 import {
     type SlotData,
     TareSchematic,
@@ -31,8 +32,8 @@ import {
     ComboBox,
     type ComboBoxFilterChangeEvent,
 } from '@progress/kendo-react-dropdowns'
-import { TextBox } from '@progress/kendo-react-inputs'
-import React, { useEffect, useMemo, useState } from 'react'
+import type React from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import '@logistics/components/repacking/Repacking.css'
 
 type TargetTareState = TareInfo & {
@@ -63,10 +64,10 @@ export function AllocateProcessOutput({
         `${api.orders}/${orderId}/output-items`,
         [orderId, reloadToken],
     )
-    const [[order]] = useGet<Order>(
-        orderId ? `${api.orders}/${orderId}` : '',
-        [orderId, reloadToken],
-    )
+    const [[order]] = useGet<Order>(orderId ? `${api.orders}/${orderId}` : '', [
+        orderId,
+        reloadToken,
+    ])
 
     const unallocated = output?.unallocated ?? []
     const processId = output?.processId
@@ -86,6 +87,7 @@ export function AllocateProcessOutput({
     const [targetTares, setTargetTares] = useState<TargetTareState[]>([])
 
     const [newTareBarcode, setNewTareBarcode] = useState('')
+    const [newTarePicked, setNewTarePicked] = useState<TareInfo | undefined>()
     const [newTareTypeId, setNewTareTypeId] = useState<UUID>()
     const [tareTypeFilter, setTareTypeFilter] = useState('')
 
@@ -223,6 +225,13 @@ export function AllocateProcessOutput({
 
     const searchAndAddTare = async () => {
         setError(undefined)
+        // Picker already resolved an existing tare for us — short-circuit.
+        if (newTarePicked) {
+            await addTargetTare(newTarePicked)
+            setNewTareBarcode('')
+            setNewTarePicked(undefined)
+            return
+        }
         if (!newTareBarcode.trim()) return
         try {
             const tares = await getData<TareInfo[]>(
@@ -338,7 +347,9 @@ export function AllocateProcessOutput({
         setPending(newPending)
         setTargetTares(updated)
         const movedIds = new Set(
-            itemsToFill.filter((si) => !remaining.includes(si)).map((i) => i.id),
+            itemsToFill
+                .filter((si) => !remaining.includes(si))
+                .map((i) => i.id),
         )
         setSelectedItemIds((prev) => {
             const next = new Set(prev)
@@ -491,13 +502,14 @@ export function AllocateProcessOutput({
             <div className="field-group">
                 <label>Add target tare</label>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <TextBox
-                        value={newTareBarcode}
-                        onChange={(e) =>
-                            setNewTareBarcode(e.value?.toString() || '')
-                        }
-                        placeholder="Tare barcode..."
-                        style={{ width: 180 }}
+                    <TareBarcodePicker
+                        value={newTarePicked ?? newTareBarcode}
+                        onChange={({ tare, barcode }) => {
+                            setNewTarePicked(tare)
+                            setNewTareBarcode(barcode)
+                        }}
+                        placeholder="Tare barcode…"
+                        style={{ width: 220 }}
                     />
                     <ComboBox
                         data={filteredTareTypes}
@@ -610,153 +622,157 @@ export function AllocateProcessOutput({
                     overflow: 'auto',
                 }}
             >
-            <SmartScroll
-                offsetTop={0}
-                style={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    alignItems: 'flex-start',
-                    gap: 20,
-                }}
-            >
-                <SmartScrollContent style={{ flex: 1 }}>
-                    <div className="repacking-panel source">
-                        <h3>Unallocated outputs</h3>
-                        {grades && grades.length > 0 && (
-                            <GradeLegend
-                                grades={grades}
-                                onPick={selectByGrade}
-                            />
-                        )}
-                        {loading && <span>Loading...</span>}
-                        {!loading && unallocated.length === 0 && (
-                            <div className="no-items-message">
-                                No unallocated outputs
-                            </div>
-                        )}
-                        {unallocated.length > 0 && (
-                            <OutputItemsPanel
-                                items={unallocated}
-                                selectedIds={selectedItemIds}
-                                onSlotClick={onOutputSlotClick}
-                                onToggleAll={onToggleAll}
-                                onItemContextMenu={openContextMenu}
-                            />
-                        )}
-                        {selectedItems.length > 0 && (
-                            <div
-                                style={{
-                                    marginTop: '0.5rem',
-                                    fontSize: '0.85rem',
-                                    color: '#1976d2',
-                                }}
-                            >
-                                {selectedItems.length} selected &mdash; click an
-                                empty target slot to place, or right-click for
-                                more.
-                            </div>
-                        )}
-                    </div>
-                </SmartScrollContent>
-
-                <SmartScrollContent style={{ flex: 1 }}>
-                    <div className="repacking-panel target">
-                        <h3>Target tares</h3>
-                        {targetTares.length === 0 && (
-                            <div className="no-items-message">
-                                Add target tares by barcode search or create new
-                                ones
-                            </div>
-                        )}
-                        {targetTares.map((t) => {
-                            const isExpanded = expandedTareIds.has(t.id)
-                            const cap = Math.floor(t.capacity)
-                            const hasCommittedFromOrder = t.items.some(
-                                (i) =>
-                                    i.orderId === orderId &&
-                                    !pendingItemIds.has(i.id),
-                            )
-                            return (
+                <SmartScroll
+                    offsetTop={0}
+                    style={{
+                        display: 'flex',
+                        flexDirection: 'row',
+                        alignItems: 'flex-start',
+                        gap: 20,
+                    }}
+                >
+                    <SmartScrollContent style={{ flex: 1 }}>
+                        <div className="repacking-panel source">
+                            <h3>Unallocated outputs</h3>
+                            {grades && grades.length > 0 && (
+                                <GradeLegend
+                                    grades={grades}
+                                    onPick={selectByGrade}
+                                />
+                            )}
+                            {loading && <span>Loading...</span>}
+                            {!loading && unallocated.length === 0 && (
+                                <div className="no-items-message">
+                                    No unallocated outputs
+                                </div>
+                            )}
+                            {unallocated.length > 0 && (
+                                <OutputItemsPanel
+                                    items={unallocated}
+                                    selectedIds={selectedItemIds}
+                                    onSlotClick={onOutputSlotClick}
+                                    onToggleAll={onToggleAll}
+                                    onItemContextMenu={openContextMenu}
+                                />
+                            )}
+                            {selectedItems.length > 0 && (
                                 <div
-                                    key={t.id}
                                     style={{
-                                        border: '1px solid #e0e0e0',
-                                        borderRadius: 6,
-                                        marginBottom: 8,
-                                        background: '#fafafa',
+                                        marginTop: '0.5rem',
+                                        fontSize: '0.85rem',
+                                        color: '#1976d2',
                                     }}
                                 >
+                                    {selectedItems.length} selected &mdash;
+                                    click an empty target slot to place, or
+                                    right-click for more.
+                                </div>
+                            )}
+                        </div>
+                    </SmartScrollContent>
+
+                    <SmartScrollContent style={{ flex: 1 }}>
+                        <div className="repacking-panel target">
+                            <h3>Target tares</h3>
+                            {targetTares.length === 0 && (
+                                <div className="no-items-message">
+                                    Add target tares by barcode search or create
+                                    new ones
+                                </div>
+                            )}
+                            {targetTares.map((t) => {
+                                const isExpanded = expandedTareIds.has(t.id)
+                                const cap = Math.floor(t.capacity)
+                                const hasCommittedFromOrder = t.items.some(
+                                    (i) =>
+                                        i.orderId === orderId &&
+                                        !pendingItemIds.has(i.id),
+                                )
+                                return (
                                     <div
-                                        onClick={() =>
-                                            toggleTareExpanded(t.id)
-                                        }
+                                        key={t.id}
                                         style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '0.5rem',
-                                            padding: '0.4rem 0.6rem',
-                                            cursor: 'pointer',
-                                            userSelect: 'none',
+                                            border: '1px solid #e0e0e0',
+                                            borderRadius: 6,
+                                            marginBottom: 8,
+                                            background: '#fafafa',
                                         }}
                                     >
-                                        <span
+                                        <div
+                                            onClick={() =>
+                                                toggleTareExpanded(t.id)
+                                            }
                                             style={{
-                                                width: 14,
-                                                color: '#666',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '0.5rem',
+                                                padding: '0.4rem 0.6rem',
+                                                cursor: 'pointer',
+                                                userSelect: 'none',
                                             }}
                                         >
-                                            {isExpanded ? '\u25be' : '\u25b8'}
-                                        </span>
-                                        <strong style={{ fontSize: '0.9rem' }}>
-                                            {t.barcode || 'Tare'}
-                                        </strong>
-                                        <small style={{ color: '#777' }}>
-                                            {t.tareTypeName}
-                                            {' \u00b7 '}
-                                            {t.items.length}/{cap}
-                                        </small>
-                                        <span style={{ flex: 1 }} />
-                                        {!hasCommittedFromOrder && (
-                                            <Button
-                                                size="small"
-                                                fillMode="flat"
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    removeTargetTare(t.id)
+                                            <span
+                                                style={{
+                                                    width: 14,
+                                                    color: '#666',
                                                 }}
                                             >
-                                                Remove
-                                            </Button>
+                                                {isExpanded
+                                                    ? '\u25be'
+                                                    : '\u25b8'}
+                                            </span>
+                                            <strong
+                                                style={{ fontSize: '0.9rem' }}
+                                            >
+                                                {t.barcode || 'Tare'}
+                                            </strong>
+                                            <small style={{ color: '#777' }}>
+                                                {t.tareTypeName}
+                                                {' \u00b7 '}
+                                                {t.items.length}/{cap}
+                                            </small>
+                                            <span style={{ flex: 1 }} />
+                                            {!hasCommittedFromOrder && (
+                                                <Button
+                                                    size="small"
+                                                    fillMode="flat"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        removeTargetTare(t.id)
+                                                    }}
+                                                >
+                                                    Remove
+                                                </Button>
+                                            )}
+                                        </div>
+                                        {isExpanded && (
+                                            <div
+                                                style={{
+                                                    padding: '0 0.6rem 0.6rem',
+                                                }}
+                                            >
+                                                <TareSchematic
+                                                    tare={t}
+                                                    items={t.items}
+                                                    highlightEmpty
+                                                    onSlotClick={(slot) =>
+                                                        handleTargetSlotClick(
+                                                            t.id,
+                                                            slot,
+                                                        )
+                                                    }
+                                                    dimItem={(item) =>
+                                                        item.orderId !== orderId
+                                                    }
+                                                />
+                                            </div>
                                         )}
                                     </div>
-                                    {isExpanded && (
-                                        <div
-                                            style={{
-                                                padding: '0 0.6rem 0.6rem',
-                                            }}
-                                        >
-                                            <TareSchematic
-                                                tare={t}
-                                                items={t.items}
-                                                highlightEmpty
-                                                onSlotClick={(slot) =>
-                                                    handleTargetSlotClick(
-                                                        t.id,
-                                                        slot,
-                                                    )
-                                                }
-                                                dimItem={(item) =>
-                                                    item.orderId !== orderId
-                                                }
-                                            />
-                                        </div>
-                                    )}
-                                </div>
-                            )
-                        })}
-                    </div>
-                </SmartScrollContent>
-            </SmartScroll>
+                                )
+                            })}
+                        </div>
+                    </SmartScrollContent>
+                </SmartScroll>
             </div>
 
             {ctxMenu && (

@@ -28,6 +28,25 @@ public class UserService : IUserService
 
     public string[] GetUserGroups() => _userInfo.Divisions.ToArray() ?? [];
 
+    /// <summary>
+    /// Returns the user's active role, honoring a session-selected role if the
+    /// user has one (matches <c>AuthControllerBase.UserInfo</c>). Falls back to
+    /// the first role claim when no session selection is present.
+    /// </summary>
+    public string? GetUserRole()
+    {
+        var session = _httpContextAccessor.HttpContext?.Session;
+        if (session != null)
+        {
+            var selected = session.GetString("SelectedRole");
+            if (!string.IsNullOrEmpty(selected) && _userInfo.Roles.Contains(selected))
+            {
+                return selected;
+            }
+        }
+        return _userInfo.Role;
+    }
+
     [SupportedOSPlatform("windows")]
     private UserInfo GetUserInfo()
     {

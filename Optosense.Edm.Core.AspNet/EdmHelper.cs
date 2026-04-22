@@ -71,7 +71,7 @@ namespace Optosense.Edm.Core.AspNet
                 var addresses = server.Features.Get<IServerAddressesFeature>();
                 var addr = context.Features.Get<IServerAddressesFeature>();
                 var name = Dns.GetHostName();
-                return next();
+                    return next();
             });
         }
 

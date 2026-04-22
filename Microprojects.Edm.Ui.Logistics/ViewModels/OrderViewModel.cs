@@ -1,5 +1,13 @@
 namespace Microprojects.Edm.Ui.Logistics.ViewModels;
 
+public enum OrderStatus
+{
+    Draft,
+    Running,
+    OutputsPending,
+    Completed,
+}
+
 public class OrderViewModel
 {
     public Guid Id { get; set; }
@@ -15,4 +23,10 @@ public class OrderViewModel
     public DateTime? Completed { get; set; }
     /// <summary>When the order was cancelled/removed by the user.</summary>
     public DateTime? Deleted { get; set; }
+    /// <summary>Derived lifecycle state of the order's single root process.</summary>
+    public OrderStatus Status { get; set; }
+    /// <summary>Name of the user currently responsible for executing the order. Null when unlaunched.</summary>
+    public string? Executor { get; set; }
+    /// <summary>True when the current user is the Executor of this order.</summary>
+    public bool Mine { get; set; }
 }

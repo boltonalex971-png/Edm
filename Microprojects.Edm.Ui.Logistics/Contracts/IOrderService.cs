@@ -19,4 +19,5 @@ public interface IOrderService : IGenericService<Order>
     Task<AssignGradesResult> AssignGrades(Guid orderId, AssignGradesRequest request);
     Task CompleteOrder(Guid orderId);
     Task<IEnumerable<Order>> Search(OrderSearchQuery query);
+    Task<IReadOnlyDictionary<Guid, Services.OrderExecutionState>> GetExecutionStates(IEnumerable<Guid> orderIds);
 }

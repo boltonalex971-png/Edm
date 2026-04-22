@@ -265,6 +265,20 @@ export interface AllocateOutputsResult {
     errors: string[]
 }
 
+export type OrderStatus = 'Draft' | 'Running' | 'OutputsPending' | 'Completed'
+
+export interface OrderSpecification {
+    id: UUID
+    nomenclatureId: UUID
+    nomenclatureCategory?: string
+    nomenclatureName?: string
+    nomenclatureDescription?: string
+    processName?: string
+    processId: UUID
+    amount: number
+    total: number
+}
+
 export interface Order extends DataItem {
     processId: UUID
     processName: string
@@ -275,6 +289,12 @@ export interface Order extends DataItem {
     dueDate: Date
     completed?: string
     deleted?: string
+    /** Derived lifecycle state of the order's root process. */
+    status?: OrderStatus
+    /** User who launched the process and owns the order until completion. Null when unlaunched. */
+    executor?: string
+    /** True when the current user is the Executor. */
+    mine?: boolean
 }
 
 export interface OrderProcess {

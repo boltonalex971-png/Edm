@@ -4,4 +4,5 @@ public interface IUserService
 {
     string? GetUserName();
     string[] GetUserGroups();
+    string? GetUserRole();
 }

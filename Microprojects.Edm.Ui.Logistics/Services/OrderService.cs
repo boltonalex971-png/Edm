@@ -6,6 +6,7 @@ using Microprojects.Edm.Ui.Logistics.Models;
 using Microprojects.Edm.Ui.Logistics.Persistence;
 using Microprojects.Edm.Ui.Logistics.ViewModels;
 using Microsoft.EntityFrameworkCore;
+using Directory = Microprojects.Edm.Ui.Logistics.Models.Directory;
 
 namespace Microprojects.Edm.Ui.Logistics.Services;
 
@@ -58,6 +59,19 @@ public class OrderService : ServiceBase<Order>, IOrderService
         await base.Save(order);
         if (create)
         {
+            // Inherit access groups from the chosen process's folder lineage —
+            // closest ancestor with non-empty Meta.Groups wins; empty ancestors
+            // mean the order is unrestricted and visible to every operator.
+            var inheritedGroups = await ResolveProcessFolderGroups(order.ProcessId);
+            if (inheritedGroups.Length > 0)
+            {
+                var meta = await Set<Meta>().FindAsync(order.Id);
+                if (meta != null)
+                {
+                    meta.Groups = inheritedGroups;
+                }
+            }
+
             // One order -> one process. Operations within a technology process are
             // represented by OrderProcess rows only for the future integration phase;
             // today we always use a single row matching the order's root process.
@@ -72,6 +86,81 @@ public class OrderService : ServiceBase<Order>, IOrderService
         }
 
         return order;
+    }
+
+    /// <summary>
+    /// Walks the folder lineage above the given process and returns the groups
+    /// of the closest ancestor folder that has any groups assigned. Returns an
+    /// empty array when no ancestor carries groups.
+    /// </summary>
+    private async Task<string[]> ResolveProcessFolderGroups(Guid processId)
+    {
+        var process = await Set<Process>().AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Id == processId);
+        if (process == null)
+        {
+            return [];
+        }
+
+        var currentId = process.DirectoryId;
+        while (currentId != null)
+        {
+            var folder = await Set<Directory>().AsNoTracking()
+                .Include(d => d.Meta)
+                .FirstOrDefaultAsync(d => d.Id == currentId.Value);
+            if (folder == null)
+            {
+                break;
+            }
+            if (folder.Meta is { Groups.Length: > 0 })
+            {
+                return folder.Meta.Groups;
+            }
+            currentId = folder.DirectoryId;
+        }
+
+        return [];
+    }
+
+    /// <summary>
+    /// Rejects a mutation attempt when the caller is not the order's Executor
+    /// and is not acting in the Admin role. Admin bypasses the restriction.
+    /// </summary>
+    private void AssertCanMutate(Order order)
+    {
+        if (string.Equals(UserService.GetUserRole(), "Admin", StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        var user = UserService.GetUserName();
+        var executor = order.Meta?.Executor;
+        if (string.IsNullOrEmpty(executor))
+        {
+            return;
+        }
+        if (!string.Equals(executor, user, StringComparison.Ordinal))
+        {
+            throw new EdmException(
+                $"Order is being executed by {executor}. Only the executor or an Admin can modify it.");
+        }
+    }
+
+    /// <summary>Derives the lifecycle state of the order's root process.</summary>
+    public static OrderStatus DeriveStatus(
+        DateTime? completed,
+        DateTime? startTime,
+        int pendingOutputs)
+    {
+        if (completed != null)
+        {
+            return OrderStatus.Completed;
+        }
+        if (startTime == null)
+        {
+            return OrderStatus.Draft;
+        }
+        return pendingOutputs > 0 ? OrderStatus.OutputsPending : OrderStatus.Running;
     }
 
     public async Task<IEnumerable<OrderSpecificationNomenclature>> GetSpecifications(Guid orderId,
@@ -255,6 +344,18 @@ public class OrderService : ServiceBase<Order>, IOrderService
             throw new EdmException("Order has already been executed.");
         }
 
+        // First operator to launch becomes Executor and takes responsibility
+        // for the order's further actions. Admin bypasses; anyone else who
+        // tries to re-launch a different operator's order is rejected.
+        var currentUser = UserService.GetUserName();
+        if (!string.IsNullOrEmpty(order.Meta.Executor) &&
+            !string.Equals(order.Meta.Executor, currentUser, StringComparison.Ordinal) &&
+            !string.Equals(UserService.GetUserRole(), "Admin", StringComparison.Ordinal))
+        {
+            throw new EdmException(
+                $"Order is being executed by {order.Meta.Executor}. Only the executor or an Admin can relaunch.");
+        }
+
         var specifications = (await GetSpecifications(id))
             .ToList();
 
@@ -271,6 +372,10 @@ public class OrderService : ServiceBase<Order>, IOrderService
 
         var now = DateTime.UtcNow;
         orderProcess.StartTime = now;
+        if (string.IsNullOrEmpty(order.Meta.Executor))
+        {
+            order.Meta.Executor = currentUser;
+        }
 
         // Produce outputs from the root process nomenclature.
         var targetOutputItems = new List<Item>();
@@ -471,6 +576,12 @@ public class OrderService : ServiceBase<Order>, IOrderService
 
     public async Task<AllocateOutputsResult> AllocateOutputs(Guid orderId, IEnumerable<OutputAllocation> allocations)
     {
+        var order = await Set()
+            .Include(o => o.Meta)
+            .FirstOrDefaultAsync(o => o.Id == orderId)
+            ?? throw new EdmException($"Order with id {orderId} not found");
+        AssertCanMutate(order);
+
         var errors = new List<string>();
         var allocated = 0;
 
@@ -523,9 +634,11 @@ public class OrderService : ServiceBase<Order>, IOrderService
             return new AssignGradesResult { UpdatedCount = 0, Errors = [] };
         }
 
-        var order = await Set().AsNoTracking()
+        var order = await Set()
+            .Include(o => o.Meta)
             .FirstOrDefaultAsync(o => o.Id == orderId)
             ?? throw new EdmException($"Order with id {orderId} not found");
+        AssertCanMutate(order);
 
         if (request.GradeId != null)
         {
@@ -584,6 +697,7 @@ public class OrderService : ServiceBase<Order>, IOrderService
             .Include(o => o.Meta)
             .FirstOrDefaultAsync(o => o.Id == orderId)
             ?? throw new EdmException($"Order with id {orderId} not found");
+        AssertCanMutate(order);
 
         if (order.Meta.Completed != null)
         {
@@ -651,4 +765,73 @@ public class OrderService : ServiceBase<Order>, IOrderService
 
         return orders;
     }
+
+    /// <summary>
+    /// Returns per-order view-model annotations derived from execution state:
+    /// <c>Status</c>, <c>Executor</c>, and <c>Mine</c>. Used by controllers to
+    /// enrich the mapped <see cref="OrderViewModel"/>s with state the
+    /// AutoMapper profile cannot produce on its own (Mine depends on the
+    /// current user).
+    /// </summary>
+    public async Task<IReadOnlyDictionary<Guid, OrderExecutionState>> GetExecutionStates(IEnumerable<Guid> orderIds)
+    {
+        var ids = orderIds.ToArray();
+        if (ids.Length == 0)
+        {
+            return new Dictionary<Guid, OrderExecutionState>();
+        }
+
+        var orderProcesses = await Set<OrderProcess>().AsNoTracking()
+            .Where(op => ids.Contains(op.OrderId))
+            .GroupBy(op => op.OrderId)
+            .Select(g => new
+            {
+                OrderId = g.Key,
+                StartTime = g.Min(op => op.StartTime),
+            })
+            .ToListAsync();
+        var startByOrder = orderProcesses.ToDictionary(x => x.OrderId, x => x.StartTime);
+
+        // Pending output = output item (ProcessId != null) without a tare,
+        // not deleted/completed.
+        var pendingByOrder = await Set<Item>().AsNoTracking()
+            .Include(i => i.Meta)
+            .Where(i =>
+                i.OrderId != null && ids.Contains(i.OrderId.Value) &&
+                i.ProcessId != null && i.TareId == null &&
+                i.Meta.Deleted == null && i.Meta.Completed == null)
+            .GroupBy(i => i.OrderId!.Value)
+            .Select(g => new { OrderId = g.Key, Count = g.Count() })
+            .ToListAsync();
+        var pendingCounts = pendingByOrder.ToDictionary(x => x.OrderId, x => x.Count);
+
+        var metas = await Set<Order>().AsNoTracking()
+            .Include(o => o.Meta)
+            .Where(o => ids.Contains(o.Id))
+            .Select(o => new { o.Id, Completed = o.Meta.Completed, Executor = o.Meta.Executor })
+            .ToListAsync();
+
+        var currentUser = UserService.GetUserName();
+        var result = new Dictionary<Guid, OrderExecutionState>();
+        foreach (var m in metas)
+        {
+            startByOrder.TryGetValue(m.Id, out var start);
+            pendingCounts.TryGetValue(m.Id, out var pending);
+            result[m.Id] = new OrderExecutionState
+            {
+                Status = DeriveStatus(m.Completed, start, pending),
+                Executor = m.Executor,
+                Mine = !string.IsNullOrEmpty(m.Executor) &&
+                       string.Equals(m.Executor, currentUser, StringComparison.Ordinal),
+            };
+        }
+        return result;
+    }
+}
+
+public class OrderExecutionState
+{
+    public OrderStatus Status { get; set; }
+    public string? Executor { get; set; }
+    public bool Mine { get; set; }
 }

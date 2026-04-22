@@ -184,6 +184,27 @@ export const OrderSearch = (props: OrderSearchProps) => {
                                 title="Due"
                                 cell={DateCell}
                             />
+                            <GridColumn
+                                field="status"
+                                title="Status"
+                                width="140"
+                                cell={(p) => {
+                                    const status = p.dataItem
+                                        .status as Order['status']
+                                    const label =
+                                        status === 'OutputsPending'
+                                            ? 'Outputs pending'
+                                            : status
+                                    return (
+                                        <td className={p.className}>{label}</td>
+                                    )
+                                }}
+                            />
+                            <GridColumn
+                                field="executor"
+                                title="Executor"
+                                width="160"
+                            />
                         </Grid>
                     )}
                     <div className="mt-2" />
