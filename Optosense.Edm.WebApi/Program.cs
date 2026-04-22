@@ -106,10 +106,10 @@ if (builder.Environment.IsDevelopment())
     {
         o.AddDefaultPolicy(b =>
             b
-                .AllowAnyOrigin()
+                .SetIsOriginAllowed(_ => true)
                 .AllowAnyHeader()
                 .AllowAnyMethod()
-                .SetIsOriginAllowed((host) => true)
+                .AllowCredentials()
         );
     });
 }
@@ -236,6 +236,10 @@ app.UsePeer();
 app.UseJobs();
 app.JsonConfigure();
 app.UseRouting();
+if (app.Environment.IsDevelopment())
+{
+    app.UseCors();
+}
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseSession();

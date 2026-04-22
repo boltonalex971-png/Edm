@@ -7,10 +7,12 @@ import { Orders } from '@logistics/components/orders/Orders.tsx'
 import { Repacking } from '@logistics/components/repacking/Repacking.tsx'
 import { Supplies } from '@logistics/components/supplies/Supplies.tsx'
 import type { RootState } from '@logistics/store.ts'
+import axios from 'axios'
 import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
+import api from './features/api/api'
 import { getUserFromToken } from './features/auth/authUtils'
 import { setUser } from './features/auth/userSlice'
 
@@ -22,7 +24,30 @@ export function App() {
         const u = getUserFromToken()
         if (u) {
             userDispatch(setUser(u))
+            return
         }
+        // No cookie yet — happens when the SPA is served from a separate
+        // origin (rsbuild dev) so the initial HTML load never hit the API.
+        // Fetch user info; the response triggers the Negotiate handshake
+        // and the server middleware seeds X-Auth-Token for later calls.
+        axios
+            .get(`${api.auth}/user/name`)
+            .then((res) => {
+                const info = res.data
+                if (!info?.Name) return
+                userDispatch(
+                    setUser({
+                        name: info.Name,
+                        role: info.Role,
+                        roles: info.Roles,
+                        divisions: info.Divisions,
+                        groups: info.Groups,
+                    }),
+                )
+            })
+            .catch(() => {
+                /* leave Guest state if Negotiate fails */
+            })
     }, [userDispatch])
 
     const isAuthenticated = user.name !== 'Guest'

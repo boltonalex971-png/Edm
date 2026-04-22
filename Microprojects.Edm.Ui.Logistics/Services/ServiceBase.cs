@@ -47,6 +47,9 @@ public class ServiceBase<TEntity> : IGenericService<TEntity> where TEntity : cla
         UserService = userService;
     }
 
+    private static string NameOrPlaceholder(string? name) =>
+        string.IsNullOrEmpty(name) ? "?" : name;
+
     /// <summary>
     /// Retrieves the DbSet corresponding to the type parameter <typeparamref name="TEntity"/>.
     /// </summary>
@@ -246,7 +249,7 @@ public class ServiceBase<TEntity> : IGenericService<TEntity> where TEntity : cla
             {
                 withMeta.Meta = new Meta
                 {
-                    Owner = UserService.GetUserName() ?? "?",
+                    Owner = NameOrPlaceholder(UserService.GetUserName()),
                     Metatype = typeof(TEntity).Name,
                     //Groups = model.Division == null ? [] : [model.Division]
                 };
@@ -263,7 +266,7 @@ public class ServiceBase<TEntity> : IGenericService<TEntity> where TEntity : cla
                 {
                     Id = DomainObject.NewGuid(),
                     MetaId = meta.Id,
-                    Author = UserService.GetUserName() ?? "?", 
+                    Author = NameOrPlaceholder(UserService.GetUserName()),
                     JsonValue  = JsonConvert.SerializeObject(withMeta)
                 });
                 Set().Attach(entity).State = EntityState.Modified;

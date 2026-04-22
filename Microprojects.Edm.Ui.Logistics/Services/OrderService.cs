@@ -139,7 +139,7 @@ public class OrderService : ServiceBase<Order>, IOrderService
         {
             return;
         }
-        if (!string.Equals(executor, user, StringComparison.Ordinal))
+        if (!string.Equals(executor, user, StringComparison.OrdinalIgnoreCase))
         {
             throw new EdmException(
                 $"Order is being executed by {executor}. Only the executor or an Admin can modify it.");
@@ -349,7 +349,7 @@ public class OrderService : ServiceBase<Order>, IOrderService
         // tries to re-launch a different operator's order is rejected.
         var currentUser = UserService.GetUserName();
         if (!string.IsNullOrEmpty(order.Meta.Executor) &&
-            !string.Equals(order.Meta.Executor, currentUser, StringComparison.Ordinal) &&
+            !string.Equals(order.Meta.Executor, currentUser, StringComparison.OrdinalIgnoreCase) &&
             !string.Equals(UserService.GetUserRole(), "Admin", StringComparison.Ordinal))
         {
             throw new EdmException(
@@ -822,7 +822,7 @@ public class OrderService : ServiceBase<Order>, IOrderService
                 Status = DeriveStatus(m.Completed, start, pending),
                 Executor = m.Executor,
                 Mine = !string.IsNullOrEmpty(m.Executor) &&
-                       string.Equals(m.Executor, currentUser, StringComparison.Ordinal),
+                       string.Equals(m.Executor, currentUser, StringComparison.OrdinalIgnoreCase),
             };
         }
         return result;

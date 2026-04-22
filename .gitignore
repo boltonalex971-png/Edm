@@ -337,6 +337,8 @@ ASALocalRun/
 # Local History for Visual Studio
 .localhistory/
 
+.git-certs/
+
 # Kendo UI license files (create locally)
 /**/kendo-ui-license.txt
 # BeatPulse healthcheck temp database

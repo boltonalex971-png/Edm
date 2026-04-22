@@ -12,14 +12,16 @@ public class UserService : IUserService
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ILogger<UserService> _logger;
     private readonly IConfiguration _configuration;
+    private readonly IHostEnvironment _env;
     private readonly UserInfo _userInfo;
 
     public UserService(IHttpContextAccessor httpContextAccessor, ILogger<UserService> logger,
-        IConfiguration configuration)
+        IConfiguration configuration, IHostEnvironment env)
     {
         _httpContextAccessor = httpContextAccessor;
         _logger = logger;
         _configuration = configuration;
+        _env = env;
         _userInfo = GetUserInfo();
     }
 
@@ -52,7 +54,13 @@ public class UserService : IUserService
     {
         var context = _httpContextAccessor.HttpContext;
         var request = _httpContextAccessor.HttpContext?.Request;
-        if (!string.IsNullOrEmpty(request.Headers.Origin.ToString()) &&
+        // Defense-in-depth: in production, refuse to surface the Windows
+        // identity to a request whose Origin doesn't match Host (would catch
+        // an XHR from another site abusing cached Negotiate creds). Skipped in
+        // development because the rsbuild dev proxy preserves Origin while
+        // CORS already controls who can talk to the API.
+        if (!_env.IsDevelopment() &&
+            !string.IsNullOrEmpty(request.Headers.Origin.ToString()) &&
             !request.Headers.Origin.ToString().EndsWith(request.Headers.Host))
         {
             return new UserInfo();

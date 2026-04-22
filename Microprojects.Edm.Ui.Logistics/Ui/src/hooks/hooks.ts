@@ -32,15 +32,14 @@ function useFetch<T>(
     const setData = (data: T) => setState({ data: data })
     const options: RequestInit = {
         method: type,
-        mode: 'cors', // no-cors, *cors, same-origin
-        cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-        //credentials: 'include', // include, *same-origin, omit
+        mode: 'cors',
+        cache: 'no-cache',
+        credentials: 'include',
         headers: {
             'Content-Type': 'application/json',
         },
-        //redirect: 'follow', // manual, *follow, error
-        referrerPolicy: 'no-referrer', // no-referrer, *client
-        body: data && JSON.stringify(data), // body data type must match "Content-Type" header
+        referrerPolicy: 'no-referrer',
+        body: data && JSON.stringify(data),
     }
 
     useEffect(() => {
@@ -104,6 +103,7 @@ export const query = async <T>(
 ): Promise<T> => {
     const props: RequestInit = {
         method: method,
+        credentials: 'include',
         headers: {
             'Content-Type': 'application/json',
         },

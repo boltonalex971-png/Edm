@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Optosense.Edm.Core.Auditing;
@@ -12,6 +13,7 @@ using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Core.Models;
 using Optosense.Edm.Domain.Models;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Primitives;
 using System.Security.Claims;
 using Optosense.Edm.Core.AspNet.Auth;
@@ -21,12 +23,20 @@ namespace Optosense.Edm.Core.AspNet.Controllers
     public class AuthControllerBase : ControllerBase
     {
         private readonly IConfiguration _configuration;
-        
+
         public UserInfo UserInfo
         {
             get
             {
-                if (!string.IsNullOrEmpty(Request.Headers.Origin.ToString()) && 
+                // Defense-in-depth: in production, refuse to surface the
+                // Windows identity to a request whose Origin doesn't match
+                // Host (would catch an XHR from another site abusing cached
+                // Negotiate creds). Skipped in development because the rsbuild
+                // dev proxy forwards Origin/Host in a way the EndsWith check
+                // can mis-classify; CORS already gates who can call the API.
+                var env = HttpContext.RequestServices.GetService<IHostEnvironment>();
+                if (env?.IsDevelopment() != true &&
+                    !string.IsNullOrEmpty(Request.Headers.Origin.ToString()) &&
                     !Request.Headers.Origin.ToString().EndsWith(Request.Headers.Host))
                 {
                     return new UserInfo();

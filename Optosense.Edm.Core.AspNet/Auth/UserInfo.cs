@@ -8,10 +8,14 @@ namespace Optosense.Edm.Core.AspNet.Auth
 {
     public record UserInfo
     {
-        public string Name { get; set; } = "User";
-        public string Role { get; set; } = "Admin";
-        public IEnumerable<string> Roles { get; set; } = ["Admin", "Technologist", "Operator"];
-        public IEnumerable<string> Divisions { get; set; }
+        // Defaults represent an *unauthenticated / fallback* user — deliberately
+        // empty so a code path that returns `new UserInfo()` (e.g. the
+        // cross-origin guard) cannot accidentally hand the caller admin
+        // privileges or a fabricated identity.
+        public string Name { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
+        public IEnumerable<string> Roles { get; set; } = [];
+        public IEnumerable<string> Divisions { get; set; } = [];
         /// <summary>
         /// Get user group list. Null means User current Admin role
         /// </summary>
