@@ -1,6 +1,7 @@
 import api from '@features/api/api'
 import { PageTitle } from '@logistics/components/PageTitle'
 import { TareBarcodePicker } from '@logistics/components/tare/TareBarcodePicker'
+import { TareGroupRow } from '@logistics/components/tare/TareGroupRow'
 import {
     type SlotData,
     TareSchematic,
@@ -74,6 +75,49 @@ export function Repacking() {
     const [submitResult, setSubmitResult] = useState<RepackResult>()
     const [submitting, setSubmitting] = useState(false)
 
+    // Expand/collapse state per source/target tare — same pattern as
+    // TareItemsPanel.
+    const [expandedSource, setExpandedSource] = useState<Set<string>>(new Set())
+    const [expandedTarget, setExpandedTarget] = useState<Set<string>>(new Set())
+
+    const toggleExpandedSource = (key: string) =>
+        setExpandedSource((prev) => {
+            const next = new Set(prev)
+            if (next.has(key)) next.delete(key)
+            else next.add(key)
+            return next
+        })
+
+    const toggleExpandedTarget = (key: string) =>
+        setExpandedTarget((prev) => {
+            const next = new Set(prev)
+            if (next.has(key)) next.delete(key)
+            else next.add(key)
+            return next
+        })
+
+    // Drop a source tare from the visible pool — only the items that are
+    // still un-moved are removed; any pendingMoves already taken from that
+    // tare stay (their items are now displayed under their target tare).
+    const removeSourceTare = (tareKey: string) => {
+        setSourceItems((prev) =>
+            prev.filter(
+                (i) => (i.tareId || i.tareBarcode || 'no-tare') !== tareKey,
+            ),
+        )
+        setSelectedSourceItem((curr) => {
+            if (!curr) return curr
+            const currKey = curr.tareId || curr.tareBarcode || 'no-tare'
+            return currKey === tareKey ? undefined : curr
+        })
+        setExpandedSource((prev) => {
+            if (!prev.has(tareKey)) return prev
+            const next = new Set(prev)
+            next.delete(tareKey)
+            return next
+        })
+    }
+
     const filteredNomenclatures = useMemo(() => {
         if (!nomenclatures) return []
         if (!nomenclatureFilter) return nomenclatures
@@ -120,6 +164,9 @@ export function Repacking() {
                     )
                     return [...prev, ...additions]
                 })
+                // Open the new tare row by default.
+                const key = tare.id || tare.barcode || 'no-tare'
+                setExpandedSource((prev) => new Set(prev).add(key))
             }
         } catch {
             /* ignore */
@@ -243,6 +290,9 @@ export function Repacking() {
                 ...prev,
                 { ...existing, items: items || [] },
             ])
+            // Newly added tares open by default so the operator sees the
+            // schematic without an extra click.
+            setExpandedTarget((prev) => new Set(prev).add(existing.id))
             return
         }
 
@@ -255,6 +305,7 @@ export function Repacking() {
             })
             if (created) {
                 setTargetTares((prev) => [...prev, { ...created, items: [] }])
+                setExpandedTarget((prev) => new Set(prev).add(created.id))
                 setNewTarePicked(null)
                 setNewTareTypeId(undefined)
             }
@@ -390,6 +441,13 @@ export function Repacking() {
                                                 )
                                                 return [...additions, ...prev]
                                             })
+                                            const key =
+                                                tare.id ||
+                                                tare.barcode ||
+                                                'no-tare'
+                                            setExpandedSource((prev) =>
+                                                new Set(prev).add(key),
+                                            )
                                         } catch {
                                             /* ignore */
                                         }
@@ -436,22 +494,41 @@ export function Repacking() {
                                     : 'Select a nomenclature, then pick a tare to load its items.'}
                             </div>
                         )}
-                        {sourceTares.map(({ tare, items }) => (
-                            <TareSchematic
-                                key={tare.barcode}
-                                tare={tare}
-                                items={items}
-                                selectedSlot={
-                                    selectedSourceItem &&
-                                    items.some(
-                                        (i) => i.id === selectedSourceItem.id,
-                                    )
-                                        ? selectedSourceItem.address
-                                        : undefined
-                                }
-                                onSlotClick={handleSourceSlotClick}
-                            />
-                        ))}
+                        {sourceTares.map(({ tare, items }) => {
+                            const key = tare.id || tare.barcode || 'no-tare'
+                            const expanded = expandedSource.has(key)
+                            return (
+                                <TareGroupRow
+                                    key={key}
+                                    group={{ tare, items }}
+                                    expanded={expanded}
+                                    onToggleExpanded={() =>
+                                        toggleExpandedSource(key)
+                                    }
+                                    selectedSlot={
+                                        selectedSourceItem &&
+                                        items.some(
+                                            (i) =>
+                                                i.id === selectedSourceItem.id,
+                                        )
+                                            ? selectedSourceItem.address
+                                            : undefined
+                                    }
+                                    onSlotClick={handleSourceSlotClick}
+                                    headerExtra={
+                                        <Button
+                                            size="small"
+                                            fillMode="flat"
+                                            onClick={() =>
+                                                removeSourceTare(key)
+                                            }
+                                        >
+                                            Remove
+                                        </Button>
+                                    }
+                                />
+                            )
+                        })}
                         {selectedSourceItem && (
                             <div
                                 style={{
@@ -582,13 +659,19 @@ export function Repacking() {
                                 ones
                             </div>
                         )}
-                        {targetTares.map((t) => (
-                            <div key={t.id} style={{ position: 'relative' }}>
-                                <TareSchematic
-                                    tare={t}
-                                    items={t.items}
+                        {targetTares.map((t) => {
+                            const key = t.id
+                            const expanded = expandedTarget.has(key)
+                            return (
+                                <TareGroupRow
+                                    key={key}
+                                    group={{ tare: t, items: t.items }}
+                                    expanded={expanded}
+                                    onToggleExpanded={() =>
+                                        toggleExpandedTarget(key)
+                                    }
                                     highlightEmpty
-                                    onSlotClick={(slot, _e) =>
+                                    onSlotClick={(slot) =>
                                         handleTargetSlotClick(t.id, slot)
                                     }
                                     selectedSlot={
@@ -596,21 +679,20 @@ export function Repacking() {
                                             ? selectedTargetSlot.address
                                             : undefined
                                     }
+                                    headerExtra={
+                                        <Button
+                                            size="small"
+                                            fillMode="flat"
+                                            onClick={() =>
+                                                removeTargetTare(t.id)
+                                            }
+                                        >
+                                            Remove
+                                        </Button>
+                                    }
                                 />
-                                <Button
-                                    size="small"
-                                    fillMode="flat"
-                                    onClick={() => removeTargetTare(t.id)}
-                                    style={{
-                                        position: 'absolute',
-                                        top: 0,
-                                        right: 0,
-                                    }}
-                                >
-                                    Remove
-                                </Button>
-                            </div>
-                        ))}
+                            )
+                        })}
                     </div>
                 </SmartScrollContent>
             </SmartScroll>
