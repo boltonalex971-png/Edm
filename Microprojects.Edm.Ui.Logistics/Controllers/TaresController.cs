@@ -58,30 +58,37 @@ public class TaresController : AuthControllerBase
 
     /// <summary>
     /// Returns tares of the given type that still have free slots/capacity,
-    /// together with the number of remaining available slots.
+    /// together with the number of remaining available slots. When
+    /// <paramref name="barcode"/> is supplied, results are additionally
+    /// narrowed to tares whose barcode contains the given text
+    /// (case-sensitive).
     /// </summary>
     [HttpGet("available")]
     [RequireRoles("Operator", "Technologist", "Admin")]
-    public async Task<IEnumerable<AvailableTareViewModel>> GetAvailable([FromQuery] Guid? tareTypeId)
+    public async Task<IEnumerable<AvailableTareViewModel>> GetAvailable(
+        [FromQuery] Guid? tareTypeId = null,
+        [FromQuery] string? barcode = null)
     {
         // Callers may issue this lookup before the user has chosen a tare
         // type (e.g. dropdowns mount before selection). Treat the missing
         // case as "no available tares" instead of returning 400.
-        if (tareTypeId == null || tareTypeId == Guid.Empty)
+        if ((tareTypeId == null || tareTypeId == Guid.Empty) && barcode == null)
         {
             return Array.Empty<AvailableTareViewModel>();
         }
 
-        var tareType = await _db.TareTypes.AsNoTracking()
-            .FirstOrDefaultAsync(t => t.Id == tareTypeId.Value)
-            ?? throw new EdmException("Tare type not found.");
+        var query = _db.Tares.AsNoTracking()
+            .Include(t => t.TareType)
+            .Where(t => tareTypeId == null || t.TareTypeId == tareTypeId.Value);
 
-        var tares = await _db.Tares.AsNoTracking()
-            .Where(t => t.TareTypeId == tareTypeId.Value)
-            .ToListAsync();
+        if (!string.IsNullOrWhiteSpace(barcode))
+        {
+            var bc = barcode.Trim();
+            query = query.Where(t => t.Barcode != null && t.Barcode.Contains(bc));
+        }
 
+        var tares = await query.ToListAsync();
         var tareIds = tares.Select(t => t.Id).ToList();
-
         var activeItems = await _db.Items.AsNoTracking()
             .Include(i => i.Meta)
             .Where(i => i.TareId != null && tareIds.Contains(i.TareId.Value) && i.Meta.Deleted == null && i.Meta.Completed == null)
@@ -92,11 +99,11 @@ public class TaresController : AuthControllerBase
         {
             var itemsInTare = activeItems.Where(i => i.TareId == tare.Id).ToList();
 
-            double used = tareType.Dimensions > 0 && tareType.Countable
+            double used = tare.TareType.Dimensions > 0 && tare.TareType.Countable
                 ? itemsInTare.Count
                 : itemsInTare.Sum(i => i.Quantity);
 
-            var remaining = tareType.Capacity - used;
+            var remaining = tare.TareType.Capacity - used;
             if (remaining <= 0)
             {
                 continue;
@@ -107,13 +114,13 @@ public class TaresController : AuthControllerBase
                 Id = tare.Id,
                 Barcode = tare.Barcode,
                 TareTypeId = tare.TareTypeId,
-                TareTypeName = tareType.Name,
-                TareTypeUnits = tareType.Units,
-                SizeX = tareType.SizeX,
-                SizeY = tareType.SizeY,
-                SizeZ = tareType.SizeZ,
-                Dimensions = tareType.Dimensions,
-                Capacity = tareType.Capacity,
+                TareTypeName = tare.TareType.Name,
+                TareTypeUnits = tare.TareType.Units,
+                SizeX = tare.TareType.SizeX,
+                SizeY = tare.TareType.SizeY,
+                SizeZ = tare.TareType.SizeZ,
+                Dimensions = tare.TareType.Dimensions,
+                Capacity = tare.TareType.Capacity,
                 Remaining = remaining,
             });
         }
