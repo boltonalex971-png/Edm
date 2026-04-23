@@ -163,6 +163,10 @@ export interface TareInfo {
     capacity: number
 }
 
+export interface AvailableTare extends TareInfo{
+    remaining: number
+}
+
 export interface RepackMove {
     sourceItemId: UUID
     targetTareId: UUID
@@ -178,20 +182,6 @@ export interface RepackRequest {
 export interface RepackResult {
     movedCount: number
     errors: string[]
-}
-
-export interface AvailableTare {
-    id: UUID
-    barcode?: string
-    tareTypeId: UUID
-    tareTypeName?: string
-    tareTypeUnits?: string
-    sizeX?: number
-    sizeY?: number
-    sizeZ?: number
-    dimensions: number
-    capacity: number
-    remaining: number
 }
 
 export interface BatchCreateItemRequest {

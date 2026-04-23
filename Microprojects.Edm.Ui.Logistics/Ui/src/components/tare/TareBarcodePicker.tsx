@@ -1,16 +1,17 @@
 import api from '@features/api/api'
-import type { TareInfo } from '@logistics/data/types'
+import type { AvailableTare, TareInfo, UUID } from '@logistics/data/types'
 import { getData } from '@logistics/hooks/hooks'
+import { type FilterDescriptor, filterBy } from '@progress/kendo-data-query'
 import {
     ComboBox,
-    type ComboBoxChangeEvent, ComboBoxFilterChangeEvent,
+    type ComboBoxChangeEvent,
+    type ComboBoxFilterChangeEvent,
 } from '@progress/kendo-react-dropdowns'
 import { type CSSProperties, useEffect, useState } from 'react'
-import {filterBy, FilterDescriptor} from "@progress/kendo-data-query";
 
 export type TareBarcodeSelection = {
     /** The matched tare when the user picked an existing one. */
-    tare?: TareInfo
+    tare?: AvailableTare
     /** Current text in the input. When `tare` is undefined and `barcode`
      * is non-empty, the caller should treat this as "create a new tare
      * with this barcode". */
@@ -18,103 +19,100 @@ export type TareBarcodeSelection = {
 }
 
 type TareBarcodePickerProps = {
-    /** Current selection — pass either the resolved tare or the typed text. */
-    value?: TareInfo | string | null
-    /** Fires when the user commits a selection or custom value. */
-    onChange: (next: TareBarcodeSelection) => void
-    /** Optional pre-loaded option list. When omitted the picker self-loads
-     * suggestions from `GET /api/logistics/tares/search`. */
-    data?: TareInfo[]
+    /** The currently picked tare (object form). For typed-only custom
+     * values pass `null` — Kendo keeps the custom text in its internal
+     * state to avoid the value-prop overriding the typed input. */
+    value?: AvailableTare | TareInfo | null
+    /** Fires on selection or commit of a custom typed value. */
+    onChange: (next: AvailableTare) => void
+    /** When set, the picker narrows its lookup to tares of this type with
+     * available capacity (`/api/logistics/tares/available?tareTypeId=…`).
+     * When omitted, the picker lists all tares
+     * (`/api/logistics/tares/search`). */
+    tareTypeId?: UUID
     placeholder?: string
     disabled?: boolean
     style?: CSSProperties
     className?: string
 }
 
+// Kendo's combobox calls `.toString()` on the textField value when rendering
+// the dropdown rows; barcodes can legitimately be null/undefined, so coerce
+// to '' to avoid a render crash inside <ListItem>.
+const normalise = (t: AvailableTare): AvailableTare => ({
+    ...t,
+    barcode: t.barcode ?? '',
+})
+
 /**
- * Tare barcode autocomplete — Kendo ComboBox with `allowCustom` so typed
- * values commit on blur / Enter. Kendo handles filtering itself.
+ * Tare barcode autocomplete — Kendo ComboBox with `allowCustom` (typed
+ * values commit on blur / Enter) and client-side `filterBy` filtering on
+ * the loaded options. Self-loads its own option list based on the
+ * optional `tareTypeId` prop.
  */
 export const TareBarcodePicker = ({
     value,
     onChange,
-    data,
+    tareTypeId,
     placeholder = 'Tare barcode…',
     disabled,
     style,
     className,
 }: TareBarcodePickerProps) => {
-    const externallyControlled = data !== undefined
-    const [loaded, setLoaded] = useState<TareInfo[]>([])
+    const [loaded, setLoaded] = useState<AvailableTare[]>([])
+    const [filtered, setFiltered] = useState<AvailableTare[]>([])
+    const [barcode, setBarcode] = useState<string>('')
 
-    const [filtered, setData] = useState(loaded.slice());
-
-    const filterData = (filter: FilterDescriptor) => {
-        const data = loaded.slice();
-        return filterBy(data, filter);
-    };
-
-    const filterChange = (event: ComboBoxFilterChangeEvent) => {
-        setData(filterData(event.filter));
-    };    
-    
     useEffect(() => {
-        if (externallyControlled) {
-            setLoaded(
-                data || [],
-                // (data ?? []).map((t) => ({
-                //     ...t,
-                //     barcode: t.barcode ?? '',
-                // })),
-            )
-            return
-        }
-        
-        let cancelled = false;
+        let cancelled = false
+        const url = `${api.tares}/available?tareTypeId=${tareTypeId ?? '' }&barcode=${barcode ?? ''}`;
         (async () => {
             try {
-                const found = await getData<TareInfo[]>(
-                    `${api.tares}/search?barcode=`,
-                )
-                if (!cancelled) {
-                    setLoaded(
-                        found || []
-                        // (found ?? []).map((t) => ({
-                        //     ...t,
-                        //     barcode: t.barcode ?? '',
-                        // })),
-                    )
-                }
+                const found = await getData<AvailableTare[]>(url)
+                if (cancelled) return
+                const normed = (found ?? []).map(normalise)
+                setLoaded(normed)
+                setFiltered(normed)
             } catch {
-                if (!cancelled) setLoaded([])
+                if (!cancelled) {
+                    setLoaded([])
+                    setFiltered([])
+                }
             }
         })()
         return () => {
             cancelled = true
         }
-    }, [data, externallyControlled])
+    }, [tareTypeId, barcode])
+
+    const onFilterChange = (e: ComboBoxFilterChangeEvent) => {
+        const bc = e.filter.value
+        if (!barcode || !bc.startsWith(barcode)){
+            setBarcode(bc)
+            return
+        }
+        
+        setFiltered(filterBy(loaded.slice(), e.filter as FilterDescriptor))
+    }
 
     const handleChange = (e: ComboBoxChangeEvent) => {
-        const v = e.value
-        if (typeof v === 'string') {
-            onChange({ tare: undefined, barcode: v })
-        } else if (v && (v as TareInfo).id) {
-            const tare = v as TareInfo
-            onChange({ tare, barcode: tare.barcode ?? '' })
-        } else {
-            onChange({ tare: undefined, barcode: '' })
-        }
+        let tare = e.value
+        onChange(tare)
     }
 
     return (
         <ComboBox
-            data={loaded}
+            data={filtered}
             textField="barcode"
             dataItemKey="id"
             allowCustom={true}
             filterable={true}
-            onFilterChange={filterChange}
-            value={value ?? ''}
+            onFilterChange={onFilterChange}
+            // Pass the object (or null) only — never a string. Feeding a
+            // typed string back through `value` makes Kendo treat it as
+            // an "external value change" and resets the input on blur,
+            // which is what was making the custom value disappear.
+            value={value && !value?.id ? {...value, id: ''} : value}
             placeholder={placeholder}
             disabled={disabled}
             style={style}

@@ -15,6 +15,7 @@ import type {
     AllocateOutputsResult,
     AssignGradesRequest,
     AssignGradesResult,
+    AvailableTare,
     Grade,
     Item,
     Order,
@@ -86,8 +87,13 @@ export function AllocateProcessOutput({
 
     const [targetTares, setTargetTares] = useState<TargetTareState[]>([])
 
-    const [newTareBarcode, setNewTareBarcode] = useState('')
-    const [newTarePicked, setNewTarePicked] = useState<TareInfo | undefined>()
+    // Single source of truth for the "add target tare" input — emitted by
+    // TareBarcodePicker. When `.id` is set the user picked an existing
+    // tare; when only `.barcode` is set, it's a typed-only custom value
+    // that will become a new tare on commit.
+    const [newTarePicked, setNewTarePicked] = useState<AvailableTare | null>(
+        null,
+    )
     const [newTareTypeId, setNewTareTypeId] = useState<UUID>()
     const [tareTypeFilter, setTareTypeFilter] = useState('')
 
@@ -189,6 +195,8 @@ export function AllocateProcessOutput({
         return tareTypes.filter((t) => t.name.toLowerCase().includes(lc))
     }, [tareTypes, tareTypeFilter])
 
+    const newTareBarcodeText = newTarePicked?.barcode?.trim() ?? ''
+
     const addTargetTare = async (existing?: TareInfo) => {
         if (existing) {
             if (targetTares.some((t) => t.id === existing.id)) {
@@ -206,16 +214,16 @@ export function AllocateProcessOutput({
             return
         }
 
-        if (!newTareTypeId || !newTareBarcode.trim()) return
+        if (!newTareTypeId || !newTareBarcodeText) return
         try {
             const created = await postData<TareInfo>(`${api.tares}`, {
-                barcode: newTareBarcode.trim(),
+                barcode: newTareBarcodeText,
                 tareTypeId: newTareTypeId,
             })
             if (created) {
                 setTargetTares((prev) => [...prev, { ...created, items: [] }])
                 expandTare(created.id)
-                setNewTareBarcode('')
+                setNewTarePicked(null)
                 setNewTareTypeId(undefined)
             }
         } catch (e: any) {
@@ -226,20 +234,19 @@ export function AllocateProcessOutput({
     const searchAndAddTare = async () => {
         setError(undefined)
         // Picker already resolved an existing tare for us — short-circuit.
-        if (newTarePicked) {
+        if (newTarePicked?.id) {
             await addTargetTare(newTarePicked)
-            setNewTareBarcode('')
-            setNewTarePicked(undefined)
+            setNewTarePicked(null)
             return
         }
-        if (!newTareBarcode.trim()) return
+        if (!newTareBarcodeText) return
         try {
             const tares = await getData<TareInfo[]>(
-                `${api.tares}/search?barcode=${encodeURIComponent(newTareBarcode.trim())}`,
+                `${api.tares}/search?barcode=${encodeURIComponent(newTareBarcodeText)}`,
             )
             if (tares && tares.length > 0) {
                 await addTargetTare(tares[0])
-                setNewTareBarcode('')
+                setNewTarePicked(null)
             } else if (newTareTypeId) {
                 await addTargetTare()
             } else {
@@ -503,11 +510,9 @@ export function AllocateProcessOutput({
                 <label>Add target tare</label>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                     <TareBarcodePicker
-                        value={newTarePicked ?? newTareBarcode}
-                        onChange={({ tare, barcode }) => {
-                            setNewTarePicked(tare)
-                            setNewTareBarcode(barcode)
-                        }}
+                        tareTypeId={newTareTypeId}
+                        value={newTarePicked}
+                        onChange={(tare) => setNewTarePicked(tare)}
                         placeholder="Tare barcode…"
                         style={{ width: 220 }}
                     />
