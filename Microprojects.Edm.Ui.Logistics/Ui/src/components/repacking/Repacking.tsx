@@ -6,6 +6,7 @@ import {
     TareSchematic,
 } from '@logistics/components/tare/TareSchematic'
 import type {
+    AvailableTare,
     Item,
     Nomenclature,
     RepackMove,
@@ -15,7 +16,7 @@ import type {
     TareType,
     UUID,
 } from '@logistics/data/types'
-import { getData, postData, useGet, usePost } from '@logistics/hooks/hooks'
+import { getData, postData, useGet } from '@logistics/hooks/hooks'
 import { SmartScroll, SmartScrollContent } from '@microprojects/tools'
 import { Button } from '@progress/kendo-react-buttons'
 import {
@@ -35,11 +36,9 @@ export function Repacking() {
     const [[tareTypes]] = useGet<TareType[]>(api.taretypes, [])
 
     const [selectedNomenclatureId, setSelectedNomenclatureId] = useState<UUID>()
-    const [tareBarcode, setTareBarcode] = useState('')
     const [nomenclatureFilter, setNomenclatureFilter] = useState('')
 
     const [sourceItems, setSourceItems] = useState<Item[]>([])
-    const [sourceLoading, setSourceLoading] = useState(false)
 
     const [targetTares, setTargetTares] = useState<TargetTareState[]>([])
     const [selectedSourceItem, setSelectedSourceItem] = useState<Item>()
@@ -48,11 +47,28 @@ export function Repacking() {
         address: number
     }>()
 
-    const [newTareBarcode, setNewTareBarcode] = useState('')
-    const [newTarePicked, setNewTarePicked] = useState<TareInfo | undefined>()
-    const [tarePicked, setTarePicked] = useState<TareInfo | undefined>()
+    // Single state for each picker — the picker emits an AvailableTare-like
+    // object (with `.id` for an existing pick, only `.barcode` for a typed
+    // custom value). Derive the barcode string from that.
+    const [tarePicked, setTarePicked] = useState<AvailableTare | null>(null)
+    const [newTarePicked, setNewTarePicked] = useState<AvailableTare | null>(
+        null,
+    )
     const [newTareTypeId, setNewTareTypeId] = useState<UUID>()
     const [tareTypeFilter, setTareTypeFilter] = useState('')
+
+    const tareBarcode = tarePicked?.barcode ?? ''
+    const newTareBarcode = newTarePicked?.barcode ?? ''
+
+    // Selected nomenclature's default tare type narrows the source picker's
+    // dropdown to tares of that type — purely a search hint. The operator
+    // is still free to type or pick any other barcode; whatever they pick
+    // is added to the source pool unfiltered.
+    const sourceSuggestionTareTypeId = useMemo(
+        () => nomenclatures?.find((n) => n.id === selectedNomenclatureId)
+            ?.defaultTareTypeId,
+        [nomenclatures, selectedNomenclatureId],
+    )
 
     const [pendingMoves, setPendingMoves] = useState<RepackMove[]>([])
     const [submitResult, setSubmitResult] = useState<RepackResult>()
@@ -72,28 +88,17 @@ export function Repacking() {
         return tareTypes.filter((t) => t.name.toLowerCase().includes(lc))
     }, [tareTypes, tareTypeFilter])
 
-    const loadSourceItems = useCallback(async () => {
-        if (!selectedNomenclatureId) {
-            setSourceItems([])
-            return
-        }
-        setSourceLoading(true)
-        try {
-            const query: any = {
-                nomenclatureId: selectedNomenclatureId,
-                active: true,
-            }
-            const items = await postData<Item[]>(`${api.items}/search`, query)
-            setSourceItems(items || [])
-        } catch {
-            setSourceItems([])
-        }
-        setSourceLoading(false)
-    }, [selectedNomenclatureId])
-
+    // The Nomenclature combo is a *helper* — it identifies which kind of
+    // item the operator wants to relocate so the source pool can ignore
+    // unrelated items in a picked tare. It does NOT pre-populate the
+    // source pool: the operator picks tares explicitly via the source
+    // picker (or the Find button) and only matching items are added.
+    // Whenever the helper changes, drop the current source items so the
+    // pool reflects the new context.
     useEffect(() => {
-        loadSourceItems()
-    }, [loadSourceItems])
+        setSourceItems([])
+        setSelectedSourceItem(undefined)
+    }, [selectedNomenclatureId])
 
     const loadTareByBarcode = useCallback(async () => {
         if (!tareBarcode.trim()) return
@@ -106,22 +111,20 @@ export function Repacking() {
                 const items = await getData<Item[]>(
                     `${api.items}/tare/${tare.id}`,
                 )
-                if (selectedNomenclatureId) {
-                    setSourceItems((prev) => {
-                        const existing = new Set(prev.map((i) => i.id))
-                        const filtered = (items || []).filter(
-                            (i) =>
-                                i.nomenclatureId === selectedNomenclatureId &&
-                                !existing.has(i.id),
-                        )
-                        return [...prev, ...filtered]
-                    })
-                }
+                // Add every item from the picked tare — nomenclature is
+                // only a search hint, not a filter on the contents.
+                setSourceItems((prev) => {
+                    const existing = new Set(prev.map((i) => i.id))
+                    const additions = (items || []).filter(
+                        (i) => !existing.has(i.id),
+                    )
+                    return [...prev, ...additions]
+                })
             }
         } catch {
             /* ignore */
         }
-    }, [tareBarcode, selectedNomenclatureId])
+    }, [tareBarcode])
 
     const sourceTares = useMemo(() => {
         const map = new Map<string, { tare: TareInfo; items: Item[] }>()
@@ -243,15 +246,16 @@ export function Repacking() {
             return
         }
 
-        if (!newTareTypeId || !newTareBarcode.trim()) return
+        const text = newTareBarcode.trim()
+        if (!newTareTypeId || !text) return
         try {
             const created = await postData<TareInfo>(`${api.tares}`, {
-                barcode: newTareBarcode.trim(),
+                barcode: text,
                 tareTypeId: newTareTypeId,
             })
             if (created) {
                 setTargetTares((prev) => [...prev, { ...created, items: [] }])
-                setNewTareBarcode('')
+                setNewTarePicked(null)
                 setNewTareTypeId(undefined)
             }
         } catch (e: any) {
@@ -260,14 +264,21 @@ export function Repacking() {
     }
 
     const searchAndAddTare = async () => {
-        if (!newTareBarcode.trim()) return
+        // Existing pick from the dropdown — short-circuit.
+        if (newTarePicked?.id) {
+            await addTargetTare(newTarePicked)
+            setNewTarePicked(null)
+            return
+        }
+        const text = newTareBarcode.trim()
+        if (!text) return
         try {
             const tares = await getData<TareInfo[]>(
-                `${api.tares}/search?barcode=${encodeURIComponent(newTareBarcode.trim())}`,
+                `${api.tares}/search?barcode=${encodeURIComponent(text)}`,
             )
             if (tares && tares.length > 0) {
                 await addTargetTare(tares[0])
-                setNewTareBarcode('')
+                setNewTarePicked(null)
             } else if (newTareTypeId) {
                 await addTargetTare()
             } else {
@@ -304,7 +315,9 @@ export function Repacking() {
             setSubmitResult(result)
             if (result.errors.length === 0) {
                 setPendingMoves([])
-                loadSourceItems()
+                // Source pool is operator-driven now — clear it and let
+                // the user re-pick tares for the next round.
+                setSourceItems([])
                 const refreshed: TargetTareState[] = []
                 for (const t of targetTares) {
                     const items = await getData<Item[]>(
@@ -329,7 +342,7 @@ export function Repacking() {
         setSelectedSourceItem(undefined)
         setSelectedTargetSlot(undefined)
         setTargetTares([])
-        loadSourceItems()
+        setSourceItems([])
     }
 
     const selectedNomenclature = nomenclatures?.find(
@@ -356,10 +369,29 @@ export function Repacking() {
                             <label>Search source tare by barcode</label>
                             <div style={{ display: 'flex', gap: '0.5rem' }}>
                                 <TareBarcodePicker
-                                    value={tarePicked ?? tareBarcode}
-                                    onChange={({ tare, barcode }) => {
+                                    tareTypeId={sourceSuggestionTareTypeId}
+                                    value={tarePicked}
+                                    onChange={async (tare) => {
                                         setTarePicked(tare)
-                                        setTareBarcode(barcode)
+                                        if (!tare?.id) return
+                                        try {
+                                            const items = await getData<
+                                                Item[]
+                                            >(`${api.items}/tare/${tare.id}`)
+                                            setSourceItems((prev) => {
+                                                const existing = new Set(
+                                                    prev.map((i) => i.id),
+                                                )
+                                                const additions = (
+                                                    items || []
+                                                ).filter(
+                                                    (i) => !existing.has(i.id),
+                                                )
+                                                return [...additions, ...prev]
+                                            })
+                                        } catch {
+                                            /* ignore */
+                                        }
                                     }}
                                     placeholder="Scan or type barcode…"
                                     style={{ width: 240 }}
@@ -396,12 +428,11 @@ export function Repacking() {
                     </div>
                     <div className="repacking-panel source">
                         <h3>Source tares</h3>
-                        {sourceLoading && <span>Loading...</span>}
-                        {!sourceLoading && sourceTares.length === 0 && (
+                        {sourceTares.length === 0 && (
                             <div className="no-items-message">
                                 {selectedNomenclatureId
-                                    ? 'No items found for this nomenclature'
-                                    : 'Select a nomenclature to see source items'}
+                                    ? 'Pick or scan a tare to add its matching items here.'
+                                    : 'Select a nomenclature, then pick a tare to load its items.'}
                             </div>
                         )}
                         {sourceTares.map(({ tare, items }) => (
@@ -444,10 +475,21 @@ export function Repacking() {
                             <label>Add target tare</label>
                             <div style={{ display: 'flex', gap: '0.5rem' }}>
                                 <TareBarcodePicker
-                                    value={newTarePicked ?? newTareBarcode}
-                                    onChange={({ tare, barcode }) => {
+                                    tareTypeId={newTareTypeId}
+                                    value={newTarePicked}
+                                    onChange={async (tare) => {
                                         setNewTarePicked(tare)
-                                        setNewTareBarcode(barcode)
+                                        // When the user picks an existing
+                                        // tare (has `.id`), auto-add it as
+                                        // a target — no need to also press
+                                        // "Add tare". Custom-typed values
+                                        // still go through the Add tare
+                                        // button so the operator confirms
+                                        // creation. Keep the picker showing
+                                        // the just-picked barcode so the
+                                        // operator sees what was added.
+                                        if (!tare?.id) return
+                                        await addTargetTare(tare)
                                     }}
                                     placeholder="Tare barcode…"
                                     style={{ width: 220 }}
