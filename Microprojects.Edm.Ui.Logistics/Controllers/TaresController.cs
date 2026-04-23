@@ -61,13 +61,17 @@ public class TaresController : AuthControllerBase
     /// together with the number of remaining available slots. When
     /// <paramref name="barcode"/> is supplied, results are additionally
     /// narrowed to tares whose barcode contains the given text
-    /// (case-sensitive).
+    /// (case-sensitive). When <paramref name="includeFull"/> is true,
+    /// tares with no remaining capacity are also returned (useful for
+    /// source-tare lookups in repacking, where a "full" tare is the
+    /// expected starting point).
     /// </summary>
     [HttpGet("available")]
     [RequireRoles("Operator", "Technologist", "Admin")]
     public async Task<IEnumerable<AvailableTareViewModel>> GetAvailable(
         [FromQuery] Guid? tareTypeId = null,
-        [FromQuery] string? barcode = null)
+        [FromQuery] string? barcode = null,
+        [FromQuery] bool includeFull = false)
     {
         // Callers may issue this lookup before the user has chosen a tare
         // type (e.g. dropdowns mount before selection). Treat the missing
@@ -104,7 +108,7 @@ public class TaresController : AuthControllerBase
                 : itemsInTare.Sum(i => i.Quantity);
 
             var remaining = tare.TareType.Capacity - used;
-            if (remaining <= 0)
+            if (remaining <= 0 && !includeFull)
             {
                 continue;
             }

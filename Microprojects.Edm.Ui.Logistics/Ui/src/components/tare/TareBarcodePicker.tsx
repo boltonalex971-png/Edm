@@ -30,6 +30,10 @@ type TareBarcodePickerProps = {
      * When omitted, the picker lists all tares
      * (`/api/logistics/tares/search`). */
     tareTypeId?: UUID
+    /** When true, the dropdown also includes tares with no remaining
+     * capacity (e.g. for source-tare lookups in repacking). Defaults to
+     * false — only tares with free slots are returned. */
+    includeFull?: boolean
     placeholder?: string
     disabled?: boolean
     style?: CSSProperties
@@ -54,6 +58,7 @@ export const TareBarcodePicker = ({
     value,
     onChange,
     tareTypeId,
+    includeFull = false,
     placeholder = 'Tare barcode…',
     disabled,
     style,
@@ -65,7 +70,7 @@ export const TareBarcodePicker = ({
 
     useEffect(() => {
         let cancelled = false
-        const url = `${api.tares}/available?tareTypeId=${tareTypeId ?? '' }&barcode=${barcode ?? ''}`;
+        const url = `${api.tares}/available?tareTypeId=${tareTypeId ?? ''}&barcode=${barcode ?? ''}&includeFull=${includeFull}`;
         (async () => {
             try {
                 const found = await getData<AvailableTare[]>(url)
@@ -83,7 +88,7 @@ export const TareBarcodePicker = ({
         return () => {
             cancelled = true
         }
-    }, [tareTypeId, barcode])
+    }, [tareTypeId, barcode, includeFull])
 
     const onFilterChange = (e: ComboBoxFilterChangeEvent) => {
         const bc = e.filter.value

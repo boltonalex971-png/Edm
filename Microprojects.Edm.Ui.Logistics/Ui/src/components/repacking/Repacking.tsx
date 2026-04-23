@@ -370,6 +370,7 @@ export function Repacking() {
                             <div style={{ display: 'flex', gap: '0.5rem' }}>
                                 <TareBarcodePicker
                                     tareTypeId={sourceSuggestionTareTypeId}
+                                    includeFull
                                     value={tarePicked}
                                     onChange={async (tare) => {
                                         setTarePicked(tare)
