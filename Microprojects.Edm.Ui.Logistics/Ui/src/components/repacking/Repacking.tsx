@@ -18,6 +18,7 @@ import type {
     UUID,
 } from '@logistics/data/types'
 import { getData, postData, useGet } from '@logistics/hooks/hooks'
+import { useSlotSelection } from '@logistics/hooks/useSlotSelection'
 import { SmartScroll, SmartScrollContent } from '@microprojects/tools'
 import { Button } from '@progress/kendo-react-buttons'
 import {
@@ -25,7 +26,7 @@ import {
     type ComboBoxFilterChangeEvent,
 } from '@progress/kendo-react-dropdowns'
 import type React from 'react'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import './Repacking.css'
 
 type TargetTareState = TareInfo & {
@@ -45,11 +46,14 @@ export function Repacking() {
     // Multi-select source items: plain click → single, Ctrl/Cmd+click →
     // toggle, Shift+click within the same tare → range. Click on an empty
     // target slot then places the selected items starting at that address.
-    const [selectedSourceItemIds, setSelectedSourceItemIds] = useState<Set<UUID>>(new Set())
-    const lastSourceClickRef = useRef<{
-        tareKey: string
-        itemId: UUID
-    } | null>(null)
+    // Selection state + modifier-aware handling lives in useSlotSelection;
+    // we just supply the flat sourceItems list and a per-tare scopeKey so
+    // Shift-range stays inside one tare.
+    const {
+        selected: selectedSourceItemIds,
+        handleClick: onSourceItemClick,
+        clear: clearSourceSelection,
+    } = useSlotSelection(sourceItems)
     const [selectedTargetSlot, setSelectedTargetSlot] = useState<{
         tareId: UUID
         address: number
@@ -108,23 +112,9 @@ export function Repacking() {
     // tare stay (their items are now displayed under their target tare).
     const removeSourceTare = (tareKey: string) => {
         setSourceItems((prev) =>
-            prev.filter(
-                (i) => (i.tareId || i.tareBarcode || 'no-tare') !== tareKey,
-            ),
+            prev.filter((i) => (i.tareId || i.tareBarcode || 'no-tare') !== tareKey),
         )
-        // Drop any selection that pointed at items in the removed tare.
-        setSelectedSourceItemIds((prev) => {
-            const stillHere = new Set(
-                sourceItems
-                    .filter(
-                        (i) =>
-                            (i.tareId || i.tareBarcode || 'no-tare') !==
-                                tareKey && prev.has(i.id),
-                    )
-                    .map((i) => i.id),
-            )
-            return stillHere
-        })
+        // Selection auto-prunes — useSlotSelection drops ids no longer in `items`.
         setExpandedSource((prev) => {
             if (!prev.has(tareKey)) return prev
             const next = new Set(prev)
@@ -156,8 +146,8 @@ export function Repacking() {
     // pool reflects the new context.
     useEffect(() => {
         setSourceItems([])
-        setSelectedSourceItemIds(new Set())
-    }, [selectedNomenclatureId])
+        clearSourceSelection()
+    }, [selectedNomenclatureId, clearSourceSelection])
 
     const loadTareByBarcode = useCallback(async () => {
         if (!tareBarcode.trim()) return
@@ -224,53 +214,8 @@ export function Repacking() {
         e: React.MouseEvent,
     ) => {
         if (!slot.item) return
-        const itemId = slot.item.id
         const tareKey = group.tare.id || group.tare.barcode || 'no-tare'
-
-        // Shift+click extends the range from the last clicked slot in the
-        // same tare. Mirrors ItemSearch.handleSlotSelect.
-        if (
-            e.shiftKey &&
-            lastSourceClickRef.current &&
-            lastSourceClickRef.current.tareKey === tareKey
-        ) {
-            const sorted = [...group.items]
-                .filter((i) => i.address != null)
-                .sort((a, b) => (a.address ?? 0) - (b.address ?? 0))
-            const lastIdx = sorted.findIndex(
-                (i) => i.id === lastSourceClickRef.current?.itemId,
-            )
-            const curIdx = sorted.findIndex((i) => i.id === itemId)
-            if (lastIdx >= 0 && curIdx >= 0) {
-                const lo = Math.min(lastIdx, curIdx)
-                const hi = Math.max(lastIdx, curIdx)
-                setSelectedSourceItemIds((prev) => {
-                    const next = new Set(prev)
-                    for (let i = lo; i <= hi; i++) next.add(sorted[i].id)
-                    return next
-                })
-                lastSourceClickRef.current = { tareKey, itemId }
-                return
-            }
-        }
-
-        // Ctrl/Cmd+click toggles selection without dropping the rest.
-        if (e.ctrlKey || e.metaKey) {
-            setSelectedSourceItemIds((prev) => {
-                const next = new Set(prev)
-                if (next.has(itemId)) next.delete(itemId)
-                else next.add(itemId)
-                return next
-            })
-        } else {
-            // Plain click — single select (toggle off if it's the only one
-            // already selected).
-            setSelectedSourceItemIds((prev) => {
-                if (prev.size === 1 && prev.has(itemId)) return new Set()
-                return new Set([itemId])
-            })
-        }
-        lastSourceClickRef.current = { tareKey, itemId }
+        onSourceItemClick(slot.item, e, tareKey)
     }
 
     const handleTargetSlotClick = (tareId: UUID, slot: SlotData) => {
@@ -341,9 +286,8 @@ export function Repacking() {
                       },
             ),
         )
-        setSelectedSourceItemIds(new Set())
+        clearSourceSelection()
         setSelectedTargetSlot(undefined)
-        lastSourceClickRef.current = null
     }
 
     const autoFill = () => {
@@ -489,7 +433,7 @@ export function Repacking() {
     const reset = () => {
         setPendingMoves([])
         setSubmitResult(undefined)
-        setSelectedSourceItemIds(new Set())
+        clearSourceSelection()
         setSelectedTargetSlot(undefined)
         setTargetTares([])
         setSourceItems([])
