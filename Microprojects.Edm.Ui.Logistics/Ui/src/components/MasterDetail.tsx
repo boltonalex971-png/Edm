@@ -23,7 +23,10 @@ import type React from 'react'
 import {
     type MouseEventHandler,
     createContext,
+    useCallback,
     useContext,
+    useEffect,
+    useRef,
     useState,
 } from 'react'
 import { Route, Routes, useLocation, useNavigate } from 'react-router-dom'
@@ -69,20 +72,71 @@ export type MasterDetailProps = {
     path: string
 }
 
+const SEPARATOR_MIN_PX = 80
+
 export function MasterDetail(props: MasterDetailProps) {
     const { path } = useBasePath()
     const navigate = useNavigate()
+
+    const containerRef = useRef<HTMLDivElement | null>(null)
+    const [masterPx, setMasterPx] = useState<number | null>(null)
+    const [mode, setMode] = useState<'auto' | 'manual'>('auto')
+
+    // Re-clamp the manual width when the viewport changes so the master
+    // pane never exceeds 1/3 of the new container width.
+    useEffect(() => {
+        const el = containerRef.current
+        if (!el || mode !== 'manual') return
+        const reclamp = () => {
+            const cap = Math.floor(el.getBoundingClientRect().width / 3)
+            setMasterPx((prev) =>
+                prev != null && prev > cap ? Math.max(SEPARATOR_MIN_PX, cap) : prev,
+            )
+        }
+        const ro = new ResizeObserver(reclamp)
+        ro.observe(el)
+        return () => ro.disconnect()
+    }, [mode])
+
+    const onSeparatorDrag = useCallback((clientX: number) => {
+        const el = containerRef.current
+        if (!el) return
+        const rect = el.getBoundingClientRect()
+        const cap = Math.floor(rect.width / 3)
+        const next = Math.max(
+            SEPARATOR_MIN_PX,
+            Math.min(cap, Math.round(clientX - rect.left)),
+        )
+        setMasterPx(next)
+        setMode('manual')
+    }, [])
+
+    const masterStyle: React.CSSProperties =
+        mode === 'manual' && masterPx != null
+            ? {
+                  flex: `0 0 ${masterPx}px`,
+                  maxWidth: '33.333%',
+                  minWidth: 0,
+                  overflow: 'hidden',
+              }
+            : {
+                  flex: '0 0 auto',
+                  maxWidth: '33.333%',
+                  minWidth: 0,
+                  overflow: 'hidden',
+              }
+
     return (
+        <div ref={containerRef} style={{ width: '100%' }}>
         <SmartScroll
             offsetTop={10}
             style={{
                 display: 'flex',
                 flexDirection: 'row',
                 alignItems: 'flex-start',
-                gap: 20,
             }}
         >
-            <SmartScrollContent style={{ flex: 1 }}>
+            <SmartScrollContent style={masterStyle}>
                 <TreeViewMaster
                     api={props.api}
                     getHierarchyQuery={props.getHierarchyQuery}
@@ -90,7 +144,8 @@ export function MasterDetail(props: MasterDetailProps) {
                     item={props.item}
                 />
             </SmartScrollContent>
-            <SmartScrollContent style={{ flex: 5, marginLeft: '1rem' }}>
+            <PaneSeparator onDrag={onSeparatorDrag} />
+            <SmartScrollContent style={{ flex: 1, minWidth: 0 }}>
                 <Routes>
                     <Route
                         index
@@ -122,6 +177,88 @@ export function MasterDetail(props: MasterDetailProps) {
                 </Routes>
             </SmartScrollContent>
         </SmartScroll>
+        </div>
+    )
+}
+
+type PaneSeparatorProps = {
+    onDrag: (clientX: number) => void
+}
+
+const PaneSeparator = ({ onDrag }: PaneSeparatorProps) => {
+    // While dragging we render a small vertical guide segment centered on
+    // the cursor. `null` while idle keeps the indicator out of the DOM so
+    // the separator stays invisible at rest.
+    const [guide, setGuide] = useState<{ x: number; y: number } | null>(null)
+
+    const update = (e: React.PointerEvent<HTMLDivElement>) => {
+        const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect()
+        setGuide({ x: rect.left + rect.width / 2, y: e.clientY })
+        onDrag(e.clientX)
+    }
+
+    const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+        ;(e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId)
+        document.body.style.userSelect = 'none'
+        document.body.style.cursor = 'col-resize'
+        update(e)
+    }
+
+    const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+        if (!guide) return
+        update(e)
+    }
+
+    const endDrag = (e: React.PointerEvent<HTMLDivElement>) => {
+        if (!guide) return
+        document.body.style.userSelect = ''
+        document.body.style.cursor = ''
+        ;(e.currentTarget as HTMLDivElement).releasePointerCapture?.(e.pointerId)
+        setGuide(null)
+    }
+
+    const GUIDE_HALF = 110 // px above and below the cursor
+
+    return (
+        <div
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={endDrag}
+            onPointerCancel={endDrag}
+            role="separator"
+            aria-orientation="vertical"
+            style={{
+                // Generous, invisible hit area — easier to grab without being
+                // visually noisy at rest.
+                flex: '0 0 16px',
+                alignSelf: 'stretch',
+                cursor: 'col-resize',
+                touchAction: 'none',
+                background: 'transparent',
+                minHeight: '60vh',
+            }}
+        >
+            {guide && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        left: guide.x,
+                        top: guide.y - GUIDE_HALF,
+                        width: 2,
+                        height: GUIDE_HALF * 2,
+                        transform: 'translateX(-50%)',
+                        // Vertical gradient fading at both ends — feels like
+                        // a "drag handle" tied to the cursor without painting
+                        // the entire viewport.
+                        background:
+                            'linear-gradient(to bottom, rgba(120, 144, 156, 0) 0%, rgba(120, 144, 156, 0.7) 50%, rgba(120, 144, 156, 0) 100%)',
+                        borderRadius: 1,
+                        pointerEvents: 'none',
+                        zIndex: 1000,
+                    }}
+                />
+            )}
+        </div>
     )
 }
 

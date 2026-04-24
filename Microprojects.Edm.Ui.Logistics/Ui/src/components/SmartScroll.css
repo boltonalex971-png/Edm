@@ -16,3 +16,19 @@
   left: 35%; */
     text-align: center;
 }
+
+.pane-separator {
+    flex: 0 0 8px;
+    align-self: stretch;
+    margin: 0 4px;
+    cursor: col-resize;
+    background: transparent;
+    border-radius: 2px;
+    transition: background 0.12s;
+    touch-action: none;
+}
+
+.pane-separator:hover,
+.pane-separator:active {
+    background: #cfd8dc;
+}
