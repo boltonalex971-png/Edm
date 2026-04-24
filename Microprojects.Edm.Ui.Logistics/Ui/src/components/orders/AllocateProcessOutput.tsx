@@ -558,16 +558,6 @@ export function AllocateProcessOutput({
                         {submitResult.errors[0]}
                     </span>
                 )}
-                {order && !order.completed && (
-                    <Button
-                        themeColor="primary"
-                        onClick={completeOrder}
-                        disabled={!canComplete || completing}
-                        style={{ marginLeft: 'auto' }}
-                    >
-                        {completing ? 'Completing...' : 'Complete order'}
-                    </Button>
-                )}
             </div>
         </div>
     )
