@@ -36,11 +36,18 @@ void Install(Dictionary<string, string?> options)
     var consolePort = 16332;
     var grpcPort = 16334;
 
+    // Resolve connection strings. /logisticsDb is optional: when missing or
+    // left as a literal MSI placeholder, derive it from /db by swapping the
+    // catalog name (typical single-server deployment).
+    var dbConn = options["db"];
+    var logisticsConn = ResolveLogisticsConnection(options, dbConn);
+
     // Fix appsettings.json according choosen installation options
     var settingsPath = $"{_targetDir}\\appsettings.json";
     var settings = File.ReadAllText(settingsPath);
     //settings = settings.Replace("[CACHECONNECTIONSTRING]", options["cache"]);
-    settings = settings.Replace("[DBCONNECTIONSTRING]", options["db"]?.Replace("\\", "\\\\"));
+    settings = settings.Replace("[DBCONNECTIONSTRING]", dbConn?.Replace("\\", "\\\\"));
+    settings = settings.Replace("[LOGISTICSCONNECTIONSTRING]", logisticsConn?.Replace("\\", "\\\\"));
     settings = settings.Replace("[PRINCIPALURL]", options["principalUrl"]);
     settings = settings.Replace("[CONSOLEURL]", $"{protocol}://{hostName}:{consolePort}"); //options["consoleUrl"]);
     settings = settings.Replace("[GRPCURL]", $"{protocol}://{hostName}:{grpcPort}"); //options["grpcUrl"]);
@@ -49,6 +56,18 @@ void Install(Dictionary<string, string?> options)
     File.WriteAllText(settingsPath, settings);
     File.Delete($"{_targetDir}\\appsettings.Production.json");
     File.Delete($"{_targetDir}\\appsettings.Development.json");
+
+    // Apply EF migrations before the service starts touching the DB. Each
+    // bundle is a self-contained migrator that compares __EFMigrationsHistory
+    // against the migrations baked into it and applies only the missing ones.
+    if (!string.IsNullOrEmpty(dbConn))
+    {
+        Migrate($"{_targetDir}Optosense.Edm.DataAccess.efbundle.exe", dbConn);
+    }
+    if (!string.IsNullOrEmpty(logisticsConn))
+    {
+        Migrate($"{_targetDir}Microprojects.Edm.Ui.Logistics.efbundle.exe", logisticsConn);
+    }
 
     // Install EDM as service
     cmd = new Process();
@@ -124,4 +143,58 @@ void Uninstall(Dictionary<string, string?> options)
         WindowStyle = ProcessWindowStyle.Hidden
     };
     cmd.Start();
+}
+
+static string? ResolveLogisticsConnection(Dictionary<string, string?> options, string? dbConn)
+{
+    if (options.TryGetValue("logisticsDb", out var explicitConn)
+        && !string.IsNullOrWhiteSpace(explicitConn)
+        && !explicitConn.StartsWith('['))
+    {
+        return explicitConn;
+    }
+
+    if (string.IsNullOrEmpty(dbConn))
+    {
+        return null;
+    }
+
+    // Same server, swap catalog. Match the typical "optosense_edm" → "optosense_logistics"
+    // pairing; if the catalog already mentions logistics, leave it alone.
+    const string fromCatalog = "optosense_edm";
+    const string toCatalog = "optosense_logistics";
+    if (dbConn.Contains(fromCatalog, StringComparison.OrdinalIgnoreCase))
+    {
+        return dbConn.Replace(fromCatalog, toCatalog, StringComparison.OrdinalIgnoreCase);
+    }
+    return dbConn;
+}
+
+static void Migrate(string bundlePath, string connectionString)
+{
+    if (!File.Exists(bundlePath))
+    {
+        Console.WriteLine($"Migration bundle missing, skipping: {bundlePath}");
+        return;
+    }
+
+    var psi = new ProcessStartInfo(bundlePath, $"--connection \"{connectionString}\"")
+    {
+        WindowStyle = ProcessWindowStyle.Hidden,
+        RedirectStandardOutput = true,
+        RedirectStandardError = true,
+        UseShellExecute = false,
+        CreateNoWindow = true,
+    };
+    var p = Process.Start(psi)!;
+    var stdout = p.StandardOutput.ReadToEnd();
+    var stderr = p.StandardError.ReadToEnd();
+    p.WaitForExit();
+
+    Console.WriteLine(stdout);
+    if (p.ExitCode != 0)
+    {
+        throw new InvalidOperationException(
+            $"Migration failed for {Path.GetFileName(bundlePath)} (exit {p.ExitCode}):\n{stderr}");
+    }
 }

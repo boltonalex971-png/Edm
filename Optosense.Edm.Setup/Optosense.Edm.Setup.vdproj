@@ -301,6 +301,18 @@
         "OwnerKey" = "8:_80831C912AA02F312845F283ED7E4099"
         "MsmSig" = "8:_UNDEFINED"
         }
+        "Entry"
+        {
+        "MsmKey" = "8:_E0F1A2B3C4D5E6F708192A3B4C5D6E7F"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_E1F2A3B4C5D6E7F8091A2B3C4D5E6F70"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
     }
     "Configurations"
     {
@@ -384,12 +396,12 @@
             "Object" = "8:_6327C4D243264C9D9ED3D44C8D215B35"
             "FileType" = "3:2"
             "InstallAction" = "3:1"
-            "Arguments" = "8:/Install /targetDir=\"[TARGETDIR]\\\" /db=\"[DBCONNECTIONSTRING]\" /principalUrl=\"[PRINCIPALURL]\" /consoleUrl=\"[CONSOLEURL]\" /grpcUrl=\"[GRPCURL]\" /mode=\"[ROLE]\""
+            "Arguments" = "8:/Install /targetDir=\"[TARGETDIR]\\\" /db=\"[DBCONNECTIONSTRING]\" /logisticsDb=\"[LOGISTICSCONNECTIONSTRING]\" /principalUrl=\"[PRINCIPALURL]\" /consoleUrl=\"[CONSOLEURL]\" /grpcUrl=\"[GRPCURL]\" /mode=\"[ROLE]\""
             "EntryPoint" = "8:"
             "Sequence" = "3:1"
             "Identifier" = "8:_618C994D_36E1_46A2_8F3F_EF2631E74625"
             "InstallerClass" = "11:FALSE"
-            "CustomActionData" = "8:/targetDir=\"[TARGETDIR]\\\" /db=\"[DBCONNECTIONSTRING]\" /pricipalUrl=\"[PRINCIPALURL]\" /consoleUrl=\"[CONSOLEURL]\" /grpcUrl=\"[GRPCURL]\""
+            "CustomActionData" = "8:/targetDir=\"[TARGETDIR]\\\" /db=\"[DBCONNECTIONSTRING]\" /logisticsDb=\"[LOGISTICSCONNECTIONSTRING]\" /pricipalUrl=\"[PRINCIPALURL]\" /consoleUrl=\"[CONSOLEURL]\" /grpcUrl=\"[GRPCURL]\""
             }
         }
         "DefaultFeature"
@@ -647,6 +659,46 @@
             {
             "SourcePath" = "8:CloseFirewallPorts.bat"
             "TargetName" = "8:CloseFirewallPorts.bat"
+            "Tag" = "8:"
+            "Folder" = "8:_AE4052A7CE5F48FF84E7825B278F4895"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_E0F1A2B3C4D5E6F708192A3B4C5D6E7F"
+            {
+            "SourcePath" = "8:..\\Optosense.Edm.DataAccess\\bin\\Debug\\net10.0\\Optosense.Edm.DataAccess.efbundle.exe"
+            "TargetName" = "8:Optosense.Edm.DataAccess.efbundle.exe"
+            "Tag" = "8:"
+            "Folder" = "8:_AE4052A7CE5F48FF84E7825B278F4895"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_E1F2A3B4C5D6E7F8091A2B3C4D5E6F70"
+            {
+            "SourcePath" = "8:..\\Microprojects.Edm.Ui.Logistics\\bin\\Debug\\net10.0\\Microprojects.Edm.Ui.Logistics.efbundle.exe"
+            "TargetName" = "8:Microprojects.Edm.Ui.Logistics.efbundle.exe"
             "Tag" = "8:"
             "Folder" = "8:_AE4052A7CE5F48FF84E7825B278F4895"
             "Condition" = "8:"
