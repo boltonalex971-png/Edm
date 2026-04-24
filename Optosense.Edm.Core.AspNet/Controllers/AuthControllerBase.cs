@@ -28,18 +28,17 @@ namespace Optosense.Edm.Core.AspNet.Controllers
         {
             get
             {
-                // Defense-in-depth: in production, refuse to surface the
-                // Windows identity to a request whose Origin doesn't match
-                // Host (would catch an XHR from another site abusing cached
-                // Negotiate creds). Skipped in development because the rsbuild
-                // dev proxy forwards Origin/Host in a way the EndsWith check
-                // can mis-classify; CORS already gates who can call the API.
-                var env = HttpContext.RequestServices.GetService<IHostEnvironment>();
-                if (env?.IsDevelopment() != true &&
-                    !string.IsNullOrEmpty(Request.Headers.Origin.ToString()) &&
-                    !Request.Headers.Origin.ToString().EndsWith(Request.Headers.Host))
+                // CSRF guard: reject when Origin's host differs from Host (port ignored so cross-port dev proxies work).
+                var origin = Request.Headers.Origin.ToString();
+                if (!string.IsNullOrEmpty(origin))
                 {
-                    return new UserInfo();
+                    var hostHeader = Request.Headers.Host.ToString();
+                    var hostName = hostHeader.Split(':')[0];
+                    if (!Uri.TryCreate(origin, UriKind.Absolute, out var originUri)
+                        || !string.Equals(originUri.Host, hostName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return new UserInfo();
+                    }
                 }
 
                 var userInfo = new UserInfo();

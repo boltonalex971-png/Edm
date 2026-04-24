@@ -83,7 +83,20 @@ namespace Optosense.Edm.Core.AspNet.Auth
             }
             else
             {
-                var existingClaims = principal.Claims.ToList();
+                // Drop JWT protocol claims — descriptor re-issues them; passing through compounds across refreshes.
+                var reserved = new HashSet<string>(StringComparer.Ordinal)
+                {
+                    JwtRegisteredClaimNames.Iss,
+                    JwtRegisteredClaimNames.Aud,
+                    JwtRegisteredClaimNames.Exp,
+                    JwtRegisteredClaimNames.Nbf,
+                    JwtRegisteredClaimNames.Iat,
+                    JwtRegisteredClaimNames.Jti
+                };
+                var existingClaims = principal.Claims
+                    .Where(c => !reserved.Contains(c.Type))
+                    .ToList();
+
                 if (!string.IsNullOrEmpty(overrideRole))
                 {
                     var roles = existingClaims.Where(c => c.Type == "Roles").Select(c => c.Value).ToList();
@@ -100,6 +113,12 @@ namespace Optosense.Edm.Core.AspNet.Auth
                     claims.Add(new Claim(JwtRegisteredClaimNames.Sub, principal.Identity.Name));
                 }
             }
+
+            // Dedup so any upstream-introduced duplicate doesn't compound across refreshes.
+            claims = claims
+                .GroupBy(c => (c.Type, c.Value), c => c)
+                .Select(g => g.First())
+                .ToList();
 
             var descriptor = new SecurityTokenDescriptor
             {

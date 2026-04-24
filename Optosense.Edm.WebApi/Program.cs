@@ -156,6 +156,8 @@ builder.Services.AddAuthentication(options =>
     .AddJwtBearer(options =>
     {
         var jwtSettings = builder.Configuration.GetSection("Edm:Auth:Jwt");
+        // Keep "sub"/"role" short — mapping to long URIs makes the per-request refresh accumulate both forms.
+        options.MapInboundClaims = false;
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
