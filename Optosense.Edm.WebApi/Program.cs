@@ -156,6 +156,11 @@ builder.Services.AddAuthentication(options =>
     .AddJwtBearer(options =>
     {
         var jwtSettings = builder.Configuration.GetSection("Edm:Auth:Jwt");
+        // Keep JWT short claim names ("sub", "role") as-is. Without this, every
+        // validation rewrites them to the long ClaimTypes URIs, and the per-request
+        // token refresh in JwtService then carries both forms forward, growing the
+        // cookie until it exceeds the 4096-byte browser limit.
+        options.MapInboundClaims = false;
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
