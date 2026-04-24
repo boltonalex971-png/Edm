@@ -23,6 +23,7 @@ using Microsoft.Extensions.Hosting.WindowsServices;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.EventLog;
 using System.Security.Claims;
+using System.Security.Principal;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using Optosense.Edm.Core.AspNet;
@@ -248,7 +249,7 @@ app.UseSession();
 
 app.Use(async (context, next) =>
 {
-    if (context.User.Identity?.IsAuthenticated == true)
+    if (context.User.Identity?.IsAuthenticated == true && ShouldRefreshToken(context))
     {
         var jwtService = context.RequestServices.GetRequiredService<IJwtService>();
         var selectedRole = context.Session.GetString("SelectedRole");
@@ -262,6 +263,18 @@ app.Use(async (context, next) =>
         });
     }
     await next();
+
+    static bool ShouldRefreshToken(HttpContext ctx)
+    {
+        if (ctx.User.Identity is WindowsIdentity) return true;
+        var exp = ctx.User.FindFirst("exp")?.Value;
+        if (exp == null || !long.TryParse(exp, out var seconds)) return true;
+        var remaining = DateTimeOffset.FromUnixTimeSeconds(seconds) - DateTimeOffset.UtcNow;
+        var threshold = TimeSpan.FromMinutes(
+            ctx.RequestServices.GetService<IConfiguration>()
+                ?.GetValue<int?>("Edm:Auth:Jwt:RefreshThresholdMinutes") ?? 15);
+        return remaining < threshold;
+    }
 });
 
 app.UseExceptionHandler();
