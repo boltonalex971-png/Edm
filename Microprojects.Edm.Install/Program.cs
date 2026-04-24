@@ -83,15 +83,24 @@ void Uninstall(Dictionary<string, string?> options)
 #endif
 
     var _serviceName = "edm";
-    var _targetDir = options["targetDir"];
+    if (!options.TryGetValue("targetDir", out var _targetDir))
+    {
+        // Upgrading from a version whose MSI passed no arguments — derive path from service registry
+        var imagePath = Microsoft.Win32.Registry.GetValue(
+            @"HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\edm", "ImagePath", null) as string;
+        _targetDir = imagePath is not null ? Path.GetDirectoryName(imagePath) + @"\" : null;
+    }
 
     var cmd = new Process();
     // Close firewall ports
-    cmd.StartInfo = new ProcessStartInfo("cmd.exe", $"/C \"{_targetDir}CloseFirewallPorts.bat\"")
+    if (_targetDir is not null && File.Exists($"{_targetDir}CloseFirewallPorts.bat"))
     {
-        WindowStyle = ProcessWindowStyle.Hidden,
-    };
-    cmd.Start();
+        cmd.StartInfo = new ProcessStartInfo("cmd.exe", $"/C \"{_targetDir}CloseFirewallPorts.bat\"")
+        {
+            WindowStyle = ProcessWindowStyle.Hidden,
+        };
+        cmd.Start();
+    }
 
     // Uninstall EDM as service
     //var sc = new ServiceController("edm");
