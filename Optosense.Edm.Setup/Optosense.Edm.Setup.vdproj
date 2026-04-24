@@ -382,7 +382,7 @@
             "Object" = "8:_6327C4D243264C9D9ED3D44C8D215B35"
             "FileType" = "3:2"
             "InstallAction" = "3:4"
-            "Arguments" = "8:/Uninstall /targetDir=\"[TARGETDIR]\""
+            "Arguments" = "8:/Uninstall /targetDir=\"[TARGETDIR]\" /upgrading=\"[UPGRADINGPRODUCTCODE]\""
             "EntryPoint" = "8:"
             "Sequence" = "3:1"
             "Identifier" = "8:_FB0BFC49_B0E6_4663_931E_7A08189BB69D"
@@ -1557,7 +1557,7 @@
                             "ContextData" = "8:1;True=1;False=0"
                             "Attributes" = "3:0"
                             "Setting" = "3:0"
-                            "Value" = "3:1"
+                            "Value" = "3:0"
                             "DefaultValue" = "3:1"
                             "UsePlugInResources" = "11:TRUE"
                             }
