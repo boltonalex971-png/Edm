@@ -40,16 +40,16 @@ namespace Optosense.Edm.Persistence
             base.OnModelCreating(modelBuilder);
             modelBuilder.Entity<Audit>().HasMany(a => a.Qualifiers).WithMany();
 
+            // Parameters is a Dictionary<string, object> round-tripped as JSON.
+            // On SQL Server the column defaults to nvarchar(max), which is what
+            // the existing schema already has.
             modelBuilder.Entity<Record>()
                 .Property(e => e.Parameters)
-                .HasColumnType("jsonb")
                 .HasConversion(
                     d => JsonConvert.SerializeObject(d),
                     s => JsonConvert.DeserializeObject<Dictionary<string, object>>(s),
                     ValueComparer.CreateDefault<Dictionary<string, object>>(false)
                 );
-            // TODO .ToJson() does not properly process Dictionaries 
-            //modelBuilder.Entity<Record>().OwnsOne(r => r.Parameters).ToJson();
         }
     }
 }
