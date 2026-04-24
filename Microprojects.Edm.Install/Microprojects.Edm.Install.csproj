@@ -8,6 +8,7 @@
 	  <PublishReadyToRun>true</PublishReadyToRun>
 	  <PublishSingleFile>true</PublishSingleFile>
 	  <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+	  <PublishDir>bin\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)\publish\</PublishDir>
     <InvariantGlobalization>true</InvariantGlobalization>
     <LangVersion>14</LangVersion>
   </PropertyGroup>
