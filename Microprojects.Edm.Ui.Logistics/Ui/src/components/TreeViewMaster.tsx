@@ -256,13 +256,17 @@ export type TreeItemProps = {
 }
 
 const TreeItem = (props: TreeItemProps) => {
+    const tooltip =
+        props.item.description && props.item.description !== props.item.name
+            ? `${props.item.name} — ${props.item.description}`
+            : props.item.name
     return (
         <>
             {/*<span className={iconClassName(props.item)}>&nbsp;</span>*/}
             {icon(props.item)}&nbsp;
             <span
                 className={props.item.isFolder ? 'fw-bolder' : ''}
-                title={props.item.description}
+                title={tooltip}
             >
                 {props.item.name}
             </span>

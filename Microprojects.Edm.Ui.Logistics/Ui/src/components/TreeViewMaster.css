@@ -1,4 +1,29 @@
+.k-treeview {
+    overflow-x: hidden;
+    width: 100%;
+}
+
+.k-treeview .k-treeview-leaf,
+.k-treeview .k-treeview-mid {
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
 .k-treeview-leaf-text {
     display: flex;
     align-items: center;
+    min-width: 0;
+    overflow: hidden;
+    flex: 1 1 auto;
+}
+
+.k-treeview-leaf-text > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    flex: 1 1 auto;
+    display: block;
 }
