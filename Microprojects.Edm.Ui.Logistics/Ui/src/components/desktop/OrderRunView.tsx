@@ -4,11 +4,13 @@ import styles from '@logistics/components/desktop/desktop.module.css'
 import { AllocateProcessOutput } from '@logistics/components/orders/AllocateProcessOutput'
 import type {
     ExecuteResult,
+    Item,
     Order,
     OrderOutputItems,
     UUID,
 } from '@logistics/data/types'
 import { useGet } from '@logistics/hooks/hooks'
+import { colorForGradeId } from '@logistics/utils/gradePalette'
 import axios from 'axios'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -32,12 +34,11 @@ export const OrderRunView = () => {
     const [reloadToken, setReloadToken] = useState(0)
     const [launching, setLaunching] = useState(false)
     const [launchError, setLaunchError] = useState<string | undefined>()
+    const [completing, setCompleting] = useState(false)
+    const [completeError, setCompleteError] = useState<string | undefined>()
     const [step, setStep] = useState<Step>('review')
 
-    const [[order], loading] = useGet<Order>(id ? `${api.orders}/${id}` : '', [
-        id,
-        reloadToken,
-    ])
+    const [[order], loading] = useGet<Order>(id ? `${api.orders}/${id}` : '', [id, reloadToken])
     const [[outputs]] = useGet<OrderOutputItems>(
         id ? `${api.orders}/${id}/output-items` : '',
         [id, reloadToken],
@@ -46,35 +47,34 @@ export const OrderRunView = () => {
     const isReadOnly = !!order?.executor && order.mine === false
     const isAlreadyLaunched = !!order && order.status !== 'Draft'
     const isCompleted = order?.status === 'Completed'
+    const unallocatedCount = outputs?.unallocated?.length ?? 0
+    const allocatedCount = outputs?.allocated?.length ?? 0
+    // All produced outputs have been placed in tares — Done becomes
+    // reachable even before the operator clicks "Complete order".
+    const allAllocated =
+        isAlreadyLaunched && allocatedCount + unallocatedCount > 0 && unallocatedCount === 0
 
     // The step that reflects the order's *current* execution state on the
     // server. Stepper navigation is allowed up to and including this step.
     const liveStep: Step = useMemo(() => {
         if (!order) return 'review'
-        if (isCompleted) return 'complete'
+        if (isCompleted || allAllocated) return 'complete'
         if (isAlreadyLaunched) return 'distribute'
         return 'review'
-    }, [order, isAlreadyLaunched, isCompleted])
+    }, [order, isAlreadyLaunched, isCompleted, allAllocated])
 
     // Track the highest step the user has reached this session so they can
     // step backward and forward freely without losing their place.
     const [maxStep, setMaxStep] = useState<Step>('review')
 
     useEffect(() => {
-        // Bump max-step whenever the live state advances or the user clicks
-        // forward in the stepper.
-        if (stepIndex(liveStep) > stepIndex(maxStep)) {
-            setMaxStep(liveStep)
-        }
+        if (stepIndex(liveStep) > stepIndex(maxStep)) setMaxStep(liveStep)
     }, [liveStep, maxStep])
 
     useEffect(() => {
-        if (stepIndex(step) > stepIndex(maxStep)) {
-            setMaxStep(step)
-        }
+        if (stepIndex(step) > stepIndex(maxStep)) setMaxStep(step)
     }, [step, maxStep])
 
-    // Initial step decision.
     useEffect(() => {
         if (!order) return
         setStep(liveStep)
@@ -85,7 +85,6 @@ export const OrderRunView = () => {
     const maxStepIndex = stepIndex(maxStep)
 
     const isOnPastStep = activeStepIndex < liveStepIndex
-    const isOnFutureStep = activeStepIndex > liveStepIndex
 
     const launch = () => {
         if (!id || isReadOnly) return
@@ -95,46 +94,56 @@ export const OrderRunView = () => {
             .post<ExecuteResult>(`${api.orders}/${id}/execute`)
             .then((r) => {
                 setReloadToken((x) => x + 1)
-                if (r.data.completed) {
-                    setStep('complete')
-                } else {
-                    setStep('distribute')
-                }
+                if (r.data.completed) setStep('complete')
+                else setStep('distribute')
             })
             .catch((e) => {
                 setLaunchError(
-                    e.response?.data?.detail ||
-                        e.response?.statusText ||
-                        'Failed to launch',
+                    e.response?.data?.detail || e.response?.statusText || 'Failed to launch',
                 )
             })
             .finally(() => setLaunching(false))
     }
 
-    const onOutputsChanged = () => {
-        setReloadToken((x) => x + 1)
+    const completeOrder = () => {
+        if (!id || isReadOnly || completing) return
+        setCompleteError(undefined)
+        setCompleting(true)
+        axios
+            .post(`${api.orders}/${id}/complete`, {})
+            .then(() => setReloadToken((x) => x + 1))
+            .catch((e) => {
+                setCompleteError(
+                    e.response?.data?.detail ||
+                        e.response?.statusText ||
+                        'Failed to complete the order',
+                )
+            })
+            .finally(() => setCompleting(false))
     }
+
+    const onOutputsChanged = () => setReloadToken((x) => x + 1)
 
     const backToList = () => navigate('/desktop')
 
     const tryGoToStep = (target: Step) => {
-        if (stepIndex(target) <= maxStepIndex) {
-            setStep(target)
-        }
+        if (stepIndex(target) <= maxStepIndex) setStep(target)
     }
 
     const renderReviewBanner = () => {
         if (!isOnPastStep) return null
+        const liveLabel =
+            liveStep === 'distribute'
+                ? 'Distribute'
+                : liveStep === 'complete'
+                  ? 'Done'
+                  : 'Launch'
         return (
             <div className={styles.reviewBanner}>
                 <span>
-                    Reviewing — order is currently at <strong>{liveStep === 'distribute' ? 'Distribute' : liveStep === 'complete' ? 'Done' : 'Launch'}</strong>.
+                    Reviewing — order is currently at <strong>{liveLabel}</strong>.
                 </span>
-                <button
-                    type="button"
-                    className={styles.resumeBtn}
-                    onClick={() => setStep(liveStep)}
-                >
+                <button type="button" className={styles.resumeBtn} onClick={() => setStep(liveStep)}>
                     Resume
                 </button>
             </div>
@@ -144,11 +153,7 @@ export const OrderRunView = () => {
     return (
         <div className={styles.runRoot}>
             <div className={styles.runHeader}>
-                <button
-                    type="button"
-                    className={styles.backBtn}
-                    onClick={backToList}
-                >
+                <button type="button" className={styles.backBtn} onClick={backToList}>
                     ← Back
                 </button>
                 <div className={styles.runTitle}>
@@ -171,23 +176,15 @@ export const OrderRunView = () => {
             <div className={styles.stepper}>
                 {STEPS.map((s, idx) => {
                     const reachable = idx <= maxStepIndex
-                    // Frontier (the live execution state) is always blue — it
-                    // marks where the order actually sits, independently of
-                    // where the user is currently looking.
                     const isLive = idx === maxStepIndex
-                    // Earlier reached steps are always green (done).
                     const isDone = idx < maxStepIndex
-                    // Currently-viewed step: explicit outline so the user
-                    // always sees which step they're looking at.
                     const isViewing = idx === activeStepIndex
                     const cls = [
                         styles.step,
                         isLive && styles.stepActive,
                         isDone && styles.stepDone,
                         isViewing && styles.stepViewing,
-                        reachable
-                            ? styles.stepClickable
-                            : styles.stepDisabled,
+                        reachable ? styles.stepClickable : styles.stepDisabled,
                     ]
                         .filter(Boolean)
                         .join(' ')
@@ -212,12 +209,8 @@ export const OrderRunView = () => {
                     <ReviewStep
                         order={order}
                         onNext={() => setStep('launch')}
-                        nextLabel={
-                            isOnPastStep ? 'Continue review' : 'Next'
-                        }
-                        onResume={
-                            isOnPastStep ? () => setStep(liveStep) : undefined
-                        }
+                        nextLabel={isOnPastStep ? 'Continue review' : 'Next'}
+                        onResume={isOnPastStep ? () => setStep(liveStep) : undefined}
                     />
                 )}
                 {step === 'launch' && id && (
@@ -227,13 +220,8 @@ export const OrderRunView = () => {
                         launching={launching}
                         launchError={launchError}
                         readOnly={isReadOnly}
-                        // Lock the step only when execution has already moved
-                        // past it. Going forward from Review on a Draft order
-                        // is the legitimate path to allocate inputs and launch.
                         reviewOnly={isOnPastStep}
-                        onResume={
-                            isOnPastStep ? () => setStep(liveStep) : undefined
-                        }
+                        onResume={isOnPastStep ? () => setStep(liveStep) : undefined}
                     />
                 )}
                 {step === 'distribute' && id && (
@@ -241,35 +229,24 @@ export const OrderRunView = () => {
                         orderId={id}
                         onChanged={onOutputsChanged}
                         onClose={() => {
-                            if (
-                                (outputs?.unallocated?.length ?? 0) === 0 &&
-                                order?.status === 'Completed'
-                            ) {
-                                setStep('complete')
-                            } else {
-                                backToList()
-                            }
+                            if (allAllocated) setStep('complete')
+                            else backToList()
                         }}
                     />
                 )}
-                {step === 'complete' && (
-                    <div className={styles.completeHero}>
-                        <div className={styles.completeTitle}>
-                            {isCompleted ? 'Order completed' : 'Done'}
-                        </div>
-                        <div className={styles.completeSub}>
-                            {order?.processName} — all outputs allocated.
-                        </div>
-                        <div style={{ marginTop: '1.5rem' }}>
-                            <button
-                                type="button"
-                                className={styles.primary}
-                                onClick={backToList}
-                            >
-                                Back to list
-                            </button>
-                        </div>
-                    </div>
+                {step === 'complete' && order && (
+                    <CompleteStep
+                        order={order}
+                        allocatedCount={allocatedCount}
+                        unallocatedCount={unallocatedCount}
+                        outputs={outputs}
+                        onComplete={completeOrder}
+                        completing={completing}
+                        completeError={completeError}
+                        isCompleted={isCompleted}
+                        readOnly={isReadOnly}
+                        onBackToList={backToList}
+                    />
                 )}
             </div>
         </div>
@@ -283,52 +260,269 @@ type ReviewStepProps = {
     onResume?: () => void
 }
 
-const ReviewStep = ({ order, onNext, nextLabel, onResume }: ReviewStepProps) => {
+const ReviewStep = ({ order, onNext, nextLabel, onResume }: ReviewStepProps) => (
+    <div>
+        <div className={styles.reviewGrid}>
+            <div className={styles.reviewLabel}>Process</div>
+            <div className={styles.reviewValue}>{order.processName}</div>
+            <div className={styles.reviewLabel}>Nomenclature</div>
+            <div className={styles.reviewValue}>{order.processNomenclatureName ?? '—'}</div>
+            <div className={styles.reviewLabel}>Amount</div>
+            <div className={styles.reviewValue}>{order.amount} pcs</div>
+            {order.startDate && (
+                <>
+                    <div className={styles.reviewLabel}>Start</div>
+                    <div className={styles.reviewValue}>
+                        {new Date(order.startDate).toLocaleDateString()}
+                    </div>
+                </>
+            )}
+            {order.dueDate && (
+                <>
+                    <div className={styles.reviewLabel}>Due</div>
+                    <div className={styles.reviewValue}>
+                        {new Date(order.dueDate).toLocaleDateString()}
+                    </div>
+                </>
+            )}
+            {order.description && (
+                <>
+                    <div className={styles.reviewLabel}>Description</div>
+                    <div className={styles.reviewValue}>{order.description}</div>
+                </>
+            )}
+        </div>
+
+        <div className={styles.footer}>
+            <button
+                type="button"
+                className={styles.primary}
+                onClick={onResume ?? onNext}
+            >
+                {onResume ? 'Resume' : nextLabel}
+            </button>
+        </div>
+    </div>
+)
+
+type CompleteStepProps = {
+    order: Order
+    allocatedCount: number
+    unallocatedCount: number
+    outputs?: OrderOutputItems
+    onComplete: () => void
+    completing: boolean
+    completeError?: string
+    isCompleted: boolean
+    readOnly: boolean
+    onBackToList: () => void
+}
+
+type GradeBucket = {
+    gradeId: UUID | null
+    gradeName: string
+    color?: string
+    count: number
+}
+
+const groupByGrade = (items: Item[]): GradeBucket[] => {
+    const map = new Map<string, GradeBucket>()
+    for (const item of items) {
+        const key = item.gradeId ?? '__none__'
+        if (!map.has(key)) {
+            map.set(key, {
+                gradeId: item.gradeId ?? null,
+                gradeName: item.gradeName ?? 'No grade',
+                color: item.gradeId ? colorForGradeId(item.gradeId) : '#e3f2fd',
+                count: 0,
+            })
+        }
+        map.get(key)!.count++
+    }
+    return Array.from(map.values()).sort((a, b) => {
+        if (a.gradeId === null) return 1
+        if (b.gradeId === null) return -1
+        return a.gradeName.localeCompare(b.gradeName)
+    })
+}
+
+type DueStatus =
+    | { kind: 'on-time'; label: string }
+    | { kind: 'overdue'; label: string }
+    | { kind: 'ahead'; label: string }
+
+/** Calendar-day comparison: same day = "In time"; later days = overdue;
+ *  earlier days = before plan. Time-of-day is ignored. */
+const computeDueStatus = (
+    dueRaw: Date | string | undefined,
+    completedRaw?: Date | string,
+): DueStatus | undefined => {
+    if (!dueRaw) return undefined
+    const due = new Date(dueRaw)
+    if (Number.isNaN(due.getTime())) return undefined
+    const ref = completedRaw ? new Date(completedRaw) : new Date()
+    const dueDay = Date.UTC(due.getFullYear(), due.getMonth(), due.getDate())
+    const refDay = Date.UTC(ref.getFullYear(), ref.getMonth(), ref.getDate())
+    const diffDays = Math.round((refDay - dueDay) / (1000 * 60 * 60 * 24))
+    if (diffDays === 0) {
+        return { kind: 'on-time', label: 'In time' }
+    }
+    if (diffDays > 0) {
+        return { kind: 'overdue', label: `Overdue ${diffDays} d` }
+    }
+    return { kind: 'ahead', label: `${-diffDays} d before plan` }
+}
+
+const CompleteStep = ({
+    order,
+    allocatedCount,
+    unallocatedCount,
+    outputs,
+    onComplete,
+    completing,
+    completeError,
+    isCompleted,
+    readOnly,
+    onBackToList,
+}: CompleteStepProps) => {
+    const totalOutputs = allocatedCount + unallocatedCount
+    const distinctTares = useMemo(() => {
+        const ids = new Set<string>()
+        for (const item of outputs?.allocated ?? []) {
+            if (item.tareId) ids.add(item.tareId)
+        }
+        return ids.size
+    }, [outputs])
+
+    const gradeBuckets = useMemo(
+        () => groupByGrade([...(outputs?.allocated ?? []), ...(outputs?.unallocated ?? [])]),
+        [outputs],
+    )
+
+    const dueStatus = useMemo(
+        () => computeDueStatus(order.dueDate, order.completed),
+        [order.dueDate, order.completed],
+    )
+    const dueBadgeClass = !dueStatus
+        ? ''
+        : dueStatus.kind === 'on-time'
+          ? `${styles.dueBadge} ${styles.dueOnTime}`
+          : dueStatus.kind === 'overdue'
+            ? `${styles.dueBadge} ${styles.dueOverdue}`
+            : `${styles.dueBadge} ${styles.dueAhead}`
+
     return (
-        <div>
-            <div className={styles.reviewGrid}>
-                <div className={styles.reviewLabel}>Process</div>
-                <div className={styles.reviewValue}>{order.processName}</div>
-                <div className={styles.reviewLabel}>Nomenclature</div>
-                <div className={styles.reviewValue}>
+        <div className={styles.doneCard}>
+            <div className={styles.doneHeadline}>
+                {isCompleted ? 'Order completed' : 'Ready to complete'}
+            </div>
+            <div className={styles.doneSubline}>
+                {isCompleted
+                    ? `All done.`
+                    : `Every output is allocated. Confirm to close the order.`}
+            </div>
+
+            <div className={styles.doneStats}>
+                <div className={styles.doneStatLabel}>Nomenclature</div>
+                <div className={styles.doneStatValue}>
                     {order.processNomenclatureName ?? '—'}
                 </div>
-                <div className={styles.reviewLabel}>Amount</div>
-                <div className={styles.reviewValue}>{order.amount} pcs</div>
-                {order.startDate && (
+                <div className={styles.doneStatLabel}>Amount</div>
+                <div className={styles.doneStatValue}>{order.amount} pcs</div>
+                <div className={styles.doneStatLabel}>Outputs allocated</div>
+                <div className={styles.doneStatValue}>
+                    {allocatedCount} / {totalOutputs}
+                </div>
+                <div className={styles.doneStatLabel}>Tares used</div>
+                <div className={styles.doneStatValue}>{distinctTares}</div>
+                {order.executor && (
                     <>
-                        <div className={styles.reviewLabel}>Start</div>
-                        <div className={styles.reviewValue}>
-                            {new Date(order.startDate).toLocaleDateString()}
-                        </div>
+                        <div className={styles.doneStatLabel}>Executor</div>
+                        <div className={styles.doneStatValue}>{order.executor}</div>
                     </>
                 )}
                 {order.dueDate && (
                     <>
-                        <div className={styles.reviewLabel}>Due</div>
-                        <div className={styles.reviewValue}>
-                            {new Date(order.dueDate).toLocaleDateString()}
+                        <div className={styles.doneStatLabel}>Due</div>
+                        <div className={styles.doneStatValue}>
+                            <span style={{ marginRight: '0.5rem' }}>
+                                {new Date(order.dueDate).toLocaleDateString()}
+                            </span>
+                            {dueStatus && (
+                                <span className={dueBadgeClass}>
+                                    {dueStatus.label}
+                                </span>
+                            )}
                         </div>
                     </>
                 )}
-                {order.description && (
+                {order.completed && (
                     <>
-                        <div className={styles.reviewLabel}>Description</div>
-                        <div className={styles.reviewValue}>
-                            {order.description}
+                        <div className={styles.doneStatLabel}>Completed</div>
+                        <div className={styles.doneStatValue}>
+                            {new Date(order.completed).toLocaleString()}
                         </div>
                     </>
                 )}
             </div>
 
-            <div className={styles.footer}>
-                <button
-                    type="button"
-                    className={styles.primary}
-                    onClick={onResume ?? onNext}
-                >
-                    {onResume ? 'Resume' : nextLabel}
-                </button>
+            {gradeBuckets.length > 0 && (
+                <div className={styles.doneSection}>
+                    <div className={styles.doneSectionTitle}>By grade</div>
+                    <div className={styles.gradeRows}>
+                        {gradeBuckets.map((g) => (
+                            <div
+                                key={g.gradeId ?? 'no-grade'}
+                                className={styles.gradeRow}
+                            >
+                                <span
+                                    className={styles.gradeSwatch}
+                                    style={{ background: g.color ?? '#eee' }}
+                                />
+                                <span className={styles.gradeName}>
+                                    {g.gradeName}
+                                </span>
+                                <span className={styles.gradeCount}>
+                                    {g.count}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {completeError && (
+                <div className={styles.errorMsg} style={{ marginTop: '0.6rem' }}>
+                    {completeError}
+                </div>
+            )}
+
+            <div className={styles.doneFooter}>
+                {isCompleted ? (
+                    <button type="button" className={styles.primary} onClick={onBackToList}>
+                        Back to list
+                    </button>
+                ) : (
+                    <button
+                        type="button"
+                        className={`${styles.primary} ${styles.success}`}
+                        onClick={onComplete}
+                        disabled={readOnly || completing || unallocatedCount > 0}
+                        title={
+                            readOnly
+                                ? 'Read-only'
+                                : unallocatedCount > 0
+                                  ? 'All outputs must be allocated before completing'
+                                  : undefined
+                        }
+                    >
+                        {readOnly
+                            ? 'Read-only'
+                            : completing
+                              ? 'Completing…'
+                              : 'Complete order'}
+                    </button>
+                )}
             </div>
         </div>
     )
