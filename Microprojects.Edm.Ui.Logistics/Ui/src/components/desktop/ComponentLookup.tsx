@@ -17,6 +17,7 @@ import type {
     UUID,
 } from '@logistics/data/types'
 import { postData } from '@logistics/hooks/hooks'
+import { useSlotSelection } from '@logistics/hooks/useSlotSelection'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ChevronDown, ChevronRight } from 'react-bootstrap-icons'
 
@@ -36,12 +37,13 @@ export const ComponentLookup = ({
     const [items, setItems] = useState<Item[]>([])
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
-    const [selected, setSelected] = useState<Set<UUID>>(new Set())
+    const {
+        selected,
+        setSelected,
+        handleClick: onItemClickInTare,
+    } = useSlotSelection(items)
     const [error, setError] = useState<string | undefined>()
     const [expanded, setExpanded] = useState<Set<string>>(new Set())
-    const lastClickedRef = useRef<{ tareKey: string; itemId: UUID } | null>(
-        null,
-    )
     // Click-vs-double-click timer so a double-click (select-all) cancels the
     // pending single-click (toggle-expand).
     const pendingRowClickRef = useRef<{
@@ -94,48 +96,12 @@ export const ComponentLookup = ({
         })
     }
 
-    const toggleItem = (itemId: UUID) => {
-        setSelected((prev) => {
-            const next = new Set(prev)
-            if (next.has(itemId)) next.delete(itemId)
-            else next.add(itemId)
-            return next
-        })
-    }
-
-    // Slot click within a TareSchematic — supports shift-range select within
-    // an addressable tare (mirrors ItemSearch.handleSlotSelect).
+    // Per-tare scoped selection: shift-range only kicks in when both clicks
+    // happen in the same tare. The hook (useSlotSelection) does the rest.
     const onSlotClick = (group: TareGroup, slot: SlotData, e: React.MouseEvent) => {
         if (!slot.item) return
         const tareKey = group.tare.id || 'no-tare'
-        if (
-            e.shiftKey &&
-            lastClickedRef.current &&
-            lastClickedRef.current.tareKey === tareKey
-        ) {
-            const sorted = [...group.items]
-                .filter((i) => i.address != null)
-                .sort((a, b) => (a.address ?? 0) - (b.address ?? 0))
-            const lastIdx = sorted.findIndex(
-                (i) => i.id === lastClickedRef.current?.itemId,
-            )
-            const curIdx = sorted.findIndex((i) => i.id === slot.item?.id)
-            if (lastIdx >= 0 && curIdx >= 0) {
-                const lo = Math.min(lastIdx, curIdx)
-                const hi = Math.max(lastIdx, curIdx)
-                setSelected((prev) => {
-                    const next = new Set(prev)
-                    for (let i = lo; i <= hi; i++) {
-                        next.add(sorted[i].id)
-                    }
-                    return next
-                })
-                lastClickedRef.current = { tareKey, itemId: slot.item.id }
-                return
-            }
-        }
-        toggleItem(slot.item.id)
-        lastClickedRef.current = { tareKey, itemId: slot.item.id }
+        onItemClickInTare(slot.item, e, tareKey)
     }
 
     // Double-click a tare row → select all its items at once.

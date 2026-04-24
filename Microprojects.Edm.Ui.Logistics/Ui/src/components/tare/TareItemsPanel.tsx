@@ -1,13 +1,9 @@
 import { Loading } from '@features/utils/Utils'
-import {
-    type SlotData,
-    TareSchematic,
-} from '@logistics/components/tare/TareSchematic'
+import { TareGroupRow } from '@logistics/components/tare/TareGroupRow'
 import type { Item, TareInfo, UUID } from '@logistics/data/types'
 import { useGet } from '@logistics/hooks/hooks'
 import type React from 'react'
 import { useMemo, useState } from 'react'
-import { ChevronDown, ChevronRight } from 'react-bootstrap-icons'
 import { Alert } from 'reactstrap'
 import './TareItemsPanel.css'
 
@@ -94,66 +90,18 @@ export function TareItemsPanel({
                 const key = group.tare.id || 'no-tare'
                 const expanded = expandedTares.has(key)
                 return (
-                    <div key={key} className="tare-row-group">
-                        <div
-                            className="tare-row"
-                            onClick={() => onTareClick?.(group)}
-                        >
-                            <button
-                                type="button"
-                                className="tare-expand-btn"
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    toggleExpand(key)
-                                }}
-                            >
-                                {expanded ? (
-                                    <ChevronDown size={14} />
-                                ) : (
-                                    <ChevronRight size={14} />
-                                )}
-                            </button>
-                            <span className="tare-row-barcode">
-                                {group.tare.barcode || '(no barcode)'}
-                            </span>
-                            <span className="tare-row-type">
-                                {group.tare.tareTypeName}
-                            </span>
-                            <span className="tare-row-nomenclatures">
-                                {[
-                                    ...new Set(
-                                        group.items.map(
-                                            (i) => i.nomenclatureName,
-                                        ),
-                                    ),
-                                ].join(', ')}
-                            </span>
-                            <span className="tare-row-summary">
-                                {tareSummary(group)}
-                            </span>
-                            {group.tare.tareTypeUnits && (
-                                <span className="tare-row-units">
-                                    {group.tare.tareTypeUnits}
-                                </span>
-                            )}
-                        </div>
-                        {expanded && (
-                            <div className="tare-row-detail">
-                                <TareSchematic
-                                    tare={group.tare}
-                                    items={group.items}
-                                    onSlotClick={(
-                                        slot: SlotData,
-                                        _e: React.MouseEvent,
-                                    ) => {
-                                        if (slot.item && onItemClick) {
-                                            onItemClick(slot.item)
-                                        }
-                                    }}
-                                />
-                            </div>
-                        )}
-                    </div>
+                    <TareGroupRow
+                        key={key}
+                        group={group}
+                        expanded={expanded}
+                        onToggleExpanded={() => toggleExpand(key)}
+                        onRowClick={() => onTareClick?.(group)}
+                        onSlotClick={(slot) => {
+                            if (slot.item && onItemClick) {
+                                onItemClick(slot.item)
+                            }
+                        }}
+                    />
                 )
             })}
         </div>

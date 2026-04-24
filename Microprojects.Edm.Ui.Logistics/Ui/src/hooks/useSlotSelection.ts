@@ -7,10 +7,15 @@ type Identifiable = { id: UUID }
  * Slot selection with click / Ctrl-click toggle / Shift-range over an ordered
  * list. The list identity matters for Shift-range: callers pass the same
  * ordered array they render, and the hook computes the range by index.
+ *
+ * Optional `scopeKey` on each click confines Shift-range to one logical
+ * group (e.g. one tare): if the current click's scope differs from the
+ * last click's, Shift behaves like a plain click instead of extending the
+ * range — slots from different tares are independent.
  */
 export function useSlotSelection<T extends Identifiable>(items: T[]) {
     const [selected, setSelected] = useState<Set<UUID>>(new Set())
-    const lastRef = useRef<UUID | null>(null)
+    const lastRef = useRef<{ id: UUID; scope?: string } | null>(null)
 
     useEffect(() => {
         setSelected((prev) => {
@@ -30,12 +35,14 @@ export function useSlotSelection<T extends Identifiable>(items: T[]) {
         (
             item: T,
             e: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean },
+            scopeKey?: string,
         ) => {
             setSelected((prev) => {
-                if (e.shiftKey && lastRef.current) {
-                    const lastIdx = items.findIndex(
-                        (i) => i.id === lastRef.current,
-                    )
+                const sameScope =
+                    scopeKey === undefined ||
+                    lastRef.current?.scope === scopeKey
+                if (e.shiftKey && lastRef.current && sameScope) {
+                    const lastIdx = items.findIndex((i) => i.id === lastRef.current?.id)
                     const curIdx = items.findIndex((i) => i.id === item.id)
                     if (lastIdx >= 0 && curIdx >= 0) {
                         const lo = Math.min(lastIdx, curIdx)
@@ -56,7 +63,7 @@ export function useSlotSelection<T extends Identifiable>(items: T[]) {
                 }
                 return new Set([item.id])
             })
-            lastRef.current = item.id
+            lastRef.current = { id: item.id, scope: scopeKey }
         },
         [items],
     )

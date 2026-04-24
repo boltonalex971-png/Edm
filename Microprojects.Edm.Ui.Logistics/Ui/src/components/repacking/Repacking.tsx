@@ -1,6 +1,7 @@
 import api from '@features/api/api'
 import { PageTitle } from '@logistics/components/PageTitle'
 import { TareBarcodePicker } from '@logistics/components/tare/TareBarcodePicker'
+import { TareGroupRow } from '@logistics/components/tare/TareGroupRow'
 import {
     type SlotData,
     TareSchematic,
@@ -17,6 +18,7 @@ import type {
     UUID,
 } from '@logistics/data/types'
 import { getData, postData, useGet } from '@logistics/hooks/hooks'
+import { useSlotSelection } from '@logistics/hooks/useSlotSelection'
 import { SmartScroll, SmartScrollContent } from '@microprojects/tools'
 import { Button } from '@progress/kendo-react-buttons'
 import {
@@ -41,7 +43,17 @@ export function Repacking() {
     const [sourceItems, setSourceItems] = useState<Item[]>([])
 
     const [targetTares, setTargetTares] = useState<TargetTareState[]>([])
-    const [selectedSourceItem, setSelectedSourceItem] = useState<Item>()
+    // Multi-select source items: plain click → single, Ctrl/Cmd+click →
+    // toggle, Shift+click within the same tare → range. Click on an empty
+    // target slot then places the selected items starting at that address.
+    // Selection state + modifier-aware handling lives in useSlotSelection;
+    // we just supply the flat sourceItems list and a per-tare scopeKey so
+    // Shift-range stays inside one tare.
+    const {
+        selected: selectedSourceItemIds,
+        handleClick: onSourceItemClick,
+        clear: clearSourceSelection,
+    } = useSlotSelection(sourceItems)
     const [selectedTargetSlot, setSelectedTargetSlot] = useState<{
         tareId: UUID
         address: number
@@ -74,6 +86,43 @@ export function Repacking() {
     const [submitResult, setSubmitResult] = useState<RepackResult>()
     const [submitting, setSubmitting] = useState(false)
 
+    // Expand/collapse state per source/target tare — same pattern as
+    // TareItemsPanel.
+    const [expandedSource, setExpandedSource] = useState<Set<string>>(new Set())
+    const [expandedTarget, setExpandedTarget] = useState<Set<string>>(new Set())
+
+    const toggleExpandedSource = (key: string) =>
+        setExpandedSource((prev) => {
+            const next = new Set(prev)
+            if (next.has(key)) next.delete(key)
+            else next.add(key)
+            return next
+        })
+
+    const toggleExpandedTarget = (key: string) =>
+        setExpandedTarget((prev) => {
+            const next = new Set(prev)
+            if (next.has(key)) next.delete(key)
+            else next.add(key)
+            return next
+        })
+
+    // Drop a source tare from the visible pool — only the items that are
+    // still un-moved are removed; any pendingMoves already taken from that
+    // tare stay (their items are now displayed under their target tare).
+    const removeSourceTare = (tareKey: string) => {
+        setSourceItems((prev) =>
+            prev.filter((i) => (i.tareId || i.tareBarcode || 'no-tare') !== tareKey),
+        )
+        // Selection auto-prunes — useSlotSelection drops ids no longer in `items`.
+        setExpandedSource((prev) => {
+            if (!prev.has(tareKey)) return prev
+            const next = new Set(prev)
+            next.delete(tareKey)
+            return next
+        })
+    }
+
     const filteredNomenclatures = useMemo(() => {
         if (!nomenclatures) return []
         if (!nomenclatureFilter) return nomenclatures
@@ -97,8 +146,8 @@ export function Repacking() {
     // pool reflects the new context.
     useEffect(() => {
         setSourceItems([])
-        setSelectedSourceItem(undefined)
-    }, [selectedNomenclatureId])
+        clearSourceSelection()
+    }, [selectedNomenclatureId, clearSourceSelection])
 
     const loadTareByBarcode = useCallback(async () => {
         if (!tareBarcode.trim()) return
@@ -120,6 +169,9 @@ export function Repacking() {
                     )
                     return [...prev, ...additions]
                 })
+                // Open the new tare row by default.
+                const key = tare.id || tare.barcode || 'no-tare'
+                setExpandedSource((prev) => new Set(prev).add(key))
             }
         } catch {
             /* ignore */
@@ -156,47 +208,85 @@ export function Repacking() {
         return Array.from(map.values())
     }, [sourceItems])
 
-    const handleSourceSlotClick = (slot: SlotData, _e: React.MouseEvent) => {
-        if (slot.item) {
-            setSelectedSourceItem(slot.item)
-        }
+    const handleSourceSlotClick = (
+        group: { tare: TareInfo; items: Item[] },
+        slot: SlotData,
+        e: React.MouseEvent,
+    ) => {
+        if (!slot.item) return
+        const tareKey = group.tare.id || group.tare.barcode || 'no-tare'
+        onSourceItemClick(slot.item, e, tareKey)
     }
 
     const handleTargetSlotClick = (tareId: UUID, slot: SlotData) => {
-        if (!slot.item && selectedSourceItem) {
-            moveItemToSlot(selectedSourceItem, tareId, slot.address)
-        } else if (!slot.item) {
+        if (slot.item) return
+        if (selectedSourceItemIds.size === 0) {
             setSelectedTargetSlot({ tareId, address: slot.address })
+            return
         }
+        moveSelectedItemsTo(tareId, slot.address)
     }
 
-    const moveItemToSlot = (
-        item: Item,
+    /** Place every currently-selected source item into the target tare,
+     *  starting at `startAddress` and skipping already-occupied slots. */
+    const moveSelectedItemsTo = (
         targetTareId: UUID,
-        targetAddress: number,
+        startAddress: number,
     ) => {
-        const move: RepackMove = {
+        const target = targetTares.find((t) => t.id === targetTareId)
+        if (!target) return
+
+        // Items in click-order: derived from sourceItems by address.
+        const itemsToPlace = sourceItems
+            .filter((i) => selectedSourceItemIds.has(i.id))
+            .sort((a, b) => (a.address ?? 0) - (b.address ?? 0))
+        if (itemsToPlace.length === 0) return
+
+        const occupied = new Set(target.items.map((i) => i.address))
+        const cap = Math.floor(target.capacity)
+        const placed: { item: Item; address: number }[] = []
+        let queueIdx = 0
+        let addr = startAddress
+        while (queueIdx < itemsToPlace.length && addr <= cap) {
+            if (!occupied.has(addr)) {
+                placed.push({ item: itemsToPlace[queueIdx], address: addr })
+                occupied.add(addr)
+                queueIdx++
+            }
+            addr++
+        }
+        if (placed.length === 0) return
+
+        const placedIds = new Set(placed.map((p) => p.item.id))
+        const newMoves: RepackMove[] = placed.map(({ item, address }) => ({
             sourceItemId: item.id,
             targetTareId,
-            targetAddress,
+            targetAddress: address,
             quantity: item.quantity,
-        }
+        }))
+
         setPendingMoves((prev) => [
-            ...prev.filter((m) => m.sourceItemId !== item.id),
-            move,
+            ...prev.filter((m) => !placedIds.has(m.sourceItemId)),
+            ...newMoves,
         ])
-
-        setSourceItems((prev) => prev.filter((i) => i.id !== item.id))
-
+        setSourceItems((prev) => prev.filter((i) => !placedIds.has(i.id)))
         setTargetTares((prev) =>
-            prev.map((t) => {
-                if (t.id !== targetTareId) return t
-                const movedItem: Item = { ...item, address: targetAddress }
-                return { ...t, items: [...t.items, movedItem] }
-            }),
+            prev.map((t) =>
+                t.id !== targetTareId
+                    ? t
+                    : {
+                          ...t,
+                          items: [
+                              ...t.items,
+                              ...placed.map(({ item, address }) => ({
+                                  ...item,
+                                  address,
+                              })),
+                          ],
+                      },
+            ),
         )
-
-        setSelectedSourceItem(undefined)
+        clearSourceSelection()
         setSelectedTargetSlot(undefined)
     }
 
@@ -243,6 +333,9 @@ export function Repacking() {
                 ...prev,
                 { ...existing, items: items || [] },
             ])
+            // Newly added tares open by default so the operator sees the
+            // schematic without an extra click.
+            setExpandedTarget((prev) => new Set(prev).add(existing.id))
             return
         }
 
@@ -255,6 +348,7 @@ export function Repacking() {
             })
             if (created) {
                 setTargetTares((prev) => [...prev, { ...created, items: [] }])
+                setExpandedTarget((prev) => new Set(prev).add(created.id))
                 setNewTarePicked(null)
                 setNewTareTypeId(undefined)
             }
@@ -339,7 +433,7 @@ export function Repacking() {
     const reset = () => {
         setPendingMoves([])
         setSubmitResult(undefined)
-        setSelectedSourceItem(undefined)
+        clearSourceSelection()
         setSelectedTargetSlot(undefined)
         setTargetTares([])
         setSourceItems([])
@@ -370,6 +464,7 @@ export function Repacking() {
                             <div style={{ display: 'flex', gap: '0.5rem' }}>
                                 <TareBarcodePicker
                                     tareTypeId={sourceSuggestionTareTypeId}
+                                    includeFull
                                     value={tarePicked}
                                     onChange={async (tare) => {
                                         setTarePicked(tare)
@@ -389,6 +484,13 @@ export function Repacking() {
                                                 )
                                                 return [...additions, ...prev]
                                             })
+                                            const key =
+                                                tare.id ||
+                                                tare.barcode ||
+                                                'no-tare'
+                                            setExpandedSource((prev) =>
+                                                new Set(prev).add(key),
+                                            )
                                         } catch {
                                             /* ignore */
                                         }
@@ -435,23 +537,50 @@ export function Repacking() {
                                     : 'Select a nomenclature, then pick a tare to load its items.'}
                             </div>
                         )}
-                        {sourceTares.map(({ tare, items }) => (
-                            <TareSchematic
-                                key={tare.barcode}
-                                tare={tare}
-                                items={items}
-                                selectedSlot={
-                                    selectedSourceItem &&
-                                    items.some(
-                                        (i) => i.id === selectedSourceItem.id,
+                        {sourceTares.map(({ tare, items }) => {
+                            const key = tare.id || tare.barcode || 'no-tare'
+                            const expanded = expandedSource.has(key)
+                            const selectedSlots = new Set(
+                                items
+                                    .filter((i) =>
+                                        selectedSourceItemIds.has(i.id),
                                     )
-                                        ? selectedSourceItem.address
-                                        : undefined
-                                }
-                                onSlotClick={handleSourceSlotClick}
-                            />
-                        ))}
-                        {selectedSourceItem && (
+                                    .map((i) => i.address)
+                                    .filter(
+                                        (a): a is number => a != null,
+                                    ),
+                            )
+                            return (
+                                <TareGroupRow
+                                    key={key}
+                                    group={{ tare, items }}
+                                    expanded={expanded}
+                                    onToggleExpanded={() =>
+                                        toggleExpandedSource(key)
+                                    }
+                                    selectedSlots={selectedSlots}
+                                    onSlotClick={(slot, e) =>
+                                        handleSourceSlotClick(
+                                            { tare, items },
+                                            slot,
+                                            e,
+                                        )
+                                    }
+                                    headerExtra={
+                                        <Button
+                                            size="small"
+                                            fillMode="flat"
+                                            onClick={() =>
+                                                removeSourceTare(key)
+                                            }
+                                        >
+                                            Remove
+                                        </Button>
+                                    }
+                                />
+                            )
+                        })}
+                        {selectedSourceItemIds.size > 0 && (
                             <div
                                 style={{
                                     marginTop: '0.5rem',
@@ -459,11 +588,10 @@ export function Repacking() {
                                     color: '#1976d2',
                                 }}
                             >
-                                Selected:{' '}
-                                {selectedSourceItem.serialNo ||
-                                    selectedSourceItem.nomenclatureName}{' '}
-                                (qty: {selectedSourceItem.quantity}) &mdash;
-                                click an empty target slot to place it
+                                {selectedSourceItemIds.size} item(s) selected
+                                — click an empty target slot to place them
+                                (Shift+click for range, Ctrl/Cmd+click to
+                                toggle).
                             </div>
                         )}
                     </div>
@@ -581,13 +709,19 @@ export function Repacking() {
                                 ones
                             </div>
                         )}
-                        {targetTares.map((t) => (
-                            <div key={t.id} style={{ position: 'relative' }}>
-                                <TareSchematic
-                                    tare={t}
-                                    items={t.items}
+                        {targetTares.map((t) => {
+                            const key = t.id
+                            const expanded = expandedTarget.has(key)
+                            return (
+                                <TareGroupRow
+                                    key={key}
+                                    group={{ tare: t, items: t.items }}
+                                    expanded={expanded}
+                                    onToggleExpanded={() =>
+                                        toggleExpandedTarget(key)
+                                    }
                                     highlightEmpty
-                                    onSlotClick={(slot, _e) =>
+                                    onSlotClick={(slot) =>
                                         handleTargetSlotClick(t.id, slot)
                                     }
                                     selectedSlot={
@@ -595,21 +729,20 @@ export function Repacking() {
                                             ? selectedTargetSlot.address
                                             : undefined
                                     }
+                                    headerExtra={
+                                        <Button
+                                            size="small"
+                                            fillMode="flat"
+                                            onClick={() =>
+                                                removeTargetTare(t.id)
+                                            }
+                                        >
+                                            Remove
+                                        </Button>
+                                    }
                                 />
-                                <Button
-                                    size="small"
-                                    fillMode="flat"
-                                    onClick={() => removeTargetTare(t.id)}
-                                    style={{
-                                        position: 'absolute',
-                                        top: 0,
-                                        right: 0,
-                                    }}
-                                >
-                                    Remove
-                                </Button>
-                            </div>
-                        ))}
+                            )
+                        })}
                     </div>
                 </SmartScrollContent>
             </SmartScroll>
