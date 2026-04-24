@@ -83,8 +83,7 @@ namespace Optosense.Edm.Core.AspNet.Auth
             }
             else
             {
-                // Drop JWT-protocol claims; SecurityTokenDescriptor re-issues them.
-                // Carrying them forward causes them to compound across refreshes.
+                // Drop JWT protocol claims — descriptor re-issues them; passing through compounds across refreshes.
                 var reserved = new HashSet<string>(StringComparer.Ordinal)
                 {
                     JwtRegisteredClaimNames.Iss,
@@ -115,8 +114,7 @@ namespace Optosense.Edm.Core.AspNet.Auth
                 }
             }
 
-            // Defense-in-depth: collapse any (type, value) duplicates so a stray
-            // duplicate from an upstream identity transformation can't compound.
+            // Dedup so any upstream-introduced duplicate doesn't compound across refreshes.
             claims = claims
                 .GroupBy(c => (c.Type, c.Value), c => c)
                 .Select(g => g.First())
