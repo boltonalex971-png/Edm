@@ -22,4 +22,6 @@ public class Nomenclature : DirectoryEntry
     
     public TareType? DefaultTareType { get; set; }
     public Guid? DefaultTareTypeId { get; set; }
+
+    public ICollection<NomenclatureTareType>? AllowedTareTypes { get; set; }
 }

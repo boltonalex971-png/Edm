@@ -62,6 +62,18 @@ export interface TareType extends DataItem {
     capacity: number
 }
 
+export interface NomenclatureTareType {
+    id: UUID
+    nomenclatureId: UUID
+    tareTypeId: UUID
+    tareTypeName?: string
+    tareTypeDescription?: string
+    nomenclatureName?: string
+    nomenclatureDescription?: string
+    nomenclatureCategory?: string
+    isDefault: boolean
+}
+
 export interface Item extends DataItem {
     id: UUID
     supplyId?: UUID
@@ -163,7 +175,7 @@ export interface TareInfo {
     capacity: number
 }
 
-export interface AvailableTare extends TareInfo{
+export interface AvailableTare extends TareInfo {
     remaining: number
 }
 

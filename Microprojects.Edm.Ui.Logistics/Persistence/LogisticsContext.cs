@@ -20,6 +20,7 @@ public class LogisticsContext : DbContext
     public DbSet<SpecificationNomenclature> SpecificationNomenclatures { get; set; }
     public DbSet<Tare> Tares { get; set; }
     public DbSet<TareType> TareTypes { get; set; }
+    public DbSet<NomenclatureTareType> NomenclatureTareTypes { get; set; }
     public DbSet<Assignment> Tasks { get; set; }
     public DbSet<ItemLink> ItemLinks { get; set; }
     
@@ -114,6 +115,20 @@ public class LogisticsContext : DbContext
             .WithMany()
             .HasForeignKey(l => l.TargetItemId)
             .OnDelete(DeleteBehavior.NoAction);
+
+        builder.Entity<NomenclatureTareType>()
+            .HasOne(x => x.Nomenclature)
+            .WithMany(n => n.AllowedTareTypes)
+            .HasForeignKey(x => x.NomenclatureId)
+            .OnDelete(DeleteBehavior.Cascade);
+        builder.Entity<NomenclatureTareType>()
+            .HasOne(x => x.TareType)
+            .WithMany()
+            .HasForeignKey(x => x.TareTypeId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.Entity<NomenclatureTareType>()
+            .HasIndex(x => new { x.NomenclatureId, x.TareTypeId })
+            .IsUnique();
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken())
