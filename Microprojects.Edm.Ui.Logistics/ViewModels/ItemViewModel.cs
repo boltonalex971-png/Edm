@@ -52,4 +52,11 @@ public class ItemViewModel
     /// from supply-only stock without relying on field combinations.
     /// </summary>
     public bool IsOutput { get; set; }
+
+    /// <summary>
+    /// True when this item has no recorded origin: no <see cref="SupplyId"/>,
+    /// no producing process, and no parent <c>ItemLink</c>. Such items were
+    /// created directly via batch entry and are presumed to come from store.
+    /// </summary>
+    public bool IsStore { get; set; }
 }

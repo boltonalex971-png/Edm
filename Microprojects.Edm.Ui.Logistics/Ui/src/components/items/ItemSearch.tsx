@@ -366,6 +366,9 @@ export const ItemSearch = (props: ItemSearchProps) => {
                                         const hasSupply = row.items.some(
                                             (i) => i.supplyId && !i.isOutput,
                                         )
+                                        const hasStore = row.items.some(
+                                            (i) => i.isStore,
+                                        )
                                         if (hasOutput) {
                                             return (
                                                 <td title="This tare contains items produced by an order execution.">
@@ -380,6 +383,15 @@ export const ItemSearch = (props: ItemSearchProps) => {
                                                 <td title="This tare contains items received through a supply.">
                                                     <span className="item-source-badge item-source-badge--supply">
                                                         Supply
+                                                    </span>
+                                                </td>
+                                            )
+                                        }
+                                        if (hasStore) {
+                                            return (
+                                                <td title="This tare contains items created directly from store.">
+                                                    <span className="item-source-badge item-source-badge--store">
+                                                        Store
                                                     </span>
                                                 </td>
                                             )

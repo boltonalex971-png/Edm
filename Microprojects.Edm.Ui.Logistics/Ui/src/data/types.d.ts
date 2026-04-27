@@ -84,6 +84,9 @@ export interface Item extends DataItem {
     processName?: string
     /** True when this item is an order execution output (ProcessId != null). */
     isOutput?: boolean
+    /** True when the item has no recorded origin: no supply, no producing process,
+     * and no parent ItemLink — i.e. created directly via batch entry from store. */
+    isStore?: boolean
     /** Process grade assigned to this output item, nullable. */
     gradeId?: UUID
     gradeName?: string
