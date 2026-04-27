@@ -4,6 +4,7 @@ import { DetailLinkText } from '@logistics/components/DropDownCell.tsx'
 import {
     HierarchyPicker,
     findInHierarchy,
+    pruneHierarchy,
 } from '@logistics/components/HierarchyPicker.tsx'
 import {
     type AlertState,
@@ -27,9 +28,11 @@ import {
     type DetailEventHandler,
     type Item,
     type Nomenclature,
+    type NomenclatureTareType,
     Order,
     type TareType,
     type TreeDataItem,
+    type UUID,
 } from '@logistics/data/types'
 import { useGet } from '@logistics/hooks/hooks.ts'
 import { formatUnits } from '@logistics/utils/format.ts'
@@ -40,7 +43,7 @@ import { Field } from '@progress/kendo-react-form'
 import { Input, NumericTextBox, TextArea } from '@progress/kendo-react-inputs'
 import axios from 'axios'
 import type React from 'react'
-import { type EffectCallback, useEffect, useState } from 'react'
+import { type EffectCallback, useEffect, useMemo, useState } from 'react'
 import { Diagram3, Link45deg } from 'react-bootstrap-icons'
 
 export interface ItemDetailProps extends DetailProps {
@@ -77,6 +80,27 @@ export function ItemDetail({ id, title = 'Item', ...props }: ItemDetailProps) {
         taretypes,
         data?.tareTareTypeId,
     ) as TareType | null
+
+    const [[allowedRows]] = useGet<NomenclatureTareType[]>(
+        data?.nomenclatureId
+            ? `${Api.nomenclatures}/${data.nomenclatureId}/taretypes`
+            : '',
+        [data?.nomenclatureId],
+    )
+    const allowedTareTypeIds = useMemo(
+        () =>
+            data?.nomenclatureId && allowedRows
+                ? new Set<UUID>(allowedRows.map((r) => r.tareTypeId))
+                : null,
+        [data?.nomenclatureId, allowedRows],
+    )
+    const tareTypeOptions = useMemo(
+        () =>
+            allowedTareTypeIds
+                ? pruneHierarchy(taretypes, allowedTareTypeIds)
+                : (taretypes ?? []),
+        [taretypes, allowedTareTypeIds],
+    )
     const showAddress =
         (selectedTareType?.sizeX ?? 0) > 0 &&
         (selectedNomenclature?.countable ?? false) === true
@@ -430,7 +454,7 @@ export function ItemDetail({ id, title = 'Item', ...props }: ItemDetailProps) {
                                     name={'tareTareTypeId'}
                                     component={(p) => (
                                         <HierarchyPicker
-                                            data={taretypes}
+                                            data={tareTypeOptions}
                                             value={p.value}
                                             onChange={(v) =>
                                                 p.onChange({ value: v })

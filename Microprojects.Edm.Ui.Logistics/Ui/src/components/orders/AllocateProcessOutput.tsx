@@ -1,5 +1,8 @@
 import api from '@features/api/api'
-import { HierarchyPicker } from '@logistics/components/HierarchyPicker'
+import {
+    HierarchyPicker,
+    pruneHierarchy,
+} from '@logistics/components/HierarchyPicker'
 import {
     AllocateContextMenu,
     type ContextTareOption,
@@ -19,6 +22,7 @@ import type {
     AvailableTare,
     Grade,
     Item,
+    NomenclatureTareType,
     Order,
     OrderOutputItems,
     OutputAllocation,
@@ -70,6 +74,28 @@ export function AllocateProcessOutput({
         orderId,
         reloadToken,
     ])
+
+    const orderNomenclatureId = order?.processNomenclatureId
+    const [[allowedRows]] = useGet<NomenclatureTareType[]>(
+        orderNomenclatureId
+            ? `${api.nomenclatures}/${orderNomenclatureId}/taretypes`
+            : '',
+        [orderNomenclatureId],
+    )
+    const allowedTareTypeIds = useMemo(
+        () =>
+            orderNomenclatureId && allowedRows
+                ? new Set<UUID>(allowedRows.map((r) => r.tareTypeId))
+                : null,
+        [orderNomenclatureId, allowedRows],
+    )
+    const tareTypeOptions = useMemo(
+        () =>
+            allowedTareTypeIds
+                ? pruneHierarchy(tareTypes, allowedTareTypeIds)
+                : (tareTypes ?? []),
+        [tareTypes, allowedTareTypeIds],
+    )
 
     const unallocated = output?.unallocated ?? []
     const processId = output?.processId
@@ -125,6 +151,16 @@ export function AllocateProcessOutput({
         setSelectedItemIds(new Set())
         setPending([])
     }, [reloadToken, orderId, setSelectedItemIds])
+
+    useEffect(() => {
+        if (
+            allowedTareTypeIds &&
+            newTareTypeId &&
+            !allowedTareTypeIds.has(newTareTypeId)
+        ) {
+            setNewTareTypeId(undefined)
+        }
+    }, [allowedTareTypeIds, newTareTypeId])
 
     // Pre-populate the target-tares list with every tare that already holds at
     // least one output item from this order. On each refresh, re-fetch each
@@ -510,7 +546,7 @@ export function AllocateProcessOutput({
                         style={{ width: 220 }}
                     />
                     <HierarchyPicker
-                        data={tareTypes}
+                        data={tareTypeOptions}
                         value={newTareTypeId}
                         onChange={setNewTareTypeId}
                         style={{ width: 200 }}

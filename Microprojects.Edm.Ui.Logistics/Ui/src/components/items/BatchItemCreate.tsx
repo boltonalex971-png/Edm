@@ -3,6 +3,7 @@ import {Loading} from '@features/utils/Utils'
 import {
     HierarchyPicker,
     findInHierarchy,
+    pruneHierarchy,
 } from '@logistics/components/HierarchyPicker'
 import {TareBarcodePicker} from '@logistics/components/tare/TareBarcodePicker'
 import type {
@@ -10,6 +11,7 @@ import type {
     BatchCreateItemRequest,
     BatchCreateItemResult,
     Nomenclature,
+    NomenclatureTareType,
     TareInfo,
     TareType,
     TreeDataItem,
@@ -44,6 +46,27 @@ export function BatchItemCreate({
 
     const [nomenclatureId, setNomenclatureId] = useState<UUID>()
     const [tareTypeId, setTareTypeId] = useState<UUID>()
+
+    const [[allowedRows]] = useGet<NomenclatureTareType[]>(
+        nomenclatureId
+            ? `${Api.nomenclatures}/${nomenclatureId}/taretypes`
+            : '',
+        [nomenclatureId],
+    )
+    const allowedTareTypeIds = useMemo(
+        () =>
+            nomenclatureId && allowedRows
+                ? new Set<UUID>(allowedRows.map((r) => r.tareTypeId))
+                : null,
+        [nomenclatureId, allowedRows],
+    )
+    const tareTypeOptions = useMemo(
+        () =>
+            allowedTareTypeIds
+                ? pruneHierarchy(tareTypes, allowedTareTypeIds)
+                : (tareTypes ?? []),
+        [tareTypes, allowedTareTypeIds],
+    )
     const [selectedTare, setSelectedTare] = useState<AvailableTare | null>(null)
     const [barcodeText, setBarcodeText] = useState('')
     // Quantity stays empty until a Tare Type is chosen — there is no
@@ -190,7 +213,7 @@ export function BatchItemCreate({
             <div className="mb-2">
                 <label className="k-label">Tare Type</label>
                 <HierarchyPicker
-                    data={tareTypes}
+                    data={tareTypeOptions}
                     value={tareTypeId}
                     onChange={setTareTypeId}
                 />
