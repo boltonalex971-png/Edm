@@ -1,4 +1,5 @@
 import Api from '@features/api/api'
+import { HierarchyPicker } from '@logistics/components/HierarchyPicker'
 import { useGet } from '@logistics/hooks/hooks'
 import { useBasePath } from '@logistics/hooks/routerHooks'
 import { Field } from '@progress/kendo-react-form'
@@ -8,13 +9,12 @@ import { Diagram3 } from 'react-bootstrap-icons'
 import { useNavigate, useParams } from 'react-router-dom'
 import type {
     DetailEventHandler,
-    Item,
     Operation,
     Process,
     ProcessKind,
+    TreeDataItem,
     UUID,
 } from '../../../data/types'
-import { DropDownComp } from '../../DropDownCell'
 import {
     Detail,
     type DetailProps,
@@ -101,7 +101,10 @@ export function ProcessDetail({
     const id = processId?.toString() || params.id
     const [sub, setSub] = useState<React.ReactElement>()
     useEffect(setSub as EffectCallback, [id])
-    const [[noms]] = useGet<Item[]>(`${Api.nomenclatures}`, [])
+    const [[noms]] = useGet<TreeDataItem[]>(
+        `${Api.nomenclatures}/hierarchy`,
+        [],
+    )
     let [[data, setData], loading, error] = useGet<Process>(
         `${props.api}/${id}`,
         [id],
@@ -200,13 +203,12 @@ export function ProcessDetail({
                                     name={'nomenclatureId'}
                                     label={'Nomenclature'}
                                     component={(compProps) => (
-                                        <DropDownComp
-                                            {...compProps}
-                                            loading={!noms}
+                                        <HierarchyPicker
                                             data={noms}
-                                            textField="name"
-                                            dataItemKey="id"
-                                            valueField="nomenclatureId"
+                                            value={compProps.value}
+                                            onChange={(v) =>
+                                                compProps.onChange({ value: v })
+                                            }
                                         />
                                     )}
                                 />

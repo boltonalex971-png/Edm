@@ -1,10 +1,8 @@
 import Api from '@features/api/api.ts'
-import { DropDownCell } from '@logistics/components/DropDownCell.tsx'
-import { Dictionary, type Nomenclature } from '@logistics/data/types'
+import { DropDownTreeCell } from '@logistics/components/DropDownTreeCell.tsx'
+import type { TreeDataItem } from '@logistics/data/types'
 import { useGet } from '@logistics/hooks/hooks.ts'
 import { GridColumn } from '@progress/kendo-react-grid'
-import PropTypes from 'prop-types'
-import React from 'react'
 import { RelationTable } from '../../RelationTable'
 
 type ProcessSpecificationTabProps = {
@@ -16,7 +14,10 @@ export function ProcessSpecificationTab({
     id,
     api,
 }: ProcessSpecificationTabProps) {
-    const [[noms]] = useGet<Nomenclature>(`${Api.nomenclatures}`)
+    const [[noms]] = useGet<TreeDataItem[]>(
+        `${Api.nomenclatures}/hierarchy`,
+        [],
+    )
     return (
         <RelationTable
             api={`${api}/${id}/specification`}
@@ -35,11 +36,11 @@ export function ProcessSpecificationTab({
                 title="Name"
                 width={200}
                 cell={(p) => (
-                    <DropDownCell
+                    <DropDownTreeCell
                         {...p}
-                        getData={(_) => noms}
-                        id="id"
-                        text="name"
+                        getData={() => noms}
+                        fieldId="nomenclatureId"
+                        fieldName="nomenclatureName"
                     />
                 )}
             />

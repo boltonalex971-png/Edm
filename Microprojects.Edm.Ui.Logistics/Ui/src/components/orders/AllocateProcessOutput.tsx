@@ -1,4 +1,5 @@
 import api from '@features/api/api'
+import { HierarchyPicker } from '@logistics/components/HierarchyPicker'
 import {
     AllocateContextMenu,
     type ContextTareOption,
@@ -23,16 +24,13 @@ import type {
     OutputAllocation,
     TareInfo,
     TareType,
+    TreeDataItem,
     UUID,
 } from '@logistics/data/types'
 import { getData, postData, useGet } from '@logistics/hooks/hooks'
 import { useSlotSelection } from '@logistics/hooks/useSlotSelection'
 import { SmartScroll, SmartScrollContent } from '@microprojects/tools'
 import { Button } from '@progress/kendo-react-buttons'
-import {
-    ComboBox,
-    type ComboBoxFilterChangeEvent,
-} from '@progress/kendo-react-dropdowns'
 import type React from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import '@logistics/components/repacking/Repacking.css'
@@ -58,7 +56,10 @@ export function AllocateProcessOutput({
     onClose,
     onChanged,
 }: AllocateProcessOutputProps) {
-    const [[tareTypes]] = useGet<TareType[]>(api.taretypes, [])
+    const [[tareTypes]] = useGet<TreeDataItem[]>(
+        `${api.taretypes}/hierarchy`,
+        [],
+    )
 
     const [reloadToken, setReloadToken] = useState(0)
     const [[output], loading] = useGet<OrderOutputItems>(
@@ -95,7 +96,6 @@ export function AllocateProcessOutput({
         null,
     )
     const [newTareTypeId, setNewTareTypeId] = useState<UUID>()
-    const [tareTypeFilter, setTareTypeFilter] = useState('')
 
     const [pending, setPending] = useState<OutputAllocation[]>([])
     const [submitting, setSubmitting] = useState(false)
@@ -187,13 +187,6 @@ export function AllocateProcessOutput({
             cancelled = true
         }
     }, [output])
-
-    const filteredTareTypes = useMemo(() => {
-        if (!tareTypes) return []
-        if (!tareTypeFilter) return tareTypes
-        const lc = tareTypeFilter.toLowerCase()
-        return tareTypes.filter((t) => t.name.toLowerCase().includes(lc))
-    }, [tareTypes, tareTypeFilter])
 
     const newTareBarcodeText = newTarePicked?.barcode?.trim() ?? ''
 
@@ -516,19 +509,10 @@ export function AllocateProcessOutput({
                         placeholder="Tare barcode…"
                         style={{ width: 220 }}
                     />
-                    <ComboBox
-                        data={filteredTareTypes}
-                        dataItemKey="id"
-                        textField="name"
-                        value={
-                            tareTypes?.find((t) => t.id === newTareTypeId) ||
-                            null
-                        }
-                        filterable
-                        onFilterChange={(e: ComboBoxFilterChangeEvent) =>
-                            setTareTypeFilter(e.filter?.value || '')
-                        }
-                        onChange={(e) => setNewTareTypeId(e.value?.id)}
+                    <HierarchyPicker
+                        data={tareTypes}
+                        value={newTareTypeId}
+                        onChange={setNewTareTypeId}
                         style={{ width: 200 }}
                         placeholder="Type (for new)..."
                     />

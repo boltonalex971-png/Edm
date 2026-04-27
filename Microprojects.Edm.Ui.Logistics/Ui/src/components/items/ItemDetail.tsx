@@ -1,7 +1,10 @@
 import api from '@features/api/api.ts'
 import Api from '@features/api/api.ts'
 import { DetailLinkText } from '@logistics/components/DropDownCell.tsx'
-import { LinkableComboBox } from '@logistics/components/DropDowns.tsx'
+import {
+    HierarchyPicker,
+    findInHierarchy,
+} from '@logistics/components/HierarchyPicker.tsx'
 import {
     type AlertState,
     InlineAlert,
@@ -26,6 +29,7 @@ import {
     type Nomenclature,
     Order,
     type TareType,
+    type TreeDataItem,
 } from '@logistics/data/types'
 import { useGet } from '@logistics/hooks/hooks.ts'
 import { formatUnits } from '@logistics/utils/format.ts'
@@ -49,8 +53,14 @@ export function ItemDetail({ id, title = 'Item', ...props }: ItemDetailProps) {
     const [subDetail, setSubDetail] = useState<React.ReactElement>()
     useEffect(setSubDetail as EffectCallback, [id])
     //const [[processes]] = useGet<any[]>(api.processes, []);
-    const [[taretypes]] = useGet<TareType[]>(`${Api.taretypes}`, [])
-    const [[nomenclatures]] = useGet<Nomenclature[]>(`${Api.nomenclatures}`, [])
+    const [[taretypes]] = useGet<TreeDataItem[]>(
+        `${Api.taretypes}/hierarchy`,
+        [],
+    )
+    const [[nomenclatures]] = useGet<TreeDataItem[]>(
+        `${Api.nomenclatures}/hierarchy`,
+        [],
+    )
     let [[data, setData], loading, error] = useGet<Item>(
         `${Api.items}/${id || EMPTY_GUID}`,
         [id],
@@ -59,12 +69,14 @@ export function ItemDetail({ id, title = 'Item', ...props }: ItemDetailProps) {
         data = { ...data, name: '', description: '' } as Item
     }
 
-    const selectedNomenclature = nomenclatures?.find(
-        (n) => n.id === data?.nomenclatureId,
-    )
-    const selectedTareType = taretypes?.find(
-        (t) => t.id === data?.tareTareTypeId,
-    )
+    const selectedNomenclature = findInHierarchy(
+        nomenclatures,
+        data?.nomenclatureId,
+    ) as Nomenclature | null
+    const selectedTareType = findInHierarchy(
+        taretypes,
+        data?.tareTareTypeId,
+    ) as TareType | null
     const showAddress =
         (selectedTareType?.sizeX ?? 0) > 0 &&
         (selectedNomenclature?.countable ?? false) === true
@@ -392,9 +404,12 @@ export function ItemDetail({ id, title = 'Item', ...props }: ItemDetailProps) {
                                 <Field
                                     name={'nomenclatureId'}
                                     component={(p) => (
-                                        <LinkableComboBox
-                                            {...p}
+                                        <HierarchyPicker
                                             data={nomenclatures}
+                                            value={p.value}
+                                            onChange={(v) =>
+                                                p.onChange({ value: v })
+                                            }
                                         />
                                     )}
                                     label={'Nomenclature'}
@@ -414,9 +429,12 @@ export function ItemDetail({ id, title = 'Item', ...props }: ItemDetailProps) {
                                 <Field
                                     name={'tareTareTypeId'}
                                     component={(p) => (
-                                        <LinkableComboBox
-                                            {...p}
+                                        <HierarchyPicker
                                             data={taretypes}
+                                            value={p.value}
+                                            onChange={(v) =>
+                                                p.onChange({ value: v })
+                                            }
                                         />
                                     )}
                                     label={'Tare Type'}

@@ -1,4 +1,8 @@
 import api from '@features/api/api'
+import {
+    HierarchyPicker,
+    findInHierarchy,
+} from '@logistics/components/HierarchyPicker'
 import { PageTitle } from '@logistics/components/PageTitle'
 import { TareBarcodePicker } from '@logistics/components/tare/TareBarcodePicker'
 import { TareGroupRow } from '@logistics/components/tare/TareGroupRow'
@@ -15,16 +19,13 @@ import type {
     RepackResult,
     TareInfo,
     TareType,
+    TreeDataItem,
     UUID,
 } from '@logistics/data/types'
 import { getData, postData, useGet } from '@logistics/hooks/hooks'
 import { useSlotSelection } from '@logistics/hooks/useSlotSelection'
 import { SmartScroll, SmartScrollContent } from '@microprojects/tools'
 import { Button } from '@progress/kendo-react-buttons'
-import {
-    ComboBox,
-    type ComboBoxFilterChangeEvent,
-} from '@progress/kendo-react-dropdowns'
 import type React from 'react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import './Repacking.css'
@@ -34,11 +35,16 @@ type TargetTareState = TareInfo & {
 }
 
 export function Repacking() {
-    const [[nomenclatures]] = useGet<Nomenclature[]>(api.nomenclatures, [])
-    const [[tareTypes]] = useGet<TareType[]>(api.taretypes, [])
+    const [[nomenclatures]] = useGet<TreeDataItem[]>(
+        `${api.nomenclatures}/hierarchy`,
+        [],
+    )
+    const [[tareTypes]] = useGet<TreeDataItem[]>(
+        `${api.taretypes}/hierarchy`,
+        [],
+    )
 
     const [selectedNomenclatureId, setSelectedNomenclatureId] = useState<UUID>()
-    const [nomenclatureFilter, setNomenclatureFilter] = useState('')
 
     const [sourceItems, setSourceItems] = useState<Item[]>([])
 
@@ -67,7 +73,6 @@ export function Repacking() {
         null,
     )
     const [newTareTypeId, setNewTareTypeId] = useState<UUID>()
-    const [tareTypeFilter, setTareTypeFilter] = useState('')
 
     const tareBarcode = tarePicked?.barcode ?? ''
     const newTareBarcode = newTarePicked?.barcode ?? ''
@@ -77,8 +82,13 @@ export function Repacking() {
     // is still free to type or pick any other barcode; whatever they pick
     // is added to the source pool unfiltered.
     const sourceSuggestionTareTypeId = useMemo(
-        () => nomenclatures?.find((n) => n.id === selectedNomenclatureId)
-            ?.defaultTareTypeId,
+        () =>
+            (
+                findInHierarchy(
+                    nomenclatures,
+                    selectedNomenclatureId,
+                ) as Nomenclature | null
+            )?.defaultTareTypeId,
         [nomenclatures, selectedNomenclatureId],
     )
 
@@ -122,20 +132,6 @@ export function Repacking() {
             return next
         })
     }
-
-    const filteredNomenclatures = useMemo(() => {
-        if (!nomenclatures) return []
-        if (!nomenclatureFilter) return nomenclatures
-        const lc = nomenclatureFilter.toLowerCase()
-        return nomenclatures.filter((n) => n.name.toLowerCase().includes(lc))
-    }, [nomenclatures, nomenclatureFilter])
-
-    const filteredTareTypes = useMemo(() => {
-        if (!tareTypes) return []
-        if (!tareTypeFilter) return tareTypes
-        const lc = tareTypeFilter.toLowerCase()
-        return tareTypes.filter((t) => t.name.toLowerCase().includes(lc))
-    }, [tareTypes, tareTypeFilter])
 
     // The Nomenclature combo is a *helper* — it identifies which kind of
     // item the operator wants to relocate so the source pool can ignore
@@ -439,9 +435,10 @@ export function Repacking() {
         setSourceItems([])
     }
 
-    const selectedNomenclature = nomenclatures?.find(
-        (n) => n.id === selectedNomenclatureId,
-    )
+    const selectedNomenclature = findInHierarchy(
+        nomenclatures,
+        selectedNomenclatureId,
+    ) as Nomenclature | null
 
     return (
         <div className="repacking-page">
@@ -508,19 +505,11 @@ export function Repacking() {
                         </div>
                         <div className="field-group">
                             <label>Nomenclature</label>
-                            <ComboBox
-                                data={filteredNomenclatures}
-                                dataItemKey="id"
-                                textField="name"
-                                value={selectedNomenclature || null}
-                                filterable
-                                onFilterChange={(
-                                    e: ComboBoxFilterChangeEvent,
-                                ) =>
-                                    setNomenclatureFilter(e.filter?.value || '')
-                                }
-                                onChange={(e) => {
-                                    setSelectedNomenclatureId(e.value?.id)
+                            <HierarchyPicker
+                                data={nomenclatures}
+                                value={selectedNomenclatureId}
+                                onChange={(v) => {
+                                    setSelectedNomenclatureId(v)
                                     reset()
                                 }}
                                 style={{ width: 300 }}
@@ -622,24 +611,10 @@ export function Repacking() {
                                     placeholder="Tare barcode…"
                                     style={{ width: 220 }}
                                 />
-                                <ComboBox
-                                    data={filteredTareTypes}
-                                    dataItemKey="id"
-                                    textField="name"
-                                    value={
-                                        tareTypes?.find(
-                                            (t) => t.id === newTareTypeId,
-                                        ) || null
-                                    }
-                                    filterable
-                                    onFilterChange={(
-                                        e: ComboBoxFilterChangeEvent,
-                                    ) =>
-                                        setTareTypeFilter(e.filter?.value || '')
-                                    }
-                                    onChange={(e) =>
-                                        setNewTareTypeId(e.value?.id)
-                                    }
+                                <HierarchyPicker
+                                    data={tareTypes}
+                                    value={newTareTypeId}
+                                    onChange={setNewTareTypeId}
                                     style={{ width: 200 }}
                                     placeholder="Type (for new)..."
                                 />

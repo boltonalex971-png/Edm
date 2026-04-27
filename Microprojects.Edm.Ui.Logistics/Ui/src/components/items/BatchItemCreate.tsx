@@ -1,6 +1,9 @@
 import Api from '@features/api/api'
 import {Loading} from '@features/utils/Utils'
-import {LinkableComboBox} from '@logistics/components/DropDowns'
+import {
+    HierarchyPicker,
+    findInHierarchy,
+} from '@logistics/components/HierarchyPicker'
 import {TareBarcodePicker} from '@logistics/components/tare/TareBarcodePicker'
 import type {
     AvailableTare,
@@ -9,6 +12,7 @@ import type {
     Nomenclature,
     TareInfo,
     TareType,
+    TreeDataItem,
     UUID,
 } from '@logistics/data/types'
 import {useGet} from '@logistics/hooks/hooks'
@@ -29,8 +33,14 @@ export function BatchItemCreate({
                                     onCreated,
                                     onClose,
                                 }: BatchItemCreateProps) {
-    const [[nomenclatures]] = useGet<Nomenclature[]>(Api.nomenclatures, [])
-    const [[tareTypes]] = useGet<TareType[]>(Api.taretypes, [])
+    const [[nomenclatures]] = useGet<TreeDataItem[]>(
+        `${Api.nomenclatures}/hierarchy`,
+        [],
+    )
+    const [[tareTypes]] = useGet<TreeDataItem[]>(
+        `${Api.taretypes}/hierarchy`,
+        [],
+    )
 
     const [nomenclatureId, setNomenclatureId] = useState<UUID>()
     const [tareTypeId, setTareTypeId] = useState<UUID>()
@@ -43,10 +53,14 @@ export function BatchItemCreate({
     const [error, setError] = useState<string>()
     const [result, setResult] = useState<BatchCreateItemResult>()
 
-    const selectedNomenclature = nomenclatures?.find(
-        (n) => n.id === nomenclatureId,
-    )
-    const selectedTareType = tareTypes?.find((t) => t.id === tareTypeId)
+    const selectedNomenclature = findInHierarchy(
+        nomenclatures,
+        nomenclatureId,
+    ) as Nomenclature | null
+    const selectedTareType = findInHierarchy(
+        tareTypes,
+        tareTypeId,
+    ) as TareType | null
 
     useEffect(() => {
         if (selectedNomenclature?.defaultTareTypeId) {
@@ -166,19 +180,19 @@ export function BatchItemCreate({
 
             <div className="mb-2">
                 <label className="k-label">Nomenclature</label>
-                <LinkableComboBox
+                <HierarchyPicker
                     data={nomenclatures}
                     value={nomenclatureId}
-                    onChange={(e) => setNomenclatureId(e.value?.id)}
+                    onChange={setNomenclatureId}
                 />
             </div>
 
             <div className="mb-2">
                 <label className="k-label">Tare Type</label>
-                <LinkableComboBox
+                <HierarchyPicker
                     data={tareTypes}
                     value={tareTypeId}
-                    onChange={(e) => setTareTypeId(e.value?.id)}
+                    onChange={setTareTypeId}
                 />
             </div>
 
