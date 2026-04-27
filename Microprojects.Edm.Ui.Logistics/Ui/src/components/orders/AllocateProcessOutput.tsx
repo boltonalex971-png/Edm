@@ -540,6 +540,7 @@ export function AllocateProcessOutput({
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                     <TareBarcodePicker
                         tareTypeId={newTareTypeId}
+                        nomenclatureId={orderNomenclatureId}
                         value={newTarePicked}
                         onChange={(tare) => setNewTarePicked(tare)}
                         placeholder="Tare barcode…"

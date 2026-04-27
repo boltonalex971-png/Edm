@@ -225,6 +225,7 @@ export function BatchItemCreate({
                 </label>
                 <TareBarcodePicker
                     tareTypeId={tareTypeId}
+                    nomenclatureId={nomenclatureId}
                     // Pass only the picked tare object — never the typed
                     // string — so the picker keeps custom values across
                     // blur/Enter (see comment inside TareBarcodePicker).

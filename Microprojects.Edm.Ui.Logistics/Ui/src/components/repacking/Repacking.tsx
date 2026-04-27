@@ -494,6 +494,7 @@ export function Repacking() {
                             <div style={{ display: 'flex', gap: '0.5rem' }}>
                                 <TareBarcodePicker
                                     tareTypeId={sourceSuggestionTareTypeId}
+                                    nomenclatureId={selectedNomenclatureId}
                                     includeFull
                                     value={tarePicked}
                                     onChange={async (tare) => {
@@ -626,6 +627,7 @@ export function Repacking() {
                             <div style={{ display: 'flex', gap: '0.5rem' }}>
                                 <TareBarcodePicker
                                     tareTypeId={newTareTypeId}
+                                    nomenclatureId={selectedNomenclatureId}
                                     value={newTarePicked}
                                     onChange={async (tare) => {
                                         setNewTarePicked(tare)
