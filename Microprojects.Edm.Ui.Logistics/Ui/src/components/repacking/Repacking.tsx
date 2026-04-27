@@ -2,6 +2,7 @@ import api from '@features/api/api'
 import {
     HierarchyPicker,
     findInHierarchy,
+    pruneHierarchy,
 } from '@logistics/components/HierarchyPicker'
 import { PageTitle } from '@logistics/components/PageTitle'
 import { TareBarcodePicker } from '@logistics/components/tare/TareBarcodePicker'
@@ -14,6 +15,7 @@ import type {
     AvailableTare,
     Item,
     Nomenclature,
+    NomenclatureTareType,
     RepackMove,
     RepackRequest,
     RepackResult,
@@ -45,6 +47,27 @@ export function Repacking() {
     )
 
     const [selectedNomenclatureId, setSelectedNomenclatureId] = useState<UUID>()
+
+    const [[allowedRows]] = useGet<NomenclatureTareType[]>(
+        selectedNomenclatureId
+            ? `${api.nomenclatures}/${selectedNomenclatureId}/taretypes`
+            : '',
+        [selectedNomenclatureId],
+    )
+    const allowedTareTypeIds = useMemo(
+        () =>
+            selectedNomenclatureId && allowedRows
+                ? new Set<UUID>(allowedRows.map((r) => r.tareTypeId))
+                : null,
+        [selectedNomenclatureId, allowedRows],
+    )
+    const tareTypeOptions = useMemo(
+        () =>
+            allowedTareTypeIds
+                ? pruneHierarchy(tareTypes, allowedTareTypeIds)
+                : (tareTypes ?? []),
+        [tareTypes, allowedTareTypeIds],
+    )
 
     const [sourceItems, setSourceItems] = useState<Item[]>([])
 
@@ -144,6 +167,16 @@ export function Repacking() {
         setSourceItems([])
         clearSourceSelection()
     }, [selectedNomenclatureId, clearSourceSelection])
+
+    useEffect(() => {
+        if (
+            allowedTareTypeIds &&
+            newTareTypeId &&
+            !allowedTareTypeIds.has(newTareTypeId)
+        ) {
+            setNewTareTypeId(undefined)
+        }
+    }, [allowedTareTypeIds, newTareTypeId])
 
     const loadTareByBarcode = useCallback(async () => {
         if (!tareBarcode.trim()) return
@@ -461,6 +494,7 @@ export function Repacking() {
                             <div style={{ display: 'flex', gap: '0.5rem' }}>
                                 <TareBarcodePicker
                                     tareTypeId={sourceSuggestionTareTypeId}
+                                    nomenclatureId={selectedNomenclatureId}
                                     includeFull
                                     value={tarePicked}
                                     onChange={async (tare) => {
@@ -593,6 +627,7 @@ export function Repacking() {
                             <div style={{ display: 'flex', gap: '0.5rem' }}>
                                 <TareBarcodePicker
                                     tareTypeId={newTareTypeId}
+                                    nomenclatureId={selectedNomenclatureId}
                                     value={newTarePicked}
                                     onChange={async (tare) => {
                                         setNewTarePicked(tare)
@@ -612,7 +647,7 @@ export function Repacking() {
                                     style={{ width: 220 }}
                                 />
                                 <HierarchyPicker
-                                    data={tareTypes}
+                                    data={tareTypeOptions}
                                     value={newTareTypeId}
                                     onChange={setNewTareTypeId}
                                     style={{ width: 200 }}

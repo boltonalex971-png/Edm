@@ -71,12 +71,15 @@ public class TaresController : AuthControllerBase
     public async Task<IEnumerable<AvailableTareViewModel>> GetAvailable(
         [FromQuery] Guid? tareTypeId = null,
         [FromQuery] string? barcode = null,
-        [FromQuery] bool includeFull = false)
+        [FromQuery] bool includeFull = false,
+        [FromQuery] Guid? nomenclatureId = null)
     {
         // Callers may issue this lookup before the user has chosen a tare
-        // type (e.g. dropdowns mount before selection). Treat the missing
-        // case as "no available tares" instead of returning 400.
-        if ((tareTypeId == null || tareTypeId == Guid.Empty) && barcode == null)
+        // type or nomenclature (e.g. dropdowns mount before selection).
+        // Treat the missing case as "no available tares" instead of returning 400.
+        var hasType = tareTypeId != null && tareTypeId != Guid.Empty;
+        var hasNomenclature = nomenclatureId != null && nomenclatureId != Guid.Empty;
+        if (!hasType && !hasNomenclature && barcode == null)
         {
             return Array.Empty<AvailableTareViewModel>();
         }
@@ -84,6 +87,15 @@ public class TaresController : AuthControllerBase
         var query = _db.Tares.AsNoTracking()
             .Include(t => t.TareType)
             .Where(t => tareTypeId == null || t.TareTypeId == tareTypeId.Value);
+
+        if (hasNomenclature && !hasType)
+        {
+            var allowedTypeIds = await _db.NomenclatureTareTypes.AsNoTracking()
+                .Where(x => x.NomenclatureId == nomenclatureId!.Value)
+                .Select(x => x.TareTypeId)
+                .ToListAsync();
+            query = query.Where(t => allowedTypeIds.Contains(t.TareTypeId));
+        }
 
         if (!string.IsNullOrWhiteSpace(barcode))
         {

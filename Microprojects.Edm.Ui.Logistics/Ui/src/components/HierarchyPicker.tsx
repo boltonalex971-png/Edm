@@ -18,6 +18,28 @@ export function findInHierarchy(
     return null
 }
 
+// Drop leaves not in `allowedIds` and folders that have no allowed descendants.
+// Used to constrain a TareType picker to a Nomenclature's AllowedTareTypes
+// while preserving the directory grouping.
+export function pruneHierarchy(
+    nodes: TreeDataItem[] | undefined,
+    allowedIds: Set<UUID>,
+): TreeDataItem[] {
+    if (!nodes) return []
+    const out: TreeDataItem[] = []
+    for (const n of nodes) {
+        if (n.isFolder) {
+            const children = pruneHierarchy(n.items, allowedIds)
+            if (children.length > 0) {
+                out.push({ ...n, items: children })
+            }
+        } else if (allowedIds.has(n.id)) {
+            out.push(n)
+        }
+    }
+    return out
+}
+
 export type HierarchyPickerProps = {
     data: TreeDataItem[] | undefined
     value: UUID | undefined
