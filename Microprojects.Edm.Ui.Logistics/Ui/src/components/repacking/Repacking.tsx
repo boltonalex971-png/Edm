@@ -546,7 +546,7 @@ export function Repacking() {
                                     setSelectedNomenclatureId(v)
                                     reset()
                                 }}
-                                style={{ width: 300 }}
+                                width={300}
                                 placeholder="Select nomenclature..."
                             />
                         </div>
@@ -650,7 +650,7 @@ export function Repacking() {
                                     data={tareTypeOptions}
                                     value={newTareTypeId}
                                     onChange={setNewTareTypeId}
-                                    style={{ width: 200 }}
+                                    width={200}
                                     placeholder="Type (for new)..."
                                 />
                                 <Button

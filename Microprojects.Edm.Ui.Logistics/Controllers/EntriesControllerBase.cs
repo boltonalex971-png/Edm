@@ -102,8 +102,14 @@ public class EntriesControllerBase<TEntry, TEntryViewModel, TService> : AuthCont
 
     protected async Task<IEnumerable<DirectoryEntryViewModel>> BuildEntryHierarchy(IEnumerable<TEntry> entries)
     {
-        // 1) find all entries of target type (already provided as `entries`)
-        var entryViewModels = Mapper.Map<IEnumerable<DirectoryEntryViewModel>>(entries).ToList();
+        // 1) find all entries of target type (already provided as `entries`).
+        // Map to the derived viewmodel so leaf nodes carry their type-specific
+        // fields (e.g. Nomenclature.DefaultTareTypeId, TareType.Capacity).
+        // Newtonsoft serializes by runtime type, so the JSON keeps those fields
+        // even though the declared collection type is the base.
+        var entryViewModels = Mapper.Map<IEnumerable<TEntryViewModel>>(entries)
+            .Cast<DirectoryEntryViewModel>()
+            .ToList();
         if (entryViewModels.Count == 0)
         {
             return Array.Empty<DirectoryEntryViewModel>();

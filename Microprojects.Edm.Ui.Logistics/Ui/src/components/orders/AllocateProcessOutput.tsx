@@ -550,7 +550,7 @@ export function AllocateProcessOutput({
                         data={tareTypeOptions}
                         value={newTareTypeId}
                         onChange={setNewTareTypeId}
-                        style={{ width: 200 }}
+                        width={200}
                         placeholder="Type (for new)..."
                     />
                     <Button themeColor="primary" onClick={searchAndAddTare}>

@@ -26,17 +26,14 @@ public static class DirectoryHelper
 
         foreach (var c in children)
         {
-            var childrenItems = items.ToDeepTree(c.Id).ToArray();
-            result.Add(new DirectoryEntryViewModel
-            {
-                Id = c.Id,
-                DirectoryId = c.DirectoryId,
-                Description = c.Description,
-                IsFolder = c.IsFolder,
-                Name = c.Name,
-                Expanded = true,
-                Items = childrenItems
-            });
+            // Mutate the original node so its runtime type is preserved.
+            // Allocating a fresh `new DirectoryEntryViewModel { ... }` here
+            // would strip derived viewmodels (NomenclatureViewModel,
+            // TareTypeViewModel, …) of their type-specific fields when
+            // Newtonsoft serializes the result.
+            c.Items = items.ToDeepTree(c.Id).ToArray();
+            c.Expanded = true;
+            result.Add(c);
         }
 
         return result;
