@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace Microprojects.Edm.Ui.Logistics.Models;
 
 public class Item : DomainObject, IWithMeta
@@ -53,4 +55,12 @@ public class Item : DomainObject, IWithMeta
     public Guid? GradeId { get; set; }
 
     public Meta Meta { get; set; }
+
+    /// <summary>
+    /// Transient flag set by the service layer for read queries. True when the
+    /// item has no <see cref="SupplyId"/>, no <see cref="ProcessId"/>, and no
+    /// parent <c>ItemLink</c> — i.e. it was created directly via batch entry.
+    /// </summary>
+    [NotMapped]
+    public bool IsStore { get; set; }
 }

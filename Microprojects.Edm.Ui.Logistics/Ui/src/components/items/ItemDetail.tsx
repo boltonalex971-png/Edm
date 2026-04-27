@@ -187,6 +187,14 @@ export function ItemDetail({ id, title = 'Item', ...props }: ItemDetailProps) {
                                             >
                                                 Supply
                                             </span>
+                                        ) : data.isStore ? (
+                                            <span
+                                                className="item-source-badge item-source-badge--store"
+                                                style={{ marginLeft: 8 }}
+                                                title="Created directly from store (no recorded origin)."
+                                            >
+                                                Store
+                                            </span>
                                         ) : null}
                                     </dd>
 

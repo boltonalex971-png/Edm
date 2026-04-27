@@ -32,6 +32,12 @@ public class ItemService : ServiceBase<Item>, IItemService
             .Include(i => i.Order).ThenInclude(o => o.Process)
             .Include(i => i.Process)
             .FirstOrDefaultAsync(i => id == i.Id);
+
+        if (result != null && result.SupplyId == null && result.ProcessId == null)
+        {
+            result.IsStore = !await Db.Set<ItemLink>()
+                .AnyAsync(l => l.TargetItemId == id);
+        }
         return result;
     }
 
@@ -234,6 +240,11 @@ public class ItemService : ServiceBase<Item>, IItemService
                 Quantity = i.Quantity - linkSet
                     .Where(l => l.SourceItemId == i.Id && l.OrderProcessId == null)
                     .Sum(l => (double?)l.ConsumedQuantity) ?? 0,
+                // Origin is "store" when the item has no supply, no producing
+                // process, and no parent ItemLink (i.e. was created via batch entry).
+                IsStore = i.SupplyId == null
+                    && i.ProcessId == null
+                    && !linkSet.Any(l => l.TargetItemId == i.Id),
             })
             .Where(i => i.Quantity > 0)
             .ToListAsync();
@@ -618,19 +629,42 @@ public class ItemService : ServiceBase<Item>, IItemService
                 Address = i.Address,
                 Quantity = i.Quantity,
                 SupplyId = i.SupplyId,
+                IsStore = i.SupplyId == null,
             }),
         };
     }
 
     public async Task<IEnumerable<Item>> GetByTare(Guid tareId)
     {
-        return await Set().AsNoTracking()
+        var items = await Set().AsNoTracking()
             .Include(i => i.Nomenclature).ThenInclude(n => n.DefaultTareType)
             .Include(i => i.Tare.TareType)
             .Include(i => i.Grade)
             .Include(i => i.Meta)
             .Where(i => i.TareId == tareId && i.Meta.Deleted == null && i.Meta.Completed == null)
             .ToListAsync();
+
+        var candidateIds = items
+            .Where(i => i.SupplyId == null && i.ProcessId == null)
+            .Select(i => i.Id)
+            .ToList();
+        if (candidateIds.Count > 0)
+        {
+            var withParent = await Db.Set<ItemLink>().AsNoTracking()
+                .Where(l => candidateIds.Contains(l.TargetItemId))
+                .Select(l => l.TargetItemId)
+                .Distinct()
+                .ToListAsync();
+            var withParentSet = withParent.ToHashSet();
+            foreach (var item in items)
+            {
+                item.IsStore = item.SupplyId == null
+                    && item.ProcessId == null
+                    && !withParentSet.Contains(item.Id);
+            }
+        }
+
+        return items;
     }
 
     public async Task<RepackResult> Repack(RepackRequest request)
