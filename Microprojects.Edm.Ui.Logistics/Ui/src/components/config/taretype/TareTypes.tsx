@@ -21,6 +21,7 @@ import {
     MasterDetail,
     reloadMaster,
 } from '../../MasterDetail'
+import { TareTypeTabs } from './TareTypeTabs'
 
 function formatSize(data: TareType) {
     const parts = [data.sizeX, data.sizeY, data.sizeZ].filter(
@@ -262,7 +263,7 @@ export interface TareTypeDetailProps extends DetailProps {
 
 export function TareTypeDetail({ id, ...props }: TareTypeDetailProps) {
     const params = useParams<{ id: string }>()
-    const effectiveId = id || params.id
+    const effectiveId = (id || params.id) as UUID | undefined
     const [sub, setSub] = useState<React.ReactElement>()
     useEffect(setSub as EffectCallback, [effectiveId])
     let [[data, setData], loading, error] = useGet<TareType>(
@@ -285,6 +286,16 @@ export function TareTypeDetail({ id, ...props }: TareTypeDetailProps) {
             error={error as string}
             data={data}
             subDetail={sub}
+            relations={
+                effectiveId &&
+                effectiveId !== EMPTY_GUID && (
+                    <TareTypeTabs
+                        id={effectiveId}
+                        api={props.api}
+                        onDetailSelected={setSub}
+                    />
+                )
+            }
             card={
                 <Info
                     content={

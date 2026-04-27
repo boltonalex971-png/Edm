@@ -4,12 +4,11 @@ import { useBasePath } from '@logistics/hooks/routerHooks'
 import { Field } from '@progress/kendo-react-form'
 import { Checkbox, Input } from '@progress/kendo-react-inputs'
 import { type EffectCallback, useEffect, useState } from 'react'
-import { CardChecklist, Diagram3 } from 'react-bootstrap-icons'
+import { CardChecklist } from 'react-bootstrap-icons'
 import { useNavigate, useParams } from 'react-router-dom'
 import type {
     DetailEventHandler,
     Nomenclature,
-    TareType,
     UUID,
 } from '../../../data/types'
 import { DropDownComp } from '../../DropDownCell'
@@ -22,6 +21,7 @@ import {
     MasterDetail,
     reloadMaster,
 } from '../../MasterDetail'
+import { NomenclatureTabs } from './NomenclatureTabs'
 
 export function Nomenclatures() {
     const type = 'nomenclature'
@@ -54,14 +54,13 @@ export interface NomenclatureDetailProps extends DetailProps {
 
 export function NomenclatureDetail({ id, ...props }: NomenclatureDetailProps) {
     const params = useParams<{ id: string }>()
-    const effectiveId = id || params.id
+    const effectiveId = (id || params.id) as UUID | undefined
     const [sub, setSub] = useState<React.ReactElement>()
     useEffect(setSub as EffectCallback, [effectiveId])
     const [[categories]] = useGet<string[]>(
         `${Api.nomenclatures}/categories`,
         [],
     )
-    const [[tareTypes]] = useGet<TareType[]>(`${Api.taretypes}`, [])
     let [[data, setData], loading, error] = useGet<Nomenclature>(
         `${props.api}/${effectiveId}`,
         [effectiveId],
@@ -88,10 +87,6 @@ export function NomenclatureDetail({ id, ...props }: NomenclatureDetailProps) {
                                     <p>
                                         <span>Category: </span>
                                         <span>{data.category}</span>
-                                    </p>
-                                    <p>
-                                        <span>Tare: </span>
-                                        <span>{data.defaultTareTypeName}</span>
                                     </p>
                                 </div>
                             </>
@@ -127,9 +122,6 @@ export function NomenclatureDetail({ id, ...props }: NomenclatureDetailProps) {
                                     label={'Description'}
                                 />
                             </div>
-                            {/*<div className="mb-3">*/}
-                            {/*    <Field name={'commonUid'} component={Input} label={'Common UID'} />*/}
-                            {/*</div>*/}
                             <div className="mb-3" style={{ width: '400px' }}>
                                 <Field
                                     name={'category'}
@@ -150,24 +142,6 @@ export function NomenclatureDetail({ id, ...props }: NomenclatureDetailProps) {
                                     )}
                                 />
                             </div>
-                            <div className="mb-3" style={{ width: '400px' }}>
-                                <Field
-                                    name={'defaultTareTypeId'}
-                                    label={'Default tare'}
-                                    component={(compProps) => (
-                                        <DropDownComp
-                                            {...compProps}
-                                            loading={!tareTypes}
-                                            data={[
-                                                { name: '' },
-                                                ...(tareTypes || []),
-                                            ]}
-                                            textField="name"
-                                            dataItemKey="id"
-                                        />
-                                    )}
-                                />
-                            </div>
                             <div className="mb-3">
                                 <Field
                                     name={'countable'}
@@ -178,6 +152,16 @@ export function NomenclatureDetail({ id, ...props }: NomenclatureDetailProps) {
                         </fieldset>
                     }
                 />
+            }
+            relations={
+                effectiveId &&
+                effectiveId !== EMPTY_GUID && (
+                    <NomenclatureTabs
+                        id={effectiveId}
+                        api={props.api}
+                        onDetailSelected={setSub}
+                    />
+                )
             }
         />
     )

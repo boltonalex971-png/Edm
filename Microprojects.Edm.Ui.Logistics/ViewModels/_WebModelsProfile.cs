@@ -35,8 +35,22 @@ public class WebModelsProfile : AutoMapper.Profile
         CreateMap<Grade, GradeViewModel>();
         CreateMap<GradeViewModel, Grade>();
         
-        CreateMap<Nomenclature, NomenclatureViewModel>();
-        CreateMap<NomenclatureViewModel, Nomenclature>();
+        CreateMap<Nomenclature, NomenclatureViewModel>()
+            .ForMember(d => d.DefaultTareTypeName, o => o.MapFrom(s =>
+                s.DefaultTareType != null ? s.DefaultTareType.Name : null));
+        // Default tare is set via the AllowedTareTypes sub-route; ignore here so plain PUT cannot change it.
+        CreateMap<NomenclatureViewModel, Nomenclature>()
+            .ForMember(d => d.DefaultTareTypeId, o => o.Ignore())
+            .ForMember(d => d.DefaultTareType, o => o.Ignore())
+            .ForMember(d => d.AllowedTareTypes, o => o.Ignore());
+
+        CreateMap<NomenclatureTareType, NomenclatureTareTypeViewModel>()
+            .ForMember(d => d.TareTypeName, o => o.MapFrom(s => s.TareType.Name))
+            .ForMember(d => d.TareTypeDescription, o => o.MapFrom(s => s.TareType.Description))
+            .ForMember(d => d.NomenclatureName, o => o.MapFrom(s => s.Nomenclature.Name))
+            .ForMember(d => d.NomenclatureDescription, o => o.MapFrom(s => s.Nomenclature.Description))
+            .ForMember(d => d.NomenclatureCategory, o => o.MapFrom(s => s.Nomenclature.Category.ToString()))
+            .ForMember(d => d.IsDefault, o => o.MapFrom(s => s.Nomenclature.DefaultTareTypeId == s.TareTypeId));
         CreateMap<TareType, TareTypeViewModel>();
         CreateMap<TareTypeViewModel, TareType>();
         CreateMap<Item, ItemViewModel>()
