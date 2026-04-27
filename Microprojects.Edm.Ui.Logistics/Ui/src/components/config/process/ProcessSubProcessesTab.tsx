@@ -4,12 +4,11 @@ import {
     OPERATION,
     TECHNOLOGY,
 } from '@logistics/data/processKinds'
-import type { ProcessKind, UUID } from '@logistics/data/types'
+import type { ProcessKind, TreeDataItem, UUID } from '@logistics/data/types'
 import { GridColumn } from '@progress/kendo-react-grid'
-import React from 'react'
 import Api from '../../../features/api/api'
 import { useGet } from '../../../hooks/hooks'
-import { DropDownCell, LinkTextCell } from '../../DropDownCell'
+import { DropDownTreeCell } from '../../DropDownTreeCell'
 import { RelationTable } from '../../RelationTable'
 
 export type ProcessProfilesTabProps = {
@@ -24,7 +23,6 @@ export function ProcessSubProcessesTab({
     id,
     api,
     kind,
-    missedInputs,
     onDetailSelected,
 }: ProcessProfilesTabProps) {
     const allowedChildKind =
@@ -33,8 +31,11 @@ export function ProcessSubProcessesTab({
             : kind === TECHNOLOGY
               ? OPERATION
               : undefined
-    const [[data]] = useGet(
-        allowedChildKind ? `${api}?kind=${allowedChildKind}` : `${api}`,
+    const [[hierarchy]] = useGet<TreeDataItem[]>(
+        allowedChildKind
+            ? `${api}/hierarchy?kind=${allowedChildKind}`
+            : `${api}/hierarchy`,
+        [],
     )
     return (
         <RelationTable
@@ -49,27 +50,24 @@ export function ProcessSubProcessesTab({
                 width="200"
                 field="linkedProcessId"
                 title="Process"
-                cell={(cellProps) =>
-                    data && (
-                        <DropDownCell
-                            {...cellProps}
-                            getData={() => data}
-                            id="id"
-                            text="name"
-                            fieldId={cellProps.field || 'id'}
-                            onClick={(id, itemUpdate) =>
-                                onDetailSelected(
-                                    <ProcessDetail
-                                        processId={id}
-                                        api={Api.processes}
-                                        onClose={() => onDetailSelected()}
-                                        onUpdate={itemUpdate}
-                                    />,
-                                )
-                            }
-                        />
-                    )
-                }
+                cell={(cellProps) => (
+                    <DropDownTreeCell
+                        {...cellProps}
+                        getData={() => hierarchy}
+                        fieldId="linkedProcessId"
+                        fieldName="linkedProcessName"
+                        onClick={(procId, itemUpdate) =>
+                            onDetailSelected(
+                                <ProcessDetail
+                                    processId={procId}
+                                    api={Api.processes}
+                                    onClose={() => onDetailSelected()}
+                                    onUpdate={itemUpdate}
+                                />,
+                            )
+                        }
+                    />
+                )}
             />
             <GridColumn
                 field="linkedProcessKind"
