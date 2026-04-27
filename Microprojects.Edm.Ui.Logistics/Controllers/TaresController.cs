@@ -17,13 +17,15 @@ public class TaresController : AuthControllerBase
     private readonly IMapper _mapper;
     private readonly LogisticsContext _db;
     private readonly ITareService _tareService;
+    private readonly IUserService _userService;
 
-    public TaresController(IMapper mapper, LogisticsContext db, ITareService tareService, IConfiguration configuration)
+    public TaresController(IMapper mapper, LogisticsContext db, ITareService tareService, IUserService userService, IConfiguration configuration)
         : base(configuration)
     {
         _mapper = mapper;
         _db = db;
         _tareService = tareService;
+        _userService = userService;
     }
 
     [HttpGet("search")]
@@ -32,7 +34,15 @@ public class TaresController : AuthControllerBase
     {
         var query = _db.Tares.AsNoTracking()
             .Include(t => t.TareType)
+                .ThenInclude(tt => tt.Meta)
             .AsQueryable();
+
+        var userGroups = _userService.GetUserGroups();
+        if (userGroups is { Length: > 0 })
+        {
+            query = query.Where(t => t.TareType.Meta.Groups.Length == 0 ||
+                                     t.TareType.Meta.Groups.Any(g => userGroups.Contains(g)));
+        }
 
         if (!string.IsNullOrWhiteSpace(barcode))
         {
@@ -86,7 +96,18 @@ public class TaresController : AuthControllerBase
 
         var query = _db.Tares.AsNoTracking()
             .Include(t => t.TareType)
+                .ThenInclude(tt => tt.Meta)
             .Where(t => tareTypeId == null || t.TareTypeId == tareTypeId.Value);
+
+        // Restrict to tares whose TareType lives in a directory the current
+        // user is permitted to see. Mirrors ServiceBase.GetAll() — empty
+        // group set on the entry means public.
+        var userGroups = _userService.GetUserGroups();
+        if (userGroups is { Length: > 0 })
+        {
+            query = query.Where(t => t.TareType.Meta.Groups.Length == 0 ||
+                                     t.TareType.Meta.Groups.Any(g => userGroups.Contains(g)));
+        }
 
         if (hasNomenclature && !hasType)
         {
