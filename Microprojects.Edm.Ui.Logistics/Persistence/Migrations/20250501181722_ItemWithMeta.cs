@@ -10,7 +10,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.Sql("INSERT INTO dbo.Metas (Id, Metatype, Created, Owner) SELECT Id, 'Item', GETDATE(), 'User' FROM dbo.Items");
+            migrationBuilder.Sql("INSERT INTO dbo.Meta (Id, Metatype, Created, Owner) SELECT Id, 'Item', GETDATE(), 'User' FROM dbo.Items");
             migrationBuilder.AddForeignKey(
                 name: "FK_Items_Meta_Id",
                 table: "Items",
