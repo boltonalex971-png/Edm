@@ -260,6 +260,18 @@ public static class PluginManagerHelper
                     }
                 }
             }
+            catch (System.Reflection.ReflectionTypeLoadException ex)
+            {
+                var loaderDetail = string.Join(
+                    Environment.NewLine,
+                    (ex.LoaderExceptions ?? Array.Empty<Exception?>())
+                        .Where(e => e is not null)
+                        .Select(e => $"  - {e!.GetType().FullName}: {e.Message}"));
+                logger.LogError(
+                    ex,
+                    "Failed to load plugin assembly {Path}. LoaderExceptions:{NewLine}{Detail}",
+                    fullPath, Environment.NewLine, loaderDetail);
+            }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to load plugin assembly {Path}", fullPath);

@@ -9,8 +9,15 @@
 	  <PublishSingleFile>true</PublishSingleFile>
 	  <RuntimeIdentifier>win-x64</RuntimeIdentifier>
 	  <PublishDir>bin\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)\publish\</PublishDir>
-    <InvariantGlobalization>true</InvariantGlobalization>
     <LangVersion>14</LangVersion>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Microsoft.Data.SqlClient is used by the pre-flight DB-existence check
+         in Program.cs (EnsureDatabaseExists). Version 6.0.2 to match the
+         SNI runtime already pulled in by WebApi / DataAccess. -->
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.2" />
+    <PackageReference Include="System.ServiceProcess.ServiceController" Version="10.0.0" />
+  </ItemGroup>
 
 </Project>

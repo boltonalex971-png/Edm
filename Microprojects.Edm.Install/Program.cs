@@ -1,21 +1,44 @@
 using System.Diagnostics;
 using System.Net;
+using System.ServiceProcess;
+using Microsoft.Data.SqlClient;
 using Microsoft.Win32;
 //System.Diagnostics.Debugger.Launch();
-var stage = args[0];
-var options = args[1..]
-    .Select(a => a.Split('=', 2))
-    .ToDictionary(a => a[0][1..], a => a.Length == 2 ? a[1] : null);
-Console.WriteLine(string.Join(", ", options.Select(o => $"{o.Key}={MaskConnectionLike(o.Key, o.Value)}")));
 
-switch (stage)
+// MSI does not capture stdout/stderr from EXE custom actions, so an unhandled
+// exception here surfaces only as opaque exit 0xE0434352. Mirror everything to
+// a trace file colocated with this EXE — i.e. the install target dir, since
+// MSI executes the CA from where it was laid down. Caveat: a failed install
+// rolls back and removes the dir, so capture the file before dismissing the
+// failure dialog.
+var traceLog = Path.Combine(AppContext.BaseDirectory, "edm-install-trace.txt");
+void Trace(string s) { try { File.AppendAllText(traceLog, $"{DateTime.Now:O} {s}{Environment.NewLine}"); } catch { } }
+
+try
 {
-    case "/Install":
-        Install(options);
-        break;
-    case "/Uninstall":
-        Uninstall(options);
-        break;
+    Trace($"=== install CA fired: {string.Join(' ', args)} ===");
+    var stage = args[0];
+    var options = args[1..]
+        .Select(a => a.Split('=', 2))
+        .ToDictionary(a => a[0][1..], a => a.Length == 2 ? a[1] : null);
+    Console.WriteLine(string.Join(", ", options.Select(o => $"{o.Key}={MaskConnectionLike(o.Key, o.Value)}")));
+
+    switch (stage)
+    {
+        case "/Install":
+            Install(options);
+            break;
+        case "/Uninstall":
+            Uninstall(options);
+            break;
+    }
+    Trace($"stage {stage} completed OK");
+}
+catch (Exception ex)
+{
+    Trace($"UNHANDLED: {ex.GetType().FullName}: {ex.Message}");
+    Trace(ex.ToString());
+    throw;
 }
 
 void Install(Dictionary<string, string?> options)
@@ -62,43 +85,68 @@ void Install(Dictionary<string, string?> options)
     cmd.Start();
     cmd.WaitForExit();
 
-    // Restore any Environment backup stashed by a prior Uninstall. MSI major
-    // upgrades run Uninstall→Install in the same session; `sc delete` wipes
-    // the service's Environment, so without this step every upgrade would
-    // force the admin to re-supply DBCONNECTIONSTRING.
-    RestoreServiceEnvFromBackup(_serviceName);
-
-    // Resolve each connection string. Precedence: existing registry value
-    // (upgrade case or restored backup) → MSI property (first install) → fail.
-    var dbConn = ResolveConnectionString(_serviceName, "ConnectionStrings__Edm", options, "db");
-    var logisticsConn = ResolveConnectionString(_serviceName, "ConnectionStrings__Logistics", options, "logisticsDb");
-
-    if (string.IsNullOrEmpty(dbConn))
+    // Only the "admin" role hosts the EDM admin app and therefore needs
+    // databases. The "peer" role is a device-control node that talks to a
+    // remote admin host instead of its own DB. Skip all DB-touching steps
+    // (connection strings, env backup/restore, migrations) for non-admin
+    // roles. The vdproj's radio-button default is BUTTON2 == "peer", so
+    // an unset/missing mode is treated as a non-DB install.
+    var isAdminRole = options.TryGetValue("mode", out var roleVal)
+        && string.Equals(roleVal, "admin", StringComparison.OrdinalIgnoreCase);
+    if (!isAdminRole)
     {
-        throw new InvalidOperationException(
-            "No DB connection string available. First install must provide DBCONNECTIONSTRING via msiexec, "
-            + $"or set HKLM\\SYSTEM\\CurrentControlSet\\Services\\{_serviceName}\\Environment "
-            + "with a ConnectionStrings__Edm=... entry.");
+        Console.WriteLine($"Role '{roleVal ?? "(unset)"}' does not require a database; "
+            + "skipping connection-string resolution, EF migrations, and Environment backup.");
     }
-    if (string.IsNullOrEmpty(logisticsConn))
+    else
     {
-        // Typical single-server deployment: derive Logistics from /db by
-        // swapping "optosense_edm" → "optosense_logistics". Write the derived
-        // value back to the registry so upgrades skip this step.
-        logisticsConn = dbConn.Contains("optosense_edm", StringComparison.OrdinalIgnoreCase)
-            ? dbConn.Replace("optosense_edm", "optosense_logistics", StringComparison.OrdinalIgnoreCase)
-            : dbConn;
-        WriteServiceEnv(_serviceName, "ConnectionStrings__Logistics", logisticsConn);
-        Console.WriteLine("Derived ConnectionStrings__Logistics from /db (catalog swap).");
+        // Restore any Environment backup stashed by a prior Uninstall. MSI major
+        // upgrades run Uninstall→Install in the same session; `sc delete` wipes
+        // the service's Environment, so without this step every upgrade would
+        // force the admin to re-supply DBCONNECTIONSTRING.
+        RestoreServiceEnvFromBackup(_serviceName);
+
+        // Resolve each connection string. Precedence: existing registry value
+        // (upgrade case or restored backup) → MSI property (first install) → fail.
+        var dbConn = ResolveConnectionString(_serviceName, "ConnectionStrings__Edm", options, "db");
+        var logisticsConn = ResolveConnectionString(_serviceName, "ConnectionStrings__Logistics", options, "logisticsDb");
+
+        if (string.IsNullOrEmpty(dbConn))
+        {
+            throw new InvalidOperationException(
+                "No DB connection string available. First install must provide DBCONNECTIONSTRING via msiexec, "
+                + $"or set HKLM\\SYSTEM\\CurrentControlSet\\Services\\{_serviceName}\\Environment "
+                + "with a ConnectionStrings__Edm=... entry.");
+        }
+        if (string.IsNullOrEmpty(logisticsConn))
+        {
+            // Typical single-server deployment: derive Logistics from /db by
+            // swapping "optosense_edm" → "optosense_logistics". Write the derived
+            // value back to the registry so upgrades skip this step.
+            logisticsConn = dbConn.Contains("optosense_edm", StringComparison.OrdinalIgnoreCase)
+                ? dbConn.Replace("optosense_edm", "optosense_logistics", StringComparison.OrdinalIgnoreCase)
+                : dbConn;
+            WriteServiceEnv(_serviceName, "ConnectionStrings__Logistics", logisticsConn);
+            Console.WriteLine("Derived ConnectionStrings__Logistics from /db (catalog swap).");
+        }
+
+        // Pre-flight: confirm both target databases exist and the install account
+        // can connect. EF Core's Migrate() would otherwise call CREATE DATABASE
+        // on a missing catalog -- which fails with an opaque stack trace when
+        // the install account lacks CREATE DATABASE on master (a common case
+        // for service installs where the connection runs as the machine
+        // account). Surface a plain-English error pointing to BUILD.md instead.
+        EnsureDatabaseExists(dbConn);
+        EnsureDatabaseExists(logisticsConn);
+
+        // Apply EF migrations before the service starts touching the DB.
+        Migrate($"{_targetDir}Optosense.Edm.DataAccess.efbundle.exe", dbConn);
+        Migrate($"{_targetDir}Microprojects.Edm.Ui.Logistics.efbundle.exe", logisticsConn);
+
+        // Backup existed only to bridge an upgrade; service Environment is now
+        // populated, so drop it. No-op on a first install.
+        DeleteEnvBackup();
     }
-
-    // Apply EF migrations before the service starts touching the DB.
-    Migrate($"{_targetDir}Optosense.Edm.DataAccess.efbundle.exe", dbConn);
-    Migrate($"{_targetDir}Microprojects.Edm.Ui.Logistics.efbundle.exe", logisticsConn);
-
-    // Backup existed only to bridge an upgrade; service Environment is now
-    // populated, so drop it. No-op on a first install.
-    DeleteEnvBackup();
 
     cmd = new Process();
     cmd.StartInfo = new ProcessStartInfo("cmd.exe", $"/C sc start {_serviceName}")
@@ -151,23 +199,37 @@ void Uninstall(Dictionary<string, string?> options)
         cmd.Start();
     }
 
-    // Uninstall EDM as service
+    // Stop the service and WAIT for it to reach Stopped — sc.exe returns
+    // immediately after issuing the stop request, leaving the service in
+    // Stop-Pending. If we proceed while the service is still alive its DLLs
+    // stay locked, so on a major-upgrade scenario InstallValidate (run by
+    // the new MSI right after RemoveExistingProducts) raises the
+    // FilesInUse / Restart Manager dialog. WaitForStatus blocks until the
+    // SCM reports Stopped.
+    try
+    {
+        using var svc = new ServiceController(_serviceName);
+        if (svc.Status != ServiceControllerStatus.Stopped)
+        {
+            if (svc.Status != ServiceControllerStatus.StopPending)
+            {
+                svc.Stop();
+            }
+            svc.WaitForStatus(ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(60));
+        }
+    }
+    catch (InvalidOperationException)
+    {
+        // Service not installed (already removed by a partial uninstall) — nothing to stop.
+    }
+
     cmd = new Process();
-    cmd.StartInfo = new ProcessStartInfo("cmd.exe", $"/C sc stop {_serviceName}")
+    cmd.StartInfo = new ProcessStartInfo("cmd.exe", $"/C sc delete {_serviceName}")
     {
         WindowStyle = ProcessWindowStyle.Hidden,
     };
     cmd.Start();
-
-    // Wait to give time to stop service
     cmd.WaitForExit();
-    cmd = new Process();
-    cmd.StartInfo = new ProcessStartInfo("cmd.exe",
-        $"/C sc delete edm")
-    {
-        WindowStyle = ProcessWindowStyle.Hidden
-    };
-    cmd.Start();
 }
 
 // Resolution order per connection string:
@@ -334,3 +396,47 @@ static string? MaskConnectionLike(string name, string? value)
     => name.IndexOf("db", StringComparison.OrdinalIgnoreCase) >= 0 && !string.IsNullOrEmpty(value)
         ? "***"
         : value;
+
+// Pre-flight: open a SQL connection to the target catalog using the install
+// account's credentials. If the database doesn't exist, the login lacks
+// access, or networking is wrong, surface a single plain-English error that
+// names the install account and points to BUILD.md "Pre-install database
+// setup". Without this, EF's Migrate() blunders into CREATE DATABASE on the
+// missing catalog and emits an opaque stack trace from
+// SqlServerDatabaseCreator.Create() -- a path the install account on a
+// locked-down server typically can't take (no CREATE DATABASE on master).
+static void EnsureDatabaseExists(string connectionString)
+{
+    var builder = new SqlConnectionStringBuilder(connectionString);
+    var dbName = builder.InitialCatalog;
+    var server = builder.DataSource;
+    if (string.IsNullOrWhiteSpace(dbName))
+    {
+        throw new InvalidOperationException(
+            "Connection string has no Initial Catalog / Database specified.");
+    }
+
+    try
+    {
+        using var conn = new SqlConnection(connectionString);
+        conn.Open();
+        // If Open() succeeded the DB exists and the install account has at
+        // least connect permission. db_owner (which Migrate needs) isn't
+        // verified here -- a permission-denied DDL during the migration
+        // itself remains the canonical signal for that.
+    }
+    catch (SqlException ex)
+    {
+        var caller = $"{Environment.UserDomainName}\\{Environment.UserName}";
+        throw new InvalidOperationException(
+            $"Cannot connect to database '{dbName}' on SQL server '{server}' "
+            + $"(install service identity: {caller}). Pre-create '{dbName}' and "
+            + $"grant db_owner to the SQL principal that the install service "
+            + $"presents -- for LOCAL SQL that is `NT AUTHORITY\\SYSTEM` "
+            + $"(LocalSystem's well-known SID, not the machine account), for "
+            + $"REMOTE SQL it is the machine account `{caller}`. See BUILD.md "
+            + $"\"Pre-install database setup\" for the exact SQL. "
+            + $"Underlying SQL error {ex.Number}: {ex.Message}",
+            ex);
+    }
+}
