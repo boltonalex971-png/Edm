@@ -29,6 +29,7 @@ import {
     useRef,
     useState,
 } from 'react'
+import { useSelector } from 'react-redux'
 import { Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { Alert } from 'reactstrap'
 import type {
@@ -39,11 +40,16 @@ import type {
     UUID,
 } from '../data/types'
 import api from '../features/api/api'
+import type { RootState } from '../store'
 import { DetailStub, Loading } from '../features/utils/Utils'
 import {
     useEntityToken,
     useInvalidateEntities,
 } from '../hooks/entityRefresh'
+import {
+    useAcquireEntityLock,
+    useEntityLockState,
+} from '../hooks/entityLocks'
 import { useBasePath } from '../hooks/routerHooks'
 import { TreeViewMaster } from './TreeViewMaster'
 import type { TreeItemProps } from './TreeViewMaster'
@@ -296,8 +302,29 @@ export function Detail({
 }: DetailProps) {
     const navigate = useNavigate()
     const invalidate = useInvalidateEntities()
+    const username = useSelector((s: RootState) => s.user.name)
     let [editMode, setEditMode] = useState(props.editMode)
     editMode = editMode || props.id === EMPTY_GUID
+
+    // Cross-user edit lock. Only acquires for an existing entity (skipping
+    // EMPTY_GUID — new items aren't yet shared) once the owner of the
+    // Detail enters edit mode. The lock is released automatically when
+    // editMode flips back, on unmount, or on tab close (best-effort).
+    const lockableId =
+        props.id && props.id !== EMPTY_GUID ? props.id : undefined
+    useAcquireEntityLock(props.type, lockableId, editMode, username)
+    const remoteLock = useEntityLockState(props.type, lockableId)
+    const lockedByOther = !!remoteLock.lockedBy && !remoteLock.isOwn
+
+    // Force out of edit mode if another client took the lock first
+    // (happens when both users press Edit nearly simultaneously and the
+    // remote message arrives after our own local flip).
+    useEffect(() => {
+        if (lockedByOther && editMode && props.id !== EMPTY_GUID) {
+            setEditMode(false)
+        }
+    }, [lockedByOther, editMode, props.id])
+
     return props.error ? (
         <Alert
             color="danger"
@@ -328,6 +355,19 @@ export function Detail({
                                 <div>
                                     <CardTitle>
                                         {props.title || props.data?.name}
+                                        {lockedByOther && (
+                                            <span
+                                                style={{
+                                                    marginLeft: '0.6rem',
+                                                    fontSize: '0.85em',
+                                                    fontWeight: 'normal',
+                                                    color: '#b58900',
+                                                }}
+                                            >
+                                                🔒 Locked by{' '}
+                                                {remoteLock.lockedBy}
+                                            </span>
+                                        )}
                                     </CardTitle>
                                     <CardSubtitle>
                                         {props.subTitle ||
@@ -344,12 +384,15 @@ export function Detail({
                                             <ToolbarButton
                                                 visible={editable}
                                                 title={
-                                                    editMode
-                                                        ? 'View mode'
-                                                        : 'Edit mode'
+                                                    lockedByOther
+                                                        ? `Locked by ${remoteLock.lockedBy}`
+                                                        : editMode
+                                                          ? 'View mode'
+                                                          : 'Edit mode'
                                                 }
                                                 icon={editMode ? 'eye' : 'edit'}
                                                 fillMode="flat"
+                                                disabled={lockedByOther}
                                                 onClick={() =>
                                                     setEditMode(!editMode)
                                                 }

@@ -6,6 +6,7 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import { EntityRefreshProvider } from './hooks/entityRefresh'
 import { EntityRefreshSignalRBridge } from './hooks/entityRefreshBridge'
+import { LockProvider } from './hooks/entityLocks'
 import { getCurrentConnectionId } from './hooks/signalRHooks'
 import store from './store'
 import 'bootstrap/dist/css/bootstrap.css'
@@ -36,10 +37,12 @@ if (rootEl) {
         <Provider store={store}>
             <React.StrictMode>
                 <EntityRefreshProvider>
-                    <EntityRefreshSignalRBridge />
-                    <BrowserRouter basename={base}>
-                        <App />
-                    </BrowserRouter>
+                    <LockProvider>
+                        <EntityRefreshSignalRBridge />
+                        <BrowserRouter basename={base}>
+                            <App />
+                        </BrowserRouter>
+                    </LockProvider>
                 </EntityRefreshProvider>
             </React.StrictMode>
         </Provider>,

@@ -566,10 +566,10 @@ public class OrderService : ServiceBase<Order>, IOrderService
         await Db.SaveChangesAsync();
         await transaction.CommitAsync();
 
-        PublishOrderEvent("order.executed", id);
+        PublishOrderEvent(LogisticsEventKinds.OrderExecuted, id);
         if (pendingCount == 0)
         {
-            PublishOrderEvent("order.completed", id);
+            PublishOrderEvent(LogisticsEventKinds.OrderCompleted, id);
         }
 
         return new ExecuteResult
@@ -657,7 +657,7 @@ public class OrderService : ServiceBase<Order>, IOrderService
 
         if (allocated > 0)
         {
-            PublishOrderEvent("order.outputs-allocated", orderId);
+            PublishOrderEvent(LogisticsEventKinds.OrderOutputsAllocated, orderId);
         }
 
         return new AllocateOutputsResult
@@ -724,7 +724,7 @@ public class OrderService : ServiceBase<Order>, IOrderService
         if (updated > 0)
         {
             await Db.SaveChangesAsync();
-            PublishOrderEvent("order.grades-assigned", orderId);
+            PublishOrderEvent(LogisticsEventKinds.OrderGradesAssigned, orderId);
         }
 
         return new AssignGradesResult
@@ -764,7 +764,7 @@ public class OrderService : ServiceBase<Order>, IOrderService
         order.Meta.Completed = DateTime.UtcNow;
         await Db.SaveChangesAsync();
 
-        PublishOrderEvent("order.completed", orderId);
+        PublishOrderEvent(LogisticsEventKinds.OrderCompleted, orderId);
     }
 
     /// <summary>

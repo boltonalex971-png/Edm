@@ -4,6 +4,7 @@ import {
     LogLevel,
 } from '@microsoft/signalr'
 import { useEffect, useState } from 'react'
+import type { LogisticsMessage } from './logisticsEvents'
 
 export function getCookie(name: string): string | undefined {
     const value = `; ${document.cookie}`
@@ -22,6 +23,23 @@ let currentConnectionId: string | null = null
 
 export function getCurrentConnectionId(): string | null {
     return currentConnectionId
+}
+
+// Module-scope sender, populated by the active useSignalR instance. Lets
+// arbitrary components publish to the Logistics channel without each
+// holding its own hub connection.
+type Sender = (methodName: string, ...args: any[]) => Promise<void>
+let currentSender: Sender | null = null
+
+// Typed publish: callers pass a discriminated-union message built by the
+// helpers in logisticsEvents.ts. Mistyping a kind or missing a payload
+// field is a compile-time error.
+export function publishLogisticsMessage(message: LogisticsMessage): void {
+    if (!currentSender) return
+    currentSender('Publish', 'Logistics', message).catch(() => {
+        // Best-effort: hub-down or transient failures are swallowed so the
+        // caller's UI flow is never blocked by transport issues.
+    })
 }
 
 type UseSignalRResult = {
@@ -108,6 +126,13 @@ export default function useSignalR(
             console.warn('Cannot send message: SignalR not connected.')
         }
     }
+
+    useEffect(() => {
+        currentSender = isConnected ? sendMessage : null
+        return () => {
+            if (currentSender === sendMessage) currentSender = null
+        }
+    }, [isConnected])
 
     return { error, sendMessage, connectionId }
 }

@@ -49,28 +49,32 @@ public class LogisticsPublishingInterceptor : SaveChangesInterceptor
             {
                 var op = entry.State switch
                 {
-                    EntityState.Added => "created",
-                    EntityState.Modified => "updated",
-                    EntityState.Deleted => "deleted",
+                    EntityState.Added => LogisticsEntityOps.Created,
+                    EntityState.Modified => LogisticsEntityOps.Updated,
+                    EntityState.Deleted => LogisticsEntityOps.Deleted,
                     _ => null,
                 };
                 if (op == null) continue;
 
                 var clrType = entry.Entity.GetType();
-                var tag = EntityTypeTag.For(clrType);
-                if (tag == null) continue;
+                var tags = EntityTypeTag.For(clrType);
+                if (tags.Count == 0) continue;
 
+                // Many-to-many: address each side by its own foreign key so
+                // detail panels keyed by id refresh correctly. Falls through
+                // to the generic IDomainObject path for the single-tag case.
                 if (entry.Entity is NomenclatureTareType ntt)
                 {
-                    // Many-to-many: invalidate both sides so listeners on
-                    // either nomenclature or taretype detail panels refresh.
-                    list.Add(new PendingChange("nomenclature", ntt.NomenclatureId, op));
-                    list.Add(new PendingChange("taretype", ntt.TareTypeId, op));
+                    list.Add(new PendingChange(LogisticsEntityTypes.Nomenclature, ntt.NomenclatureId, op));
+                    list.Add(new PendingChange(LogisticsEntityTypes.TareType, ntt.TareTypeId, op));
                     continue;
                 }
 
                 Guid? id = entry.Entity is IDomainObject dom ? dom.Id : null;
-                list.Add(new PendingChange(tag, id, op));
+                foreach (var tag in tags)
+                {
+                    list.Add(new PendingChange(tag, id, op));
+                }
             }
             _pending.Value = list;
         }
@@ -94,7 +98,7 @@ public class LogisticsPublishingInterceptor : SaveChangesInterceptor
                 {
                     await _intercom.Publish(LogisticsMessage.Channel, new LogisticsMessage
                     {
-                        Kind = "entity-changed",
+                        Kind = LogisticsEventKinds.EntityChanged,
                         Type = c.Tag,
                         Id = c.Id,
                         Op = c.Op,
@@ -104,7 +108,8 @@ public class LogisticsPublishingInterceptor : SaveChangesInterceptor
                 catch (Exception ex)
                 {
                     _logger.LogWarning(ex,
-                        "Failed to publish entity-changed for {Tag}/{Id}", c.Tag, c.Id);
+                        "Failed to publish {Kind} for {Tag}/{Id}",
+                        LogisticsEventKinds.EntityChanged, c.Tag, c.Id);
                 }
             }
         }
