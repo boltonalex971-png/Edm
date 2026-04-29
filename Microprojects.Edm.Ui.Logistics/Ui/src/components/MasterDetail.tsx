@@ -403,9 +403,14 @@ export function Detail({
                                             />
                                             <ToolbarButton
                                                 visible={copyable}
-                                                title="Copy"
+                                                title={
+                                                    lockedByOther
+                                                        ? `Locked by ${remoteLock.lockedBy}`
+                                                        : 'Copy'
+                                                }
                                                 fillMode="flat"
                                                 icon="copy"
+                                                disabled={lockedByOther}
                                                 onClick={(e) => {
                                                     e.preventDefault()
                                                     const data = {
@@ -443,9 +448,14 @@ export function Detail({
                                             />
                                             <ToolbarButton
                                                 visible={deletable}
-                                                title="Delete"
+                                                title={
+                                                    lockedByOther
+                                                        ? `Locked by ${remoteLock.lockedBy}`
+                                                        : 'Delete'
+                                                }
                                                 fillMode="flat"
                                                 icon="delete"
+                                                disabled={lockedByOther}
                                                 onClick={(e) => {
                                                     e.preventDefault()
                                                     if (
