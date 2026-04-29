@@ -1,7 +1,9 @@
 using System;
 using System.Linq.Expressions;
 using AutoMapper;
+using Microprojects.Edm.Intercom;
 using Microprojects.Edm.Ui.Logistics.Contracts;
+using Microprojects.Edm.Ui.Logistics.Events;
 using Microprojects.Edm.Ui.Logistics.Models;
 using Microprojects.Edm.Ui.Logistics.Persistence;
 using Microprojects.Edm.Ui.Logistics.ViewModels;
@@ -16,15 +18,44 @@ public class OrderService : ServiceBase<Order>, IOrderService
 
     private IItemService _itemService;
     private IMapper? _mapper;
+    private IIntercom? _intercom;
+    private IConnectionOrigin? _origin;
 
     public OrderService()
     {
     }
 
-    public OrderService(LogisticsContext db, IUserService userService, IItemService itemService, IMapper mapper) : base(db, userService)
+    public OrderService(
+        LogisticsContext db,
+        IUserService userService,
+        IItemService itemService,
+        IMapper mapper,
+        IIntercom? intercom = null,
+        IConnectionOrigin? origin = null) : base(db, userService)
     {
         _itemService = itemService;
         _mapper = mapper;
+        _intercom = intercom;
+        _origin = origin;
+    }
+
+    private void PublishOrderEvent(string kind, Guid orderId)
+    {
+        if (_intercom == null) return;
+        try
+        {
+            _intercom.Publish(LogisticsMessage.Channel, new LogisticsMessage
+            {
+                Kind = kind,
+                OrderId = orderId,
+                OriginConnectionId = _origin?.ConnectionId,
+            });
+        }
+        catch
+        {
+            // Hub-down resilience: swallow publish failures so domain
+            // operations never fail because of a transport issue.
+        }
     }
 
     public override async Task<Order> Get(Guid id)
@@ -535,6 +566,12 @@ public class OrderService : ServiceBase<Order>, IOrderService
         await Db.SaveChangesAsync();
         await transaction.CommitAsync();
 
+        PublishOrderEvent(LogisticsEventKinds.OrderExecuted, id);
+        if (pendingCount == 0)
+        {
+            PublishOrderEvent(LogisticsEventKinds.OrderCompleted, id);
+        }
+
         return new ExecuteResult
         {
             Completed = pendingCount == 0,
@@ -618,6 +655,11 @@ public class OrderService : ServiceBase<Order>, IOrderService
 
         await Db.SaveChangesAsync();
 
+        if (allocated > 0)
+        {
+            PublishOrderEvent(LogisticsEventKinds.OrderOutputsAllocated, orderId);
+        }
+
         return new AllocateOutputsResult
         {
             AllocatedCount = allocated,
@@ -682,6 +724,7 @@ public class OrderService : ServiceBase<Order>, IOrderService
         if (updated > 0)
         {
             await Db.SaveChangesAsync();
+            PublishOrderEvent(LogisticsEventKinds.OrderGradesAssigned, orderId);
         }
 
         return new AssignGradesResult
@@ -720,6 +763,8 @@ public class OrderService : ServiceBase<Order>, IOrderService
 
         order.Meta.Completed = DateTime.UtcNow;
         await Db.SaveChangesAsync();
+
+        PublishOrderEvent(LogisticsEventKinds.OrderCompleted, orderId);
     }
 
     /// <summary>

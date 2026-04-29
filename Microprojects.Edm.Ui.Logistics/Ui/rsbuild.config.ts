@@ -35,6 +35,7 @@ export default defineConfig({
         proxy: {
             '/api':      { target: 'https://localhost:16332', secure: false, changeOrigin: false, ws: true },
             '/intercom': { target: 'https://localhost:16332', secure: false, changeOrigin: false, ws: true },
+            '/hub':      { target: 'https://localhost:16332', secure: false, changeOrigin: false, ws: true },
         },
     },
 })

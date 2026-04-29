@@ -29,6 +29,7 @@ import {
 import type { TreeDataItem } from '../data/types'
 import api from '../features/api/api'
 import { Loading } from '../features/utils/Utils'
+import { useInvalidateEntities } from '../hooks/entityRefresh'
 import { useGet } from '../hooks/hooks'
 import { useBasePath } from '../hooks/routerHooks'
 import { EMPTY_GUID } from './MasterDetail.tsx'
@@ -42,6 +43,8 @@ export type TreeViewMasterProps = {
     onCurrentRootChanged?: (item: TreeDataItem) => void
     item?: (props: TreeItemProps) => React.ReactElement
     onRootLoaded?: (item: TreeDataItem) => void
+    refreshToken?: unknown
+    publishType?: string
 }
 
 function buildUrl(base: string, query: QueryParams) {
@@ -57,13 +60,8 @@ function buildUrl(base: string, query: QueryParams) {
 }
 
 export function TreeViewMaster(props: TreeViewMasterProps) {
-    const [render, setRender] = useState(0)
-    _render = render
-    _renderFunc = setRender
     const navigate = useNavigate()
-    // const params = useParams<Record<string, string | undefined>>();
-    // const { pathname } = useLocation();
-    // const url = params && pathname.replace(`/${params['*']}`, '')
+    const invalidate = useInvalidateEntities()
     const { path: url } = useBasePath()
     const hierarchyUrl = buildUrl(
         `${props.api}/hierarchy`,
@@ -71,7 +69,7 @@ export function TreeViewMaster(props: TreeViewMasterProps) {
     )
     const [[data, setData], loading, error] = useGet<TreeDataItem[]>(
         hierarchyUrl,
-        [render],
+        [props.refreshToken],
     )
     const dragClue = React.useRef<TreeViewDragClue>({} as TreeViewDragClue)
     const [filter, setFilter] = useState('')
@@ -166,7 +164,14 @@ export function TreeViewMaster(props: TreeViewMasterProps) {
             ) as TreeDataItem[]
             event.item.parentId = targetItem.id
             const link = event.item.isFolder ? api.directories : props.api
-            axios.put(`${link}/${event.item.id}/parent`, targetItem)
+            axios.put(`${link}/${event.item.id}/parent`, targetItem).then(() => {
+                if (props.publishType) {
+                    invalidate([
+                        { type: props.publishType },
+                        { type: props.publishType, id: event.item.id },
+                    ])
+                }
+            })
             setData(updatedTree)
         }
     }
@@ -300,10 +305,3 @@ function icon({ isFolder, isActive, ...item }: TreeDataItem) {
 //
 //     return result;
 // }
-
-let _render: number
-let _renderFunc: (i: number) => void
-
-export function refresh() {
-    _renderFunc(++_render)
-}

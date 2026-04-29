@@ -12,6 +12,7 @@
     },
     "dependencies": {
         "@microprojects/tools": "^1.0.7",
+        "@microsoft/signalr": "^10.0.0",
         "@progress/kendo-data-query": "^1.5.4",
         "@progress/kendo-drawing": "^1.7.0",
         "@progress/kendo-licensing": "^1.1.0",

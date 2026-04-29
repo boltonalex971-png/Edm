@@ -1,4 +1,5 @@
 import Api from '@features/api/api'
+import { useEntityToken } from '@logistics/hooks/entityRefresh'
 import { useGet } from '@logistics/hooks/hooks'
 import { useBasePath } from '@logistics/hooks/routerHooks'
 import { Field } from '@progress/kendo-react-form'
@@ -19,7 +20,6 @@ import {
     Editor,
     Info,
     MasterDetail,
-    reloadMaster,
 } from '../../MasterDetail'
 import { NomenclatureTabs } from './NomenclatureTabs'
 
@@ -39,7 +39,6 @@ export function Nomenclatures() {
                     type={type}
                     api={api}
                     path={path || ''}
-                    onChange={() => reloadMaster()}
                     onClose={() => navigate(path)}
                 />
             }
@@ -61,9 +60,12 @@ export function NomenclatureDetail({ id, ...props }: NomenclatureDetailProps) {
         `${Api.nomenclatures}/categories`,
         [],
     )
+    const entityToken = useEntityToken([
+        { type: props.type, id: effectiveId },
+    ])
     let [[data, setData], loading, error] = useGet<Nomenclature>(
         `${props.api}/${effectiveId}`,
-        [effectiveId],
+        [effectiveId, entityToken],
     )
     if (!data || data.id === EMPTY_GUID) {
         data = { ...data, name: '', description: '' } as Nomenclature

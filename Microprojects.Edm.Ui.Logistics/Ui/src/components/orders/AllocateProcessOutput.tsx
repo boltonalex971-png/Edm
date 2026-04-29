@@ -31,6 +31,10 @@ import type {
     TreeDataItem,
     UUID,
 } from '@logistics/data/types'
+import {
+    useEntityToken,
+    useInvalidateEntities,
+} from '@logistics/hooks/entityRefresh'
 import { getData, postData, useGet } from '@logistics/hooks/hooks'
 import { useSlotSelection } from '@logistics/hooks/useSlotSelection'
 import { SmartScroll, SmartScrollContent } from '@microprojects/tools'
@@ -65,14 +69,15 @@ export function AllocateProcessOutput({
         [],
     )
 
-    const [reloadToken, setReloadToken] = useState(0)
+    const invalidate = useInvalidateEntities()
+    const orderToken = useEntityToken([{ type: 'order', id: orderId }])
     const [[output], loading] = useGet<OrderOutputItems>(
         `${api.orders}/${orderId}/output-items`,
-        [orderId, reloadToken],
+        [orderId, orderToken],
     )
     const [[order]] = useGet<Order>(orderId ? `${api.orders}/${orderId}` : '', [
         orderId,
-        reloadToken,
+        orderToken,
     ])
 
     const orderNomenclatureId = order?.processNomenclatureId
@@ -150,7 +155,7 @@ export function AllocateProcessOutput({
     useEffect(() => {
         setSelectedItemIds(new Set())
         setPending([])
-    }, [reloadToken, orderId, setSelectedItemIds])
+    }, [orderToken, orderId, setSelectedItemIds])
 
     useEffect(() => {
         if (
@@ -418,7 +423,11 @@ export function AllocateProcessOutput({
             setSubmitResult(result)
             if (result.errors.length === 0) {
                 setPending([])
-                setReloadToken((x) => x + 1)
+                invalidate([
+                    { type: 'order', id: orderId },
+                    { type: 'item' },
+                    { type: 'tare' },
+                ])
                 onChanged?.()
             }
         } catch (e: any) {
@@ -459,7 +468,10 @@ export function AllocateProcessOutput({
             if (result.errors && result.errors.length > 0) {
                 setError(result.errors[0])
             }
-            setReloadToken((x) => x + 1)
+            invalidate([
+                { type: 'order', id: orderId },
+                { type: 'item' },
+            ])
             onChanged?.()
         } catch (e: any) {
             setError(e.message || 'Grade assignment failed')

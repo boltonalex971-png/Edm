@@ -113,6 +113,7 @@ export function SupplyDetail({
                 supplyId && supplyId !== EMPTY_GUID ? (
                     <TareItemsPanel
                         api={`${api.supplies}/${supplyId}/items`}
+                        supplyId={supplyId as UUID}
                         onTareClick={(group) =>
                             setSubDetail(
                                 <TareDetail

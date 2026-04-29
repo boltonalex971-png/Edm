@@ -29,6 +29,7 @@ import {
     useRef,
     useState,
 } from 'react'
+import { useSelector } from 'react-redux'
 import { Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { Alert } from 'reactstrap'
 import type {
@@ -39,9 +40,18 @@ import type {
     UUID,
 } from '../data/types'
 import api from '../features/api/api'
+import type { RootState } from '../store'
 import { DetailStub, Loading } from '../features/utils/Utils'
+import {
+    useEntityToken,
+    useInvalidateEntities,
+} from '../hooks/entityRefresh'
+import {
+    useAcquireEntityLock,
+    useEntityLockState,
+} from '../hooks/entityLocks'
 import { useBasePath } from '../hooks/routerHooks'
-import { TreeViewMaster, refresh } from './TreeViewMaster'
+import { TreeViewMaster } from './TreeViewMaster'
 import type { TreeItemProps } from './TreeViewMaster'
 import { Folder } from './config/Folder'
 
@@ -53,14 +63,7 @@ const DetailEditModeContext = createContext<
     ((editMode: boolean) => void) | undefined
 >(undefined)
 
-export function reloadMaster() {
-    refresh()
-    _renderFunc(++_render)
-}
-
 let _rootItem: TreeDataItem
-let _render = 0
-let _renderFunc: (r: number) => void
 
 export type MasterDetailProps = {
     api: string
@@ -77,6 +80,7 @@ const SEPARATOR_MIN_PX = 80
 export function MasterDetail(props: MasterDetailProps) {
     const { path } = useBasePath()
     const navigate = useNavigate()
+    const treeToken = useEntityToken([{ type: props.type }])
 
     const containerRef = useRef<HTMLDivElement | null>(null)
     const [masterPx, setMasterPx] = useState<number | null>(null)
@@ -142,6 +146,8 @@ export function MasterDetail(props: MasterDetailProps) {
                     getHierarchyQuery={props.getHierarchyQuery}
                     onRootLoaded={(root) => (_rootItem = root)}
                     item={props.item}
+                    refreshToken={treeToken}
+                    publishType={props.type}
                 />
             </SmartScrollContent>
             <PaneSeparator onDrag={onSeparatorDrag} />
@@ -158,7 +164,6 @@ export function MasterDetail(props: MasterDetailProps) {
                                 api={api.directories}
                                 type={props.type}
                                 path={path}
-                                onChange={() => reloadMaster()}
                                 onClose={() => navigate(path)}
                             />
                         }
@@ -278,6 +283,7 @@ export type DetailProps = {
     onUp?: MouseEventHandler
     path?: string
     api: string
+    type?: string
     editMode?: boolean
     editable?: boolean
     copyable?: boolean
@@ -295,10 +301,30 @@ export function Detail({
     ...props
 }: DetailProps) {
     const navigate = useNavigate()
-    const [_, setRefresh] = useState(0)
-    _renderFunc = setRefresh
+    const invalidate = useInvalidateEntities()
+    const username = useSelector((s: RootState) => s.user.name)
     let [editMode, setEditMode] = useState(props.editMode)
     editMode = editMode || props.id === EMPTY_GUID
+
+    // Cross-user edit lock. Only acquires for an existing entity (skipping
+    // EMPTY_GUID — new items aren't yet shared) once the owner of the
+    // Detail enters edit mode. The lock is released automatically when
+    // editMode flips back, on unmount, or on tab close (best-effort).
+    const lockableId =
+        props.id && props.id !== EMPTY_GUID ? props.id : undefined
+    useAcquireEntityLock(props.type, lockableId, editMode, username)
+    const remoteLock = useEntityLockState(props.type, lockableId)
+    const lockedByOther = !!remoteLock.lockedBy && !remoteLock.isOwn
+
+    // Force out of edit mode if another client took the lock first
+    // (happens when both users press Edit nearly simultaneously and the
+    // remote message arrives after our own local flip).
+    useEffect(() => {
+        if (lockedByOther && editMode && props.id !== EMPTY_GUID) {
+            setEditMode(false)
+        }
+    }, [lockedByOther, editMode, props.id])
+
     return props.error ? (
         <Alert
             color="danger"
@@ -329,6 +355,19 @@ export function Detail({
                                 <div>
                                     <CardTitle>
                                         {props.title || props.data?.name}
+                                        {lockedByOther && (
+                                            <span
+                                                style={{
+                                                    marginLeft: '0.6rem',
+                                                    fontSize: '0.85em',
+                                                    fontWeight: 'normal',
+                                                    color: '#b58900',
+                                                }}
+                                            >
+                                                🔒 Locked by{' '}
+                                                {remoteLock.lockedBy}
+                                            </span>
+                                        )}
                                     </CardTitle>
                                     <CardSubtitle>
                                         {props.subTitle ||
@@ -345,12 +384,15 @@ export function Detail({
                                             <ToolbarButton
                                                 visible={editable}
                                                 title={
-                                                    editMode
-                                                        ? 'View mode'
-                                                        : 'Edit mode'
+                                                    lockedByOther
+                                                        ? `Locked by ${remoteLock.lockedBy}`
+                                                        : editMode
+                                                          ? 'View mode'
+                                                          : 'Edit mode'
                                                 }
                                                 icon={editMode ? 'eye' : 'edit'}
                                                 fillMode="flat"
+                                                disabled={lockedByOther}
                                                 onClick={() =>
                                                     setEditMode(!editMode)
                                                 }
@@ -375,6 +417,19 @@ export function Detail({
                                                         .then((response) => {
                                                             props.onChange &&
                                                                 props.onChange()
+                                                            if (props.type) {
+                                                                invalidate([
+                                                                    {
+                                                                        type: props.type,
+                                                                    },
+                                                                    {
+                                                                        type: props.type,
+                                                                        id: response
+                                                                            .data
+                                                                            .id,
+                                                                    },
+                                                                ])
+                                                            }
                                                             props.path &&
                                                                 navigate(
                                                                     `${props.path}/${response.data.id}`,
@@ -401,6 +456,21 @@ export function Detail({
                                                             .then(() => {
                                                                 props.onChange &&
                                                                     props.onChange()
+                                                                if (
+                                                                    props.type
+                                                                ) {
+                                                                    invalidate([
+                                                                        {
+                                                                            type: props.type,
+                                                                        },
+                                                                        {
+                                                                            type: props.type,
+                                                                            id: props
+                                                                                .data
+                                                                                ?.id,
+                                                                        },
+                                                                    ])
+                                                                }
                                                                 props.path &&
                                                                     navigate(
                                                                         props.path,
@@ -494,6 +564,7 @@ export function Editor(props: EditorProps) {
     const location = useLocation()
     const [alert, setAlert] = useState<AlertState>()
     const setDetailEditMode = useContext(DetailEditModeContext)
+    const invalidate = useInvalidateEntities()
     const mode =
         (props.data.id && props.data.id !== EMPTY_GUID && 'Update') || 'Create'
     const handleSubmit = (data: Dictionary) => {
@@ -518,6 +589,10 @@ export function Editor(props: EditorProps) {
                     props.onUpdate?.(response.data)
                     props.onChange?.(response.data)
                     props.setData(response.data)
+                    invalidate([
+                        { type: props.type },
+                        { type: props.type, id: response.data.id },
+                    ])
                     setAlert({ message: 'Updated successfully' })
                     setDetailEditMode?.(false)
                 })
@@ -538,6 +613,10 @@ export function Editor(props: EditorProps) {
                     props.onUpdate?.(response.data)
                     props.onChange?.(response.data)
                     props.setData(response.data)
+                    invalidate([
+                        { type: props.type },
+                        { type: props.type, id: response.data.id },
+                    ])
                     setAlert({ message: 'Created successfully' })
                     setDetailEditMode?.(false)
                     if (props.path) {

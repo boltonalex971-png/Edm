@@ -9,11 +9,21 @@ import type {
     OrderOutputItems,
     UUID,
 } from '@logistics/data/types'
+import {
+    useEntityToken,
+    useInvalidateEntities,
+} from '@logistics/hooks/entityRefresh'
+import {
+    useAcquireOrderClaim,
+    useOrderClaimState,
+} from '@logistics/hooks/entityLocks'
 import { useGet } from '@logistics/hooks/hooks'
 import { colorForGradeId } from '@logistics/utils/gradePalette'
 import axios from 'axios'
 import { useEffect, useMemo, useState } from 'react'
+import { useSelector } from 'react-redux'
 import { useNavigate, useParams } from 'react-router-dom'
+import type { RootState } from '@logistics/store'
 
 type Step = 'review' | 'launch' | 'distribute' | 'complete'
 
@@ -31,20 +41,35 @@ export const OrderRunView = () => {
     const id = idParam as UUID | undefined
     const navigate = useNavigate()
 
-    const [reloadToken, setReloadToken] = useState(0)
+    const invalidate = useInvalidateEntities()
+    const orderToken = useEntityToken([{ type: 'order', id }])
     const [launching, setLaunching] = useState(false)
     const [launchError, setLaunchError] = useState<string | undefined>()
     const [completing, setCompleting] = useState(false)
     const [completeError, setCompleteError] = useState<string | undefined>()
     const [step, setStep] = useState<Step>('review')
 
-    const [[order], loading] = useGet<Order>(id ? `${api.orders}/${id}` : '', [id, reloadToken])
+    const [[order], loading] = useGet<Order>(id ? `${api.orders}/${id}` : '', [id, orderToken])
     const [[outputs]] = useGet<OrderOutputItems>(
         id ? `${api.orders}/${id}/output-items` : '',
-        [id, reloadToken],
+        [id, orderToken],
     )
 
-    const isReadOnly = !!order?.executor && order.mine === false
+    // Claim the order for as long as the operator stays in this view, so
+    // other tabs/users see "Executing by {username}" the same way they
+    // see a persisted Executor banner. Nothing happens once the order
+    // already has a persisted executor: that's already the source of
+    // truth and gating happens through the existing isReadOnly path.
+    const username = useSelector((s: RootState) => s.user.name)
+    const claim = useOrderClaimState(id)
+    const claimedByOther = !!claim.lockedBy && !claim.isOwn
+    const claimable =
+        !!id && !!order && order.status !== 'Completed' && !order.executor
+    useAcquireOrderClaim(id, claimable, username)
+
+    const occupiedBy = order?.executor || (claimedByOther ? claim.lockedBy : null)
+    const isReadOnly =
+        (!!order?.executor && order.mine === false) || claimedByOther
     const isAlreadyLaunched = !!order && order.status !== 'Draft'
     const isCompleted = order?.status === 'Completed'
     const unallocatedCount = outputs?.unallocated?.length ?? 0
@@ -93,7 +118,11 @@ export const OrderRunView = () => {
         axios
             .post<ExecuteResult>(`${api.orders}/${id}/execute`)
             .then((r) => {
-                setReloadToken((x) => x + 1)
+                invalidate([
+                    { type: 'order', id },
+                    { type: 'item' },
+                    { type: 'tare' },
+                ])
                 if (r.data.completed) setStep('complete')
                 else setStep('distribute')
             })
@@ -111,7 +140,7 @@ export const OrderRunView = () => {
         setCompleting(true)
         axios
             .post(`${api.orders}/${id}/complete`, {})
-            .then(() => setReloadToken((x) => x + 1))
+            .then(() => invalidate([{ type: 'order', id }]))
             .catch((e) => {
                 setCompleteError(
                     e.response?.data?.detail ||
@@ -122,7 +151,12 @@ export const OrderRunView = () => {
             .finally(() => setCompleting(false))
     }
 
-    const onOutputsChanged = () => setReloadToken((x) => x + 1)
+    const onOutputsChanged = () =>
+        invalidate([
+            { type: 'order', id },
+            { type: 'item' },
+            { type: 'tare' },
+        ])
 
     const backToList = () => navigate('/desktop')
 
@@ -168,8 +202,9 @@ export const OrderRunView = () => {
 
             {isReadOnly && (
                 <div className={styles.readonlyBanner}>
-                    Executed by <strong>{order?.executor}</strong> — read-only.
-                    You can view progress but cannot change anything.
+                    {order?.executor ? 'Executed' : 'Executing'} by{' '}
+                    <strong>{occupiedBy}</strong> — read-only. You can view
+                    progress but cannot change anything.
                 </div>
             )}
 

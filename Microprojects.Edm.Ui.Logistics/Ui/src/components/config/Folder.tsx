@@ -4,13 +4,14 @@ import React, { type MouseEventHandler } from 'react'
 import { useSelector } from 'react-redux'
 import { useParams } from 'react-router-dom'
 import type { TreeNode } from '../../data/types'
+import { useEntityToken } from '../../hooks/entityRefresh'
 import { useGet } from '../../hooks/hooks'
 import type { RootState } from '../../store'
 import { MultiSelectComp } from '../DropDownCell'
 import { Detail, EMPTY_GUID, Editor, Info } from '../MasterDetail'
 
 type FolderProps = {
-    onChange: () => void
+    onChange?: () => void
     onClose: MouseEventHandler
     path: string
     api: string
@@ -49,9 +50,10 @@ function formatGroups(groups: unknown): string | null {
 export function Folder(props: FolderProps) {
     const user = useSelector((state: RootState) => state.user)
     const { id } = useParams()
+    const entityToken = useEntityToken([{ type: props.type, id }])
     let [[data, setData], loading, error] = useGet<TreeNode>(
         `${props.api}/${id}`,
-        [id],
+        [id, entityToken],
     )
     if (!data || data.id === EMPTY_GUID) {
         data = { ...data, name: '', description: '', url: '' } as TreeNode

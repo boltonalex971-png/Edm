@@ -18,6 +18,10 @@ import type {
     ItemSearchQuery,
     UUID,
 } from '@logistics/data/types'
+import {
+    useEntityToken,
+    useInvalidateEntities,
+} from '@logistics/hooks/entityRefresh'
 import { usePost } from '@logistics/hooks/hooks'
 import { process } from '@progress/kendo-data-query'
 import { Button } from '@progress/kendo-react-buttons'
@@ -50,15 +54,15 @@ type ItemSearchProps = {
     ) => void
 }
 
-let refresh = false
-
 type TareRow = TareGroup & { expanded?: boolean }
 
 export const ItemSearch = (props: ItemSearchProps) => {
+    const token = useEntityToken([{ type: 'item' }, { type: 'tare' }])
+    const invalidate = useInvalidateEntities()
     const [[items], loading, error] = usePost<Item[]>(
         `${api.items}/search`,
         props.query || {},
-        [props.query?.nomenclatureId, props.query?.active, refresh],
+        [props.query?.nomenclatureId, props.query?.active, token],
     )
     const [subDetail, setSubDetail] = useState<ReactElement | undefined>()
     const [filter, setFilter] = useState<string>('')
@@ -182,9 +186,8 @@ export const ItemSearch = (props: ItemSearchProps) => {
     }
 
     const doRefresh = () => {
-        refresh = !refresh
+        invalidate([{ type: 'item' }, { type: 'tare' }])
         setSelectedItemIds(new Set())
-        setAlert((a) => a)
     }
 
     const allocateSelected = () => {

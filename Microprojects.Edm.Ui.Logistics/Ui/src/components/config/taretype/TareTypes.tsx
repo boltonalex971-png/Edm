@@ -1,4 +1,5 @@
 import Api from '@features/api/api'
+import { useEntityToken } from '@logistics/hooks/entityRefresh'
 import { useGet } from '@logistics/hooks/hooks'
 import { useBasePath } from '@logistics/hooks/routerHooks'
 import { Field } from '@progress/kendo-react-form'
@@ -19,7 +20,6 @@ import {
     Editor,
     Info,
     MasterDetail,
-    reloadMaster,
 } from '../../MasterDetail'
 import { TareTypeTabs } from './TareTypeTabs'
 
@@ -243,7 +243,6 @@ export function TareTypes() {
                     type={type}
                     api={api}
                     path={path || ''}
-                    onChange={() => reloadMaster()}
                     onClose={() => navigate(path)}
                 />
             }
@@ -266,9 +265,12 @@ export function TareTypeDetail({ id, ...props }: TareTypeDetailProps) {
     const effectiveId = (id || params.id) as UUID | undefined
     const [sub, setSub] = useState<React.ReactElement>()
     useEffect(setSub as EffectCallback, [effectiveId])
+    const entityToken = useEntityToken([
+        { type: props.type, id: effectiveId },
+    ])
     let [[data, setData], loading, error] = useGet<TareType>(
         `${props.api}/${effectiveId}`,
-        [effectiveId],
+        [effectiveId, entityToken],
     )
     if (!data || data.id === EMPTY_GUID) {
         data = { ...data, name: '', description: '' } as TareType
@@ -278,6 +280,7 @@ export function TareTypeDetail({ id, ...props }: TareTypeDetailProps) {
         <Detail
             api={props.api}
             path={props.path}
+            type={props.type}
             onChange={props.onChange}
             onClose={props.onClose}
             id={effectiveId}

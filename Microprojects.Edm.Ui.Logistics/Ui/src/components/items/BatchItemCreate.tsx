@@ -21,6 +21,7 @@ import type {
     TreeDataItem,
     UUID,
 } from '@logistics/data/types'
+import { useInvalidateEntities } from '@logistics/hooks/entityRefresh'
 import { getData, useGet } from '@logistics/hooks/hooks'
 import { Button } from '@progress/kendo-react-buttons'
 import { Form, FormElement } from '@progress/kendo-react-form'
@@ -56,6 +57,7 @@ export function BatchItemCreate({
         [],
     )
     const [alert, setAlert] = useState<AlertState>()
+    const invalidate = useInvalidateEntities()
 
     const handleSubmit = async (raw: Dictionary) => {
         const data = raw as BatchFormValues
@@ -93,6 +95,12 @@ export function BatchItemCreate({
                     `${result.tareTypeName ? ` (${result.tareTypeName})` : ''}.` +
                     remainingTxt,
             })
+            invalidate([
+                { type: 'item' },
+                { type: 'tare' },
+                { type: 'tare', id: result.tareId },
+                ...(supplyId ? [{ type: 'supply', id: supplyId }] : []),
+            ])
             onCreated?.(result)
         } catch (e: any) {
             setAlert({

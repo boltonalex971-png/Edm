@@ -1,5 +1,6 @@
 import Api from '@features/api/api'
 import { HierarchyPicker } from '@logistics/components/HierarchyPicker'
+import { useEntityToken } from '@logistics/hooks/entityRefresh'
 import { useGet } from '@logistics/hooks/hooks'
 import { useBasePath } from '@logistics/hooks/routerHooks'
 import { Field } from '@progress/kendo-react-form'
@@ -22,7 +23,6 @@ import {
     Editor,
     Info,
     MasterDetail,
-    reloadMaster,
 } from '../../MasterDetail'
 import { ProcessTabs } from './ProcessTabs'
 
@@ -73,7 +73,6 @@ export function Processes({ kind }: { kind?: ProcessKind }) {
                     api={api}
                     path={path || ''}
                     kind={kind}
-                    onChange={() => reloadMaster()}
                     onClose={() => navigate(path)}
                 />
             }
@@ -105,9 +104,12 @@ export function ProcessDetail({
         `${Api.nomenclatures}/hierarchy`,
         [],
     )
+    const entityToken = useEntityToken([
+        { type: props.type ?? 'process', id: id },
+    ])
     let [[data, setData], loading, error] = useGet<Process>(
         `${props.api}/${id}`,
-        [id],
+        [id, entityToken],
     )
     if (!data || data.id === EMPTY_GUID) {
         data = { ...data, name: '', description: '' } as Process

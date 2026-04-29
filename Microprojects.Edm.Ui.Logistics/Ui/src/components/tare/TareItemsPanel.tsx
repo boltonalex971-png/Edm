@@ -1,6 +1,7 @@
 import { Loading } from '@features/utils/Utils'
 import { TareGroupRow } from '@logistics/components/tare/TareGroupRow'
 import type { Item, TareInfo, UUID } from '@logistics/data/types'
+import { useEntityToken } from '@logistics/hooks/entityRefresh'
 import { useGet } from '@logistics/hooks/hooks'
 import type React from 'react'
 import { useMemo, useState } from 'react'
@@ -17,6 +18,7 @@ type TareItemsPanelProps = {
     onTareClick?: (group: TareGroup) => void
     onItemClick?: (item: Item) => void
     toolbar?: React.ReactNode
+    supplyId?: UUID
 }
 
 export function groupByTare(items: Item[]): TareGroup[] {
@@ -59,9 +61,14 @@ export function TareItemsPanel({
     onTareClick,
     onItemClick,
     toolbar,
+    supplyId,
 }: TareItemsPanelProps) {
-    const [reload, setReload] = useState(false)
-    const [[data], loading, error] = useGet<Item[]>(api, [reload, api])
+    const token = useEntityToken([
+        { type: 'item' },
+        { type: 'tare' },
+        ...(supplyId ? [{ type: 'supply', id: supplyId }] : []),
+    ])
+    const [[data], loading, error] = useGet<Item[]>(api, [api, token])
     const [expandedTares, setExpandedTares] = useState<Set<string>>(new Set())
 
     const groups = useMemo(() => groupByTare(data || []), [data])

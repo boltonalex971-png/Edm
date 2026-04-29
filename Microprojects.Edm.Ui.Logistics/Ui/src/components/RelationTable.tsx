@@ -13,9 +13,14 @@ import {
 import axios from 'axios'
 import isEqual from 'lodash.isequal'
 import type React from 'react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Alert } from 'reactstrap'
 import { Loading } from '../features/utils/Utils'
+import {
+    type EntityTag,
+    useEntityToken,
+    useInvalidateEntities,
+} from '../hooks/entityRefresh'
 import { useGet } from '../hooks/hooks'
 import { ParentContext } from './ParentContext'
 
@@ -43,17 +48,26 @@ type RelationTableProps = {
     onRowSelected?: Function
     onRowClick?: (event: GridRowClickEvent) => void
     onRowDoubleClick?: (event: GridRowDoubleClickEvent) => void
+    // Tags published on every save/delete and subscribed to for refetches.
+    // Always augmented with a per-URL tag so a table self-refreshes after its
+    // own mutations even when the caller forgets to pass tags.
+    invalidateTags?: EntityTag[]
     children: React.ReactElement
 }
 
 export function RelationTable({ api, children, ...props }: RelationTableProps) {
-    const [reload, setReload] = useState(false) // used to force fetching table data
+    const tags = useMemo<EntityTag[]>(
+        () => [
+            ...(props.invalidateTags ?? []),
+            { type: `relation:${api}` },
+        ],
+        [props.invalidateTags, api],
+    )
+    const token = useEntityToken(tags)
+    const invalidate = useInvalidateEntities()
     const [editItem, setEditItem] = useState<any>(null)
     const [subDetail, setSubDetail] = useState<React.ReactElement>()
-    let [[data, setData], loading, error] = useGet<any[]>(`${api}`, [
-        reload,
-        api,
-    ])
+    let [[data, setData], loading, error] = useGet<any[]>(`${api}`, [api, token])
 
     const rowClick = (event: GridRowClickEvent | { dataItem: any }) => {
         if (props.onRowSelected) {
@@ -76,7 +90,7 @@ export function RelationTable({ api, children, ...props }: RelationTableProps) {
         }
     }
     const itemUpdate = (item: any) => {
-        setReload((r) => !r)
+        invalidate(tags)
         //// Update grid method below is faster but item and data format can be different
         // const newData = data.map(i => i.id === item.Id ? { ...item } : item)
         // setData(newData)
@@ -92,7 +106,7 @@ export function RelationTable({ api, children, ...props }: RelationTableProps) {
             ? axios.put(`${api}`, event.dataItem)
             : axios.post(`${api}`, event.dataItem)
         promise.then(() => {
-            setReload(!reload)
+            invalidate(tags)
             setEditItem(null)
         })
     }
@@ -148,7 +162,7 @@ export function RelationTable({ api, children, ...props }: RelationTableProps) {
     const removeRecord = (event: { dataItem: any }) => {
         if (window.confirm('Confirm deleting record')) {
             const id = event.dataItem.id
-            axios.delete(`${api}/${id}`).then(() => setReload(!reload))
+            axios.delete(`${api}/${id}`).then(() => invalidate(tags))
         }
     }
     const discardEdit = (event: { dataItem: any }) => {
