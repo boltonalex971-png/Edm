@@ -104,21 +104,28 @@ export function TreeViewMaster(props: TreeViewMasterProps) {
         navigate(`${url}/${EMPTY_GUID}`, { state: { parentId } })
     }
 
+    // Drag indices are positions in the rendered tree (filteredData), not in `data`,
+    // because data may wrap a hidden common root whose children are what's actually shown.
+    const resolveTargetItem = (itemIndex: string | undefined) => {
+        if (!itemIndex) return undefined
+        return itemIndex
+            .split('_')
+            .map((i) => Number.parseInt(i))
+            .reduce<TreeDataItem | undefined>(
+                (acc, curr) => acc?.items?.[curr],
+                { items: filteredData ?? [] } as TreeDataItem,
+            )
+    }
+
     const getClueClassName = (event: TreeViewItemDragOverEvent) => {
         const eventAnalyzer = new TreeViewDragAnalyzer(event).init()
-        const { itemHierarchicalIndex: itemIndex } =
-            eventAnalyzer.destinationMeta
-        const targetIndexes = itemIndex
-            ?.split('_')
-            .map((i) => Number.parseInt(i))
-        const targetItem = targetIndexes?.reduce(
-            (acc, curr) => acc.items[curr],
-            { items: data || [] } as TreeDataItem,
+        const targetItem = resolveTargetItem(
+            eventAnalyzer.destinationMeta.itemHierarchicalIndex,
         )
 
         if (
+            targetItem?.isFolder &&
             eventAnalyzer.isDropAllowed &&
-            targetItem.isFolder &&
             targetItem.id !== event.item.parentId &&
             targetItem.id !== event.item.id
         ) {
@@ -140,25 +147,19 @@ export function TreeViewMaster(props: TreeViewMasterProps) {
     const onItemDragEnd = (event: TreeViewItemDragEndEvent) => {
         dragClue.current.hide()
         const eventAnalyzer = new TreeViewDragAnalyzer(event).init()
-        const { itemHierarchicalIndex: itemIndex } =
-            eventAnalyzer.destinationMeta
-        const targetIndexes = itemIndex
-            .split('_')
-            .map((i) => Number.parseInt(i))
-        const targetItem = targetIndexes.reduce(
-            (acc, curr) => acc.items[curr],
-            { items: data || [] } as TreeDataItem,
+        const targetItem = resolveTargetItem(
+            eventAnalyzer.destinationMeta.itemHierarchicalIndex,
         )
 
         if (
+            targetItem?.isFolder &&
             eventAnalyzer.isDropAllowed &&
-            targetItem.isFolder &&
             targetItem.id !== event.item.parentId &&
             targetItem.id !== event.item.id
         ) {
-            const updatedTree = moveTreeViewItem(
+            const updatedSubtree = moveTreeViewItem(
                 event.itemHierarchicalIndex,
-                data,
+                filteredData ?? [],
                 eventAnalyzer.getDropOperation() || 'after',
                 eventAnalyzer.destinationMeta.itemHierarchicalIndex,
             ) as TreeDataItem[]
@@ -172,7 +173,14 @@ export function TreeViewMaster(props: TreeViewMasterProps) {
                     ])
                 }
             })
-            setData(updatedTree)
+            // Restore the hidden-root wrapper so the next render still hides it.
+            const hadHiddenRoot =
+                data && data.length === 1 && data[0].items !== undefined
+            setData(
+                hadHiddenRoot
+                    ? [{ ...data![0], items: updatedSubtree }]
+                    : updatedSubtree,
+            )
         }
     }
 
