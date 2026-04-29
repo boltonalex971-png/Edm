@@ -48,6 +48,7 @@ type ItemSearchProps = {
         setAlert: (alertState: AlertState) => void,
         onDone: () => void,
     ) => void
+    refreshToken?: unknown
 }
 
 let refresh = false
@@ -58,7 +59,12 @@ export const ItemSearch = (props: ItemSearchProps) => {
     const [[items], loading, error] = usePost<Item[]>(
         `${api.items}/search`,
         props.query || {},
-        [props.query?.nomenclatureId, props.query?.active, refresh],
+        [
+            props.query?.nomenclatureId,
+            props.query?.active,
+            refresh,
+            props.refreshToken,
+        ],
     )
     const [subDetail, setSubDetail] = useState<ReactElement | undefined>()
     const [filter, setFilter] = useState<string>('')

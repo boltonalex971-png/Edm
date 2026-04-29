@@ -4,6 +4,7 @@ import { Search } from '@logistics/components/Search'
 import { BatchItemCreate } from '@logistics/components/items/BatchItemCreate.tsx'
 import { ItemSearch } from '@logistics/components/items/ItemSearch.tsx'
 import type { ItemSearchQuery } from '@logistics/data/types'
+import { useRefreshToken } from '@logistics/hooks/hooks'
 import { useRouteMatch } from '@logistics/hooks/routerHooks'
 import React, { useEffect, useState } from 'react'
 import { NavLink as Link } from 'react-router'
@@ -16,6 +17,7 @@ export function Items() {
     const [panel, setPanel] = useState<'search' | 'create'>('search')
     const [linkPanel, setLinkPanel] = useState<string>()
     const [query, setQuery] = useState<ItemSearchQuery>()
+    const [refreshToken, refresh] = useRefreshToken()
     useEffect(() => {
         setQuery({ active: name.includes('remaining') })
     }, [name])
@@ -51,8 +53,13 @@ export function Items() {
                     api={Api.items}
                     stubMessage={'Select an action'}
                     type={'none'}
-                    search={<ItemSearch query={query} />}
-                    detail={<BatchItemCreate />}
+                    search={
+                        <ItemSearch
+                            query={query}
+                            refreshToken={refreshToken}
+                        />
+                    }
+                    detail={<BatchItemCreate onCreated={refresh} />}
                 />
             </div>
         </>

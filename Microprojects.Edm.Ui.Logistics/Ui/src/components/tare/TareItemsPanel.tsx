@@ -17,6 +17,7 @@ type TareItemsPanelProps = {
     onTareClick?: (group: TareGroup) => void
     onItemClick?: (item: Item) => void
     toolbar?: React.ReactNode
+    refreshToken?: unknown
 }
 
 export function groupByTare(items: Item[]): TareGroup[] {
@@ -59,9 +60,9 @@ export function TareItemsPanel({
     onTareClick,
     onItemClick,
     toolbar,
+    refreshToken,
 }: TareItemsPanelProps) {
-    const [reload, setReload] = useState(false)
-    const [[data], loading, error] = useGet<Item[]>(api, [reload, api])
+    const [[data], loading, error] = useGet<Item[]>(api, [api, refreshToken])
     const [expandedTares, setExpandedTares] = useState<Set<string>>(new Set())
 
     const groups = useMemo(() => groupByTare(data || []), [data])
