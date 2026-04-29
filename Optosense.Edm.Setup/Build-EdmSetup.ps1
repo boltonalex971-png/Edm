@@ -405,12 +405,39 @@ function Exec-Sql {
 Exec-Sql $db "DELETE FROM Property WHERE Property='SVC_STOP_CMD'"
 Exec-Sql $db "INSERT INTO Property (Property,Value) VALUES ('SVC_STOP_CMD','C:\Windows\System32\cmd.exe')"
 
+# Property MSIRMSHUTDOWN=2 -- the real fix for "EDM Service is using files".
+# Why: our StopEdm CA below is IMMEDIATE (Type 114). MSI runs immediate CAs in
+# InstallExecuteSequence as the launching user, NOT as LocalSystem -- only
+# deferred+NoImpersonate CAs are elevated. So `net stop edm /y` from sequence
+# 1300 fails with access-denied and the service is still running when
+# InstallValidate (1400) does its Restart Manager scan, triggering the
+# FilesInUse dialog. Setting MSIRMSHUTDOWN=2 tells MSI's RM integration to
+# silently shut down apps/services holding files instead of prompting; RM
+# itself runs server-side (elevated) and CAN stop the service via SCM.
+# We still keep the StopEdm CA for trace logging and as belt-and-suspenders.
+Exec-Sql $db "DELETE FROM Property WHERE Property='MSIRMSHUTDOWN'"
+Exec-Sql $db "INSERT INTO Property (Property,Value) VALUES ('MSIRMSHUTDOWN','2')"
+
 # CustomAction Type 114 = 50 (EXE from property) + 64 (Continue on non-zero exit).
 # `mkdir "[TARGETDIR]."` ensures the install dir exists at sequence 1300,
 # before MSI's CreateFolders. The "." form avoids the cmd-quoting pitfall
 # where a path ending in `\"` can be misread as an escaped quote.
+#
+# DO NOT use `^&` to separate commands inside the parenthesised group:
+# in cmd parsing `^&` is the ESCAPED form, i.e. a literal `&` character,
+# NOT a command separator. With `^&` the entire group becomes a single
+# echo whose argument contains the literal text "& net stop edm /y";
+# net stop never runs and InstallValidate (1400) still sees the service
+# holding files. Plain `&` is correct here -- it separates commands
+# within the group, and the group's combined output is redirected by
+# the `>>` after the closing paren.
+#
+# `taskkill /F` is a belt-and-suspenders safety: `net stop edm /y` blocks
+# until SCM reports SERVICE_STOPPED, but the underlying process can
+# remain alive briefly while finalisers run, leaving file handles
+# locked. /T also kills child processes if any.
 Exec-Sql $db "DELETE FROM CustomAction WHERE Action='StopEdmServiceBeforeInstall'"
-$tgt = '/c mkdir "[TARGETDIR]." 2>nul & (echo === %DATE% %TIME% StopEdm CA fired === ^& net stop edm /y) >> "[TARGETDIR]edm-stop-trace.txt" 2>^&1'
+$tgt = '/c mkdir "[TARGETDIR]." 2>nul & (echo === %DATE% %TIME% StopEdm CA fired === & net stop edm /y & taskkill /F /IM Optosense.Edm.WebApi.exe /T) >> "[TARGETDIR]edm-stop-trace.txt" 2>&1'
 Exec-Sql $db "INSERT INTO CustomAction (Action,Type,Source,Target) VALUES ('StopEdmServiceBeforeInstall',114,'SVC_STOP_CMD','$tgt')"
 
 # (b) Schedule StopEdm at 1300, REP at 1399 (before InstallValidate at 1400).

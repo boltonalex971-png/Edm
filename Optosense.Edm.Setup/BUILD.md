@@ -403,11 +403,29 @@ function Exec($db, $sql) {
 Exec $db "DELETE FROM Property WHERE Property='SVC_STOP_CMD'"
 Exec $db "INSERT INTO Property (Property,Value) VALUES ('SVC_STOP_CMD','C:\Windows\System32\cmd.exe')"
 
+# MSIRMSHUTDOWN=2 -- the real fix for "EDM Service is using files".
+# Immediate CAs in InstallExecuteSequence run as the launching user (only
+# deferred+NoImpersonate runs as LocalSystem), so our StopEdm CA at 1300
+# can't actually stop the service. MSIRMSHUTDOWN=2 tells MSI's RM to
+# silently shut things down at InstallValidate instead of showing the
+# FilesInUse dialog -- RM runs server-side (elevated) and CAN stop the
+# service.
+Exec $db "DELETE FROM Property WHERE Property='MSIRMSHUTDOWN'"
+Exec $db "INSERT INTO Property (Property,Value) VALUES ('MSIRMSHUTDOWN','2')"
+
 # CustomAction: Type 114 (50 + 64 Continue), Source=property, Target=cmd args.
 # `mkdir "[TARGETDIR]."` ensures the install dir exists at sequence 1300,
 # before MSI's CreateFolders. Trailing "." form avoids cmd's trailing-\" pitfall.
+#
+# DO NOT use `^&` between commands inside the parens. cmd treats `^&` as the
+# ESCAPED form of `&` (a literal `&` character), not a command separator --
+# so the entire group degenerates to a single echo and `net stop` never runs.
+# Plain `&` is the correct separator. `taskkill /F /T` is belt-and-suspenders
+# in case the service process keeps file handles past SCM's SERVICE_STOPPED
+# notification (otherwise InstallValidate at 1400 still sees them and shows
+# "EDM Service is using files").
 Exec $db "DELETE FROM CustomAction WHERE Action='StopEdmServiceBeforeInstall'"
-$tgt = '/c mkdir "[TARGETDIR]." 2>nul & (echo === %DATE% %TIME% StopEdm CA fired === ^& net stop edm /y) >> "[TARGETDIR]edm-stop-trace.txt" 2>^&1'
+$tgt = '/c mkdir "[TARGETDIR]." 2>nul & (echo === %DATE% %TIME% StopEdm CA fired === & net stop edm /y & taskkill /F /IM Optosense.Edm.WebApi.exe /T) >> "[TARGETDIR]edm-stop-trace.txt" 2>&1'
 Exec $db "INSERT INTO CustomAction (Action,Type,Source,Target) VALUES ('StopEdmServiceBeforeInstall',114,'SVC_STOP_CMD','$tgt')"
 
 # Sequence: StopEdm at 1300, REP at 1399.
