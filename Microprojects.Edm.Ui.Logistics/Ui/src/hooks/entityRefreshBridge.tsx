@@ -1,8 +1,12 @@
 import { useCallback } from 'react'
 import api from '../features/api/api'
-import { useInvalidateEntities } from './entityRefresh'
+import { type EntityTag, useInvalidateEntities } from './entityRefresh'
 import { useLockSetters } from './entityLocks'
-import { EventKind, type LogisticsMessage } from './logisticsEvents'
+import {
+    EntityType,
+    EventKind,
+    type LogisticsMessage,
+} from './logisticsEvents'
 import useSignalR, { getCurrentConnectionId } from './signalRHooks'
 
 // Bridges the "Logistics" SignalR channel to in-page state: tag-based
@@ -21,14 +25,24 @@ export function EntityRefreshSignalRBridge() {
 
             switch (msg.kind) {
                 case EventKind.EntityChanged:
-                    invalidate(
-                        msg.id
-                            ? [
-                                  { type: msg.type },
-                                  { type: msg.type, id: msg.id },
-                              ]
-                            : [{ type: msg.type }],
-                    )
+                    if (msg.type === EntityType.Directory) {
+                        // Folders are shared across every leaf-type master view.
+                        const tags: EntityTag[] = []
+                        for (const t of Object.values(EntityType)) {
+                            tags.push({ type: t })
+                            if (msg.id) tags.push({ type: t, id: msg.id })
+                        }
+                        invalidate(tags)
+                    } else {
+                        invalidate(
+                            msg.id
+                                ? [
+                                      { type: msg.type },
+                                      { type: msg.type, id: msg.id },
+                                  ]
+                                : [{ type: msg.type }],
+                        )
+                    }
                     return
 
                 case EventKind.EntityLocked:
