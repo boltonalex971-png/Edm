@@ -2,7 +2,7 @@ import {
     type AlertState,
     InlineAlert,
 } from '@logistics/components/InlineAlert.tsx'
-import { SmartScroll, SmartScrollContent } from '@microprojects/tools'
+import {SmartScroll, SmartScrollContent} from '@microprojects/tools'
 import {
     Button,
     ButtonGroup,
@@ -10,7 +10,7 @@ import {
     Toolbar,
     ToolbarItem,
 } from '@progress/kendo-react-buttons'
-import { Form, FormElement } from '@progress/kendo-react-form'
+import {Form, FormElement} from '@progress/kendo-react-form'
 import {
     Card,
     CardBody,
@@ -29,9 +29,9 @@ import {
     useRef,
     useState,
 } from 'react'
-import { useSelector } from 'react-redux'
-import { Route, Routes, useLocation, useNavigate } from 'react-router-dom'
-import { Alert } from 'reactstrap'
+import {useSelector} from 'react-redux'
+import {Route, Routes, useLocation, useNavigate} from 'react-router-dom'
+import {Alert} from 'reactstrap'
 import type {
     DataItem,
     DetailEventHandler,
@@ -40,8 +40,8 @@ import type {
     UUID,
 } from '../data/types'
 import api from '../features/api/api'
-import type { RootState } from '../store'
-import { DetailStub, Loading } from '../features/utils/Utils'
+import type {RootState} from '../store'
+import {DetailStub, Loading} from '../features/utils/Utils'
 import {
     useEntityToken,
     useInvalidateEntities,
@@ -50,10 +50,10 @@ import {
     useAcquireEntityLock,
     useEntityLockState,
 } from '../hooks/entityLocks'
-import { useBasePath } from '../hooks/routerHooks'
-import { TreeViewMaster } from './TreeViewMaster'
-import type { TreeItemProps } from './TreeViewMaster'
-import { Folder } from './config/Folder'
+import {useBasePath} from '../hooks/routerHooks'
+import {TreeViewMaster} from './TreeViewMaster'
+import type {TreeItemProps} from './TreeViewMaster'
+import {Folder} from './config/Folder'
 
 export const EMPTY_GUID = '00000000-0000-0000-0000-000000000000'
 
@@ -63,7 +63,8 @@ const DetailEditModeContext = createContext<
     ((editMode: boolean) => void) | undefined
 >(undefined)
 
-let _rootItem: TreeDataItem
+// Per-instance so it resets across kind navigations; module-level would drop new items into the previous view's folder when the new list is empty.
+const RootItemContext = createContext<TreeDataItem | undefined>(undefined)
 
 export type MasterDetailProps = {
     api: string
@@ -78,9 +79,10 @@ export type MasterDetailProps = {
 const SEPARATOR_MIN_PX = 80
 
 export function MasterDetail(props: MasterDetailProps) {
-    const { path } = useBasePath()
+    const {path} = useBasePath()
     const navigate = useNavigate()
-    const treeToken = useEntityToken([{ type: props.type }])
+    const treeToken = useEntityToken([{type: props.type}])
+    const [rootItem, setRootItem] = useState<TreeDataItem | undefined>(undefined)
 
     const containerRef = useRef<HTMLDivElement | null>(null)
     const [masterPx, setMasterPx] = useState<number | null>(null)
@@ -118,71 +120,73 @@ export function MasterDetail(props: MasterDetailProps) {
     const masterStyle: React.CSSProperties =
         mode === 'manual' && masterPx != null
             ? {
-                  flex: `0 0 ${masterPx}px`,
-                  maxWidth: '33.333%',
-                  minWidth: 0,
-                  overflow: 'hidden',
-              }
+                flex: `0 0 ${masterPx}px`,
+                maxWidth: '33.333%',
+                minWidth: 0,
+                overflow: 'hidden',
+            }
             : {
-                  flex: '0 0 auto',
-                  maxWidth: '33.333%',
-                  minWidth: 0,
-                  overflow: 'hidden',
-              }
+                flex: '0 0 auto',
+                maxWidth: '33.333%',
+                minWidth: 0,
+                overflow: 'hidden',
+            }
 
     return (
-        <div ref={containerRef} style={{ width: '100%' }}>
-        <SmartScroll
-            offsetTop={10}
-            style={{
-                display: 'flex',
-                flexDirection: 'row',
-                alignItems: 'flex-start',
-            }}
-        >
-            <SmartScrollContent style={masterStyle}>
-                <TreeViewMaster
-                    api={props.api}
-                    getHierarchyQuery={props.getHierarchyQuery}
-                    onRootLoaded={(root) => (_rootItem = root)}
-                    item={props.item}
-                    refreshToken={treeToken}
-                    publishType={props.type}
-                />
-            </SmartScrollContent>
-            <PaneSeparator onDrag={onSeparatorDrag} />
-            <SmartScrollContent style={{ flex: 1, minWidth: 0 }}>
-                <Routes>
-                    <Route
-                        index
-                        element={<DetailStub message={props.stubMessage} />}
-                    />
-                    <Route
-                        path={'folder/:id'}
-                        element={
-                            <Folder
-                                api={api.directories}
-                                type={props.type}
-                                path={path}
-                                onClose={() => navigate(path)}
+        <RootItemContext.Provider value={rootItem}>
+            <div ref={containerRef} style={{width: '100%'}}>
+                <SmartScroll
+                    offsetTop={10}
+                    style={{
+                        display: 'flex',
+                        flexDirection: 'row',
+                        alignItems: 'flex-start',
+                    }}
+                >
+                    <SmartScrollContent style={masterStyle}>
+                        <TreeViewMaster
+                            api={props.api}
+                            getHierarchyQuery={props.getHierarchyQuery}
+                            onRootLoaded={setRootItem}
+                            item={props.item}
+                            refreshToken={treeToken}
+                            publishType={props.type}
+                        />
+                    </SmartScrollContent>
+                    <PaneSeparator onDrag={onSeparatorDrag}/>
+                    <SmartScrollContent style={{flex: 1, minWidth: 0}}>
+                        <Routes>
+                            <Route
+                                index
+                                element={<DetailStub message={props.stubMessage}/>}
                             />
-                        }
-                    />
-                    <Route
-                        path={':id'}
-                        element={
-                            <>
-                                {props.detail}
-                                <div style={{ height: '40vh' }}>
-                                    {/*div to avoid ui jerking when switching cards at bottom*/}
-                                </div>
-                            </>
-                        }
-                    />
-                </Routes>
-            </SmartScrollContent>
-        </SmartScroll>
-        </div>
+                            <Route
+                                path={'folder/:id'}
+                                element={
+                                    <Folder
+                                        api={api.directories}
+                                        type={props.type}
+                                        path={path}
+                                        onClose={() => navigate(path)}
+                                    />
+                                }
+                            />
+                            <Route
+                                path={':id'}
+                                element={
+                                    <>
+                                        {props.detail}
+                                        <div style={{height: '40vh'}}>
+                                            {/*div to avoid ui jerking when switching cards at bottom*/}
+                                        </div>
+                                    </>
+                                }
+                            />
+                        </Routes>
+                    </SmartScrollContent>
+                </SmartScroll>
+            </div>
+        </RootItemContext.Provider>
     )
 }
 
@@ -190,7 +194,7 @@ type PaneSeparatorProps = {
     onDrag: (clientX: number) => void
 }
 
-const PaneSeparator = ({ onDrag }: PaneSeparatorProps) => {
+const PaneSeparator = ({onDrag}: PaneSeparatorProps) => {
     // While dragging we render a small vertical guide segment centered on
     // the cursor. `null` while idle keeps the indicator out of the DOM so
     // the separator stays invisible at rest.
@@ -198,7 +202,7 @@ const PaneSeparator = ({ onDrag }: PaneSeparatorProps) => {
 
     const update = (e: React.PointerEvent<HTMLDivElement>) => {
         const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect()
-        setGuide({ x: rect.left + rect.width / 2, y: e.clientY })
+        setGuide({x: rect.left + rect.width / 2, y: e.clientY})
         onDrag(e.clientX)
     }
 
@@ -294,12 +298,12 @@ export type DetailProps = {
 }
 
 export function Detail({
-    editable = true,
-    copyable = true,
-    deletable = true,
-    readonly = false,
-    ...props
-}: DetailProps) {
+                           editable = true,
+                           copyable = true,
+                           deletable = true,
+                           readonly = false,
+                           ...props
+                       }: DetailProps) {
     const navigate = useNavigate()
     const invalidate = useInvalidateEntities()
     const username = useSelector((s: RootState) => s.user.name)
@@ -328,7 +332,7 @@ export function Detail({
     return props.error ? (
         <Alert
             color="danger"
-            style={{ display: 'flex', justifyContent: 'space-around' }}
+            style={{display: 'flex', justifyContent: 'space-around'}}
         >
             {props.error}
         </Alert>
@@ -337,7 +341,7 @@ export function Detail({
             <Card className="animated">
                 {props.loading && props.id && (
                     <CardBody>
-                        <Loading />
+                        <Loading/>
                     </CardBody>
                 )}
                 {!(props.loading && props.id) && (
@@ -350,7 +354,7 @@ export function Detail({
                                 justifyContent: 'space-between',
                             }}
                         >
-                            <div style={{ display: 'flex' }}>
+                            <div style={{display: 'flex'}}>
                                 <div className="me-2">{props.icon}</div>
                                 <div>
                                     <CardTitle>
@@ -376,7 +380,7 @@ export function Detail({
                                 </div>
                             </div>
                             <Toolbar
-                                style={{ padding: '0', borderStyle: 'none' }}
+                                style={{padding: '0', borderStyle: 'none'}}
                             >
                                 <ToolbarItem>
                                     {props.editor && !readonly && (
@@ -387,8 +391,8 @@ export function Detail({
                                                     lockedByOther
                                                         ? `Locked by ${remoteLock.lockedBy}`
                                                         : editMode
-                                                          ? 'View mode'
-                                                          : 'Edit mode'
+                                                            ? 'View mode'
+                                                            : 'Edit mode'
                                                 }
                                                 icon={editMode ? 'eye' : 'edit'}
                                                 fillMode="flat"
@@ -416,7 +420,7 @@ export function Detail({
                                                         )
                                                         .then((response) => {
                                                             props.onChange &&
-                                                                props.onChange()
+                                                            props.onChange()
                                                             if (props.type) {
                                                                 invalidate([
                                                                     {
@@ -431,9 +435,9 @@ export function Detail({
                                                                 ])
                                                             }
                                                             props.path &&
-                                                                navigate(
-                                                                    `${props.path}/${response.data.id}`,
-                                                                )
+                                                            navigate(
+                                                                `${props.path}/${response.data.id}`,
+                                                            )
                                                         })
                                                 }}
                                             />
@@ -455,7 +459,7 @@ export function Detail({
                                                             )
                                                             .then(() => {
                                                                 props.onChange &&
-                                                                    props.onChange()
+                                                                props.onChange()
                                                                 if (
                                                                     props.type
                                                                 ) {
@@ -472,9 +476,9 @@ export function Detail({
                                                                     ])
                                                                 }
                                                                 props.path &&
-                                                                    navigate(
-                                                                        props.path,
-                                                                    )
+                                                                navigate(
+                                                                    props.path,
+                                                                )
                                                             })
                                                     }
                                                 }}
@@ -502,7 +506,7 @@ export function Detail({
                                 </ToolbarItem>
                             </Toolbar>
                         </CardHeader>
-                        <CardBody style={{ position: 'relative' }}>
+                        <CardBody style={{position: 'relative'}}>
                             {props.validation && (
                                 <Alert
                                     color="warning"
@@ -520,7 +524,7 @@ export function Detail({
                     </>
                 )}
             </Card>
-            <div className="mt-2" />
+            <div className="mt-2"/>
             {props.subDetail}
         </DetailEditModeContext.Provider>
     )
@@ -530,7 +534,7 @@ type ToolbarButtonProps = ButtonProps & {
     visible?: boolean
 }
 
-function ToolbarButton({ visible, ...props }: ToolbarButtonProps) {
+function ToolbarButton({visible, ...props}: ToolbarButtonProps) {
     return visible ? <Button {...props} /> : null
 }
 
@@ -564,6 +568,7 @@ export function Editor(props: EditorProps) {
     const location = useLocation()
     const [alert, setAlert] = useState<AlertState>()
     const setDetailEditMode = useContext(DetailEditModeContext)
+    const rootItem = useContext(RootItemContext)
     const invalidate = useInvalidateEntities()
     const mode =
         (props.data.id && props.data.id !== EMPTY_GUID && 'Update') || 'Create'
@@ -590,10 +595,10 @@ export function Editor(props: EditorProps) {
                     props.onChange?.(response.data)
                     props.setData(response.data)
                     invalidate([
-                        { type: props.type },
-                        { type: props.type, id: response.data.id },
+                        {type: props.type},
+                        {type: props.type, id: response.data.id},
                     ])
-                    setAlert({ message: 'Updated successfully' })
+                    setAlert({message: 'Updated successfully'})
                     setDetailEditMode?.(false)
                 })
                 .catch((r) =>
@@ -606,18 +611,18 @@ export function Editor(props: EditorProps) {
             const stateParentId = (location.state as any)?.parentId as
                 | UUID
                 | undefined
-            const parentId = stateParentId || _rootItem?.id
+            const parentId = stateParentId || rootItem?.id
             axios
-                .post(`${props.api}`, { ...foreignData, directoryId: parentId })
+                .post(`${props.api}`, {...foreignData, directoryId: parentId})
                 .then((response) => {
                     props.onUpdate?.(response.data)
                     props.onChange?.(response.data)
                     props.setData(response.data)
                     invalidate([
-                        { type: props.type },
-                        { type: props.type, id: response.data.id },
+                        {type: props.type},
+                        {type: props.type, id: response.data.id},
                     ])
-                    setAlert({ message: 'Created successfully' })
+                    setAlert({message: 'Created successfully'})
                     setDetailEditMode?.(false)
                     if (props.path) {
                         navigate(
@@ -636,7 +641,7 @@ export function Editor(props: EditorProps) {
 
     return (
         <>
-            <InlineAlert state={alert} onClose={() => setAlert(undefined)} />
+            <InlineAlert state={alert} onClose={() => setAlert(undefined)}/>
             <Form
                 key={props.data.id}
                 initialValues={props.data}
