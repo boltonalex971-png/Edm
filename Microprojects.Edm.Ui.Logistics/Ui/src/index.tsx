@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client'
 import { Provider } from 'react-redux'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App'
+import { EntityRefreshProvider } from './hooks/entityRefresh'
 import store from './store'
 import 'bootstrap/dist/css/bootstrap.css'
 import '@progress/kendo-theme-bootstrap/dist/all.css'
@@ -20,9 +21,11 @@ if (rootEl) {
     root.render(
         <Provider store={store}>
             <React.StrictMode>
-                <BrowserRouter basename={base}>
-                    <App />
-                </BrowserRouter>
+                <EntityRefreshProvider>
+                    <BrowserRouter basename={base}>
+                        <App />
+                    </BrowserRouter>
+                </EntityRefreshProvider>
             </React.StrictMode>
         </Provider>,
     )
