@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer, useState } from 'react'
+import { useEffect, useReducer } from 'react'
 
 enum RequestType {
     GET = 'GET',
@@ -89,12 +89,6 @@ function usePost<T>(
 }
 
 export { useFetch, useGet, usePost }
-
-export function useRefreshToken(): [number, () => void] {
-    const [token, setToken] = useState(0)
-    const refresh = useCallback(() => setToken((t) => t + 1), [])
-    return [token, refresh]
-}
 
 /* new data fetch api */
 export const getData = <T>(url: string): Promise<T> => query(url)

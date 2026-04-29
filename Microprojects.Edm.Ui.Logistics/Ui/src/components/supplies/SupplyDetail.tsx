@@ -12,7 +12,7 @@ import { ItemDetail } from '@logistics/components/items/ItemDetail'
 import { TareDetail } from '@logistics/components/tare/TareDetail'
 import { TareItemsPanel } from '@logistics/components/tare/TareItemsPanel'
 import type { DetailEventHandler, Supply, UUID } from '@logistics/data/types'
-import { useGet, useRefreshToken } from '@logistics/hooks/hooks'
+import { useGet } from '@logistics/hooks/hooks'
 import { Button } from '@progress/kendo-react-buttons'
 import { Field } from '@progress/kendo-react-form'
 import { Input } from '@progress/kendo-react-inputs'
@@ -32,7 +32,6 @@ export function SupplyDetail({
 }: SupplyDetailProps) {
     const [subDetail, setSubDetail] = useState<React.ReactElement>()
     useEffect(setSubDetail as EffectCallback, [id])
-    const [refreshToken, refresh] = useRefreshToken()
 
     let [[data, setData], loading, error] = useGet<Supply>(
         `${api.supplies}/${id || EMPTY_GUID}`,
@@ -114,7 +113,7 @@ export function SupplyDetail({
                 supplyId && supplyId !== EMPTY_GUID ? (
                     <TareItemsPanel
                         api={`${api.supplies}/${supplyId}/items`}
-                        refreshToken={refreshToken}
+                        supplyId={supplyId as UUID}
                         onTareClick={(group) =>
                             setSubDetail(
                                 <TareDetail
@@ -143,7 +142,6 @@ export function SupplyDetail({
                                         setSubDetail(
                                             <BatchItemCreate
                                                 supplyId={supplyId as UUID}
-                                                onCreated={refresh}
                                                 onClose={() =>
                                                     setSubDetail(undefined)
                                                 }

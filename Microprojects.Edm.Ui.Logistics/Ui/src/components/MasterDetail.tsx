@@ -141,6 +141,7 @@ export function MasterDetail(props: MasterDetailProps) {
                     onRootLoaded={(root) => (_rootItem = root)}
                     item={props.item}
                     refreshToken={treeToken}
+                    publishType={props.type}
                 />
             </SmartScrollContent>
             <PaneSeparator onDrag={onSeparatorDrag} />

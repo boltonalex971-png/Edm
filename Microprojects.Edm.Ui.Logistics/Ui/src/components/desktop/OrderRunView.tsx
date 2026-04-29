@@ -9,6 +9,10 @@ import type {
     OrderOutputItems,
     UUID,
 } from '@logistics/data/types'
+import {
+    useEntityToken,
+    useInvalidateEntities,
+} from '@logistics/hooks/entityRefresh'
 import { useGet } from '@logistics/hooks/hooks'
 import { colorForGradeId } from '@logistics/utils/gradePalette'
 import axios from 'axios'
@@ -31,17 +35,18 @@ export const OrderRunView = () => {
     const id = idParam as UUID | undefined
     const navigate = useNavigate()
 
-    const [reloadToken, setReloadToken] = useState(0)
+    const invalidate = useInvalidateEntities()
+    const orderToken = useEntityToken([{ type: 'order', id }])
     const [launching, setLaunching] = useState(false)
     const [launchError, setLaunchError] = useState<string | undefined>()
     const [completing, setCompleting] = useState(false)
     const [completeError, setCompleteError] = useState<string | undefined>()
     const [step, setStep] = useState<Step>('review')
 
-    const [[order], loading] = useGet<Order>(id ? `${api.orders}/${id}` : '', [id, reloadToken])
+    const [[order], loading] = useGet<Order>(id ? `${api.orders}/${id}` : '', [id, orderToken])
     const [[outputs]] = useGet<OrderOutputItems>(
         id ? `${api.orders}/${id}/output-items` : '',
-        [id, reloadToken],
+        [id, orderToken],
     )
 
     const isReadOnly = !!order?.executor && order.mine === false
@@ -93,7 +98,11 @@ export const OrderRunView = () => {
         axios
             .post<ExecuteResult>(`${api.orders}/${id}/execute`)
             .then((r) => {
-                setReloadToken((x) => x + 1)
+                invalidate([
+                    { type: 'order', id },
+                    { type: 'item' },
+                    { type: 'tare' },
+                ])
                 if (r.data.completed) setStep('complete')
                 else setStep('distribute')
             })
@@ -111,7 +120,7 @@ export const OrderRunView = () => {
         setCompleting(true)
         axios
             .post(`${api.orders}/${id}/complete`, {})
-            .then(() => setReloadToken((x) => x + 1))
+            .then(() => invalidate([{ type: 'order', id }]))
             .catch((e) => {
                 setCompleteError(
                     e.response?.data?.detail ||
@@ -122,7 +131,12 @@ export const OrderRunView = () => {
             .finally(() => setCompleting(false))
     }
 
-    const onOutputsChanged = () => setReloadToken((x) => x + 1)
+    const onOutputsChanged = () =>
+        invalidate([
+            { type: 'order', id },
+            { type: 'item' },
+            { type: 'tare' },
+        ])
 
     const backToList = () => navigate('/desktop')
 

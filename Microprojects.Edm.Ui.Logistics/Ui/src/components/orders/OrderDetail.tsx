@@ -25,6 +25,10 @@ import type {
     UUID,
 } from '@logistics/data/types'
 import type { ExecuteResult } from '@logistics/data/types'
+import {
+    useEntityToken,
+    useInvalidateEntities,
+} from '@logistics/hooks/entityRefresh'
 import { useGet } from '@logistics/hooks/hooks.ts'
 import { Button } from '@progress/kendo-react-buttons'
 import { DatePicker, DateTimePicker } from '@progress/kendo-react-dateinputs'
@@ -100,10 +104,11 @@ export function OrderDetail({
     //const processTree = useMemo(() => markFoldersDisabled(hierarchy), [hierarchy])
     // const [[kinds]] = useGet<string[]>(`${Api.processes}/kinds`, []);
     // const [[noms]] = useGet<Item[]>(`${Api.nomenclatures}`, []);
-    const [reloadToken, setReloadToken] = useState(0)
+    const invalidate = useInvalidateEntities()
+    const orderToken = useEntityToken([{ type: 'order', id }])
     let [[data, setData], loading, error] = useGet<Order>(
         `${Api.orders}/${id || EMPTY_GUID}`,
-        [id, reloadToken],
+        [id, orderToken],
     )
     // After a Create, the prop `id` stays undefined (the panel is not
     // route-driven), but `data.id` is set to the new GUID via setData.
@@ -111,17 +116,20 @@ export function OrderDetail({
     const effectiveId =
         id ||
         (data?.id && data.id !== EMPTY_GUID ? (data.id as UUID) : undefined)
+    const effectiveToken = useEntityToken([
+        { type: 'order', id: effectiveId },
+    ])
     const [[orderProcesses]] = useGet<OrderProcess[]>(
         effectiveId
             ? `${Api.orders}/${effectiveId}/operations`
             : `${Api.orders}/${EMPTY_GUID}/operations`,
-        [effectiveId, reloadToken],
+        [effectiveId, effectiveToken],
     )
     const [[outputItems]] = useGet<OrderOutputItems>(
         effectiveId
             ? `${Api.orders}/${effectiveId}/output-items`
             : `${Api.orders}/${EMPTY_GUID}/output-items`,
-        [effectiveId, reloadToken],
+        [effectiveId, effectiveToken],
     )
     if (!data || data.id === EMPTY_GUID) {
         data = { ...data, name: '', description: '' } as Order
@@ -147,7 +155,11 @@ export function OrderDetail({
             .post<ExecuteResult>(`${Api.orders}/${effectiveId}/execute`)
             .then((r) => {
                 const { completed, pendingCount } = r.data
-                setReloadToken((x) => x + 1)
+                invalidate([
+                    { type: 'order', id: effectiveId },
+                    { type: 'item' },
+                    { type: 'tare' },
+                ])
                 if (pendingCount > 0) {
                     setAllocateOpen(true)
                     return
@@ -196,7 +208,9 @@ export function OrderDetail({
                 <AllocateOutputWindow
                     orderId={effectiveId}
                     onClose={() => setAllocateOpen(false)}
-                    onChanged={() => setReloadToken((x) => x + 1)}
+                    onChanged={() =>
+                        invalidate([{ type: 'order', id: effectiveId }])
+                    }
                 />
             )}
             <Detail
