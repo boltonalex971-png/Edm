@@ -5,6 +5,8 @@ import { Provider } from 'react-redux'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import { EntityRefreshProvider } from './hooks/entityRefresh'
+import { EntityRefreshSignalRBridge } from './hooks/entityRefreshBridge'
+import { getCurrentConnectionId } from './hooks/signalRHooks'
 import store from './store'
 import 'bootstrap/dist/css/bootstrap.css'
 import '@progress/kendo-theme-bootstrap/dist/all.css'
@@ -14,6 +16,18 @@ import '@progress/kendo-theme-bootstrap/dist/all.css'
 // (https://localhost:3000) and the API runs on https://localhost:16332.
 axios.defaults.withCredentials = true
 
+// Stamp the originator's hub connection id on every API request so the
+// server can echo it back in published LogisticsMessages — the bridge uses
+// it to suppress self-echo. Header is omitted before the hub connects,
+// which the server treats as anonymous origin (no echo suppression).
+axios.interceptors.request.use((config) => {
+    const id = getCurrentConnectionId()
+    if (id) {
+        config.headers.set('X-Edm-Connection-Id', id)
+    }
+    return config
+})
+
 const base = import.meta.env.ASSET_PREFIX
 const rootEl = document.getElementById('root')
 if (rootEl) {
@@ -22,6 +36,7 @@ if (rootEl) {
         <Provider store={store}>
             <React.StrictMode>
                 <EntityRefreshProvider>
+                    <EntityRefreshSignalRBridge />
                     <BrowserRouter basename={base}>
                         <App />
                     </BrowserRouter>

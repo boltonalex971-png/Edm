@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Microprojects.Edm.Ui.Logistics.Contracts;
+using Microprojects.Edm.Ui.Logistics.Events;
 using Microprojects.Edm.Ui.Logistics.Persistence;
 using Microprojects.Edm.Ui.Logistics.Services;
 using Microsoft.EntityFrameworkCore;
@@ -19,6 +20,9 @@ namespace Microprojects.Edm.Ui.Logistics
     {
         public override void InjectDependencies(IServiceCollection services, IConfiguration configuration)
         {
+            services.AddSingleton<IConnectionOrigin, HttpHeaderConnectionOrigin>();
+            services.AddSingleton<LogisticsPublishingInterceptor>();
+
             services.AddDbContextPool<LogisticsContext>((provider, options) =>
             {
                 options.UseSqlServer(
@@ -27,6 +31,8 @@ namespace Microprojects.Edm.Ui.Logistics
                         .UseCompatibilityLevel(140)); // This is a workaround for EF 8 and "Contains" problem
                 var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
                 options.UseLoggerFactory(loggerFactory);
+                options.AddInterceptors(
+                    provider.GetRequiredService<LogisticsPublishingInterceptor>());
             }, poolSize: 128);
 
             services.AddScoped<IDirectoryService, DirectoryService>();
