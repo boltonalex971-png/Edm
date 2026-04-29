@@ -19,7 +19,6 @@ import {
     Editor,
     Info,
     MasterDetail,
-    reloadMaster,
 } from '../../MasterDetail'
 import { TareTypeTabs } from './TareTypeTabs'
 
@@ -243,7 +242,6 @@ export function TareTypes() {
                     type={type}
                     api={api}
                     path={path || ''}
-                    onChange={() => reloadMaster()}
                     onClose={() => navigate(path)}
                 />
             }

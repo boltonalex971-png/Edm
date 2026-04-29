@@ -22,7 +22,6 @@ import {
     Editor,
     Info,
     MasterDetail,
-    reloadMaster,
 } from '../../MasterDetail'
 import { ProcessTabs } from './ProcessTabs'
 
@@ -73,7 +72,6 @@ export function Processes({ kind }: { kind?: ProcessKind }) {
                     api={api}
                     path={path || ''}
                     kind={kind}
-                    onChange={() => reloadMaster()}
                     onClose={() => navigate(path)}
                 />
             }

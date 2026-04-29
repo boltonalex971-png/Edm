@@ -10,7 +10,7 @@ import { MultiSelectComp } from '../DropDownCell'
 import { Detail, EMPTY_GUID, Editor, Info } from '../MasterDetail'
 
 type FolderProps = {
-    onChange: () => void
+    onChange?: () => void
     onClose: MouseEventHandler
     path: string
     api: string

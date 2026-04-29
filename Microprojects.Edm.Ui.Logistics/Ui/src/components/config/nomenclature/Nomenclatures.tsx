@@ -19,7 +19,6 @@ import {
     Editor,
     Info,
     MasterDetail,
-    reloadMaster,
 } from '../../MasterDetail'
 import { NomenclatureTabs } from './NomenclatureTabs'
 
@@ -39,7 +38,6 @@ export function Nomenclatures() {
                     type={type}
                     api={api}
                     path={path || ''}
-                    onChange={() => reloadMaster()}
                     onClose={() => navigate(path)}
                 />
             }

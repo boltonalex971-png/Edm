@@ -40,8 +40,9 @@ import type {
 } from '../data/types'
 import api from '../features/api/api'
 import { DetailStub, Loading } from '../features/utils/Utils'
+import { useRefreshToken } from '../hooks/hooks'
 import { useBasePath } from '../hooks/routerHooks'
-import { TreeViewMaster, refresh } from './TreeViewMaster'
+import { TreeViewMaster } from './TreeViewMaster'
 import type { TreeItemProps } from './TreeViewMaster'
 import { Folder } from './config/Folder'
 
@@ -53,14 +54,15 @@ const DetailEditModeContext = createContext<
     ((editMode: boolean) => void) | undefined
 >(undefined)
 
-export function reloadMaster() {
-    refresh()
-    _renderFunc(++_render)
+// Bumped on every save/copy/delete inside the Routes; TreeViewMaster's
+// useGet listens via the refreshToken in its deps.
+const MasterRefreshContext = createContext<() => void>(() => {})
+
+export function useReloadMaster(): () => void {
+    return useContext(MasterRefreshContext)
 }
 
 let _rootItem: TreeDataItem
-let _render = 0
-let _renderFunc: (r: number) => void
 
 export type MasterDetailProps = {
     api: string
@@ -77,6 +79,7 @@ const SEPARATOR_MIN_PX = 80
 export function MasterDetail(props: MasterDetailProps) {
     const { path } = useBasePath()
     const navigate = useNavigate()
+    const [refreshToken, refresh] = useRefreshToken()
 
     const containerRef = useRef<HTMLDivElement | null>(null)
     const [masterPx, setMasterPx] = useState<number | null>(null)
@@ -142,39 +145,41 @@ export function MasterDetail(props: MasterDetailProps) {
                     getHierarchyQuery={props.getHierarchyQuery}
                     onRootLoaded={(root) => (_rootItem = root)}
                     item={props.item}
+                    refreshToken={refreshToken}
                 />
             </SmartScrollContent>
             <PaneSeparator onDrag={onSeparatorDrag} />
             <SmartScrollContent style={{ flex: 1, minWidth: 0 }}>
-                <Routes>
-                    <Route
-                        index
-                        element={<DetailStub message={props.stubMessage} />}
-                    />
-                    <Route
-                        path={'folder/:id'}
-                        element={
-                            <Folder
-                                api={api.directories}
-                                type={props.type}
-                                path={path}
-                                onChange={() => reloadMaster()}
-                                onClose={() => navigate(path)}
-                            />
-                        }
-                    />
-                    <Route
-                        path={':id'}
-                        element={
-                            <>
-                                {props.detail}
-                                <div style={{ height: '40vh' }}>
-                                    {/*div to avoid ui jerking when switching cards at bottom*/}
-                                </div>
-                            </>
-                        }
-                    />
-                </Routes>
+                <MasterRefreshContext.Provider value={refresh}>
+                    <Routes>
+                        <Route
+                            index
+                            element={<DetailStub message={props.stubMessage} />}
+                        />
+                        <Route
+                            path={'folder/:id'}
+                            element={
+                                <Folder
+                                    api={api.directories}
+                                    type={props.type}
+                                    path={path}
+                                    onClose={() => navigate(path)}
+                                />
+                            }
+                        />
+                        <Route
+                            path={':id'}
+                            element={
+                                <>
+                                    {props.detail}
+                                    <div style={{ height: '40vh' }}>
+                                        {/*div to avoid ui jerking when switching cards at bottom*/}
+                                    </div>
+                                </>
+                            }
+                        />
+                    </Routes>
+                </MasterRefreshContext.Provider>
             </SmartScrollContent>
         </SmartScroll>
         </div>
@@ -295,8 +300,7 @@ export function Detail({
     ...props
 }: DetailProps) {
     const navigate = useNavigate()
-    const [_, setRefresh] = useState(0)
-    _renderFunc = setRefresh
+    const masterRefresh = useContext(MasterRefreshContext)
     let [editMode, setEditMode] = useState(props.editMode)
     editMode = editMode || props.id === EMPTY_GUID
     return props.error ? (
@@ -375,6 +379,7 @@ export function Detail({
                                                         .then((response) => {
                                                             props.onChange &&
                                                                 props.onChange()
+                                                            masterRefresh()
                                                             props.path &&
                                                                 navigate(
                                                                     `${props.path}/${response.data.id}`,
@@ -401,6 +406,7 @@ export function Detail({
                                                             .then(() => {
                                                                 props.onChange &&
                                                                     props.onChange()
+                                                                masterRefresh()
                                                                 props.path &&
                                                                     navigate(
                                                                         props.path,
@@ -494,6 +500,7 @@ export function Editor(props: EditorProps) {
     const location = useLocation()
     const [alert, setAlert] = useState<AlertState>()
     const setDetailEditMode = useContext(DetailEditModeContext)
+    const masterRefresh = useContext(MasterRefreshContext)
     const mode =
         (props.data.id && props.data.id !== EMPTY_GUID && 'Update') || 'Create'
     const handleSubmit = (data: Dictionary) => {
@@ -518,6 +525,7 @@ export function Editor(props: EditorProps) {
                     props.onUpdate?.(response.data)
                     props.onChange?.(response.data)
                     props.setData(response.data)
+                    masterRefresh()
                     setAlert({ message: 'Updated successfully' })
                     setDetailEditMode?.(false)
                 })
@@ -538,6 +546,7 @@ export function Editor(props: EditorProps) {
                     props.onUpdate?.(response.data)
                     props.onChange?.(response.data)
                     props.setData(response.data)
+                    masterRefresh()
                     setAlert({ message: 'Created successfully' })
                     setDetailEditMode?.(false)
                     if (props.path) {
