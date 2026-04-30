@@ -31,24 +31,7 @@ public class ProcessesController : EntriesControllerBase<Process, ProcessViewMod
     [HttpGet]
     public override async Task<IEnumerable<ProcessViewModel>> GetAllEntries([FromQuery] string? kind = null)
     {
-        ProcessKinds? kindFilter = null;
-
-        if (string.IsNullOrEmpty(kind))
-        {
-            kindFilter = ProcessKinds.Manufacturing;
-        }
-        else if (Enum.TryParse<ProcessKinds>(kind, true, out var parsedKind))
-        {
-            kindFilter = parsedKind;
-        }
-
-        Expression<Func<Process, bool>>? predicate = null;
-        if (kindFilter.HasValue)
-        {
-            var value = kindFilter.Value;
-            predicate = e => e.Kind == value;
-        }
-
+        var predicate = BuildKindPredicate(kind);
         var entries = await Service.GetAll(predicate);
         return Mapper.Map<IEnumerable<ProcessViewModel>>(entries);
     }
@@ -56,26 +39,32 @@ public class ProcessesController : EntriesControllerBase<Process, ProcessViewMod
     [HttpGet("hierarchy")]
     public override async Task<IEnumerable<DirectoryEntryViewModel>> GetEntryHierarchy([FromQuery] string? kind = null)
     {
-        ProcessKinds? kindFilter = null;
-
-        if (string.IsNullOrEmpty(kind))
-        {
-            kindFilter = ProcessKinds.Manufacturing;
-        }
-        else if (Enum.TryParse<ProcessKinds>(kind, true, out var parsedKind))
-        {
-            kindFilter = parsedKind;
-        }
-
-        Expression<Func<Process, bool>>? predicate = null;
-        if (kindFilter.HasValue)
-        {
-            var value = kindFilter.Value;
-            predicate = e => e.Kind == value;
-        }
-
+        var predicate = BuildKindPredicate(kind);
+        var rootId = GetEntryRootId(kind)
+            ?? throw new EdmException($"No type root configured for {nameof(Process)}.");
         var entries = await Service.GetAll(predicate);
-        return await BuildEntryHierarchy(entries);
+        return await BuildEntryHierarchy(entries, rootId);
+    }
+
+    protected override Guid? GetEntryRootId(string? kind) =>
+        WellKnownDirectoryIds.ResolveRoot(typeof(Process), ParseKindOrDefault(kind));
+
+    protected override Guid? GetEntryRootIdFor(Process entity) =>
+        WellKnownDirectoryIds.ResolveRoot(typeof(Process), entity.Kind);
+
+    private static ProcessKinds ParseKindOrDefault(string? kind)
+    {
+        if (!string.IsNullOrEmpty(kind) && Enum.TryParse<ProcessKinds>(kind, true, out var parsed))
+        {
+            return parsed;
+        }
+        return ProcessKinds.Manufacturing;
+    }
+
+    private static Expression<Func<Process, bool>> BuildKindPredicate(string? kind)
+    {
+        var value = ParseKindOrDefault(kind);
+        return e => e.Kind == value;
     }
 
     [HttpGet("kinds")]

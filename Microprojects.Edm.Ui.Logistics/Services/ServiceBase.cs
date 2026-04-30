@@ -292,11 +292,10 @@ public class ServiceBase<TEntity> : IGenericService<TEntity> where TEntity : cla
             {
                 withMeta.Meta = new Meta
                 {
+                    Id = id,
                     Owner = NameOrPlaceholder(UserService.GetUserName()),
                     Metatype = typeof(TEntity).Name,
-                    //Groups = model.Division == null ? [] : [model.Division]
                 };
-                withMeta.Id = id;
                 Set().Add(entity);
             }
             else
