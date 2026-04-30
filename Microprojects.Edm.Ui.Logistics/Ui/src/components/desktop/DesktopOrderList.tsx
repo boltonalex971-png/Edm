@@ -2,6 +2,7 @@ import api from '@features/api/api.ts'
 import styles from '@logistics/components/desktop/desktop.module.css'
 import type { Order, OrderStatus, UUID } from '@logistics/data/types'
 import { usePost } from '@logistics/hooks/hooks'
+import { formatLocalDate, parseUtcDate } from '@logistics/utils/format'
 import { useMemo } from 'react'
 
 type DesktopOrderListProps = {
@@ -35,9 +36,8 @@ const statusClass = (status?: OrderStatus) => {
 }
 
 const isOverdue = (dueDate: Order['dueDate']) => {
-    if (!dueDate) return false
-    const due = new Date(dueDate)
-    if (Number.isNaN(due.getTime())) return false
+    const due = parseUtcDate(dueDate)
+    if (!due) return false
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     return due.getTime() <= today.getTime() + 24 * 60 * 60 * 1000
@@ -63,12 +63,8 @@ export const DesktopOrderList = ({ onOpen }: DesktopOrderListProps) => {
         // Most recently-launched first for "mine"; due-soonest first for available.
         mine.sort((a, b) => (a.status ?? '').localeCompare(b.status ?? ''))
         available.sort((a, b) => {
-            const ad = a.dueDate
-                ? new Date(a.dueDate).getTime()
-                : Number.POSITIVE_INFINITY
-            const bd = b.dueDate
-                ? new Date(b.dueDate).getTime()
-                : Number.POSITIVE_INFINITY
+            const ad = parseUtcDate(a.dueDate)?.getTime() ?? Number.POSITIVE_INFINITY
+            const bd = parseUtcDate(b.dueDate)?.getTime() ?? Number.POSITIVE_INFINITY
             return ad - bd
         })
         return { mine, available }
@@ -115,7 +111,7 @@ export const DesktopOrderList = ({ onOpen }: DesktopOrderListProps) => {
                     <span>{order.amount} pcs</span>
                     {order.dueDate && (
                         <span className={styles.cardMeta}>
-                            Due {new Date(order.dueDate).toLocaleDateString()}
+                            Due {formatLocalDate(order.dueDate)}
                         </span>
                     )}
                 </div>

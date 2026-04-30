@@ -18,6 +18,12 @@ import {
     useOrderClaimState,
 } from '@logistics/hooks/entityLocks'
 import { useGet } from '@logistics/hooks/hooks'
+import {
+    type DateLike,
+    formatLocalDate,
+    formatLocalDateTime,
+    parseUtcDate,
+} from '@logistics/utils/format'
 import { colorForGradeId } from '@logistics/utils/gradePalette'
 import axios from 'axios'
 import { useEffect, useMemo, useState } from 'react'
@@ -308,7 +314,7 @@ const ReviewStep = ({ order, onNext, nextLabel, onResume }: ReviewStepProps) => 
                 <>
                     <div className={styles.reviewLabel}>Start</div>
                     <div className={styles.reviewValue}>
-                        {new Date(order.startDate).toLocaleDateString()}
+                        {formatLocalDate(order.startDate)}
                     </div>
                 </>
             )}
@@ -316,7 +322,7 @@ const ReviewStep = ({ order, onNext, nextLabel, onResume }: ReviewStepProps) => 
                 <>
                     <div className={styles.reviewLabel}>Due</div>
                     <div className={styles.reviewValue}>
-                        {new Date(order.dueDate).toLocaleDateString()}
+                        {formatLocalDate(order.dueDate)}
                     </div>
                 </>
             )}
@@ -389,13 +395,12 @@ type DueStatus =
 /** Calendar-day comparison: same day = "In time"; later days = overdue;
  *  earlier days = before plan. Time-of-day is ignored. */
 const computeDueStatus = (
-    dueRaw: Date | string | undefined,
-    completedRaw?: Date | string,
+    dueRaw: DateLike,
+    completedRaw?: DateLike,
 ): DueStatus | undefined => {
-    if (!dueRaw) return undefined
-    const due = new Date(dueRaw)
-    if (Number.isNaN(due.getTime())) return undefined
-    const ref = completedRaw ? new Date(completedRaw) : new Date()
+    const due = parseUtcDate(dueRaw)
+    if (!due) return undefined
+    const ref = parseUtcDate(completedRaw) ?? new Date()
     const dueDay = Date.UTC(due.getFullYear(), due.getMonth(), due.getDate())
     const refDay = Date.UTC(ref.getFullYear(), ref.getMonth(), ref.getDate())
     const diffDays = Math.round((refDay - dueDay) / (1000 * 60 * 60 * 24))
@@ -481,7 +486,7 @@ const CompleteStep = ({
                         <div className={styles.doneStatLabel}>Due</div>
                         <div className={styles.doneStatValue}>
                             <span style={{ marginRight: '0.5rem' }}>
-                                {new Date(order.dueDate).toLocaleDateString()}
+                                {formatLocalDate(order.dueDate)}
                             </span>
                             {dueStatus && (
                                 <span className={dueBadgeClass}>
@@ -495,7 +500,7 @@ const CompleteStep = ({
                     <>
                         <div className={styles.doneStatLabel}>Completed</div>
                         <div className={styles.doneStatValue}>
-                            {new Date(order.completed).toLocaleString()}
+                            {formatLocalDateTime(order.completed)}
                         </div>
                     </>
                 )}

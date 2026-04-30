@@ -22,6 +22,7 @@ import {
     useInvalidateEntities,
 } from '../hooks/entityRefresh'
 import { useGet } from '../hooks/hooks'
+import { formatLocalDate, formatLocalDateTime } from '../utils/format'
 import { ParentContext } from './ParentContext'
 
 export type RelationTableAddMode = 'inline' | 'subdetail'
@@ -391,12 +392,10 @@ export const ActionCell = ({
 
 export const DateCell = (props: GridCellProps) => {
     const value = props.dataItem[props.field!]
-    const date = value && new Date(value).toLocaleDateString()
-    return <td>{date}</td>
+    return <td>{formatLocalDate(value)}</td>
 }
 
 export const DateTimeCell = (props: GridCellProps) => {
     const value = props.dataItem[props.field!]
-    const date = value && new Date(value).toLocaleString()
-    return <td>{date}</td>
+    return <td>{formatLocalDateTime(value)}</td>
 }
