@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Microprojects.Edm.Cache;
 using Microprojects.Edm.Ui.Logistics.Contracts;
 using Microprojects.Edm.Ui.Logistics.Models;
@@ -6,6 +6,7 @@ using Microprojects.Edm.Ui.Logistics.Utils;
 using Microprojects.Edm.Ui.Logistics.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Optosense.Edm.Core.AspNet.Controllers;
+using Optosense.Edm.Plugins;
 using Directory = Microprojects.Edm.Ui.Logistics.Models.Directory;
 
 namespace Microprojects.Edm.Ui.Logistics.Controllers;
@@ -28,13 +29,6 @@ public class DirectoriesController : AuthControllerBase
         _directoryService = directoryService;
         _cache = cache;
     }
-
-    //[HttpPost]
-    //public JsonResult KeepTreeExpandedState(HierarchyType type, IEnumerable<TreeExpandedState> items)
-    //{
-    //    _cache.StoreMany(UiCacheHelper.OwnerKey(this), items, () => type);
-    //    return Json("Ok");
-    //}
 
     [HttpGet]
     public async Task<IEnumerable<Directory>> Get()
@@ -60,39 +54,34 @@ public class DirectoriesController : AuthControllerBase
         return result;
     }
 
-    //public async Task<string> GetHierarchyEditor(Guid id, int? parentId = null, HierarchyType type = HierarchyType.Any)
-    //{
-    //    var parent = parentId.HasValue ?
-    //        await _hierarchyService.Get(parentId.Value) :
-    //        await _hierarchyService.GetRoot(type);
-    //    var folder = (await _hierarchyService.Get(id)) ?? new Hierarchy
-    //    {
-    //        ParentId = parent.Id,
-    //        Type = parent.Type,
-    //        IsActive = true,
-    //        IsPublic = true,
-    //        Owner = "user 1" // TODO attach real user
-    //    };
-    //    var model = Mapper.Map<HierarchyViewModel>(folder);
-    //    return RenderViewPart("~/Views/Hierarchy/HierarchyEditor.cshtml", model);
-    //}
-
     [HttpGet("{entryType}/tree")]
-    public async Task<IEnumerable<DirectoryEntryViewModel>> GetHierarchyTree(string entryType)
+    public async Task<IEnumerable<DirectoryEntryViewModel>> GetHierarchyTree(
+        string entryType,
+        [FromQuery] string? kind = null)
     {
-        var folders =
-            _mapper.Map<IEnumerable<DirectoryEntryViewModel>>(
-                    await _directoryService.GetTree(entryType))
-                .ToList();
-        var tree = folders.ToTree();
-        return tree;
+        var rootId = WellKnownDirectoryIds.ResolveRoot(entryType, kind)
+            ?? throw new EdmException($"No type root configured for {entryType}.");
+
+        var folders = _mapper
+            .Map<IEnumerable<DirectoryEntryViewModel>>(await _directoryService.GetSubtreeFolders(rootId))
+            .ToList();
+        return folders.ToTree();
     }
 
     [HttpPost]
     public async Task<DirectoryViewModel> Create([FromBody] DirectoryViewModel model)
     {
-        // If parent is not defined select default one
-        model.DirectoryId ??= Directory.GeneralRootId;
+        if (model.DirectoryId is null || model.DirectoryId == Directory.GeneralRootId)
+        {
+            throw new EdmException("New folders must be created inside a type root.");
+        }
+
+        var parentRoot = await _directoryService.ResolveTypeRoot(model.DirectoryId.Value);
+        if (parentRoot is null)
+        {
+            throw new EdmException("Parent folder is not under a recognized type root.");
+        }
+
         var directory = _mapper.Map<Directory>(model);
         var groups = (model.Groups ?? [])
             .Where(g => !string.IsNullOrWhiteSpace(g))
@@ -111,6 +100,11 @@ public class DirectoriesController : AuthControllerBase
     [HttpPut("{id:guid}")]
     public async Task<DirectoryViewModel> Save(Guid id, [FromBody] DirectoryViewModel model)
     {
+        if (WellKnownDirectoryIds.IsTypeRoot(id) || id == Directory.GeneralRootId)
+        {
+            throw new EdmException("Built-in folders cannot be edited.");
+        }
+
         var directory = _mapper.Map<Directory>(model);
         var groups = (model.Groups ?? [])
             .Where(g => !string.IsNullOrWhiteSpace(g))
@@ -129,6 +123,11 @@ public class DirectoriesController : AuthControllerBase
     [HttpDelete("{id:guid}")]
     public async Task<DirectoryViewModel> Delete(Guid id)
     {
+        if (WellKnownDirectoryIds.IsTypeRoot(id) || id == Directory.GeneralRootId)
+        {
+            throw new EdmException("Built-in folders cannot be deleted.");
+        }
+
         var deleted = await _directoryService.Delete(id);
         return _mapper.Map<DirectoryViewModel>(deleted);
     }
