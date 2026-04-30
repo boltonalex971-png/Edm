@@ -47,8 +47,43 @@ public class ServiceBase<TEntity> : IGenericService<TEntity> where TEntity : cla
         UserService = userService;
     }
 
-    private static string NameOrPlaceholder(string? name) =>
+    protected static string NameOrPlaceholder(string? name) =>
         string.IsNullOrEmpty(name) ? "?" : name;
+
+    /// <summary>
+    /// Auto-fork helper for forkable services (TareType, Nomenclature, Process).
+    /// Allocates a new Id on <paramref name="proposed"/>, attaches a fresh
+    /// <see cref="Meta"/> whose <see cref="Meta.OriginId"/> points back at
+    /// <paramref name="oldMeta"/>, marks the predecessor as
+    /// <see cref="Meta.Completed"/>, and adds the new row to the DbSet.
+    /// Caller is responsible for the trivial-field/reference checks before
+    /// calling, for re-pointing or copying any junction rows after, and for
+    /// calling <see cref="DbContext.SaveChangesAsync"/>.
+    /// </summary>
+    protected void ForkEntity(TEntity proposed, Meta oldMeta)
+    {
+        if (proposed is not IWithMeta proposedWithMeta)
+        {
+            throw new InvalidOperationException(
+                $"{typeof(TEntity).Name} cannot be forked: not IWithMeta.");
+        }
+
+        var newId = DomainObject.NewGuid();
+        proposed.Id = newId;
+
+        var newMeta = new Meta
+        {
+            Id = newId,
+            Owner = NameOrPlaceholder(UserService.GetUserName()),
+            Metatype = oldMeta.Metatype,
+            Groups = oldMeta.Groups,
+            OriginId = oldMeta.Id,
+        };
+        proposedWithMeta.Meta = newMeta;
+
+        Set().Add(proposed);
+        oldMeta.Completed = DateTime.UtcNow;
+    }
 
     /// <summary>
     /// Retrieves the DbSet corresponding to the type parameter <typeparamref name="TEntity"/>.
@@ -239,6 +274,14 @@ public class ServiceBase<TEntity> : IGenericService<TEntity> where TEntity : cla
     /// </summary>
     /// <param name="entity">The entity to save.</param>
     /// <returns>Returns the saved entity after being persisted to the database.</returns>
+    /// <summary>
+    /// Default forwarder for the auto-fork-aware Save overload. Services that
+    /// don't participate in versioning inherit this no-op default and behave
+    /// identically regardless of <paramref name="force"/>. Forkable services
+    /// override this overload directly.
+    /// </summary>
+    public virtual Task<TEntity> Save(TEntity entity, bool force) => Save(entity);
+
     public virtual async Task<TEntity> Save(TEntity entity)
     {
         var state = entity.Id == Guid.Empty ? EntityState.Added : EntityState.Modified;

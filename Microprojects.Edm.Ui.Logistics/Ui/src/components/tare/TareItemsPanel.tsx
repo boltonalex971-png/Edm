@@ -51,7 +51,13 @@ export function tareSummary(group: TareGroup): string {
     const { tare, items } = group
     const totalQty = items.reduce((s, i) => s + i.quantity, 0)
     if ((tare.sizeX ?? 0) > 0) {
-        return `${items.length} / ${Math.floor(tare.capacity)} slots`
+        // Addressed tare: only items pinned to a slot count toward occupancy.
+        // Address-less items here are orphans (their nomenclature/tare type
+        // shape changed after they were stored) and surface separately.
+        const placed = items.filter((i) => i.address != null).length
+        const orphans = items.length - placed
+        const base = `${placed} / ${Math.floor(tare.capacity)} slots`
+        return orphans > 0 ? `${base} (+${orphans} orphan)` : base
     }
     return `${totalQty} / ${tare.capacity}`
 }

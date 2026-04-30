@@ -34,6 +34,15 @@ public class Meta : DomainObject
     /// or cancellation.
     /// </summary>
     public DateTime? Completed { get; set; }
-    
+
+    /// <summary>
+    /// For schema-defining entities versioned via auto-fork on save (TareType,
+    /// Nomenclature, Process), points at the immediate predecessor in the
+    /// version chain. Null for entities created from scratch and for non-
+    /// versioned entities. Type homogeneity (a fork's origin must share the
+    /// same <see cref="Metatype"/>) is enforced by the fork code path.
+    /// </summary>
+    public Guid? OriginId { get; set; }
+
     public ICollection<History> History { get; set; } = new List<History>();
 }

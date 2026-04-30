@@ -52,7 +52,10 @@ public class CrudControllerBase<TObject, TObjectViewModel, TService> : AuthContr
     }
 
     [HttpPut("{id:guid}")]
-    public async Task<TObjectViewModel> SaveObject(Guid id, [FromBody] TObjectViewModel model)
+    public async Task<ActionResult<TObjectViewModel>> SaveObject(
+        Guid id,
+        [FromBody] TObjectViewModel model,
+        [FromQuery] bool force = false)
     {
         var entry = Mapper.Map<TObject>(model);
         if (id != entry.Id)
@@ -60,8 +63,15 @@ public class CrudControllerBase<TObject, TObjectViewModel, TService> : AuthContr
             throw new Exception($"{typeof(TObject).Name} id is ambiguous");
         }
 
-        var result = await Service.Save(entry);
-        return Mapper.Map<TObjectViewModel>(result);
+        try
+        {
+            var result = await Service.Save(entry, force);
+            return Mapper.Map<TObjectViewModel>(result);
+        }
+        catch (Services.ForkRequiredException ex)
+        {
+            return Conflict(new { detail = ex.Message, code = "fork-required" });
+        }
     }
 
     [HttpDelete("{id:guid}")]

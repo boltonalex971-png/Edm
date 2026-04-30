@@ -48,6 +48,7 @@ public class ProcessService : ServiceBase<Process>, IProcessService
     public async Task<SubProcess> AddSubProcess(Guid id, SubProcess process)
     {
         process.ProcessId = id;
+        process.SetId();
         var sub = Set<SubProcess>().Add(process);
         await Db.SaveChangesAsync();
         return sub.Entity;
@@ -139,6 +140,7 @@ public class ProcessService : ServiceBase<Process>, IProcessService
         grade.Description ??= string.Empty;
         grade.QualifierName ??= string.Empty;
         grade.Process = null!;
+        grade.SetId();
 
         var entry = Set<Grade>().Add(grade);
         await Db.SaveChangesAsync();
