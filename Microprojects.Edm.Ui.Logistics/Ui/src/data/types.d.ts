@@ -200,6 +200,9 @@ export interface RepackRequest {
 
 export interface RepackResult {
     movedCount: number
+    movedQuantity: number
+    units?: string
+    countable: boolean
     errors: string[]
 }
 
@@ -214,6 +217,9 @@ export interface BatchCreateItemRequest {
 
 export interface BatchCreateItemResult {
     createdCount: number
+    quantity: number
+    units?: string
+    countable: boolean
     tareId: UUID
     tareBarcode?: string
     tareTypeName?: string
@@ -228,6 +234,8 @@ export interface AllocateItemsRequest {
 export interface AllocateItemsResult {
     allocatedCount: number
     allocatedQuantity: number
+    units?: string
+    countable: boolean
     stoppedReason?: string
 }
 
@@ -294,6 +302,8 @@ export interface Order extends DataItem {
     processName: string
     processNomenclatureId: UUID
     processNomenclatureName: string
+    processNomenclatureUnits?: string
+    processNomenclatureCountable: boolean
     amount: number
     startDate: Date
     dueDate: Date

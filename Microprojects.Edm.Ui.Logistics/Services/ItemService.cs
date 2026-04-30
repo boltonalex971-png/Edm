@@ -606,6 +606,9 @@ public class ItemService : ServiceBase<Item>, IItemService
         return new BatchCreateItemResult
         {
             CreatedCount = createdItems.Count,
+            Quantity = createdItems.Sum(i => i.Quantity),
+            Units = tareType.Units,
+            Countable = nomenclature.Countable,
             TareId = tare.Id,
             TareBarcode = tare.Barcode,
             TareTypeName = tareType.Name,
@@ -673,6 +676,9 @@ public class ItemService : ServiceBase<Item>, IItemService
 
         var errors = new List<string>();
         var movedCount = 0;
+        var movedQuantity = 0.0;
+        string? units = null;
+        var countable = false;
 
         await using var transaction = await Db.Database.BeginTransactionAsync();
         try
@@ -786,6 +792,9 @@ public class ItemService : ServiceBase<Item>, IItemService
                     item.TareId = move.TargetTareId;
                     item.Address = move.TargetAddress;
                     movedCount++;
+                    movedQuantity += move.Quantity;
+                    units ??= targetType.Units;
+                    countable = item.Nomenclature?.Countable ?? countable;
                     continue;
                 }
 
@@ -795,6 +804,9 @@ public class ItemService : ServiceBase<Item>, IItemService
                     item.TareId = move.TargetTareId;
                     item.Address = null;
                     movedCount++;
+                    movedQuantity += move.Quantity;
+                    units ??= targetType.Units;
+                    countable = item.Nomenclature?.Countable ?? countable;
                     continue;
                 }
 
@@ -822,6 +834,9 @@ public class ItemService : ServiceBase<Item>, IItemService
 
                 item.Quantity -= move.Quantity;
                 movedCount++;
+                movedQuantity += move.Quantity;
+                units ??= targetType.Units;
+                countable = item.Nomenclature?.Countable ?? countable;
             }
 
             await Db.SaveChangesAsync();
@@ -833,7 +848,14 @@ public class ItemService : ServiceBase<Item>, IItemService
             errors.Add($"Transaction failed: {ex.Message}");
         }
 
-        return new RepackResult { MovedCount = movedCount, Errors = errors.ToArray() };
+        return new RepackResult
+        {
+            MovedCount = movedCount,
+            MovedQuantity = movedQuantity,
+            Units = units,
+            Countable = countable,
+            Errors = errors.ToArray(),
+        };
     }
 
 }

@@ -62,7 +62,7 @@ public class OrderService : ServiceBase<Order>, IOrderService
     public override async Task<Order> Get(Guid id)
     {
         var order = await Set().AsNoTracking()
-            .Include(o => o.Process.Nomenclature)
+            .Include(o => o.Process.Nomenclature).ThenInclude(n => n.DefaultTareType)
             .Include(o => o.Meta)
             .FirstOrDefaultAsync(o => o.Id == id);
         return order;
@@ -71,7 +71,7 @@ public class OrderService : ServiceBase<Order>, IOrderService
     public override async Task<IEnumerable<Order>> GetAll(Expression<Func<Order, bool>>? predicate = null)
     {
         var query = Set().AsNoTracking()
-            .Include(i => i.Process.Nomenclature)
+            .Include(i => i.Process.Nomenclature).ThenInclude(n => n.DefaultTareType)
             .Include(e => e.Meta)
             .Where(e => e.Meta.Deleted == null && e.Meta.Completed == null);
 
@@ -323,6 +323,7 @@ public class OrderService : ServiceBase<Order>, IOrderService
         var allocated = 0;
         var totalQty = 0.0;
         string? stoppedReason = null;
+        Guid? firstAllocatedId = null;
 
         foreach (var itemId in itemIds)
         {
@@ -339,6 +340,7 @@ public class OrderService : ServiceBase<Order>, IOrderService
                 var result = await AddItem(orderId, storeItem);
                 allocated++;
                 totalQty += result.Quantity;
+                firstAllocatedId ??= result.Id;
             }
             catch (EdmException ex)
             {
@@ -347,10 +349,27 @@ public class OrderService : ServiceBase<Order>, IOrderService
             }
         }
 
+        string? units = null;
+        var countable = false;
+        if (firstAllocatedId != null)
+        {
+            var info = await Set<Item>().AsNoTracking()
+                .Where(i => i.Id == firstAllocatedId)
+                .Select(i => new { i.Nomenclature.Countable, Units = i.Tare.TareType.Units })
+                .FirstOrDefaultAsync();
+            if (info != null)
+            {
+                units = info.Units;
+                countable = info.Countable;
+            }
+        }
+
         return new AllocateItemsResult
         {
             AllocatedCount = allocated,
             AllocatedQuantity = totalQty,
+            Units = units,
+            Countable = countable,
             StoppedReason = stoppedReason,
         };
     }
@@ -808,7 +827,7 @@ public class OrderService : ServiceBase<Order>, IOrderService
         // TODO Use materialized view to gain performance.
         // Active: no Deleted AND no Completed. Completed view: Completed != null AND Deleted == null.
         var orders = await Set().AsNoTracking()
-            .Include(o => o.Process.Nomenclature)
+            .Include(o => o.Process.Nomenclature).ThenInclude(n => n.DefaultTareType)
             .Include(o => o.Meta)
             .Where(i =>
                 (query.Active

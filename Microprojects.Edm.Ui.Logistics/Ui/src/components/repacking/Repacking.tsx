@@ -26,6 +26,7 @@ import type {
 } from '@logistics/data/types'
 import { getData, postData, useGet } from '@logistics/hooks/hooks'
 import { useSlotSelection } from '@logistics/hooks/useSlotSelection'
+import { formatUnits } from '@logistics/utils/format'
 import { SmartScroll, SmartScrollContent } from '@microprojects/tools'
 import { Button } from '@progress/kendo-react-buttons'
 import type React from 'react'
@@ -453,6 +454,8 @@ export function Repacking() {
         } catch (e: any) {
             setSubmitResult({
                 movedCount: 0,
+                movedQuantity: 0,
+                countable: false,
                 errors: [e.message || 'Request failed'],
             })
         }
@@ -472,6 +475,17 @@ export function Repacking() {
         nomenclatures,
         selectedNomenclatureId,
     ) as Nomenclature | null
+
+    const selectedSourceTotals = useMemo(() => {
+        let qty = 0
+        let units: string | undefined
+        for (const item of sourceItems) {
+            if (!selectedSourceItemIds.has(item.id)) continue
+            qty += item.quantity ?? 0
+            units ??= item.tareTareTypeUnits
+        }
+        return { qty, units }
+    }, [sourceItems, selectedSourceItemIds])
 
     return (
         <div className="repacking-page">
@@ -611,9 +625,13 @@ export function Repacking() {
                                     color: '#1976d2',
                                 }}
                             >
-                                {selectedSourceItemIds.size} item(s) selected
-                                — click an empty target slot to place them
-                                (Shift+click for range, Ctrl/Cmd+click to
+                                {formatUnits(
+                                    selectedSourceTotals.qty,
+                                    selectedSourceTotals.units,
+                                    selectedNomenclature?.countable,
+                                )}{' '}
+                                selected — click an empty target slot to place
+                                them (Shift+click for range, Ctrl/Cmd+click to
                                 toggle).
                             </div>
                         )}
@@ -697,7 +715,13 @@ export function Repacking() {
                                             fontSize: '0.85rem',
                                         }}
                                     >
-                                        Moved {submitResult.movedCount} items.
+                                        Moved{' '}
+                                        {formatUnits(
+                                            submitResult.movedQuantity,
+                                            submitResult.units,
+                                            submitResult.countable,
+                                        )}
+                                        .
                                     </span>
                                 ) : (
                                     <span

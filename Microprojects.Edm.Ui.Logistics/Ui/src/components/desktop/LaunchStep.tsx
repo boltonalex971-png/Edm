@@ -7,6 +7,7 @@ import type {
     UUID,
 } from '@logistics/data/types'
 import { getData } from '@logistics/hooks/hooks'
+import { formatUnits } from '@logistics/utils/format'
 import { useCallback, useEffect, useState } from 'react'
 
 type LaunchStepProps = {
@@ -64,8 +65,13 @@ export const LaunchStep = ({
 
     const onAllocated = (result?: AllocateItemsResult) => {
         if (result) {
+            const qtyTxt = formatUnits(
+                result.allocatedQuantity,
+                result.units,
+                result.countable,
+            )
             setInfo(
-                `Added ${result.allocatedCount} item(s)` +
+                `Added ${qtyTxt}` +
                     (result.stoppedReason
                         ? ` (stopped: ${result.stoppedReason})`
                         : ''),

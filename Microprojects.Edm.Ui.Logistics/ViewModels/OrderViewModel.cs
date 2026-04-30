@@ -16,6 +16,8 @@ public class OrderViewModel
     public string? ProcessName { get; set; }
     public Guid? ProcessNomenclatureId { get; set; }
     public string? ProcessNomenclatureName { get; set; }
+    public string? ProcessNomenclatureUnits { get; set; }
+    public bool ProcessNomenclatureCountable { get; set; }
     public string? Description { get; set; }
     public double? Amount { get; set; }
     public DateTime? StartDate { get; set; }
