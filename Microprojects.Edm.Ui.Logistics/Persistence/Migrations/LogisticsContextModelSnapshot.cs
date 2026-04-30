@@ -25,7 +25,6 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Assignment", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("From")
@@ -41,13 +40,12 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("NomenclatureId");
 
-                    b.ToTable("Tasks");
+                    b.ToTable("Tasks", (string)null);
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Changelog", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Author")
@@ -66,7 +64,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Changelog");
+                    b.ToTable("Changelog", (string)null);
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Directory", b =>
@@ -88,13 +86,12 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("DirectoryId");
 
-                    b.ToTable("Directories");
+                    b.ToTable("Directories", (string)null);
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Grade", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Description")
@@ -114,13 +111,12 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("ProcessId");
 
-                    b.ToTable("Grades");
+                    b.ToTable("Grades", (string)null);
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.History", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Author")
@@ -141,7 +137,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("MetaId");
 
-                    b.ToTable("History");
+                    b.ToTable("History", (string)null);
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Item", b =>
@@ -190,13 +186,12 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("TareId");
 
-                    b.ToTable("Items");
+                    b.ToTable("Items", (string)null);
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.ItemLink", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<double>("ConsumedQuantity")
@@ -219,13 +214,12 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("TargetItemId");
 
-                    b.ToTable("ItemLinks");
+                    b.ToTable("ItemLinks", (string)null);
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Meta", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("Completed")
@@ -260,7 +254,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Meta");
+                    b.ToTable("Meta", (string)null);
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Nomenclature", b =>
@@ -293,13 +287,12 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("DirectoryId");
 
-                    b.ToTable("Nomenclatures");
+                    b.ToTable("Nomenclatures", (string)null);
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.NomenclatureTareType", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("NomenclatureId")
@@ -315,7 +308,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
                     b.HasIndex("NomenclatureId", "TareTypeId")
                         .IsUnique();
 
-                    b.ToTable("NomenclatureTareTypes");
+                    b.ToTable("NomenclatureTareTypes", (string)null);
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Order", b =>
@@ -343,13 +336,12 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("ProcessId");
 
-                    b.ToTable("Order");
+                    b.ToTable("Order", (string)null);
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.OrderProcess", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("EndTime")
@@ -378,7 +370,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("ProcessId");
 
-                    b.ToTable("OrderProcess");
+                    b.ToTable("OrderProcess", (string)null);
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Process", b =>
@@ -408,7 +400,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("NomenclatureId");
 
-                    b.ToTable("Processes");
+                    b.ToTable("Processes", (string)null);
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Specification", b =>
@@ -438,13 +430,12 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("ProcessId");
 
-                    b.ToTable("Specifications");
+                    b.ToTable("Specifications", (string)null);
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.SpecificationNomenclature", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("NomenclatureId")
@@ -462,13 +453,12 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("SpecificationId");
 
-                    b.ToTable("SpecificationNomenclatures");
+                    b.ToTable("SpecificationNomenclatures", (string)null);
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.SubProcess", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("LinkedProcessId")
@@ -505,7 +495,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Supplies");
+                    b.ToTable("Supplies", (string)null);
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Tare", b =>
@@ -523,7 +513,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("TareTypeId");
 
-                    b.ToTable("Tares");
+                    b.ToTable("Tares", (string)null);
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.TareType", b =>
@@ -564,7 +554,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("DirectoryId");
 
-                    b.ToTable("TareTypes");
+                    b.ToTable("TareTypes", (string)null);
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Assignment", b =>

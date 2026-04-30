@@ -48,6 +48,13 @@ public class LogisticsContext : DbContext
 
         builder.Entity<TareType>().Ignore(t => t.Dimensions);
 
+        // All Ids are generated client-side via DomainObject.NewGuid()
+        // (UUIDNext for SQL Server). Disable the SQL Server convention that
+        // would otherwise plug in SqlServerSequentialGuidValueGenerator and
+        // produce non-time-sortable UUIDv4 Ids whenever a code path forgets
+        // to call SetId() before SaveChanges.
+        ConfigureNoServerGeneratedIds(builder);
+
         // Foreign keys for tables with metainfo
         ConfigureMetaEntities(builder);
 
@@ -149,6 +156,19 @@ public class LogisticsContext : DbContext
                 .WithOne()
                 .HasForeignKey(entityType.Name, nameof(DomainObject.Id))
                 .OnDelete(DeleteBehavior.NoAction);
+        }
+    }
+
+    private static void ConfigureNoServerGeneratedIds(ModelBuilder builder)
+    {
+        var entityTypes = builder.Model.GetEntityTypes()
+            .Where(t => typeof(IDomainObject).IsAssignableFrom(t.ClrType));
+
+        foreach (var entityType in entityTypes)
+        {
+            builder.Entity(entityType.ClrType)
+                .Property(nameof(IDomainObject.Id))
+                .ValueGeneratedNever();
         }
     }
 }
