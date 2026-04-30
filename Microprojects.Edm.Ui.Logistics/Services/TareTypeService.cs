@@ -17,7 +17,85 @@ public class TareTypeService : ServiceBase<TareType>, ITareTypeService
     {
     }
 
+    public override async Task<TareType> Get(Guid id)
+    {
+        return await Set().AsNoTracking()
+            .Include(t => t.Meta)
+            .FirstOrDefaultAsync(t => t.Id == id);
+    }
+
     public override async Task<TareType> Save(TareType entity)
+    {
+        Normalize(entity);
+        return await base.Save(entity);
+    }
+
+    public override async Task<TareType> Save(TareType entity, bool force)
+    {
+        Normalize(entity);
+
+        if (entity.Id == Guid.Empty)
+        {
+            return await base.Save(entity);
+        }
+
+        var persisted = await Set().AsNoTracking()
+            .Include(t => t.Meta)
+            .FirstOrDefaultAsync(t => t.Id == entity.Id);
+        if (persisted is null)
+        {
+            return await base.Save(entity);
+        }
+
+        if (persisted.Meta.Completed != null)
+        {
+            throw new EdmException(
+                "This tare type is outdated and cannot be edited. Open the current version instead.");
+        }
+
+        if (IsTrivialChange(persisted, entity))
+        {
+            return await base.Save(entity);
+        }
+
+        if (!await HasReferences(persisted.Id))
+        {
+            return await base.Save(entity);
+        }
+
+        if (!force)
+        {
+            throw new ForkRequiredException(
+                "This tare type is referenced by existing tares, nomenclatures, or allowed-tare links. " +
+                "Saving will create a new version and mark the current one as outdated.");
+        }
+
+        var oldMeta = await Set<Meta>().FindAsync(persisted.Id)
+                      ?? throw new EdmException("Cannot find Meta for the existing tare type.");
+        var oldId = oldMeta.Id;
+
+        ForkEntity(entity, oldMeta);
+        var newId = entity.Id;
+
+        // Copy NomenclatureTareType junction rows to the new version.
+        var oldLinks = await Db.NomenclatureTareTypes.AsNoTracking()
+            .Where(x => x.TareTypeId == oldId)
+            .ToListAsync();
+        foreach (var link in oldLinks)
+        {
+            Db.NomenclatureTareTypes.Add(new NomenclatureTareType
+            {
+                Id = DomainObject.NewGuid(),
+                NomenclatureId = link.NomenclatureId,
+                TareTypeId = newId,
+            });
+        }
+
+        await Db.SaveChangesAsync();
+        return entity;
+    }
+
+    private static void Normalize(TareType entity)
     {
         var eps = 1e-9;
 
@@ -36,8 +114,38 @@ public class TareTypeService : ServiceBase<TareType>, ITareTypeService
 
             entity.Capacity = rounded;
         }
+    }
 
-        return await base.Save(entity);
+    private static bool IsTrivialChange(TareType persisted, TareType proposed)
+    {
+        // Trivial = only Name/Description/DirectoryId differ. Shape fields
+        // (Units, Countable, sizes, Capacity) drive the auto-fork behavior.
+        return persisted.Units == proposed.Units
+            && persisted.Countable == proposed.Countable
+            && persisted.SizeX == proposed.SizeX
+            && persisted.SizeY == proposed.SizeY
+            && persisted.SizeZ == proposed.SizeZ
+            && Math.Abs(persisted.Capacity - proposed.Capacity) < 1e-9;
+    }
+
+    private async Task<bool> HasReferences(Guid tareTypeId)
+    {
+        if (await Db.Tares.AnyAsync(t => t.TareTypeId == tareTypeId))
+        {
+            return true;
+        }
+
+        if (await Db.Nomenclatures.AnyAsync(n => n.DefaultTareTypeId == tareTypeId))
+        {
+            return true;
+        }
+
+        if (await Db.NomenclatureTareTypes.AnyAsync(x => x.TareTypeId == tareTypeId))
+        {
+            return true;
+        }
+
+        return false;
     }
 
     public async Task<IEnumerable<NomenclatureTareType>> GetAllowedNomenclatures(Guid tareTypeId)

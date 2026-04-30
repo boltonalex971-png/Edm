@@ -66,7 +66,10 @@ public class EntriesControllerBase<TEntry, TEntryViewModel, TService> : AuthCont
     }
 
     [HttpPut("{id:guid}")]
-    public async Task<TEntry> SaveEntry(Guid id, [FromBody] TEntryViewModel model)
+    public async Task<ActionResult<TEntry>> SaveEntry(
+        Guid id,
+        [FromBody] TEntryViewModel model,
+        [FromQuery] bool force = false)
     {
         var entry = Mapper.Map<TEntry>(model);
         if (id != entry.Id)
@@ -74,8 +77,15 @@ public class EntriesControllerBase<TEntry, TEntryViewModel, TService> : AuthCont
             throw new Exception($"{typeof(TEntry).Name} id is ambiguous");
         }
 
-        var result = await Service.Save(entry);
-        return result;
+        try
+        {
+            var result = await Service.Save(entry, force);
+            return result;
+        }
+        catch (Services.ForkRequiredException ex)
+        {
+            return Conflict(new { detail = ex.Message, code = "fork-required" });
+        }
     }
 
     [HttpDelete("{id:guid}")]

@@ -11,4 +11,10 @@ public class DirectoryEntryViewModel
     public bool IsFolder { get; set; } = false;
     public DirectoryEntryViewModel[]? Items { get; set; }
     public bool Expanded { get; set; }
+
+    /// <summary>
+    /// True when the entity has been superseded by an auto-fork (Meta.Completed
+    /// is set). UI surfaces this as a read-only "outdated" indicator.
+    /// </summary>
+    public bool Outdated { get; set; }
 }

@@ -319,6 +319,7 @@ export function Detail({
     useAcquireEntityLock(props.type, lockableId, editMode, username)
     const remoteLock = useEntityLockState(props.type, lockableId)
     const lockedByOther = !!remoteLock.lockedBy && !remoteLock.isOwn
+    const outdated = !!(props.data as any)?.outdated
 
     // Force out of edit mode if another client took the lock first
     // (happens when both users press Edit nearly simultaneously and the
@@ -372,6 +373,20 @@ export function Detail({
                                                 {remoteLock.lockedBy}
                                             </span>
                                         )}
+                                        {outdated && (
+                                            <span
+                                                style={{
+                                                    marginLeft: '0.6rem',
+                                                    fontSize: '0.85em',
+                                                    fontWeight: 'normal',
+                                                    color: '#888',
+                                                    fontStyle: 'italic',
+                                                }}
+                                                title="A newer version exists. This record is preserved for historical references and cannot be edited."
+                                            >
+                                                outdated
+                                            </span>
+                                        )}
                                     </CardTitle>
                                     <CardSubtitle>
                                         {props.subTitle ||
@@ -388,15 +403,19 @@ export function Detail({
                                             <ToolbarButton
                                                 visible={editable}
                                                 title={
-                                                    lockedByOther
-                                                        ? `Locked by ${remoteLock.lockedBy}`
-                                                        : editMode
-                                                            ? 'View mode'
-                                                            : 'Edit mode'
+                                                    outdated
+                                                        ? 'Outdated — open the current version to edit'
+                                                        : lockedByOther
+                                                            ? `Locked by ${remoteLock.lockedBy}`
+                                                            : editMode
+                                                                ? 'View mode'
+                                                                : 'Edit mode'
                                                 }
                                                 icon={editMode ? 'eye' : 'edit'}
                                                 fillMode="flat"
-                                                disabled={lockedByOther}
+                                                disabled={
+                                                    lockedByOther || outdated
+                                                }
                                                 onClick={() =>
                                                     setEditMode(!editMode)
                                                 }
@@ -598,25 +617,56 @@ export function Editor(props: EditorProps) {
             {},
         )
         if (data.id && data.id !== EMPTY_GUID) {
-            axios
-                .put(`${props.api}/${props.data.id}`, foreignData)
-                .then((response) => {
-                    props.onUpdate?.(response.data)
-                    props.onChange?.(response.data)
-                    props.setData(response.data)
-                    invalidate([
-                        {type: props.type},
-                        {type: props.type, id: response.data.id},
-                    ])
-                    setAlert({message: 'Updated successfully'})
-                    setDetailEditMode?.(false)
-                })
-                .catch((r) =>
-                    setAlert({
-                        status: 'danger',
-                        message: r.response?.data?.detail || 'Unknown error',
-                    }),
-                )
+            const sendUpdate = (force: boolean) => {
+                const url = force
+                    ? `${props.api}/${props.data.id}?force=true`
+                    : `${props.api}/${props.data.id}`
+                return axios
+                    .put(url, foreignData)
+                    .then((response) => {
+                        props.onUpdate?.(response.data)
+                        props.onChange?.(response.data)
+                        props.setData(response.data)
+                        invalidate([
+                            {type: props.type},
+                            {type: props.type, id: response.data.id},
+                        ])
+                        setAlert({
+                            message: force
+                                ? 'Saved as a new version'
+                                : 'Updated successfully',
+                        })
+                        setDetailEditMode?.(false)
+                        if (force && props.path) {
+                            navigate(`${props.path}/${response.data.id}`)
+                        }
+                    })
+                    .catch((r) => {
+                        if (
+                            !force &&
+                            r.response?.status === 409 &&
+                            r.response?.data?.code === 'fork-required'
+                        ) {
+                            const detail =
+                                r.response?.data?.detail ||
+                                'This change will create a new version.'
+                            if (
+                                window.confirm(
+                                    `${detail}\n\nProceed and create a new version?`,
+                                )
+                            ) {
+                                return sendUpdate(true)
+                            }
+                            return
+                        }
+                        setAlert({
+                            status: 'danger',
+                            message:
+                                r.response?.data?.detail || 'Unknown error',
+                        })
+                    })
+            }
+            sendUpdate(false)
         } else {
             const stateParentId = (location.state as any)?.parentId as
                 | UUID

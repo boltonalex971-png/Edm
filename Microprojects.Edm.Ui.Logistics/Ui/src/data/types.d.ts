@@ -26,6 +26,9 @@ export interface TreeDataItem extends DataItem {
     items: TreeDataItem[]
     expanded: boolean
     groups?: string[] | null
+    /** Set when the entity has been superseded by an auto-fork. UI shows
+     * a read-only "outdated" indicator and blocks edits. */
+    outdated?: boolean
 }
 
 export interface TreeNode extends TreeDataItem {

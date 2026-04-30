@@ -22,8 +22,107 @@ public class NomenclatureService : ServiceBase<Nomenclature>, INomenclatureServi
     {
         var nomenclature = await Set().AsNoTracking()
             .Include(o => o.DefaultTareType)
+            .Include(o => o.Meta)
             .FirstOrDefaultAsync(o => o.Id == id);
         return nomenclature;
+    }
+
+    public override async Task<Nomenclature> Save(Nomenclature entity, bool force)
+    {
+        if (entity.Id == Guid.Empty)
+        {
+            return await base.Save(entity);
+        }
+
+        var persisted = await Set().AsNoTracking()
+            .Include(n => n.Meta)
+            .FirstOrDefaultAsync(n => n.Id == entity.Id);
+        if (persisted is null)
+        {
+            return await base.Save(entity);
+        }
+
+        if (persisted.Meta.Completed != null)
+        {
+            throw new EdmException(
+                "This nomenclature is outdated and cannot be edited. Open the current version instead.");
+        }
+
+        if (IsTrivialChange(persisted, entity))
+        {
+            return await base.Save(entity);
+        }
+
+        if (!await HasReferences(persisted.Id))
+        {
+            return await base.Save(entity);
+        }
+
+        if (!force)
+        {
+            throw new ForkRequiredException(
+                "This nomenclature is referenced by existing items, allowed-tare links, specifications, or processes. " +
+                "Saving will create a new version and mark the current one as outdated.");
+        }
+
+        var oldMeta = await Set<Meta>().FindAsync(persisted.Id)
+                      ?? throw new EdmException("Cannot find Meta for the existing nomenclature.");
+        var oldId = oldMeta.Id;
+
+        ForkEntity(entity, oldMeta);
+        var newId = entity.Id;
+
+        // Copy NomenclatureTareType junction rows to the new version.
+        var oldLinks = await Db.NomenclatureTareTypes.AsNoTracking()
+            .Where(x => x.NomenclatureId == oldId)
+            .ToListAsync();
+        foreach (var link in oldLinks)
+        {
+            Db.NomenclatureTareTypes.Add(new NomenclatureTareType
+            {
+                Id = DomainObject.NewGuid(),
+                NomenclatureId = newId,
+                TareTypeId = link.TareTypeId,
+            });
+        }
+
+        await Db.SaveChangesAsync();
+        return entity;
+    }
+
+    private static bool IsTrivialChange(Nomenclature persisted, Nomenclature proposed)
+    {
+        // Trivial = only Name/Description/DirectoryId differ. Category and
+        // Countable affect quantity semantics across existing items, so
+        // changing them must fork. DefaultTareTypeId is intentionally ignored
+        // because the AutoMapper config forbids changing it via plain PUT.
+        return persisted.Category == proposed.Category
+            && persisted.Countable == proposed.Countable;
+    }
+
+    private async Task<bool> HasReferences(Guid nomenclatureId)
+    {
+        if (await Db.Items.AnyAsync(i => i.NomenclatureId == nomenclatureId))
+        {
+            return true;
+        }
+
+        if (await Db.NomenclatureTareTypes.AnyAsync(x => x.NomenclatureId == nomenclatureId))
+        {
+            return true;
+        }
+
+        if (await Db.SpecificationNomenclatures.AnyAsync(x => x.NomenclatureId == nomenclatureId))
+        {
+            return true;
+        }
+
+        if (await Db.Processes.AnyAsync(p => p.NomenclatureId == nomenclatureId))
+        {
+            return true;
+        }
+
+        return false;
     }
 
     public override async Task<IEnumerable<Nomenclature>> GetAll(Expression<Func<Nomenclature, bool>>? predicate = null)

@@ -273,13 +273,21 @@ const TreeItem = (props: TreeItemProps) => {
         props.item.description && props.item.description !== props.item.name
             ? `${props.item.name} — ${props.item.description}`
             : props.item.name
+    const outdated = !!props.item.outdated
     return (
         <>
             {/*<span className={iconClassName(props.item)}>&nbsp;</span>*/}
             {icon(props.item)}&nbsp;
             <span
                 className={props.item.isFolder ? 'fw-bolder' : ''}
-                title={tooltip}
+                title={
+                    outdated ? `${tooltip} (outdated)` : tooltip
+                }
+                style={
+                    outdated
+                        ? { color: '#888', textDecoration: 'line-through' }
+                        : undefined
+                }
             >
                 {props.item.name}
             </span>
