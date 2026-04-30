@@ -30,6 +30,7 @@ import {
     useInvalidateEntities,
 } from '@logistics/hooks/entityRefresh'
 import { useGet } from '@logistics/hooks/hooks.ts'
+import { parseUtcDate } from '@logistics/utils/format'
 import { Button } from '@progress/kendo-react-buttons'
 import { DatePicker, DateTimePicker } from '@progress/kendo-react-dateinputs'
 import {
@@ -132,7 +133,14 @@ export function OrderDetail({
         [effectiveId, effectiveToken],
     )
     if (!data || data.id === EMPTY_GUID) {
-        data = { ...data, name: '', description: '' } as Order
+        const today = new Date()
+        data = {
+            ...data,
+            name: '',
+            description: '',
+            startDate: today,
+            dueDate: today,
+        } as Order
     }
 
     const isCompleted = !!data?.completed
@@ -501,10 +509,9 @@ export function OrderDetail({
                                             <DatePicker
                                                 {...o}
                                                 placeholder={''}
-                                                value={
-                                                    data?.startDate &&
-                                                    new Date(data.startDate)
-                                                }
+                                                value={parseUtcDate(
+                                                    data?.startDate,
+                                                )}
                                             />
                                         )}
                                         label={'Start Date'}
@@ -520,10 +527,9 @@ export function OrderDetail({
                                             <DatePicker
                                                 {...o}
                                                 placeholder={''}
-                                                value={
-                                                    data?.dueDate &&
-                                                    new Date(data.dueDate)
-                                                }
+                                                value={parseUtcDate(
+                                                    data?.dueDate,
+                                                )}
                                             />
                                         )}
                                         label={'Due Date'}

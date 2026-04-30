@@ -13,6 +13,7 @@ import { TareDetail } from '@logistics/components/tare/TareDetail'
 import { TareItemsPanel } from '@logistics/components/tare/TareItemsPanel'
 import type { DetailEventHandler, Supply, UUID } from '@logistics/data/types'
 import { useGet } from '@logistics/hooks/hooks'
+import { formatLocalDateTime } from '@logistics/utils/format'
 import { Button } from '@progress/kendo-react-buttons'
 import { Field } from '@progress/kendo-react-form'
 import { Input } from '@progress/kendo-react-inputs'
@@ -64,7 +65,12 @@ export function SupplyDetail({
                                 <p>Shipment Id: {data.shipmentExternalId}</p>
                             )}
                             {(data as any).metaCreated && (
-                                <p>Created: {(data as any).metaCreated}</p>
+                                <p>
+                                    Created:{' '}
+                                    {formatLocalDateTime(
+                                        (data as any).metaCreated,
+                                    )}
+                                </p>
                             )}
                         </>
                     }

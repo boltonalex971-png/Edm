@@ -3,6 +3,7 @@ import { Loading } from '@features/utils/Utils.tsx'
 import { LinkTextCell } from '@logistics/components/DropDownCell'
 import { Detail } from '@logistics/components/MasterDetail'
 import { PageTitle } from '@logistics/components/PageTitle'
+import { DateTimeCell } from '@logistics/components/RelationTable'
 import { Search } from '@logistics/components/Search'
 import { TreeViewLink } from '@logistics/components/TreeViewLink'
 import { SupplyDetail } from '@logistics/components/supplies/SupplyDetail'
@@ -167,7 +168,11 @@ function SupplySearch() {
                                 field="shipmentExternalId"
                                 title="Shipment Id"
                             />
-                            <GridColumn field="metaCreated" title="Created" />
+                            <GridColumn
+                                field="metaCreated"
+                                title="Created"
+                                cell={DateTimeCell}
+                            />
                         </Grid>
                     )}
                 </>

@@ -117,7 +117,7 @@ export function Folder(props: FolderProps) {
                                     component={(compProps) => (
                                         <MultiSelectComp
                                             {...compProps}
-                                            data={user?.groups || []}
+                                            data={user?.divisions || []}
                                         />
                                     )}
                                 />
