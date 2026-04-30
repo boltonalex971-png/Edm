@@ -11,6 +11,7 @@ public enum OrderStatus
 public class OrderViewModel
 {
     public Guid Id { get; set; }
+    public string? Number { get; set; }
     public Guid? ProcessId { get; set; }
     public string? ProcessName { get; set; }
     public Guid? ProcessNomenclatureId { get; set; }

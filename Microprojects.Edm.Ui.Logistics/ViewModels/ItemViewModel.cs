@@ -35,6 +35,8 @@ public class ItemViewModel
     public Guid? OrderId { get; set; }
     /// <summary>Display label for the order — uses process name falling back to description.</summary>
     public string? OrderName { get; set; }
+    /// <summary>Free-form order number (Order.Number).</summary>
+    public string? OrderNumber { get; set; }
 
     /// <summary>Process that produced this item (set for execution outputs).</summary>
     public Guid? ProcessId { get; set; }

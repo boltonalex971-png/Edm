@@ -83,6 +83,7 @@ export interface Item extends DataItem {
     supplyName?: string
     orderId?: UUID
     orderName?: string
+    orderNumber?: string
     processId?: UUID
     processName?: string
     /** True when this item is an order execution output (ProcessId != null). */
@@ -288,6 +289,7 @@ export interface OrderSpecification {
 }
 
 export interface Order extends DataItem {
+    number: string
     processId: UUID
     processName: string
     processNomenclatureId: UUID

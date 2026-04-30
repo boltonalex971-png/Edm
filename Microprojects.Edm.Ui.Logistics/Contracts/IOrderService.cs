@@ -20,4 +20,5 @@ public interface IOrderService : IGenericService<Order>
     Task CompleteOrder(Guid orderId);
     Task<IEnumerable<Order>> Search(OrderSearchQuery query);
     Task<IReadOnlyDictionary<Guid, Services.OrderExecutionState>> GetExecutionStates(IEnumerable<Guid> orderIds);
+    Task<string> GetNextNumber();
 }

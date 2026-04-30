@@ -101,6 +101,7 @@ public class ProcessService : ServiceBase<Process>, IProcessService
         }
         
         row.Nomenclature = null;
+        row.SetId();
         spec.Rows.Add(row);
         await Db.SaveChangesAsync();
         return row;

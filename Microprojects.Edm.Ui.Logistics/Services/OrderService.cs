@@ -6,6 +6,7 @@ using Microprojects.Edm.Ui.Logistics.Contracts;
 using Microprojects.Edm.Ui.Logistics.Events;
 using Microprojects.Edm.Ui.Logistics.Models;
 using Microprojects.Edm.Ui.Logistics.Persistence;
+using Microprojects.Edm.Ui.Logistics.Utils;
 using Microprojects.Edm.Ui.Logistics.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using Directory = Microprojects.Edm.Ui.Logistics.Models.Directory;
@@ -84,9 +85,17 @@ public class OrderService : ServiceBase<Order>, IOrderService
 
     public override async Task<Order> Save(Order order)
     {
+        if (order.Amount <= 0)
+        {
+            throw new EdmException("Amount must be greater than 0.");
+        }
         var create = order.Id == Guid.Empty;
         // Avoid creating a new process
         order.Process = null;
+        if (create && string.IsNullOrEmpty(order.Number))
+        {
+            order.Number = await GetNextNumber();
+        }
         await base.Save(order);
         if (create)
         {
@@ -871,6 +880,25 @@ public class OrderService : ServiceBase<Order>, IOrderService
             };
         }
         return result;
+    }
+
+    // Latest = most recently created order whose Number is set, regardless of
+    // whether the order is completed or soft-deleted — completed/cancelled
+    // numbers are still "used" and must not be reissued. Rows with an empty
+    // Number (migration default or pre-feature data) are skipped so the
+    // sequence never rolls back to "1" once any numbered order exists.
+    // Concurrent /next-number calls can race and produce duplicates; accepted
+    // per product decision (Number is a free-form identifier the user can
+    // override, no DB unique constraint).
+    public async Task<string> GetNextNumber()
+    {
+        var latest = await Set().AsNoTracking()
+            .Include(o => o.Meta)
+            .Where(o => o.Number != "")
+            .OrderByDescending(o => o.Meta.Created)
+            .Select(o => o.Number)
+            .FirstOrDefaultAsync();
+        return OrderNumberHelper.GenerateNext(latest);
     }
 }
 
