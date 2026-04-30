@@ -33,7 +33,7 @@ public class OrdersController : CrudControllerBase<Order, OrderViewModel, IOrder
     {
         if (id == Guid.Empty)
         {
-            return new OrderViewModel();
+            return new OrderViewModel { Number = await Service.GetNextNumber() };
         }
 
         var entry = await Service.Get(id);
@@ -145,6 +145,13 @@ public class OrdersController : CrudControllerBase<Order, OrderViewModel, IOrder
     {
         await Service.CompleteOrder(id);
         return Ok();
+    }
+
+    [HttpGet("next-number")]
+    [RequireRoles("Operator", "Technologist", "Admin")]
+    public async Task<string> GetNextNumber()
+    {
+        return await Service.GetNextNumber();
     }
 
     [HttpPost("search")]

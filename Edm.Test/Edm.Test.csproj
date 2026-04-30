@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Edm\Edm.csproj" />
+    <ProjectReference Include="..\Microprojects.Edm.Ui.Logistics\Microprojects.Edm.Ui.Logistics.csproj" />
   </ItemGroup>
 
 </Project>

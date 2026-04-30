@@ -52,6 +52,7 @@ export const OrderSearch = (props: OrderSearchProps) => {
         const lowerCasedFilter = filter.toLowerCase()
         const result = orders?.filter(
             (o) =>
+                o.number?.toLowerCase().includes(lowerCasedFilter) ||
                 o.processName?.toLowerCase().includes(lowerCasedFilter) ||
                 o.processNomenclatureName
                     ?.toLowerCase()
@@ -93,7 +94,7 @@ export const OrderSearch = (props: OrderSearchProps) => {
                 <>
                     <TextBox
                         inputMode={'text'}
-                        placeholder={'Search by process or nomenclature'}
+                        placeholder={'Search by number, process or nomenclature'}
                         prefix={() => (
                             <InputPrefix>
                                 <Search width={30} />
@@ -125,6 +126,11 @@ export const OrderSearch = (props: OrderSearchProps) => {
                                 )
                             }
                         >
+                            <GridColumn
+                                field="number"
+                                title="Order #"
+                                width="120"
+                            />
                             <GridColumn
                                 field="processName"
                                 title="Process"

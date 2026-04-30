@@ -303,10 +303,12 @@ export function ItemDetail({ id, title = 'Item', ...props }: ItemDetailProps) {
                                                     <DetailLinkText
                                                         id={data.orderId}
                                                         text={
-                                                            data.orderName ||
-                                                            `${String(
-                                                                data.orderId,
-                                                            ).slice(0, 8)}…`
+                                                            data.orderNumber
+                                                                ? `#${data.orderNumber}`
+                                                                : data.orderName ||
+                                                                  `${String(
+                                                                      data.orderId,
+                                                                  ).slice(0, 8)}…`
                                                         }
                                                         onClick={() =>
                                                             setSubDetail(
@@ -333,6 +335,17 @@ export function ItemDetail({ id, title = 'Item', ...props }: ItemDetailProps) {
                                                             )
                                                         }
                                                     />
+                                                    {data.orderNumber &&
+                                                        data.orderName && (
+                                                            <span
+                                                                className="item-info-value--muted"
+                                                                style={{
+                                                                    marginLeft: 8,
+                                                                }}
+                                                            >
+                                                                · {data.orderName}
+                                                            </span>
+                                                        )}
                                                 </dd>
                                             </>
                                         )

@@ -70,6 +70,8 @@ public class WebModelsProfile : AutoMapper.Profile
                     : (s.Order.Process != null && !string.IsNullOrWhiteSpace(s.Order.Process.Name)
                         ? s.Order.Process.Name
                         : s.Order.Description)))
+            .ForMember(d => d.OrderNumber, o => o.MapFrom(s =>
+                s.Order == null ? null : s.Order.Number))
             .ForMember(d => d.ProcessName, o => o.MapFrom(s =>
                 s.Process == null ? null : s.Process.Name))
             .ForMember(d => d.GradeName, o => o.MapFrom(s =>

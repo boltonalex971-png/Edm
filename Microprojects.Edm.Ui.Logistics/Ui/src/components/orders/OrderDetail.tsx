@@ -1,6 +1,7 @@
 import api from '@features/api/api.ts'
 import Api from '@features/api/api.ts'
 import { DetailLinkText } from '@logistics/components/DropDownCell.tsx'
+import { HierarchyPicker } from '@logistics/components/HierarchyPicker.tsx'
 import {
     type AlertState,
     InlineAlert,
@@ -33,55 +34,13 @@ import { useGet } from '@logistics/hooks/hooks.ts'
 import { parseUtcDate } from '@logistics/utils/format'
 import { Button } from '@progress/kendo-react-buttons'
 import { DatePicker, DateTimePicker } from '@progress/kendo-react-dateinputs'
-import {
-    DropDownTree,
-    type DropDownTreeChangeEvent,
-    DropDownTreeCloseEvent,
-} from '@progress/kendo-react-dropdowns'
 import { Field } from '@progress/kendo-react-form'
 import { Input, NumericTextBox, TextArea } from '@progress/kendo-react-inputs'
 import axios from 'axios'
 import type React from 'react'
-import { type EffectCallback, useEffect, useMemo, useState } from 'react'
+import { type EffectCallback, useEffect, useState } from 'react'
 import { Diagram3 } from 'react-bootstrap-icons'
 import { useNavigate } from 'react-router-dom'
-
-type ProcessTreeItem = TreeDataItem & {
-    disabled?: boolean
-    items?: ProcessTreeItem[]
-}
-
-function markFoldersDisabled(
-    nodes: TreeDataItem[] | undefined,
-): ProcessTreeItem[] {
-    if (!nodes) {
-        return []
-    }
-    return nodes.map((n) => ({
-        ...(n as any),
-        disabled: (n as any).isFolder === true,
-        items: markFoldersDisabled((n as any).items),
-    }))
-}
-
-function findTreeItemById(
-    nodes: ProcessTreeItem[] | undefined,
-    id: UUID | undefined,
-): ProcessTreeItem | null {
-    if (!nodes || !id) {
-        return null
-    }
-    for (const n of nodes) {
-        if ((n as any).id === id) {
-            return n
-        }
-        const child = findTreeItemById(n.items, id)
-        if (child) {
-            return child
-        }
-    }
-    return null
-}
 
 export interface OrderDetailProps extends DetailProps {
     onUpdate?: DetailEventHandler
@@ -102,9 +61,6 @@ export function OrderDetail({
         `${Api.processes}/hierarchy?kind=Technology`,
         [],
     )
-    //const processTree = useMemo(() => markFoldersDisabled(hierarchy), [hierarchy])
-    // const [[kinds]] = useGet<string[]>(`${Api.processes}/kinds`, []);
-    // const [[noms]] = useGet<Item[]>(`${Api.nomenclatures}`, []);
     const invalidate = useInvalidateEntities()
     const orderToken = useEntityToken([{ type: 'order', id }])
     let [[data, setData], loading, error] = useGet<Order>(
@@ -136,6 +92,7 @@ export function OrderDetail({
         const today = new Date()
         data = {
             ...data,
+            number: data?.number ?? '',
             name: '',
             description: '',
             startDate: today,
@@ -241,6 +198,16 @@ export function OrderDetail({
                                         id={id}
                                         onClose={() => setAlert(undefined)}
                                     ></InlineAlert>
+                                    {data?.number && (
+                                        <h3
+                                            style={{
+                                                margin: 0,
+                                                marginBottom: '0.5rem',
+                                            }}
+                                        >
+                                            #{data.number}
+                                        </h3>
+                                    )}
                                     {data?.status && (
                                         <div
                                             style={{
@@ -433,51 +400,34 @@ export function OrderDetail({
                                 </legend>
                                 <div
                                     className="mb-2"
+                                    style={{ width: '400px' }}
+                                >
+                                    <Field
+                                        name={'number'}
+                                        component={Input}
+                                        label={'Order #'}
+                                    />
+                                </div>
+                                <div
+                                    className="mb-2"
                                     style={{
                                         display: 'flex',
                                         alignItems: 'baseline',
-                                        width: '600px',
                                     }}
                                 >
                                     <Field
                                         name={'processId'}
                                         component={(p) => (
-                                            <DropDownTree
-                                                {...p}
+                                            <HierarchyPicker
                                                 data={hierarchy}
-                                                dataItemKey={'id'}
-                                                textField={'name'}
-                                                subItemsField={'items'}
-                                                expandField={'expanded'}
-                                                value={findTreeItemById(
-                                                    hierarchy,
-                                                    p.value as any,
-                                                )}
-                                                onChange={(
-                                                    e: DropDownTreeChangeEvent,
-                                                ) => {
-                                                    const selected =
-                                                        e.value as ProcessTreeItem | null
-                                                    if (
-                                                        !selected ||
-                                                        selected?.isFolder
-                                                    ) {
-                                                        return
-                                                    }
-
-                                                    p.onChange({
-                                                        value: (selected as any)
-                                                            .id as UUID,
-                                                    })
-                                                }}
+                                                value={p.value}
+                                                onChange={(v) =>
+                                                    p.onChange({ value: v })
+                                                }
                                             />
                                         )}
                                         label="Process"
                                     />
-                                    {/*<button onClick={() => props.onLink(api.processes)}*/}
-                                    {/*        style={{backgroundColor: 'transparent', border: 'transparent'}}>*/}
-                                    {/*    <Link45deg size={'1.4em'}/>*/}
-                                    {/*</button>*/}
                                 </div>
                                 <div className="mb-2">
                                     <label className="k-label">
@@ -497,6 +447,11 @@ export function OrderDetail({
                                         name={'amount'}
                                         component={NumericTextBox}
                                         label={'Amount'}
+                                        validator={(value: number) =>
+                                            value > 0
+                                                ? ''
+                                                : 'Amount must be greater than 0'
+                                        }
                                     />
                                 </div>
                                 <div

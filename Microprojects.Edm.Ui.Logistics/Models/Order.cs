@@ -2,6 +2,7 @@ namespace Microprojects.Edm.Ui.Logistics.Models;
 
 public class Order : DomainObject, IWithMeta
 {
+    public string Number { get; set; } = "";
     public double Amount { get; set; }
     public string Description { get; set; }
     /// <summary>

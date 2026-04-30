@@ -100,6 +100,7 @@ export const DesktopOrderList = ({ onOpen }: DesktopOrderListProps) => {
                 tabIndex={0}
             >
                 <div className={styles.cardTitle}>
+                    {order.number ? `#${order.number} · ` : ''}
                     {order.processName || '—'}
                 </div>
                 {order.processNomenclatureName && (
