@@ -268,6 +268,17 @@ public class OrderService : ServiceBase<Order>, IOrderService
         return operations;
     }
 
+    /// <summary>
+    /// Marker exception: the order's specification for this nomenclature is
+    /// already fully covered. Callers that loop over candidate items (see
+    /// <see cref="AddItems"/>) treat this as a clean end-of-loop, not a
+    /// stop reason worth surfacing to the user.
+    /// </summary>
+    private sealed class SpecificationFulfilledException : EdmException
+    {
+        public SpecificationFulfilledException(string message) : base(message) { }
+    }
+
     public async Task<Item> AddItem(Guid id, Item item)
     {
         var specification = (await GetSpecifications(id))
@@ -276,7 +287,7 @@ public class OrderService : ServiceBase<Order>, IOrderService
                                 $"Specification for nomenclature {item.NomenclatureId} not found");
         if (specification.Total >= specification.Amount)
         {
-            throw new EdmException($"{specification.Nomenclature.Name} no more required");
+            throw new SpecificationFulfilledException($"{specification.Nomenclature.Name} no more required");
         }
 
         var storeItem = await Set<Item>()
@@ -341,6 +352,10 @@ public class OrderService : ServiceBase<Order>, IOrderService
                 allocated++;
                 totalQty += result.Quantity;
                 firstAllocatedId ??= result.Id;
+            }
+            catch (SpecificationFulfilledException)
+            {
+                break;
             }
             catch (EdmException ex)
             {

@@ -206,6 +206,7 @@ public class ItemService : ServiceBase<Item>, IItemService
     {
         // TODO Use materialized view to gain performance
         var linkSet = Db.Set<ItemLink>();
+        var orderSet = Db.Set<Order>();
         var items = await Set().AsNoTracking()
             .Include(i => i.Tare.TareType)
             .Include(i => i.Nomenclature).ThenInclude(n => n.DefaultTareType)
@@ -216,10 +217,14 @@ public class ItemService : ServiceBase<Item>, IItemService
                             ? (i.Meta.Deleted == null && i.Meta.Completed == null)
                             : (i.Meta.Deleted != null || i.Meta.Completed != null))
                         && (query.NomenclatureId == null || query.NomenclatureId == i.NomenclatureId)
-                        // Exclude items that are currently reserved for / assigned to another
-                        // order (inputs that haven't been consumed yet), but keep execution
-                        // outputs: those have ProcessId != null and are available stock again.
-                        && (i.OrderId == null || i.ProcessId != null))
+                        // Available stock: no current OrderId, or it's an output still
+                        // sitting in its producing order (OrderId == producing order). Once
+                        // an output is allocated as input to a downstream order, AddItem
+                        // overwrites OrderId; the join below stops matching and the item
+                        // drops out of the lookup.
+                        && (i.OrderId == null
+                            || (i.ProcessId != null
+                                && orderSet.Any(o => o.Id == i.OrderId && o.ProcessId == i.ProcessId))))
             .Select(i => new Item
             {
                 Id = i.Id,
