@@ -34,6 +34,12 @@ public class ItemNode
     /// <summary>True when this item was produced by an order's process execution (<c>ProcessId != null</c>).</summary>
     public bool IsOutput { get; set; }
 
+    /// <summary>Set when the item came from a supply receipt — used by the genealogy pill to render a "SUPPLY" origin label.</summary>
+    public Guid? SupplyId { get; set; }
+
+    /// <summary>True when the item is a "store" creation: no supply, no producing process, no parent <c>ItemLink</c>. Mirrors <c>ItemFlags.Apply</c>.</summary>
+    public bool IsStore { get; set; }
+
     public Guid? TareId { get; set; }
     public string? TareBarcode { get; set; }
     public string? TareTypeName { get; set; }

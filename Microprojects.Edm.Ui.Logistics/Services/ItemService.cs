@@ -267,6 +267,30 @@ public class ItemService : ServiceBase<Item>, IItemService
                 direction: 1, nodes, edges);
         }
 
+        // Mark "store" origin: items that aren't outputs, have no supply, and
+        // have no incoming ItemLink. Mirrors ItemFlags.Apply but inlined here
+        // because genealogy works in DTO space, not over ItemViewModel.
+        var storeCandidates = nodes.Values
+            .Where(n => !n.IsOutput && n.SupplyId == null)
+            .Select(n => n.Id)
+            .ToList();
+        if (storeCandidates.Count > 0)
+        {
+            var withParent = (await links
+                    .Where(l => storeCandidates.Contains(l.TargetItemId))
+                    .Select(l => l.TargetItemId)
+                    .Distinct()
+                    .ToListAsync())
+                .ToHashSet();
+            foreach (var id in storeCandidates)
+            {
+                if (!withParent.Contains(id))
+                {
+                    nodes[id].IsStore = true;
+                }
+            }
+        }
+
         return new ItemGenealogy
         {
             RootId = root.Id,
@@ -293,6 +317,7 @@ public class ItemService : ServiceBase<Item>, IItemService
         Address = i.Address,
         OrderId = i.OrderId,
         IsOutput = i.ProcessId != null,
+        SupplyId = i.SupplyId,
         Depth = depth,
         Inactive = i.Meta?.Deleted != null || i.Meta?.Completed != null,
     };
