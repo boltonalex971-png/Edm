@@ -137,6 +137,10 @@ export interface ItemNode {
     nomenclatureCountable?: boolean
     /** True when this item is an order execution output (ProcessId != null). */
     isOutput?: boolean
+    /** Set when the item came from a supply receipt — drives the SUPPLY origin pill. */
+    supplyId?: UUID
+    /** True when the item is a store creation (no supply, no producing process, no parent link). */
+    isStore?: boolean
     tareId?: UUID
     tareBarcode?: string
     tareTypeName?: string

@@ -209,7 +209,7 @@
     user-select: none;
 }
 
-.geneal-edge--exec {
+.geneal-edge--out {
     background: var(--geneal-edge-exec-bg);
     color: var(--geneal-edge-exec-text);
 }
@@ -219,9 +219,26 @@
     color: var(--geneal-edge-split-text);
 }
 
-.geneal-edge .arrow {
-    font-size: 9px;
-    opacity: 0.7;
+.geneal-edge--supply {
+    background: #e8eefa;
+    color: #2a4b8a;
+}
+
+.geneal-edge--store {
+    background: #efeae0;
+    color: #6b5a2a;
+}
+
+.geneal-edge-chevron {
+    flex-shrink: 0;
+    width: 12px;
+    height: 12px;
+    opacity: 0.75;
+}
+
+.geneal-edge-source {
+    font-weight: 600;
+    letter-spacing: 0.02em;
 }
 
 /* Truncation hint. */
@@ -346,4 +363,96 @@
 .geneal-node-badge--output {
     background: var(--geneal-edge-exec-bg, #e2f3ea);
     color: var(--geneal-edge-exec-text, #1f6e45);
+}
+
+.geneal-node-badge--group {
+    background: #eef0f3;
+    color: #4a5260;
+    border: 1px solid #dfe2e7;
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 600;
+}
+
+.geneal-node--group .geneal-node-primary {
+    color: var(--geneal-secondary);
+    font-style: italic;
+    font-weight: 500;
+}
+
+/* Genealogy tooltip popover — header + label/value column. */
+.geneal-tooltip {
+    min-width: 220px;
+    max-width: 340px;
+    padding: 4px 2px;
+    color: var(--geneal-primary);
+    font-size: 12px;
+    line-height: 1.4;
+    text-align: left;
+}
+
+.geneal-tooltip-header {
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.geneal-tooltip-name {
+    font-size: 13px;
+    font-weight: 600;
+    word-break: break-word;
+}
+
+.geneal-tooltip-sub {
+    margin-top: 2px;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.78);
+    font-style: italic;
+}
+
+.geneal-tooltip-grid {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    column-gap: 12px;
+    row-gap: 4px;
+    margin: 0;
+}
+
+.geneal-tooltip-grid dt {
+    color: rgba(255, 255, 255, 0.65);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 10px;
+    font-weight: 600;
+    align-self: baseline;
+}
+
+.geneal-tooltip-grid dd {
+    margin: 0;
+    font-weight: 500;
+    word-break: break-word;
+}
+
+.geneal-tooltip-note {
+    color: rgba(255, 255, 255, 0.85);
+    font-style: italic;
+}
+
+.geneal-tooltip--inactive .geneal-tooltip-name {
+    color: rgba(255, 255, 255, 0.7);
+    font-style: italic;
+}
+
+/* Kendo paints its tooltip body dark; override only the inner colors —
+   header/label use semi-transparent white so the column reads cleanly. */
+.k-tooltip:has(.geneal-tooltip),
+.k-tooltip-wrapper:has(.geneal-tooltip) {
+    color: #fff;
+}
+
+.geneal-tooltip,
+.geneal-tooltip-name,
+.geneal-tooltip-grid dd,
+.geneal-tooltip-note {
+    color: inherit;
 }
