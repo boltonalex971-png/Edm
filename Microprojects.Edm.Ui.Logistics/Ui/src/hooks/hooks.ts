@@ -15,7 +15,7 @@ type FetchState<T> = {
 }
 
 function useFetch<T>(
-    url: string,
+    url: string | null | undefined,
     deps: any[] = [],
     type: RequestType = RequestType.GET,
     data: any = null,
@@ -26,7 +26,7 @@ function useFetch<T>(
             newState: Partial<FetchState<T>>,
         ): FetchState<T> => ({ ...state, ...newState }),
         {
-            loading: true,
+            loading: !!url,
         },
     )
     const setData = (data: T) => setState({ data: data })
@@ -43,10 +43,14 @@ function useFetch<T>(
     }
 
     useEffect(() => {
+        if (!url) {
+            setState({ loading: false, data: undefined, error: undefined })
+            return
+        }
         const controller = new AbortController()
         async function fetchUrl() {
             try {
-                const response = await fetch(url, {
+                const response = await fetch(url!, {
                     ...options,
                     signal: controller.signal,
                 })
@@ -76,7 +80,10 @@ function useFetch<T>(
     return [[state.data, setData], state.loading, state.error]
 }
 
-function useGet<T>(url: string, deps: any[] = []): UseFetchResult<T> {
+function useGet<T>(
+    url: string | null | undefined,
+    deps: any[] = [],
+): UseFetchResult<T> {
     return useFetch<T>(url, deps, RequestType.GET)
 }
 

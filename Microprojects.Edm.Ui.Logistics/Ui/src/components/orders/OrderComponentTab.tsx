@@ -23,6 +23,8 @@ export function OrderComponentTab({
                 onDetailSelected?.(
                     <TareDetail
                         tareId={group.tare.id}
+                        tare={group.tare}
+                        items={group.items}
                         label={group.tare.barcode}
                         onClose={() => onDetailSelected?.(undefined)}
                     />,
