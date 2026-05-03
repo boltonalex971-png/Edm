@@ -147,6 +147,7 @@ export interface ItemNode {
     tareTypeUnits?: string
     address?: number
     orderId?: UUID
+    orderNumber?: string
     /** Signed distance from the root. <0 = ancestor, 0 = root, >0 = descendant. */
     depth: number
     /** Soft-deleted or completed — render greyed. */

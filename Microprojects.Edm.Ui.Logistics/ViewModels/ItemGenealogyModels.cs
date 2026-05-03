@@ -48,6 +48,7 @@ public class ItemNode
     public int? Address { get; set; }
 
     public Guid? OrderId { get; set; }
+    public string? OrderNumber { get; set; }
 
     /// <summary>Signed distance from the root: &lt;0 = ancestor, 0 = root, &gt;0 = descendant.</summary>
     public int Depth { get; set; }

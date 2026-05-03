@@ -240,6 +240,7 @@ public class ItemService : ServiceBase<Item>, IItemService
             .Include(i => i.Nomenclature)
             .Include(i => i.Tare).ThenInclude(t => t!.TareType)
             .Include(i => i.Meta)
+            .Include(i => i.Order)
             .FirstOrDefaultAsync(i => i.Id == rootItemId);
 
         if (root == null)
@@ -316,6 +317,7 @@ public class ItemService : ServiceBase<Item>, IItemService
         TareTypeUnits = i.Tare?.TareType?.Units,
         Address = i.Address,
         OrderId = i.OrderId,
+        OrderNumber = i.Order?.Number,
         IsOutput = i.ProcessId != null,
         SupplyId = i.SupplyId,
         Depth = depth,
@@ -390,6 +392,7 @@ public class ItemService : ServiceBase<Item>, IItemService
                 .Include(i => i.Nomenclature)
                 .Include(i => i.Tare).ThenInclude(t => t!.TareType)
                 .Include(i => i.Meta)
+                .Include(i => i.Order)
                 .Where(i => newFrontier.Contains(i.Id))
                 .ToListAsync();
 
