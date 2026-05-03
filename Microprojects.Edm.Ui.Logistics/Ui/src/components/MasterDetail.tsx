@@ -43,6 +43,7 @@ import api from '../features/api/api'
 import type {RootState} from '../store'
 import {DetailStub, Loading} from '../features/utils/Utils'
 import {
+    listTag,
     useEntityToken,
     useInvalidateEntities,
 } from '../hooks/entityRefresh'
@@ -456,6 +457,9 @@ export function Detail({
                                                                             .data
                                                                             .id,
                                                                     },
+                                                                    listTag(
+                                                                        props.type,
+                                                                    ),
                                                                 ])
                                                             }
                                                             props.path &&
@@ -502,6 +506,9 @@ export function Detail({
                                                                                 .data
                                                                                 ?.id,
                                                                         },
+                                                                        listTag(
+                                                                            props.type,
+                                                                        ),
                                                                     ])
                                                                 }
                                                                 props.path &&
@@ -681,6 +688,7 @@ export function Editor(props: EditorProps) {
                     invalidate([
                         {type: props.type},
                         {type: props.type, id: response.data.id},
+                        listTag(props.type),
                     ])
                     setAlert({message: 'Created successfully'})
                     setDetailEditMode?.(false)

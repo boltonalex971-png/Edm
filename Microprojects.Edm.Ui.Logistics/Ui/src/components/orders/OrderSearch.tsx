@@ -13,6 +13,11 @@ import {
     type ItemSearchQuery,
     type Order,
 } from '@logistics/data/types'
+import {
+    type EntityTag,
+    listTag,
+    useEntityToken,
+} from '@logistics/hooks/entityRefresh'
 import { useGet, usePost } from '@logistics/hooks/hooks.ts'
 import { process } from '@progress/kendo-data-query'
 import {
@@ -26,7 +31,13 @@ import {
     type TextBoxChangeEvent,
 } from '@progress/kendo-react-inputs'
 import { Error } from '@progress/kendo-react-labels'
-import React, { type ReactElement, useMemo, useState } from 'react'
+import React, {
+    type ReactElement,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react'
 import { Diagram3, Search } from 'react-bootstrap-icons'
 
 type OrderSearchProps = {
@@ -39,11 +50,57 @@ interface PageState {
 const initialDataState: PageState = { skip: 0, take: 10 }
 
 export const OrderSearch = (props: OrderSearchProps) => {
-    const [[orders], loading, error] = usePost<Order[]>(
+    // Two-tier subscription: list-tag for membership changes
+    // (create/delete/complete) plus per-id tokens for orders currently in
+    // the list. Edits to off-list orders fire only the broad `{type:'order'}`
+    // tag, which we do NOT subscribe to — so they don't trigger a refetch.
+    const [orders, setOrders] = useState<Order[]>()
+    const subscribedTags = useMemo<EntityTag[]>(
+        () => [
+            listTag('order'),
+            ...(orders ?? []).map((o) => ({
+                type: 'order',
+                id: o.id as string,
+            })),
+        ],
+        [orders],
+    )
+    const fingerprint = useMemo(
+        () =>
+            subscribedTags
+                .map((t) => (t.id ? `${t.type}:${t.id}` : t.type))
+                .sort()
+                .join('|'),
+        [subscribedTags],
+    )
+    const rawToken = useEntityToken(subscribedTags)
+
+    // Re-baseline silently when the subscribed set changes (orders arrive or
+    // depart) so the refetch counter only bumps for actual invalidations to
+    // already-subscribed tags — not for the artificial token jump that
+    // happens when a newly-added id has a non-zero counter.
+    const baselineRef = useRef({ fingerprint, token: rawToken })
+    const [refreshCounter, setRefreshCounter] = useState(0)
+    useEffect(() => {
+        if (baselineRef.current.fingerprint !== fingerprint) {
+            baselineRef.current = { fingerprint, token: rawToken }
+            return
+        }
+        if (rawToken !== baselineRef.current.token) {
+            baselineRef.current.token = rawToken
+            setRefreshCounter((c) => c + 1)
+        }
+    }, [fingerprint, rawToken])
+
+    const [[fetchedOrders], loading, error] = usePost<Order[]>(
         `${api.orders}/search`,
         props.query || {},
-        [props.query?.nomenclatureId, props.query?.active],
+        [props.query?.nomenclatureId, props.query?.active, refreshCounter],
     )
+    useEffect(() => {
+        if (fetchedOrders) setOrders(fetchedOrders)
+    }, [fetchedOrders])
+
     const [subDetail, setSubDetail] = useState<ReactElement | undefined>()
     const [page, setPage] = React.useState<PageState>(initialDataState)
     const [filter, setFilter] = useState<string>('')
