@@ -4,7 +4,7 @@ import { Search } from '@logistics/components/Search'
 import { TreeViewLink } from '@logistics/components/TreeViewLink'
 import { OrderDetail } from '@logistics/components/orders/OrderDetail'
 import { OrderSearch } from '@logistics/components/orders/OrderSearch.tsx'
-import type { OrderSearchQuery } from '@logistics/data/types'
+import type { OrderSearchQuery, UUID } from '@logistics/data/types'
 import { useRouteMatch } from '@logistics/hooks/routerHooks'
 import { SmartScrollContent } from '@microprojects/tools'
 import React, { useEffect, useState } from 'react'
@@ -19,6 +19,10 @@ export function Orders() {
     const [panel, setPanel] = useState<'search' | 'create'>('search')
     const [linkPanel, setLinkPanel] = useState<string>()
     const [query, setQuery] = useState<OrderSearchQuery>()
+    // After a successful Create, flip the Create-panel from the empty
+    // "New Order" form to a view-mode detail of the just-created order.
+    // Cleared via the detail's Close button so the user can create another.
+    const [createdOrderId, setCreatedOrderId] = useState<UUID>()
     useEffect(() => {
         setQuery({ active: name.includes('ongoing') })
     }, [name])
@@ -30,6 +34,28 @@ export function Orders() {
         setPanel('create')
         setLinkPanel(undefined)
     }
+
+    const detail = createdOrderId ? (
+        <OrderDetail
+            key={createdOrderId}
+            id={createdOrderId}
+            api={Api.orders}
+            type="order"
+            onClose={() => setCreatedOrderId(undefined)}
+        />
+    ) : (
+        <OrderDetail
+            key="new"
+            title="New Order"
+            editMode={true}
+            api={Api.orders}
+            type="order"
+            onChange={(d) => {
+                const newId = (d as { id?: UUID } | undefined)?.id
+                if (newId) setCreatedOrderId(newId)
+            }}
+        />
+    )
 
     return (
         <>
@@ -55,13 +81,7 @@ export function Orders() {
                     stubMessage={'Select an action'}
                     type={'none'}
                     search={<OrderSearch query={query} />}
-                    detail={
-                        <OrderDetail
-                            title="New Order"
-                            editMode={true}
-                            api={Api.orders}
-                        />
-                    }
+                    detail={detail}
                 />
             </div>
         </>
