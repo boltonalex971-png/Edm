@@ -72,3 +72,44 @@ public static class ItemFlags
     public static Task Apply(LogisticsContext db, ItemViewModel dto) =>
         Apply(db, [dto]);
 }
+
+/// <summary>
+/// "Available" view: an item's <see cref="Item.Quantity"/> minus the sum of
+/// every outgoing <see cref="ItemLink.ConsumedQuantity"/> — both
+/// non-execution (allocation / repack splits) and execution (Order Execute
+/// consumption). Under the immutable-Quantity model, links are the sole
+/// record of consumption; <c>Item.Quantity</c> is fixed at creation and
+/// represents the original allocation/production amount. Use this for any
+/// "what's left" read (capacity, allocation, repack, post-execution
+/// availability). Pure read — no mutation.
+/// </summary>
+public static class ItemHistory
+{
+    public static async Task<IReadOnlyDictionary<Guid, double>> GetAvailableQuantities(
+        LogisticsContext db, IEnumerable<Item> items)
+    {
+        var byId = items.ToDictionary(i => i.Id, i => i.Quantity);
+        if (byId.Count == 0)
+        {
+            return byId;
+        }
+        var ids = byId.Keys.ToList();
+        var splits = (await db.ItemLinks.AsNoTracking()
+                .Where(l => ids.Contains(l.SourceItemId))
+                .GroupBy(l => l.SourceItemId)
+                .Select(g => new { Id = g.Key, Sum = g.Sum(l => l.ConsumedQuantity) })
+                .ToListAsync())
+            .ToDictionary(x => x.Id, x => x.Sum);
+        return byId.ToDictionary(
+            kv => kv.Key,
+            kv => kv.Value - splits.GetValueOrDefault(kv.Key, 0));
+    }
+
+    public static async Task<double> GetAvailableQuantity(LogisticsContext db, Item item)
+    {
+        var split = await db.ItemLinks.AsNoTracking()
+            .Where(l => l.SourceItemId == item.Id)
+            .SumAsync(l => (double?)l.ConsumedQuantity) ?? 0;
+        return item.Quantity - split;
+    }
+}

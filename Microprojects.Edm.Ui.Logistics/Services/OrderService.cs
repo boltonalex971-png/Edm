@@ -233,9 +233,11 @@ public class OrderService : ServiceBase<Order>, IOrderService
             .Where(i => i.OrderId == orderId && i.ProcessId == null)
             .ToListAsync();
 
-        // Recover original allocation for items already drained by Execute:
-        // sum the consumed quantity from execution-time ItemLinks pointing
-        // out of each item.
+        // For consumed items: original allocation = sum of execution-link
+        // consumption from the item.
+        // For active items: currently allocated = Quantity minus any
+        // non-execution outgoing splits (allocation/repack). Repack no
+        // longer mutates the parent so the subtraction is always required.
         var itemIds = items.Select(i => i.Id).ToList();
         var consumedByItem = itemIds.Count == 0
             ? new Dictionary<Guid, double>()
@@ -245,6 +247,7 @@ public class OrderService : ServiceBase<Order>, IOrderService
                 .Select(g => new { Id = g.Key, Sum = g.Sum(l => l.ConsumedQuantity) })
                 .ToListAsync())
                 .ToDictionary(x => x.Id, x => x.Sum);
+        var availableByItem = await ItemHistory.GetAvailableQuantities(Db, items);
 
         var rows = await Set<SpecificationNomenclature>().AsNoTracking()
             .Include(sn => sn.Nomenclature)
@@ -261,12 +264,10 @@ public class OrderService : ServiceBase<Order>, IOrderService
                     Nomenclature = list.First().Nomenclature,
                     Quantity = list.Sum(s => s.Quantity),
                     Items = matched,
-                    // Live items contribute current Quantity; consumed items
-                    // contribute their historical consumption.
                     Total = matched.Sum(i =>
-                        i.Quantity > 0
-                            ? i.Quantity
-                            : consumedByItem.GetValueOrDefault(i.Id, 0)),
+                        i.Meta.Completed != null
+                            ? consumedByItem.GetValueOrDefault(i.Id, 0)
+                            : availableByItem.GetValueOrDefault(i.Id, i.Quantity)),
                 };
             });
 
@@ -286,31 +287,6 @@ public class OrderService : ServiceBase<Order>, IOrderService
             .NotDeleted()
             .Where(i => i.OrderId == id && i.ProcessId == null)
             .ToListAsync();
-
-        // Restore the originally-allocated quantity onto consumed items so the
-        // component tab shows "10 / 10" instead of "0 / 10" after Execute.
-        // Quantity is the entity field but these instances are AsNoTracking and
-        // never persisted again — the patch is presentation-only.
-        var consumedIds = items
-            .Where(i => i.Meta.Completed != null)
-            .Select(i => i.Id)
-            .ToList();
-        if (consumedIds.Count > 0)
-        {
-            var consumedByItem = (await Set<ItemLink>().AsNoTracking()
-                .Where(l => l.OrderProcessId != null && consumedIds.Contains(l.SourceItemId))
-                .GroupBy(l => l.SourceItemId)
-                .Select(g => new { Id = g.Key, Sum = g.Sum(l => l.ConsumedQuantity) })
-                .ToListAsync())
-                .ToDictionary(x => x.Id, x => x.Sum);
-            foreach (var i in items.Where(x => x.Meta.Completed != null))
-            {
-                if (consumedByItem.TryGetValue(i.Id, out var consumed))
-                {
-                    i.Quantity = consumed;
-                }
-            }
-        }
 
         return items;
     }
@@ -353,7 +329,11 @@ public class OrderService : ServiceBase<Order>, IOrderService
                         ?? throw new EdmException($"Item with id {item.Id} not found");
         var tare = storeItem.Tare;
         var requiredAmount = specification.Amount - specification.Total;
-        var splitQty = Math.Min(storeItem.Quantity, requiredAmount);
+        // Available = Quantity minus prior non-execution splits (allocation /
+        // repack). Repack and AddItem no longer mutate the parent's Quantity,
+        // so the raw field is the original allocation, not what's left.
+        var available = await ItemHistory.GetAvailableQuantity(Db, storeItem);
+        var splitQty = Math.Min(available, requiredAmount);
 
         // Output items (ProcessId != null) must always be split so the producing
         // order keeps the production lineage on the parent and the consuming
@@ -361,7 +341,7 @@ public class OrderService : ServiceBase<Order>, IOrderService
         // place would make the item look like an output of the consuming order.
         // Raw supplies / store items have ProcessId == null and can be reassigned
         // wholesale when the quantity matches.
-        if (storeItem.ProcessId == null && storeItem.Quantity <= requiredAmount)
+        if (storeItem.ProcessId == null && available <= requiredAmount)
         {
             storeItem.OrderId = id;
             await Db.SaveChangesAsync();
@@ -577,9 +557,18 @@ public class OrderService : ServiceBase<Order>, IOrderService
                 .OrderBy(i => i.Id) // UUIDv7 ordering: FIFO by creation time
                 .ToListAsync();
 
+            // Available = Quantity minus prior non-execution splits (Repack /
+            // allocation children created off this item). Execute consumes
+            // against available, not raw Quantity, so an item that had part
+            // of its volume split off earlier is not over-consumed.
+            var availableByItem = (await ItemHistory.GetAvailableQuantities(Db, inputItems))
+                .ToDictionary(kv => kv.Key, kv => kv.Value);
+
             if (targetOutputItems.Count == 0)
             {
                 // No output items -> consume the required quantity without persisting links.
+                // Item.Quantity stays immutable; available is tracked in the dict and
+                // Meta.Completed is stamped when an item's available drops to zero.
                 var remaining = spec.Amount;
                 foreach (var item in inputItems)
                 {
@@ -593,12 +582,12 @@ public class OrderService : ServiceBase<Order>, IOrderService
                     // the comment on Nomenclature.Countable. Physical
                     // piece-count integrity is enforced by tare operations
                     // (BatchCreate, Move, Repack).
-                    var consumed = Math.Min(item.Quantity, remaining);
-                    item.Quantity -= consumed;
+                    var availableHere = availableByItem[item.Id];
+                    var consumed = Math.Min(availableHere, remaining);
+                    availableByItem[item.Id] = availableHere - consumed;
                     remaining -= consumed;
-                    if (item.Quantity <= Eps)
+                    if (availableByItem[item.Id] <= Eps)
                     {
-                        item.Quantity = 0;
                         item.Meta.Completed = now;
                     }
                 }
@@ -624,11 +613,10 @@ public class OrderService : ServiceBase<Order>, IOrderService
 
                     var inputItem = inputItems[inputIndex];
 
-                    var available = inputItem.Quantity;
+                    var available = availableByItem[inputItem.Id];
                     if (available <= Eps)
                     {
                         inputItem.Meta.Completed = now;
-                        inputItem.Quantity = 0;
                         inputIndex++;
                         continue;
                     }
@@ -648,12 +636,14 @@ public class OrderService : ServiceBase<Order>, IOrderService
                         ConsumedQuantity = consumed
                     });
 
-                    inputItem.Quantity -= consumed;
+                    // Item.Quantity is immutable; consumption is recorded only
+                    // through the link above. Track depletion in the dict so we
+                    // know when to stamp Meta.Completed.
+                    availableByItem[inputItem.Id] = available - consumed;
                     requiredForThisTarget -= consumed;
 
-                    if (inputItem.Quantity <= Eps)
+                    if (availableByItem[inputItem.Id] <= Eps)
                     {
-                        inputItem.Quantity = 0;
                         inputItem.Meta.Completed = now;
                         inputIndex++;
                     }

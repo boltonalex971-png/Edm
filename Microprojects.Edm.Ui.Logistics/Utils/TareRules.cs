@@ -32,12 +32,24 @@ public static class TareRules
     /// <summary>
     /// Capacity already consumed by the supplied items. For addressed
     /// countable tares, capacity is measured in slot count; for everything
-    /// else, in summed quantity.
+    /// else, in summed quantity. When <paramref name="available"/> is
+    /// supplied, items found in the dict contribute their available
+    /// quantity (i.e. <see cref="Item.Quantity"/> minus non-execution
+    /// outgoing splits) instead of raw <see cref="Item.Quantity"/> — needed
+    /// because Repack no longer decrements the parent on bulk splits.
     /// </summary>
-    public static double UsedCapacity(TareType type, IEnumerable<Item> items) =>
-        type.Countable && type.Dimensions > 0
-            ? items.Count()
-            : items.Sum(i => i.Quantity);
+    public static double UsedCapacity(
+        TareType type,
+        IEnumerable<Item> items,
+        IReadOnlyDictionary<Guid, double>? available = null)
+    {
+        if (type.Countable && type.Dimensions > 0)
+        {
+            return items.Count();
+        }
+        return items.Sum(i =>
+            available != null && available.TryGetValue(i.Id, out var a) ? a : i.Quantity);
+    }
 
     /// <summary>
     /// Throws if <paramref name="quantity"/> is not an integer (within

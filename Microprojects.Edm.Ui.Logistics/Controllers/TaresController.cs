@@ -132,12 +132,13 @@ public class TaresController : AuthControllerBase
             .Active()
             .Where(i => i.TareId != null && tareIds.Contains(i.TareId.Value))
             .ToListAsync();
+        var available = await ItemHistory.GetAvailableQuantities(_db, activeItems);
 
         var result = new List<AvailableTareViewModel>();
         foreach (var tare in tares)
         {
             var itemsInTare = activeItems.Where(i => i.TareId == tare.Id).ToList();
-            var remaining = tare.TareType.Capacity - TareRules.UsedCapacity(tare.TareType, itemsInTare);
+            var remaining = tare.TareType.Capacity - TareRules.UsedCapacity(tare.TareType, itemsInTare, available);
             if (remaining <= 0 && !includeFull)
             {
                 continue;

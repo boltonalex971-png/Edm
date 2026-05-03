@@ -217,10 +217,11 @@ public class ItemService : ServiceBase<Item>, IItemService
                 GradeId = i.GradeId,
                 Grade = i.Grade,
                 Meta = i.Meta,
-                // Subtract quantity that was already "split off" by Repack/allocation
-                // into child items through non-execution ItemLinks.
+                // Available = original Quantity minus every outgoing
+                // ItemLink (allocation/repack splits AND execution
+                // consumption). Item.Quantity itself is immutable.
                 Quantity = i.Quantity - linkSet
-                    .Where(l => l.SourceItemId == i.Id && l.OrderProcessId == null)
+                    .Where(l => l.SourceItemId == i.Id)
                     .Sum(l => (double?)l.ConsumedQuantity) ?? 0,
             })
             .Where(i => i.Quantity > 0)
@@ -445,7 +446,8 @@ public class ItemService : ServiceBase<Item>, IItemService
                 .Where(i => i.TareId == tare.Id)
                 .ToListAsync();
 
-            used = TareRules.UsedCapacity(tareType, itemsInTare);
+            var availableInTare = await ItemHistory.GetAvailableQuantities(Db, itemsInTare);
+            used = TareRules.UsedCapacity(tareType, itemsInTare, availableInTare);
         }
         else
         {
@@ -618,6 +620,11 @@ public class ItemService : ServiceBase<Item>, IItemService
                     continue;
                 }
 
+                // Available = Item.Quantity minus prior non-execution splits.
+                // Repack no longer mutates the parent, so we must subtract any
+                // earlier allocation/repack splits before deciding full-vs-partial.
+                var sourceAvailable = await ItemHistory.GetAvailableQuantity(Db, item);
+
                 var tare = await Set<Tare>().AsNoTracking()
                     .Include(t => t.TareType)
                     .FirstOrDefaultAsync(t => t.Id == move.TargetTareId);
@@ -668,7 +675,8 @@ public class ItemService : ServiceBase<Item>, IItemService
                         .Where(i => i.TareId == move.TargetTareId)
                         .ToListAsync();
 
-                    var remaining = targetType.Capacity - TareRules.UsedCapacity(targetType, itemsInTarget);
+                    var availableInTarget = await ItemHistory.GetAvailableQuantities(Db, itemsInTarget);
+                    var remaining = targetType.Capacity - TareRules.UsedCapacity(targetType, itemsInTarget, availableInTarget);
                     if (move.Quantity > remaining + eps)
                     {
                         errors.Add($"Target tare {tare.Barcode} has insufficient remaining capacity ({remaining}).");
@@ -685,7 +693,7 @@ public class ItemService : ServiceBase<Item>, IItemService
                         continue;
                     }
 
-                    if (Math.Abs(item.Quantity - 1) > eps || Math.Abs(move.Quantity - 1) > eps)
+                    if (Math.Abs(sourceAvailable - 1) > eps || Math.Abs(move.Quantity - 1) > eps)
                     {
                         errors.Add($"Addressed tares require whole-item moves (quantity=1) for item {move.SourceItemId}.");
                         continue;
@@ -700,8 +708,11 @@ public class ItemService : ServiceBase<Item>, IItemService
                     continue;
                 }
 
-                // Bulk move: allow partial quantity by splitting the item.
-                if (move.Quantity >= item.Quantity - eps)
+                // Bulk move: full move flips TareId on the parent; partial
+                // move splits off a child. The parent's Quantity is never
+                // mutated — non-execution links are the sole record of splits
+                // and the source-of-truth for "available".
+                if (move.Quantity >= sourceAvailable - eps)
                 {
                     item.TareId = move.TargetTareId;
                     item.Address = null;
@@ -734,7 +745,6 @@ public class ItemService : ServiceBase<Item>, IItemService
                     OrderProcessId = null,
                 });
 
-                item.Quantity -= move.Quantity;
                 movedCount++;
                 movedQuantity += move.Quantity;
                 units ??= targetType.Units;
