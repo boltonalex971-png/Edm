@@ -40,7 +40,7 @@ import { useSlotSelection } from '@logistics/hooks/useSlotSelection'
 import { SmartScroll, SmartScrollContent } from '@microprojects/tools'
 import { Button } from '@progress/kendo-react-buttons'
 import type React from 'react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import '@logistics/components/repacking/Repacking.css'
 
 type TargetTareState = TareInfo & {
@@ -167,6 +167,19 @@ export function AllocateProcessOutput({
         }
     }, [allowedTareTypeIds, newTareTypeId])
 
+    // Seed the type picker with the nomenclature's default tare type once
+    // its allowed-list has loaded. Tracked per-nomenclature so an explicit
+    // user choice (or clear) afterwards isn't reverted on re-renders, but a
+    // switch to a different order's nomenclature re-seeds.
+    const seededForRef = useRef<UUID | null>(null)
+    useEffect(() => {
+        if (!orderNomenclatureId || !allowedRows) return
+        if (seededForRef.current === orderNomenclatureId) return
+        seededForRef.current = orderNomenclatureId
+        const def = allowedRows.find((r) => r.isDefault)
+        if (def) setNewTareTypeId(def.tareTypeId)
+    }, [orderNomenclatureId, allowedRows])
+
     // Pre-populate the target-tares list with every tare that already holds at
     // least one output item from this order. On each refresh, re-fetch each
     // tare's contents so the display reflects the server's truth (including
@@ -258,7 +271,6 @@ export function AllocateProcessOutput({
                 setTargetTares((prev) => [...prev, { ...created, items: [] }])
                 expandTare(created.id)
                 setNewTarePicked(null)
-                setNewTareTypeId(undefined)
             }
         } catch (e: any) {
             setError(e.message || 'Failed to create tare')
