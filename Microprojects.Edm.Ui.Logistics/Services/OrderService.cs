@@ -224,23 +224,50 @@ public class OrderService : ServiceBase<Order>, IOrderService
                 .SelectMany(p => p.Process.Specifications)
                 .ToListAsync();
         }
+        // Inputs only (ProcessId == null) and NotDeleted so consumed inputs
+        // (Meta.Completed != null after Execute) stay visible for the
+        // historical view.
         var items = await Set<Item>().AsNoTracking()
             .Include(i => i.Meta)
-            .Active()
-            .Where(i => i.OrderId == orderId)
+            .NotDeleted()
+            .Where(i => i.OrderId == orderId && i.ProcessId == null)
             .ToListAsync();
+
+        // Recover original allocation for items already drained by Execute:
+        // sum the consumed quantity from execution-time ItemLinks pointing
+        // out of each item.
+        var itemIds = items.Select(i => i.Id).ToList();
+        var consumedByItem = itemIds.Count == 0
+            ? new Dictionary<Guid, double>()
+            : (await Set<ItemLink>().AsNoTracking()
+                .Where(l => l.OrderProcessId != null && itemIds.Contains(l.SourceItemId))
+                .GroupBy(l => l.SourceItemId)
+                .Select(g => new { Id = g.Key, Sum = g.Sum(l => l.ConsumedQuantity) })
+                .ToListAsync())
+                .ToDictionary(x => x.Id, x => x.Sum);
+
         var rows = await Set<SpecificationNomenclature>().AsNoTracking()
             .Include(sn => sn.Nomenclature)
             .Include(sn => sn.Specification.Process)
             .Where(sn => specifications.Select(s => s.Id).Contains(sn.SpecificationId))
             .ToListAsync();
         var result = rows
-            .GroupBy(r => r.NomenclatureId, (key, list) => new OrderSpecificationNomenclature
+            .GroupBy(r => r.NomenclatureId, (key, list) =>
             {
-                Order = order,
-                Nomenclature = list.First().Nomenclature,
-                Quantity = list.Sum(s => s.Quantity),
-                Items = items.Where(i => i.NomenclatureId == key).ToList()
+                var matched = items.Where(i => i.NomenclatureId == key).ToList();
+                return new OrderSpecificationNomenclature
+                {
+                    Order = order,
+                    Nomenclature = list.First().Nomenclature,
+                    Quantity = list.Sum(s => s.Quantity),
+                    Items = matched,
+                    // Live items contribute current Quantity; consumed items
+                    // contribute their historical consumption.
+                    Total = matched.Sum(i =>
+                        i.Quantity > 0
+                            ? i.Quantity
+                            : consumedByItem.GetValueOrDefault(i.Id, 0)),
+                };
             });
 
         return result;
@@ -248,13 +275,42 @@ public class OrderService : ServiceBase<Order>, IOrderService
 
     public async Task<IEnumerable<Item>> GetItems(Guid id)
     {
+        // Component tab: input items only (ProcessId == null). Outputs share
+        // the same OrderId and would otherwise leak in here once the order is
+        // executed (they live in the Output tab). NotDeleted keeps consumed
+        // inputs visible for historical lookup.
         var items = await Set<Item>().AsNoTracking()
             .Include(i => i.Nomenclature)
             .Include(i => i.Tare.TareType)
             .Include(i => i.Meta)
-            .Active()
-            .Where(i => i.OrderId == id)
+            .NotDeleted()
+            .Where(i => i.OrderId == id && i.ProcessId == null)
             .ToListAsync();
+
+        // Restore the originally-allocated quantity onto consumed items so the
+        // component tab shows "10 / 10" instead of "0 / 10" after Execute.
+        // Quantity is the entity field but these instances are AsNoTracking and
+        // never persisted again — the patch is presentation-only.
+        var consumedIds = items
+            .Where(i => i.Meta.Completed != null)
+            .Select(i => i.Id)
+            .ToList();
+        if (consumedIds.Count > 0)
+        {
+            var consumedByItem = (await Set<ItemLink>().AsNoTracking()
+                .Where(l => l.OrderProcessId != null && consumedIds.Contains(l.SourceItemId))
+                .GroupBy(l => l.SourceItemId)
+                .Select(g => new { Id = g.Key, Sum = g.Sum(l => l.ConsumedQuantity) })
+                .ToListAsync())
+                .ToDictionary(x => x.Id, x => x.Sum);
+            foreach (var i in items.Where(x => x.Meta.Completed != null))
+            {
+                if (consumedByItem.TryGetValue(i.Id, out var consumed))
+                {
+                    i.Quantity = consumed;
+                }
+            }
+        }
 
         return items;
     }

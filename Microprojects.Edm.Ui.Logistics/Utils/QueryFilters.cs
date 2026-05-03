@@ -22,6 +22,14 @@ public static class QueryFilters
     /// </summary>
     public static IQueryable<T> Inactive<T>(this IQueryable<T> source) where T : class, IWithMeta =>
         source.Where(e => e.Meta.Deleted != null || e.Meta.Completed != null);
+
+    /// <summary>
+    /// Soft-deleted rows excluded, but naturally-completed rows (consumed
+    /// items, finished orders) kept. The right filter for historical views
+    /// where lifecycle artefacts must remain visible.
+    /// </summary>
+    public static IQueryable<T> NotDeleted<T>(this IQueryable<T> source) where T : class, IWithMeta =>
+        source.Where(e => e.Meta.Deleted == null);
 }
 
 /// <summary>

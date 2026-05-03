@@ -91,6 +91,10 @@ export interface Item extends DataItem {
     /** True when the item has no recorded origin: no supply, no producing process,
      * and no parent ItemLink — i.e. created directly via batch entry from store. */
     isStore?: boolean
+    /** Soft-deleted or naturally completed (e.g. consumed by an order execution).
+     * Historical rows surface in component / spec views with this flag set so
+     * they can be rendered greyed. */
+    inactive?: boolean
     /** Process grade assigned to this output item, nullable. */
     gradeId?: UUID
     gradeName?: string

@@ -61,4 +61,11 @@ public class ItemViewModel
     /// created directly via batch entry and are presumed to come from store.
     /// </summary>
     public bool IsStore { get; set; }
+
+    /// <summary>
+    /// Soft-deleted or naturally completed (e.g. consumed by an order
+    /// execution). Mirrors the same flag on <c>ItemNode</c> so historical
+    /// item rows can be rendered greyed.
+    /// </summary>
+    public bool Inactive { get; set; }
 }

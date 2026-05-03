@@ -83,6 +83,8 @@ public class WebModelsProfile : AutoMapper.Profile
                     ? s.Nomenclature.DefaultTareType.Units
                     : null))
             .ForMember(d => d.IsOutput, o => o.MapFrom(s => s.ProcessId != null))
+            .ForMember(d => d.Inactive, o => o.MapFrom(s =>
+                s.Meta != null && (s.Meta.Deleted != null || s.Meta.Completed != null)))
             // IsStore is populated post-mapping by ItemFlags.Apply; the entity
             // no longer carries it.
             .ForMember(d => d.IsStore, o => o.Ignore())
