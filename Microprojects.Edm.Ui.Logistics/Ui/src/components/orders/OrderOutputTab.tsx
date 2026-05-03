@@ -70,6 +70,12 @@ export function OrderOutputTab({
             {error && <Alert color="danger">{error}</Alert>}
             {loading && <Loading />}
 
+            {!loading &&
+                allocatedGroups.length === 0 &&
+                unallocated.length === 0 && (
+                    <div className="tare-items-empty">Not executed yet</div>
+                )}
+
             {!loading && (
                 <>
                     {allocatedGroups.length > 0 && (
@@ -99,6 +105,8 @@ export function OrderOutputTab({
                                                             tareId={
                                                                 group.tare.id
                                                             }
+                                                            tare={group.tare}
+                                                            items={group.items}
                                                             label={
                                                                 group.tare
                                                                     .barcode
