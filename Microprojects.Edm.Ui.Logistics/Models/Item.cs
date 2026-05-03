@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations.Schema;
-
 namespace Microprojects.Edm.Ui.Logistics.Models;
 
 public class Item : DomainObject, IWithMeta
@@ -7,13 +5,13 @@ public class Item : DomainObject, IWithMeta
     /// <summary>
     /// Serial number of item if any
     /// </summary>
-    public string? SerialNo { get; set; }   
-    
+    public string? SerialNo { get; set; }
+
     /// <summary>
     /// Number of available units
     /// </summary>
     public double Quantity { get; set; }
-  
+
     /// <summary>
     /// Item nomenclature
     /// </summary>
@@ -31,13 +29,13 @@ public class Item : DomainObject, IWithMeta
     /// Must be unique per tare among active items (validated in service).
     /// </summary>
     public int? Address { get; set; }
-    
+
     /// <summary>
     /// The process where the item has been assembled
     /// </summary>
     public Process? Process { get; set; }
     public Guid? ProcessId { get; set; }
-    
+
     /// <summary>
     /// The order where the item has been assigned
     /// </summary>
@@ -55,12 +53,4 @@ public class Item : DomainObject, IWithMeta
     public Guid? GradeId { get; set; }
 
     public Meta Meta { get; set; }
-
-    /// <summary>
-    /// Transient flag set by the service layer for read queries. True when the
-    /// item has no <see cref="SupplyId"/>, no <see cref="ProcessId"/>, and no
-    /// parent <c>ItemLink</c> — i.e. it was created directly via batch entry.
-    /// </summary>
-    [NotMapped]
-    public bool IsStore { get; set; }
 }

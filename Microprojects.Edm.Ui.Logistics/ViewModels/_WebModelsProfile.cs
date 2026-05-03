@@ -83,14 +83,15 @@ public class WebModelsProfile : AutoMapper.Profile
                     ? s.Nomenclature.DefaultTareType.Units
                     : null))
             .ForMember(d => d.IsOutput, o => o.MapFrom(s => s.ProcessId != null))
-            .ForMember(d => d.IsStore, o => o.MapFrom(s => s.IsStore))
+            // IsStore is populated post-mapping by ItemFlags.Apply; the entity
+            // no longer carries it.
+            .ForMember(d => d.IsStore, o => o.Ignore())
             .ReverseMap()
             .ForMember(d => d.Nomenclature, o => o.Ignore())
             .ForMember(d => d.Supply, o => o.Ignore())
             .ForMember(d => d.Order, o => o.Ignore())
             .ForMember(d => d.Process, o => o.Ignore())
-            .ForMember(d => d.Grade, o => o.Ignore())
-            .ForMember(d => d.IsStore, o => o.Ignore());
+            .ForMember(d => d.Grade, o => o.Ignore());
         CreateMap<Tare, TareViewModel>().ReverseMap()
             .ForMember(d => d.TareType, o => o.Ignore());
         CreateMap<SpecificationNomenclature, SpecificationRowViewModel>().ReverseMap();
