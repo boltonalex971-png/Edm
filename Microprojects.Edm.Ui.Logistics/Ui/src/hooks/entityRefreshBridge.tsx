@@ -1,8 +1,13 @@
 import { useCallback } from 'react'
 import api from '../features/api/api'
-import { type EntityTag, useInvalidateEntities } from './entityRefresh'
+import {
+    type EntityTag,
+    listTag,
+    useInvalidateEntities,
+} from './entityRefresh'
 import { useLockSetters } from './entityLocks'
 import {
+    EntityOp,
     EntityType,
     EventKind,
     type LogisticsMessage,
@@ -24,26 +29,31 @@ export function EntityRefreshSignalRBridge() {
             if (own && msg.originConnectionId === own) return
 
             switch (msg.kind) {
-                case EventKind.EntityChanged:
+                case EventKind.EntityChanged: {
+                    const isMembershipChange =
+                        msg.op === EntityOp.Created ||
+                        msg.op === EntityOp.Deleted
                     if (msg.type === EntityType.Directory) {
                         // Folders are shared across every leaf-type master view.
                         const tags: EntityTag[] = []
                         for (const t of Object.values(EntityType)) {
                             tags.push({ type: t })
                             if (msg.id) tags.push({ type: t, id: msg.id })
+                            if (isMembershipChange) tags.push(listTag(t))
                         }
                         invalidate(tags)
                     } else {
-                        invalidate(
-                            msg.id
-                                ? [
-                                      { type: msg.type },
-                                      { type: msg.type, id: msg.id },
-                                  ]
-                                : [{ type: msg.type }],
-                        )
+                        const tags: EntityTag[] = msg.id
+                            ? [
+                                  { type: msg.type },
+                                  { type: msg.type, id: msg.id },
+                              ]
+                            : [{ type: msg.type }]
+                        if (isMembershipChange) tags.push(listTag(msg.type))
+                        invalidate(tags)
                     }
                     return
+                }
 
                 case EventKind.EntityLocked:
                     setEntityLock(msg.type, msg.id, {
@@ -68,12 +78,20 @@ export function EntityRefreshSignalRBridge() {
                     return
 
                 case EventKind.OrderExecuted:
-                case EventKind.OrderCompleted:
                 case EventKind.OrderOutputsAllocated:
                 case EventKind.OrderGradesAssigned:
                     invalidate([
                         { type: 'order' },
                         { type: 'order', id: msg.orderId },
+                    ])
+                    return
+
+                case EventKind.OrderCompleted:
+                    // Completion removes the order from the active list view.
+                    invalidate([
+                        { type: 'order' },
+                        { type: 'order', id: msg.orderId },
+                        listTag('order'),
                     ])
                     return
 

@@ -13,6 +13,14 @@ export type EntityTag = {
     id?: string
 }
 
+// Membership tag, distinct from the broad `{type}` tag. Search/list views
+// can subscribe to it together with per-row id tokens, so they refetch
+// when a row is added or removed (create/delete/complete) but ignore
+// updates to off-list rows. Producers — Editor (create), Detail toolbar
+// (delete), OrderService.complete, and the SignalR bridge — fire it
+// alongside the per-id tag whenever membership changes.
+export const listTag = (type: string): EntityTag => ({ type: `${type}:list` })
+
 type RefMap = { current: Map<string, number> }
 type RefSet = { current: Set<() => void> }
 

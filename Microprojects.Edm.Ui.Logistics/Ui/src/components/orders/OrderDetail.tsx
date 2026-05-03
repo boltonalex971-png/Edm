@@ -27,6 +27,7 @@ import type {
 } from '@logistics/data/types'
 import type { ExecuteResult } from '@logistics/data/types'
 import {
+    listTag,
     useEntityToken,
     useInvalidateEntities,
 } from '@logistics/hooks/entityRefresh'
@@ -150,6 +151,11 @@ export function OrderDetail({
         axios
             .post(`${Api.orders}/${effectiveId}/complete`, {})
             .then(() => {
+                invalidate([
+                    { type: 'order' },
+                    { type: 'order', id: effectiveId },
+                    listTag('order'),
+                ])
                 props.onClose?.(
                     undefined as unknown as React.MouseEvent<HTMLElement>,
                 )
