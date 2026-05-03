@@ -4,6 +4,10 @@ This changelog covers the host (`Optosense.Edm.WebApi`) and the libraries loaded
 
 The product version is set in `Optosense.Edm.Setup/Optosense.Edm.Setup.vdproj` (`ProductVersion`). Versions below correspond to the value shipped in the MSI at the time.
 
+## v1.13.26
+
+- **Setup build script & admin manual** (PR #18). `Optosense.Edm.Setup/Build-EdmSetup.ps1` drives the full build end-to-end — EF bundles → plugin SPAs and DLLs with selective `FileVersion` bumps → WebApi + installer publish → `devenv` vdproj → out-of-process MSI patch (`StopEdmServiceBeforeInstall` CA at sequence 1300, `RemoveExistingProducts` at 1399, `MSIRMSHUTDOWN=2`, regenerated PackageCode). `Optosense.Edm.Setup/BUILD.md` documents the operational flow for admins.
+
 ## v1.13.22 (currently shipping)
 
 - **EF migrations executed at install time** (PR 850, PR #4). MSI runs `dotnet ef database update` for Logistics + Main via an EF bundle invoked with the right per-context connection string, so the first launch doesn't hit a missing schema.

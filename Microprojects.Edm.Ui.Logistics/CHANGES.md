@@ -2,6 +2,17 @@
 
 The Logistics app (`/logistics`) covers nomenclature, tare, supplies, items, orders, repacking, allocation, the operator desktop, and the manufacturing process tree. It was added in v1.13.0 and has been the focus of most recent work.
 
+## v1.13.26
+
+- **Item genealogy redesign** (PR 30, PR 35). The genealogy tree shows item details in a tooltip and surfaces the order number on each tree node, so you can trace an item's lineage at a glance.
+- **Order workflow polish** (PR 28, PR 31, PR 32, PR 33, PR 34). Orders get an auto-incremented number on creation, the order list refreshes when an order is created or completed, the new-order form flips to the created order on submit, the allocate-output dialog pre-fills the target tare type from the nomenclature default, and the tare-item amount on order tabs computes correctly.
+- **Item lifecycle simplified** (`8fd3ce9`). Item quantity is now immutable so historical data is preserved in executed orders, item allocation against an order is corrected, and the items-count noise in notifications is gone.
+- **Datetimes in local format** (PR 27). All datetime fields across orders, supplies, the operator desktop, folder details and relation tables display in your locale format.
+- **Per-type root folder** (PR 26). Each entry type (nomenclature, tare, process) opens at its own root in the directory tree, so the tree is type-scoped from the start.
+- **Entry versioning** (PR 24). Nomenclatures, tare types and processes carry a version on each save; the UI prompts you to fork when an edit would conflict with another version already on the server.
+- **Cross-user refresh & locks** (PR 19, PR 22, PR 23). Changes made by another user propagate to your open views over SignalR, action buttons on a locked Detail form are disabled, and the cross-user folder-notification glitch is fixed.
+- **Master tree polish** (PR 20, PR 21). Drag-and-drop in the master tree works correctly, and the process-tree root is detected reliably.
+
 ## v1.13.22
 
 - **First-run data on empty DB** (PR 4, PR 15). Setup seeds default nomenclatures, tare types and processes so the app is usable out of the box; the EF bundle now runs Logistics migrations alongside the rest of the app, no manual step.
