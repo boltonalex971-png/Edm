@@ -1,6 +1,7 @@
 using Microprojects.Edm.Ui.Logistics.Contracts;
 using Microprojects.Edm.Ui.Logistics.Models;
 using Microprojects.Edm.Ui.Logistics.Persistence;
+using Microprojects.Edm.Ui.Logistics.Utils;
 using Microsoft.EntityFrameworkCore;
 
 namespace Microprojects.Edm.Ui.Logistics.Services;
@@ -47,7 +48,8 @@ public class SupplyService : ServiceBase<Supply>, ISupplyService
             .Include(i => i.Nomenclature)
             .Include(i => i.Tare.TareType)
             .Include(i => i.Meta)
-            .Where(i => i.SupplyId == supplyId && i.Meta.Deleted == null && i.Meta.Completed == null)
+            .Active()
+            .Where(i => i.SupplyId == supplyId)
             .ToListAsync();
 
         return items;

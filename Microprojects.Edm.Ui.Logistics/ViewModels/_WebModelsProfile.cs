@@ -83,14 +83,17 @@ public class WebModelsProfile : AutoMapper.Profile
                     ? s.Nomenclature.DefaultTareType.Units
                     : null))
             .ForMember(d => d.IsOutput, o => o.MapFrom(s => s.ProcessId != null))
-            .ForMember(d => d.IsStore, o => o.MapFrom(s => s.IsStore))
+            .ForMember(d => d.Inactive, o => o.MapFrom(s =>
+                s.Meta != null && (s.Meta.Deleted != null || s.Meta.Completed != null)))
+            // IsStore is populated post-mapping by ItemFlags.Apply; the entity
+            // no longer carries it.
+            .ForMember(d => d.IsStore, o => o.Ignore())
             .ReverseMap()
             .ForMember(d => d.Nomenclature, o => o.Ignore())
             .ForMember(d => d.Supply, o => o.Ignore())
             .ForMember(d => d.Order, o => o.Ignore())
             .ForMember(d => d.Process, o => o.Ignore())
-            .ForMember(d => d.Grade, o => o.Ignore())
-            .ForMember(d => d.IsStore, o => o.Ignore());
+            .ForMember(d => d.Grade, o => o.Ignore());
         CreateMap<Tare, TareViewModel>().ReverseMap()
             .ForMember(d => d.TareType, o => o.Ignore());
         CreateMap<SpecificationNomenclature, SpecificationRowViewModel>().ReverseMap();
@@ -98,6 +101,12 @@ public class WebModelsProfile : AutoMapper.Profile
             .ForMember(d => d.Completed, o => o.MapFrom(s => s.Meta != null ? s.Meta.Completed : null))
             .ForMember(d => d.Deleted, o => o.MapFrom(s => s.Meta != null ? s.Meta.Deleted : null))
             .ForMember(d => d.Executor, o => o.MapFrom(s => s.Meta != null ? s.Meta.Executor : null))
+            .ForMember(d => d.ProcessNomenclatureCountable, o => o.MapFrom(s =>
+                s.Process != null && s.Process.Nomenclature != null && s.Process.Nomenclature.Countable))
+            .ForMember(d => d.ProcessNomenclatureUnits, o => o.MapFrom(s =>
+                s.Process != null && s.Process.Nomenclature != null && s.Process.Nomenclature.DefaultTareType != null
+                    ? s.Process.Nomenclature.DefaultTareType.Units
+                    : null))
             // Status and Mine are derived server-side in OrderService; leave them out of the map.
             .ForMember(d => d.Status, o => o.Ignore())
             .ForMember(d => d.Mine, o => o.Ignore())

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Microprojects.Edm.Ui.Logistics.Contracts;
 using Microprojects.Edm.Ui.Logistics.Models;
+using Microprojects.Edm.Ui.Logistics.Persistence;
 using Microprojects.Edm.Ui.Logistics.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -19,19 +20,33 @@ namespace Microprojects.Edm.Ui.Logistics.Controllers;
 public class ItemsController : CrudControllerBase<Item, ItemViewModel, IItemService>
 {
     private readonly ILogger<ItemsController> _logger;
+    private readonly LogisticsContext _db;
 
     public ItemsController(ILogger<ItemsController> logger, IMapper mapper,
-        IItemService service, IConfiguration configuration) :
+        IItemService service, LogisticsContext db, IConfiguration configuration) :
         base(mapper, service, configuration)
     {
         _logger = logger;
+        _db = db;
+    }
+
+    public override async Task<ItemViewModel> GetObjectById(Guid id)
+    {
+        var dto = await base.GetObjectById(id);
+        if (dto != null)
+        {
+            await ItemFlags.Apply(_db, dto);
+        }
+        return dto;
     }
 
     [HttpPost("search")]
     public async Task<IEnumerable<ItemViewModel>> Search([FromBody] ItemSearchQuery query)
     {
         var result = await Service.Search(query);
-        return Mapper.Map<IEnumerable<ItemViewModel>>(result);
+        var dtos = Mapper.Map<List<ItemViewModel>>(result);
+        await ItemFlags.Apply(_db, dtos);
+        return dtos;
     }
 
     [HttpGet("{id:guid}/genealogy")]
@@ -44,7 +59,9 @@ public class ItemsController : CrudControllerBase<Item, ItemViewModel, IItemServ
     public async Task<IEnumerable<ItemViewModel>> GetByTare([FromRoute] Guid tareId)
     {
         var items = await Service.GetByTare(tareId);
-        return Mapper.Map<IEnumerable<ItemViewModel>>(items);
+        var dtos = Mapper.Map<List<ItemViewModel>>(items);
+        await ItemFlags.Apply(_db, dtos);
+        return dtos;
     }
 
     [HttpPost("batch")]

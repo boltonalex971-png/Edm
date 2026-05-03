@@ -22,6 +22,7 @@ import {
     type DateLike,
     formatLocalDate,
     formatLocalDateTime,
+    formatUnits,
     parseUtcDate,
 } from '@logistics/utils/format'
 import { colorForGradeId } from '@logistics/utils/gradePalette'
@@ -309,7 +310,13 @@ const ReviewStep = ({ order, onNext, nextLabel, onResume }: ReviewStepProps) => 
             <div className={styles.reviewLabel}>Nomenclature</div>
             <div className={styles.reviewValue}>{order.processNomenclatureName ?? '—'}</div>
             <div className={styles.reviewLabel}>Amount</div>
-            <div className={styles.reviewValue}>{order.amount} pcs</div>
+            <div className={styles.reviewValue}>
+                {formatUnits(
+                    order.amount,
+                    order.processNomenclatureUnits,
+                    order.processNomenclatureCountable,
+                )}
+            </div>
             {order.startDate && (
                 <>
                     <div className={styles.reviewLabel}>Start</div>
@@ -363,7 +370,7 @@ type GradeBucket = {
     gradeId: UUID | null
     gradeName: string
     color?: string
-    count: number
+    quantity: number
 }
 
 const groupByGrade = (items: Item[]): GradeBucket[] => {
@@ -375,10 +382,10 @@ const groupByGrade = (items: Item[]): GradeBucket[] => {
                 gradeId: item.gradeId ?? null,
                 gradeName: item.gradeName ?? 'No grade',
                 color: item.gradeId ? colorForGradeId(item.gradeId) : '#e3f2fd',
-                count: 0,
+                quantity: 0,
             })
         }
-        map.get(key)!.count++
+        map.get(key)!.quantity += item.quantity ?? 0
     }
     return Array.from(map.values()).sort((a, b) => {
         if (a.gradeId === null) return 1
@@ -434,6 +441,19 @@ const CompleteStep = ({
         return ids.size
     }, [outputs])
 
+    const allocatedQty = useMemo(
+        () => (outputs?.allocated ?? []).reduce((s, i) => s + (i.quantity ?? 0), 0),
+        [outputs],
+    )
+    const totalQty = useMemo(
+        () =>
+            allocatedQty +
+            (outputs?.unallocated ?? []).reduce((s, i) => s + (i.quantity ?? 0), 0),
+        [allocatedQty, outputs],
+    )
+    const units = order.processNomenclatureUnits
+    const countable = order.processNomenclatureCountable
+
     const gradeBuckets = useMemo(
         () => groupByGrade([...(outputs?.allocated ?? []), ...(outputs?.unallocated ?? [])]),
         [outputs],
@@ -468,10 +488,13 @@ const CompleteStep = ({
                     {order.processNomenclatureName ?? '—'}
                 </div>
                 <div className={styles.doneStatLabel}>Amount</div>
-                <div className={styles.doneStatValue}>{order.amount} pcs</div>
+                <div className={styles.doneStatValue}>
+                    {formatUnits(order.amount, units, countable)}
+                </div>
                 <div className={styles.doneStatLabel}>Outputs allocated</div>
                 <div className={styles.doneStatValue}>
-                    {allocatedCount} / {totalOutputs}
+                    {formatUnits(allocatedQty, units, countable)} /{' '}
+                    {formatUnits(totalQty, units, countable)}
                 </div>
                 <div className={styles.doneStatLabel}>Tares used</div>
                 <div className={styles.doneStatValue}>{distinctTares}</div>
@@ -523,7 +546,7 @@ const CompleteStep = ({
                                     {g.gradeName}
                                 </span>
                                 <span className={styles.gradeCount}>
-                                    {g.count}
+                                    {formatUnits(g.quantity, units, countable)}
                                 </span>
                             </div>
                         ))}

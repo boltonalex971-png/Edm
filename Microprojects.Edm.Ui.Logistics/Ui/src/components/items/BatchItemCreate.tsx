@@ -23,6 +23,7 @@ import type {
 } from '@logistics/data/types'
 import { useInvalidateEntities } from '@logistics/hooks/entityRefresh'
 import { getData, useGet } from '@logistics/hooks/hooks'
+import { formatUnits } from '@logistics/utils/format'
 import { Button } from '@progress/kendo-react-buttons'
 import { Form, FormElement } from '@progress/kendo-react-form'
 import { NumericTextBox } from '@progress/kendo-react-inputs'
@@ -84,13 +85,18 @@ export function BatchItemCreate({
                 body,
             )
             const result = response.data
+            const qtyTxt = formatUnits(
+                result.quantity,
+                result.units,
+                result.countable,
+            )
             const remainingTxt =
                 result.remaining > 0
-                    ? ` Remaining capacity: ${result.remaining}.`
+                    ? ` Remaining capacity: ${formatUnits(result.remaining, result.units, result.countable)}.`
                     : ''
             setAlert({
                 message:
-                    `Created ${result.createdCount} item(s) in tare ` +
+                    `Created ${qtyTxt} in tare ` +
                     `${result.tareBarcode || '(no barcode)'}` +
                     `${result.tareTypeName ? ` (${result.tareTypeName})` : ''}.` +
                     remainingTxt,

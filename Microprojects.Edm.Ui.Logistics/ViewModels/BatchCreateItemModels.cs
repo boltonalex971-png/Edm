@@ -30,6 +30,9 @@ public class BatchCreateItemRequest
 public class BatchCreateItemResult
 {
     public int CreatedCount { get; set; }
+    public double Quantity { get; set; }
+    public string? Units { get; set; }
+    public bool Countable { get; set; }
     public Guid TareId { get; set; }
     public string? TareBarcode { get; set; }
     public string? TareTypeName { get; set; }
@@ -46,5 +49,7 @@ public class AllocateItemsResult
 {
     public int AllocatedCount { get; set; }
     public double AllocatedQuantity { get; set; }
+    public string? Units { get; set; }
+    public bool Countable { get; set; }
     public string? StoppedReason { get; set; }
 }

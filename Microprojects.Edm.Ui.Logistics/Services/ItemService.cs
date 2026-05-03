@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using Microprojects.Edm.Ui.Logistics.Contracts;
 using Microprojects.Edm.Ui.Logistics.Models;
 using Microprojects.Edm.Ui.Logistics.Persistence;
+using Microprojects.Edm.Ui.Logistics.Utils;
 using Microprojects.Edm.Ui.Logistics.ViewModels;
 using Microsoft.EntityFrameworkCore;
 
@@ -32,12 +33,6 @@ public class ItemService : ServiceBase<Item>, IItemService
             .Include(i => i.Order).ThenInclude(o => o.Process)
             .Include(i => i.Process)
             .FirstOrDefaultAsync(i => id == i.Id);
-
-        if (result != null && result.SupplyId == null && result.ProcessId == null)
-        {
-            result.IsStore = !await Db.Set<ItemLink>()
-                .AnyAsync(l => l.TargetItemId == id);
-        }
         return result;
     }
 
@@ -47,7 +42,7 @@ public class ItemService : ServiceBase<Item>, IItemService
             .Include(i => i.Tare.TareType)
             .Include(i => i.Nomenclature)
             .Include(e => e.Meta)
-            .Where(e => e.Meta.Deleted == null && e.Meta.Completed == null);
+            .Active();
 
         if (predicate != null)
         {
@@ -59,167 +54,154 @@ public class ItemService : ServiceBase<Item>, IItemService
 
     public override async Task<Item> Save(Item item)
     {
-        // Technology-produced target items are created without a tare; the operator assigns it later.
-        if (item.Tare is null && (item.TareId == null || item.TareId == Guid.Empty))
+        // Pre-load existing row once so server-controlled fields (ProcessId,
+        // SupplyId) the UI DTO doesn't carry are restored before validation.
+        // Outputs are the only items allowed to be tare-less, and the UI never
+        // sends ProcessId — so updates of an output would otherwise look like
+        // a brand-new tare-less store item and get rejected.
+        if (item.Id != Guid.Empty)
+        {
+            var existing = await Set<Item>().AsNoTracking()
+                .FirstOrDefaultAsync(i => i.Id == item.Id);
+            if (existing != null)
+            {
+                item.ProcessId ??= existing.ProcessId;
+                item.SupplyId ??= existing.SupplyId;
+            }
+        }
+
+        await ResolveTareReference(item);
+
+        var hasTare = item.TareId is { } id && id != Guid.Empty;
+        if (!hasTare)
         {
             if (item.ProcessId == null)
             {
-                // UI DTOs don't carry ProcessId; allow tare-less saves when the existing DB row is a target.
-                if (item.Id != Guid.Empty)
-                {
-                    var existing = await Set<Item>()
-                        .AsNoTracking()
-                        .FirstOrDefaultAsync(i => i.Id == item.Id);
-
-                    if (existing?.ProcessId == null)
-                    {
-                        throw new EdmException("Item must have a tare.");
-                    }
-                }
-                else
-                {
-                    throw new EdmException("Item must have a tare.");
-                }
+                throw new EdmException("Item must have a tare.");
             }
-
-            // No tare => no address.
-            item.Address = null;
-        }
-        else if (item.Tare is not null)
-        {
-            // If the UI provided tare details, reuse an existing tare by barcode+type.
-            var tareTypeId = item.Tare.TareTypeId;
-            if (item.Tare.Id == Guid.Empty || item.Tare.Id == Guid.Empty)
-            {
-                // Just a safety guard; Id is expected to be empty when UI creates a new tare.
-                item.Tare.Id = Guid.Empty;
-            }
-
-            var existingTare = await Set<Tare>()
-                .AsNoTracking()
-                .FirstOrDefaultAsync(t => t.Id == item.Tare.Id);
-
-            // Prefer barcode+type reuse when Id is empty.
-            if (existingTare == null)
-            {
-                existingTare = await Set<Tare>()
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(t => t.Barcode == item.Tare.Barcode && t.TareTypeId == tareTypeId);
-            }
-
-            if (existingTare != null)
-            {
-                item.TareId = existingTare.Id;
-            }
-            else
-            {
-                // Avoid inserting a chosen tare type as a new entity.
-                item.Tare.TareType = null;
-                item.Tare.Id = Guid.Empty;
-                var tare = await _tareService.Save(item.Tare);
-                item.TareId = tare.Id;
-            }
-        }
-
-        // If tare isn't assigned, address must be empty.
-        if (item.TareId == null || item.TareId == Guid.Empty)
-        {
             item.Address = null;
             item.Tare = null;
         }
         else
         {
-            // When tare is assigned, validate address rules.
-            var tare = await Set<Tare>()
-                .AsNoTracking()
-                .Include(t => t.TareType)
-                .FirstOrDefaultAsync(t => t.Id == item.TareId);
-
-            if (tare?.TareType == null)
-            {
-                throw new EdmException("Tare type not found for assigned tare.");
-            }
-
-            // Enforce address only when the tare has addressed slots.
-            if (tare.TareType.Dimensions <= 0)
-            {
-                item.Address = null;
-            }
-            else
-            {
-                var nomenclature = await Set<Nomenclature>()
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(n => n.Id == item.NomenclatureId);
-
-                if (nomenclature == null)
-                {
-                    throw new EdmException("Nomenclature not found for item.");
-                }
-
-                if (nomenclature.Countable)
-                {
-                    if (item.Address == null)
-                    {
-                        throw new EdmException("Address is required for countable nomenclatures.");
-                    }
-
-                    if (item.Address < 1 || item.Address > tare.TareType.Capacity)
-                    {
-                        throw new EdmException(
-                            $"Address must be in range 1..{tare.TareType.Capacity} for this tare.");
-                    }
-
-                    var alreadyUsed = await Set<Item>()
-                        .Include(i => i.Meta)
-                        .AnyAsync(i =>
-                            i.TareId == item.TareId &&
-                            i.Address == item.Address &&
-                            i.Id != item.Id &&
-                            i.Meta.Deleted == null &&
-                            i.Meta.Completed == null);
-
-                    if (alreadyUsed)
-                    {
-                        throw new EdmException("Address is already in use for this tare.");
-                    }
-                }
-                else
-                {
-                    if (item.Address != null)
-                    {
-                        throw new EdmException("Address must be empty for non-countable nomenclatures.");
-                    }
-                }
-            }
-
+            await ValidateTareAddress(item);
             item.Tare = null;
         }
+
         await base.Save(item);
-        // Required to return item with full tare info
-        item = await Set().AsNoTracking()
+        // Reload so callers get the full tare info (TareType included).
+        return await Set().AsNoTracking()
             .Include(i => i.Tare.TareType)
             .FirstAsync(i => i.Id == item.Id);
-        return item;
+    }
+
+    /// <summary>
+    /// When the UI sends a Tare object, reuse the existing tare by Id (or
+    /// barcode+type) if any, otherwise create one through the tare service.
+    /// Sets <see cref="Item.TareId"/> as a side effect.
+    /// </summary>
+    private async Task ResolveTareReference(Item item)
+    {
+        if (item.Tare is null)
+        {
+            return;
+        }
+
+        var tareTypeId = item.Tare.TareTypeId;
+        var existingTare = item.Tare.Id != Guid.Empty
+            ? await Set<Tare>().AsNoTracking().FirstOrDefaultAsync(t => t.Id == item.Tare.Id)
+            : null;
+        existingTare ??= await Set<Tare>().AsNoTracking()
+            .FirstOrDefaultAsync(t => t.Barcode == item.Tare.Barcode && t.TareTypeId == tareTypeId);
+
+        if (existingTare != null)
+        {
+            item.TareId = existingTare.Id;
+        }
+        else
+        {
+            // Avoid inserting a chosen tare type as a new entity.
+            item.Tare.TareType = null;
+            item.Tare.Id = Guid.Empty;
+            var tare = await _tareService.Save(item.Tare);
+            item.TareId = tare.Id;
+        }
+    }
+
+    private async Task ValidateTareAddress(Item item)
+    {
+        var tare = await Set<Tare>().AsNoTracking()
+            .Include(t => t.TareType)
+            .FirstOrDefaultAsync(t => t.Id == item.TareId)
+            ?? throw new EdmException("Tare not found for assigned tare.");
+        if (tare.TareType == null)
+        {
+            throw new EdmException("Tare type not found for assigned tare.");
+        }
+
+        if (tare.TareType.Dimensions <= 0)
+        {
+            item.Address = null;
+            return;
+        }
+
+        var nomenclature = await Set<Nomenclature>().AsNoTracking()
+            .FirstOrDefaultAsync(n => n.Id == item.NomenclatureId)
+            ?? throw new EdmException("Nomenclature not found for item.");
+
+        if (!nomenclature.Countable)
+        {
+            if (item.Address != null)
+            {
+                throw new EdmException("Address must be empty for non-countable nomenclatures.");
+            }
+            return;
+        }
+
+        if (item.Address == null)
+        {
+            throw new EdmException("Address is required for countable nomenclatures.");
+        }
+        if (item.Address < 1 || item.Address > tare.TareType.Capacity)
+        {
+            throw new EdmException(
+                $"Address must be in range 1..{tare.TareType.Capacity} for this tare.");
+        }
+        var alreadyUsed = await Set<Item>()
+            .Include(i => i.Meta)
+            .Active()
+            .AnyAsync(i =>
+                i.TareId == item.TareId &&
+                i.Address == item.Address &&
+                i.Id != item.Id);
+        if (alreadyUsed)
+        {
+            throw new EdmException("Address is already in use for this tare.");
+        }
     }
 
     public async Task<IEnumerable<Item>> Search(ItemSearchQuery query)
     {
         // TODO Use materialized view to gain performance
         var linkSet = Db.Set<ItemLink>();
-        var items = await Set().AsNoTracking()
+        var orderSet = Db.Set<Order>();
+        var baseQuery = Set().AsNoTracking()
             .Include(i => i.Tare.TareType)
             .Include(i => i.Nomenclature).ThenInclude(n => n.DefaultTareType)
             .Include(i => i.Grade)
-            .Include(e => e.Meta)
+            .Include(e => e.Meta);
+        var lifecycleScoped = query.Active ? baseQuery.Active() : baseQuery.Inactive();
+        var items = await lifecycleScoped
             .Where(i =>
-                        (query.Active
-                            ? (i.Meta.Deleted == null && i.Meta.Completed == null)
-                            : (i.Meta.Deleted != null || i.Meta.Completed != null))
-                        && (query.NomenclatureId == null || query.NomenclatureId == i.NomenclatureId)
-                        // Exclude items that are currently reserved for / assigned to another
-                        // order (inputs that haven't been consumed yet), but keep execution
-                        // outputs: those have ProcessId != null and are available stock again.
-                        && (i.OrderId == null || i.ProcessId != null))
+                        (query.NomenclatureId == null || query.NomenclatureId == i.NomenclatureId)
+                        // Available stock: no current OrderId, or it's an output still
+                        // sitting in its producing order (OrderId == producing order). Once
+                        // an output is allocated as input to a downstream order, AddItem
+                        // overwrites OrderId; the join below stops matching and the item
+                        // drops out of the lookup.
+                        && (i.OrderId == null
+                            || (i.ProcessId != null
+                                && orderSet.Any(o => o.Id == i.OrderId && o.ProcessId == i.ProcessId))))
             .Select(i => new Item
             {
                 Id = i.Id,
@@ -235,16 +217,12 @@ public class ItemService : ServiceBase<Item>, IItemService
                 GradeId = i.GradeId,
                 Grade = i.Grade,
                 Meta = i.Meta,
-                // Subtract quantity that was already "split off" by Repack/allocation
-                // into child items through non-execution ItemLinks.
+                // Available = original Quantity minus every outgoing
+                // ItemLink (allocation/repack splits AND execution
+                // consumption). Item.Quantity itself is immutable.
                 Quantity = i.Quantity - linkSet
-                    .Where(l => l.SourceItemId == i.Id && l.OrderProcessId == null)
+                    .Where(l => l.SourceItemId == i.Id)
                     .Sum(l => (double?)l.ConsumedQuantity) ?? 0,
-                // Origin is "store" when the item has no supply, no producing
-                // process, and no parent ItemLink (i.e. was created via batch entry).
-                IsStore = i.SupplyId == null
-                    && i.ProcessId == null
-                    && !linkSet.Any(l => l.TargetItemId == i.Id),
             })
             .Where(i => i.Quantity > 0)
             .ToListAsync();
@@ -278,165 +256,15 @@ public class ItemService : ServiceBase<Item>, IItemService
         var edges = new List<GenealogyEdge>();
         var truncated = false;
 
-        // BFS ancestors (SourceItemId -> TargetItemId), moving UP from root.
-        var frontier = new HashSet<Guid> { root.Id };
-        for (var d = 1; d <= effectiveDepth; d++)
-        {
-            if (frontier.Count == 0) { break; }
-
-            var captured = frontier;
-            var parentLinks = await links
-                .Where(l => captured.Contains(l.TargetItemId))
-                .Select(l => new
-                {
-                    l.SourceItemId,
-                    l.TargetItemId,
-                    l.ConsumedQuantity,
-                    l.OrderProcessId,
-                    ProcessName = l.OrderProcess != null && l.OrderProcess.Process != null
-                        ? l.OrderProcess.Process.Name
-                        : null,
-                })
-                .ToListAsync();
-
-            if (parentLinks.Count == 0) { break; }
-
-            var newFrontier = new HashSet<Guid>();
-            foreach (var pl in parentLinks)
-            {
-                edges.Add(new GenealogyEdge
-                {
-                    SourceItemId = pl.SourceItemId,
-                    TargetItemId = pl.TargetItemId,
-                    ConsumedQuantity = pl.ConsumedQuantity,
-                    OrderProcessId = pl.OrderProcessId,
-                    ProcessName = pl.ProcessName,
-                });
-
-                if (!nodes.ContainsKey(pl.SourceItemId))
-                {
-                    newFrontier.Add(pl.SourceItemId);
-                }
-            }
-
-            if (newFrontier.Count == 0) { break; }
-
-            var parents = await Set().AsNoTracking()
-                .Include(i => i.Nomenclature)
-                .Include(i => i.Tare).ThenInclude(t => t!.TareType)
-                .Include(i => i.Meta)
-                .Where(i => newFrontier.Contains(i.Id))
-                .ToListAsync();
-
-            foreach (var p in parents)
-            {
-                nodes[p.Id] = ToNode(p, -d);
-                if (nodes.Count >= MaxNodes)
-                {
-                    truncated = true;
-                    break;
-                }
-            }
-
-            if (truncated) { break; }
-            frontier = newFrontier;
-        }
-
+        // Walk lineage in both directions through ItemLink. Ancestors move
+        // UP (TargetItemId -> SourceItemId, depth -d); descendants move DOWN
+        // (SourceItemId -> TargetItemId, depth +d).
+        truncated |= await WalkGenealogy(links, root.Id, effectiveDepth, MaxNodes,
+            direction: -1, nodes, edges);
         if (!truncated)
         {
-            // Probe one level beyond to flag truncation on ancestor side.
-            var beyond = await links
-                .Where(l => frontier.Contains(l.TargetItemId))
-                .Select(l => l.SourceItemId)
-                .AnyAsync();
-            if (beyond && effectiveDepth != int.MaxValue)
-            {
-                truncated = true;
-                foreach (var id in frontier)
-                {
-                    if (nodes.TryGetValue(id, out var n) && n.Depth < 0) { n.HasMore = true; }
-                }
-            }
-        }
-
-        // BFS descendants (SourceItemId -> TargetItemId), moving DOWN from root.
-        frontier = new HashSet<Guid> { root.Id };
-        for (var d = 1; d <= effectiveDepth; d++)
-        {
-            if (frontier.Count == 0) { break; }
-
-            var captured = frontier;
-            var childLinks = await links
-                .Where(l => captured.Contains(l.SourceItemId))
-                .Select(l => new
-                {
-                    l.SourceItemId,
-                    l.TargetItemId,
-                    l.ConsumedQuantity,
-                    l.OrderProcessId,
-                    ProcessName = l.OrderProcess != null && l.OrderProcess.Process != null
-                        ? l.OrderProcess.Process.Name
-                        : null,
-                })
-                .ToListAsync();
-
-            if (childLinks.Count == 0) { break; }
-
-            var newFrontier = new HashSet<Guid>();
-            foreach (var cl in childLinks)
-            {
-                edges.Add(new GenealogyEdge
-                {
-                    SourceItemId = cl.SourceItemId,
-                    TargetItemId = cl.TargetItemId,
-                    ConsumedQuantity = cl.ConsumedQuantity,
-                    OrderProcessId = cl.OrderProcessId,
-                    ProcessName = cl.ProcessName,
-                });
-
-                if (!nodes.ContainsKey(cl.TargetItemId))
-                {
-                    newFrontier.Add(cl.TargetItemId);
-                }
-            }
-
-            if (newFrontier.Count == 0) { break; }
-
-            var children = await Set().AsNoTracking()
-                .Include(i => i.Nomenclature)
-                .Include(i => i.Tare).ThenInclude(t => t!.TareType)
-                .Include(i => i.Meta)
-                .Where(i => newFrontier.Contains(i.Id))
-                .ToListAsync();
-
-            foreach (var c in children)
-            {
-                nodes[c.Id] = ToNode(c, d);
-                if (nodes.Count >= MaxNodes)
-                {
-                    truncated = true;
-                    break;
-                }
-            }
-
-            if (truncated) { break; }
-            frontier = newFrontier;
-        }
-
-        if (!truncated)
-        {
-            var beyond = await links
-                .Where(l => frontier.Contains(l.SourceItemId))
-                .Select(l => l.TargetItemId)
-                .AnyAsync();
-            if (beyond && effectiveDepth != int.MaxValue)
-            {
-                truncated = true;
-                foreach (var id in frontier)
-                {
-                    if (nodes.TryGetValue(id, out var n) && n.Depth > 0) { n.HasMore = true; }
-                }
-            }
+            truncated = await WalkGenealogy(links, root.Id, effectiveDepth, MaxNodes,
+                direction: 1, nodes, edges);
         }
 
         return new ItemGenealogy
@@ -469,10 +297,117 @@ public class ItemService : ServiceBase<Item>, IItemService
         Inactive = i.Meta?.Deleted != null || i.Meta?.Completed != null,
     };
 
+    /// <summary>
+    /// BFS over <see cref="ItemLink"/> from <paramref name="rootId"/> in the
+    /// given <paramref name="direction"/> (-1 = ancestors, +1 = descendants).
+    /// Adds visited items to <paramref name="nodes"/> and edges to
+    /// <paramref name="edges"/>; returns true when the walk had to stop early
+    /// (node cap or one-level-beyond probe).
+    /// </summary>
+    private async Task<bool> WalkGenealogy(
+        IQueryable<ItemLink> links,
+        Guid rootId,
+        int effectiveDepth,
+        int maxNodes,
+        int direction,
+        Dictionary<Guid, ItemNode> nodes,
+        List<GenealogyEdge> edges)
+    {
+        // Pivot: ancestors look up by TargetItemId and add SourceItemId nodes;
+        // descendants look up by SourceItemId and add TargetItemId nodes.
+        var goingUp = direction < 0;
+        var truncated = false;
+
+        var frontier = new HashSet<Guid> { rootId };
+        for (var d = 1; d <= effectiveDepth; d++)
+        {
+            if (frontier.Count == 0) { break; }
+
+            var captured = frontier;
+            var stepLinks = await (goingUp
+                    ? links.Where(l => captured.Contains(l.TargetItemId))
+                    : links.Where(l => captured.Contains(l.SourceItemId)))
+                .Select(l => new
+                {
+                    l.SourceItemId,
+                    l.TargetItemId,
+                    l.ConsumedQuantity,
+                    l.OrderProcessId,
+                    ProcessName = l.OrderProcess != null && l.OrderProcess.Process != null
+                        ? l.OrderProcess.Process.Name
+                        : null,
+                })
+                .ToListAsync();
+
+            if (stepLinks.Count == 0) { break; }
+
+            var newFrontier = new HashSet<Guid>();
+            foreach (var l in stepLinks)
+            {
+                edges.Add(new GenealogyEdge
+                {
+                    SourceItemId = l.SourceItemId,
+                    TargetItemId = l.TargetItemId,
+                    ConsumedQuantity = l.ConsumedQuantity,
+                    OrderProcessId = l.OrderProcessId,
+                    ProcessName = l.ProcessName,
+                });
+                var nextId = goingUp ? l.SourceItemId : l.TargetItemId;
+                if (!nodes.ContainsKey(nextId))
+                {
+                    newFrontier.Add(nextId);
+                }
+            }
+
+            if (newFrontier.Count == 0) { break; }
+
+            var step = await Set().AsNoTracking()
+                .Include(i => i.Nomenclature)
+                .Include(i => i.Tare).ThenInclude(t => t!.TareType)
+                .Include(i => i.Meta)
+                .Where(i => newFrontier.Contains(i.Id))
+                .ToListAsync();
+
+            var depth = direction * d;
+            foreach (var i in step)
+            {
+                nodes[i.Id] = ToNode(i, depth);
+                if (nodes.Count >= maxNodes)
+                {
+                    truncated = true;
+                    break;
+                }
+            }
+
+            if (truncated) { break; }
+            frontier = newFrontier;
+        }
+
+        if (!truncated)
+        {
+            // Probe one level beyond to flag truncation on the explored side.
+            var beyond = await (goingUp
+                ? links.Where(l => frontier.Contains(l.TargetItemId)).Select(l => l.SourceItemId)
+                : links.Where(l => frontier.Contains(l.SourceItemId)).Select(l => l.TargetItemId))
+                .AnyAsync();
+            if (beyond && effectiveDepth != int.MaxValue)
+            {
+                truncated = true;
+                foreach (var id in frontier)
+                {
+                    if (nodes.TryGetValue(id, out var n) && Math.Sign(n.Depth) == direction)
+                    {
+                        n.HasMore = true;
+                    }
+                }
+            }
+        }
+
+        return truncated;
+    }
+
     public async Task<BatchCreateItemResult> BatchCreate(BatchCreateItemRequest request)
     {
-        var eps = 1e-9;
-
         var nomenclature = await Set<Nomenclature>().AsNoTracking()
             .FirstOrDefaultAsync(n => n.Id == request.NomenclatureId)
             ?? throw new EdmException("Nomenclature not found.");
@@ -486,14 +421,9 @@ public class ItemService : ServiceBase<Item>, IItemService
             throw new EdmException("Quantity must be greater than zero.");
         }
 
-        var isCountableBulkTare = tareType.Countable && tareType.Dimensions <= 0;
-        if (isCountableBulkTare)
+        if (TareRules.IsCountableBulk(tareType))
         {
-            var rounded = Math.Round(request.Quantity);
-            if (Math.Abs(request.Quantity - rounded) > eps)
-            {
-                throw new EdmException("Quantity must be an integer for countable bulk tares.");
-            }
+            TareRules.EnsureIntegerQuantity(request.Quantity, "countable bulk tares");
         }
 
         Tare tare;
@@ -512,12 +442,12 @@ public class ItemService : ServiceBase<Item>, IItemService
 
             var itemsInTare = await Set<Item>().AsNoTracking()
                 .Include(i => i.Meta)
-                .Where(i => i.TareId == tare.Id && i.Meta.Deleted == null && i.Meta.Completed == null)
+                .Active()
+                .Where(i => i.TareId == tare.Id)
                 .ToListAsync();
 
-            used = tareType.Dimensions > 0 && tareType.Countable
-                ? itemsInTare.Count
-                : itemsInTare.Sum(i => i.Quantity);
+            var availableInTare = await ItemHistory.GetAvailableQuantities(Db, itemsInTare);
+            used = TareRules.UsedCapacity(tareType, itemsInTare, availableInTare);
         }
         else
         {
@@ -540,16 +470,14 @@ public class ItemService : ServiceBase<Item>, IItemService
 
         var createdItems = new List<Item>();
 
-        if (nomenclature.Countable && tareType.Dimensions > 0)
+        if (nomenclature.Countable && TareRules.IsAddressed(tareType))
         {
+            TareRules.EnsureIntegerQuantity(request.Quantity, "addressed countable tares");
             var count = (int)Math.Round(request.Quantity);
-            if (Math.Abs(request.Quantity - count) > eps)
-            {
-                throw new EdmException("Quantity must be an integer for addressed countable tares.");
-            }
             var occupiedAddresses = await Set<Item>().AsNoTracking()
                 .Include(i => i.Meta)
-                .Where(i => i.TareId == tare.Id && i.Meta.Deleted == null && i.Meta.Completed == null && i.Address != null)
+                .Active()
+                .Where(i => i.TareId == tare.Id && i.Address != null)
                 .Select(i => i.Address!.Value)
                 .ToListAsync();
 
@@ -578,14 +506,10 @@ public class ItemService : ServiceBase<Item>, IItemService
         }
         else
         {
-            if (nomenclature.Countable && isCountableBulkTare)
+            if (nomenclature.Countable && TareRules.IsCountableBulk(tareType))
             {
-                var rounded = Math.Round(request.Quantity);
-                if (Math.Abs(request.Quantity - rounded) > eps)
-                {
-                    throw new EdmException("Quantity must be an integer for countable bulk tares.");
-                }
-                request.Quantity = rounded;
+                TareRules.EnsureIntegerQuantity(request.Quantity, "countable bulk tares");
+                request.Quantity = Math.Round(request.Quantity);
             }
 
             var item = new Item
@@ -603,34 +527,42 @@ public class ItemService : ServiceBase<Item>, IItemService
 
         var finalRemaining = remaining - request.Quantity;
 
+        var dtos = createdItems.Select(i => new ItemViewModel
+        {
+            Id = i.Id,
+            NomenclatureId = i.NomenclatureId,
+            NomenclatureName = nomenclature.Name,
+            NomenclatureCategory = nomenclature.Category.ToString(),
+            TareId = i.TareId,
+            TareBarcode = tare.Barcode,
+            TareTareTypeId = tareType.Id,
+            TareTareTypeName = tareType.Name,
+            TareTareTypeUnits = tareType.Units,
+            TareTareTypeSizeX = tareType.SizeX,
+            TareTareTypeSizeY = tareType.SizeY,
+            TareTareTypeSizeZ = tareType.SizeZ,
+            TareTareTypeDimensions = tareType.Dimensions,
+            TareTareTypeCapacity = tareType.Capacity,
+            Address = i.Address,
+            Quantity = i.Quantity,
+            SupplyId = i.SupplyId,
+            // Batch-created items have no ProcessId and no parent ItemLink, so
+            // IsStore reduces to SupplyId == null. Use the canonical helper
+            // anyway so the rule has one home.
+        }).ToList();
+        await ItemFlags.Apply(Db, dtos);
+
         return new BatchCreateItemResult
         {
             CreatedCount = createdItems.Count,
+            Quantity = createdItems.Sum(i => i.Quantity),
+            Units = tareType.Units,
+            Countable = nomenclature.Countable,
             TareId = tare.Id,
             TareBarcode = tare.Barcode,
             TareTypeName = tareType.Name,
             Remaining = finalRemaining,
-            Items = createdItems.Select(i => new ItemViewModel
-            {
-                Id = i.Id,
-                NomenclatureId = i.NomenclatureId,
-                NomenclatureName = nomenclature.Name,
-                NomenclatureCategory = nomenclature.Category.ToString(),
-                TareId = i.TareId,
-                TareBarcode = tare.Barcode,
-                TareTareTypeId = tareType.Id,
-                TareTareTypeName = tareType.Name,
-                TareTareTypeUnits = tareType.Units,
-                TareTareTypeSizeX = tareType.SizeX,
-                TareTareTypeSizeY = tareType.SizeY,
-                TareTareTypeSizeZ = tareType.SizeZ,
-                TareTareTypeDimensions = tareType.Dimensions,
-                TareTareTypeCapacity = tareType.Capacity,
-                Address = i.Address,
-                Quantity = i.Quantity,
-                SupplyId = i.SupplyId,
-                IsStore = i.SupplyId == null,
-            }),
+            Items = dtos,
         };
     }
 
@@ -641,38 +573,22 @@ public class ItemService : ServiceBase<Item>, IItemService
             .Include(i => i.Tare.TareType)
             .Include(i => i.Grade)
             .Include(i => i.Meta)
-            .Where(i => i.TareId == tareId && i.Meta.Deleted == null && i.Meta.Completed == null)
+            .Active()
+            .Where(i => i.TareId == tareId)
             .ToListAsync();
-
-        var candidateIds = items
-            .Where(i => i.SupplyId == null && i.ProcessId == null)
-            .Select(i => i.Id)
-            .ToList();
-        if (candidateIds.Count > 0)
-        {
-            var withParent = await Db.Set<ItemLink>().AsNoTracking()
-                .Where(l => candidateIds.Contains(l.TargetItemId))
-                .Select(l => l.TargetItemId)
-                .Distinct()
-                .ToListAsync();
-            var withParentSet = withParent.ToHashSet();
-            foreach (var item in items)
-            {
-                item.IsStore = item.SupplyId == null
-                    && item.ProcessId == null
-                    && !withParentSet.Contains(item.Id);
-            }
-        }
 
         return items;
     }
 
     public async Task<RepackResult> Repack(RepackRequest request)
     {
-        var eps = 1e-9;
+        const double eps = TareRules.Eps;
 
         var errors = new List<string>();
         var movedCount = 0;
+        var movedQuantity = 0.0;
+        string? units = null;
+        var countable = false;
 
         await using var transaction = await Db.Database.BeginTransactionAsync();
         try
@@ -683,7 +599,8 @@ public class ItemService : ServiceBase<Item>, IItemService
                     .Include(i => i.Meta)
                     .Include(i => i.Nomenclature)
                     .Include(i => i.Tare).ThenInclude(t => t.TareType)
-                    .FirstOrDefaultAsync(i => i.Id == move.SourceItemId && i.Meta.Deleted == null && i.Meta.Completed == null);
+                    .Active()
+                    .FirstOrDefaultAsync(i => i.Id == move.SourceItemId);
 
                 if (item == null)
                 {
@@ -703,6 +620,11 @@ public class ItemService : ServiceBase<Item>, IItemService
                     continue;
                 }
 
+                // Available = Item.Quantity minus prior non-execution splits.
+                // Repack no longer mutates the parent, so we must subtract any
+                // earlier allocation/repack splits before deciding full-vs-partial.
+                var sourceAvailable = await ItemHistory.GetAvailableQuantity(Db, item);
+
                 var tare = await Set<Tare>().AsNoTracking()
                     .Include(t => t.TareType)
                     .FirstOrDefaultAsync(t => t.Id == move.TargetTareId);
@@ -715,31 +637,27 @@ public class ItemService : ServiceBase<Item>, IItemService
 
                 var targetType = tare.TareType ?? throw new EdmException("Target tare type not found.");
                 var sourceType = item.Tare?.TareType;
-                var isTargetAddressed = targetType.Dimensions > 0;
+                var isTargetAddressed = TareRules.IsAddressed(targetType);
 
                 // Enforce integer-only quantities for countable bulk tares (source and target).
-                var sourceIsCountableBulkTare = sourceType != null && sourceType.Countable && sourceType.Dimensions <= 0;
-                var targetIsCountableBulkTare = targetType.Countable && targetType.Dimensions <= 0;
-                if (sourceIsCountableBulkTare || targetIsCountableBulkTare)
+                var endpointIsCountableBulk =
+                    (sourceType != null && TareRules.IsCountableBulk(sourceType)) ||
+                    TareRules.IsCountableBulk(targetType);
+                if (endpointIsCountableBulk && Math.Abs(move.Quantity - Math.Round(move.Quantity)) > eps)
                 {
-                    var rounded = Math.Round(move.Quantity);
-                    if (Math.Abs(move.Quantity - rounded) > eps)
-                    {
-                        errors.Add($"Quantity must be an integer for countable bulk tare move (item {move.SourceItemId}).");
-                        continue;
-                    }
+                    errors.Add($"Quantity must be an integer for countable bulk tare move (item {move.SourceItemId}).");
+                    continue;
                 }
 
-                if (move.TargetAddress.HasValue && tare.TareType.Dimensions > 0)
+                if (move.TargetAddress.HasValue && isTargetAddressed)
                 {
                     var addressTaken = await Set()
                         .Include(i => i.Meta)
+                        .Active()
                         .AnyAsync(i =>
                             i.TareId == move.TargetTareId &&
                             i.Address == move.TargetAddress &&
-                            i.Id != item.Id &&
-                            i.Meta.Deleted == null &&
-                            i.Meta.Completed == null);
+                            i.Id != item.Id);
 
                     if (addressTaken)
                     {
@@ -753,14 +671,12 @@ public class ItemService : ServiceBase<Item>, IItemService
                 {
                     var itemsInTarget = await Set<Item>().AsNoTracking()
                         .Include(i => i.Meta)
-                        .Where(i => i.TareId == move.TargetTareId && i.Meta.Deleted == null && i.Meta.Completed == null)
+                        .Active()
+                        .Where(i => i.TareId == move.TargetTareId)
                         .ToListAsync();
 
-                    var used = targetType.Countable && targetType.Dimensions > 0
-                        ? itemsInTarget.Count
-                        : itemsInTarget.Sum(i => i.Quantity);
-
-                    var remaining = targetType.Capacity - used;
+                    var availableInTarget = await ItemHistory.GetAvailableQuantities(Db, itemsInTarget);
+                    var remaining = targetType.Capacity - TareRules.UsedCapacity(targetType, itemsInTarget, availableInTarget);
                     if (move.Quantity > remaining + eps)
                     {
                         errors.Add($"Target tare {tare.Barcode} has insufficient remaining capacity ({remaining}).");
@@ -777,7 +693,7 @@ public class ItemService : ServiceBase<Item>, IItemService
                         continue;
                     }
 
-                    if (Math.Abs(item.Quantity - 1) > eps || Math.Abs(move.Quantity - 1) > eps)
+                    if (Math.Abs(sourceAvailable - 1) > eps || Math.Abs(move.Quantity - 1) > eps)
                     {
                         errors.Add($"Addressed tares require whole-item moves (quantity=1) for item {move.SourceItemId}.");
                         continue;
@@ -786,15 +702,24 @@ public class ItemService : ServiceBase<Item>, IItemService
                     item.TareId = move.TargetTareId;
                     item.Address = move.TargetAddress;
                     movedCount++;
+                    movedQuantity += move.Quantity;
+                    units ??= targetType.Units;
+                    countable = item.Nomenclature?.Countable ?? countable;
                     continue;
                 }
 
-                // Bulk move: allow partial quantity by splitting the item.
-                if (move.Quantity >= item.Quantity - eps)
+                // Bulk move: full move flips TareId on the parent; partial
+                // move splits off a child. The parent's Quantity is never
+                // mutated — non-execution links are the sole record of splits
+                // and the source-of-truth for "available".
+                if (move.Quantity >= sourceAvailable - eps)
                 {
                     item.TareId = move.TargetTareId;
                     item.Address = null;
                     movedCount++;
+                    movedQuantity += move.Quantity;
+                    units ??= targetType.Units;
+                    countable = item.Nomenclature?.Countable ?? countable;
                     continue;
                 }
 
@@ -820,8 +745,10 @@ public class ItemService : ServiceBase<Item>, IItemService
                     OrderProcessId = null,
                 });
 
-                item.Quantity -= move.Quantity;
                 movedCount++;
+                movedQuantity += move.Quantity;
+                units ??= targetType.Units;
+                countable = item.Nomenclature?.Countable ?? countable;
             }
 
             await Db.SaveChangesAsync();
@@ -833,7 +760,14 @@ public class ItemService : ServiceBase<Item>, IItemService
             errors.Add($"Transaction failed: {ex.Message}");
         }
 
-        return new RepackResult { MovedCount = movedCount, Errors = errors.ToArray() };
+        return new RepackResult
+        {
+            MovedCount = movedCount,
+            MovedQuantity = movedQuantity,
+            Units = units,
+            Countable = countable,
+            Errors = errors.ToArray(),
+        };
     }
 
 }

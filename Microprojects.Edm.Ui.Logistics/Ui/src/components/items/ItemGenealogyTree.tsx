@@ -54,17 +54,13 @@ function nodeName(n: ItemNode): string {
 }
 
 /**
- * For non-root tree nodes we prefer the edge's consumed quantity: the
- * historical amount that actually flowed along this lineage edge. The live
- * Item.Quantity often drops to 0 after full consumption by the process,
- * which would make the tree misleadingly look empty.
+ * Show the item's own quantity. Under the immutable-Quantity model
+ * Item.Quantity is set at creation and never decremented (consumption is
+ * recorded only via ItemLinks), so it's a reliable label. The edge's
+ * consumed quantity is shown in the tooltip for context.
  */
-function nodePrimary(n: ItemNode, edge?: GenealogyEdge): string {
-    const qty = formatUnits(
-        edge ? edge.consumedQuantity : n.quantity,
-        n.tareTypeUnits,
-        n.nomenclatureCountable,
-    )
+function nodePrimary(n: ItemNode): string {
+    const qty = formatUnits(n.quantity, n.tareTypeUnits, n.nomenclatureCountable)
     return `${nodeName(n)} — ${qty}`
 }
 
@@ -159,7 +155,7 @@ function buildTree(
                 id: nodeKey,
                 itemId: nextId,
                 primary: node
-                    ? nodePrimary(node, edge)
+                    ? nodePrimary(node)
                     : `(missing ${nextId.slice(0, 8)})`,
                 tooltip: node ? nodeTooltip(node, edge) : '',
                 inactive: node?.inactive ?? false,

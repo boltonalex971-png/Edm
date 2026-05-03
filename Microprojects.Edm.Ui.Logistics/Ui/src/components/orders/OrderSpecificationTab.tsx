@@ -2,6 +2,7 @@ import type { AlertState } from '@logistics/components/InlineAlert'
 import { RelationTable } from '@logistics/components/RelationTable.tsx'
 import { ItemSearch } from '@logistics/components/items/ItemSearch.tsx'
 import type { AllocateItemsRequest, Item, UUID } from '@logistics/data/types'
+import { formatUnits } from '@logistics/utils/format'
 import { GridColumn } from '@progress/kendo-react-grid'
 import { Switch } from '@progress/kendo-react-inputs'
 import axios from 'axios'
@@ -30,10 +31,11 @@ export function OrderSpecificationTab({
         axios
             .post(`${api}/${id}/items/batch`, request)
             .then((result) => {
-                const { allocatedCount, allocatedQuantity, stoppedReason } =
+                const { allocatedQuantity, units, countable, stoppedReason } =
                     result.data
+                const qtyTxt = formatUnits(allocatedQuantity, units, countable)
                 const msg =
-                    `${allocatedCount} item(s) allocated (${allocatedQuantity} qty)` +
+                    `${qtyTxt} allocated` +
                     (stoppedReason ? `. Stopped: ${stoppedReason}` : '')
                 setAlert({
                     message: msg,

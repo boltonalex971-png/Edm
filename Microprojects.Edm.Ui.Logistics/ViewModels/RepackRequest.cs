@@ -17,5 +17,8 @@ public class RepackRequest
 public class RepackResult
 {
     public int MovedCount { get; set; }
+    public double MovedQuantity { get; set; }
+    public string? Units { get; set; }
+    public bool Countable { get; set; }
     public string[] Errors { get; set; } = [];
 }

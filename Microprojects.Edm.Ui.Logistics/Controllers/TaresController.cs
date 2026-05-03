@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microprojects.Edm.Ui.Logistics.Contracts;
 using Microprojects.Edm.Ui.Logistics.Models;
+using Microprojects.Edm.Ui.Logistics.Utils;
 using Microprojects.Edm.Ui.Logistics.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Optosense.Edm.Core.AspNet.Auth;
@@ -128,19 +129,16 @@ public class TaresController : AuthControllerBase
         var tareIds = tares.Select(t => t.Id).ToList();
         var activeItems = await _db.Items.AsNoTracking()
             .Include(i => i.Meta)
-            .Where(i => i.TareId != null && tareIds.Contains(i.TareId.Value) && i.Meta.Deleted == null && i.Meta.Completed == null)
+            .Active()
+            .Where(i => i.TareId != null && tareIds.Contains(i.TareId.Value))
             .ToListAsync();
+        var available = await ItemHistory.GetAvailableQuantities(_db, activeItems);
 
         var result = new List<AvailableTareViewModel>();
         foreach (var tare in tares)
         {
             var itemsInTare = activeItems.Where(i => i.TareId == tare.Id).ToList();
-
-            double used = tare.TareType.Dimensions > 0 && tare.TareType.Countable
-                ? itemsInTare.Count
-                : itemsInTare.Sum(i => i.Quantity);
-
-            var remaining = tare.TareType.Capacity - used;
+            var remaining = tare.TareType.Capacity - TareRules.UsedCapacity(tare.TareType, itemsInTare, available);
             if (remaining <= 0 && !includeFull)
             {
                 continue;

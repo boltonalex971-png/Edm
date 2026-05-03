@@ -62,7 +62,7 @@ public class OrderService : ServiceBase<Order>, IOrderService
     public override async Task<Order> Get(Guid id)
     {
         var order = await Set().AsNoTracking()
-            .Include(o => o.Process.Nomenclature)
+            .Include(o => o.Process.Nomenclature).ThenInclude(n => n.DefaultTareType)
             .Include(o => o.Meta)
             .FirstOrDefaultAsync(o => o.Id == id);
         return order;
@@ -71,9 +71,9 @@ public class OrderService : ServiceBase<Order>, IOrderService
     public override async Task<IEnumerable<Order>> GetAll(Expression<Func<Order, bool>>? predicate = null)
     {
         var query = Set().AsNoTracking()
-            .Include(i => i.Process.Nomenclature)
+            .Include(i => i.Process.Nomenclature).ThenInclude(n => n.DefaultTareType)
             .Include(e => e.Meta)
-            .Where(e => e.Meta.Deleted == null && e.Meta.Completed == null);
+            .Active();
 
         if (predicate != null)
         {
@@ -224,22 +224,51 @@ public class OrderService : ServiceBase<Order>, IOrderService
                 .SelectMany(p => p.Process.Specifications)
                 .ToListAsync();
         }
+        // Inputs only (ProcessId == null) and NotDeleted so consumed inputs
+        // (Meta.Completed != null after Execute) stay visible for the
+        // historical view.
         var items = await Set<Item>().AsNoTracking()
             .Include(i => i.Meta)
-            .Where(i => i.OrderId == orderId && i.Meta.Deleted == null && i.Meta.Completed == null)
+            .NotDeleted()
+            .Where(i => i.OrderId == orderId && i.ProcessId == null)
             .ToListAsync();
+
+        // For consumed items: original allocation = sum of execution-link
+        // consumption from the item.
+        // For active items: currently allocated = Quantity minus any
+        // non-execution outgoing splits (allocation/repack). Repack no
+        // longer mutates the parent so the subtraction is always required.
+        var itemIds = items.Select(i => i.Id).ToList();
+        var consumedByItem = itemIds.Count == 0
+            ? new Dictionary<Guid, double>()
+            : (await Set<ItemLink>().AsNoTracking()
+                .Where(l => l.OrderProcessId != null && itemIds.Contains(l.SourceItemId))
+                .GroupBy(l => l.SourceItemId)
+                .Select(g => new { Id = g.Key, Sum = g.Sum(l => l.ConsumedQuantity) })
+                .ToListAsync())
+                .ToDictionary(x => x.Id, x => x.Sum);
+        var availableByItem = await ItemHistory.GetAvailableQuantities(Db, items);
+
         var rows = await Set<SpecificationNomenclature>().AsNoTracking()
             .Include(sn => sn.Nomenclature)
             .Include(sn => sn.Specification.Process)
             .Where(sn => specifications.Select(s => s.Id).Contains(sn.SpecificationId))
             .ToListAsync();
         var result = rows
-            .GroupBy(r => r.NomenclatureId, (key, list) => new OrderSpecificationNomenclature
+            .GroupBy(r => r.NomenclatureId, (key, list) =>
             {
-                Order = order,
-                Nomenclature = list.First().Nomenclature,
-                Quantity = list.Sum(s => s.Quantity),
-                Items = items.Where(i => i.NomenclatureId == key).ToList()
+                var matched = items.Where(i => i.NomenclatureId == key).ToList();
+                return new OrderSpecificationNomenclature
+                {
+                    Order = order,
+                    Nomenclature = list.First().Nomenclature,
+                    Quantity = list.Sum(s => s.Quantity),
+                    Items = matched,
+                    Total = matched.Sum(i =>
+                        i.Meta.Completed != null
+                            ? consumedByItem.GetValueOrDefault(i.Id, 0)
+                            : availableByItem.GetValueOrDefault(i.Id, i.Quantity)),
+                };
             });
 
         return result;
@@ -247,11 +276,16 @@ public class OrderService : ServiceBase<Order>, IOrderService
 
     public async Task<IEnumerable<Item>> GetItems(Guid id)
     {
+        // Component tab: input items only (ProcessId == null). Outputs share
+        // the same OrderId and would otherwise leak in here once the order is
+        // executed (they live in the Output tab). NotDeleted keeps consumed
+        // inputs visible for historical lookup.
         var items = await Set<Item>().AsNoTracking()
             .Include(i => i.Nomenclature)
             .Include(i => i.Tare.TareType)
             .Include(i => i.Meta)
-            .Where(i => i.OrderId == id && i.Meta.Deleted == null && i.Meta.Completed == null)
+            .NotDeleted()
+            .Where(i => i.OrderId == id && i.ProcessId == null)
             .ToListAsync();
 
         return items;
@@ -268,6 +302,17 @@ public class OrderService : ServiceBase<Order>, IOrderService
         return operations;
     }
 
+    /// <summary>
+    /// Marker exception: the order's specification for this nomenclature is
+    /// already fully covered. Callers that loop over candidate items (see
+    /// <see cref="AddItems"/>) treat this as a clean end-of-loop, not a
+    /// stop reason worth surfacing to the user.
+    /// </summary>
+    private sealed class SpecificationFulfilledException : EdmException
+    {
+        public SpecificationFulfilledException(string message) : base(message) { }
+    }
+
     public async Task<Item> AddItem(Guid id, Item item)
     {
         var specification = (await GetSpecifications(id))
@@ -276,7 +321,7 @@ public class OrderService : ServiceBase<Order>, IOrderService
                                 $"Specification for nomenclature {item.NomenclatureId} not found");
         if (specification.Total >= specification.Amount)
         {
-            throw new EdmException($"{specification.Nomenclature.Name} no more required");
+            throw new SpecificationFulfilledException($"{specification.Nomenclature.Name} no more required");
         }
 
         var storeItem = await Set<Item>()
@@ -284,14 +329,25 @@ public class OrderService : ServiceBase<Order>, IOrderService
                         ?? throw new EdmException($"Item with id {item.Id} not found");
         var tare = storeItem.Tare;
         var requiredAmount = specification.Amount - specification.Total;
-        if (storeItem.Quantity <= requiredAmount)
+        // Available = Quantity minus prior non-execution splits (allocation /
+        // repack). Repack and AddItem no longer mutate the parent's Quantity,
+        // so the raw field is the original allocation, not what's left.
+        var available = await ItemHistory.GetAvailableQuantity(Db, storeItem);
+        var splitQty = Math.Min(available, requiredAmount);
+
+        // Output items (ProcessId != null) must always be split so the producing
+        // order keeps the production lineage on the parent and the consuming
+        // side gets a fresh non-output child input. Reassigning the OrderId in
+        // place would make the item look like an output of the consuming order.
+        // Raw supplies / store items have ProcessId == null and can be reassigned
+        // wholesale when the quantity matches.
+        if (storeItem.ProcessId == null && available <= requiredAmount)
         {
             storeItem.OrderId = id;
             await Db.SaveChangesAsync();
         }
         else
         {
-            var splitQty = Math.Min(storeItem.Quantity, requiredAmount);
             var parentId = storeItem.Id;
             storeItem = await _itemService.Save(new Item
             {
@@ -323,6 +379,7 @@ public class OrderService : ServiceBase<Order>, IOrderService
         var allocated = 0;
         var totalQty = 0.0;
         string? stoppedReason = null;
+        Guid? firstAllocatedId = null;
 
         foreach (var itemId in itemIds)
         {
@@ -339,6 +396,11 @@ public class OrderService : ServiceBase<Order>, IOrderService
                 var result = await AddItem(orderId, storeItem);
                 allocated++;
                 totalQty += result.Quantity;
+                firstAllocatedId ??= result.Id;
+            }
+            catch (SpecificationFulfilledException)
+            {
+                break;
             }
             catch (EdmException ex)
             {
@@ -347,10 +409,27 @@ public class OrderService : ServiceBase<Order>, IOrderService
             }
         }
 
+        string? units = null;
+        var countable = false;
+        if (firstAllocatedId != null)
+        {
+            var info = await Set<Item>().AsNoTracking()
+                .Where(i => i.Id == firstAllocatedId)
+                .Select(i => new { i.Nomenclature.Countable, Units = i.Tare.TareType.Units })
+                .FirstOrDefaultAsync();
+            if (info != null)
+            {
+                units = info.Units;
+                countable = info.Countable;
+            }
+        }
+
         return new AllocateItemsResult
         {
             AllocatedCount = allocated,
             AllocatedQuantity = totalQty,
+            Units = units,
+            Countable = countable,
             StoppedReason = stoppedReason,
         };
     }
@@ -471,17 +550,25 @@ public class OrderService : ServiceBase<Order>, IOrderService
         {
             var inputItems = await Set<Item>()
                 .Include(i => i.Meta)
+                .Active()
                 .Where(i =>
                     i.OrderId == order.Id &&
-                    i.NomenclatureId == spec.NomenclatureId &&
-                    i.Meta.Deleted == null &&
-                    i.Meta.Completed == null)
+                    i.NomenclatureId == spec.NomenclatureId)
                 .OrderBy(i => i.Id) // UUIDv7 ordering: FIFO by creation time
                 .ToListAsync();
+
+            // Available = Quantity minus prior non-execution splits (Repack /
+            // allocation children created off this item). Execute consumes
+            // against available, not raw Quantity, so an item that had part
+            // of its volume split off earlier is not over-consumed.
+            var availableByItem = (await ItemHistory.GetAvailableQuantities(Db, inputItems))
+                .ToDictionary(kv => kv.Key, kv => kv.Value);
 
             if (targetOutputItems.Count == 0)
             {
                 // No output items -> consume the required quantity without persisting links.
+                // Item.Quantity stays immutable; available is tracked in the dict and
+                // Meta.Completed is stamped when an item's available drops to zero.
                 var remaining = spec.Amount;
                 foreach (var item in inputItems)
                 {
@@ -495,12 +582,12 @@ public class OrderService : ServiceBase<Order>, IOrderService
                     // the comment on Nomenclature.Countable. Physical
                     // piece-count integrity is enforced by tare operations
                     // (BatchCreate, Move, Repack).
-                    var consumed = Math.Min(item.Quantity, remaining);
-                    item.Quantity -= consumed;
+                    var availableHere = availableByItem[item.Id];
+                    var consumed = Math.Min(availableHere, remaining);
+                    availableByItem[item.Id] = availableHere - consumed;
                     remaining -= consumed;
-                    if (item.Quantity <= Eps)
+                    if (availableByItem[item.Id] <= Eps)
                     {
-                        item.Quantity = 0;
                         item.Meta.Completed = now;
                     }
                 }
@@ -526,11 +613,10 @@ public class OrderService : ServiceBase<Order>, IOrderService
 
                     var inputItem = inputItems[inputIndex];
 
-                    var available = inputItem.Quantity;
+                    var available = availableByItem[inputItem.Id];
                     if (available <= Eps)
                     {
                         inputItem.Meta.Completed = now;
-                        inputItem.Quantity = 0;
                         inputIndex++;
                         continue;
                     }
@@ -550,12 +636,14 @@ public class OrderService : ServiceBase<Order>, IOrderService
                         ConsumedQuantity = consumed
                     });
 
-                    inputItem.Quantity -= consumed;
+                    // Item.Quantity is immutable; consumption is recorded only
+                    // through the link above. Track depletion in the dict so we
+                    // know when to stamp Meta.Completed.
+                    availableByItem[inputItem.Id] = available - consumed;
                     requiredForThisTarget -= consumed;
 
-                    if (inputItem.Quantity <= Eps)
+                    if (availableByItem[inputItem.Id] <= Eps)
                     {
-                        inputItem.Quantity = 0;
                         inputItem.Meta.Completed = now;
                         inputIndex++;
                     }
@@ -598,11 +686,10 @@ public class OrderService : ServiceBase<Order>, IOrderService
             .Include(i => i.Tare).ThenInclude(t => t.TareType)
             .Include(i => i.Grade)
             .Include(i => i.Meta)
+            .Active()
             .Where(i =>
                 i.OrderId == orderId &&
-                i.ProcessId != null &&
-                i.Meta.Deleted == null &&
-                i.Meta.Completed == null)
+                i.ProcessId != null)
             .ToListAsync();
 
         var allocated = items.Where(i => i.TareId != null).ToList();
@@ -635,12 +722,11 @@ public class OrderService : ServiceBase<Order>, IOrderService
         {
             var item = await Set<Item>()
                 .Include(i => i.Meta)
+                .Active()
                 .FirstOrDefaultAsync(i =>
                     i.Id == allocation.ItemId &&
                     i.OrderId == orderId &&
-                    i.ProcessId != null &&
-                    i.Meta.Deleted == null &&
-                    i.Meta.Completed == null);
+                    i.ProcessId != null);
 
             if (item == null)
             {
@@ -704,12 +790,11 @@ public class OrderService : ServiceBase<Order>, IOrderService
 
         var items = await Set<Item>()
             .Include(i => i.Meta)
+            .Active()
             .Where(i =>
                 request.ItemIds.Contains(i.Id) &&
                 i.OrderId == orderId &&
-                i.ProcessId != null &&
-                i.Meta.Deleted == null &&
-                i.Meta.Completed == null)
+                i.ProcessId != null)
             .ToListAsync();
 
         var foundIds = new HashSet<Guid>(items.Select(i => i.Id));
@@ -758,12 +843,11 @@ public class OrderService : ServiceBase<Order>, IOrderService
 
         var hasPending = await Set<Item>().AsNoTracking()
             .Include(i => i.Meta)
+            .Active()
             .AnyAsync(i =>
                 i.OrderId == orderId &&
                 i.ProcessId != null &&
-                i.TareId == null &&
-                i.Meta.Deleted == null &&
-                i.Meta.Completed == null);
+                i.TareId == null);
 
         if (hasPending)
         {
@@ -807,14 +891,14 @@ public class OrderService : ServiceBase<Order>, IOrderService
     {
         // TODO Use materialized view to gain performance.
         // Active: no Deleted AND no Completed. Completed view: Completed != null AND Deleted == null.
-        var orders = await Set().AsNoTracking()
-            .Include(o => o.Process.Nomenclature)
-            .Include(o => o.Meta)
-            .Where(i =>
-                (query.Active
-                    ? (i.Meta.Deleted == null && i.Meta.Completed == null)
-                    : (i.Meta.Deleted == null && i.Meta.Completed != null))
-                && (query.NomenclatureId == null || query.NomenclatureId == i.Process.NomenclatureId))
+        var baseQuery = Set().AsNoTracking()
+            .Include(o => o.Process.Nomenclature).ThenInclude(n => n.DefaultTareType)
+            .Include(o => o.Meta);
+        var lifecycleScoped = query.Active
+            ? baseQuery.Active()
+            : baseQuery.Where(i => i.Meta.Deleted == null && i.Meta.Completed != null);
+        var orders = await lifecycleScoped
+            .Where(i => query.NomenclatureId == null || query.NomenclatureId == i.Process.NomenclatureId)
             .ToListAsync();
 
         return orders;
@@ -850,10 +934,10 @@ public class OrderService : ServiceBase<Order>, IOrderService
         // not deleted/completed.
         var pendingByOrder = await Set<Item>().AsNoTracking()
             .Include(i => i.Meta)
+            .Active()
             .Where(i =>
                 i.OrderId != null && ids.Contains(i.OrderId.Value) &&
-                i.ProcessId != null && i.TareId == null &&
-                i.Meta.Deleted == null && i.Meta.Completed == null)
+                i.ProcessId != null && i.TareId == null)
             .GroupBy(i => i.OrderId!.Value)
             .Select(g => new { OrderId = g.Key, Count = g.Count() })
             .ToListAsync();
