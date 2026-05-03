@@ -183,6 +183,20 @@
     text-overflow: ellipsis;
 }
 
+.geneal-node-name {
+    font-weight: 500;
+}
+
+.geneal-node-order {
+    margin-inline: 6px;
+    color: var(--geneal-secondary);
+    font-weight: 400;
+}
+
+.geneal-node-qty {
+    font-weight: 500;
+}
+
 .geneal-node-more {
     flex-shrink: 0;
     color: var(--geneal-edge-split-text);

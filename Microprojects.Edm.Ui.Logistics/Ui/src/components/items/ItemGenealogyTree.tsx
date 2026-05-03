@@ -57,7 +57,9 @@ type TreeItem = {
     id: string
     /** Undefined for synthetic group rows. */
     itemId?: UUID
-    primary: string
+    name: string
+    quantityText: string
+    orderNumber?: string
     tooltipFields: TooltipFields
     inactive: boolean
     isOutput: boolean
@@ -85,14 +87,12 @@ function nodeName(n: ItemNode): string {
 }
 
 /**
- * Show the item's own quantity. Under the immutable-Quantity model
- * Item.Quantity is set at creation and never decremented (consumption is
- * recorded only via ItemLinks), so it's a reliable label. The edge's
- * consumed quantity is shown in the tooltip for context.
+ * Item's own quantity under the immutable-Quantity model: set at creation,
+ * never decremented (consumption flows through ItemLinks). The edge's
+ * consumed quantity is shown separately in the tooltip.
  */
-function nodePrimary(n: ItemNode): string {
-    const qty = formatUnits(n.quantity, n.tareTypeUnits, n.nomenclatureCountable)
-    return `${nodeName(n)} — ${qty}`
+function nodeQuantityText(n: ItemNode): string {
+    return formatUnits(n.quantity, n.tareTypeUnits, n.nomenclatureCountable)
 }
 
 /**
@@ -170,7 +170,9 @@ const ORIGIN_LABELS: Record<OriginKind, string> = {
 /** Stable signature for grouping visually-identical siblings. */
 function similaritySignature(item: TreeItem): string {
     return [
-        item.primary,
+        item.name,
+        item.quantityText,
+        item.orderNumber ?? '',
         item.originKind ?? '',
         item.inactive ? 'I' : '',
     ].join('|')
@@ -204,7 +206,9 @@ function groupSiblings(children: TreeItem[], path: string): TreeItem[] {
                 id: groupId,
                 isGroup: true,
                 groupCount: items.length,
-                primary: head.primary,
+                name: head.name,
+                quantityText: head.quantityText,
+                orderNumber: head.orderNumber,
                 tooltipFields: {
                     name: head.tooltipFields.name,
                     quantity: head.tooltipFields.quantity,
@@ -265,9 +269,9 @@ function buildTree(
             return {
                 id: nodeKey,
                 itemId: nextId,
-                primary: node
-                    ? nodePrimary(node)
-                    : `(missing ${nextId.slice(0, 8)})`,
+                name: node ? nodeName(node) : `(missing ${nextId.slice(0, 8)})`,
+                quantityText: node ? nodeQuantityText(node) : '—',
+                orderNumber: node?.orderNumber ?? undefined,
                 tooltipFields: fields,
                 inactive: node?.inactive ?? false,
                 isOutput: node?.isOutput ?? false,
@@ -411,7 +415,18 @@ function renderItem({ item }: { item: TreeItem }): React.ReactElement {
                     </span>
                 </span>
             )}
-            <span className="geneal-node-primary">{item.primary}</span>
+            <span className="geneal-node-primary">
+                {item.orderNumber && (
+                    <span className="geneal-node-order">
+                        {item.orderNumber}
+                    </span>
+                )}
+                <span className="geneal-node-name">{item.name}</span>
+                <span className="geneal-node-qty">
+                    {' — '}
+                    {item.quantityText}
+                </span>
+            </span>
             {item.isGroup && item.groupCount != null && (
                 <span className="geneal-node-badge geneal-node-badge--group">
                     × {item.groupCount}
