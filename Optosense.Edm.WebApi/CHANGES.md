@@ -4,9 +4,10 @@ This changelog covers the host (`Optosense.Edm.WebApi`) and the libraries loaded
 
 The product version is set in `Optosense.Edm.Setup/Optosense.Edm.Setup.vdproj` (`ProductVersion`). Versions below correspond to the value shipped in the MSI at the time.
 
-## v1.13.26
+## v1.13.27
 
-- **MSI shutdown hardening** (PR #18). The Setup build now stamps `MSIRMSHUTDOWN=2` into the MSI so the Restart Manager (server-side, elevated) silently shuts down the EDM service when files are in use, instead of showing the "Files In Use" dialog — the immediate `StopEdmServiceBeforeInstall` CA at sequence 1300 cannot do that itself because immediate CAs run as the launching user, not LocalSystem. The CA's command chain also adds `taskkill /F /IM Optosense.Edm.WebApi.exe /T` after `net stop edm /y` to release file handles that survive SCM's `SERVICE_STOPPED`, and the `cmd` group separator was switched from the literal `^&` (incorrectly escaped — so `net stop` never ran inside the redirected group) to plain `&`. `BUILD.md` documents the rationale.
+- **Setup build automation & MSI shutdown hardening** (PR #18). Introduces `Optosense.Edm.Setup/Build-EdmSetup.ps1` and the companion `BUILD.md` covering the full MSI build flow. The MSI now stamps `MSIRMSHUTDOWN=2` so the Restart Manager (server-side, elevated) silently shuts down the EDM service when files are in use, instead of showing the "Files In Use" dialog — the immediate `StopEdmServiceBeforeInstall` CA at sequence 1300 cannot do that itself because immediate CAs run as the launching user, not LocalSystem. The CA's command chain now also runs `taskkill /F /IM Optosense.Edm.WebApi.exe /T` after `net stop edm /y` to release file handles that survive SCM's `SERVICE_STOPPED`, and the `cmd` group separator was switched from the literal `^&` (incorrectly escaped — so `net stop` never ran inside the redirected group) to plain `&`.
+- **User-facing changelog system** (PR #17, `c4d54f7`). Each plugin now ships a `CHANGES.md` embedded as a resource, and Logistics exposes `api/logistics/meta/version` and `api/logistics/meta/changelog` so the SPA footer can render the running plugin version, the EDM product version (stamped from the vdproj into a `BuildInfo` constant at compile time) and the changelog itself.
 
 ## v1.13.22 (currently shipping)
 
