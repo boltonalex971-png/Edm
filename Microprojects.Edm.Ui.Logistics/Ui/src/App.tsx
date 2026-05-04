@@ -1,4 +1,5 @@
 import './App.css'
+import { Changelog } from '@logistics/components/Changelog.tsx'
 import { Config } from '@logistics/components/config/Config.tsx'
 import { OperatorDesktop } from '@logistics/components/desktop/OperatorDesktop'
 import { Home } from '@logistics/components/homepages/Home.tsx'
@@ -62,6 +63,7 @@ export function App() {
             <Layout hideMenu>
                 <Routes>
                     <Route path="/desktop/*" element={<OperatorDesktop />} />
+                    <Route path="/changes" element={<Changelog />} />
                     <Route
                         path="*"
                         element={<Navigate to="/desktop" replace />}
@@ -81,6 +83,7 @@ export function App() {
                     <Route path="/supplies/*" element={<Supplies />} />
                     <Route path="/items/*" element={<Items />} />
                     <Route path="/repacking" element={<Repacking />} />
+                    <Route path="/changes" element={<Changelog />} />
                     <Route path="*" element={<span>Page not exist</span>} />
                 </Routes>
             )}
