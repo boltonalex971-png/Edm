@@ -15,7 +15,10 @@ import {
     type ContextTareOption,
     TransferContextMenu,
 } from '@logistics/components/transfer/TransferContextMenu'
-import { visibleNomenclatures } from '@logistics/components/transfer/visibleFromItems'
+import {
+    selectionSummary,
+    visibleNomenclatures,
+} from '@logistics/components/transfer/visibleFromItems'
 import type {
     AllocateOutputsRequest,
     AllocateOutputsResult,
@@ -140,10 +143,13 @@ export function AllocateProcessOutput({
     const [completing, setCompleting] = useState(false)
     const [error, setError] = useState<string>()
 
+    // Wipe selection + pending only when the order itself changes.
+    // `orderToken` rotates on every entity invalidation (e.g. assign-grade
+    // refetch) — selection must survive those refreshes.
     useEffect(() => {
         setSelectedItemIds(new Set())
         clearPending()
-    }, [orderToken, orderId, setSelectedItemIds, clearPending])
+    }, [orderId, setSelectedItemIds, clearPending])
 
     useEffect(() => {
         if (
@@ -292,6 +298,18 @@ export function AllocateProcessOutput({
         () => unallocated.filter((i) => selectedItemIds.has(i.id)),
         [unallocated, selectedItemIds],
     )
+
+    const selectionLabel = useMemo(() => {
+        if (selectedItems.length === 0) return null
+        const { nomenclatureNames, gradeNames } = selectionSummary(
+            selectedItems,
+        )
+        const segments = [`${selectedItems.length} selected`]
+        if (nomenclatureNames.length > 0)
+            segments.push(nomenclatureNames.join(', '))
+        if (gradeNames.length > 0) segments.push(gradeNames.join(', '))
+        return segments.join(' · ')
+    }, [selectedItems])
 
     const pendingItemIds = useMemo(
         () => new Set(pending.map((p) => p.itemId)),
@@ -527,16 +545,41 @@ export function AllocateProcessOutput({
                     <SmartScrollContent style={{ flex: 1 }}>
                         <div className="repacking-panel source">
                             <h3>Unallocated outputs</h3>
-                            {grades && grades.length > 0 && (
-                                <GradeLegend
-                                    grades={grades}
-                                    onPick={selectByGrade}
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    flexWrap: 'wrap',
+                                    alignItems: 'center',
+                                    columnGap: '1rem',
+                                    rowGap: '0.25rem',
+                                    margin: '0.25rem 0 0.5rem',
+                                }}
+                            >
+                                {grades && grades.length > 0 && (
+                                    <GradeLegend
+                                        grades={grades}
+                                        onPick={selectByGrade}
+                                    />
+                                )}
+                                <NomenclatureLegend
+                                    nomenclatures={visibleNomenclatures(
+                                        unallocated,
+                                    )}
+                                    onPick={selectByNomenclature}
                                 />
-                            )}
-                            <NomenclatureLegend
-                                nomenclatures={visibleNomenclatures(unallocated)}
-                                onPick={selectByNomenclature}
-                            />
+                                {selectionLabel && (
+                                    <span
+                                        title="Click an empty target slot to place, or right-click for more."
+                                        style={{
+                                            fontSize: '0.85rem',
+                                            color: '#1976d2',
+                                            marginLeft: 'auto',
+                                        }}
+                                    >
+                                        {selectionLabel}
+                                    </span>
+                                )}
+                            </div>
                             {loading && <span>Loading...</span>}
                             {!loading && unallocated.length === 0 && (
                                 <div className="no-items-message">
@@ -551,19 +594,6 @@ export function AllocateProcessOutput({
                                     onToggleAll={onToggleAll}
                                     onItemContextMenu={openContextMenu}
                                 />
-                            )}
-                            {selectedItems.length > 0 && (
-                                <div
-                                    style={{
-                                        marginTop: '0.5rem',
-                                        fontSize: '0.85rem',
-                                        color: '#1976d2',
-                                    }}
-                                >
-                                    {selectedItems.length} selected &mdash;
-                                    click an empty target slot to place, or
-                                    right-click for more.
-                                </div>
                             )}
                         </div>
                     </SmartScrollContent>
@@ -660,6 +690,11 @@ export function AllocateProcessOutput({
                                                     }
                                                     dimItem={(item) =>
                                                         item.orderId !== orderId
+                                                    }
+                                                    mutedItem={(item) =>
+                                                        pendingItemIds.has(
+                                                            item.id,
+                                                        )
                                                     }
                                                 />
                                             </div>

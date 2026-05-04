@@ -28,6 +28,8 @@ type TareGroupRowProps = {
     selectedSlots?: Set<number>
     /** Optional dim predicate forwarded to TareSchematic. */
     dimItem?: (item: Item) => boolean
+    /** Optional mute predicate forwarded to TareSchematic — lighter than dim. */
+    mutedItem?: (item: Item) => boolean
     /** Forwarded to TareSchematic — render empty slots prominently. */
     highlightEmpty?: boolean
     /** Optional content rendered at the right end of the row header
@@ -51,6 +53,7 @@ export const TareGroupRow = ({
     selectedSlot,
     selectedSlots,
     dimItem,
+    mutedItem,
     highlightEmpty,
     headerExtra,
 }: TareGroupRowProps) => {
@@ -109,6 +112,7 @@ export const TareGroupRow = ({
                         selectedSlot={selectedSlot}
                         selectedSlots={selectedSlots}
                         dimItem={dimItem}
+                        mutedItem={mutedItem}
                         highlightEmpty={highlightEmpty}
                         onSlotClick={onSlotClick}
                         onSlotContextMenu={onSlotContextMenu}

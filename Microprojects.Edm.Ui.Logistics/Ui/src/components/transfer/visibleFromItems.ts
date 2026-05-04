@@ -28,3 +28,18 @@ export function visibleNomenclatures(items: Item[]): LegendEntry[] {
     }
     return [...map.entries()].map(([id, name]) => ({ id, name }))
 }
+
+/** Distinct nomenclature + grade names across the given items. Used to
+ *  build the compact selection label (amount + nomenclatures + grades). */
+export function selectionSummary(items: Item[]): {
+    nomenclatureNames: string[]
+    gradeNames: string[]
+} {
+    const noms = new Set<string>()
+    const grades = new Set<string>()
+    for (const it of items) {
+        if (it.nomenclatureName) noms.add(it.nomenclatureName)
+        if (it.gradeName) grades.add(it.gradeName)
+    }
+    return { nomenclatureNames: [...noms], gradeNames: [...grades] }
+}

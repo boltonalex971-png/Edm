@@ -26,6 +26,10 @@ type TareSchematicProps = {
     slotColor?: (item: Item) => string | undefined
     /** Optional predicate to dim slots whose item is "foreign" (e.g. another process). */
     dimItem?: (item: Item) => boolean
+    /** Optional predicate to mute slots whose item is in a transient state
+     *  (e.g. pending-move pre-Apply). Lighter than `dimItem`: only an
+     *  opacity drop, no grayscale. `dimItem` wins if both apply. */
+    mutedItem?: (item: Item) => boolean
 }
 
 type TooltipState = {
@@ -69,6 +73,7 @@ function SlotCell({
     highlightEmpty,
     slotColor,
     dimmed,
+    muted,
     onSlotClick,
     onSlotContextMenu,
     onMouseEnter,
@@ -79,6 +84,7 @@ function SlotCell({
     highlightEmpty: boolean
     slotColor?: string
     dimmed?: boolean
+    muted?: boolean
     onSlotClick?: (slot: SlotData, event: React.MouseEvent) => void
     onSlotContextMenu?: (slot: SlotData, event: React.MouseEvent) => void
     onMouseEnter: (slot: SlotData, e: React.MouseEvent) => void
@@ -113,7 +119,12 @@ function SlotCell({
               opacity: 0.55,
           }
         : occupied
-          ? { ...(baseStyle ?? {}), ...ownEmphasis, ...selectedEmphasis }
+          ? {
+                ...(baseStyle ?? {}),
+                ...ownEmphasis,
+                ...selectedEmphasis,
+                ...(muted ? { opacity: 0.55 } : {}),
+            }
           : { ...(baseStyle ?? {}), ...selectedEmphasis }
     return (
         <div
@@ -152,6 +163,7 @@ export const TareSchematic = (props: TareSchematicProps) => {
         highlightEmpty,
         slotColor,
         dimItem,
+        mutedItem,
     } = props
     const sx = tare.sizeX ?? 0
     const sy = tare.sizeY ?? 0
@@ -295,6 +307,11 @@ export const TareSchematic = (props: TareSchematicProps) => {
                                 dimmed={
                                     slot.item && dimItem
                                         ? dimItem(slot.item)
+                                        : false
+                                }
+                                muted={
+                                    slot.item && mutedItem
+                                        ? mutedItem(slot.item)
                                         : false
                                 }
                                 onSlotClick={onSlotClick}

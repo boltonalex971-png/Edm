@@ -35,7 +35,6 @@ export function NomenclatureLegend({
                 alignItems: 'center',
                 fontSize: '0.8rem',
                 color: '#555',
-                margin: '0.25rem 0 0.5rem',
             }}
         >
             <span style={{ fontWeight: 600, marginRight: 4 }}>

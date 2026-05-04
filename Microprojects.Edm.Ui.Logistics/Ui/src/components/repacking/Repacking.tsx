@@ -15,6 +15,7 @@ import {
     TransferContextMenu,
 } from '@logistics/components/transfer/TransferContextMenu'
 import {
+    selectionSummary,
     visibleGrades,
     visibleNomenclatures,
 } from '@logistics/components/transfer/visibleFromItems'
@@ -36,7 +37,7 @@ import { formatUnits } from '@logistics/utils/format'
 import { SmartScroll, SmartScrollContent } from '@microprojects/tools'
 import { Button } from '@progress/kendo-react-buttons'
 import type React from 'react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import './Repacking.css'
 
 export function Repacking() {
@@ -168,18 +169,6 @@ export function Repacking() {
         })
     }
 
-    // The Nomenclature combo is a *helper* — it identifies which kind of
-    // item the operator wants to relocate so the source pool can ignore
-    // unrelated items in a picked tare. It does NOT pre-populate the
-    // source pool: the operator picks tares explicitly via the source
-    // picker (or the Find button) and only matching items are added.
-    // Whenever the helper changes, drop the current source items so the
-    // pool reflects the new context.
-    useEffect(() => {
-        setSourceItems([])
-        clearSourceSelection()
-    }, [selectedNomenclatureId, clearSourceSelection])
-
     useEffect(() => {
         if (
             allowedTareTypeIds &&
@@ -189,6 +178,19 @@ export function Repacking() {
             setNewTareTypeId(undefined)
         }
     }, [allowedTareTypeIds, newTareTypeId])
+
+    // Seed the type picker with the nomenclature's default tare type once
+    // its allowed-list has loaded. Tracked per-nomenclature so an explicit
+    // user choice (or clear) afterwards isn't reverted on re-renders, but a
+    // switch to a different nomenclature re-seeds. Mirrors Allocate.
+    const seededForRef = useRef<UUID | null>(null)
+    useEffect(() => {
+        if (!selectedNomenclatureId || !allowedRows) return
+        if (seededForRef.current === selectedNomenclatureId) return
+        seededForRef.current = selectedNomenclatureId
+        const def = allowedRows.find((r) => r.isDefault)
+        if (def) setNewTareTypeId(def.tareTypeId)
+    }, [selectedNomenclatureId, allowedRows])
 
     const loadTareByBarcode = useCallback(async () => {
         if (!tareBarcode.trim()) return
@@ -275,6 +277,11 @@ export function Repacking() {
     const selectByNomenclature = (nomenclatureId: UUID) =>
         selectByPredicate((i) => i.nomenclatureId === nomenclatureId)
 
+    const pendingItemIds = useMemo(
+        () => new Set(pending.map((p) => p.itemId)),
+        [pending],
+    )
+
     const ctxTareOptions = useMemo<ContextTareOption[]>(
         () =>
             targetTares.map((t) => ({
@@ -314,7 +321,6 @@ export function Repacking() {
             if (created) {
                 addTargetTareToWorkspace(created, [])
                 setNewTarePicked(null)
-                setNewTareTypeId(undefined)
             }
         } catch (e: any) {
             alert(e.message || 'Failed to create tare')
@@ -420,9 +426,17 @@ export function Repacking() {
 
     const reset = () => {
         setSubmitResult(undefined)
+        // Restore pending-moved items to the source pool. Repacking
+        // removes items from `sourceItems` on move, so a hook-only reset
+        // would leave them stranded once the target tares roll back their
+        // pending items. Source and target tares themselves stay loaded.
+        const restored = targetTares.flatMap((t) =>
+            t.items.filter((i) => pending.some((p) => p.itemId === i.id)),
+        )
+        if (restored.length > 0) {
+            setSourceItems((prev) => [...prev, ...restored])
+        }
         resetTransfer()
-        updateTargetTares(() => [])
-        setSourceItems([])
     }
 
     const selectedNomenclature = findInHierarchy(
@@ -430,16 +444,37 @@ export function Repacking() {
         selectedNomenclatureId,
     ) as Nomenclature | null
 
+    const selectedSourceItems = useMemo(
+        () => sourceItems.filter((i) => selectedSourceItemIds.has(i.id)),
+        [sourceItems, selectedSourceItemIds],
+    )
+
     const selectedSourceTotals = useMemo(() => {
         let qty = 0
         let units: string | undefined
-        for (const item of sourceItems) {
-            if (!selectedSourceItemIds.has(item.id)) continue
+        for (const item of selectedSourceItems) {
             qty += item.quantity ?? 0
             units ??= item.tareTareTypeUnits
         }
         return { qty, units }
-    }, [sourceItems, selectedSourceItemIds])
+    }, [selectedSourceItems])
+
+    const selectionLabel = useMemo(() => {
+        if (selectedSourceItems.length === 0) return null
+        const { nomenclatureNames, gradeNames } = selectionSummary(
+            selectedSourceItems,
+        )
+        const amount = formatUnits(
+            selectedSourceTotals.qty,
+            selectedSourceTotals.units,
+            selectedNomenclature?.countable,
+        )
+        const segments = [amount]
+        if (nomenclatureNames.length > 0)
+            segments.push(nomenclatureNames.join(', '))
+        if (gradeNames.length > 0) segments.push(gradeNames.join(', '))
+        return segments.join(' · ')
+    }, [selectedSourceItems, selectedSourceTotals, selectedNomenclature])
 
     return (
         <div className="repacking-page">
@@ -499,7 +534,7 @@ export function Repacking() {
                                 />
                                 <Button
                                     onClick={loadTareByBarcode}
-                                    disabled={!selectedNomenclatureId}
+                                    disabled={!tareBarcode.trim()}
                                 >
                                     Find
                                 </Button>
@@ -510,10 +545,7 @@ export function Repacking() {
                             <HierarchyPicker
                                 data={nomenclatures}
                                 value={selectedNomenclatureId}
-                                onChange={(v) => {
-                                    setSelectedNomenclatureId(v)
-                                    reset()
-                                }}
+                                onChange={setSelectedNomenclatureId}
                                 width={300}
                                 placeholder="Select nomenclature..."
                             />
@@ -521,14 +553,37 @@ export function Repacking() {
                     </div>
                     <div className="repacking-panel source">
                         <h3>Source tares</h3>
-                        <GradeLegend
-                            grades={visibleGrades(sourceItems)}
-                            onPick={selectByGrade}
-                        />
-                        <NomenclatureLegend
-                            nomenclatures={visibleNomenclatures(sourceItems)}
-                            onPick={selectByNomenclature}
-                        />
+                        <div
+                            style={{
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                alignItems: 'center',
+                                columnGap: '1rem',
+                                rowGap: '0.25rem',
+                                margin: '0.25rem 0 0.5rem',
+                            }}
+                        >
+                            <GradeLegend
+                                grades={visibleGrades(sourceItems)}
+                                onPick={selectByGrade}
+                            />
+                            <NomenclatureLegend
+                                nomenclatures={visibleNomenclatures(sourceItems)}
+                                onPick={selectByNomenclature}
+                            />
+                            {selectionLabel && (
+                                <span
+                                    title="Click an empty target slot to place. Shift+click for range, Ctrl/Cmd+click to toggle. Right-click for more."
+                                    style={{
+                                        fontSize: '0.85rem',
+                                        color: '#1976d2',
+                                        marginLeft: 'auto',
+                                    }}
+                                >
+                                    {selectionLabel}
+                                </span>
+                            )}
+                        </div>
                         {sourceTares.length === 0 && (
                             <div className="no-items-message">
                                 {selectedNomenclatureId
@@ -584,24 +639,6 @@ export function Repacking() {
                                 />
                             )
                         })}
-                        {selectedSourceItemIds.size > 0 && (
-                            <div
-                                style={{
-                                    marginTop: '0.5rem',
-                                    fontSize: '0.85rem',
-                                    color: '#1976d2',
-                                }}
-                            >
-                                {formatUnits(
-                                    selectedSourceTotals.qty,
-                                    selectedSourceTotals.units,
-                                    selectedNomenclature?.countable,
-                                )}{' '}
-                                selected — click an empty target slot to place
-                                them (Shift+click for range, Ctrl/Cmd+click to
-                                toggle).
-                            </div>
-                        )}
                     </div>
                 </SmartScrollContent>
 
@@ -729,6 +766,9 @@ export function Repacking() {
                                         selectedTargetSlot?.tareId === t.id
                                             ? selectedTargetSlot.address
                                             : undefined
+                                    }
+                                    mutedItem={(item) =>
+                                        pendingItemIds.has(item.id)
                                     }
                                     headerExtra={
                                         <Button
