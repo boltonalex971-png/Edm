@@ -41,6 +41,29 @@ export function pruneHierarchy(
     return out
 }
 
+// Drop outdated leaves (auto-fork has produced a successor) and folders that
+// become empty as a result. The currently selected `keepId` is preserved even
+// when outdated so existing references on saved records still resolve to a
+// readable label in the picker input.
+export function dropOutdated(
+    nodes: TreeDataItem[] | undefined,
+    keepId: UUID | undefined,
+): TreeDataItem[] {
+    if (!nodes) return []
+    const out: TreeDataItem[] = []
+    for (const n of nodes) {
+        if (n.isFolder) {
+            const children = dropOutdated(n.items, keepId)
+            if (children.length > 0) {
+                out.push({ ...n, items: children })
+            }
+        } else if (!n.outdated || n.id === keepId) {
+            out.push(n)
+        }
+    }
+    return out
+}
+
 // Reusable canvas context for text measurement — created lazily on first use.
 let _measureCtx: CanvasRenderingContext2D | null | undefined
 function getMeasureCtx(): CanvasRenderingContext2D | null {
@@ -115,6 +138,13 @@ export function HierarchyPicker({
     style,
     width,
 }: HierarchyPickerProps) {
+    // Outdated (auto-forked) leaves never appear in the dropdown; the current
+    // value is preserved so existing references still display their label.
+    const visibleData = useMemo(
+        () => dropOutdated(data, value),
+        [data, value],
+    )
+
     // Auto-size to the data on every reload. The wrapper is used to read
     // the actual rendered font (Kendo theme + browser size) so the canvas
     // measurement matches what the user sees.
@@ -122,7 +152,7 @@ export function HierarchyPicker({
     const [labelPx, setLabelPx] = useState<number>()
 
     useEffect(() => {
-        if (!data || data.length === 0) {
+        if (visibleData.length === 0) {
             setLabelPx(undefined)
             return
         }
@@ -132,7 +162,7 @@ export function HierarchyPicker({
         const font =
             computed?.font ||
             `${computed?.fontSize ?? '14px'} ${computed?.fontFamily ?? 'sans-serif'}`
-        const { labelPx } = measureTree(data, font, 24)
+        const { labelPx } = measureTree(visibleData, font, 24)
         // Picker chrome: chevron, optional clear (X), inner padding ≈ 56px.
         if (labelPx > 0) setLabelPx(Math.ceil(labelPx + 56))
         else setLabelPx(undefined)
@@ -142,7 +172,7 @@ export function HierarchyPicker({
         // popupSettings.width is silently ignored. Instead the popup gets
         // a custom class (below) and App.css lets the popup size itself
         // to the widest row via `width: max-content !important`.
-    }, [data])
+    }, [visibleData])
 
     const mergedStyle = useMemo<React.CSSProperties>(() => {
         if (width != null) {
@@ -197,12 +227,12 @@ export function HierarchyPicker({
     return (
         <span ref={wrapperRef}>
             <DropDownTree
-                data={data || []}
+                data={visibleData}
                 dataItemKey="id"
                 textField="name"
                 subItemsField="items"
                 expandField="expanded"
-                value={findInHierarchy(data, value)}
+                value={findInHierarchy(visibleData, value)}
                 onChange={(e: DropDownTreeChangeEvent) => {
                     const sel = e.value as TreeDataItem | null
                     if (!sel) {
