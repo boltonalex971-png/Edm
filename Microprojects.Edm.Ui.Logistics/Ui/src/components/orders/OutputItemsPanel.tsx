@@ -107,6 +107,17 @@ export function OutputItemsPanel({
                 {items.map((item) => {
                     const color = colorForGradeId(item.gradeId)
                     const selected = selectedSet.has(item.id)
+                    // Selection indicator stays color-independent — the
+                    // grade tint is set inline so it would otherwise hide
+                    // the .tare-slot.selected CSS rule. Same recipe as
+                    // TareSchematic so both screens read identically.
+                    const selectedStyle: React.CSSProperties = selected
+                        ? {
+                              boxShadow:
+                                  '0 0 0 2px #1976d2, inset 0 0 0 2px rgba(255,255,255,0.85)',
+                              borderColor: '#1976d2',
+                          }
+                        : {}
                     return (
                         <div
                             key={item.id}
@@ -117,14 +128,15 @@ export function OutputItemsPanel({
                             ]
                                 .filter(Boolean)
                                 .join(' ')}
-                            style={
-                                color
+                            style={{
+                                ...(color
                                     ? {
                                           background: color,
                                           borderColor: color,
                                       }
-                                    : undefined
-                            }
+                                    : {}),
+                                ...selectedStyle,
+                            }}
                             onClick={(e) => onSlotClick(item, e)}
                             onContextMenu={
                                 onItemContextMenu

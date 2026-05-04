@@ -17,6 +17,9 @@ type TareSchematicProps = {
     selectedSlot?: number
     selectedSlots?: Set<number>
     onSlotClick?: (slot: SlotData, event: React.MouseEvent) => void
+    /** Optional right-click handler on a slot. Caller is expected to call
+     *  e.preventDefault() to suppress the native menu. */
+    onSlotContextMenu?: (slot: SlotData, event: React.MouseEvent) => void
     highlightEmpty?: boolean
     label?: string
     /** Optional tint for occupied slots based on item (e.g. grade color). */
@@ -67,6 +70,7 @@ function SlotCell({
     slotColor,
     dimmed,
     onSlotClick,
+    onSlotContextMenu,
     onMouseEnter,
     onMouseLeave,
 }: {
@@ -76,6 +80,7 @@ function SlotCell({
     slotColor?: string
     dimmed?: boolean
     onSlotClick?: (slot: SlotData, event: React.MouseEvent) => void
+    onSlotContextMenu?: (slot: SlotData, event: React.MouseEvent) => void
     onMouseEnter: (slot: SlotData, e: React.MouseEvent) => void
     onMouseLeave: () => void
 }) {
@@ -86,20 +91,30 @@ function SlotCell({
             ? { background: slotColor, borderColor: slotColor }
             : undefined
     const ownEmphasis: React.CSSProperties =
-        occupied && !dimmed
+        occupied && !dimmed && !selected
             ? {
                   boxShadow: 'inset 0 0 0 1.5px rgba(0,0,0,0.32)',
                   borderColor: 'rgba(0,0,0,0.32)',
               }
             : {}
+    // Selected items need a strong, color-independent indicator: an outer
+    // ring + thick inner border that wins over the per-grade tint inline
+    // style (which would otherwise hide the .tare-slot.selected CSS rule).
+    const selectedEmphasis: React.CSSProperties = selected
+        ? {
+              boxShadow:
+                  '0 0 0 2px #1976d2, inset 0 0 0 2px rgba(255,255,255,0.85)',
+              borderColor: '#1976d2',
+          }
+        : {}
     const style: React.CSSProperties | undefined = dimmed
         ? {
               filter: 'grayscale(1)',
               opacity: 0.55,
           }
         : occupied
-          ? { ...(baseStyle ?? {}), ...ownEmphasis }
-          : baseStyle
+          ? { ...(baseStyle ?? {}), ...ownEmphasis, ...selectedEmphasis }
+          : { ...(baseStyle ?? {}), ...selectedEmphasis }
     return (
         <div
             className={[
@@ -110,6 +125,11 @@ function SlotCell({
             ].join(' ')}
             style={style}
             onClick={(e) => onSlotClick?.(slot, e)}
+            onContextMenu={
+                onSlotContextMenu
+                    ? (e) => onSlotContextMenu(slot, e)
+                    : undefined
+            }
             onMouseEnter={(e) => onMouseEnter(slot, e)}
             onMouseLeave={onMouseLeave}
         >
@@ -128,6 +148,7 @@ export const TareSchematic = (props: TareSchematicProps) => {
         selectedSlot,
         selectedSlots,
         onSlotClick,
+        onSlotContextMenu,
         highlightEmpty,
         slotColor,
         dimItem,
@@ -277,6 +298,7 @@ export const TareSchematic = (props: TareSchematicProps) => {
                                         : false
                                 }
                                 onSlotClick={onSlotClick}
+                                onSlotContextMenu={onSlotContextMenu}
                                 onMouseEnter={showTooltip}
                                 onMouseLeave={hideTooltip}
                             />

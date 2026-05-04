@@ -1,4 +1,5 @@
-import type { Grade, TareInfo, UUID } from '@logistics/data/types'
+import type { LegendEntry } from '@logistics/components/transfer/visibleFromItems'
+import type { TareInfo, UUID } from '@logistics/data/types'
 import { colorForGradeId } from '@logistics/utils/gradePalette'
 import { useEffect } from 'react'
 
@@ -7,16 +8,17 @@ export type ContextTareOption = TareInfo & {
     capacity: number
 }
 
-type AllocateContextMenuProps = {
+type TransferContextMenuProps = {
     x: number
     y: number
-    grades: Grade[]
     tares: ContextTareOption[]
     targetCount: number
     canAutofill: boolean
     onAutofillAll: () => void
     onFillTare: (tareId: UUID) => void
-    onAssignGrade: (gradeId: UUID | undefined) => void
+    /** Grade section is hidden unless both `grades` and `onAssignGrade` are provided. */
+    grades?: LegendEntry[]
+    onAssignGrade?: (gradeId: UUID | undefined) => void
     onClose: () => void
 }
 
@@ -50,7 +52,7 @@ const DIVIDER: React.CSSProperties = {
     margin: '4px 0',
 }
 
-export function AllocateContextMenu({
+export function TransferContextMenu({
     x,
     y,
     grades,
@@ -61,7 +63,8 @@ export function AllocateContextMenu({
     onFillTare,
     onAssignGrade,
     onClose,
-}: AllocateContextMenuProps) {
+}: TransferContextMenuProps) {
+    const showGrades = !!grades && grades.length > 0 && !!onAssignGrade
     useEffect(() => {
         const onKey = (e: KeyboardEvent) => {
             if (e.key === 'Escape') onClose()
@@ -132,15 +135,15 @@ export function AllocateContextMenu({
                         })}
                     </>
                 )}
-                {grades.length > 0 && (
+                {showGrades && (
                     <>
                         <div style={DIVIDER} />
                         <div style={HEADER_STYLE}>Grades</div>
-                        {grades.map((g) => (
+                        {grades!.map((g) => (
                             <div
                                 key={g.id}
                                 style={ROW_STYLE}
-                                onClick={() => onAssignGrade(g.id)}
+                                onClick={() => onAssignGrade!(g.id)}
                             >
                                 <span
                                     style={{
@@ -157,7 +160,7 @@ export function AllocateContextMenu({
                         ))}
                         <div
                             style={ROW_STYLE}
-                            onClick={() => onAssignGrade(undefined)}
+                            onClick={() => onAssignGrade!(undefined)}
                         >
                             <span
                                 style={{

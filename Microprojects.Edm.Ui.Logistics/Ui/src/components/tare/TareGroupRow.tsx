@@ -20,6 +20,8 @@ type TareGroupRowProps = {
     onRowClick?: () => void
     /** Click on a slot inside the schematic. */
     onSlotClick?: (slot: SlotData, e: React.MouseEvent) => void
+    /** Right-click on a slot inside the schematic. */
+    onSlotContextMenu?: (slot: SlotData, e: React.MouseEvent) => void
     /** Single-slot highlight. */
     selectedSlot?: number
     /** Multi-slot highlight. */
@@ -45,6 +47,7 @@ export const TareGroupRow = ({
     onToggleExpanded,
     onRowClick,
     onSlotClick,
+    onSlotContextMenu,
     selectedSlot,
     selectedSlots,
     dimItem,
@@ -108,6 +111,7 @@ export const TareGroupRow = ({
                         dimItem={dimItem}
                         highlightEmpty={highlightEmpty}
                         onSlotClick={onSlotClick}
+                        onSlotContextMenu={onSlotContextMenu}
                     />
                 </div>
             )}

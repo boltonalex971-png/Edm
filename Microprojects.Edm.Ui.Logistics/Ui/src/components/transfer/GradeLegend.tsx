@@ -1,8 +1,9 @@
-import type { Grade, UUID } from '@logistics/data/types'
+import type { LegendEntry } from '@logistics/components/transfer/visibleFromItems'
+import type { UUID } from '@logistics/data/types'
 import { colorForGradeId } from '@logistics/utils/gradePalette'
 
 type GradeLegendProps = {
-    grades: Grade[]
+    grades: LegendEntry[]
     /** Click handler: receives the grade id, or `null` for the "No grade" chip. */
     onPick?: (gradeId: UUID | null) => void
 }
