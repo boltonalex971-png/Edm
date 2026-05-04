@@ -1,6 +1,7 @@
 import React, {useState} from "react";
 import {Route, MemoryRouter, Switch} from "react-router";
 import {Layout} from "./components/Layout.js";
+import {Changelog} from "./components/Changelog";
 import {Home} from "./components/home/Home";
 import {Dashboard} from "./components/dashboard/Dashboard";
 import {Config} from "./components/config/Config";
@@ -36,6 +37,7 @@ export default function App() {
                 <Switch>
                     <Route path='/operations/:id' component={OperationLayout}/>
                     <Layout>
+                        <Route path="/changes" component={Changelog}/>
                         {user && userRole &&
                             <>
                                 <Route exact path="/" component={Home}/>

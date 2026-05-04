@@ -1,17 +1,28 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import { Box, Typography, Divider, Link as MuiLink, Stack, Chip } from '@mui/material';
+import { Box, Typography, Divider, Stack, Chip } from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
 import { NavMenu } from './NavMenu';
+import api from './api';
 import styles from './Layout.module.scss';
 
 export const Layout = (props) => {
     const currYear = new Date().getFullYear();
-    const version = "0.1.0"; // From package.json
+    const [versions, setVersions] = useState(null);
+
+    useEffect(() => {
+        const controller = new AbortController();
+        fetch(`${api.meta}/version`, { credentials: 'include', signal: controller.signal })
+            .then((r) => (r.ok ? r.json() : null))
+            .then((v) => v && setVersions(v))
+            .catch(() => { /* leave dashes if unavailable */ });
+        return () => controller.abort();
+    }, []);
 
     return (
         <Box className={styles.layoutRoot}>
             <NavMenu />
-            
+
             <Box component="main" className={styles.mainContent}>
                 <Box className={styles.detailWrapper}>
                     {props.children}
@@ -33,22 +44,23 @@ export const Layout = (props) => {
                 </Stack>
 
                 <Stack direction="row" spacing={2} alignItems="center">
-                    <Chip 
-                        label={`v ${version}`} 
-                        size="small" 
-                        variant="outlined" 
+                    <Chip
+                        label={`Main ${versions?.main ?? '—'}`}
+                        size="small"
+                        variant="outlined"
                         className={styles.versionChip}
                     />
-                    <MuiLink href="#" className={styles.footerLink}>
+                    <Chip
+                        label={`EDM ${versions?.product ?? '—'}`}
+                        size="small"
+                        variant="outlined"
+                        className={styles.versionChip}
+                    />
+                    <RouterLink to="/changes" className={styles.footerLink}>
                         <Typography variant="caption" color="textSecondary">
-                            Documentation
+                            What's new
                         </Typography>
-                    </MuiLink>
-                    <MuiLink href="#" className={styles.footerLink}>
-                        <Typography variant="caption" color="textSecondary">
-                            Support
-                        </Typography>
-                    </MuiLink>
+                    </RouterLink>
                 </Stack>
             </Box>
         </Box>
