@@ -7,10 +7,18 @@ import {
 import { PageTitle } from '@logistics/components/PageTitle'
 import { TareBarcodePicker } from '@logistics/components/tare/TareBarcodePicker'
 import { TareGroupRow } from '@logistics/components/tare/TareGroupRow'
+import type { SlotData } from '@logistics/components/tare/TareSchematic'
+import { GradeLegend } from '@logistics/components/transfer/GradeLegend'
+import { NomenclatureLegend } from '@logistics/components/transfer/NomenclatureLegend'
 import {
-    type SlotData,
-    TareSchematic,
-} from '@logistics/components/tare/TareSchematic'
+    type ContextTareOption,
+    TransferContextMenu,
+} from '@logistics/components/transfer/TransferContextMenu'
+import {
+    selectionSummary,
+    visibleGrades,
+    visibleNomenclatures,
+} from '@logistics/components/transfer/visibleFromItems'
 import type {
     AvailableTare,
     Item,
@@ -20,22 +28,17 @@ import type {
     RepackRequest,
     RepackResult,
     TareInfo,
-    TareType,
     TreeDataItem,
     UUID,
 } from '@logistics/data/types'
 import { getData, postData, useGet } from '@logistics/hooks/hooks'
-import { useSlotSelection } from '@logistics/hooks/useSlotSelection'
+import { useTareTransfer } from '@logistics/hooks/useTareTransfer'
 import { formatUnits } from '@logistics/utils/format'
 import { SmartScroll, SmartScrollContent } from '@microprojects/tools'
 import { Button } from '@progress/kendo-react-buttons'
 import type React from 'react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import './Repacking.css'
-
-type TargetTareState = TareInfo & {
-    items: Item[]
-}
 
 export function Repacking() {
     const [[nomenclatures]] = useGet<TreeDataItem[]>(
@@ -72,22 +75,41 @@ export function Repacking() {
 
     const [sourceItems, setSourceItems] = useState<Item[]>([])
 
-    const [targetTares, setTargetTares] = useState<TargetTareState[]>([])
     // Multi-select source items: plain click → single, Ctrl/Cmd+click →
     // toggle, Shift+click within the same tare → range. Click on an empty
     // target slot then places the selected items starting at that address.
-    // Selection state + modifier-aware handling lives in useSlotSelection;
-    // we just supply the flat sourceItems list and a per-tare scopeKey so
-    // Shift-range stays inside one tare.
+    // The shared workspace hook owns selection, target-tare bookkeeping,
+    // pending-moves, and context-menu state so Repacking and Allocate can't
+    // drift; `onItemConsumed` drops the item from this screen's local pool
+    // (Repacking's source isn't server-managed).
     const {
         selected: selectedSourceItemIds,
-        handleClick: onSourceItemClick,
+        handleSlotClick: onSourceItemClick,
         clear: clearSourceSelection,
-    } = useSlotSelection(sourceItems)
-    const [selectedTargetSlot, setSelectedTargetSlot] = useState<{
-        tareId: UUID
-        address: number
-    }>()
+        selectByPredicate,
+        targetTares,
+        addTargetTare: addTargetTareToWorkspace,
+        removeTargetTare: removeTargetTareFromWorkspace,
+        updateTargetTares,
+        expandedTareIds: expandedTarget,
+        toggleTareExpanded: toggleExpandedTarget,
+        pending,
+        distribute,
+        placeAt,
+        reset: resetTransfer,
+        clearPending,
+        pendingTargetSlot: selectedTargetSlot,
+        setPendingTargetSlot: setSelectedTargetSlot,
+        ctxMenu,
+        openContextMenu,
+        closeContextMenu,
+        ctxEligibleIds,
+    } = useTareTransfer<Item>({
+        sourceItems,
+        itemScopeKey: (i) => i.tareId || i.tareBarcode || 'no-tare',
+        onItemConsumed: (id) =>
+            setSourceItems((prev) => prev.filter((i) => i.id !== id)),
+    })
 
     // Single state for each picker — the picker emits an AvailableTare-like
     // object (with `.id` for an existing pick, only `.barcode` for a typed
@@ -116,25 +138,15 @@ export function Repacking() {
         [nomenclatures, selectedNomenclatureId],
     )
 
-    const [pendingMoves, setPendingMoves] = useState<RepackMove[]>([])
     const [submitResult, setSubmitResult] = useState<RepackResult>()
     const [submitting, setSubmitting] = useState(false)
 
-    // Expand/collapse state per source/target tare — same pattern as
-    // TareItemsPanel.
+    // Source-side expansion is screen-local (the hook only tracks target
+    // tares — source tares are derived from sourceItems on every render).
     const [expandedSource, setExpandedSource] = useState<Set<string>>(new Set())
-    const [expandedTarget, setExpandedTarget] = useState<Set<string>>(new Set())
 
     const toggleExpandedSource = (key: string) =>
         setExpandedSource((prev) => {
-            const next = new Set(prev)
-            if (next.has(key)) next.delete(key)
-            else next.add(key)
-            return next
-        })
-
-    const toggleExpandedTarget = (key: string) =>
-        setExpandedTarget((prev) => {
             const next = new Set(prev)
             if (next.has(key)) next.delete(key)
             else next.add(key)
@@ -157,18 +169,6 @@ export function Repacking() {
         })
     }
 
-    // The Nomenclature combo is a *helper* — it identifies which kind of
-    // item the operator wants to relocate so the source pool can ignore
-    // unrelated items in a picked tare. It does NOT pre-populate the
-    // source pool: the operator picks tares explicitly via the source
-    // picker (or the Find button) and only matching items are added.
-    // Whenever the helper changes, drop the current source items so the
-    // pool reflects the new context.
-    useEffect(() => {
-        setSourceItems([])
-        clearSourceSelection()
-    }, [selectedNomenclatureId, clearSourceSelection])
-
     useEffect(() => {
         if (
             allowedTareTypeIds &&
@@ -178,6 +178,19 @@ export function Repacking() {
             setNewTareTypeId(undefined)
         }
     }, [allowedTareTypeIds, newTareTypeId])
+
+    // Seed the type picker with the nomenclature's default tare type once
+    // its allowed-list has loaded. Tracked per-nomenclature so an explicit
+    // user choice (or clear) afterwards isn't reverted on re-renders, but a
+    // switch to a different nomenclature re-seeds. Mirrors Allocate.
+    const seededForRef = useRef<UUID | null>(null)
+    useEffect(() => {
+        if (!selectedNomenclatureId || !allowedRows) return
+        if (seededForRef.current === selectedNomenclatureId) return
+        seededForRef.current = selectedNomenclatureId
+        const def = allowedRows.find((r) => r.isDefault)
+        if (def) setNewTareTypeId(def.tareTypeId)
+    }, [selectedNomenclatureId, allowedRows])
 
     const loadTareByBarcode = useCallback(async () => {
         if (!tareBarcode.trim()) return
@@ -254,103 +267,38 @@ export function Repacking() {
             setSelectedTargetSlot({ tareId, address: slot.address })
             return
         }
-        moveSelectedItemsTo(tareId, slot.address)
+        placeAt(tareId, slot.address)
     }
 
-    /** Place every currently-selected source item into the target tare,
-     *  starting at `startAddress` and skipping already-occupied slots. */
-    const moveSelectedItemsTo = (
-        targetTareId: UUID,
-        startAddress: number,
-    ) => {
-        const target = targetTares.find((t) => t.id === targetTareId)
-        if (!target) return
+    const autoFill = () => distribute(sourceItems.map((i) => i.id))
 
-        // Items in click-order: derived from sourceItems by address.
-        const itemsToPlace = sourceItems
-            .filter((i) => selectedSourceItemIds.has(i.id))
-            .sort((a, b) => (a.address ?? 0) - (b.address ?? 0))
-        if (itemsToPlace.length === 0) return
+    const selectByGrade = (gradeId: UUID | null) =>
+        selectByPredicate((i) => (i.gradeId ?? null) === gradeId)
+    const selectByNomenclature = (nomenclatureId: UUID) =>
+        selectByPredicate((i) => i.nomenclatureId === nomenclatureId)
 
-        const occupied = new Set(target.items.map((i) => i.address))
-        const cap = Math.floor(target.capacity)
-        const placed: { item: Item; address: number }[] = []
-        let queueIdx = 0
-        let addr = startAddress
-        while (queueIdx < itemsToPlace.length && addr <= cap) {
-            if (!occupied.has(addr)) {
-                placed.push({ item: itemsToPlace[queueIdx], address: addr })
-                occupied.add(addr)
-                queueIdx++
-            }
-            addr++
-        }
-        if (placed.length === 0) return
+    const pendingItemIds = useMemo(
+        () => new Set(pending.map((p) => p.itemId)),
+        [pending],
+    )
 
-        const placedIds = new Set(placed.map((p) => p.item.id))
-        const newMoves: RepackMove[] = placed.map(({ item, address }) => ({
-            sourceItemId: item.id,
-            targetTareId,
-            targetAddress: address,
-            quantity: item.quantity,
-        }))
+    const ctxTareOptions = useMemo<ContextTareOption[]>(
+        () =>
+            targetTares.map((t) => ({
+                ...t,
+                occupied: t.items.length,
+                capacity: Math.floor(t.capacity),
+            })),
+        [targetTares],
+    )
 
-        setPendingMoves((prev) => [
-            ...prev.filter((m) => !placedIds.has(m.sourceItemId)),
-            ...newMoves,
-        ])
-        setSourceItems((prev) => prev.filter((i) => !placedIds.has(i.id)))
-        setTargetTares((prev) =>
-            prev.map((t) =>
-                t.id !== targetTareId
-                    ? t
-                    : {
-                          ...t,
-                          items: [
-                              ...t.items,
-                              ...placed.map(({ item, address }) => ({
-                                  ...item,
-                                  address,
-                              })),
-                          ],
-                      },
-            ),
-        )
-        clearSourceSelection()
-        setSelectedTargetSlot(undefined)
+    const onCtxAutofill = () => {
+        distribute(ctxEligibleIds)
+        closeContextMenu()
     }
-
-    const autoFill = () => {
-        if (targetTares.length === 0 || sourceItems.length === 0) return
-
-        const remaining = [...sourceItems]
-        const newMoves: RepackMove[] = [...pendingMoves]
-        const updatedTargets = targetTares.map((t) => {
-            const capacity = Math.floor(t.capacity)
-            const occupiedAddresses = new Set(t.items.map((i) => i.address))
-            const newItems = [...t.items]
-
-            for (
-                let addr = 1;
-                addr <= capacity && remaining.length > 0;
-                addr++
-            ) {
-                if (occupiedAddresses.has(addr)) continue
-                const item = remaining.shift()!
-                newItems.push({ ...item, address: addr })
-                newMoves.push({
-                    sourceItemId: item.id,
-                    targetTareId: t.id,
-                    targetAddress: addr,
-                    quantity: item.quantity,
-                })
-            }
-            return { ...t, items: newItems }
-        })
-
-        setPendingMoves(newMoves)
-        setSourceItems(remaining)
-        setTargetTares(updatedTargets)
+    const onCtxFillTare = (tareId: UUID) => {
+        distribute(ctxEligibleIds, tareId)
+        closeContextMenu()
     }
 
     const addTargetTare = async (existing?: TareInfo) => {
@@ -359,13 +307,7 @@ export function Repacking() {
             const items = await getData<Item[]>(
                 `${api.items}/tare/${existing.id}`,
             )
-            setTargetTares((prev) => [
-                ...prev,
-                { ...existing, items: items || [] },
-            ])
-            // Newly added tares open by default so the operator sees the
-            // schematic without an extra click.
-            setExpandedTarget((prev) => new Set(prev).add(existing.id))
+            addTargetTareToWorkspace(existing, items || [])
             return
         }
 
@@ -377,10 +319,8 @@ export function Repacking() {
                 tareTypeId: newTareTypeId,
             })
             if (created) {
-                setTargetTares((prev) => [...prev, { ...created, items: [] }])
-                setExpandedTarget((prev) => new Set(prev).add(created.id))
+                addTargetTareToWorkspace(created, [])
                 setNewTarePicked(null)
-                setNewTareTypeId(undefined)
             }
         } catch (e: any) {
             alert(e.message || 'Failed to create tare')
@@ -413,24 +353,45 @@ export function Repacking() {
         }
     }
 
+    /** Wrap the hook's removeTargetTare so any pending-moved items in this
+     *  tare flow back into the local source pool — Repacking moves remove
+     *  items from `sourceItems` (unlike Allocate where they stay in the
+     *  server-managed unallocated list). */
     const removeTargetTare = (tareId: UUID) => {
         const tare = targetTares.find((t) => t.id === tareId)
-        if (!tare) return
-        const movedBackItems = tare.items.filter((i) =>
-            pendingMoves.some((m) => m.sourceItemId === i.id),
-        )
-        setSourceItems((prev) => [...prev, ...movedBackItems])
-        setPendingMoves((prev) => prev.filter((m) => m.targetTareId !== tareId))
-        setTargetTares((prev) => prev.filter((t) => t.id !== tareId))
+        const movedBackItems =
+            tare?.items.filter((i) =>
+                pending.some((m) => m.itemId === i.id),
+            ) ?? []
+        if (movedBackItems.length > 0) {
+            setSourceItems((prev) => [...prev, ...movedBackItems])
+        }
+        removeTargetTareFromWorkspace(tareId)
     }
 
     const submitRepack = async () => {
-        if (!selectedNomenclatureId || pendingMoves.length === 0) return
+        if (!selectedNomenclatureId || pending.length === 0) return
         setSubmitting(true)
         try {
+            // Build RepackMove[] from the hook's generic pending records.
+            // Each pending entry's item now lives under its target tare —
+            // pull `quantity` from there since moved items have already
+            // left `sourceItems`.
+            const tareById = new Map(targetTares.map((t) => [t.id, t]))
+            const moves: RepackMove[] = pending.map((m) => {
+                const item = tareById.get(m.targetTareId)?.items.find(
+                    (i) => i.id === m.itemId,
+                )
+                return {
+                    sourceItemId: m.itemId,
+                    targetTareId: m.targetTareId,
+                    targetAddress: m.address,
+                    quantity: item?.quantity ?? 0,
+                }
+            })
             const request: RepackRequest = {
                 nomenclatureId: selectedNomenclatureId,
-                moves: pendingMoves,
+                moves,
             }
             const result = await postData<RepackResult>(
                 `${api.items}/repack`,
@@ -438,18 +399,19 @@ export function Repacking() {
             )
             setSubmitResult(result)
             if (result.errors.length === 0) {
-                setPendingMoves([])
-                // Source pool is operator-driven now — clear it and let
-                // the user re-pick tares for the next round.
+                clearPending()
+                // Source pool is operator-driven — clear it and let the
+                // user re-pick tares for the next round.
                 setSourceItems([])
-                const refreshed: TargetTareState[] = []
-                for (const t of targetTares) {
-                    const items = await getData<Item[]>(
-                        `${api.items}/tare/${t.id}`,
-                    )
-                    refreshed.push({ ...t, items: items || [] })
-                }
-                setTargetTares(refreshed)
+                const refreshed = await Promise.all(
+                    targetTares.map(async (t) => {
+                        const items = await getData<Item[]>(
+                            `${api.items}/tare/${t.id}`,
+                        )
+                        return { ...t, items: items || [] }
+                    }),
+                )
+                updateTargetTares(() => refreshed)
             }
         } catch (e: any) {
             setSubmitResult({
@@ -463,12 +425,18 @@ export function Repacking() {
     }
 
     const reset = () => {
-        setPendingMoves([])
         setSubmitResult(undefined)
-        clearSourceSelection()
-        setSelectedTargetSlot(undefined)
-        setTargetTares([])
-        setSourceItems([])
+        // Restore pending-moved items to the source pool. Repacking
+        // removes items from `sourceItems` on move, so a hook-only reset
+        // would leave them stranded once the target tares roll back their
+        // pending items. Source and target tares themselves stay loaded.
+        const restored = targetTares.flatMap((t) =>
+            t.items.filter((i) => pending.some((p) => p.itemId === i.id)),
+        )
+        if (restored.length > 0) {
+            setSourceItems((prev) => [...prev, ...restored])
+        }
+        resetTransfer()
     }
 
     const selectedNomenclature = findInHierarchy(
@@ -476,16 +444,37 @@ export function Repacking() {
         selectedNomenclatureId,
     ) as Nomenclature | null
 
+    const selectedSourceItems = useMemo(
+        () => sourceItems.filter((i) => selectedSourceItemIds.has(i.id)),
+        [sourceItems, selectedSourceItemIds],
+    )
+
     const selectedSourceTotals = useMemo(() => {
         let qty = 0
         let units: string | undefined
-        for (const item of sourceItems) {
-            if (!selectedSourceItemIds.has(item.id)) continue
+        for (const item of selectedSourceItems) {
             qty += item.quantity ?? 0
             units ??= item.tareTareTypeUnits
         }
         return { qty, units }
-    }, [sourceItems, selectedSourceItemIds])
+    }, [selectedSourceItems])
+
+    const selectionLabel = useMemo(() => {
+        if (selectedSourceItems.length === 0) return null
+        const { nomenclatureNames, gradeNames } = selectionSummary(
+            selectedSourceItems,
+        )
+        const amount = formatUnits(
+            selectedSourceTotals.qty,
+            selectedSourceTotals.units,
+            selectedNomenclature?.countable,
+        )
+        const segments = [amount]
+        if (nomenclatureNames.length > 0)
+            segments.push(nomenclatureNames.join(', '))
+        if (gradeNames.length > 0) segments.push(gradeNames.join(', '))
+        return segments.join(' · ')
+    }, [selectedSourceItems, selectedSourceTotals, selectedNomenclature])
 
     return (
         <div className="repacking-page">
@@ -545,7 +534,7 @@ export function Repacking() {
                                 />
                                 <Button
                                     onClick={loadTareByBarcode}
-                                    disabled={!selectedNomenclatureId}
+                                    disabled={!tareBarcode.trim()}
                                 >
                                     Find
                                 </Button>
@@ -556,10 +545,7 @@ export function Repacking() {
                             <HierarchyPicker
                                 data={nomenclatures}
                                 value={selectedNomenclatureId}
-                                onChange={(v) => {
-                                    setSelectedNomenclatureId(v)
-                                    reset()
-                                }}
+                                onChange={setSelectedNomenclatureId}
                                 width={300}
                                 placeholder="Select nomenclature..."
                             />
@@ -567,6 +553,37 @@ export function Repacking() {
                     </div>
                     <div className="repacking-panel source">
                         <h3>Source tares</h3>
+                        <div
+                            style={{
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                alignItems: 'center',
+                                columnGap: '1rem',
+                                rowGap: '0.25rem',
+                                margin: '0.25rem 0 0.5rem',
+                            }}
+                        >
+                            <GradeLegend
+                                grades={visibleGrades(sourceItems)}
+                                onPick={selectByGrade}
+                            />
+                            <NomenclatureLegend
+                                nomenclatures={visibleNomenclatures(sourceItems)}
+                                onPick={selectByNomenclature}
+                            />
+                            {selectionLabel && (
+                                <span
+                                    title="Click an empty target slot to place. Shift+click for range, Ctrl/Cmd+click to toggle. Right-click for more."
+                                    style={{
+                                        fontSize: '0.85rem',
+                                        color: '#1976d2',
+                                        marginLeft: 'auto',
+                                    }}
+                                >
+                                    {selectionLabel}
+                                </span>
+                            )}
+                        </div>
                         {sourceTares.length === 0 && (
                             <div className="no-items-message">
                                 {selectedNomenclatureId
@@ -603,6 +620,11 @@ export function Repacking() {
                                             e,
                                         )
                                     }
+                                    onSlotContextMenu={(slot, e) => {
+                                        if (slot.item) {
+                                            openContextMenu(slot.item, e)
+                                        }
+                                    }}
                                     headerExtra={
                                         <Button
                                             size="small"
@@ -617,24 +639,6 @@ export function Repacking() {
                                 />
                             )
                         })}
-                        {selectedSourceItemIds.size > 0 && (
-                            <div
-                                style={{
-                                    marginTop: '0.5rem',
-                                    fontSize: '0.85rem',
-                                    color: '#1976d2',
-                                }}
-                            >
-                                {formatUnits(
-                                    selectedSourceTotals.qty,
-                                    selectedSourceTotals.units,
-                                    selectedNomenclature?.countable,
-                                )}{' '}
-                                selected — click an empty target slot to place
-                                them (Shift+click for range, Ctrl/Cmd+click to
-                                toggle).
-                            </div>
-                        )}
                     </div>
                 </SmartScrollContent>
 
@@ -694,16 +698,16 @@ export function Repacking() {
                                 themeColor="success"
                                 onClick={submitRepack}
                                 disabled={
-                                    pendingMoves.length === 0 || submitting
+                                    pending.length === 0 || submitting
                                 }
                             >
                                 {submitting
                                     ? 'Saving...'
-                                    : `Apply (${pendingMoves.length} moves)`}
+                                    : `Apply (${pending.length} moves)`}
                             </Button>
                             <Button
                                 onClick={reset}
-                                disabled={pendingMoves.length === 0}
+                                disabled={pending.length === 0}
                             >
                                 Reset
                             </Button>
@@ -763,6 +767,9 @@ export function Repacking() {
                                             ? selectedTargetSlot.address
                                             : undefined
                                     }
+                                    mutedItem={(item) =>
+                                        pendingItemIds.has(item.id)
+                                    }
                                     headerExtra={
                                         <Button
                                             size="small"
@@ -780,6 +787,20 @@ export function Repacking() {
                     </div>
                 </SmartScrollContent>
             </SmartScroll>
+            {ctxMenu && (
+                <TransferContextMenu
+                    x={ctxMenu.x}
+                    y={ctxMenu.y}
+                    tares={ctxTareOptions}
+                    targetCount={ctxEligibleIds.length}
+                    canAutofill={
+                        targetTares.length > 0 && ctxEligibleIds.length > 0
+                    }
+                    onAutofillAll={onCtxAutofill}
+                    onFillTare={onCtxFillTare}
+                    onClose={closeContextMenu}
+                />
+            )}
         </div>
     )
 }

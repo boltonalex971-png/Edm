@@ -3,17 +3,22 @@ import {
     HierarchyPicker,
     pruneHierarchy,
 } from '@logistics/components/HierarchyPicker'
-import {
-    AllocateContextMenu,
-    type ContextTareOption,
-} from '@logistics/components/orders/AllocateContextMenu'
-import { GradeLegend } from '@logistics/components/orders/GradeLegend'
 import { OutputItemsPanel } from '@logistics/components/orders/OutputItemsPanel'
 import { TareBarcodePicker } from '@logistics/components/tare/TareBarcodePicker'
 import {
     type SlotData,
     TareSchematic,
 } from '@logistics/components/tare/TareSchematic'
+import { GradeLegend } from '@logistics/components/transfer/GradeLegend'
+import { NomenclatureLegend } from '@logistics/components/transfer/NomenclatureLegend'
+import {
+    type ContextTareOption,
+    TransferContextMenu,
+} from '@logistics/components/transfer/TransferContextMenu'
+import {
+    selectionSummary,
+    visibleNomenclatures,
+} from '@logistics/components/transfer/visibleFromItems'
 import type {
     AllocateOutputsRequest,
     AllocateOutputsResult,
@@ -27,7 +32,6 @@ import type {
     OrderOutputItems,
     OutputAllocation,
     TareInfo,
-    TareType,
     TreeDataItem,
     UUID,
 } from '@logistics/data/types'
@@ -36,22 +40,12 @@ import {
     useInvalidateEntities,
 } from '@logistics/hooks/entityRefresh'
 import { getData, postData, useGet } from '@logistics/hooks/hooks'
-import { useSlotSelection } from '@logistics/hooks/useSlotSelection'
+import { useTareTransfer } from '@logistics/hooks/useTareTransfer'
 import { SmartScroll, SmartScrollContent } from '@microprojects/tools'
 import { Button } from '@progress/kendo-react-buttons'
 import type React from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import '@logistics/components/repacking/Repacking.css'
-
-type TargetTareState = TareInfo & {
-    items: Item[]
-}
-
-type ContextMenuState = {
-    x: number
-    y: number
-    itemId: UUID
-}
 
 type AllocateProcessOutputProps = {
     orderId: UUID
@@ -110,14 +104,30 @@ export function AllocateProcessOutput({
         [processId],
     )
 
+    const transfer = useTareTransfer<Item>({ sourceItems: unallocated })
     const {
         selected: selectedItemIds,
         setSelected: setSelectedItemIds,
-        handleClick: onOutputSlotClick,
+        handleSlotClick: onOutputSlotClick,
         toggleAll: onToggleAll,
-    } = useSlotSelection(unallocated)
-
-    const [targetTares, setTargetTares] = useState<TargetTareState[]>([])
+        selectByPredicate,
+        targetTares,
+        addTargetTare: addTargetTareToWorkspace,
+        removeTargetTare,
+        updateTargetTares,
+        expandedTareIds,
+        toggleTareExpanded,
+        expandTare,
+        pending,
+        addMove,
+        distribute,
+        reset: resetTransfer,
+        clearPending,
+        ctxMenu,
+        openContextMenu,
+        closeContextMenu,
+        ctxEligibleIds,
+    } = transfer
 
     // Single source of truth for the "add target tare" input — emitted by
     // TareBarcodePicker. When `.id` is set the user picked an existing
@@ -128,34 +138,18 @@ export function AllocateProcessOutput({
     )
     const [newTareTypeId, setNewTareTypeId] = useState<UUID>()
 
-    const [pending, setPending] = useState<OutputAllocation[]>([])
     const [submitting, setSubmitting] = useState(false)
     const [submitResult, setSubmitResult] = useState<AllocateOutputsResult>()
     const [completing, setCompleting] = useState(false)
     const [error, setError] = useState<string>()
-    const [ctxMenu, setCtxMenu] = useState<ContextMenuState | null>(null)
-    const [expandedTareIds, setExpandedTareIds] = useState<Set<UUID>>(new Set())
 
-    const expandTare = (tareId: UUID) =>
-        setExpandedTareIds((prev) => {
-            if (prev.has(tareId)) return prev
-            const next = new Set(prev)
-            next.add(tareId)
-            return next
-        })
-
-    const toggleTareExpanded = (tareId: UUID) =>
-        setExpandedTareIds((prev) => {
-            const next = new Set(prev)
-            if (next.has(tareId)) next.delete(tareId)
-            else next.add(tareId)
-            return next
-        })
-
+    // Wipe selection + pending only when the order itself changes.
+    // `orderToken` rotates on every entity invalidation (e.g. assign-grade
+    // refetch) — selection must survive those refreshes.
     useEffect(() => {
         setSelectedItemIds(new Set())
-        setPending([])
-    }, [orderToken, orderId, setSelectedItemIds])
+        clearPending()
+    }, [orderId, setSelectedItemIds, clearPending])
 
     useEffect(() => {
         if (
@@ -210,7 +204,7 @@ export function AllocateProcessOutput({
                 }
             }
             if (cancelled) return
-            setTargetTares((prev) => {
+            updateTargetTares((prev) => {
                 const next = [...prev]
                 for (const [id, sample] of seeds) {
                     const items = fetched.get(id) ?? []
@@ -253,11 +247,7 @@ export function AllocateProcessOutput({
             const items = await getData<Item[]>(
                 `${api.items}/tare/${existing.id}`,
             )
-            setTargetTares((prev) => [
-                ...prev,
-                { ...existing, items: items || [] },
-            ])
-            expandTare(existing.id)
+            addTargetTareToWorkspace(existing, items || [])
             return
         }
 
@@ -268,8 +258,7 @@ export function AllocateProcessOutput({
                 tareTypeId: newTareTypeId,
             })
             if (created) {
-                setTargetTares((prev) => [...prev, { ...created, items: [] }])
-                expandTare(created.id)
+                addTargetTareToWorkspace(created, [])
                 setNewTarePicked(null)
             }
         } catch (e: any) {
@@ -305,31 +294,22 @@ export function AllocateProcessOutput({
         }
     }
 
-    const removeTargetTare = (tareId: UUID) => {
-        const tare = targetTares.find((t) => t.id === tareId)
-        if (!tare) return
-        const movedBackIds = new Set(
-            pending.filter((m) => m.tareId === tareId).map((m) => m.itemId),
-        )
-        setPending((prev) => prev.filter((m) => m.tareId !== tareId))
-        setTargetTares((prev) => prev.filter((t) => t.id !== tareId))
-        setExpandedTareIds((prev) => {
-            if (!prev.has(tareId)) return prev
-            const next = new Set(prev)
-            next.delete(tareId)
-            return next
-        })
-        setSelectedItemIds((prev) => {
-            const next = new Set(prev)
-            movedBackIds.forEach((id) => next.delete(id))
-            return next
-        })
-    }
-
     const selectedItems: Item[] = useMemo(
         () => unallocated.filter((i) => selectedItemIds.has(i.id)),
         [unallocated, selectedItemIds],
     )
+
+    const selectionLabel = useMemo(() => {
+        if (selectedItems.length === 0) return null
+        const { nomenclatureNames, gradeNames } = selectionSummary(
+            selectedItems,
+        )
+        const segments = [`${selectedItems.length} selected`]
+        if (nomenclatureNames.length > 0)
+            segments.push(nomenclatureNames.join(', '))
+        if (gradeNames.length > 0) segments.push(gradeNames.join(', '))
+        return segments.join(' · ')
+    }, [selectedItems])
 
     const pendingItemIds = useMemo(
         () => new Set(pending.map((p) => p.itemId)),
@@ -338,103 +318,27 @@ export function AllocateProcessOutput({
 
     const handleTargetSlotClick = (tareId: UUID, slot: SlotData) => {
         if (slot.item || selectedItems.length === 0) return
-        const item = selectedItems[0]
-        addMove(item, tareId, slot.address)
+        addMove(selectedItems[0], tareId, slot.address)
     }
-
-    const addMove = (item: Item, tareId: UUID, address?: number) => {
-        setPending((prev) => {
-            const filtered = prev.filter((m) => m.itemId !== item.id)
-            return [...filtered, { itemId: item.id, tareId, address }]
-        })
-        setTargetTares((prev) =>
-            prev.map((t) =>
-                t.id === tareId
-                    ? { ...t, items: [...t.items, { ...item, address }] }
-                    : t,
-            ),
-        )
-        setSelectedItemIds((prev) => {
-            const next = new Set(prev)
-            next.delete(item.id)
-            return next
-        })
-    }
-
-    const distribute = (itemIds: UUID[], onlyTareId?: UUID) => {
-        const itemsToFill = unallocated.filter(
-            (i) => itemIds.includes(i.id) && !pendingItemIds.has(i.id),
-        )
-        if (itemsToFill.length === 0) return
-        const tareIdsInScope = onlyTareId
-            ? new Set([onlyTareId])
-            : new Set(targetTares.map((t) => t.id))
-        if (tareIdsInScope.size === 0) return
-
-        const remaining = [...itemsToFill]
-        const newPending: OutputAllocation[] = [...pending]
-        const filledTareIds = new Set<UUID>()
-        const updated = targetTares.map((t) => {
-            if (!tareIdsInScope.has(t.id)) return t
-            const capacity = Math.floor(t.capacity)
-            const occupied = new Set(t.items.map((i) => i.address))
-            const items = [...t.items]
-            const sizeBefore = items.length
-            for (
-                let addr = 1;
-                addr <= capacity && remaining.length > 0;
-                addr++
-            ) {
-                if (occupied.has(addr)) continue
-                const item = remaining.shift()!
-                items.push({ ...item, address: addr })
-                newPending.push({
-                    itemId: item.id,
-                    tareId: t.id,
-                    address: addr,
-                })
-            }
-            if (items.length > sizeBefore) filledTareIds.add(t.id)
-            return { ...t, items }
-        })
-        setPending(newPending)
-        setTargetTares(updated)
-        const movedIds = new Set(
-            itemsToFill
-                .filter((si) => !remaining.includes(si))
-                .map((i) => i.id),
-        )
-        setSelectedItemIds((prev) => {
-            const next = new Set(prev)
-            movedIds.forEach((id) => next.delete(id))
-            return next
-        })
-        if (filledTareIds.size > 0) {
-            setExpandedTareIds((prev) => {
-                const next = new Set(prev)
-                filledTareIds.forEach((id) => next.add(id))
-                return next
-            })
-        }
-    }
-
-    const autoFillItems = (itemIds: UUID[]) => distribute(itemIds)
-    const fillTareWithItems = (itemIds: UUID[], tareId: UUID) =>
-        distribute(itemIds, tareId)
 
     const submit = async () => {
         if (pending.length === 0) return
         setSubmitting(true)
         setError(undefined)
         try {
-            const request: AllocateOutputsRequest = { allocations: pending }
+            const allocations: OutputAllocation[] = pending.map((m) => ({
+                itemId: m.itemId,
+                tareId: m.targetTareId,
+                address: m.address,
+            }))
+            const request: AllocateOutputsRequest = { allocations }
             const result = await postData<AllocateOutputsResult>(
                 `${api.orders}/${orderId}/allocate-outputs`,
                 request,
             )
             setSubmitResult(result)
             if (result.errors.length === 0) {
-                setPending([])
+                clearPending()
                 invalidate([
                     { type: 'order', id: orderId },
                     { type: 'item' },
@@ -449,20 +353,8 @@ export function AllocateProcessOutput({
     }
 
     const reset = () => {
-        setPending([])
-        setSelectedItemIds(new Set())
         setSubmitResult(undefined)
-        setTargetTares((prev) =>
-            prev.map((t) => ({
-                ...t,
-                items: t.items.filter(
-                    (i) =>
-                        !pending.some(
-                            (p) => p.itemId === i.id && p.tareId === t.id,
-                        ),
-                ),
-            })),
-        )
+        resetTransfer()
     }
 
     const callAssignGrades = async (
@@ -506,35 +398,18 @@ export function AllocateProcessOutput({
     const canComplete =
         unallocated.length === 0 && pending.length === 0 && !loading
 
-    const openContextMenu = (item: Item, e: React.MouseEvent) => {
-        e.preventDefault()
-        setCtxMenu({ x: e.clientX, y: e.clientY, itemId: item.id })
-    }
-
-    const ctxTargetIds = useMemo<UUID[]>(() => {
-        if (!ctxMenu) return []
-        return selectedItemIds.has(ctxMenu.itemId)
-            ? [...selectedItemIds]
-            : [ctxMenu.itemId]
-    }, [ctxMenu, selectedItemIds])
-
-    const ctxEligibleIds = useMemo(
-        () => ctxTargetIds.filter((id) => !pendingItemIds.has(id)),
-        [ctxTargetIds, pendingItemIds],
-    )
-
     const onCtxAutofill = () => {
-        autoFillItems(ctxEligibleIds)
-        setCtxMenu(null)
+        distribute(ctxEligibleIds)
+        closeContextMenu()
     }
 
     const onCtxFillTare = (tareId: UUID) => {
-        fillTareWithItems(ctxEligibleIds, tareId)
-        setCtxMenu(null)
+        distribute(ctxEligibleIds, tareId)
+        closeContextMenu()
     }
 
     const onCtxAssignGrade = async (gradeId: UUID | undefined) => {
-        setCtxMenu(null)
+        closeContextMenu()
         await callAssignGrades(gradeId, ctxEligibleIds)
     }
 
@@ -548,14 +423,10 @@ export function AllocateProcessOutput({
         [targetTares],
     )
 
-    const selectByGrade = (gradeId: UUID | null) => {
-        const ids = new Set(
-            unallocated
-                .filter((i) => (i.gradeId ?? null) === gradeId)
-                .map((i) => i.id),
-        )
-        setSelectedItemIds(ids)
-    }
+    const selectByGrade = (gradeId: UUID | null) =>
+        selectByPredicate((i) => (i.gradeId ?? null) === gradeId)
+    const selectByNomenclature = (nomenclatureId: UUID) =>
+        selectByPredicate((i) => i.nomenclatureId === nomenclatureId)
 
     const targetToolbar = (
         <div className="column-toolbar">
@@ -674,12 +545,41 @@ export function AllocateProcessOutput({
                     <SmartScrollContent style={{ flex: 1 }}>
                         <div className="repacking-panel source">
                             <h3>Unallocated outputs</h3>
-                            {grades && grades.length > 0 && (
-                                <GradeLegend
-                                    grades={grades}
-                                    onPick={selectByGrade}
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    flexWrap: 'wrap',
+                                    alignItems: 'center',
+                                    columnGap: '1rem',
+                                    rowGap: '0.25rem',
+                                    margin: '0.25rem 0 0.5rem',
+                                }}
+                            >
+                                {grades && grades.length > 0 && (
+                                    <GradeLegend
+                                        grades={grades}
+                                        onPick={selectByGrade}
+                                    />
+                                )}
+                                <NomenclatureLegend
+                                    nomenclatures={visibleNomenclatures(
+                                        unallocated,
+                                    )}
+                                    onPick={selectByNomenclature}
                                 />
-                            )}
+                                {selectionLabel && (
+                                    <span
+                                        title="Click an empty target slot to place, or right-click for more."
+                                        style={{
+                                            fontSize: '0.85rem',
+                                            color: '#1976d2',
+                                            marginLeft: 'auto',
+                                        }}
+                                    >
+                                        {selectionLabel}
+                                    </span>
+                                )}
+                            </div>
                             {loading && <span>Loading...</span>}
                             {!loading && unallocated.length === 0 && (
                                 <div className="no-items-message">
@@ -694,19 +594,6 @@ export function AllocateProcessOutput({
                                     onToggleAll={onToggleAll}
                                     onItemContextMenu={openContextMenu}
                                 />
-                            )}
-                            {selectedItems.length > 0 && (
-                                <div
-                                    style={{
-                                        marginTop: '0.5rem',
-                                        fontSize: '0.85rem',
-                                        color: '#1976d2',
-                                    }}
-                                >
-                                    {selectedItems.length} selected &mdash;
-                                    click an empty target slot to place, or
-                                    right-click for more.
-                                </div>
                             )}
                         </div>
                     </SmartScrollContent>
@@ -804,6 +691,11 @@ export function AllocateProcessOutput({
                                                     dimItem={(item) =>
                                                         item.orderId !== orderId
                                                     }
+                                                    mutedItem={(item) =>
+                                                        pendingItemIds.has(
+                                                            item.id,
+                                                        )
+                                                    }
                                                 />
                                             </div>
                                         )}
@@ -816,7 +708,7 @@ export function AllocateProcessOutput({
             </div>
 
             {ctxMenu && (
-                <AllocateContextMenu
+                <TransferContextMenu
                     x={ctxMenu.x}
                     y={ctxMenu.y}
                     grades={grades ?? []}
@@ -828,7 +720,7 @@ export function AllocateProcessOutput({
                     onAutofillAll={onCtxAutofill}
                     onFillTare={onCtxFillTare}
                     onAssignGrade={onCtxAssignGrade}
-                    onClose={() => setCtxMenu(null)}
+                    onClose={closeContextMenu}
                 />
             )}
         </div>

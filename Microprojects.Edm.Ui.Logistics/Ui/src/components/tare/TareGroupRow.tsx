@@ -20,12 +20,16 @@ type TareGroupRowProps = {
     onRowClick?: () => void
     /** Click on a slot inside the schematic. */
     onSlotClick?: (slot: SlotData, e: React.MouseEvent) => void
+    /** Right-click on a slot inside the schematic. */
+    onSlotContextMenu?: (slot: SlotData, e: React.MouseEvent) => void
     /** Single-slot highlight. */
     selectedSlot?: number
     /** Multi-slot highlight. */
     selectedSlots?: Set<number>
     /** Optional dim predicate forwarded to TareSchematic. */
     dimItem?: (item: Item) => boolean
+    /** Optional mute predicate forwarded to TareSchematic — lighter than dim. */
+    mutedItem?: (item: Item) => boolean
     /** Forwarded to TareSchematic — render empty slots prominently. */
     highlightEmpty?: boolean
     /** Optional content rendered at the right end of the row header
@@ -45,9 +49,11 @@ export const TareGroupRow = ({
     onToggleExpanded,
     onRowClick,
     onSlotClick,
+    onSlotContextMenu,
     selectedSlot,
     selectedSlots,
     dimItem,
+    mutedItem,
     highlightEmpty,
     headerExtra,
 }: TareGroupRowProps) => {
@@ -106,8 +112,10 @@ export const TareGroupRow = ({
                         selectedSlot={selectedSlot}
                         selectedSlots={selectedSlots}
                         dimItem={dimItem}
+                        mutedItem={mutedItem}
                         highlightEmpty={highlightEmpty}
                         onSlotClick={onSlotClick}
+                        onSlotContextMenu={onSlotContextMenu}
                     />
                 </div>
             )}

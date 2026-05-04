@@ -17,12 +17,19 @@ type TareSchematicProps = {
     selectedSlot?: number
     selectedSlots?: Set<number>
     onSlotClick?: (slot: SlotData, event: React.MouseEvent) => void
+    /** Optional right-click handler on a slot. Caller is expected to call
+     *  e.preventDefault() to suppress the native menu. */
+    onSlotContextMenu?: (slot: SlotData, event: React.MouseEvent) => void
     highlightEmpty?: boolean
     label?: string
     /** Optional tint for occupied slots based on item (e.g. grade color). */
     slotColor?: (item: Item) => string | undefined
     /** Optional predicate to dim slots whose item is "foreign" (e.g. another process). */
     dimItem?: (item: Item) => boolean
+    /** Optional predicate to mute slots whose item is in a transient state
+     *  (e.g. pending-move pre-Apply). Lighter than `dimItem`: only an
+     *  opacity drop, no grayscale. `dimItem` wins if both apply. */
+    mutedItem?: (item: Item) => boolean
 }
 
 type TooltipState = {
@@ -66,7 +73,9 @@ function SlotCell({
     highlightEmpty,
     slotColor,
     dimmed,
+    muted,
     onSlotClick,
+    onSlotContextMenu,
     onMouseEnter,
     onMouseLeave,
 }: {
@@ -75,7 +84,9 @@ function SlotCell({
     highlightEmpty: boolean
     slotColor?: string
     dimmed?: boolean
+    muted?: boolean
     onSlotClick?: (slot: SlotData, event: React.MouseEvent) => void
+    onSlotContextMenu?: (slot: SlotData, event: React.MouseEvent) => void
     onMouseEnter: (slot: SlotData, e: React.MouseEvent) => void
     onMouseLeave: () => void
 }) {
@@ -86,20 +97,35 @@ function SlotCell({
             ? { background: slotColor, borderColor: slotColor }
             : undefined
     const ownEmphasis: React.CSSProperties =
-        occupied && !dimmed
+        occupied && !dimmed && !selected
             ? {
                   boxShadow: 'inset 0 0 0 1.5px rgba(0,0,0,0.32)',
                   borderColor: 'rgba(0,0,0,0.32)',
               }
             : {}
+    // Selected items need a strong, color-independent indicator: an outer
+    // ring + thick inner border that wins over the per-grade tint inline
+    // style (which would otherwise hide the .tare-slot.selected CSS rule).
+    const selectedEmphasis: React.CSSProperties = selected
+        ? {
+              boxShadow:
+                  '0 0 0 2px #1976d2, inset 0 0 0 2px rgba(255,255,255,0.85)',
+              borderColor: '#1976d2',
+          }
+        : {}
     const style: React.CSSProperties | undefined = dimmed
         ? {
               filter: 'grayscale(1)',
               opacity: 0.55,
           }
         : occupied
-          ? { ...(baseStyle ?? {}), ...ownEmphasis }
-          : baseStyle
+          ? {
+                ...(baseStyle ?? {}),
+                ...ownEmphasis,
+                ...selectedEmphasis,
+                ...(muted ? { opacity: 0.55 } : {}),
+            }
+          : { ...(baseStyle ?? {}), ...selectedEmphasis }
     return (
         <div
             className={[
@@ -110,6 +136,11 @@ function SlotCell({
             ].join(' ')}
             style={style}
             onClick={(e) => onSlotClick?.(slot, e)}
+            onContextMenu={
+                onSlotContextMenu
+                    ? (e) => onSlotContextMenu(slot, e)
+                    : undefined
+            }
             onMouseEnter={(e) => onMouseEnter(slot, e)}
             onMouseLeave={onMouseLeave}
         >
@@ -128,9 +159,11 @@ export const TareSchematic = (props: TareSchematicProps) => {
         selectedSlot,
         selectedSlots,
         onSlotClick,
+        onSlotContextMenu,
         highlightEmpty,
         slotColor,
         dimItem,
+        mutedItem,
     } = props
     const sx = tare.sizeX ?? 0
     const sy = tare.sizeY ?? 0
@@ -276,7 +309,13 @@ export const TareSchematic = (props: TareSchematicProps) => {
                                         ? dimItem(slot.item)
                                         : false
                                 }
+                                muted={
+                                    slot.item && mutedItem
+                                        ? mutedItem(slot.item)
+                                        : false
+                                }
                                 onSlotClick={onSlotClick}
+                                onSlotContextMenu={onSlotContextMenu}
                                 onMouseEnter={showTooltip}
                                 onMouseLeave={hideTooltip}
                             />

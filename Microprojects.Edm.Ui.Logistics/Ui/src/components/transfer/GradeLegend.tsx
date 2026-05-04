@@ -1,8 +1,9 @@
-import type { Grade, UUID } from '@logistics/data/types'
+import type { LegendEntry } from '@logistics/components/transfer/visibleFromItems'
+import type { UUID } from '@logistics/data/types'
 import { colorForGradeId } from '@logistics/utils/gradePalette'
 
 type GradeLegendProps = {
-    grades: Grade[]
+    grades: LegendEntry[]
     /** Click handler: receives the grade id, or `null` for the "No grade" chip. */
     onPick?: (gradeId: UUID | null) => void
 }
@@ -28,7 +29,6 @@ export function GradeLegend({ grades, onPick }: GradeLegendProps) {
                 alignItems: 'center',
                 fontSize: '0.8rem',
                 color: '#555',
-                margin: '0.25rem 0 0.5rem',
             }}
         >
             <span style={{ fontWeight: 600, marginRight: 4 }}>Grades:</span>
