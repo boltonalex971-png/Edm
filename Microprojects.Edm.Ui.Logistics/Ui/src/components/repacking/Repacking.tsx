@@ -107,8 +107,11 @@ export function Repacking() {
     } = useTareTransfer<Item>({
         sourceItems,
         itemScopeKey: (i) => i.tareId || i.tareBarcode || 'no-tare',
-        onItemConsumed: (id) =>
-            setSourceItems((prev) => prev.filter((i) => i.id !== id)),
+        // Don't drop items from sourceItems on move. The hook clones them
+        // into the target tare with the new address and leaves the original
+        // item (with its original address) in place. Source-side rendering
+        // hides items that are in `pending`, so a Reset just needs to clear
+        // pending — items reappear at their real slots automatically.
     })
 
     // Single state for each picker — the picker emits an AvailableTare-like
@@ -154,11 +157,17 @@ export function Repacking() {
         })
 
     // Drop a source tare from the visible pool — only the items that are
-    // still un-moved are removed; any pendingMoves already taken from that
-    // tare stay (their items are now displayed under their target tare).
+    // still un-moved are removed; pending-moved items stay in `sourceItems`
+    // so they can flow back here on Reset (and their target-tare clones
+    // stay visible meanwhile).
     const removeSourceTare = (tareKey: string) => {
         setSourceItems((prev) =>
-            prev.filter((i) => (i.tareId || i.tareBarcode || 'no-tare') !== tareKey),
+            prev.filter((i) => {
+                const itemTareKey =
+                    i.tareId || i.tareBarcode || 'no-tare'
+                if (itemTareKey !== tareKey) return true
+                return pendingItemIds.has(i.id)
+            }),
         )
         // Selection auto-prunes — useSlotSelection drops ids no longer in `items`.
         setExpandedSource((prev) => {
@@ -221,8 +230,26 @@ export function Repacking() {
         }
     }, [tareBarcode])
 
+    const pendingItemIds = useMemo(
+        () => new Set(pending.map((p) => p.itemId)),
+        [pending],
+    )
+
+    /** Items currently visible in the source pool — pending-moved items
+     *  stay in `sourceItems` (with their original address) but are hidden
+     *  from the source rendering until Apply or Reset. The owning source
+     *  tare row stays visible even when all of its items are pending, so
+     *  the operator can see what they moved out of. */
+    const visibleSourceItems = useMemo(
+        () => sourceItems.filter((i) => !pendingItemIds.has(i.id)),
+        [sourceItems, pendingItemIds],
+    )
+
     const sourceTares = useMemo(() => {
         const map = new Map<string, { tare: TareInfo; items: Item[] }>()
+        // Walk every source item (incl. pending) so a tare keeps its row
+        // even when all of its items have been moved out. Only visible
+        // (non-pending) items are pushed into the row's `items` list.
         for (const item of sourceItems) {
             if (!item.tareBarcode) continue
             const tareKey = item.tareBarcode
@@ -240,16 +267,19 @@ export function Repacking() {
                         dimensions: item.tareTareTypeDimensions ?? 1,
                         capacity:
                             item.tareTareTypeCapacity ||
-                            sourceItems.filter((i) => i.tareBarcode === tareKey)
-                                .length,
+                            sourceItems.filter(
+                                (i) => i.tareBarcode === tareKey,
+                            ).length,
                     },
                     items: [],
                 })
             }
-            map.get(tareKey)!.items.push(item)
+            if (!pendingItemIds.has(item.id)) {
+                map.get(tareKey)!.items.push(item)
+            }
         }
         return Array.from(map.values())
-    }, [sourceItems])
+    }, [sourceItems, pendingItemIds])
 
     const handleSourceSlotClick = (
         group: { tare: TareInfo; items: Item[] },
@@ -270,17 +300,12 @@ export function Repacking() {
         placeAt(tareId, slot.address)
     }
 
-    const autoFill = () => distribute(sourceItems.map((i) => i.id))
+    const autoFill = () => distribute(visibleSourceItems.map((i) => i.id))
 
     const selectByGrade = (gradeId: UUID | null) =>
         selectByPredicate((i) => (i.gradeId ?? null) === gradeId)
     const selectByNomenclature = (nomenclatureId: UUID) =>
         selectByPredicate((i) => i.nomenclatureId === nomenclatureId)
-
-    const pendingItemIds = useMemo(
-        () => new Set(pending.map((p) => p.itemId)),
-        [pending],
-    )
 
     const ctxTareOptions = useMemo<ContextTareOption[]>(
         () =>
@@ -426,16 +451,10 @@ export function Repacking() {
 
     const reset = () => {
         setSubmitResult(undefined)
-        // Restore pending-moved items to the source pool. Repacking
-        // removes items from `sourceItems` on move, so a hook-only reset
-        // would leave them stranded once the target tares roll back their
-        // pending items. Source and target tares themselves stay loaded.
-        const restored = targetTares.flatMap((t) =>
-            t.items.filter((i) => pending.some((p) => p.itemId === i.id)),
-        )
-        if (restored.length > 0) {
-            setSourceItems((prev) => [...prev, ...restored])
-        }
+        // sourceItems is untouched by moves now (option-A model), so
+        // resetTransfer() alone is enough: it clears pending + selection
+        // and rolls the pending items out of target tares' visible items.
+        // The original source items reappear at their original addresses.
         resetTransfer()
     }
 
