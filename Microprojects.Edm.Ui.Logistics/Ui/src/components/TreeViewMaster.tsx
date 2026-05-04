@@ -12,7 +12,7 @@ import type {
     TreeViewItemDragOverEvent,
 } from '@progress/kendo-react-treeview'
 import axios from 'axios'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
     FileText,
     Folder2,
@@ -32,6 +32,7 @@ import { Loading } from '../features/utils/Utils'
 import { useInvalidateEntities } from '../hooks/entityRefresh'
 import { useGet } from '../hooks/hooks'
 import { useBasePath } from '../hooks/routerHooks'
+import { dropOutdated } from './HierarchyPicker'
 import { EMPTY_GUID } from './MasterDetail.tsx'
 import './TreeViewMaster.css'
 
@@ -76,8 +77,14 @@ export function TreeViewMaster(props: TreeViewMasterProps) {
     const [selectedItem, setSelectedItem] = useState<TreeDataItem>()
     const [rootItem, setRootItem] = useState<TreeDataItem>()
 
+    // Hide auto-forked predecessors from the master tree. The Detail page
+    // can still be reached via direct URL when needed.
+    const activeData = useMemo(() => dropOutdated(data, undefined), [data])
+
     const visibleRoots =
-        data && data.length === 1 && data[0].items ? data[0].items : data
+        activeData.length === 1 && activeData[0].items
+            ? activeData[0].items
+            : activeData
 
     const filteredData = visibleRoots?.filter((el) =>
         el.name.toUpperCase().includes(filter.toUpperCase()),
@@ -273,21 +280,12 @@ const TreeItem = (props: TreeItemProps) => {
         props.item.description && props.item.description !== props.item.name
             ? `${props.item.name} — ${props.item.description}`
             : props.item.name
-    const outdated = !!props.item.outdated
     return (
         <>
-            {/*<span className={iconClassName(props.item)}>&nbsp;</span>*/}
             {icon(props.item)}&nbsp;
             <span
                 className={props.item.isFolder ? 'fw-bolder' : ''}
-                title={
-                    outdated ? `${tooltip} (outdated)` : tooltip
-                }
-                style={
-                    outdated
-                        ? { color: '#888', textDecoration: 'line-through' }
-                        : undefined
-                }
+                title={tooltip}
             >
                 {props.item.name}
             </span>

@@ -4,7 +4,8 @@ import {
     type DropDownTreeChangeEvent,
 } from '@progress/kendo-react-dropdowns'
 import type React from 'react'
-import { useContext } from 'react'
+import { useContext, useMemo } from 'react'
+import { dropOutdated } from './HierarchyPicker'
 import { ParentContext } from './ParentContext'
 
 interface DropDownTreeCellProps {
@@ -48,8 +49,14 @@ export const DropDownTreeCell = ({
 }: DropDownTreeCellProps) => {
     const context = useContext(ParentContext)
     const { dataItem, field } = props
-    const tree = getData() || []
+    const rawTree = getData()
     const currentId = dataItem[fieldId] as UUID | undefined
+    // Outdated leaves never appear in the dropdown; the current value is
+    // preserved so existing relation rows still resolve to a readable label.
+    const tree = useMemo(
+        () => dropOutdated(rawTree, currentId),
+        [rawTree, currentId],
+    )
     const selected = findById(tree, currentId)
 
     const handleChange = (e: DropDownTreeChangeEvent): void => {
