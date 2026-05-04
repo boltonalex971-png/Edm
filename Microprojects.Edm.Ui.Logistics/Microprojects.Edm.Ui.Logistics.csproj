@@ -24,6 +24,7 @@
 		<Compile Remove="ui\node_modules\**" />
 		<EmbeddedResource Include="ui\dist\**" />
 		<EmbeddedResource Remove="ui\node_modules\**" />
+		<EmbeddedResource Include="CHANGES.md" />
 		<None Remove="ui\dist\**" />
 		<None Remove="ui\node_modules\**" />
 	</ItemGroup>
@@ -33,5 +34,37 @@
 	  <ProjectReference Include="..\Optosense.Edm.Core.AspNet\Optosense.Edm.Core.AspNet.csproj" />
 	  <ProjectReference Include="..\Optosense.Edm.DataAccess\Optosense.Edm.DataAccess.csproj" />
 	</ItemGroup>
+
+	<!--
+	Stamps the Setup MSI's ProductVersion (from the vdproj) into BuildInfo.g.cs at
+	compile time. The vdproj isn't deployed with the host, so the constant is the
+	only way the running app can show the installed product's umbrella version.
+	-->
+	<PropertyGroup>
+		<SetupVdprojPath>$(MSBuildThisFileDirectory)..\Optosense.Edm.Setup\Optosense.Edm.Setup.vdproj</SetupVdprojPath>
+		<BuildInfoGenerated>$(MSBuildThisFileDirectory)obj\$(Configuration)\$(TargetFramework)\BuildInfo.g.cs</BuildInfoGenerated>
+	</PropertyGroup>
+
+	<Target Name="StampSetupProductVersion"
+		BeforeTargets="CoreCompile"
+		Inputs="$(SetupVdprojPath);$(MSBuildThisFileFullPath)"
+		Outputs="$(BuildInfoGenerated)">
+		<PropertyGroup>
+			<_VdprojText>$([System.IO.File]::ReadAllText('$(SetupVdprojPath)'))</_VdprojText>
+			<_ProductVersion>$([System.Text.RegularExpressions.Regex]::Match($(_VdprojText), '"ProductVersion" = "8:([\d.]+)"').Groups[1].Value)</_ProductVersion>
+			<_ProductVersion Condition="'$(_ProductVersion)' == ''">0.0.0</_ProductVersion>
+		</PropertyGroup>
+		<MakeDir Directories="$(IntermediateOutputPath)" />
+		<ItemGroup>
+			<_BuildInfoLines Include="// &lt;auto-generated /&gt;" />
+			<_BuildInfoLines Include="namespace Microprojects.Edm.Ui.Logistics%3B" />
+			<_BuildInfoLines Include="internal static class BuildInfo { public const string ProductVersion = &quot;$(_ProductVersion)&quot;%3B }" />
+		</ItemGroup>
+		<WriteLinesToFile File="$(BuildInfoGenerated)" Lines="@(_BuildInfoLines)" Overwrite="true" Encoding="UTF-8" />
+		<ItemGroup>
+			<Compile Include="$(BuildInfoGenerated)" />
+			<FileWrites Include="$(BuildInfoGenerated)" />
+		</ItemGroup>
+	</Target>
 
 </Project>

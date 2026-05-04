@@ -1,4 +1,7 @@
+import api from '@logistics/features/api/api'
+import { useGet } from '@logistics/hooks/hooks'
 import type React from 'react'
+import { Link } from 'react-router-dom'
 import { NavMenu } from './NavMenu'
 
 type LayoutProps = {
@@ -7,8 +10,14 @@ type LayoutProps = {
     hideMenu?: boolean
 }
 
+type AppVersion = {
+    logistics: string
+    product: string
+}
+
 export const Layout = ({ children, hideMenu }: LayoutProps) => {
     const currYear = new Date().getFullYear()
+    const [[versions]] = useGet<AppVersion>(`${api.meta}/version`)
     return (
         <div>
             <NavMenu hideMenu={hideMenu} />
@@ -18,7 +27,15 @@ export const Layout = ({ children, hideMenu }: LayoutProps) => {
                 </div>
                 <footer>
                     <hr />
-                    <p>&#169; Microprojects 2020 &ndash; {currYear}</p>
+                    <div className="footer-meta">
+                        <span>&#169; Microprojects 2020 &ndash; {currYear}</span>
+                        <span className="footer-sep">·</span>
+                        <span>Logistics {versions?.logistics ?? '—'}</span>
+                        <span className="footer-sep">·</span>
+                        <span>EDM {versions?.product ?? '—'}</span>
+                        <span className="footer-sep">·</span>
+                        <Link to="/changes">What's new</Link>
+                    </div>
                 </footer>
             </div>
         </div>

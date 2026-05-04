@@ -11,7 +11,8 @@ const api = {
     operations: `${baseUrl}/api/operations`,
     plugins: `${baseUrl}/api/plugins`,
     profiles: `${baseUrl}/api/profiles`,
-    hierarchies: `${baseUrl}/api/hierarchies`
+    hierarchies: `${baseUrl}/api/hierarchies`,
+    meta: `${baseUrl}/api/meta`
 };
 
 export default api;
