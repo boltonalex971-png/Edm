@@ -237,7 +237,9 @@ export function Repacking() {
 
     /** Items currently visible in the source pool — pending-moved items
      *  stay in `sourceItems` (with their original address) but are hidden
-     *  from the source rendering until Apply or Reset. */
+     *  from the source rendering until Apply or Reset. The owning source
+     *  tare row stays visible even when all of its items are pending, so
+     *  the operator can see what they moved out of. */
     const visibleSourceItems = useMemo(
         () => sourceItems.filter((i) => !pendingItemIds.has(i.id)),
         [sourceItems, pendingItemIds],
@@ -245,7 +247,10 @@ export function Repacking() {
 
     const sourceTares = useMemo(() => {
         const map = new Map<string, { tare: TareInfo; items: Item[] }>()
-        for (const item of visibleSourceItems) {
+        // Walk every source item (incl. pending) so a tare keeps its row
+        // even when all of its items have been moved out. Only visible
+        // (non-pending) items are pushed into the row's `items` list.
+        for (const item of sourceItems) {
             if (!item.tareBarcode) continue
             const tareKey = item.tareBarcode
             if (!map.has(tareKey)) {
@@ -262,17 +267,19 @@ export function Repacking() {
                         dimensions: item.tareTareTypeDimensions ?? 1,
                         capacity:
                             item.tareTareTypeCapacity ||
-                            visibleSourceItems.filter(
+                            sourceItems.filter(
                                 (i) => i.tareBarcode === tareKey,
                             ).length,
                     },
                     items: [],
                 })
             }
-            map.get(tareKey)!.items.push(item)
+            if (!pendingItemIds.has(item.id)) {
+                map.get(tareKey)!.items.push(item)
+            }
         }
         return Array.from(map.values())
-    }, [visibleSourceItems])
+    }, [sourceItems, pendingItemIds])
 
     const handleSourceSlotClick = (
         group: { tare: TareInfo; items: Item[] },
