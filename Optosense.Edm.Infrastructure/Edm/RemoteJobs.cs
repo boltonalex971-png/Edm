@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using Grpc.Net.Client;
@@ -16,12 +15,12 @@ namespace Optosense.Edm.Infrastructure.Edm
     public class RemoteJobs : IRemoteJobs
     {
         private readonly IJobContainer _jobs;
-        private readonly X509Certificate2 _clientCertificate;
+        private readonly IGrpcJobExecutor _grpcExecutor;
 
-        public RemoteJobs(IJobContainer jobs, IClientCertificateProvider certProvider)
+        public RemoteJobs(IJobContainer jobs, IGrpcJobExecutor grpcExecutor)
         {
             _jobs = jobs;
-            _clientCertificate = certProvider?.Get();
+            _grpcExecutor = grpcExecutor;
         }
 
         public async Task<string> Execute(string host, IJob job)
@@ -31,7 +30,7 @@ namespace Optosense.Edm.Infrastructure.Edm
                 throw new Exception("Job name and parameters cannot be null");
             }
 
-            var response = await job.Execute(host, clientCertificate: _clientCertificate);
+            var response = await _grpcExecutor.ExecuteAsync(job, host);
             return response.Response;
         }
 
@@ -52,7 +51,7 @@ namespace Optosense.Edm.Infrastructure.Edm
                 Profile = profile
             };
             var deviceJob = new StartDeviceJob { JobParameters = deviceParams };
-            var response = await deviceJob.Execute(url, clientCertificate: _clientCertificate);
+            var response = await _grpcExecutor.ExecuteAsync(deviceJob, url);
 
             return response.Response;
         }

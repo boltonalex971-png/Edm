@@ -11,6 +11,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
 using Optosense.Edm.Core.AspNet.Auth;
 using Optosense.Edm.Core.Infrastructure;
+using Optosense.Edm.Infrastructure.Edm.Jobs;
 using Optosense.Edm.WebApi.Utils;
 using Newtonsoft.Json;
 using Microsoft.Extensions.Logging;
@@ -63,6 +64,7 @@ namespace Optosense.Edm.Core.AspNet
                 options.ClientCertificateSubject = builder.Configuration["Kestrel:Certificates:Default:Subject"];
             }
             builder.Services.AddSingleton<IClientCertificateProvider, ClientCertificateProvider>();
+            builder.Services.AddSingleton<IGrpcJobExecutor, GrpcJobExecutor>();
             builder.Services.AddSingleton<IIntercom>(provider => options?.Kind switch
             {
                 IntercomOptions.Kinds.SignalR => new EdmIntercom(
