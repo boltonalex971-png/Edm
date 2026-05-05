@@ -1,5 +1,6 @@
 ﻿using Microprojects.Edm.Intercom;
 using Microprojects.Edm.Utils;
+using Microsoft.AspNetCore.Http.Connections.Client;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
@@ -11,6 +12,7 @@ using System.Collections.Concurrent;
 using System.Net;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -24,18 +26,73 @@ namespace Optosense.Edm.WebApi.Utils
 
         private readonly Task _worker;
         private readonly ILogger<EdmIntercom> _logger;
+        private readonly X509Certificate2 _clientCertificate;
         private event EventHandler MessagePublished;
 
         public EdmIntercom(IntercomOptions options, ILogger<EdmIntercom> logger)
         {
             Options = options;
-            HubConnection = new HubConnectionBuilder()
-                .WithUrl($"{Options.Principal}/{IntercomHub.Hub}")
+            _logger = logger;
+            _clientCertificate = LoadClientCertificate(options.ClientCertificateSubject);
+            HubConnection = BuildHubConnection();
+            _worker = Task.Factory.StartNew(BackgroundSend, TaskCreationOptions.LongRunning);
+        }
+
+        // Load a client cert from LocalMachine\My by Subject CN. Used to authenticate
+        // outbound SignalR connections to the hub on the GrpcSecure endpoint
+        // (ClientCertificateMode=AllowCertificate). The cert's Subject/CN must
+        // match an entry in Edm:Auth:RemoteServices for the hub to grant the
+        // RemoteService claim.
+        private X509Certificate2 LoadClientCertificate(string subject)
+        {
+            if (string.IsNullOrEmpty(subject))
+            {
+                _logger?.LogInformation("No Edm:Intercom:ClientCertificateSubject configured; outbound SignalR will be cert-less.");
+                return null;
+            }
+            try
+            {
+                using var store = new X509Store(StoreName.My, StoreLocation.LocalMachine);
+                store.Open(OpenFlags.ReadOnly);
+                var found = store.Certificates.Find(X509FindType.FindBySubjectName, subject, validOnly: false);
+                if (found.Count == 0)
+                {
+                    _logger?.LogWarning("Intercom client cert not found in LocalMachine\\My by subject '{Subject}'; outbound SignalR will be cert-less.", subject);
+                    return null;
+                }
+                _logger?.LogInformation("Intercom client cert loaded: subject='{Subject}', thumbprint={Thumbprint}", found[0].Subject, found[0].Thumbprint);
+                return found[0];
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError("Failed to load Intercom client cert by subject '{Subject}': {Reason}", subject, ex.GetMeaningfulMessage());
+                return null;
+            }
+        }
+
+        // Apply the loaded client cert to both the underlying HTTP transport
+        // (used during /negotiate and as a fallback for SSE/long-polling) and
+        // the WebSocket transport. Both require independent configuration in
+        // SignalR's connection options.
+        private void ConfigureClientCertificate(HttpConnectionOptions opts)
+        {
+            if (_clientCertificate == null) return;
+            opts.ClientCertificates ??= new X509CertificateCollection();
+            opts.ClientCertificates.Add(_clientCertificate);
+            var prevWs = opts.WebSocketConfiguration;
+            opts.WebSocketConfiguration = ws =>
+            {
+                prevWs?.Invoke(ws);
+                ws.ClientCertificates ??= new X509CertificateCollection();
+                ws.ClientCertificates.Add(_clientCertificate);
+            };
+        }
+
+        private HubConnection BuildHubConnection() =>
+            new HubConnectionBuilder()
+                .WithUrl($"{Options.Principal}/{IntercomHub.Hub}", ConfigureClientCertificate)
                 .WithAutomaticReconnect()
                 .Build();
-            _worker = Task.Factory.StartNew(BackgroundSend, TaskCreationOptions.LongRunning);
-            _logger = logger;
-        }
 
         public Task<long> Publish<T>(string channel, T message)
         {
@@ -116,7 +173,7 @@ namespace Optosense.Edm.WebApi.Utils
             var obs = Observable.Create<T>(async observer =>
             {
                 var connection = new HubConnectionBuilder()
-                    .WithUrl($"{Options.Principal}/{IntercomHub.Hub}")
+                    .WithUrl($"{Options.Principal}/{IntercomHub.Hub}", ConfigureClientCertificate)
                     .WithAutomaticReconnect()
                     .Build();
                 connection.Closed += async (ex) =>
@@ -195,5 +252,9 @@ namespace Optosense.Edm.WebApi.Utils
         public Kinds Kind { get; set; }
         public string Principal { get; set; }
         public string ConnectionString { get; set; }
+        // Subject CN of a cert in LocalMachine\My to present on outbound
+        // SignalR connections so the hub authenticates them as RemoteService.
+        // Defaults to Kestrel:Certificates:Default:Subject in EdmHelper.
+        public string ClientCertificateSubject { get; set; }
     }
 }

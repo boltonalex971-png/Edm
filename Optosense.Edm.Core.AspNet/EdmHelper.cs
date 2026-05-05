@@ -53,6 +53,13 @@ namespace Optosense.Edm.Core.AspNet
         public static void AddOperationIntercom(this IHostApplicationBuilder builder)
         {
             var options = builder.Configuration.GetSection("Edm:Intercom").Get<IntercomOptions>();
+            // Default the outbound-SignalR client cert to the same cert Kestrel
+            // serves with, so self-subscriptions present a cert whose Subject
+            // matches the hostname (already listed in Edm:Auth:RemoteServices).
+            if (options != null && string.IsNullOrEmpty(options.ClientCertificateSubject))
+            {
+                options.ClientCertificateSubject = builder.Configuration["Kestrel:Certificates:Default:Subject"];
+            }
             builder.Services.AddSingleton<IIntercom>(provider => options?.Kind switch
             {
                 IntercomOptions.Kinds.SignalR => new EdmIntercom(options, provider.GetService<ILogger<EdmIntercom>>()),
