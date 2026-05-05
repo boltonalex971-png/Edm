@@ -296,8 +296,8 @@ app.Use(async (context, next) =>
 });
 
 app.UseExceptionHandler();
-app.MapGrpcService<EdmJobService>().AllowAnonymous();
-app.MapHub<IntercomHub>(IntercomHub.Hub).AllowAnonymous();
+app.MapGrpcService<EdmJobService>();
+app.MapHub<IntercomHub>(IntercomHub.Hub);
 app.MapGet("/status", () => "I AM ALIVE!");
 app.MapSpaPlugins();
 
