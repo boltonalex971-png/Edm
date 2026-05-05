@@ -190,11 +190,29 @@ builder.Services.AddAuthentication(options =>
         {
             OnCertificateValidated = context =>
             {
-                var allowedServices = builder.Configuration.GetSection("Edm:Auth:RemoteServices").Get<List<string>>();
+                var allowedServices = builder.Configuration.GetSection("Edm:Auth:RemoteServices").Get<List<string>>()
+                    ?? new List<string>();
+
+                // Implicitly allow the cert whose CN matches the host of
+                // Edm:Intercom:Principal. Convention: each EDM host's cert CN
+                // equals its DNS name, and the Principal URL is built from
+                // that name. So the operator only configures Principal once
+                // and the owning host's CN is auto-trusted (covers self-sub
+                // on the admin and inbound calls from the principal on every
+                // peer driver host).
+                var principal = builder.Configuration["Edm:Intercom:Principal"];
+                if (!string.IsNullOrEmpty(principal)
+                    && Uri.TryCreate(principal, UriKind.Absolute, out var principalUri)
+                    && !string.IsNullOrEmpty(principalUri.Host))
+                {
+                    allowedServices.Add(principalUri.Host);
+                    allowedServices.Add($"CN={principalUri.Host}");
+                }
+
                 var subject = context.ClientCertificate.Subject;
                 var commonName = context.ClientCertificate.GetNameInfo(System.Security.Cryptography.X509Certificates.X509NameType.SimpleName, false);
 
-                if (allowedServices != null && (allowedServices.Contains(subject) || allowedServices.Contains(commonName)))
+                if (allowedServices.Contains(subject) || allowedServices.Contains(commonName))
                 {
                     var claims = new[]
                     {

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using Optosense.Edm.Core.Infrastructure;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -29,45 +30,13 @@ namespace Optosense.Edm.WebApi.Utils
         private readonly X509Certificate2 _clientCertificate;
         private event EventHandler MessagePublished;
 
-        public EdmIntercom(IntercomOptions options, ILogger<EdmIntercom> logger)
+        public EdmIntercom(IntercomOptions options, IClientCertificateProvider certProvider, ILogger<EdmIntercom> logger)
         {
             Options = options;
             _logger = logger;
-            _clientCertificate = LoadClientCertificate(options.ClientCertificateSubject);
+            _clientCertificate = certProvider?.Get();
             HubConnection = BuildHubConnection();
             _worker = Task.Factory.StartNew(BackgroundSend, TaskCreationOptions.LongRunning);
-        }
-
-        // Load a client cert from LocalMachine\My by Subject CN. Used to authenticate
-        // outbound SignalR connections to the hub on the GrpcSecure endpoint
-        // (ClientCertificateMode=AllowCertificate). The cert's Subject/CN must
-        // match an entry in Edm:Auth:RemoteServices for the hub to grant the
-        // RemoteService claim.
-        private X509Certificate2 LoadClientCertificate(string subject)
-        {
-            if (string.IsNullOrEmpty(subject))
-            {
-                _logger?.LogInformation("No Edm:Intercom:ClientCertificateSubject configured; outbound SignalR will be cert-less.");
-                return null;
-            }
-            try
-            {
-                using var store = new X509Store(StoreName.My, StoreLocation.LocalMachine);
-                store.Open(OpenFlags.ReadOnly);
-                var found = store.Certificates.Find(X509FindType.FindBySubjectName, subject, validOnly: false);
-                if (found.Count == 0)
-                {
-                    _logger?.LogWarning("Intercom client cert not found in LocalMachine\\My by subject '{Subject}'; outbound SignalR will be cert-less.", subject);
-                    return null;
-                }
-                _logger?.LogInformation("Intercom client cert loaded: subject='{Subject}', thumbprint={Thumbprint}", found[0].Subject, found[0].Thumbprint);
-                return found[0];
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError("Failed to load Intercom client cert by subject '{Subject}': {Reason}", subject, ex.GetMeaningfulMessage());
-                return null;
-            }
         }
 
         // Apply the loaded client cert to both the underlying HTTP transport

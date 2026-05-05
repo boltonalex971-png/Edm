@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.Dynamic;
 using Microprojects.Edm.Jobs;
 using Optosense.Edm.Infrastructure.Edm.Jobs;
 using Optosense.Edm.Core.Contracts;
+using Optosense.Edm.Core.Infrastructure;
 using Microprojects.Edm.Intercom;
 using Microsoft.Extensions.Logging;
 using Microprojects.Edm.Utils;
@@ -29,6 +31,7 @@ namespace Optosense.Edm.Jobs
         protected IIntercom Intercom { get; init; }
         protected ILogger<StartOperationJob> Logger { get; init; }
         protected IServiceProvider ServiceProvider { get; init; }
+        protected X509Certificate2 ClientCertificate { get; init; }
 
         private List<(string url, IJob job)> _devices = [];
         private List<IJob> _audits = [];
@@ -45,7 +48,8 @@ namespace Optosense.Edm.Jobs
             IJobContainer container,
             IIntercom intercom,
             ILogger<StartOperationJob> logger,
-            IServiceProvider serviceProvider)
+            IServiceProvider serviceProvider,
+            IClientCertificateProvider certProvider)
         {
             OperationService = operationService;
             ProfileService = profileService;
@@ -53,6 +57,7 @@ namespace Optosense.Edm.Jobs
             Intercom = intercom;
             Logger = logger;
             ServiceProvider = serviceProvider;
+            ClientCertificate = certProvider?.Get();
         }
 
         public override async Task<bool> InitAsync()
@@ -115,7 +120,7 @@ namespace Optosense.Edm.Jobs
                 var deviceJob = new StartDeviceJob { JobParameters = deviceParams };
                 _devices.Add((url, deviceJob));
                 // TODO check response for validity
-                var response = await deviceJob.Execute(url);
+                var response = await deviceJob.Execute(url, clientCertificate: ClientCertificate);
                 Logger.LogDebug("Operation started device at {Time}", DateTime.UtcNow.ToString("hh:mm:ss.fff"));
                 if (response.Status != JobStatus.SUCCESS)
                 {
@@ -171,7 +176,7 @@ namespace Optosense.Edm.Jobs
                         ((StartDeviceJobParameters)job.JobParameters).OperationHostDevice,
                         ((StartDeviceJobParameters)job.JobParameters).Driver
                     };
-                    var response = await check.Execute(url, parameter)
+                    var response = await check.Execute(url, parameter, ClientCertificate)
                         .ContinueWith(t =>
                         {
                             if (t.Status != TaskStatus.Faulted) return t.Result;
