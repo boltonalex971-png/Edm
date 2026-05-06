@@ -186,6 +186,8 @@ builder.Services.AddAuthentication(options =>
     .AddCertificate(options =>
     {
         options.AllowedCertificateTypes = CertificateTypes.All;
+        // Private CAs publish no CRL/OCSP; default Online check times out as RevocationStatusUnknown.
+        options.RevocationMode = System.Security.Cryptography.X509Certificates.X509RevocationMode.NoCheck;
         options.Events = new CertificateAuthenticationEvents
         {
             OnCertificateValidated = context =>
