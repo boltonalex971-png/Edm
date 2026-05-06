@@ -2,6 +2,10 @@
 
 The Main UI is the EDM home screen: dashboard, new-operation wizard, the configuration trees (workbenches, devices, profiles, processes, audits) and the operation card with sensor reports. It is mounted at the site root.
 
+## v1.13.28
+
+- **Process picker fix in the New Operation wizard** (PR #41). Selecting a process is reliable again when a folder and a process happen to share the same numeric id — the picker now uses prefixed values (`process-…` / `node-…`) so the controlled state can't latch onto a disabled folder row.
+
 ## v1.13.0
 
 - **Dashboard polish** (PR 793, PR 795, PR 796, PR 797, PR 798, PR 800). Operations are coloured by status; the today's-completed list filters yesterday's noise; the root dashboard drills down to running operations across processes; cancelled rows show *when* they were cancelled; a 7-day completed view is added; rows sort by completion / cancellation date.
