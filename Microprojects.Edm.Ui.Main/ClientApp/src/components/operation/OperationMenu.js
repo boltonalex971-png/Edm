@@ -96,9 +96,12 @@ function OperationToolbar({ operation }) {
     };
 
     const start = () => {
-        const startAt = startAtRef.current?.value || new Date().toISOString();
+        const value = startAtRef.current?.value;
+        const startAt = value ? new Date(value).toISOString() : new Date().toISOString();
         setLoading(true);
-        Axios.post(`${api.operations}/${operation.id}/start`, startAt)
+        Axios.post(`${api.operations}/${operation.id}/start`, JSON.stringify(startAt), {
+            headers: { 'Content-Type': 'application/json' }
+        })
             .then(() => setLoading(false))
             .catch((error) => {
                 setLoading(false);
