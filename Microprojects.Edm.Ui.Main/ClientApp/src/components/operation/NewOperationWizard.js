@@ -94,16 +94,14 @@ export function NewOperationWizard() {
     }, []);
 
     const onProcessChange = (e) => {
-        const processId = e.target.value;
+        const value = e.target.value;
         dispatch(reset());
-        const selectedProcess = processList.find(p => p.id === processId);
-        
-        if (!selectedProcess || selectedProcess.isNode) {
+        if (!value || !value.startsWith('process-')) {
             setDetail(<ProcessDetailStub />);
             return false;
-        } else {
-            setDetail(<ProcessDetail id={processId} />);
         }
+        const processId = Number(value.slice('process-'.length));
+        setDetail(<ProcessDetail id={processId} />);
     };
 
     const onOperationStart = () => {
@@ -144,29 +142,32 @@ export function NewOperationWizard() {
                                     <InputLabel>Process</InputLabel>
                                     <Select
                                         sx={{ width: '100%' }}
-                                        value={params.process?.id || ''}
+                                        value={params.process ? `process-${params.process.id}` : ''}
                                         label="Process"
                                         onChange={onProcessChange}
                                     >
                                         <MenuItem value=""><em>None</em></MenuItem>
-                                        {processList?.map((p) => (
-                                            <MenuItem
-                                                key={p.id}
-                                                value={p.id}
-                                                disabled={p.isNode}
-                                                sx={{
-                                                    pl: (p.level || 0) * 2 + (p.isNode ? 2 : 4),
-                                                    fontWeight: p.isNode ? 700 : 400,
-                                                    color: p.isNode ? 'text.primary' : 'inherit',
-                                                    '&.Mui-disabled': {
-                                                        opacity: 1, // Keep folders legible even when disabled
-                                                        backgroundColor: 'rgba(0,0,0,0.02)'
-                                                    }
-                                                }}
-                                            >
-                                                {p.name}
-                                            </MenuItem>
-                                        ))}
+                                        {processList?.map((p) => {
+                                            const itemValue = p.isNode ? `node-${p.id}` : `process-${p.id}`;
+                                            return (
+                                                <MenuItem
+                                                    key={itemValue}
+                                                    value={itemValue}
+                                                    disabled={p.isNode}
+                                                    sx={{
+                                                        pl: (p.level || 0) * 2 + (p.isNode ? 2 : 4),
+                                                        fontWeight: p.isNode ? 700 : 400,
+                                                        color: p.isNode ? 'text.primary' : 'inherit',
+                                                        '&.Mui-disabled': {
+                                                            opacity: 1,
+                                                            backgroundColor: 'rgba(0,0,0,0.02)'
+                                                        }
+                                                    }}
+                                                >
+                                                    {p.name}
+                                                </MenuItem>
+                                            );
+                                        })}
                                     </Select>
                                 </FormControl>
                                 {params.process && (
