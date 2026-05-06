@@ -2,6 +2,10 @@
 
 The Logistics app (`/logistics`) covers nomenclature, tare, supplies, items, orders, repacking, allocation, the operator desktop, and the manufacturing process tree. It was added in v1.13.0 and has been the focus of most recent work.
 
+## v1.13.28
+
+- **Repacking — Reset and source-tare visibility** (`550d3bb`). Reset now correctly returns pending-moved items to their original slots — the move clones items into the target tare and leaves the source rows in place, hidden from the source pool until Apply. A source tare row stays visible while all of its items have been moved out, so you can see what you've removed and clear the tare manually when you're finished.
+
 ## v1.13.27
 
 - **Footer with versions and "What's new"** (`c4d54f7`). The Logistics shell footer now shows the plugin's running version, the EDM product version, and a "What's new" link that opens a `/changes` page rendering the user-facing changelog (this file).
