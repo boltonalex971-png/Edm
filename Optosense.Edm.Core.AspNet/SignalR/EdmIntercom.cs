@@ -1,16 +1,19 @@
 ﻿using Microprojects.Edm.Intercom;
 using Microprojects.Edm.Utils;
+using Microsoft.AspNetCore.Http.Connections.Client;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using Optosense.Edm.Core.Infrastructure;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Net;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -24,18 +27,41 @@ namespace Optosense.Edm.WebApi.Utils
 
         private readonly Task _worker;
         private readonly ILogger<EdmIntercom> _logger;
+        private readonly X509Certificate2 _clientCertificate;
         private event EventHandler MessagePublished;
 
-        public EdmIntercom(IntercomOptions options, ILogger<EdmIntercom> logger)
+        public EdmIntercom(IntercomOptions options, IClientCertificateProvider certProvider, ILogger<EdmIntercom> logger)
         {
             Options = options;
-            HubConnection = new HubConnectionBuilder()
-                .WithUrl($"{Options.Principal}/{IntercomHub.Hub}")
+            _logger = logger;
+            _clientCertificate = certProvider?.Get();
+            HubConnection = BuildHubConnection();
+            _worker = Task.Factory.StartNew(BackgroundSend, TaskCreationOptions.LongRunning);
+        }
+
+        // Apply the loaded client cert to both the underlying HTTP transport
+        // (used during /negotiate and as a fallback for SSE/long-polling) and
+        // the WebSocket transport. Both require independent configuration in
+        // SignalR's connection options.
+        private void ConfigureClientCertificate(HttpConnectionOptions opts)
+        {
+            if (_clientCertificate == null) return;
+            opts.ClientCertificates ??= new X509CertificateCollection();
+            opts.ClientCertificates.Add(_clientCertificate);
+            var prevWs = opts.WebSocketConfiguration;
+            opts.WebSocketConfiguration = ws =>
+            {
+                prevWs?.Invoke(ws);
+                ws.ClientCertificates ??= new X509CertificateCollection();
+                ws.ClientCertificates.Add(_clientCertificate);
+            };
+        }
+
+        private HubConnection BuildHubConnection() =>
+            new HubConnectionBuilder()
+                .WithUrl($"{Options.Principal}/{IntercomHub.Hub}", ConfigureClientCertificate)
                 .WithAutomaticReconnect()
                 .Build();
-            _worker = Task.Factory.StartNew(BackgroundSend, TaskCreationOptions.LongRunning);
-            _logger = logger;
-        }
 
         public Task<long> Publish<T>(string channel, T message)
         {
@@ -116,7 +142,7 @@ namespace Optosense.Edm.WebApi.Utils
             var obs = Observable.Create<T>(async observer =>
             {
                 var connection = new HubConnectionBuilder()
-                    .WithUrl($"{Options.Principal}/{IntercomHub.Hub}")
+                    .WithUrl($"{Options.Principal}/{IntercomHub.Hub}", ConfigureClientCertificate)
                     .WithAutomaticReconnect()
                     .Build();
                 connection.Closed += async (ex) =>
@@ -195,5 +221,9 @@ namespace Optosense.Edm.WebApi.Utils
         public Kinds Kind { get; set; }
         public string Principal { get; set; }
         public string ConnectionString { get; set; }
+        // Subject CN of a cert in LocalMachine\My to present on outbound
+        // SignalR connections so the hub authenticates them as RemoteService.
+        // Defaults to Kestrel:Certificates:Default:Subject in EdmHelper.
+        public string ClientCertificateSubject { get; set; }
     }
 }

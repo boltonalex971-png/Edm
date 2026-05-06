@@ -9,6 +9,9 @@ using System;
 using System.Linq;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
+using Optosense.Edm.Core.AspNet.Auth;
+using Optosense.Edm.Core.Infrastructure;
+using Optosense.Edm.Infrastructure.Edm.Jobs;
 using Optosense.Edm.WebApi.Utils;
 using Newtonsoft.Json;
 using Microsoft.Extensions.Logging;
@@ -53,9 +56,21 @@ namespace Optosense.Edm.Core.AspNet
         public static void AddOperationIntercom(this IHostApplicationBuilder builder)
         {
             var options = builder.Configuration.GetSection("Edm:Intercom").Get<IntercomOptions>();
+            // Default the outbound mTLS client cert subject to the same cert Kestrel
+            // serves with, so self-subscriptions and peer gRPC calls present a cert
+            // whose CN matches the hostname listed in Edm:Auth:RemoteServices.
+            if (options != null && string.IsNullOrEmpty(options.ClientCertificateSubject))
+            {
+                options.ClientCertificateSubject = builder.Configuration["Kestrel:Certificates:Default:Subject"];
+            }
+            builder.Services.AddSingleton<IClientCertificateProvider, ClientCertificateProvider>();
+            builder.Services.AddSingleton<IGrpcJobExecutor, GrpcJobExecutor>();
             builder.Services.AddSingleton<IIntercom>(provider => options?.Kind switch
             {
-                IntercomOptions.Kinds.SignalR => new EdmIntercom(options, provider.GetService<ILogger<EdmIntercom>>()),
+                IntercomOptions.Kinds.SignalR => new EdmIntercom(
+                    options,
+                    provider.GetService<IClientCertificateProvider>(),
+                    provider.GetService<ILogger<EdmIntercom>>()),
                 IntercomOptions.Kinds.Redis => new RedisCache(options.ConnectionString),
                 _ => default
             });

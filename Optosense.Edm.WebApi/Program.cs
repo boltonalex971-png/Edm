@@ -186,15 +186,35 @@ builder.Services.AddAuthentication(options =>
     .AddCertificate(options =>
     {
         options.AllowedCertificateTypes = CertificateTypes.All;
+        // Private CAs publish no CRL/OCSP; default Online check times out as RevocationStatusUnknown.
+        options.RevocationMode = System.Security.Cryptography.X509Certificates.X509RevocationMode.NoCheck;
         options.Events = new CertificateAuthenticationEvents
         {
             OnCertificateValidated = context =>
             {
-                var allowedServices = builder.Configuration.GetSection("Edm:Auth:RemoteServices").Get<List<string>>();
+                var allowedServices = builder.Configuration.GetSection("Edm:Auth:RemoteServices").Get<List<string>>()
+                    ?? new List<string>();
+
+                // Implicitly allow the cert whose CN matches the host of
+                // Edm:Intercom:Principal. Convention: each EDM host's cert CN
+                // equals its DNS name, and the Principal URL is built from
+                // that name. So the operator only configures Principal once
+                // and the owning host's CN is auto-trusted (covers self-sub
+                // on the admin and inbound calls from the principal on every
+                // peer driver host).
+                var principal = builder.Configuration["Edm:Intercom:Principal"];
+                if (!string.IsNullOrEmpty(principal)
+                    && Uri.TryCreate(principal, UriKind.Absolute, out var principalUri)
+                    && !string.IsNullOrEmpty(principalUri.Host))
+                {
+                    allowedServices.Add(principalUri.Host);
+                    allowedServices.Add($"CN={principalUri.Host}");
+                }
+
                 var subject = context.ClientCertificate.Subject;
                 var commonName = context.ClientCertificate.GetNameInfo(System.Security.Cryptography.X509Certificates.X509NameType.SimpleName, false);
 
-                if (allowedServices != null && (allowedServices.Contains(subject) || allowedServices.Contains(commonName)))
+                if (allowedServices.Contains(subject) || allowedServices.Contains(commonName))
                 {
                     var claims = new[]
                     {
@@ -278,8 +298,8 @@ app.Use(async (context, next) =>
 });
 
 app.UseExceptionHandler();
-app.MapGrpcService<EdmJobService>().AllowAnonymous();
-app.MapHub<IntercomHub>(IntercomHub.Hub).AllowAnonymous();
+app.MapGrpcService<EdmJobService>();
+app.MapHub<IntercomHub>(IntercomHub.Hub);
 app.MapGet("/status", () => "I AM ALIVE!");
 app.MapSpaPlugins();
 

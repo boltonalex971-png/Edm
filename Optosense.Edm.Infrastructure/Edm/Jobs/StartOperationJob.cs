@@ -29,6 +29,7 @@ namespace Optosense.Edm.Jobs
         protected IIntercom Intercom { get; init; }
         protected ILogger<StartOperationJob> Logger { get; init; }
         protected IServiceProvider ServiceProvider { get; init; }
+        protected IGrpcJobExecutor GrpcExecutor { get; init; }
 
         private List<(string url, IJob job)> _devices = [];
         private List<IJob> _audits = [];
@@ -45,7 +46,8 @@ namespace Optosense.Edm.Jobs
             IJobContainer container,
             IIntercom intercom,
             ILogger<StartOperationJob> logger,
-            IServiceProvider serviceProvider)
+            IServiceProvider serviceProvider,
+            IGrpcJobExecutor grpcExecutor)
         {
             OperationService = operationService;
             ProfileService = profileService;
@@ -53,6 +55,7 @@ namespace Optosense.Edm.Jobs
             Intercom = intercom;
             Logger = logger;
             ServiceProvider = serviceProvider;
+            GrpcExecutor = grpcExecutor;
         }
 
         public override async Task<bool> InitAsync()
@@ -115,7 +118,7 @@ namespace Optosense.Edm.Jobs
                 var deviceJob = new StartDeviceJob { JobParameters = deviceParams };
                 _devices.Add((url, deviceJob));
                 // TODO check response for validity
-                var response = await deviceJob.Execute(url);
+                var response = await GrpcExecutor.ExecuteAsync(deviceJob, url);
                 Logger.LogDebug("Operation started device at {Time}", DateTime.UtcNow.ToString("hh:mm:ss.fff"));
                 if (response.Status != JobStatus.SUCCESS)
                 {
@@ -171,7 +174,7 @@ namespace Optosense.Edm.Jobs
                         ((StartDeviceJobParameters)job.JobParameters).OperationHostDevice,
                         ((StartDeviceJobParameters)job.JobParameters).Driver
                     };
-                    var response = await check.Execute(url, parameter)
+                    var response = await GrpcExecutor.ExecuteAsync(check, url, parameter)
                         .ContinueWith(t =>
                         {
                             if (t.Status != TaskStatus.Faulted) return t.Result;
