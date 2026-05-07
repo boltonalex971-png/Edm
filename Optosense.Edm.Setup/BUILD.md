@@ -131,7 +131,7 @@ The batch file produces two artefacts:
 ## Step 3 - Rebuild plugin SPAs and DLLs (FileVersion-only)
 
 **Why plugins need explicit rebuilding.** Plugin csprojs embed their
-React build output (`Ui/dist` or `ClientApp/build`) as managed
+React build output (`Ui/dist` for Rsbuild, `Ui/build` for CRA) as managed
 resources. They are MEF-loaded at runtime via `PluginManagerHelper`,
 so they are NOT in WebApi's project-reference graph. Neither
 `dotnet publish Optosense.Edm.WebApi` nor the devenv Setup build
@@ -168,7 +168,7 @@ upgrades reliable without spurious bumps cluttering MSI deltas.
 | --------------------------------------- | ------------ |
 | `Microprojects.Edm.Ui.Logistics`        | `Ui`         |
 | `Microprojects.Edm.Ui.Console`          | `Ui`         |
-| `Microprojects.Edm.Ui.Technologies`             | `ClientApp`  |
+| `Microprojects.Edm.Ui.Technologies`     | `Ui`         |
 | `Optosense.Edm.Plugins.Operator`        | `Ui`         |
 | `Optosense.Edm.Profiles.Board`          | `Ui`         |
 | `Optosense.Edm.Operations.Optogen`      | `Ui`         |

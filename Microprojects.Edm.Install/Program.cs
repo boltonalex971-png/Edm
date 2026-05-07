@@ -140,7 +140,7 @@ void Install(Dictionary<string, string?> options)
         EnsureDatabaseExists(logisticsConn);
 
         // Apply EF migrations before the service starts touching the DB.
-        Migrate($"{_targetDir}Optosense.Edm.DataAccess.efbundle.exe", dbConn);
+        Migrate($"{_targetDir}Microprojects.Edm.Ui.Technologies.efbundle.exe", dbConn);
         Migrate($"{_targetDir}Microprojects.Edm.Ui.Logistics.efbundle.exe", logisticsConn);
 
         // Backup existed only to bridge an upgrade; service Environment is now

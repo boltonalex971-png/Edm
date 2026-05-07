@@ -15,7 +15,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
-    "Microprojects.Edm.Ui.Main": {
+    "Microprojects.Edm.Ui.Technologies": {
       "commandName": "Project",
       "launchBrowser": true,
       "environmentVariables": {

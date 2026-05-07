@@ -151,7 +151,7 @@ function Invoke-BuildBundles {
 # plugin's source tree changed since the last successful build.
 #
 # WHY plugins need explicit rebuilding: plugin csprojs embed their React
-# build output (Ui/dist or ClientApp/build) as resources. They are MEF-
+# build output (Ui/dist for Rsbuild, Ui/build for CRA) as resources. They are MEF-
 # loaded at runtime, so they are NOT in WebApi's project-reference graph;
 # neither 'dotnet publish Optosense.Edm.WebApi' nor the devenv Setup build
 # rebuilds them. Without this step the MSI ships whatever DLL was last
