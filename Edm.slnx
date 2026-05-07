@@ -17,6 +17,9 @@
   <Folder Name="/Solution Items/">
     <File Path="EdmAssemblyInfo.cs" />
   </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="Edm.IntegrationTests/Edm.IntegrationTests.csproj" />
+  </Folder>
   <Folder Name="/Ui/">
     <Project Path="Microprojects.Edm.Ui.Console/Microprojects.Edm.Ui.Console.csproj" />
     <Project Path="Microprojects.Edm.Ui.Logistics/Microprojects.Edm.Ui.Logistics.csproj" />
