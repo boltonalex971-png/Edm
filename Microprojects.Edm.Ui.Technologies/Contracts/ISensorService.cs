@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microprojects.Edm.Ui.Main.Models;
+using Microprojects.Edm.Ui.Technologies.Models;
 
-namespace Microprojects.Edm.Ui.Main.Contracts;
+namespace Microprojects.Edm.Ui.Technologies.Contracts;
 
 public interface ISensorService
 {

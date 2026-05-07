@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Optosense.Edm.Core.Models;
 using Microprojects.Edm.Ui.Technologies.Models;
 
-namespace Microprojects.Edm.Ui.Main.Models
+namespace Microprojects.Edm.Ui.Technologies.Models
 {
     public class OperationViewModel
     {

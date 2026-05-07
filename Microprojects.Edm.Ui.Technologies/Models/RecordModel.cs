@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Microprojects.Edm.Ui.Main.Models
+namespace Microprojects.Edm.Ui.Technologies.Models
 {
     public class RecordModel
     {

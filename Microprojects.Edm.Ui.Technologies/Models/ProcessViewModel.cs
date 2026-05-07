@@ -4,7 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Microprojects.Edm.Ui.Main.Models
+namespace Microprojects.Edm.Ui.Technologies.Models
 {
     public class ProcessViewModel 
     {

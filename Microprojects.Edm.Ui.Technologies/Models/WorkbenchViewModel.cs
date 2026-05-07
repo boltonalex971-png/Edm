@@ -2,7 +2,7 @@ using Microprojects.Edm.Ui.Technologies.Models;
 using Microprojects.Edm.Ui.Technologies.Models;
 using System;
 
-namespace Microprojects.Edm.Ui.Main.Models
+namespace Microprojects.Edm.Ui.Technologies.Models
 {
     public class WorkbenchViewModel
     {

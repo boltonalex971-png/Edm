@@ -9,13 +9,13 @@ using Microprojects.Edm.Ui.Technologies.Auditing;
 using Microprojects.Edm.Ui.Technologies.Contracts;
 using Microprojects.Edm.Ui.Technologies.Models;
 using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Ui.Main.Models;
+using Microprojects.Edm.Ui.Technologies.Models;
 using Microprojects.Edm.Ui.Technologies.Services;
 
-namespace Microprojects.Edm.Ui.Main.Controllers
+namespace Microprojects.Edm.Ui.Technologies.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/technologies/[controller]")]
     public class AuditsController : ControllerBase
     {
         private readonly ILogger<ProcessesController> _logger;

@@ -2,8 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microprojects.Edm.Ui.Main.Contracts;
-using Microprojects.Edm.Ui.Main.Services;
 using Microprojects.Edm.Ui.Technologies.Contracts;
 using Microprojects.Edm.Ui.Technologies.Jobs;
 using Microprojects.Edm.Ui.Technologies.Persistence;

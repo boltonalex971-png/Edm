@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microprojects.Edm.Ui.Main.Contracts;
-using Microprojects.Edm.Ui.Main.Models;
+using Microprojects.Edm.Ui.Technologies.Contracts;
+using Microprojects.Edm.Ui.Technologies.Models;
 using Microsoft.EntityFrameworkCore;
 using Microprojects.Edm.Ui.Technologies.Persistence;
 
-namespace Microprojects.Edm.Ui.Main.Services;
+namespace Microprojects.Edm.Ui.Technologies.Services;
 
 public class SensorService(TechnologiesContext db) : ISensorService
 {

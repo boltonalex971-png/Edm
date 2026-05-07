@@ -12,14 +12,14 @@ using Microprojects.Edm.Ui.Technologies.Models;
 using Microprojects.Edm.Ui.Technologies.Models;
 using Optosense.Edm.Plugins;
 using Optosense.Edm.Core.AspNet.Controllers;
-using Microprojects.Edm.Ui.Main.Models;
-using Microprojects.Edm.Ui.Main.Utils;
+using Microprojects.Edm.Ui.Technologies.Models;
+using Microprojects.Edm.Ui.Technologies.Utils;
 using Microsoft.Extensions.Configuration;
 
-namespace Microprojects.Edm.Ui.Main.Controllers
+namespace Microprojects.Edm.Ui.Technologies.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/technologies/[controller]")]
     public class WorkplacesController : AuthControllerBase
     {
         private readonly ILogger<WorkplacesController> _logger;

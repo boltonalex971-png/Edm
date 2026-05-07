@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 namespace Optosense.Edm.Drivers.OpcUa.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/technologies/[controller]")]
     public class OperatorController : ControllerBase
     {
         private IJobContainer _jobs;

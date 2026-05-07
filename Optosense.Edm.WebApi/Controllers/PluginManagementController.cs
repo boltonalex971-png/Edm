@@ -9,7 +9,7 @@ namespace Optosense.Edm.WebApi.Controllers
     /// Administrative controller for plugin management
     /// </summary>
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/technologies/[controller]")]
     [Authorize(Roles = "EDMAdmins")]
     public class PluginManagementController : ControllerBase
     {

@@ -12,17 +12,17 @@ using Optosense.Edm.Core.Models;
 using Microprojects.Edm.Ui.Technologies.Models;
 using Microprojects.Edm.Ui.Technologies.Models;
 using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Ui.Main.Models;
+using Microprojects.Edm.Ui.Technologies.Models;
 using Optosense.Edm.Plugins;
 using Microprojects.Edm.Jobs;
 using Newtonsoft.Json;
 using Google.Protobuf.WellKnownTypes;
 using System.Reflection;
 
-namespace Microprojects.Edm.Ui.Main.Controllers
+namespace Microprojects.Edm.Ui.Technologies.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/technologies/[controller]")]
     public class OperationsController : ControllerBase
     {
         private ILogger<OperationsController> _logger;

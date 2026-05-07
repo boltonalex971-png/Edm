@@ -1,6 +1,6 @@
 using System;
 
-namespace Microprojects.Edm.Ui.Main.Models
+namespace Microprojects.Edm.Ui.Technologies.Models
 {
     public class WorkplaceHostDeviceModel
     {

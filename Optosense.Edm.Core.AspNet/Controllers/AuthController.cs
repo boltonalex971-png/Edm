@@ -20,7 +20,7 @@ using Optosense.Edm.Core.AspNet.Auth;
 namespace Optosense.Edm.Core.AspNet.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/technologies/[controller]")]
     public class AuthController : AuthControllerBase
     {
         private readonly ILogger<AuthController> _logger;

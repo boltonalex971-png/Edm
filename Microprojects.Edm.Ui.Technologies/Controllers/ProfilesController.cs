@@ -10,12 +10,12 @@ using Microprojects.Edm.Ui.Technologies.Contracts;
 using Microprojects.Edm.Ui.Technologies.Models;
 using Microprojects.Edm.Ui.Technologies.Models;
 using Optosense.Edm.Plugins;
-using Microprojects.Edm.Ui.Main.Models;
+using Microprojects.Edm.Ui.Technologies.Models;
 
-namespace Microprojects.Edm.Ui.Main.Controllers
+namespace Microprojects.Edm.Ui.Technologies.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/technologies/[controller]")]
     public class ProfilesController : ControllerBase
     {
         private readonly ILogger<ProfilesController> _logger;

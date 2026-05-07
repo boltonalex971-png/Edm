@@ -5,11 +5,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microprojects.Edm.Ui.Technologies;
 
-namespace Microprojects.Edm.Ui.Main.Controllers;
+namespace Microprojects.Edm.Ui.Technologies.Controllers;
 
 [ApiController]
 [AllowAnonymous]
-[Route("api/[controller]")]
+[Route("api/technologies/[controller]")]
 public class MetaController : ControllerBase
 {
     private static readonly Assembly PluginAssembly = typeof(TechnologiesUiPlugin).Assembly;

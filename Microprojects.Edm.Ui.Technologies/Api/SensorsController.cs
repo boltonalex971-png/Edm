@@ -1,16 +1,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microprojects.Edm.Ui.Main.Contracts;
-using Microprojects.Edm.Ui.Main.Models;
+using Microprojects.Edm.Ui.Technologies.Contracts;
+using Microprojects.Edm.Ui.Technologies.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Microprojects.Edm.Ui.Main.Api;
+namespace Microprojects.Edm.Ui.Technologies.Api;
 
 [AllowAnonymous]
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/technologies/[controller]")]
 public class SensorsController(ISensorService sensorService) : ControllerBase
 {
     [HttpGet]
