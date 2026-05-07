@@ -4,17 +4,17 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.Dynamic;
 using Microprojects.Edm.Jobs;
-using Optosense.Edm.Core.Models;
-using Optosense.Edm.Jobs;
-using Optosense.Edm.Infrastructure.Edm.Jobs;
+using Microprojects.Edm.Models;
+using Microprojects.Edm.Jobs;
+using Microprojects.Edm.Grpc;
 using Microprojects.Edm.Ui.Technologies.Contracts;
 using Microprojects.Edm.Intercom;
 using Microsoft.Extensions.Logging;
 using Microprojects.Edm.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using Microprojects.Edm.Ui.Technologies.Models;
-using Optosense.Edm.Infrastructure.Protos;
-using Optosense.Edm.Intercom.Events;
+using Microprojects.Edm.Grpc;
+using Microprojects.Edm.Intercom.Events;
 using Enum = System.Enum;
 
 namespace Microprojects.Edm.Ui.Technologies.Jobs

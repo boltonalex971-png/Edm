@@ -8,6 +8,7 @@ using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Microprojects.Edm;
 using Microprojects.Edm.Drivers;
 using Newtonsoft.Json;
 using Optosense.Edm.Profiles.Board;

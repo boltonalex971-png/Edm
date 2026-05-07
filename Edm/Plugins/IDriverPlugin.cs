@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Optosense.Edm.Plugins
+namespace Microprojects.Edm.Plugins
 {
     public interface IDriverPlugin : IPlugin
     {

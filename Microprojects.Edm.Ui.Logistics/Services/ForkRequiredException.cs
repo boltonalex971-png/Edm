@@ -1,4 +1,4 @@
-using Optosense.Edm.Plugins;
+using Microprojects.Edm.Plugins;
 
 namespace Microprojects.Edm.Ui.Logistics.Services;
 

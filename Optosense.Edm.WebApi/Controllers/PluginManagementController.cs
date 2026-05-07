@@ -1,7 +1,6 @@
 using Microprojects.Edm.Plugins;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Optosense.Edm.Plugins;
 
 namespace Optosense.Edm.WebApi.Controllers
 {

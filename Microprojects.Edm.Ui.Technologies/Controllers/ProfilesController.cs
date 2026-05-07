@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 using Microprojects.Edm.Ui.Technologies.Contracts;
 using Microprojects.Edm.Ui.Technologies.Models;
 using Microprojects.Edm.Ui.Technologies.Models;
-using Optosense.Edm.Plugins;
+using Microprojects.Edm.Plugins;
 using Microprojects.Edm.Ui.Technologies.Models;
 
 namespace Microprojects.Edm.Ui.Technologies.Controllers

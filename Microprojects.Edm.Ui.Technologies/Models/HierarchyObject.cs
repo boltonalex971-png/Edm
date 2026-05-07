@@ -1,4 +1,4 @@
-using Optosense.Edm.Domain.Models;
+using Microprojects.Edm.Domain;
 using System;
 using System.ComponentModel.DataAnnotations;
 //using OptoSense.Domain.Properties;

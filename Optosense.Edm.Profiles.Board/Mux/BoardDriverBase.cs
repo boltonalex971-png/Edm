@@ -11,11 +11,11 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Microprojects.Edm;
 using Microprojects.Edm.Drivers;
 using Microprojects.Edm.Utils;
 using Newtonsoft.Json;
 using Optosense.Edm.Profiles.Board;
-using Optosense.Edm.Utils;
 
 namespace Optosense.Edm.Drivers.Mux
 {

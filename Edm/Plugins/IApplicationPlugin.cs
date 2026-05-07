@@ -1,6 +1,6 @@
 using System;
 
-namespace Optosense.Edm.Plugins
+namespace Microprojects.Edm.Plugins
 {
     public interface IApplicationPlugin : IPlugin
     {

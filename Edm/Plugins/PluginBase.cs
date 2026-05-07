@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Optosense.Edm.Plugins
+namespace Microprojects.Edm.Plugins
 {
     public class PluginBase : IPlugin
     {

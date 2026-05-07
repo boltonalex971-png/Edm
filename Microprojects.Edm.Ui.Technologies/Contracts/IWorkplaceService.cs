@@ -1,4 +1,4 @@
-using Optosense.Edm.Core.Models;
+using Microprojects.Edm.Models;
 using Microprojects.Edm.Ui.Technologies.Models;
 using System;
 using System.Collections.Generic;

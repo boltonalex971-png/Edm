@@ -4,7 +4,7 @@ using System.Reactive.Disposables;
 using System.Threading.Tasks;
 using Microprojects.Edm.Intercom;
 using Newtonsoft.Json;
-using Optosense.Edm.Intercom.Events;
+using Microprojects.Edm.Intercom.Events;
 
 namespace Microprojects.Edm.Ui.Technologies.Intercom;
 public static class OptosenseIntercomExtensions

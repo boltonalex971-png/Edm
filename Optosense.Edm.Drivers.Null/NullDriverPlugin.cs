@@ -1,4 +1,4 @@
-﻿using Optosense.Edm.Plugins;
+﻿using Microprojects.Edm.Plugins;
 using System;
 using Microprojects.Edm.Drivers;
 using System.Collections.Generic;

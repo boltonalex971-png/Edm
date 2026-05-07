@@ -5,7 +5,7 @@ using Microprojects.Edm.Ui.Technologies.Models;
 using Microprojects.Edm.Ui.Technologies.Models;
 using Microprojects.Edm.Ui.Technologies.Models;
 using Microprojects.Edm.Ui.Technologies.Persistence;
-using Optosense.Edm.Plugins;
+using Microprojects.Edm.Plugins;
 using System;
 using System.Collections.Generic;
 using System.Linq;

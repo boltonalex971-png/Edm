@@ -2,8 +2,8 @@ using System.Runtime.Versioning;
 using System.Security.Claims;
 using System.Security.Principal;
 using Microprojects.Edm.Ui.Logistics.Contracts;
-using Optosense.Edm.Core.AspNet.Auth;
-using Optosense.Edm.Core.AspNet.Controllers;
+using Microprojects.Edm.Auth;
+using Microprojects.Edm.Controllers;
 
 namespace Microprojects.Edm.Ui.Logistics.Services;
 

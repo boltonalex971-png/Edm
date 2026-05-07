@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using Optosense.Edm.Domain.Models;
+using Microprojects.Edm.Domain;
 using System;
 using System.Collections.Generic;
 using System.Linq;

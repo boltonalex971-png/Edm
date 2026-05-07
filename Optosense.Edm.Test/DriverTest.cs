@@ -2,7 +2,7 @@ using AdaptiveExpressions;
 using Microprojects.Edm;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
-using Optosense.Edm.Domain.Models;
+using Microprojects.Edm.Domain;
 using Microprojects.Edm.Ui.Technologies.Models;
 using Optosense.Edm.Drivers.Mux;
 using Optosense.Edm.Drivers.OpcUa;
@@ -17,7 +17,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microprojects.Edm.Drivers;
 using Microsoft.Extensions.Logging.Abstractions;
-using Optosense.Edm.Utils;
+using Microprojects.Edm.Utils;
 
 namespace Optosense.Edm.Test
 {

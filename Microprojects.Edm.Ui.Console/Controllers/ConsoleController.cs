@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.Logging.EventLog;
-using Optosense.Edm.Plugins;
+using Microprojects.Edm.Plugins;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

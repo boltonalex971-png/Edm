@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 using Grpc.Net.Client;
 using Microprojects.Edm.Jobs;
 using Newtonsoft.Json;
-using Optosense.Edm.Core.Infrastructure;
-using Optosense.Edm.Infrastructure.Edm.Jobs;
-using Optosense.Edm.Jobs;
+using Microprojects.Edm.Infrastructure;
+using Microprojects.Edm.Grpc;
+using Microprojects.Edm.Jobs;
 
 namespace Microprojects.Edm.Ui.Technologies.Jobs
 {

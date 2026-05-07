@@ -6,8 +6,8 @@ using Microprojects.Edm.Ui.Technologies.Contracts;
 using Microprojects.Edm.Ui.Technologies.Jobs;
 using Microprojects.Edm.Ui.Technologies.Persistence;
 using Microprojects.Edm.Ui.Technologies.Services;
-using Optosense.Edm.Core.Infrastructure;
-using Optosense.Edm.Plugins;
+using Microprojects.Edm.Infrastructure;
+using Microprojects.Edm.Plugins;
 
 namespace Microprojects.Edm.Ui.Technologies
 {

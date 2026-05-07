@@ -3,7 +3,7 @@ using Microprojects.Edm.Ui.Logistics.Contracts;
 using Microprojects.Edm.Ui.Logistics.Models;
 using Microprojects.Edm.Ui.Logistics.Persistence;
 using Microsoft.EntityFrameworkCore;
-using Optosense.Edm.Plugins;
+using Microprojects.Edm.Plugins;
 
 namespace Microprojects.Edm.Ui.Logistics.Services;
 

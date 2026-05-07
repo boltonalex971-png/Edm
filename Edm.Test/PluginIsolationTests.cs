@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Optosense.Edm.Plugins;
+using Microprojects.Edm.Plugins;
 
 namespace Edm.Test
 {

@@ -8,8 +8,8 @@ using Microprojects.Edm.Ui.Logistics.Models;
 using Microprojects.Edm.Ui.Logistics.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Microprojects.Edm.Ui.Logistics.ViewModels;
-using Optosense.Edm.Core.AspNet.Controllers;
-using Optosense.Edm.Plugins;
+using Microprojects.Edm.Controllers;
+using Microprojects.Edm.Plugins;
 
 namespace Microprojects.Edm.Ui.Logistics.Controllers;
 

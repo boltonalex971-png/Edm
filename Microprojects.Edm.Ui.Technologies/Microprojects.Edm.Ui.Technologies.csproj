@@ -19,11 +19,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Optosense.Edm.Core.AspNet\Optosense.Edm.Core.AspNet.csproj" />
-		<ProjectReference Include="..\Optosense.Edm.Core\Optosense.Edm.Core.csproj" />
-		<ProjectReference Include="..\Optosense.Edm.Domain\Optosense.Edm.Domain.csproj" />
-		<ProjectReference Include="..\Optosense.Edm.Infrastructure\Optosense.Edm.Infrastructure.csproj" />
-		<ProjectReference Include="..\Optosense.Edm\Optosense.Edm.csproj" />
+		<ProjectReference Include="..\Edm\Edm.csproj" />
+		<ProjectReference Include="..\Microprojects.Edm.Shared\Microprojects.Edm.Shared.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

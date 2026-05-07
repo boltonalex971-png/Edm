@@ -1,4 +1,4 @@
-﻿using Optosense.Edm.Plugins;
+﻿using Microprojects.Edm.Plugins;
 using Microprojects.Edm.Drivers;
 using Newtonsoft.Json;
 using Optosense.Edm.Profiles.Operator;

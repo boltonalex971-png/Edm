@@ -1,10 +1,10 @@
-using Optosense.Edm.Core.Models;
+using Microprojects.Edm.Models;
 using Microprojects.Edm;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using Newtonsoft.Json;
 using Microprojects.Edm.Ui.Technologies.Contracts;
-using Optosense.Edm.Core.Infrastructure;
+using Microprojects.Edm.Infrastructure;
 using Microprojects.Edm.Ui.Technologies.Models;
 using Microprojects.Edm.Ui.Technologies.Models;
 using Microprojects.Edm.Ui.Technologies.Models;

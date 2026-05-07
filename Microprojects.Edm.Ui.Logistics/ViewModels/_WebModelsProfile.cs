@@ -1,6 +1,6 @@
 using Microprojects.Edm.Ui.Logistics.Models;
 using Newtonsoft.Json;
-using Optosense.Edm.Plugins;
+using Microprojects.Edm.Plugins;
 using Directory = Microprojects.Edm.Ui.Logistics.Models.Directory;
 
 namespace Microprojects.Edm.Ui.Logistics.ViewModels;

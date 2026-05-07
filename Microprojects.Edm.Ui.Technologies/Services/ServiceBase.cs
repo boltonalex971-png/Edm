@@ -1,4 +1,4 @@
-using Optosense.Edm.Domain.Models;
+using Microprojects.Edm.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microprojects.Edm.Ui.Technologies.Contracts;
 using Microprojects.Edm.Ui.Technologies.Models;
