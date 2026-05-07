@@ -57,13 +57,17 @@ The same Kestrel server cert (LocalMachine\My, `Subject = [HOSTNAME]`) is used f
 Default = SmartAuth ─┬─ Authorization: Bearer …    → JwtBearer
                     ├─ Cookie X-Auth-Token         → JwtBearer
                     ├─ LocalPort == GrpcSecure.Port → Certificate
-                    └─ otherwise                    → Negotiate
+                    └─ otherwise                    → Negotiate¹
 ```
+
+¹ When `Edm:Auth:Negotiate:Enabled = false` (default on non-Windows / TestServer), the otherwise-fallback and `DefaultChallengeScheme` both become `JwtBearer` and `.AddNegotiate()` is skipped. Anonymous requests then get a Bearer 401 instead of a Kerberos handshake.
 
 Three real handlers sit behind it:
 
 ### 3.1 Negotiate
 Stock `AddNegotiate()`. Establishes the Windows identity for the SPA's first hit so the platform can read `WindowsIdentity.Groups` and translate them into roles + divisions.
+
+Registration is gated by `Edm:Auth:Negotiate:Enabled` (default `OperatingSystem.IsWindows()`). The handler depends on Kestrel's `IConnectionItemsFeature`, which `TestServer` and non-Windows hosts don't supply — invoking it on those throws `NotSupportedException` per request. The flag lets integration tests (and any future Linux deployment) opt out without a code change; production on Windows + Kestrel keeps Kerberos.
 
 ### 3.2 JwtBearer
 - HS256, key/issuer/audience from `Edm:Auth:Jwt`. Key is symmetric and lives in `appsettings.json` — production deployments override it via env vars or `appsettings.{Environment}.json`.
@@ -182,6 +186,7 @@ There is also a `LocalJobExecutor.Execute(this IJobContainer, IJob, …)` extens
 | `Edm:Auth:Jwt.{Key,Issuer,Audience,ExpiryMinutes}` | HS256 settings. Override `Key` per-environment.                                           |
 | `Edm:Auth:Jwt.RefreshThresholdMinutes`       | Cookie refresh window. Default 15.                                                              |
 | `Edm:Auth:Roles.{Admin,Technologist,Operator}` | Maps EDM role → AD group name fragment.                                                       |
+| `Edm:Auth:Negotiate.Enabled`                 | Register `AddNegotiate()` and use it as the SmartAuth fallback. Default: `OperatingSystem.IsWindows()`. |
 | `Edm:Auth:DivisionsRoot`                     | AD group prefix that yields `Divisions` claims.                                                 |
 | `Edm:Auth:RemoteServices`                    | Allow-list of peer cert CNs / Subject DNs. **Principal CN is auto-appended; do not duplicate.** |
 | `Edm:Intercom.Principal`                     | URL of master `IntercomHub` (e.g. `https://principal-host:16334`).                              |
@@ -200,6 +205,7 @@ There is also a `LocalJobExecutor.Execute(this IJobContainer, IJob, …)` extens
 | Issue a JWT outside the SPA-bootstrap path         | `IJwtService.GenerateToken` (don't hand-roll)          |
 | Outbound call to a peer host                       | Inject `IGrpcJobExecutor` (gRPC) or `IIntercom` (hub)  |
 | Add a new cert-bearing transport                   | Add a path to `IClientCertificateProvider.Get`         |
+| Run host on non-Windows or under TestServer        | Set `Edm:Auth:Negotiate:Enabled = false` (env: `Edm__Auth__Negotiate__Enabled`) |
 
 ---
 

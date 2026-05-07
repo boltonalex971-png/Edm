@@ -101,10 +101,18 @@ builder.Services.AddSession(session =>
     session.Cookie.IsEssential = true;
 });
 builder.Services.AddSingleton<IJwtService, JwtService>();
-builder.Services.AddAuthentication(options =>
+
+// Negotiate handler needs Kestrel's IConnectionItemsFeature; non-Windows hosts and TestServer can't supply it.
+var negotiateEnabled = builder.Configuration.GetValue<bool?>("Edm:Auth:Negotiate:Enabled")
+    ?? OperatingSystem.IsWindows();
+var defaultChallengeScheme = negotiateEnabled
+    ? NegotiateDefaults.AuthenticationScheme
+    : JwtBearerDefaults.AuthenticationScheme;
+
+var authBuilder = builder.Services.AddAuthentication(options =>
     {
         options.DefaultAuthenticateScheme = "SmartAuth";
-        options.DefaultChallengeScheme = NegotiateDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = defaultChallengeScheme;
     })
     .AddPolicyScheme("SmartAuth", "SmartAuth", options =>
     {
@@ -128,10 +136,16 @@ builder.Services.AddAuthentication(options =>
                 return CertificateAuthenticationDefaults.AuthenticationScheme;
             }
 
-            return NegotiateDefaults.AuthenticationScheme;
+            return defaultChallengeScheme;
         };
-    })
-    .AddNegotiate()
+    });
+
+if (negotiateEnabled)
+{
+    authBuilder.AddNegotiate();
+}
+
+authBuilder
     .AddJwtBearer(options =>
     {
         var jwtSettings = builder.Configuration.GetSection("Edm:Auth:Jwt");
