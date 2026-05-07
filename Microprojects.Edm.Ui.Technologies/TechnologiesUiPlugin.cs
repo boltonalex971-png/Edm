@@ -10,14 +10,15 @@ using System;
 using Microprojects.Edm.Ui.Main.Contracts;
 using Microprojects.Edm.Ui.Main.Services;
 
-namespace Microprojects.Edm.Ui.Main
+namespace Microprojects.Edm.Ui.Technologies
 {
     [OperationPlugin(
-        Name = "EDM",
-        Description = "Main EDM UI",
+        Name = "Technologies",
+        Description = "Technologies UI",
         Guid = "76123DAA-9A68-4F90-B6A9-F5F16633C7D6",
-        SpaPath = "ClientApp/build")]
-    public class EdmUiPlugin : PluginBase, IOperationPlugin
+        SpaPath = "ClientApp/build",
+        UiRoot = "technologies")]
+    public class TechnologiesUiPlugin : PluginBase, IOperationPlugin
     {
         public override void InjectDependencies(IServiceCollection services, IConfiguration configuration)
         {

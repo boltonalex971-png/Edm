@@ -50,7 +50,7 @@
 		<MakeDir Directories="$(IntermediateOutputPath)" />
 		<ItemGroup>
 			<_BuildInfoLines Include="// &lt;auto-generated /&gt;" />
-			<_BuildInfoLines Include="namespace Microprojects.Edm.Ui.Main%3B" />
+			<_BuildInfoLines Include="namespace Microprojects.Edm.Ui.Technologies%3B" />
 			<_BuildInfoLines Include="internal static class BuildInfo { public const string ProductVersion = &quot;$(_ProductVersion)&quot;%3B }" />
 		</ItemGroup>
 		<WriteLinesToFile File="$(BuildInfoGenerated)" Lines="@(_BuildInfoLines)" Overwrite="true" Encoding="UTF-8" />

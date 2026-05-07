@@ -20,7 +20,7 @@
   <Folder Name="/Ui/">
     <Project Path="Microprojects.Edm.Ui.Console/Microprojects.Edm.Ui.Console.csproj" />
     <Project Path="Microprojects.Edm.Ui.Logistics/Microprojects.Edm.Ui.Logistics.csproj" />
-    <Project Path="Microprojects.Edm.Ui.Main/Microprojects.Edm.Ui.Main.csproj" />
+    <Project Path="Microprojects.Edm.Ui.Technologies/Microprojects.Edm.Ui.Technologies.csproj" />
   </Folder>
   <Project Path="Edm.Test/Edm.Test.csproj">
     <Build Project="false" />

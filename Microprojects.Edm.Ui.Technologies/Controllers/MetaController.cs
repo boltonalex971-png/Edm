@@ -3,6 +3,7 @@ using System.IO;
 using System.Reflection;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microprojects.Edm.Ui.Technologies;
 
 namespace Microprojects.Edm.Ui.Main.Controllers;
 
@@ -11,8 +12,8 @@ namespace Microprojects.Edm.Ui.Main.Controllers;
 [Route("api/[controller]")]
 public class MetaController : ControllerBase
 {
-    private static readonly Assembly PluginAssembly = typeof(EdmUiPlugin).Assembly;
-    private const string ChangelogResourceName = "Microprojects.Edm.Ui.Main.CHANGES.md";
+    private static readonly Assembly PluginAssembly = typeof(TechnologiesUiPlugin).Assembly;
+    private const string ChangelogResourceName = "Microprojects.Edm.Ui.Technologies.CHANGES.md";
 
     [HttpGet("version")]
     public IActionResult GetVersion()
