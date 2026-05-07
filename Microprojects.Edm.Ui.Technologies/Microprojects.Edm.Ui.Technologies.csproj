@@ -27,10 +27,13 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Compile Remove="ClientApp\build\**" />
-	  <Content Remove="ClientApp\build\**" />
-	  <None Remove="ClientApp\build\**" />
-	  <EmbeddedResource Include="ClientApp\build/**" />
+	  <Compile Remove="Ui\dist\**" />
+	  <Compile Remove="Ui\node_modules\**" />
+	  <Content Remove="Ui\dist\**" />
+	  <None Remove="Ui\dist\**" />
+	  <None Remove="Ui\node_modules\**" />
+	  <EmbeddedResource Include="Ui\dist\**" />
+	  <EmbeddedResource Remove="Ui\node_modules\**" />
 	  <EmbeddedResource Include="CHANGES.md" />
 	</ItemGroup>
 

@@ -14,10 +14,7 @@ export default defineConfig({
     favicon: './public/favicon.ico',
   },
   output: {
-    assetPrefix: '/',
-    distPath: {
-      root: 'build',
-    },
+    assetPrefix: '/technologies',
   },
   dev: {
     assetPrefix: '/',
