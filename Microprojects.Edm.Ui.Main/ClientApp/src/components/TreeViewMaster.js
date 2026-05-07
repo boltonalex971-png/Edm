@@ -96,6 +96,17 @@ const getAllFolderIds = (nodes, ids = []) => {
     return ids;
 };
 
+const collectItemsWithChildren = (nodes, set = new Set()) => {
+    if (!nodes) return set;
+    for (const node of nodes) {
+        if (node.children && node.children.length > 0) {
+            set.add(node.id);
+            collectItemsWithChildren(node.children, set);
+        }
+    }
+    return set;
+};
+
 const getEntityType = (apiPath) => {
     if (apiPath.includes('/api/processes')) return 'process';
     if (apiPath.includes('/api/devices')) return 'device';
@@ -134,11 +145,15 @@ const getIconForType = (apiPath, isNode, isExpanded) => {
 
 // Custom Tree Item with D&D integration
 const IndustrialTreeItem = React.forwardRef((props, ref) => {
-    const { itemId, label, isNode, apiPath } = props;
-    
+    const { itemId, label, isNode, apiPath, itemsWithChildren, expandedSet, selectedId } = props;
+
     // Fallback detection if RichTreeView doesn't spread item properties
     const itemIsNode = isNode ?? itemId?.startsWith('node-');
-    
+    const hasChildren = itemsWithChildren?.has(itemId) ?? false;
+    const isEmptyFolder = itemIsNode && !hasChildren;
+    const isExpanded = expandedSet?.has(itemId) ?? false;
+    const isSelected = selectedId === itemId;
+
     const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
         id: itemId,
         data: { id: itemId, label, isNode: itemIsNode }
@@ -163,10 +178,43 @@ const IndustrialTreeItem = React.forwardRef((props, ref) => {
         }
     };
 
-    // Use MUI's internal state for expansion
-    const isExpanded = props.status?.expanded;
-    const isSelected = props.status?.selected;
-    const IconComponent = getIconForType(apiPath || '', itemIsNode, isExpanded);
+    // Empty folders always render the closed icon — there is nothing to expand into.
+    const showOpenFolder = itemIsNode && hasChildren && isExpanded;
+    const IconComponent = getIconForType(apiPath || '', itemIsNode, showOpenFolder);
+
+    const itemClass = itemIsNode
+        ? (isEmptyFolder ? styles.emptyFolderItem : styles.folderItem)
+        : styles.fileItem;
+
+    const iconCursor = !itemIsNode
+        ? 'pointer'
+        : isEmptyFolder
+            ? 'default'
+            : isExpanded
+                ? 'zoom-out'
+                : 'zoom-in';
+
+    // Wrap iconContainer so a folder's icon click toggles expansion (MUI's onClick) but
+    // does NOT bubble to content selection — i.e. the URL/selected node stays put.
+    const IconContainerSlot = useMemo(() => {
+        const Slot = (slotProps) => {
+            const { onClick: muiOnClick, style: muiStyle, ...rest } = slotProps;
+            const handleClick = (e) => {
+                muiOnClick?.(e);
+                if (itemIsNode) {
+                    e.stopPropagation();
+                }
+            };
+            return (
+                <div
+                    {...rest}
+                    onClick={handleClick}
+                    style={{ ...muiStyle, cursor: iconCursor }}
+                />
+            );
+        };
+        return Slot;
+    }, [itemIsNode, iconCursor]);
 
     return (
         <TreeItem
@@ -175,9 +223,10 @@ const IndustrialTreeItem = React.forwardRef((props, ref) => {
             style={style}
             {...attributes}
             {...listeners}
-            className={`${itemIsNode ? styles.folderItem : styles.fileItem} ${isSelected ? styles.selectedItem : ''}`}
+            className={`${itemClass} ${isSelected ? styles.selectedItem : ''}`}
             slots={{
-                icon: IconComponent
+                icon: IconComponent,
+                iconContainer: IconContainerSlot
             }}
         />
     );
@@ -199,6 +248,8 @@ export function TreeViewMaster(props) {
     const [initialized, setInitialized] = useState(false);
 
     const treeData = useMemo(() => transformData(data), [data]);
+    const itemsWithChildren = useMemo(() => collectItemsWithChildren(treeData || []), [treeData]);
+    const expandedSet = useMemo(() => new Set(expandedItems), [expandedItems]);
 
     // Handle initial expand all and auto-expansion when route changes
     useEffect(() => {
@@ -376,12 +427,16 @@ export function TreeViewMaster(props) {
                             onExpandedItemsChange={handleExpandedItemsChange}
                             onItemSelectionToggle={handleItemSelectionChange}
                             selectedItems={currentSelectedId}
+                            expansionTrigger="iconContainer"
                             slots={{
                                 item: IndustrialTreeItem
                             }}
                             slotProps={{
                                 item: {
-                                    apiPath: apiPath
+                                    apiPath: apiPath,
+                                    itemsWithChildren: itemsWithChildren,
+                                    expandedSet: expandedSet,
+                                    selectedId: currentSelectedId
                                 }
                             }}
                         />

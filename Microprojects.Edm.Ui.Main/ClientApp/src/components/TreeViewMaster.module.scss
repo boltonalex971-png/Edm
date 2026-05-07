@@ -88,18 +88,20 @@
         }
         
         &.Mui-selected {
-          background-color: #e3f2fd !important;
+          background-color: #bbdefb !important;
           color: $primary-main !important;
           border-left: 4px solid $primary-main !important;
           border-top-left-radius: 0 !important;
           border-bottom-left-radius: 0 !important;
-          
+          box-shadow: inset 0 -1px 0 rgba(25, 118, 210, 0.18);
+
           &:hover {
-            background-color: #e3f2fd !important;
+            background-color: #90caf9 !important;
           }
 
           .MuiTreeItem-label {
             font-weight: 700 !important;
+            color: #0d47a1 !important;
           }
         }
 
@@ -129,6 +131,15 @@
   }
   :global(.MuiTreeItem-iconContainer) {
     color: #ffa726 !important;
+  }
+}
+
+.emptyFolderItem {
+  :global(.MuiTreeItem-label) {
+    font-weight: 700 !important;
+  }
+  :global(.MuiTreeItem-iconContainer) {
+    color: #bdbdbd !important;
   }
 }
 
