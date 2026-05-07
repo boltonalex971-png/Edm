@@ -53,7 +53,7 @@ namespace Optosense.Edm.Infrastructure.Edm.Jobs
     // Local in-process job dispatch through IJobContainer. Lives alongside the
     // gRPC executor for historical reasons but has no transport-level
     // dependencies; safe to keep as a static extension.
-    internal static class LocalJobExecutor
+    public static class LocalJobExecutor
     {
         public static async Task<JobResponse> Execute(this IJobContainer container, IJob job, object parameters = null)
         {

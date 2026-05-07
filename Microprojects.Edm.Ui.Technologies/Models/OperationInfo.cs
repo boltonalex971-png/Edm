@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using System.Transactions;
 using Optosense.Edm.Core.Models;
-using Optosense.Edm.Domain.Models;
+using Microprojects.Edm.Ui.Technologies.Models;
+using Microprojects.Edm.Ui.Technologies.Models;
+using Microprojects.Edm.Ui.Technologies.Models;
 
 namespace Microprojects.Edm.Ui.Main.Models;
 

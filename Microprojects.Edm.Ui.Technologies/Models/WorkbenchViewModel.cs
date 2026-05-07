@@ -1,4 +1,5 @@
-using Optosense.Edm.Domain.Models;
+using Microprojects.Edm.Ui.Technologies.Models;
+using Microprojects.Edm.Ui.Technologies.Models;
 using System;
 
 namespace Microprojects.Edm.Ui.Main.Models

@@ -1,12 +1,13 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Optosense.Edm.Core.Contracts;
-using Optosense.Edm.Domain.Models;
+using Microprojects.Edm.Ui.Technologies.Contracts;
+using Microprojects.Edm.Ui.Technologies.Models;
+using Microprojects.Edm.Ui.Technologies.Models;
 using Optosense.Edm.Plugins;
 using Optosense.Edm.Core.AspNet.Controllers;
 using Microprojects.Edm.Ui.Main.Models;

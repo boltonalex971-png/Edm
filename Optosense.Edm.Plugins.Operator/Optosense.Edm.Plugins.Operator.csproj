@@ -11,6 +11,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\Edm\Edm.csproj" />
+		<ProjectReference Include="..\Microprojects.Edm.Ui.Technologies\Microprojects.Edm.Ui.Technologies.csproj" />
 		<ProjectReference Include="..\Optosense.Edm.Core\Optosense.Edm.Core.csproj" />
 		<ProjectReference Include="..\Optosense.Edm.Infrastructure\Optosense.Edm.Infrastructure.csproj" />
 	</ItemGroup>

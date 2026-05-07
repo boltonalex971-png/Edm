@@ -3,6 +3,7 @@ using Microprojects.Edm;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using Optosense.Edm.Domain.Models;
+using Microprojects.Edm.Ui.Technologies.Models;
 using Optosense.Edm.Drivers.Mux;
 using Optosense.Edm.Drivers.OpcUa;
 using Optosense.Edm.Profiles.Board;

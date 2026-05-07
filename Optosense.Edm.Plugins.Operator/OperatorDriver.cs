@@ -1,7 +1,7 @@
 ﻿using Microprojects.Edm.Drivers;
 using Microprojects.Edm.Intercom;
 using Newtonsoft.Json;
-using Optosense.Edm.Infrastructure.Edm.Intercom;
+using Microprojects.Edm.Ui.Technologies.Intercom;
 using Optosense.Edm.Jobs;
 using Optosense.Edm.Profiles.Operator;
 

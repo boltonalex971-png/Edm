@@ -1,10 +1,12 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Optosense.Edm.Domain.Models;
+using Microprojects.Edm.Ui.Technologies.Models;
+using Microprojects.Edm.Ui.Technologies.Models;
 using Optosense.Edm.Plugins;
 using System.Collections.Generic;
 using System.Linq;
 using Optosense.Edm.Core.Models;
+using Microprojects.Edm.Ui.Technologies.Models;
 
 namespace Microprojects.Edm.Ui.Main.Models
 {
@@ -87,10 +89,10 @@ namespace Microprojects.Edm.Ui.Main.Models
 
             CreateMap<OperationCriterion, OperationCriterionModel>();
 
-            CreateMap<Optosense.Edm.Domain.Models.Profile, ProfileViewModel>()
+            CreateMap<Microprojects.Edm.Ui.Technologies.Models.Profile, ProfileViewModel>()
                 .ForMember(d => d.ProfilerGuid, o => o.MapFrom(s => s.ProfilerGuid))
                 .ForMember(d => d.ProfilerName, o => o.Ignore());
-            CreateMap<ProfileViewModel, Optosense.Edm.Domain.Models.Profile>();
+            CreateMap<ProfileViewModel, Microprojects.Edm.Ui.Technologies.Models.Profile>();
 
             CreateMap<Workbench, WorkbenchViewModel>()
                 .ForMember(d => d.ProcessId, o => o.MapFrom(s => s.WorkplaceProcess.ProcessId))

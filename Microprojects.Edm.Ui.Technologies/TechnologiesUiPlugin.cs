@@ -1,14 +1,15 @@
-﻿using Microsoft.Extensions.Configuration;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Optosense.Edm.Core.Contracts;
-using Optosense.Edm.Core.Infrastructure;
-using Optosense.Edm.Core.Services;
-using Optosense.Edm.Infrastructure.Edm;
-using Optosense.Edm.Jobs;
-using Optosense.Edm.Plugins;
-using System;
+using Microsoft.Extensions.Logging;
 using Microprojects.Edm.Ui.Main.Contracts;
 using Microprojects.Edm.Ui.Main.Services;
+using Microprojects.Edm.Ui.Technologies.Contracts;
+using Microprojects.Edm.Ui.Technologies.Jobs;
+using Microprojects.Edm.Ui.Technologies.Persistence;
+using Microprojects.Edm.Ui.Technologies.Services;
+using Optosense.Edm.Core.Infrastructure;
+using Optosense.Edm.Plugins;
 
 namespace Microprojects.Edm.Ui.Technologies
 {
@@ -22,6 +23,25 @@ namespace Microprojects.Edm.Ui.Technologies
     {
         public override void InjectDependencies(IServiceCollection services, IConfiguration configuration)
         {
+            services.AddDbContextPool<TechnologiesContext>((provider, options) =>
+            {
+                options.UseSqlServer(
+                    configuration.GetConnectionString("Edm"),
+                    sqlOptions => sqlOptions.UseCompatibilityLevel(140));
+                var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
+                options.UseLoggerFactory(loggerFactory);
+            }, poolSize: 128);
+            services.AddPooledDbContextFactory<TechnologiesContext>((provider, options) =>
+            {
+                options.UseSqlServer(
+                    configuration.GetConnectionString("Edm"),
+                    sqlOptions => sqlOptions.UseCompatibilityLevel(140));
+                var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
+                options.UseLoggerFactory(loggerFactory);
+            }, poolSize: 16);
+
+            services.AddAutoMapper(typeof(TechnologiesUiPlugin));
+
             services.AddScoped<IRemoteJobs, RemoteJobs>();
             services.AddScoped<IAuditService, AuditService>();
             services.AddScoped<IProcessService, ProcessService>();
@@ -37,3 +57,4 @@ namespace Microprojects.Edm.Ui.Technologies
         }
     }
 }
+

@@ -3,7 +3,7 @@ using Microprojects.Edm.Drivers;
 using Microprojects.Edm.Jobs;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using Optosense.Edm.Core.Contracts;
+using Microprojects.Edm.Ui.Technologies.Contracts;
 using Optosense.Edm.Drivers.Operator;
 using Optosense.Edm.Profiles.Operator;
 using System;

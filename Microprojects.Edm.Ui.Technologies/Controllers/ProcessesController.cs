@@ -1,12 +1,13 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Optosense.Edm.Core.Contracts;
-using Optosense.Edm.Domain.Models;
+using Microprojects.Edm.Ui.Technologies.Contracts;
+using Microprojects.Edm.Ui.Technologies.Models;
+using Microprojects.Edm.Ui.Technologies.Models;
 using Optosense.Edm.Plugins;
 using Optosense.Edm.Core.AspNet.Controllers;
 using Microprojects.Edm.Ui.Main.Models;
@@ -158,7 +159,7 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         [HttpPost("{id:int}/profiles")]
         public async Task<ProfileViewModel> AddProfile(int id, ProfileViewModel model)
         {
-            var profile = _mapper.Map<Optosense.Edm.Domain.Models.Profile>(model);
+            var profile = _mapper.Map<Microprojects.Edm.Ui.Technologies.Models.Profile>(model);
             profile = await _processService.AddProfile(id, profile);
             return _mapper.Map<ProfileViewModel>(profile);
         }
@@ -166,7 +167,7 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         [HttpPut("{id:int}/profiles")]
         public async Task<ProfileViewModel> SaveProfile(int id, ProfileViewModel model)
         {
-            var profile = _mapper.Map<Optosense.Edm.Domain.Models.Profile>(model, o => o.AfterMap((s, d) => d.ProcessId = id));
+            var profile = _mapper.Map<Microprojects.Edm.Ui.Technologies.Models.Profile>(model, o => o.AfterMap((s, d) => d.ProcessId = id));
             var result = await _processService.SaveProfile(profile);
             return _mapper.Map<ProfileViewModel>(result);
         }

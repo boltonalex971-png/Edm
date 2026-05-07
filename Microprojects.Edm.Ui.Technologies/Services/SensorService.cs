@@ -4,11 +4,11 @@ using System.Threading.Tasks;
 using Microprojects.Edm.Ui.Main.Contracts;
 using Microprojects.Edm.Ui.Main.Models;
 using Microsoft.EntityFrameworkCore;
-using Optosense.Edm.Persistence;
+using Microprojects.Edm.Ui.Technologies.Persistence;
 
 namespace Microprojects.Edm.Ui.Main.Services;
 
-public class SensorService(EdmContext db) : ISensorService
+public class SensorService(TechnologiesContext db) : ISensorService
 {
     public async Task<IEnumerable<SensorMeasureModel>> FindSensorMeasures(int? minSn, int? maxSn, DateTime? from, DateTime? to)
     {

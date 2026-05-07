@@ -16,7 +16,6 @@ using Optosense.Edm.WebApi.Utils;
 using Newtonsoft.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Builder;
-using Optosense.Edm.Persistence;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microprojects.Edm;

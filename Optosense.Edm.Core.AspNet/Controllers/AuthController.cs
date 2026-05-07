@@ -8,8 +8,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Optosense.Edm.Core.Auditing;
-using Optosense.Edm.Core.Contracts;
 using Optosense.Edm.Core.Models;
 using Optosense.Edm.Domain.Models;
 using Microsoft.Extensions.Configuration;

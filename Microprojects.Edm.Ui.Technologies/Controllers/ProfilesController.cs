@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -6,8 +6,9 @@ using AutoMapper;
 //using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Optosense.Edm.Core.Contracts;
-using Optosense.Edm.Domain.Models;
+using Microprojects.Edm.Ui.Technologies.Contracts;
+using Microprojects.Edm.Ui.Technologies.Models;
+using Microprojects.Edm.Ui.Technologies.Models;
 using Optosense.Edm.Plugins;
 using Microprojects.Edm.Ui.Main.Models;
 
@@ -29,17 +30,17 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         }
 
         [HttpGet]
-        public async Task<IEnumerable<Optosense.Edm.Domain.Models.Profile>> Get()
+        public async Task<IEnumerable<Microprojects.Edm.Ui.Technologies.Models.Profile>> Get()
         {
             return await _profileService.GetAll();
         }
 
         [HttpGet("{id:int}")]
-        public async Task<Optosense.Edm.Domain.Models.Profile> GetById(int id)
+        public async Task<Microprojects.Edm.Ui.Technologies.Models.Profile> GetById(int id)
         {
             var profile = id switch {
                 not 0 => await _profileService.Get(id),
-                0 => new Optosense.Edm.Domain.Models.Profile
+                0 => new Microprojects.Edm.Ui.Technologies.Models.Profile
                 {
                     Name = string.Empty,
                     Description = string.Empty,
@@ -51,7 +52,7 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         }
 
         [HttpPut("{id:int}")]
-        public async Task<Optosense.Edm.Domain.Models.Profile> Save(int id, [FromBody] Optosense.Edm.Domain.Models.Profile profile)
+        public async Task<Microprojects.Edm.Ui.Technologies.Models.Profile> Save(int id, [FromBody] Microprojects.Edm.Ui.Technologies.Models.Profile profile)
         {
             if (id != profile.Id)
             {
@@ -62,14 +63,14 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         }
 
         [HttpDelete("{id:int}")]
-        public async Task<Optosense.Edm.Domain.Models.Profile> DeleteProfile(int id)
+        public async Task<Microprojects.Edm.Ui.Technologies.Models.Profile> DeleteProfile(int id)
         {
             var profile = await _profileService.Delete(id);
             return profile;
         }
 
         [HttpPost]
-        public async Task<Optosense.Edm.Domain.Models.Profile> Create([FromBody] Optosense.Edm.Domain.Models.Profile profile)
+        public async Task<Microprojects.Edm.Ui.Technologies.Models.Profile> Create([FromBody] Microprojects.Edm.Ui.Technologies.Models.Profile profile)
         {
             profile.Id = 0;
             var result = await _profileService.Save(profile);
@@ -84,7 +85,7 @@ namespace Microprojects.Edm.Ui.Main.Controllers
         }
 
         [HttpGet("devices/{id:int}")]
-        public async Task<IEnumerable<Optosense.Edm.Domain.Models.Profile>> GetProfilesByDeviceId(int id)
+        public async Task<IEnumerable<Microprojects.Edm.Ui.Technologies.Models.Profile>> GetProfilesByDeviceId(int id)
         {
             var profiles = await _profileService.GetByDevice(id);
             return profiles;

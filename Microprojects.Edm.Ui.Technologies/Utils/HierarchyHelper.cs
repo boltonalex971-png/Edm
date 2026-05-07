@@ -1,6 +1,7 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
-using Optosense.Edm.Domain.Models;
+using Microprojects.Edm.Ui.Technologies.Models;
+using Microprojects.Edm.Ui.Technologies.Models;
 using Microprojects.Edm.Ui.Main.Models;
 using System;
 using System.Collections.Generic;

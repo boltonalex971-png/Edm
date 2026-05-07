@@ -28,8 +28,6 @@ using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using Optosense.Edm.Core.AspNet;
 using Optosense.Edm.Core.AspNet.Auth;
-using Optosense.Edm.Infrastructure.Models;
-using Optosense.Edm.Persistence;
 using Optosense.Edm.WebApi;
 using Optosense.Edm.WebApi.Services;
 using Optosense.Edm.WebApi.Utils;
@@ -43,27 +41,6 @@ var options = new WebApplicationOptions
 var builder = WebApplication.CreateBuilder(options);
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
-
-builder.Services.AddDbContextPool<EdmContext>((provider, options) =>
-{
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("Edm"),
-        sqlOptions => sqlOptions
-            .MigrationsAssembly("Optosense.Edm.DataAccess")
-            .UseCompatibilityLevel(140)); // This is workaround for EF 8 and "Contains" problem
-    var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
-    options.UseLoggerFactory(loggerFactory);
-}, poolSize: 128);
-builder.Services.AddPooledDbContextFactory<EdmContext>((provider, options) =>
-{
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("Edm"),
-        sqlOptions => sqlOptions
-        .MigrationsAssembly("Optosense.Edm.DataAccess")
-        .UseCompatibilityLevel(140));
-    var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
-    options.UseLoggerFactory(loggerFactory);
-}, poolSize: 16);
 
 builder.Services.Configure<IntercomOptions>(builder.Configuration.GetSection("Edm:Intercom"));
 builder.Services.Configure<Peer>(options =>
@@ -84,7 +61,6 @@ builder.Services.Configure<Peer>(options =>
 });
 //System.Diagnostics.Debugger.Launch();
 builder.AddCache();
-builder.Services.AddAutoMapper(typeof(InfrastructureModelsProfile));
 builder.AddOperationIntercom();
 builder.Services.AddGrpc();
 builder.Services.AddSignalR().AddJsonProtocol(o =>
