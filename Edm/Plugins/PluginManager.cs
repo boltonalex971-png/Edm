@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Optosense.Edm.Plugins
+namespace Microprojects.Edm.Plugins
 {
     /// <summary>
     /// Plugin manager with registry support for isolated plugin loading

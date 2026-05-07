@@ -12,25 +12,25 @@ set REPO_ROOT=%SCRIPT_DIR%..
 set RID=win-x64
 set TFM=net10.0
 set CONFIG=Debug
-set EDM_OUT=%REPO_ROOT%\Optosense.Edm.DataAccess\bin\%CONFIG%\%TFM%\Optosense.Edm.DataAccess.efbundle.exe
+set TECHNOLOGIES_OUT=%REPO_ROOT%\Microprojects.Edm.Ui.Technologies\bin\%CONFIG%\%TFM%\Microprojects.Edm.Ui.Technologies.efbundle.exe
 set LOGISTICS_OUT=%REPO_ROOT%\Microprojects.Edm.Ui.Logistics\bin\%CONFIG%\%TFM%\Microprojects.Edm.Ui.Logistics.efbundle.exe
 
 REM Connection strings below are only used at *design time* by EF tools to
-REM resolve the DbContext (e.g. for LogisticsContextFactory). They are NOT
-REM baked into the bundles -- the real connection string is passed at install
-REM time by Microprojects.Edm.Install.exe via --connection.
-set DESIGN_TIME_CONN=Data Source=.\SQLEXPRESS;Initial Catalog=optosense_edm;Integrated Security=SSPI;Encrypt=no;TrustServerCertificate=no;
+REM resolve the DbContext. They are NOT baked into the bundles -- the real
+REM connection string is passed at install time by Microprojects.Edm.Install.exe
+REM via --connection.
+set DESIGN_TIME_TECHNOLOGIES_CONN=Data Source=.\SQLEXPRESS;Initial Catalog=optosense_edm;Integrated Security=SSPI;Encrypt=no;TrustServerCertificate=no;
 set DESIGN_TIME_LOGISTICS_CONN=Data Source=.\SQLEXPRESS;Initial Catalog=optosense_logistics;Integrated Security=SSPI;Encrypt=no;TrustServerCertificate=no;
 
-echo === Building Optosense.Edm.DataAccess.efbundle.exe ===
-pushd "%REPO_ROOT%\Optosense.Edm.DataAccess"
+echo === Building Microprojects.Edm.Ui.Technologies.efbundle.exe ===
+pushd "%REPO_ROOT%\Microprojects.Edm.Ui.Technologies"
 dotnet ef migrations bundle ^
-  --startup-project "%REPO_ROOT%\Optosense.Edm.WebApi" ^
-  --context EdmContext ^
+  --context TechnologiesContext ^
   --self-contained -r %RID% ^
-  --output "%EDM_OUT%" ^
-  --force
-if errorlevel 1 (popd & echo Failed to build Edm bundle & exit /b 1)
+  --output "%TECHNOLOGIES_OUT%" ^
+  --force ^
+  -- --connection-string "%DESIGN_TIME_TECHNOLOGIES_CONN%"
+if errorlevel 1 (popd & echo Failed to build Technologies bundle & exit /b 1)
 popd
 
 echo === Building Microprojects.Edm.Ui.Logistics.efbundle.exe ===
@@ -46,6 +46,6 @@ popd
 
 echo.
 echo Bundles produced:
-echo   %EDM_OUT%
+echo   %TECHNOLOGIES_OUT%
 echo   %LOGISTICS_OUT%
 endlocal

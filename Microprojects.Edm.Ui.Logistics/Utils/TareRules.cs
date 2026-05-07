@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microprojects.Edm.Ui.Logistics.Models;
-using Optosense.Edm.Plugins;
+using Microprojects.Edm.Plugins;
 
 namespace Microprojects.Edm.Ui.Logistics.Utils;
 

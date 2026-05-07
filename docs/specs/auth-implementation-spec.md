@@ -86,8 +86,8 @@ options.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUs
 Every endpoint requires an authenticated user unless explicitly `[AllowAnonymous]`. `MapGrpcService<EdmJobService>()` and `MapHub<IntercomHub>(...)` do **not** opt out — they ride SmartAuth + the fallback.
 
 Existing `[AllowAnonymous]` controllers (intentional):
-- `Microprojects.Edm.Ui.Main/Api/SensorsController.cs`
-- `Microprojects.Edm.Ui.Main/Controllers/MetaController.cs`
+- `Microprojects.Edm.Ui.Technologies/Api/SensorsController.cs`
+- `Microprojects.Edm.Ui.Technologies/Controllers/MetaController.cs`
 - `Microprojects.Edm.Ui.Logistics/Controllers/MetaController.cs`
 
 Adding new ones requires explicit justification.

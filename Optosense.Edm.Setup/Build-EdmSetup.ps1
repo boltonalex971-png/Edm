@@ -151,7 +151,7 @@ function Invoke-BuildBundles {
 # plugin's source tree changed since the last successful build.
 #
 # WHY plugins need explicit rebuilding: plugin csprojs embed their React
-# build output (Ui/dist or ClientApp/build) as resources. They are MEF-
+# build output (Ui/dist for Rsbuild, Ui/build for CRA) as resources. They are MEF-
 # loaded at runtime, so they are NOT in WebApi's project-reference graph;
 # neither 'dotnet publish Optosense.Edm.WebApi' nor the devenv Setup build
 # rebuilds them. Without this step the MSI ships whatever DLL was last
@@ -209,16 +209,14 @@ function Invoke-BuildPlugins {
     Write-Step 'STEP 3: rebuild plugin SPAs + DLLs (FileVersion-only)'
 
     # SPA-embedding plugins. Append new ones here when added to the solution.
-    # The 'ui' folder name is conventionally 'Ui' for rsbuild plugins and
-    # 'ClientApp' for the (older) CRA plugin Microprojects.Edm.Ui.Main.
     $plugins = @(
-        @{ name = 'Microprojects.Edm.Ui.Logistics';   ui = 'Ui' },
-        @{ name = 'Microprojects.Edm.Ui.Console';     ui = 'Ui' },
-        @{ name = 'Microprojects.Edm.Ui.Main';        ui = 'ClientApp' },
-        @{ name = 'Optosense.Edm.Plugins.Operator';   ui = 'Ui' },
-        @{ name = 'Optosense.Edm.Profiles.Board';     ui = 'Ui' },
-        @{ name = 'Optosense.Edm.Operations.Optogen'; ui = 'Ui' },
-        @{ name = 'Optosense.Edm.Drivers.Null';       ui = 'Ui' }
+        @{ name = 'Microprojects.Edm.Ui.Logistics';    ui = 'Ui' },
+        @{ name = 'Microprojects.Edm.Ui.Console';      ui = 'Ui' },
+        @{ name = 'Microprojects.Edm.Ui.Technologies'; ui = 'Ui' },
+        @{ name = 'Optosense.Edm.Plugins.Operator';    ui = 'Ui' },
+        @{ name = 'Optosense.Edm.Profiles.Board';      ui = 'Ui' },
+        @{ name = 'Optosense.Edm.Operations.Optogen';  ui = 'Ui' },
+        @{ name = 'Optosense.Edm.Drivers.Null';        ui = 'Ui' }
     )
 
     $state = @{}

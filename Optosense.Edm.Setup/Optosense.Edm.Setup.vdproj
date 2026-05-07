@@ -526,16 +526,16 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Microprojects.Edm.Ui.Main, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Microprojects.Edm.Ui.Technologies, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_3B66ADF4D6C74F2CBEDDAFF070A5CF8F"
                     {
-                    "Name" = "8:Microprojects.Edm.Ui.Main.dll"
+                    "Name" = "8:Microprojects.Edm.Ui.Technologies.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:..\\Microprojects.Edm.Ui.Main\\bin\\Debug\\net10.0\\Microprojects.Edm.Ui.Main.dll"
+            "SourcePath" = "8:..\\Microprojects.Edm.Ui.Technologies\bin\\Debug\\net10.0\\Microprojects.Edm.Ui.Technologies.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_AEE31518259E4CFDABF559E3A191152E"
@@ -677,8 +677,8 @@
             }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_E0F1A2B3C4D5E6F708192A3B4C5D6E7F"
             {
-            "SourcePath" = "8:..\\Optosense.Edm.DataAccess\\bin\\Debug\\net10.0\\Optosense.Edm.DataAccess.efbundle.exe"
-            "TargetName" = "8:Optosense.Edm.DataAccess.efbundle.exe"
+            "SourcePath" = "8:..\\Microprojects.Edm.Ui.Technologies\bin\\Debug\\net10.0\\Microprojects.Edm.Ui.Technologies.efbundle.exe"
+            "TargetName" = "8:Microprojects.Edm.Ui.Technologies.efbundle.exe"
             "Tag" = "8:"
             "Folder" = "8:_AE4052A7CE5F48FF84E7825B278F4895"
             "Condition" = "8:"

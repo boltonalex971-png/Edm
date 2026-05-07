@@ -117,7 +117,7 @@ cmd.exe /c C:\Projects\2020\Edm\Optosense.Edm.Setup\build-bundles.bat
 
 The batch file produces two artefacts:
 
-- `Optosense.Edm.DataAccess\bin\<Config>\net10.0\Optosense.Edm.DataAccess.efbundle.exe`
+- `Microprojects.Edm.Ui.Technologies\bin\<Config>\net10.0\Microprojects.Edm.Ui.Technologies.efbundle.exe`
 - `Microprojects.Edm.Ui.Logistics\bin\<Config>\net10.0\Microprojects.Edm.Ui.Logistics.efbundle.exe`
 
 > **Trap.** The connection strings inside `build-bundles.bat` are
@@ -131,7 +131,7 @@ The batch file produces two artefacts:
 ## Step 3 - Rebuild plugin SPAs and DLLs (FileVersion-only)
 
 **Why plugins need explicit rebuilding.** Plugin csprojs embed their
-React build output (`Ui/dist` or `ClientApp/build`) as managed
+React build output (`Ui/dist` for Rsbuild, `Ui/build` for CRA) as managed
 resources. They are MEF-loaded at runtime via `PluginManagerHelper`,
 so they are NOT in WebApi's project-reference graph. Neither
 `dotnet publish Optosense.Edm.WebApi` nor the devenv Setup build
@@ -168,7 +168,7 @@ upgrades reliable without spurious bumps cluttering MSI deltas.
 | --------------------------------------- | ------------ |
 | `Microprojects.Edm.Ui.Logistics`        | `Ui`         |
 | `Microprojects.Edm.Ui.Console`          | `Ui`         |
-| `Microprojects.Edm.Ui.Main`             | `ClientApp`  |
+| `Microprojects.Edm.Ui.Technologies`     | `Ui`         |
 | `Optosense.Edm.Plugins.Operator`        | `Ui`         |
 | `Optosense.Edm.Profiles.Board`          | `Ui`         |
 | `Optosense.Edm.Operations.Optogen`      | `Ui`         |

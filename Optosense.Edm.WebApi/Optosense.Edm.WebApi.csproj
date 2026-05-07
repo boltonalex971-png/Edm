@@ -36,6 +36,12 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <!-- Pulls SqlServer + SqlClient runtime DLLs into WebApi's bin so the Default
+         ALC has them; plugin contexts then resolve UseSqlServer() through the
+         shared default context instead of failing on missing-from-bin lookups.
+         Previously this came in transitively via Optosense.Edm.DataAccess; that
+         project was removed when migrations moved into the Technologies plugin. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.2" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.2" />
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.2" />
     <PackageReference Include="OPCFoundation.NetStandard.Opc.Ua.Client" Version="1.5.377.22" />
@@ -44,9 +50,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Edm\Edm.csproj" />
-    <ProjectReference Include="..\Optosense.Edm.Core.AspNet\Optosense.Edm.Core.AspNet.csproj" />
-    <ProjectReference Include="..\Optosense.Edm.DataAccess\Optosense.Edm.DataAccess.csproj" />
-    <ProjectReference Include="..\Optosense.Edm.Infrastructure\Optosense.Edm.Infrastructure.csproj" />
+    <ProjectReference Include="..\Microprojects.Edm.Host\Microprojects.Edm.Host.csproj" />
+    <ProjectReference Include="..\Microprojects.Edm.Shared\Microprojects.Edm.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

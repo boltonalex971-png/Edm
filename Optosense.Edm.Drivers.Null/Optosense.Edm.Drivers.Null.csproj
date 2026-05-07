@@ -29,7 +29,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Optosense.Edm\Optosense.Edm.csproj" />
+    <ProjectReference Include="..\Edm\Edm.csproj" />
+    <ProjectReference Include="..\Microprojects.Edm.Shared\Microprojects.Edm.Shared.csproj" />
   </ItemGroup>
 
 </Project>

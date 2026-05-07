@@ -7,11 +7,11 @@ using Microprojects.Edm.Ui.Logistics.Contracts;
 using Microprojects.Edm.Ui.Logistics.Models;
 using Microprojects.Edm.Ui.Logistics.Utils;
 using Microsoft.AspNetCore.Mvc;
-using Optosense.Edm.Core.AspNet.Auth;
+using Microprojects.Edm.Auth;
 using Microsoft.Extensions.Logging;
 using Microprojects.Edm.Ui.Logistics.ViewModels;
-using Optosense.Edm.Core.AspNet.Controllers;
-using Optosense.Edm.Plugins;
+using Microprojects.Edm.Controllers;
+using Microprojects.Edm.Plugins;
 
 namespace Microprojects.Edm.Ui.Logistics.Controllers;
 

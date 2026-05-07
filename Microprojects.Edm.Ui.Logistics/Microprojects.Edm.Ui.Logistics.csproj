@@ -31,8 +31,7 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\Edm\Edm.csproj" />
-	  <ProjectReference Include="..\Optosense.Edm.Core.AspNet\Optosense.Edm.Core.AspNet.csproj" />
-	  <ProjectReference Include="..\Optosense.Edm.DataAccess\Optosense.Edm.DataAccess.csproj" />
+	  <ProjectReference Include="..\Microprojects.Edm.Shared\Microprojects.Edm.Shared.csproj" />
 	</ItemGroup>
 
 	<!--

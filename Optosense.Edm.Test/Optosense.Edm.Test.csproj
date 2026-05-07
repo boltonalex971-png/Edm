@@ -21,8 +21,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Microprojects.Edm.Shared\Microprojects.Edm.Shared.csproj" />
     <ProjectReference Include="..\Microprojects.Edm.Ui.Logistics\Microprojects.Edm.Ui.Logistics.csproj" />
-    <ProjectReference Include="..\Optosense.Edm.Domain\Optosense.Edm.Domain.csproj" />
+    <ProjectReference Include="..\Microprojects.Edm.Ui.Technologies\Microprojects.Edm.Ui.Technologies.csproj" />
     <ProjectReference Include="..\Optosense.Edm.Plugins.OpcUa\Optosense.Edm.Plugins.OpcUa.csproj" />
     <ProjectReference Include="..\Optosense.Edm.Profiles.Board\Optosense.Edm.Profiles.Board.csproj" />
   </ItemGroup>

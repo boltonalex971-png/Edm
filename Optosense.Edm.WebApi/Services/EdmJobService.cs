@@ -7,7 +7,7 @@ using Grpc.Core;
 using Microprojects.Edm.Jobs;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Optosense.Edm.Infrastructure.Protos;
+using Microprojects.Edm.Grpc;
 
 namespace Optosense.Edm.WebApi.Services
 {

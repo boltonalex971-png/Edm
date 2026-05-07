@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Optosense.Edm.Plugins;
+using Microprojects.Edm.Plugins;
 using System;
 using System.Collections.Generic;
 using System.Text;

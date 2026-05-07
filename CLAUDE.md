@@ -11,12 +11,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 The solution file is `Edm.slnx` (XML format, not .sln). Projects are grouped by role:
 
 - **Core Platform** — `Optosense.Edm.WebApi`, `Optosense.Edm.Core`, `Optosense.Edm.Core.AspNet`: host, auth, plugin manager.
-- **Domain / Data** — `Optosense.Edm.Domain` (entities), `Optosense.Edm.DataAccess` (EF Core, migrations). Default provider is SQL Server.
+- **Domain** — `Optosense.Edm.Domain`: shared base classes only (`DomainObject`, `NamedObject`, `TypeObject`, `HierarchyObject`, `ILogicallyDeletableEntity`). All entity types and EF migrations live in their owning plugin (e.g. `Microprojects.Edm.Ui.Technologies/Persistence/`, `Microprojects.Edm.Ui.Logistics/Persistence/`). Default provider is SQL Server.
 - **Infrastructure** — `Optosense.Edm.Infrastructure`, `Edm`: plugin loading, caching, Redis, `Edm/Plugins/PluginManager.cs`.
 - **Profile plugins** (`Optosense.Edm.Profiles.*`) — device settings schemas, parameter extraction from profile JSON.
 - **Driver plugins** (`Optosense.Edm.Drivers.*`, `Optosense.Edm.Plugins.OpcUa`, `...Operator`) — profile → execution plan, hardware I/O.
 - **Operation plugins** (`Optosense.Edm.Operations.*`) — per-run monitoring UIs, typically SignalR-driven and scoped to an `OperationId`.
-- **Application plugins** (`Microprojects.Edm.Ui.*`) — top-level modules: `Main`, `Console`, `Logistics`. Each has its own domain, controllers, and EF migrations under `Persistence/Migrations/`.
+- **Application plugins** (`Microprojects.Edm.Ui.*`) — top-level modules: `Technologies`, `Console`, `Logistics`. Each has its own domain, controllers, and EF migrations under `Persistence/Migrations/`.
 
 Each plugin class inherits from the matching base (`ProfilePluginBase`, `DriverPluginBase`, or `PluginBase` + `IOperationPlugin`/`IApplicationPlugin`) and is decorated with the corresponding attribute (`[ProfilePlugin]`, `[DriverPlugin]`, `[OperationPlugin]`, `[ApplicationPlugin]`). The attribute's `SpaPath` points at the production SPA build (e.g. `Ui/dist` for Rsbuild, `Ui/build` for CRA); `UiRoot` is the URL prefix where the SPA is mounted.
 
@@ -49,7 +49,7 @@ or use `run-backend.bat`, which launches the `Optosense.Edm.WebApi-Dev` profile.
 
 ### EF Core migrations
 
-Migrations live **per project**, not only under `Optosense.Edm.DataAccess`. Logistics keeps its own under `Microprojects.Edm.Ui.Logistics/Persistence/Migrations`. The DbContext is resolved via a `--connection-string` passed after `--`, e.g.:
+Migrations live **per plugin** under `Persistence/Migrations`. Each plugin owns its own `DbContext` (`TechnologiesContext`, `LogisticsContext`, …). The DbContext is resolved via a `--connection-string` passed after `--`, e.g.:
 
 ```bash
 dotnet ef database update -- --connection-string "Data Source=.\SQLEXPRESS;MultipleActiveResultSets=true;Initial Catalog=optosense_logistics;Integrated Security=SSPI;Encrypt=no;TrustServerCertificate=no;"

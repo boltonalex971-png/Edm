@@ -6,7 +6,7 @@ using System.Runtime.Loader;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Optosense.Edm.Plugins;
+using Microprojects.Edm.Plugins;
 
 namespace Microprojects.Edm.Plugins
 {

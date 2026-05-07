@@ -3,7 +3,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Grpc.Net.Client;
 using Newtonsoft.Json;
-using Optosense.Edm.Infrastructure.Protos;
+using Microprojects.Edm.Grpc;
 
 namespace Edm.WebApi.Client
 {
