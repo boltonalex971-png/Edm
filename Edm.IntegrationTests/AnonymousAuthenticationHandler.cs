@@ -5,12 +5,6 @@ using Microsoft.Extensions.Options;
 
 namespace Edm.IntegrationTests;
 
-// Always returns NoResult so the request stays anonymous. Used as the
-// DefaultAuthenticateScheme + DefaultChallengeScheme in tests so we can
-// avoid Negotiate (which requires Kestrel's IConnectionItemsFeature and
-// crashes on TestServer). The base class's HandleChallengeAsync sets a
-// 401 with no scheme-specific handshake — that's what we want for
-// FallbackPolicy = RequireAuthenticatedUser hits.
 public class AnonymousAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
 {
     public const string SchemeName = "TestAnonymous";

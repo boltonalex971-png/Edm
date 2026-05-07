@@ -30,19 +30,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Optosense.Edm.WebApi\Optosense.Edm.WebApi.csproj" />
-    <!-- Build-order only; the plugin is loaded by reflection at runtime, not
-         linked into the test assembly. ReferenceOutputAssembly=false stops
-         the compiler from seeing the plugin's types. -->
+    <!-- Build-order dep only; plugin is loaded via reflection, not linked. -->
     <ProjectReference Include="..\Optosense.Edm.Drivers.Null\Optosense.Edm.Drivers.Null.csproj"
                       ReferenceOutputAssembly="false"
                       Private="false" />
   </ItemGroup>
 
-  <!-- Stage the Null driver under bin/.../Plugins/Optosense.Edm.Drivers.Null/
-       so the host can load it via Edm:Assemblies. The plugin's full bin
-       folder is copied so its .deps.json + co-located DLLs are available
-       to EdmPluginLoadContext's resolver; framework deps (Microprojects.Edm.*,
-       …) are still served by the default ALC. -->
   <Target Name="StageTestPlugins" AfterTargets="Build">
     <ItemGroup>
       <_NullDriverFiles Include="..\Optosense.Edm.Drivers.Null\bin\$(Configuration)\$(TargetFramework)\**\*.*" />
