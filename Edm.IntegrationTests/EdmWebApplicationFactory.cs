@@ -6,7 +6,7 @@ namespace Edm.IntegrationTests;
 
 public class EdmWebApplicationFactory : WebApplicationFactory<Program>
 {
-    private const int MaxAssembliesToOverride = 16;
+    private const int MaxPathsToOverride = 16;
 
     // Env vars (not ConfigureAppConfiguration) — config is read inside Program.Main before any host-builder callback runs.
     static EdmWebApplicationFactory()
@@ -25,21 +25,19 @@ public class EdmWebApplicationFactory : WebApplicationFactory<Program>
 
     public EdmWebApplicationFactory()
     {
-        for (var i = 0; i < MaxAssembliesToOverride; i++)
+        for (var i = 0; i < MaxPathsToOverride; i++)
         {
             Environment.SetEnvironmentVariable(
-                $"Edm__Assemblies__{i}",
-                i < PluginAssemblyPaths.Count ? PluginAssemblyPaths[i] : "");
+                $"Edm__PluginsPaths__{i}",
+                i < PluginsPaths.Count ? PluginsPaths[i] : "");
         }
     }
 
-    protected virtual IReadOnlyList<string> PluginAssemblyPaths { get; } =
+    // The host's subfolder scan picks up Plugins/<Name>/<Name>.dll under this root,
+    // which matches the StageTestPlugins target layout in Edm.IntegrationTests.csproj.
+    protected virtual IReadOnlyList<string> PluginsPaths { get; } =
     [
-        Path.Combine(
-            AppContext.BaseDirectory,
-            "Plugins",
-            "Optosense.Edm.Drivers.Null",
-            "Optosense.Edm.Drivers.Null.dll"),
+        Path.Combine(AppContext.BaseDirectory, "Plugins"),
     ];
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)

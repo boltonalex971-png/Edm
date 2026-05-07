@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-**EDM** is an ASP.NET Core (.NET 10.0, C# 14) platform that hosts feature modules as MEF-loaded plugin DLLs. Most plugins ship an embedded React SPA served by the host at a plugin-specific URL root. The WebApi project (`Optosense.Edm.WebApi`) is the main entry point; it loads assemblies listed under `Edm:Assemblies` in `appsettings.json` and mounts each plugin's SPA from its configured `SpaPath`.
+**EDM** is an ASP.NET Core (.NET 10.0, C# 14) platform that hosts feature modules as MEF-loaded plugin DLLs. Most plugins ship an embedded React SPA served by the host at a plugin-specific URL root. The WebApi project (`Optosense.Edm.WebApi`) is the main entry point; at startup it scans each folder listed in `Edm:PluginsPaths` (default `["./Plugins"]`) for plugin DLLs and mounts each plugin's SPA from its configured `SpaPath`. In dev, `appsettings.Development.json` points `Edm:PluginsPaths` at each plugin project's `bin/Debug/net10.0/` folder.
 
 ## Solution Layout
 
@@ -113,7 +113,7 @@ Cursor rule `.cursor/rules/always-use-crlf-for.mdc` is marked `alwaysApply`: use
 public class BoardProfilePlugin : ProfilePluginBase { ... }
 ```
 
-Register the plugin DLL under `Edm:Assemblies` in `Optosense.Edm.WebApi/appsettings.json` so the `PluginManager` picks it up.
+The host auto-discovers any DLL containing a `[PluginAttribute]`-decorated class within `Edm:PluginsPaths` folders (top-level + one subfolder deep). For dev, add the new project's `bin/Debug/net10.0/` to `Edm:PluginsPaths` in `appsettings.Development.json`. For prod, the MSI installer drops plugin DLLs into the host's `./Plugins/` folder, which is the default scan location.
 
 ## Testing
 

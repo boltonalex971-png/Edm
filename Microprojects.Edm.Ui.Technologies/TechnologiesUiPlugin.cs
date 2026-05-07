@@ -11,7 +11,7 @@ using Microprojects.Edm.Plugins;
 
 namespace Microprojects.Edm.Ui.Technologies
 {
-    [OperationPlugin(
+    [ApplicationPlugin(
         Name = "Technologies",
         Description = "Technologies UI",
         Guid = "76123DAA-9A68-4F90-B6A9-F5F16633C7D6",

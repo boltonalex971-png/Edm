@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Microprojects.Edm.Ui.Logistics
 {
-    [OperationPlugin(
+    [ApplicationPlugin(
         Name = "Logistics",
         Description = "Product Logistics UI",
         Guid = "05D4D838-86C7-4488-814E-7FDE19049125",
