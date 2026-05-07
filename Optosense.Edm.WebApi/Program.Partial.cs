@@ -1,3 +1,2 @@
-// Exposes the top-level Program class so WebApplicationFactory<Program>
-// in Edm.IntegrationTests can use it as the entry-point type.
+// Exposes top-level Program for WebApplicationFactory<Program>.
 public partial class Program;

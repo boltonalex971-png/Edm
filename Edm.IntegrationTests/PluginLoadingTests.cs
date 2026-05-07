@@ -6,6 +6,8 @@ namespace Edm.IntegrationTests;
 
 public class PluginLoadingTests : IClassFixture<EdmWebApplicationFactory>
 {
+    private static readonly Guid NullDriverGuid = new("ABC4FDD6-E58D-4CEA-96D9-20EAAB6B99CA");
+
     private readonly EdmWebApplicationFactory _factory;
 
     public PluginLoadingTests(EdmWebApplicationFactory factory)
@@ -16,18 +18,14 @@ public class PluginLoadingTests : IClassFixture<EdmWebApplicationFactory>
     [Fact]
     public void Null_driver_plugin_is_loaded_into_container()
     {
-        // Force host construction so AddPlugins runs and the registry fills.
         _ = _factory.CreateClient();
 
         var container = _factory.Services.GetRequiredService<IPluginContainer>();
         var drivers = container.GetDrivers().ToList();
 
-        // The Null driver's GUID — declared on NullDriverPlugin.
-        var nullGuid = new Guid("ABC4FDD6-E58D-4CEA-96D9-20EAAB6B99CA");
+        Assert.Contains(drivers, d => d.Guid == NullDriverGuid);
 
-        Assert.Contains(drivers, d => d.Guid == nullGuid);
-
-        var nullDriver = container.GetDriver(nullGuid);
+        var nullDriver = container.GetDriver(NullDriverGuid);
         Assert.NotNull(nullDriver);
         Assert.Equal("Null", nullDriver.Name);
     }

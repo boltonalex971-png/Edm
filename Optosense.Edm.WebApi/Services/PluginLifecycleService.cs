@@ -18,13 +18,16 @@ namespace Optosense.Edm.WebApi.Services
     {
         private readonly ILogger<PluginLifecycleService> _logger;
         private readonly IServiceProvider _serviceProvider;
+        private readonly PluginRegistry _registry;
 
         public PluginLifecycleService(
             ILogger<PluginLifecycleService> logger,
-            IServiceProvider serviceProvider)
+            IServiceProvider serviceProvider,
+            PluginRegistry registry)
         {
             _logger = logger;
             _serviceProvider = serviceProvider;
+            _registry = registry;
         }
 
         /// <summary>
@@ -36,7 +39,6 @@ namespace Optosense.Edm.WebApi.Services
 
             using var scope = _serviceProvider.CreateScope();
             var plugins = scope.ServiceProvider.GetRequiredService<IEnumerable<IPlugin>>();
-            var registry = scope.ServiceProvider.GetRequiredService<PluginRegistry>();
 
             foreach (var plugin in plugins.OfType<IPluginLifecycle>())
             {
@@ -44,15 +46,15 @@ namespace Optosense.Edm.WebApi.Services
                 {
                     using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
                     cts.CancelAfter(TimeSpan.FromSeconds(60)); // 60 second timeout per plugin
-                    
+
                     await plugin.InitializeAsync(scope.ServiceProvider, cts.Token);
-                    registry.UpdateStatus(plugin.Guid, PluginStatus.Initialized);
-                    
+                    _registry.UpdateStatus(plugin.Guid, PluginStatus.Initialized);
+
                     _logger.LogInformation("Plugin {Name} initialized successfully", plugin.Name);
                 }
                 catch (Exception ex)
                 {
-                    registry.RecordError(plugin.Guid, ex);
+                    _registry.RecordError(plugin.Guid, ex);
                     _logger.LogError(ex, "Failed to initialize plugin {Name}", plugin.Name);
                 }
             }
@@ -67,13 +69,7 @@ namespace Optosense.Edm.WebApi.Services
         {
             _logger.LogInformation("Plugin Lifecycle Service stopping...");
 
-            using var scope = _serviceProvider.CreateScope();
-            var registry = scope.ServiceProvider.GetRequiredService<PluginRegistry>();
-
-            // Unload all plugins through registry
-            await registry.UnloadAllAsync();
-
-            // Also call the static helper for context cleanup
+            await _registry.UnloadAllAsync();
             await PluginManagerHelper.UnloadAllPluginsAsync();
 
             _logger.LogInformation("All plugins unloaded");
