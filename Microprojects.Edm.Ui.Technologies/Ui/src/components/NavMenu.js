@@ -109,7 +109,7 @@ export const NavMenu = (props) => {
                 <Box component={Link} to="/" className={styles.logoContainer}>
                     <img src={logo} alt="EDμ" />
                     <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '18px' }}>
-                        Technology
+                        Technologies
                     </Typography>
                 </Box>
 

@@ -1,7 +1,6 @@
 ﻿using Microprojects.Edm.Drivers;
 using Microprojects.Edm.Intercom;
 using Newtonsoft.Json;
-using Microprojects.Edm.Ui.Technologies.Intercom;
 using Optosense.Edm.Jobs;
 using Optosense.Edm.Profiles.Operator;
 
@@ -48,7 +47,10 @@ namespace Optosense.Edm.Drivers.Operator
             
             var state = JsonConvert.DeserializeObject<OperatorState>(req.Parameters);
             SetState(state);
-            await Intercom.PublishOperatorAsync(JobParameters.Operation, state);
+            // Inlined formerly OptosenseIntercomExtensions.PublishOperatorAsync — that
+            // extension lived alongside Technologies-specific intercom types; inlining
+            // here keeps Operator from project-referencing Technologies for one channel string.
+            await Intercom.Publish($"{IntercomExtensions.IntercomOperationChannel(JobParameters.Operation)}-operator", state);
             // Wait for response
             _tokenSource = new CancellationTokenSource();
             await Task.Delay(-1, _tokenSource.Token).ContinueWith((t) => { });
