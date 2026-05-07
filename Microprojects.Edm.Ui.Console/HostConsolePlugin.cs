@@ -7,7 +7,7 @@ using System.Text;
 
 namespace Microprojects.Edm.Ui.Console
 {
-    [OperationPlugin(
+    [ApplicationPlugin(
         Name = "Host Console",
         Description = "Info about available or running tasks, drivers and logs on the host",
         Guid = "D765CE7A-F2FB-4A93-83C5-1C7CDF060116",

@@ -35,7 +35,7 @@ public static class PluginManagerHelper
     /// </summary>
     public class PluginsConfig
     {
-        public IEnumerable<string> PluginsPath { get; set; }
+        public IEnumerable<string> PluginsPaths { get; set; }
         public string BaseDirectory { get; set; } = ".";
         public IConfiguration Configuration { get; set; }
     }
@@ -58,9 +58,9 @@ public static class PluginManagerHelper
         var conf = new PluginsConfig();
         config.Invoke(conf);
         
-        if (conf.PluginsPath == null || !conf.PluginsPath.Any())
+        if (conf.PluginsPaths == null || !conf.PluginsPaths.Any())
         {
-            throw new EdmException("Startup: 'PluginsPath' option must be specified");
+            throw new EdmException("Startup: 'PluginsPaths' option must be specified");
         }
 
         // Register PluginRegistry as singleton
@@ -204,35 +204,24 @@ public static class PluginManagerHelper
         var loggerFactory = services.BuildServiceProvider().GetService<ILoggerFactory>();
         var logger = loggerFactory?.CreateLogger("PluginManagerHelper") ?? NullLogger.Instance;
 
-        foreach (var pluginPath in config.PluginsPath)
+        foreach (var dllPath in EnumerateCandidateDlls(config, logger))
         {
-            var fullPath = Path.Combine(config.BaseDirectory, pluginPath);
-            
             try
             {
-                if (!File.Exists(fullPath))
-                {
-                    logger.LogWarning("Plugin file not found: {Path}", fullPath);
-                    continue;
-                }
+                var loadContext = new EdmPluginLoadContext(dllPath, isCollectible: true);
+                var assembly = loadContext.LoadFromAssemblyPath(dllPath);
 
-                // Create isolated, collectible load context
-                var loadContext = new EdmPluginLoadContext(fullPath, isCollectible: true);
-                
-                // Load assembly from isolated context
-                var assembly = loadContext.LoadFromAssemblyPath(fullPath);
-                
                 var foundTypes = assembly.GetTypes()
                     .Where(t => t.GetCustomAttribute<PluginAttribute>() != null)
                     .ToList();
 
                 if (!foundTypes.Any())
                 {
-                    logger.LogWarning("No plugin types found in {Path}", fullPath);
+                    logger.LogDebug("Skipping non-plugin DLL {Path}", dllPath);
+                    loadContext.Unload();
                     continue;
                 }
 
-                // Register AutoMapper for each plugin
                 builder.AddApplicationPart(assembly);
                 services.AddAutoMapper(typeof(AutoMapperProfile), foundTypes.First());
 
@@ -243,8 +232,7 @@ public static class PluginManagerHelper
                         var instance = (IPlugin)Activator.CreateInstance(type);
                         instances.Add(instance);
 
-                        // Store load context for later unloading
-                        _loadContexts[fullPath] = loadContext;
+                        _loadContexts[dllPath] = loadContext;
 
                         instance.InjectDependencies(services, config.Configuration);
 
@@ -252,7 +240,7 @@ public static class PluginManagerHelper
                             "Loaded plugin {Name} ({Guid}) from {Path}",
                             instance.Name,
                             instance.Guid,
-                            fullPath);
+                            dllPath);
                     }
                     catch (Exception ex)
                     {
@@ -267,18 +255,104 @@ public static class PluginManagerHelper
                     (ex.LoaderExceptions ?? Array.Empty<Exception?>())
                         .Where(e => e is not null)
                         .Select(e => $"  - {e!.GetType().FullName}: {e.Message}"));
-                logger.LogError(
-                    ex,
-                    "Failed to load plugin assembly {Path}. LoaderExceptions:{NewLine}{Detail}",
-                    fullPath, Environment.NewLine, loaderDetail);
+                logger.LogDebug(
+                    "Skipping {Path}: type load failed (likely a transitive dep, not a plugin). LoaderExceptions:{NewLine}{Detail}",
+                    dllPath, Environment.NewLine, loaderDetail);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to load plugin assembly {Path}", fullPath);
+                logger.LogDebug(ex, "Skipping {Path}: load failed (likely a non-plugin DLL)", dllPath);
             }
         }
 
         return instances;
+    }
+
+    /// <summary>
+    /// Walks each configured folder and yields candidate DLL paths.
+    /// Top-level *.dll files are scanned in full. For one-level subfolders only the
+    /// folder-name-matching DLL is considered (i.e. &lt;X&gt;/&lt;X&gt;.dll), which both supports a
+    /// future bundle layout of Plugins/&lt;Name&gt;/&lt;Name&gt;.dll and skips noise like
+    /// EntityFrameworkCore.Design's BuildHost-netcore/ folder.
+    /// DLLs whose assembly name matches an assembly already loaded in the host's default
+    /// load context are filtered out — they are shared deps the plugin folder happens to
+    /// contain (e.g., Microprojects.Edm.dll), and loading them into a plugin ALC would
+    /// duplicate their types in the AppDomain.
+    /// </summary>
+    private static IEnumerable<string> EnumerateCandidateDlls(PluginsConfig config, ILogger logger)
+    {
+        var hostAssemblyNames = new HashSet<string>(
+            AssemblyLoadContext.Default.Assemblies
+                .Select(a => a.GetName().Name)
+                .Where(n => !string.IsNullOrEmpty(n)),
+            StringComparer.OrdinalIgnoreCase);
+
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var candidates = new List<string>();
+
+        foreach (var folder in config.PluginsPaths)
+        {
+            if (string.IsNullOrWhiteSpace(folder))
+            {
+                continue;
+            }
+
+            var fullFolder = Path.GetFullPath(Path.Combine(config.BaseDirectory, folder));
+            if (!Directory.Exists(fullFolder))
+            {
+                logger.LogWarning("Plugin folder not found: {Path}", fullFolder);
+                continue;
+            }
+
+            foreach (var dll in Directory.EnumerateFiles(fullFolder, "*.dll", SearchOption.TopDirectoryOnly))
+            {
+                Consider(dll);
+            }
+
+            foreach (var sub in Directory.EnumerateDirectories(fullFolder))
+            {
+                var name = Path.GetFileName(sub);
+                var primary = Path.Combine(sub, name + ".dll");
+                if (File.Exists(primary))
+                {
+                    Consider(primary);
+                }
+            }
+        }
+
+        candidates.Sort(StringComparer.OrdinalIgnoreCase);
+        return candidates;
+
+        void Consider(string dll)
+        {
+            if (!seen.Add(dll))
+            {
+                return;
+            }
+
+            string name;
+            try
+            {
+                name = AssemblyName.GetAssemblyName(dll).Name;
+            }
+            catch (BadImageFormatException)
+            {
+                return; // not a managed assembly
+            }
+            catch (Exception ex)
+            {
+                logger.LogDebug(ex, "Skipping unreadable DLL {Path}", dll);
+                return;
+            }
+
+            if (name != null && hostAssemblyNames.Contains(name))
+            {
+                logger.LogDebug("Skipping {Path}: shared with host's default load context", dll);
+                return;
+            }
+
+            candidates.Add(dll);
+        }
     }
 }
 

@@ -37,7 +37,8 @@ public static class EdmHostBuilderExtensions
         builder.Services.AddPlugins(config =>
         {
             config.BaseDirectory = AppContext.BaseDirectory;
-            config.PluginsPath = builder.Configuration.GetSection("Edm:Assemblies").GetChildren().Select(c => c.Value);
+            var paths = builder.Configuration.GetSection("Edm:PluginsPaths").Get<string[]>();
+            config.PluginsPaths = paths is { Length: > 0 } ? paths : new[] { "./Plugins" };
             config.Configuration = builder.Configuration;
         });
         builder.Services.AddHostedService<PluginLifecycleService>();
