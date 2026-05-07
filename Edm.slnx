@@ -30,7 +30,6 @@
   <Project Path="Microprojects.Edm.Install/Microprojects.Edm.Install.csproj" />
   <Project Path="Optosense.Edm.Core.AspNet/Optosense.Edm.Core.AspNet.csproj" />
   <Project Path="Optosense.Edm.Core/Optosense.Edm.Core.csproj" />
-  <Project Path="Optosense.Edm.DataAccess/Optosense.Edm.DataAccess.csproj" />
   <Project Path="Optosense.Edm.Domain/Optosense.Edm.Domain.csproj" />
   <Project Path="Optosense.Edm.Infrastructure/Optosense.Edm.Infrastructure.csproj" />
   <Project Path="Optosense.Edm.Setup/Optosense.Edm.Setup.vdproj" Type="Installer">
