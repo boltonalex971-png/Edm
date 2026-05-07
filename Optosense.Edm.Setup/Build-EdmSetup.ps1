@@ -209,16 +209,14 @@ function Invoke-BuildPlugins {
     Write-Step 'STEP 3: rebuild plugin SPAs + DLLs (FileVersion-only)'
 
     # SPA-embedding plugins. Append new ones here when added to the solution.
-    # The 'ui' folder name is conventionally 'Ui' for rsbuild plugins and
-    # 'ClientApp' for the (older) CRA plugin Microprojects.Edm.Ui.Main.
     $plugins = @(
-        @{ name = 'Microprojects.Edm.Ui.Logistics';   ui = 'Ui' },
-        @{ name = 'Microprojects.Edm.Ui.Console';     ui = 'Ui' },
-        @{ name = 'Microprojects.Edm.Ui.Main';        ui = 'ClientApp' },
-        @{ name = 'Optosense.Edm.Plugins.Operator';   ui = 'Ui' },
-        @{ name = 'Optosense.Edm.Profiles.Board';     ui = 'Ui' },
-        @{ name = 'Optosense.Edm.Operations.Optogen'; ui = 'Ui' },
-        @{ name = 'Optosense.Edm.Drivers.Null';       ui = 'Ui' }
+        @{ name = 'Microprojects.Edm.Ui.Logistics';    ui = 'Ui' },
+        @{ name = 'Microprojects.Edm.Ui.Console';      ui = 'Ui' },
+        @{ name = 'Microprojects.Edm.Ui.Technologies'; ui = 'Ui' },
+        @{ name = 'Optosense.Edm.Plugins.Operator';    ui = 'Ui' },
+        @{ name = 'Optosense.Edm.Profiles.Board';      ui = 'Ui' },
+        @{ name = 'Optosense.Edm.Operations.Optogen';  ui = 'Ui' },
+        @{ name = 'Optosense.Edm.Drivers.Null';        ui = 'Ui' }
     )
 
     $state = @{}
