@@ -1,9 +1,5 @@
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.AspNetCore.TestHost;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace Edm.IntegrationTests;
@@ -24,6 +20,7 @@ public class EdmWebApplicationFactory : WebApplicationFactory<Program>
         SetIfUnset("Edm__Mode", "Administrative");
         SetIfUnset("Edm__Intercom__Principal", "https://localhost:16334");
         SetIfUnset("Edm__Auth__Jwt__Key", "INTEGRATION_TESTS_JWT_KEY_AT_LEAST_256_BITS_LONG_FOR_HS256");
+        SetIfUnset("Edm__Auth__Negotiate__Enabled", "false");
     }
 
     public EdmWebApplicationFactory()
@@ -54,23 +51,6 @@ public class EdmWebApplicationFactory : WebApplicationFactory<Program>
         {
             logging.ClearProviders();
             logging.AddConsole();
-        });
-
-        builder.ConfigureTestServices(services =>
-        {
-            services.AddAuthentication()
-                .AddScheme<AuthenticationSchemeOptions, AnonymousAuthenticationHandler>(
-                    AnonymousAuthenticationHandler.SchemeName, _ => { });
-            // Negotiate's handler crashes on TestServer; swap its HandlerType to a non-IAuthenticationRequestHandler so the middleware skips it.
-            services.PostConfigure<AuthenticationOptions>(opts =>
-            {
-                if (opts.SchemeMap.TryGetValue("Negotiate", out var negotiate))
-                {
-                    negotiate.HandlerType = typeof(AnonymousAuthenticationHandler);
-                }
-                opts.DefaultAuthenticateScheme = AnonymousAuthenticationHandler.SchemeName;
-                opts.DefaultChallengeScheme = AnonymousAuthenticationHandler.SchemeName;
-            });
         });
     }
 
