@@ -8,6 +8,8 @@ import {
     fetchPlugins,
     fetchUser,
     fetchVersion,
+    pluginColor,
+    pluginGlyph,
     type PluginSummary,
     type UserInfo,
 } from './api'
@@ -17,6 +19,14 @@ import {PluginList} from './components/PluginList'
 import './app.css'
 
 const EMPTY_USER: UserInfo = {name: '', role: '', roles: [], divisions: []}
+
+// Mirrors HubUiPlugin.PluginGuid on the backend. Used to derive the glyph
+// shown above Hub's own ABOUT (when no plugin tile is active) so the visual
+// stays consistent with the plugin tiles' color/label rules.
+const HUB_IDENTITY = {
+    guid: 'd2a92ef1-7b46-4956-859d-d48aa999385c',
+    name: 'Hub',
+}
 
 // Top of the SmartScroll-stuck region: top of #main, which sits below the 56px header.
 const SMART_SCROLL_OFFSET = 64
@@ -81,6 +91,18 @@ export default function App() {
         return cached !== undefined && cached !== '' ? cached : hubAbout
     }, [activeGuid, aboutCache, hubAbout])
 
+    // The glyph above the about title follows whichever plugin's promo is
+    // currently shown. Falls back to Hub's identity when no tile is active or
+    // when the active plugin's ABOUT is missing (we render hubAbout in that
+    // case, so the glyph should match).
+    const activeIdentity = useMemo(() => {
+        if (!activeGuid) return HUB_IDENTITY
+        const cached = aboutCache[activeGuid]
+        if (cached === '') return HUB_IDENTITY
+        const p = plugins.find((x) => x.guid === activeGuid)
+        return p ?? HUB_IDENTITY
+    }, [activeGuid, aboutCache, plugins])
+
     return (
         <Box className="page-root">
             <Box component="header" className="doc-top">
@@ -124,6 +146,8 @@ export default function App() {
                             key={activeGuid ?? 'hub'}
                             markdown={activeAbout}
                             loading={loading}
+                            glyphColor={pluginColor(activeIdentity.guid)}
+                            glyphLabel={pluginGlyph(activeIdentity.name)}
                         />
                     </SmartScrollContent>
                 </SmartScroll>

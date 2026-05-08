@@ -232,6 +232,33 @@
 @media (prefers-reduced-motion: reduce) {
     .about-panel { animation: none; }
 }
+
+/* Larger sibling of the tile glyph: same visual rules (white mono initials
+   on a per-plugin accent square with a bottom highlight bar), sized to match
+   the H1's cap height so the two share a visual row. */
+.about-glyph {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--r-2);
+    display: grid;
+    place-items: center;
+    color: #fff;
+    font-family: var(--font-mono);
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    position: relative;
+    flex-shrink: 0;
+}
+.about-glyph::after {
+    content: "";
+    position: absolute;
+    left: 6px;
+    right: 6px;
+    bottom: 6px;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.45);
+}
 .about-panel--loading {
     color: var(--ink-4);
     font-family: var(--font-mono);
@@ -246,7 +273,15 @@
     line-height: 1.05;
     color: var(--ink-1);
     margin: 0 0 28px;
+    /* Glyph + title share one row; align centers so the glyph sits visually
+       against the title's cap height. flex-wrap keeps long titles readable on
+       narrow viewports — the title text drops below the glyph if needed. */
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
 }
+.about-title-text { min-width: 0; }
 .about-panel h2 {
     font-size: 24px;
     font-weight: 700;
