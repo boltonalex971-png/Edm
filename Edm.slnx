@@ -22,6 +22,7 @@
   </Folder>
   <Folder Name="/Ui/">
     <Project Path="Microprojects.Edm.Ui.Console/Microprojects.Edm.Ui.Console.csproj" />
+    <Project Path="Microprojects.Edm.Ui.Hub/Microprojects.Edm.Ui.Hub.csproj" />
     <Project Path="Microprojects.Edm.Ui.Logistics/Microprojects.Edm.Ui.Logistics.csproj" />
     <Project Path="Microprojects.Edm.Ui.Technologies/Microprojects.Edm.Ui.Technologies.csproj" />
   </Folder>

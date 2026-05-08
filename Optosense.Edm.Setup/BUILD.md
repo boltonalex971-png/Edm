@@ -166,6 +166,7 @@ upgrades reliable without spurious bumps cluttering MSI deltas.
 
 | csproj                                  | UI folder    |
 | --------------------------------------- | ------------ |
+| `Microprojects.Edm.Ui.Hub`              | `Ui`         |
 | `Microprojects.Edm.Ui.Logistics`        | `Ui`         |
 | `Microprojects.Edm.Ui.Console`          | `Ui`         |
 | `Microprojects.Edm.Ui.Technologies`     | `Ui`         |

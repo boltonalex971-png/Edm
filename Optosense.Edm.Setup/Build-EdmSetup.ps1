@@ -210,6 +210,7 @@ function Invoke-BuildPlugins {
 
     # SPA-embedding plugins. Append new ones here when added to the solution.
     $plugins = @(
+        @{ name = 'Microprojects.Edm.Ui.Hub';          ui = 'Ui' },
         @{ name = 'Microprojects.Edm.Ui.Logistics';    ui = 'Ui' },
         @{ name = 'Microprojects.Edm.Ui.Console';      ui = 'Ui' },
         @{ name = 'Microprojects.Edm.Ui.Technologies'; ui = 'Ui' },
