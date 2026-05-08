@@ -9,8 +9,11 @@ export interface PluginSummary {
     homepage: string
 }
 
-export interface VersionInfo {
-    productVersion: string
+export interface UserInfo {
+    name: string
+    role: string
+    roles: string[]
+    divisions: string[]
 }
 
 export async function fetchPlugins(): Promise<PluginSummary[]> {
@@ -18,9 +21,28 @@ export async function fetchPlugins(): Promise<PluginSummary[]> {
     return r.data
 }
 
-export async function fetchVersion(): Promise<VersionInfo> {
-    const r = await axios.get<VersionInfo>('/api/hub/plugins/version')
+export async function fetchUser(): Promise<UserInfo> {
+    const r = await axios.get<UserInfo>('/api/auth/user/name')
     return r.data
+}
+
+export interface VersionInfo {
+    product: string
+}
+
+export async function fetchVersion(): Promise<VersionInfo> {
+    const r = await axios.get<VersionInfo>('/api/hub/meta/version')
+    return r.data
+}
+
+// Strips a Windows DOMAIN\ prefix or an email @suffix. Anything else is left alone.
+export function cleanName(name: string): string {
+    if (!name) return ''
+    const slash = name.lastIndexOf('\\')
+    if (slash >= 0) return name.slice(slash + 1)
+    const at = name.indexOf('@')
+    if (at > 0) return name.slice(0, at)
+    return name
 }
 
 const palette = ['#1F4DE5', '#C2410C', '#047857', '#6D28D9', '#B45309', '#0F766E']

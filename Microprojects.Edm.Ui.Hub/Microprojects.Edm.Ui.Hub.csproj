@@ -30,8 +30,9 @@
 
   <!--
   Stamps the Setup MSI's ProductVersion (from the vdproj) into BuildInfo.g.cs at
-  compile time, mirroring the Logistics project. The constant is the only way
-  the running landing page can show the installed product's umbrella version.
+  compile time, mirroring the Logistics and Technologies plugins. The constant
+  is what /api/hub/meta/version returns so the landing-page footer can show the
+  installed product's umbrella version.
   -->
   <PropertyGroup>
     <SetupVdprojPath>$(MSBuildThisFileDirectory)..\Optosense.Edm.Setup\Optosense.Edm.Setup.vdproj</SetupVdprojPath>

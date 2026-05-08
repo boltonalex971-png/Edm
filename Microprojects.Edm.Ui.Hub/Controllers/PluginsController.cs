@@ -6,8 +6,8 @@ namespace Microprojects.Edm.Ui.Hub.Controllers
 {
     /// <summary>
     /// Returns the loaded application plugins so the Hub landing page
-    /// can render one tile per plugin. The Hub itself is filtered out
-    /// by GUID so it does not appear among its own tiles.
+    /// can render one card per plugin. The Hub itself is filtered out
+    /// by GUID so it does not appear among its own cards.
     /// </summary>
     [ApiController]
     [Route("api/hub/[controller]")]
@@ -37,12 +37,6 @@ namespace Microprojects.Edm.Ui.Hub.Controllers
                 });
 
             return Ok(plugins);
-        }
-
-        [HttpGet("version")]
-        public IActionResult GetVersion()
-        {
-            return Ok(new { productVersion = BuildInfo.ProductVersion });
         }
     }
 }

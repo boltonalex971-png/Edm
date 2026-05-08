@@ -1,77 +1,58 @@
 import { Box, Container, Typography } from '@mui/material'
 
 interface HeroProps {
-    pluginCount: number
-    productVersion: string
+    userName: string
 }
 
-export function Hero({ pluginCount, productVersion }: HeroProps) {
+export function Hero({ userName }: HeroProps) {
     return (
-        <Container maxWidth="lg" sx={{ py: { xs: 6, md: 8 }, px: { xs: 4, md: 7 } }}>
-            <Box className="stamp">
-                <b>Doc · ASM-EDM-{productVersion || '0.0.0'}</b>
-                <span className="sep">/</span>
-                <span>Status: Live</span>
-                <span className="sep">/</span>
-                <span>Owner · Platform UX</span>
-                <span className="sep">/</span>
-                <span>Industry · Discrete Manufacturing</span>
-            </Box>
+        <Container
+            maxWidth="lg"
+            sx={{ py: { xs: 7, md: 10 }, px: { xs: 4, md: 7 } }}
+        >
+            <Typography
+                component="p"
+                className="greeting"
+                sx={{ mb: 2 }}
+            >
+                Welcome{userName ? `, ${userName}` : ''}.
+            </Typography>
 
-            <Box className="hero-grid">
-                <Box>
-                    <Typography
-                        variant="h1"
-                        component="h1"
-                        sx={{
-                            fontSize: { xs: 56, md: 88 },
-                            color: 'var(--ink-1)',
-                            mb: 0,
-                        }}
-                    >
-                        Industrial UI<br />
-                        for the <em className="hero-em">plugin&#8209;based</em><br />
-                        EDM platform.
-                    </Typography>
-                    <Typography
-                        sx={{
-                            fontSize: 18,
-                            color: 'var(--ink-3)',
-                            lineHeight: 1.55,
-                            maxWidth: '52ch',
-                            mt: 4,
-                        }}
-                    >
-                        EDM is a host shell composed of independent plugins — each named{' '}
-                        <code>EDM&nbsp;{'{Plugin}'}</code>. Pick a module below to enter; every
-                        plugin shares the same chrome, tokens and role-aware UI rules so the
-                        platform reads as one product on the shop floor and at the
-                        technologist&apos;s desk.
-                    </Typography>
-                </Box>
+            <Typography
+                variant="h1"
+                component="h1"
+                sx={{
+                    fontSize: { xs: 44, md: 64 },
+                    color: 'var(--ink-1)',
+                    letterSpacing: '-0.02em',
+                    lineHeight: 1.05,
+                    fontWeight: 700,
+                    mb: 4,
+                }}
+            >
+                Enterprise Data Management.
+            </Typography>
 
-                <aside className="blueprint">
-                    <div className="ble-h">System summary</div>
-                    <div className="stat-row">
-                        <div className="stat">
-                            <div className="v">{pluginCount}</div>
-                            <div className="l">Application plugins</div>
-                        </div>
-                        <div className="stat">
-                            <div className="v">{productVersion || '—'}</div>
-                            <div className="l">Product version</div>
-                        </div>
-                        <div className="stat">
-                            <div className="v">3</div>
-                            <div className="l">Density modes</div>
-                        </div>
-                        <div className="stat">
-                            <div className="v">4</div>
-                            <div className="l">Role playbooks</div>
-                        </div>
-                    </div>
-                </aside>
-            </Box>
+            <Typography component="p" className="promo">
+                The Enterprise Data Management platform unifies nomenclature
+                design, manufacturing routings, supply chains, item traceability
+                and live shop-floor operations in a single industrial UI.
+            </Typography>
+
+            <Typography component="p" className="promo">
+                It covers the full path from a technologist authoring a process
+                tree, to a master dispatching work to a cell, to an operator
+                executing a job at a kiosk — with batch genealogy, tare and
+                inventory management, real-time monitoring and role-aware
+                density rules along the way.
+            </Typography>
+
+            <Typography component="p" className="promo">
+                Each module on this page runs as an independent plugin under one
+                shell, sharing identity, theming and conventions so the
+                experience stays coherent from the engineer&apos;s desk to the
+                operator&apos;s workstation. Pick a module below to enter.
+            </Typography>
         </Container>
     )
 }
