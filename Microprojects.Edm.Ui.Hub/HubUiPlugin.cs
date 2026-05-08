@@ -6,7 +6,7 @@ namespace Microprojects.Edm.Ui.Hub
 {
     [ApplicationPlugin(
         Name = "Hub",
-        Description = "EDM platform landing page.",
+        Description = "Platform landing — module catalog with an at-a-glance promo for each loaded application.",
         Guid = PluginGuid,
         SpaPath = "Ui/dist")]
     // UiRoot intentionally omitted -> null -> mounted at "/" by PluginManagerHelper.MapSpa.
