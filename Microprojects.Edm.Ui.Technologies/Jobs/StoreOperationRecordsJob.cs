@@ -1,18 +1,16 @@
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using System.Threading;
-using Microprojects.Edm.Drivers;
-using Microprojects.Edm.Jobs;
-using Microsoft.Extensions.Logging;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using Microprojects.Edm.Ui.Technologies.Persistence;
+using Microsoft.Extensions.Logging;
+using Microprojects.Edm.Drivers;
 using Microprojects.Edm.Intercom;
-using Newtonsoft.Json;
+using Microprojects.Edm.Jobs;
+using Microprojects.Edm.Ui.Technologies.Intercom;
 using Microprojects.Edm.Ui.Technologies.Models;
-using AutoMapper;
-using Microprojects.Edm.Ui.Technologies.Intercom;
-using Microprojects.Edm.Ui.Technologies.Intercom;
+using Microprojects.Edm.Ui.Technologies.Persistence;
+using Newtonsoft.Json;
 
 namespace Microprojects.Edm.Ui.Technologies.Jobs
 {
@@ -24,19 +22,17 @@ namespace Microprojects.Edm.Ui.Technologies.Jobs
         protected IDbContextFactory<TechnologiesContext> ContextFactory { get; init; }
         protected StoreOperationRecordsJobParameters Parameters => (StoreOperationRecordsJobParameters)JobParameters;
         private readonly ILogger<StoreOperationRecordsJob> _logger;
-        private readonly IMapper _mapper;
 
         public StoreOperationRecordsJob()
         {
         }
 
         public StoreOperationRecordsJob(ILogger<StoreOperationRecordsJob> logger, IIntercom intercom,
-            IDbContextFactory<TechnologiesContext> factory, IMapper mapper)
+            IDbContextFactory<TechnologiesContext> factory)
         {
             Intercom = intercom;
             ContextFactory = factory;
             _logger = logger;
-            _mapper = mapper;
         }
 
         public override async Task<object> ExecuteAsync()
@@ -74,7 +70,7 @@ namespace Microprojects.Edm.Ui.Technologies.Jobs
                         await context.SaveChangesAsync();
                         await Intercom.PublishRecordAsync(Parameters.Operation, rec);
                         var data = new RecordDataEvent {
-                            Data = _mapper.Map<OperationDeviceData>(rec)
+                            Data = rec.ToDeviceData()
                         };
                         await Intercom.PublishOperationDataAsync(Parameters.Operation, data);
                         if (r.Request == "Stop")

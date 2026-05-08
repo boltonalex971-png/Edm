@@ -1,6 +1,11 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.Loader;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
@@ -9,21 +14,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Newtonsoft.Json;
-using Microprojects.Edm.Mapper;
-using Microprojects.Edm.Models;
-using Microprojects.Edm.Plugins;
-using Microprojects.Edm.Host.SignalR;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.Loader;
-using System.Security.Claims;
-using System.Security.Principal;
-using System.Threading.Tasks;
 using Microprojects.Edm.Plugins;
 
 namespace Microprojects.Edm.Host;
@@ -223,7 +213,6 @@ public static class PluginManagerHelper
                 }
 
                 builder.AddApplicationPart(assembly);
-                services.AddAutoMapper(typeof(AutoMapperProfile), foundTypes.First());
 
                 foreach (var type in foundTypes)
                 {

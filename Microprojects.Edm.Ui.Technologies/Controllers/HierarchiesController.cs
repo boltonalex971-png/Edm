@@ -2,18 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AutoMapper;
-using Microprojects.Edm.Cache;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microprojects.Edm.Cache;
+using Microprojects.Edm.Controllers;
 using Microprojects.Edm.Ui.Technologies.Contracts;
 using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Controllers;
-using Microprojects.Edm.Plugins;
-using Microprojects.Edm.Ui.Technologies.Models;
 using Microprojects.Edm.Ui.Technologies.Utils;
-using Microsoft.Extensions.Configuration;
 
 namespace Microprojects.Edm.Ui.Technologies.Controllers
 {
@@ -22,25 +18,16 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
     public class HierarchiesController : AuthControllerBase
     {
         private readonly ILogger<HostsController> _logger;
-        private readonly IMapper _mapper;
         private readonly IHierarchyService _hierarchyService;
         private readonly ICache _cache;
 
-        public HierarchiesController(ILogger<HostsController> logger, IMapper mapper, ICache cache, IHierarchyService hierarchyService, IConfiguration configuration) :
-            base(configuration) 
+        public HierarchiesController(ILogger<HostsController> logger, ICache cache, IHierarchyService hierarchyService, IConfiguration configuration) :
+            base(configuration)
         {
             _logger = logger;
-            _mapper = mapper;
             _hierarchyService = hierarchyService;
             _cache = cache;
         }
-
-        //[HttpPost]
-        //public JsonResult KeepTreeExpandedState(HierarchyType type, IEnumerable<TreeExpanedState> items)
-        //{
-        //    _cache.StoreMany(UiCacheHelper.OwnerKey(this), items, () => type);
-        //    return Json("Ok");
-        //}
 
         [HttpGet]
         public async Task<IEnumerable<Hierarchy>> Get()
@@ -76,27 +63,11 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
             return result;
         }
 
-        //public async Task<string> GetHierarchyEditor(int id, int? parentId = null, HierarchyType type = HierarchyType.Any)
-        //{
-        //    var parent = parentId.HasValue ?
-        //        await _hierarchyService.Get(parentId.Value) :
-        //        await _hierarchyService.GetRoot(type);
-        //    var folder = (await _hierarchyService.Get(id)) ?? new Hierarchy
-        //    {
-        //        ParentId = parent.Id,
-        //        Type = parent.Type,
-        //        IsActive = true,
-        //        IsPublic = true,
-        //        Owner = "user 1" // TODO attach real user
-        //    };
-        //    var model = Mapper.Map<HierarchyViewModel>(folder);
-        //    return RenderViewPart("~/Views/Hierarchy/HierarchyEditor.cshtml", model);
-        //}
-
         [HttpGet("{type}/tree")]
         public async Task<IEnumerable<HierarchyItemViewModel>> GetHierarchyTree(HierarchyType type)
         {
-            var folders = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(await _hierarchyService.GetTree(type, UserInfo.Groups));
+            var folders = (await _hierarchyService.GetTree(type, UserInfo.Groups))
+                .Select(h => h.ToHierarchyItem()).ToList();
             var tree = folders.ToTree();
             return tree;
         }
@@ -108,21 +79,21 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
             model.ParentId = model.ParentId == 0 ? (await _hierarchyService.GetRoot(model.Type)).Id : model.ParentId;
             model.Owner = User.Identity.Name;
             var saved = await _hierarchyService.Save(model);
-            return _mapper.Map<HierarchyItemViewModel>(saved);
+            return saved.ToHierarchyItem();
         }
 
         [HttpPut("{id:int}")]
         public async Task<HierarchyItemViewModel> Save(int id, [FromBody] Hierarchy model)
         {
             var saved = await _hierarchyService.Save(model);
-            return _mapper.Map<HierarchyItemViewModel>(saved);
+            return saved.ToHierarchyItem();
         }
 
         [HttpDelete("{id:int}")]
         public async Task<HierarchyItemViewModel> Delete(int id)
         {
             var deleted = await _hierarchyService.Delete(id);
-            return _mapper.Map<HierarchyItemViewModel>(deleted);
+            return deleted.ToHierarchyItem();
         }
     }
 }

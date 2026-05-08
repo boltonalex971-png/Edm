@@ -2,18 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microprojects.Edm.Controllers;
+using Microprojects.Edm.Jobs;
+using Microprojects.Edm.Plugins;
 using Microprojects.Edm.Ui.Technologies.Contracts;
 using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Plugins;
-using Microprojects.Edm.Controllers;
-using Microprojects.Edm.Ui.Technologies.Models;
 using Microprojects.Edm.Ui.Technologies.Utils;
-using Microsoft.Extensions.Configuration;
-using Microprojects.Edm.Jobs;
 
 namespace Microprojects.Edm.Ui.Technologies.Controllers
 {
@@ -22,24 +19,21 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
     public class HostsController : AuthControllerBase
     {
         private readonly ILogger<HostsController> _logger;
-        private readonly IMapper _mapper;
         private readonly IHostService _hostService;
         private readonly IHierarchyService _hierarchyService;
         private readonly IPluginContainer _plugins;
         private readonly IJobContainer _jobContainer;
 
         public HostsController(
-            ILogger<HostsController> logger, 
-            IMapper mapper, 
-            IHostService hostService, 
+            ILogger<HostsController> logger,
+            IHostService hostService,
             IHierarchyService hierarchyService,
-            IPluginContainer plugins, 
+            IPluginContainer plugins,
             IJobContainer jobContainer,
             IConfiguration configuration) :
             base(configuration)
         {
             _logger = logger;
-            _mapper = mapper;
             _hostService = hostService;
             _hierarchyService = hierarchyService;
             _plugins = plugins;
@@ -72,9 +66,7 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
             }
 
             var peer = _jobContainer.Hive.GetActivePeers().FirstOrDefault(h => h.Host == host.Url) ?? new Peer();
-            var result = _mapper.Map<HostModel>(host, opts => opts.Items["Peer"] = peer);
-
-            return result;
+            return host.ToModel(peer);
         }
 
         [HttpPut("{id:int}")]
@@ -109,23 +101,17 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
         [HttpPut("{id:int}/parent")]
         public async Task<Host> ChangeParent(int id, [FromBody] HierarchyItemViewModel parent)
         {
-                var result = await _hostService.ChangeParent(id, parent.Id);
-                return result;
+            var result = await _hostService.ChangeParent(id, parent.Id);
+            return result;
         }
 
         [HttpGet("hierarchy")]
         public async Task<IEnumerable<HierarchyItemViewModel>> GetHostHierarchy()
         {
-            var hosts = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(
-                await _hostService.GetAll(),
-                o => o.Items["Type"] = HierarchyType.Host);
-            var folders = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(
-                await _hierarchyService.GetTree(HierarchyType.Host, UserInfo.Groups));
-            //var expanded = _cache.RestoreMany<TreeExpanedState>(UiCacheHelper.OwnerKey(this), () => HierarchyType.Host);
-            //foreach (var folder in folders)
-            //{
-            //    folder.expanded = expanded?.Any(e => e.Id == folder.Id) ?? false;
-            //}
+            var hosts = (await _hostService.GetAll())
+                .Select(h => h.ToHierarchyItem()).ToList();
+            var folders = (await _hierarchyService.GetTree(HierarchyType.Host, UserInfo.Groups))
+                .Select(h => h.ToHierarchyItem()).ToList();
 
             var tree = folders.Concat(hosts).ToTree().ToList();
             // always expand root if just one
@@ -143,7 +129,7 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
         public async Task<IEnumerable<HostDeviceModel>> GetDevices(int id)
         {
             var devices = await _hostService.GetDevices(id);
-            var devModels = _mapper.Map<IEnumerable<HostDeviceModel>>(devices);
+            var devModels = devices.Select(d => d.ToModel()).ToList();
             foreach (var dev in devModels)
             {
                 var driver = _plugins.GetDriver(dev.DriverGuid);
@@ -159,10 +145,10 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
         [HttpPost("{id:int}/devices")]
         public async Task<HostDeviceModel> AttachHostDevice(int id, HostDeviceModel model)
         {
-            var hostDevice = _mapper.Map<HostDevice>(model);
+            var hostDevice = model.ToEntity();
             hostDevice.HostId = id;
             var device = await _hostService.AttachDevice(hostDevice);
-            return _mapper.Map<HostDeviceModel>(device);
+            return device.ToModel();
         }
 
         [HttpDelete("{id:int}/devices/{devId:int}")]
@@ -176,14 +162,14 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
         public async Task<IEnumerable<IdNameModel>> GetAvailableDevices()
         {
             var devices = await _hostService.GetAvailableDevices();
-            return _mapper.Map<IEnumerable<IdNameModel>>(devices);
+            return devices.Select(d => d.ToIdNameModel()).ToList();
         }
 
         [HttpGet("devices/{id:int}")]
         public async Task<HostDeviceModel> GetHostDevice(int id)
         {
             var device = await _hostService.GetHostDevice(id);
-            return _mapper.Map<HostDeviceModel>(device, o => o.State = _plugins);
+            return device.ToModel(_plugins);
         }
         #endregion
     }

@@ -2,13 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microprojects.Edm.Ui.Technologies.Auditing;
 using Microprojects.Edm.Ui.Technologies.Contracts;
-using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Ui.Technologies.Models;
 using Microprojects.Edm.Ui.Technologies.Models;
 using Microprojects.Edm.Ui.Technologies.Services;
 
@@ -19,13 +16,11 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
     public class AuditsController : ControllerBase
     {
         private readonly ILogger<ProcessesController> _logger;
-        private readonly IMapper _mapper;
         private readonly IAuditService _auditService;
 
-        public AuditsController(ILogger<ProcessesController> logger, IMapper mapper, IAuditService auditService)
+        public AuditsController(ILogger<ProcessesController> logger, IAuditService auditService)
         {
             _logger = logger;
-            _mapper = mapper;
             _auditService = auditService;
         }
 
@@ -150,24 +145,22 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
         public async Task<IEnumerable<QualifierViewModel>> GetQualifiers(int id)
         {
             var qualifiers = await _auditService.GetQualifiers(id);
-            var result = _mapper.Map<IEnumerable<QualifierViewModel>>(qualifiers);
-            return result;
+            return qualifiers.Select(q => q.ToViewModel()).ToList();
         }
 
         [HttpGet("{id:int}/process/qualifiers")]
         public async Task<IEnumerable<QualifierViewModel>> GetProcessQualifiers(int id)
         {
             var qualifiers = await _auditService.GetProcessQualifiers(id);
-            var result = _mapper.Map<IEnumerable<QualifierViewModel>>(qualifiers);
-            return result;
+            return qualifiers.Select(q => q.ToViewModel()).ToList();
         }
 
         [HttpPost("{id:int}/qualifiers")]
         public async Task<QualifierViewModel> AddQualifier(int id, QualifierViewModel model)
         {
-            var qualifier = _mapper.Map<Qualifier>(model);
+            var qualifier = model.ToEntity();
             qualifier = await _auditService.AddQualifier(id, qualifier);
-            return _mapper.Map<QualifierViewModel>(qualifier);
+            return qualifier.ToViewModel();
         }
 
         [HttpDelete("{id:int}/qualifiers/{qualifierId:int}")]

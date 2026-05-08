@@ -2,22 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AutoMapper;
-using Microprojects.Edm;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Microprojects.Edm.Ui.Technologies.Contracts;
 using Microprojects.Edm.Models;
-using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Ui.Technologies.Models;
 using Microprojects.Edm.Plugins;
-using Microprojects.Edm.Jobs;
+using Microprojects.Edm.Ui.Technologies.Contracts;
+using Microprojects.Edm.Ui.Technologies.Models;
 using Newtonsoft.Json;
-using Google.Protobuf.WellKnownTypes;
-using System.Reflection;
 
 namespace Microprojects.Edm.Ui.Technologies.Controllers
 {
@@ -26,7 +17,6 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
     public class OperationsController : ControllerBase
     {
         private ILogger<OperationsController> _logger;
-        private readonly IMapper _mapper;
         private IOperationService _operationService;
         private ISettingService _settingService;
         private readonly IPluginContainer _plugins;
@@ -35,13 +25,11 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
 
         public OperationsController(
             ILogger<OperationsController> logger,
-            IMapper mapper,
             IOperationService operationService,
             ISettingService settingService,
             IPluginContainer plugins)
         {
             _logger = logger;
-            _mapper = mapper;
             _operationService = operationService;
             _settingService = settingService;
             _plugins = plugins;
@@ -64,13 +52,13 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
         [HttpPost]
         public async Task<Operation> Create(Operation model)
         {
-            var operation = await _operationService.Create(_mapper.Map<Operation>(model));
+            var operation = await _operationService.Create(model);
             //await _operationService.Start(operation.Id);
             return operation;
         }
 
         /// <summary>
-        /// Used to define an appropriate workbench for selected process to create an operation. Required 
+        /// Used to define an appropriate workbench for selected process to create an operation. Required
         /// for outer systems integrations.
         /// </summary>
         /// <param name="processUid">string representing process UID, common for integrated systems</param>
@@ -102,7 +90,7 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
         [HttpPost("{id:int}/start")]
         public async Task<Operation> Start(int id, [FromBody] DateTimeOffset? startAt)
         {
-            var startTime = startAt?.UtcDateTime ?? DateTime.UtcNow; 
+            var startTime = startAt?.UtcDateTime ?? DateTime.UtcNow;
             var operation = await _operationService.Start(id, startTime);
             return operation;
         }
@@ -144,16 +132,16 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
         [HttpGet("running")]
         public async Task<IEnumerable<OperationViewModel>> GetRunningOperations()
         {
-            var ops = await _operationService.Get(
+            var ops = (await _operationService.Get(
                 o => o.Completed == null && o.Cancelled == null,
                 o => o.WorkplaceProcess.Process,
-                o => o.WorkplaceProcess.Workplace);
-            var uncompleted = _mapper.Map<IEnumerable<OperationViewModel>>(ops);
+                o => o.WorkplaceProcess.Workplace)).ToList();
+            var uncompleted = ops.Select(o => o.ToViewModel()).ToList();
             foreach (var op in uncompleted.Where(o => o.State == OperationState.InProgress))
             {
                 op.State = (await _operationService.GetStatus(ops.First(o => o.Id == op.Id))).State;
             }
-            
+
             return uncompleted.OrderByDescending(o => o.Created);
         }
 
@@ -164,8 +152,8 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
                 o => o.Completed > DateTime.UtcNow.Date || o.Cancelled > DateTime.UtcNow.Date,
                 o => o.WorkplaceProcess.Process,
                 o => o.WorkplaceProcess.Workplace);
-            var uncompleted = _mapper.Map<IEnumerable<OperationViewModel>>(ops);
-            
+            var uncompleted = ops.Select(o => o.ToViewModel()).ToList();
+
             return uncompleted.OrderByDescending(o => o.Completed ?? o.Cancelled);
         }
 
@@ -173,11 +161,11 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
         public async Task<IEnumerable<OperationViewModel>> GetWeekOperations()
         {
             var ops = await _operationService.Get(
-                o => o.Completed > DateTime.UtcNow.Date.AddDays(-6) || o.Cancelled >  DateTime.UtcNow.Date.AddDays(-6),
+                o => o.Completed > DateTime.UtcNow.Date.AddDays(-6) || o.Cancelled > DateTime.UtcNow.Date.AddDays(-6),
                 o => o.WorkplaceProcess.Process,
                 o => o.WorkplaceProcess.Workplace);
-            var uncompleted = _mapper.Map<IEnumerable<OperationViewModel>>(ops);
-            
+            var uncompleted = ops.Select(o => o.ToViewModel()).ToList();
+
             return uncompleted.OrderByDescending(o => o.Completed ?? o.Cancelled);
         }
 
@@ -192,18 +180,16 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
         public async Task<IEnumerable<OperationCriterionModel>> GetOperationCriteria(int operationId)
         {
             var criteria = await _operationService.GetCriteria(operationId);
-            var result = _mapper.Map<IEnumerable<OperationCriterionModel>>(criteria);
-            return result;
+            return criteria.Select(c => c.ToModel()).ToList();
         }
 
         [HttpGet("{operationId:int}/criterion")]
         public async Task<IEnumerable<OperationCriterionModel>> GetOperationCriterion(int operationId, [FromQuery] int? lastId)
         {
             var criterion = await _operationService.GetCriterion(operationId, lastId ?? 0);
-            var result = _mapper.Map<IEnumerable<OperationCriterionModel>>(criterion);
-            return result;
+            return criterion.Select(c => c.ToModel()).ToList();
         }
-        
+
         [HttpGet("{id:int}/devices")]
         public async Task<IEnumerable<OperationHostDevice>> GetOperationDevices(int id)
         {
@@ -214,9 +200,9 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
         [HttpGet("{id:int}/process")]
         public async Task<Process> GetProcessByOperationId(int id)
         {
-            var process = 
+            var process =
                 (await _operationService.Get(o => o.Id == id, o => o.WorkplaceProcess.Process))
-                .FirstOrDefault()?.WorkplaceProcess?.Process ?? 
+                .FirstOrDefault()?.WorkplaceProcess?.Process ??
                 (await _operationService.Get(o => o.Id == id, o => o.Workbench.WorkplaceProcess.Process))
                 .FirstOrDefault()?.Workbench?.WorkplaceProcess.Process;
             return process;

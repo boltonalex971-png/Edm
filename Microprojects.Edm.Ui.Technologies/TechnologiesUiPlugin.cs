@@ -2,12 +2,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microprojects.Edm.Infrastructure;
+using Microprojects.Edm.Plugins;
 using Microprojects.Edm.Ui.Technologies.Contracts;
 using Microprojects.Edm.Ui.Technologies.Jobs;
 using Microprojects.Edm.Ui.Technologies.Persistence;
 using Microprojects.Edm.Ui.Technologies.Services;
-using Microprojects.Edm.Infrastructure;
-using Microprojects.Edm.Plugins;
 
 namespace Microprojects.Edm.Ui.Technologies
 {
@@ -37,8 +37,6 @@ namespace Microprojects.Edm.Ui.Technologies
                 var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
                 options.UseLoggerFactory(loggerFactory);
             }, poolSize: 16);
-
-            services.AddAutoMapper(typeof(TechnologiesUiPlugin));
 
             services.AddScoped<IRemoteJobs, RemoteJobs>();
             services.AddScoped<IAuditService, AuditService>();

@@ -1,41 +1,33 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
+using Microprojects.Edm.Controllers;
 using Microprojects.Edm.Ui.Logistics.Contracts;
 using Microprojects.Edm.Ui.Logistics.Models;
-using Microprojects.Edm.Ui.Logistics.Utils;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using Microprojects.Edm.Ui.Logistics.ViewModels;
-using Microprojects.Edm.Controllers;
-using Microprojects.Edm.Plugins;
 
 namespace Microprojects.Edm.Ui.Logistics.Controllers;
 
 [ApiController]
 [Route("api/logistics/[controller]")]
-public class CrudControllerBase<TObject, TObjectViewModel, TService> : AuthControllerBase 
+public abstract class CrudControllerBase<TObject, TObjectViewModel, TService> : AuthControllerBase
     where TObject : DomainObject
     where TService : IGenericService<TObject>
     where TObjectViewModel : new()
 {
-    protected readonly IMapper Mapper;
     protected readonly TService Service;
 
-    public CrudControllerBase(IMapper mapper, TService service, IConfiguration configuration) :
+    protected CrudControllerBase(TService service, IConfiguration configuration) :
         base(configuration)
     {
-        Mapper = mapper;
         Service = service;
     }
+
+    protected abstract TObjectViewModel ToViewModel(TObject entry);
+    protected abstract TObject ToEntity(TObjectViewModel model);
 
     [HttpGet]
     public async Task<IEnumerable<TObjectViewModel>> GetAll()
     {
-        var result = await Service.GetAll(); 
-        return Mapper.Map<IEnumerable<TObjectViewModel>>(result);
+        var result = await Service.GetAll();
+        return result.Select(ToViewModel).ToList();
     }
 
     [HttpGet("{id:guid}")]
@@ -44,8 +36,7 @@ public class CrudControllerBase<TObject, TObjectViewModel, TService> : AuthContr
         if (id != Guid.Empty)
         {
             var entry = await Service.Get(id);
-            var model = Mapper.Map<TObjectViewModel>(entry);
-            return model;
+            return ToViewModel(entry);
         }
 
         return new TObjectViewModel();
@@ -57,7 +48,7 @@ public class CrudControllerBase<TObject, TObjectViewModel, TService> : AuthContr
         [FromBody] TObjectViewModel model,
         [FromQuery] bool force = false)
     {
-        var entry = Mapper.Map<TObject>(model);
+        var entry = ToEntity(model);
         if (id != entry.Id)
         {
             throw new Exception($"{typeof(TObject).Name} id is ambiguous");
@@ -66,7 +57,7 @@ public class CrudControllerBase<TObject, TObjectViewModel, TService> : AuthContr
         try
         {
             var result = await Service.Save(entry, force);
-            return Mapper.Map<TObjectViewModel>(result);
+            return ToViewModel(result);
         }
         catch (Services.ForkRequiredException ex)
         {
@@ -78,14 +69,14 @@ public class CrudControllerBase<TObject, TObjectViewModel, TService> : AuthContr
     public async Task<TObjectViewModel> DeleteObject(Guid id)
     {
         var result = await Service.Delete(id);
-        return Mapper.Map<TObjectViewModel>(result);
+        return ToViewModel(result);
     }
 
     [HttpPost]
     public async Task<TObjectViewModel> CreateObject([FromBody] TObjectViewModel model)
     {
-        var entry = Mapper.Map<TObject>(model);
+        var entry = ToEntity(model);
         var result = await Service.Save(entry);
-        return Mapper.Map<TObjectViewModel>(result);
+        return ToViewModel(result);
     }
 }

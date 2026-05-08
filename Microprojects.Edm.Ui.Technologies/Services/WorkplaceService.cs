@@ -1,17 +1,12 @@
-using AutoMapper.QueryableExtensions;
-using Microsoft.EntityFrameworkCore;
-using Microprojects.Edm.Ui.Technologies.Contracts;
-using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Ui.Technologies.Persistence;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Microprojects.Edm.Ui.Technologies.Contracts;
+using Microprojects.Edm.Ui.Technologies.Models;
+using Microprojects.Edm.Ui.Technologies.Persistence;
 
 namespace Microprojects.Edm.Ui.Technologies.Services
 {

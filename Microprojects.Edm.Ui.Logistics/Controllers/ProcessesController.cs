@@ -1,18 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Threading.Tasks;
-using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using Microprojects.Edm.Ui.Logistics.Contracts;
 using Microprojects.Edm.Ui.Logistics.Models;
-using Microprojects.Edm.Ui.Logistics.Utils;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Microprojects.Edm.Ui.Logistics.ViewModels;
-using Microprojects.Edm.Controllers;
-using Microprojects.Edm.Plugins;
-using Directory = Microprojects.Edm.Ui.Logistics.Models.Directory;
 
 namespace Microprojects.Edm.Ui.Logistics.Controllers;
 
@@ -22,18 +12,21 @@ public class ProcessesController : EntriesControllerBase<Process, ProcessViewMod
 {
     private readonly ILogger<ProcessesController> _logger;
 
-    public ProcessesController(ILogger<ProcessesController> logger, IMapper mapper, 
+    public ProcessesController(ILogger<ProcessesController> logger,
         IProcessService service, IDirectoryService directoryService, IConfiguration configuration) :
-        base(mapper, service, directoryService, configuration)
+        base(service, directoryService, configuration)
     {
     }
+
+    protected override ProcessViewModel ToViewModel(Process entry) => entry.ToViewModel();
+    protected override Process ToEntity(ProcessViewModel model) => model.ToEntity();
 
     [HttpGet]
     public override async Task<IEnumerable<ProcessViewModel>> GetAllEntries([FromQuery] string? kind = null)
     {
         var predicate = BuildKindPredicate(kind);
         var entries = await Service.GetAll(predicate);
-        return Mapper.Map<IEnumerable<ProcessViewModel>>(entries);
+        return entries.Select(e => e.ToViewModel()).ToList();
     }
 
     [HttpGet("hierarchy")]
@@ -81,16 +74,15 @@ public class ProcessesController : EntriesControllerBase<Process, ProcessViewMod
         }
 
         var subs = await Service.GetSubProcesses(id);
-        var model = Mapper.Map<IEnumerable<SubProcessViewModel>>(subs);
-        return model;
+        return subs.Select(s => s.ToViewModel()).ToList();
     }
 
     [HttpPut("{id:guid}/subprocesses")]
     public async Task<SubProcessViewModel> SaveSubProcess(Guid id, SubProcessViewModel model)
     {
-        var sp = Mapper.Map<SubProcess>(model);
+        var sp = model.ToEntity();
         var result = await Service.SaveSubProcess(sp);
-        return Mapper.Map<SubProcessViewModel>(result);
+        return result.ToViewModel();
     }
 
     [HttpPost("{id:guid}/subprocesses")]
@@ -98,9 +90,9 @@ public class ProcessesController : EntriesControllerBase<Process, ProcessViewMod
     {
         ArgumentNullException.ThrowIfNull(model);
 
-        var subProcess = Mapper.Map<SubProcess>(model);
+        var subProcess = model.ToEntity();
         subProcess = await Service.AddSubProcess(id, subProcess);
-        return Mapper.Map<SubProcessViewModel>(subProcess);
+        return subProcess.ToViewModel();
     }
 
     [HttpDelete("{id:guid}/subprocesses/{subProcessId:guid}")]
@@ -123,7 +115,7 @@ public class ProcessesController : EntriesControllerBase<Process, ProcessViewMod
         }
 
         var grades = await Service.GetGrades(id);
-        return Mapper.Map<IEnumerable<GradeViewModel>>(grades);
+        return grades.Select(g => g.ToViewModel()).ToList();
     }
 
     [HttpPost("{id:guid}/grades")]
@@ -131,9 +123,9 @@ public class ProcessesController : EntriesControllerBase<Process, ProcessViewMod
     {
         ArgumentNullException.ThrowIfNull(model);
 
-        var grade = Mapper.Map<Grade>(model);
+        var grade = model.ToEntity();
         var result = await Service.AddGrade(id, grade);
-        return Mapper.Map<GradeViewModel>(result);
+        return result.ToViewModel();
     }
 
     [HttpPut("{id:guid}/grades")]
@@ -141,9 +133,9 @@ public class ProcessesController : EntriesControllerBase<Process, ProcessViewMod
     {
         ArgumentNullException.ThrowIfNull(model);
 
-        var grade = Mapper.Map<Grade>(model);
+        var grade = model.ToEntity();
         var result = await Service.SaveGrade(id, grade);
-        return Mapper.Map<GradeViewModel>(result);
+        return result.ToViewModel();
     }
 
     [HttpDelete("{id:guid}/grades/{gradeId:guid}")]
@@ -161,23 +153,23 @@ public class ProcessesController : EntriesControllerBase<Process, ProcessViewMod
     public async Task<IEnumerable<SpecificationRowViewModel>> GetSpecification(Guid id)
     {
         var spec = await Service.GetActiveSpecification(id);
-        return spec == null ? [] : Mapper.Map<IEnumerable<SpecificationRowViewModel>>(spec?.Rows);
+        return spec == null ? [] : spec.Rows.Select(r => r.ToViewModel()).ToList();
     }
 
     [HttpPost("{id:guid}/specification")]
     public async Task<SpecificationRowViewModel> AddSpecificationRow(Guid id, [FromBody] SpecificationRowViewModel model)
     {
-        var row = Mapper.Map<SpecificationNomenclature>(model);
+        var row = model.ToEntity();
         var result = await Service.AddSpecificationRow(id, row);
-        return Mapper.Map<SpecificationRowViewModel>(result);
+        return result.ToViewModel();
     }
 
     [HttpPut("{id:guid}/specification")]
     public async Task<SpecificationRowViewModel> SaveSpecificationRow(Guid id, SpecificationRowViewModel model)
     {
-        var row = Mapper.Map<SpecificationNomenclature>(model);
+        var row = model.ToEntity();
         var result = await Service.SaveSpecificationRow(id, row);
-        return Mapper.Map<SpecificationRowViewModel>(result);
+        return result.ToViewModel();
     }
 
     [HttpDelete("{id:guid}/specification/{rowId:guid}")]
