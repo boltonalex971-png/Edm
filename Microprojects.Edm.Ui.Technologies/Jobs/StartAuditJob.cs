@@ -1,24 +1,22 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using Microprojects.Edm.Cache;
-using Microprojects.Edm.Ui.Technologies.Models;
-using Newtonsoft.Json;
-using Microsoft.EntityFrameworkCore;
 using System.Text.RegularExpressions;
-using Microprojects.Edm.Ui.Technologies.Services;
-using Microprojects.Edm.Ui.Technologies.Auditing;
-using Microprojects.Edm.Jobs;
-using Microsoft.Extensions.Logging;
-using Microprojects.Edm.Ui.Technologies.Persistence;
-using Microprojects.Edm.Intercom;
 using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using AdaptiveExpressions;
+using Microprojects.Edm.Cache;
+using Microprojects.Edm.Intercom;
+using Microprojects.Edm.Jobs;
+using Microprojects.Edm.Ui.Technologies.Auditing;
+using Microprojects.Edm.Ui.Technologies.Intercom;
+using Microprojects.Edm.Ui.Technologies.Models;
+using Microprojects.Edm.Ui.Technologies.Persistence;
+using Microprojects.Edm.Ui.Technologies.Services;
 using Microprojects.Edm.Utils;
-using AutoMapper;
-using Microprojects.Edm.Ui.Technologies.Intercom;
-using Microprojects.Edm.Ui.Technologies.Intercom;
+using Newtonsoft.Json;
 
 namespace Microprojects.Edm.Ui.Technologies.Jobs
 {
@@ -32,24 +30,22 @@ namespace Microprojects.Edm.Ui.Technologies.Jobs
         protected ILogger<StartAuditJob> Logger { get; init; }
         protected IDbContextFactory<TechnologiesContext> ContextFactory { get; init; }
 
-        private readonly IMapper _mapper;
         private readonly string OffsetParamName = "Offset";
         private IDisposable _paramsSubscriber;
         private Dictionary<string, object> _inputParams = new();
-        private Func<int, int, string, string> CacheKey = (opId, opCritId, addr) => 
+        private Func<int, int, string, string> CacheKey = (opId, opCritId, addr) =>
             $"{nameof(Operation)}:{opId}:{nameof(OperationCriterion)}:{opCritId}:{addr}";
 
 
         public StartAuditJob() { }
-        public StartAuditJob(IJobContainer container, ICache cache, IIntercom intercom, ILogger<StartAuditJob> logger, 
-            IDbContextFactory<TechnologiesContext> contextFactory, IMapper mapper)
+        public StartAuditJob(IJobContainer container, ICache cache, IIntercom intercom, ILogger<StartAuditJob> logger,
+            IDbContextFactory<TechnologiesContext> contextFactory)
         {
             JobManager = container;
             Intercom = intercom;
             Cache = cache;
             Logger = logger;
             ContextFactory = contextFactory;
-            _mapper = mapper;
         }
 
         public override Task<bool> InitAsync()
@@ -174,7 +170,7 @@ namespace Microprojects.Edm.Ui.Technologies.Jobs
                                 operationCriterion.AuditCriterion.Zone = null;
                                 var data = new AuditDataEvent
                                 {
-                                    Data = _mapper.Map<OperationAuditData>(operationCriterion)
+                                    Data = operationCriterion.ToAuditData()
                                 };
                                 await Intercom.PublishOperationDataAsync(Parameters.Operation, data);
                             }

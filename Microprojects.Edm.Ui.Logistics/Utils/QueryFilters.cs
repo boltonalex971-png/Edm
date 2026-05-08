@@ -1,9 +1,9 @@
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Microprojects.Edm.Ui.Logistics.Models;
 using Microprojects.Edm.Ui.Logistics.Persistence;
 using Microprojects.Edm.Ui.Logistics.ViewModels;
-using Microsoft.EntityFrameworkCore;
 
 namespace Microprojects.Edm.Ui.Logistics.Utils;
 
@@ -36,9 +36,9 @@ public static class QueryFilters
 /// Single producer of the <see cref="ItemViewModel.IsStore"/> flag. Items
 /// are "store" when they were created via batch entry: no supply, no
 /// producing process, no parent <see cref="ItemLink"/>. Controllers call
-/// <see cref="Apply"/> after AutoMapper to populate the flag in one batched
-/// query, replacing the three divergent inline implementations the service
-/// layer used to carry.
+/// <see cref="Apply"/> after view-model mapping to populate the flag in one
+/// batched query, replacing the three divergent inline implementations the
+/// service layer used to carry.
 /// </summary>
 public static class ItemFlags
 {

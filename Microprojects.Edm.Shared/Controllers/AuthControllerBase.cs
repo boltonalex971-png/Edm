@@ -1,19 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.Linq;
-using System.Threading.Tasks;
-using AutoMapper;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using Microprojects.Edm.Models;
-using Microprojects.Edm.Domain;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Primitives;
-using System.Security.Claims;
 using Microprojects.Edm.Auth;
 
 namespace Microprojects.Edm.Controllers

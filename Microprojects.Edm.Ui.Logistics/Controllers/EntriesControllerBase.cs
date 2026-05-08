@@ -1,42 +1,37 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
+using Microprojects.Edm.Controllers;
 using Microprojects.Edm.Ui.Logistics.Contracts;
 using Microprojects.Edm.Ui.Logistics.Models;
 using Microprojects.Edm.Ui.Logistics.Utils;
-using Microsoft.AspNetCore.Mvc;
 using Microprojects.Edm.Ui.Logistics.ViewModels;
-using Microprojects.Edm.Controllers;
-using Microprojects.Edm.Plugins;
 
 namespace Microprojects.Edm.Ui.Logistics.Controllers;
 
 [ApiController]
 [Route("api/logistics/[controller]")]
-public class EntriesControllerBase<TEntry, TEntryViewModel, TService> : AuthControllerBase
+public abstract class EntriesControllerBase<TEntry, TEntryViewModel, TService> : AuthControllerBase
     where TService : IGenericService<TEntry>
     where TEntry : DirectoryEntry
     where TEntryViewModel : DirectoryEntryViewModel, new()
 {
-    protected readonly IMapper Mapper;
     protected readonly TService Service;
     protected readonly IDirectoryService DirectoryService;
 
-    public EntriesControllerBase(IMapper mapper, TService service, IDirectoryService directoryService, IConfiguration configuration) :
+    protected EntriesControllerBase(TService service, IDirectoryService directoryService, IConfiguration configuration) :
         base(configuration)
     {
-        Mapper = mapper;
         Service = service;
         DirectoryService = directoryService;
     }
+
+    protected abstract TEntryViewModel ToViewModel(TEntry entry);
+    protected abstract TEntry ToEntity(TEntryViewModel model);
 
     [HttpGet]
     public virtual async Task<IEnumerable<TEntryViewModel>> GetAllEntries([FromQuery] string? kind = null)
     {
         var entries = await Service.GetAll();
-        return Mapper.Map<IEnumerable<TEntryViewModel>>(entries);
+        return entries.Select(ToViewModel).ToList();
     }
 
     [HttpGet("hierarchy")]
@@ -54,8 +49,7 @@ public class EntriesControllerBase<TEntry, TEntryViewModel, TService> : AuthCont
         if (id != Guid.Empty)
         {
             var entry = await Service.Get(id);
-            var model = Mapper.Map<TEntryViewModel>(entry);
-            return model;
+            return ToViewModel(entry);
         }
 
         return new TEntryViewModel
@@ -71,7 +65,7 @@ public class EntriesControllerBase<TEntry, TEntryViewModel, TService> : AuthCont
         [FromBody] TEntryViewModel model,
         [FromQuery] bool force = false)
     {
-        var entry = Mapper.Map<TEntry>(model);
+        var entry = ToEntity(model);
         if (id != entry.Id)
         {
             throw new EdmException($"{typeof(TEntry).Name} id is ambiguous");
@@ -100,7 +94,7 @@ public class EntriesControllerBase<TEntry, TEntryViewModel, TService> : AuthCont
     [HttpPost]
     public async Task<TEntry> CreateEntry([FromBody] TEntryViewModel model)
     {
-        var entry = Mapper.Map<TEntry>(model);
+        var entry = ToEntity(model);
         await EnsureEntryParent(entry);
         var result = await Service.Save(entry);
         return result;
@@ -118,7 +112,7 @@ public class EntriesControllerBase<TEntry, TEntryViewModel, TService> : AuthCont
         await EnsureParentInTypeRoot(parent.Id, expectedRoot);
 
         var result = await Service.ChangeParent<TEntry>(id, parent.Id);
-        return Mapper.Map<TEntryViewModel>(result);
+        return ToViewModel(result);
     }
 
     /// Resolves the type-root folder id for a hierarchy request. The default
@@ -159,12 +153,12 @@ public class EntriesControllerBase<TEntry, TEntryViewModel, TService> : AuthCont
     {
         // Map entries to their derived viewmodel so leaf nodes carry their
         // type-specific fields (Newtonsoft serializes by runtime type).
-        var entryViewModels = Mapper.Map<IEnumerable<TEntryViewModel>>(entries)
+        var entryViewModels = entries.Select(ToViewModel)
             .Cast<DirectoryEntryViewModel>()
             .ToList();
 
-        var subtreeFolders = Mapper
-            .Map<IEnumerable<DirectoryEntryViewModel>>(await DirectoryService.GetSubtreeFolders(rootId))
+        var subtreeFolders = (await DirectoryService.GetSubtreeFolders(rootId))
+            .Select(d => d.ToEntryViewModel())
             .ToList();
 
         var rootFolder = subtreeFolders.FirstOrDefault(f => f.Id == rootId);

@@ -1,20 +1,17 @@
-using Microprojects.Edm.Domain;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+using Microprojects.Edm.Controllers;
+using Microprojects.Edm.Domain;
+using Microprojects.Edm.Plugins;
 using Microprojects.Edm.Ui.Technologies.Contracts;
 using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Plugins;
-using Microprojects.Edm.Controllers;
-using Microprojects.Edm.Ui.Technologies.Models;
 using Microprojects.Edm.Ui.Technologies.Utils;
-using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 
 namespace Microprojects.Edm.Ui.Technologies.Controllers
 {
@@ -23,7 +20,6 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
     public class WorkplacesController : AuthControllerBase
     {
         private readonly ILogger<WorkplacesController> _logger;
-        private readonly IMapper _mapper;
         private readonly IWorkplaceService _workplaceService;
         private readonly IProcessService _processService;
         private readonly IHierarchyService _hierarchyService;
@@ -31,7 +27,6 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
 
         public WorkplacesController(
             ILogger<WorkplacesController> logger,
-            IMapper mapper,
             IWorkplaceService workplaceService,
             IProcessService processService,
             IHierarchyService hierarchyService,
@@ -39,7 +34,6 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
             base(configuration)
         {
             _logger = logger;
-            _mapper = mapper;
             _workplaceService = workplaceService;
             _processService = processService;
             _hierarchyService = hierarchyService;
@@ -108,16 +102,10 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
         [HttpGet("hierarchy")]
         public async Task<IEnumerable<HierarchyItemViewModel>> GetHierarchy()
         {
-            var folders = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(
-                await _hierarchyService.GetTree(HierarchyType.Workplace, UserInfo.Groups));
-            var workplaces = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(
-                await _workplaceService.Get(w => folders.Select(f => f.Id).Contains(w.HierarchyId) && w.IsActive));
-            //o => o.Items["Type"] = HierarchyType.Workplace);
-            //var expanded = _cache.RestoreMany<TreeExpanedState>(UiCacheHelper.OwnerKey(this), () => HierarchyType.Host);
-            //foreach (var folder in folders)
-            //{
-            //    folder.expanded = expanded?.Any(e => e.Id == folder.Id) ?? false;
-            //}
+            var folders = (await _hierarchyService.GetTree(HierarchyType.Workplace, UserInfo.Groups))
+                .Select(h => h.ToHierarchyItem()).ToList();
+            var workplaces = (await _workplaceService.Get(w => folders.Select(f => f.Id).Contains(w.HierarchyId) && w.IsActive))
+                .Select(w => w.ToHierarchyItem()).ToList();
 
             var tree = folders.Concat(workplaces).ToTree().ToList();
             // always expand root if just one
@@ -134,25 +122,23 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
         public async Task<IEnumerable<WorkplaceHostDeviceModel>> GetDevices(int id)
         {
             var devices = await _workplaceService.GetDevices(id);
-            var models = _mapper.Map<IEnumerable<WorkplaceHostDeviceModel>>(devices, o => o.State = _plugins);
-            return models;
+            return devices.Select(d => d.ToModel(_plugins)).ToList();
         }
 
         [HttpGet("devices/{workplaceDeviceId:int}")]
         public async Task<WorkplaceHostDeviceModel> GetDevice(int workplaceDeviceId)
         {
             var device = await _workplaceService.GetDevice(workplaceDeviceId);
-            var model = _mapper.Map<WorkplaceHostDeviceModel>(device, o => o.State = _plugins);
-            return model;
+            return device.ToModel(_plugins);
         }
 
         [HttpPost("{id:int}/devices")]
         public async Task<WorkplaceHostDeviceModel> AttachHostDevice(int id, WorkplaceHostDeviceModel model)
         {
-            var wpHostDevice = _mapper.Map<WorkplaceHostDevice>(model);
+            var wpHostDevice = model.ToEntity();
             wpHostDevice.WorkplaceId = id;
             var device = await _workplaceService.AttachDevice(wpHostDevice);
-            return _mapper.Map<WorkplaceHostDeviceModel>(device);
+            return device.ToModel();
         }
 
         [HttpDelete("{id:int}/devices/{devId:int}")]
@@ -167,8 +153,8 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
         {
             var hostDevices = (await _workplaceService.GetDevices(id))
                 .Where(d => _plugins.GetDriver(d.HostDevice.Device.DriverGuid)?.ProfileGuid == profilerGuid)
-                .AsEnumerable();
-            return _mapper.Map<IEnumerable<WorkplaceHostDeviceModel>>(hostDevices);
+                .ToList();
+            return hostDevices.Select(d => d.ToModel()).ToList();
         }
 
         #endregion
@@ -178,13 +164,12 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
         [HttpGet("processes/allowed")]
         public async Task<IEnumerable<HierarchyItemViewModel>> GetProcessesHierarchy()
         {
-            var folders = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(
-                await _hierarchyService.GetTree(HierarchyType.Workplace, UserInfo.Groups));
-            var wpProc = await _workplaceService.GetAllowedProcesses(UserInfo.Groups);
-            var workplaces = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(
-                wpProc.Select(wp => wp.Workplace).Distinct(new DomainObjectComparer<Workplace>()));
-            var processes = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(wpProc);
-                //.Where(p => workplaces.Select(f => f.Id).Contains(p.ParentId));
+            var folders = (await _hierarchyService.GetTree(HierarchyType.Workplace, UserInfo.Groups))
+                .Select(h => h.ToHierarchyItem()).ToList();
+            var wpProc = (await _workplaceService.GetAllowedProcesses(UserInfo.Groups)).ToList();
+            var workplaces = wpProc.Select(wp => wp.Workplace).Distinct(new DomainObjectComparer<Workplace>())
+                .Select(w => w.ToHierarchyItem()).ToList();
+            var processes = wpProc.Select(p => p.ToHierarchyItem()).ToList();
             foreach (var w in workplaces)
             {
                 w.Items = processes.Where(p => p.ParentId == w.Id).ToList();
@@ -207,32 +192,32 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
                 hostDevices = hostDevices.Where(hd => guids.Contains(hd.Device.DriverGuid));
             }
 
-            return _mapper.Map<IEnumerable<IdNameModel>>(hostDevices);
+            return hostDevices.Select(hd => hd.ToIdNameModel()).ToList();
         }
 
         [HttpGet("{id:int}/processes")]
         public async Task<IEnumerable<WorkplaceProcessModel>> GetProcesses(int id)
         {
             var processes = await _workplaceService.GetProcesses(id);
-            return _mapper.Map<IEnumerable<WorkplaceProcessModel>>(processes);
+            return processes.Select(p => p.ToModel()).ToList();
         }
 
         [HttpPost("{id:int}/processes")]
         public async Task<WorkplaceProcessModel> AttachProcess(int id, WorkplaceProcessModel model)
         {
-            var wpProcess = _mapper.Map<WorkplaceProcess>(model);
+            var wpProcess = model.ToEntity();
             wpProcess.WorkplaceId = id;
             var process = await _workplaceService.AttachProcess(wpProcess);
-            return _mapper.Map<WorkplaceProcessModel>(process);
+            return process.ToModel();
         }
 
         [HttpPut("{id:int}/processes")]
         public async Task<WorkplaceProcessModel> SaveWorkplaceProcess(int id, WorkplaceProcessModel model)
         {
-            var wpProcess = _mapper.Map<WorkplaceProcess>(model);
+            var wpProcess = model.ToEntity();
             wpProcess.WorkplaceId = id;
             var result = await _workplaceService.SaveWorkplaceProcess(wpProcess);
-            return _mapper.Map<WorkplaceProcessModel>(result);
+            return result.ToModel();
         }
 
         [HttpDelete("{id:int}/processes/{procId:int}")]
@@ -254,63 +239,60 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
         public async Task<IEnumerable<IdNameModel>> GetAvailableProcesses()
         {
             var processes = await _workplaceService.GetAvailableProcesses();
-            return _mapper.Map<IEnumerable<IdNameModel>>(processes);
+            return processes.Select(p => p.ToIdNameModel()).ToList();
         }
 
         [HttpGet("processes/{wpProcId:int}")]
         public async Task<WorkplaceProcessModel> GetWorplaceProcess(int wpProcId)
         {
             var process = await _workplaceService.GetWorkplaceProcess(wpProcId);
-            return _mapper.Map<WorkplaceProcessModel>(process);
+            return process.ToModel();
         }
 
         [HttpGet("processes/{wpProcId:int}/workbenches")]
         public async Task<IEnumerable<WorkbenchViewModel>> GetWorkbenches(int wpProcId)
         {
             var wbs = await _workplaceService.GetWorkbenches(wpProcId);
-            var result = _mapper.Map<IEnumerable<WorkbenchViewModel>>(wbs);
-            return result;
+            return wbs.Select(w => w.ToViewModel()).ToList();
         }
 
         [HttpPost("processes/{wpProcId:int}/workbenches")]
         public async Task<WorkbenchViewModel> AddWorkbench(int wpProcId, WorkbenchViewModel model)
         {
-            var wb = _mapper.Map<Workbench>(model);
+            var wb = model.ToEntity();
             wb.Id = 0;
             wb.WorkplaceProcessId = wpProcId;
             wb = await _workplaceService.SaveWorkbench(wb);
-            var result = _mapper.Map<WorkbenchViewModel>(wb);
-            return result;
+            return wb.ToViewModel();
         }
 
         [HttpGet("processes/workbenches/{id:int}")]
         public async Task<WorkbenchViewModel> GetWorkbench(int id)
         {
             var result = await _workplaceService.GetWorkbench(id);
-            return _mapper.Map<WorkbenchViewModel>(result);
+            return result.ToViewModel();
         }
 
         [HttpPut("processes/workbenches/{id:int}")]
         public async Task<WorkbenchViewModel> SaveWorkbench(int id, WorkbenchViewModel model)
         {
-            var wb = _mapper.Map<Workbench>(model);
+            var wb = model.ToEntity();
             var result = await _workplaceService.SaveWorkbench(wb);
-            return _mapper.Map<WorkbenchViewModel>(result);
+            return result.ToViewModel();
         }
 
         [HttpDelete("processes/{procId:int}/workbenches/{id:int}")]
         public async Task<WorkbenchViewModel> DeleteWorkbench(int id)
         {
             var wb = await _workplaceService.DeleteWorkbench(id);
-            var result = _mapper.Map<WorkbenchViewModel>(wb);
-            return result;
+            return wb.ToViewModel();
         }
 
         [HttpGet("processes/workbenches/{id:int}/devices")]
         public async Task<IEnumerable<WorkbenchDeviceConfigViewModel>> GetWorkbenchDevices(int id)
         {
             var devices = await _workplaceService.GetWorkbenchDevices(id);
-            var result = _mapper.Map<IEnumerable<WorkbenchDeviceConfigViewModel>>(devices);
+            var result = devices.Select(d => d.ToViewModel()).ToList();
             foreach (var dev in result)
             {
                 var driver = _plugins.GetDriver(dev.DriverGuid);
@@ -341,7 +323,7 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
 
                     return driver.ProfileGuid == Guid.Empty || profiles.Contains(driver.ProfileGuid);
                 });
-            var models = _mapper.Map<IEnumerable<WorkplaceHostDeviceModel>>(devices);
+            var models = devices.Select(d => d.ToModel()).ToList();
             foreach (var dev in models)
             {
                 var driver = _plugins.GetDriver(dev.DriverGuid);
@@ -356,26 +338,25 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
         [HttpPost("processes/workbenches/{id:int}/devices")]
         public async Task<WorkbenchDeviceConfigViewModel> GetWorkbenchDevices(int id, WorkbenchDeviceConfigViewModel model)
         {
-            var device = _mapper.Map<WorkbenchWorkplaceHostDevice>(model);
+            var device = model.ToEntity();
             device.Id = 0;
             device.WorkbenchId = id;
             var result = await _workplaceService.SaveWorkbenchDevice(device);
-            return _mapper.Map<WorkbenchDeviceConfigViewModel>(result);
+            return result.ToViewModel();
         }
 
         [HttpDelete("processes/workbenches/{wbId:int}/devices/{id:int}")]
         public async Task<WorkbenchDeviceConfigViewModel> DeleteWorkbenchDevice(int id)
         {
             var device = await _workplaceService.DeleteWorkbenchDevice(id);
-            var result = _mapper.Map<WorkbenchDeviceConfigViewModel>(device);
-            return result;
+            return device.ToViewModel();
         }
 
         [HttpGet("processes/workbenches/devices/{id:int}")]
         public async Task<WorkbenchDeviceConfigViewModel> GetWorkbenchDevice(int id)
         {
             var device = await _workplaceService.GetWorkbenchDevice(id);
-            var result = _mapper.Map<WorkbenchDeviceConfigViewModel>(device);
+            var result = device.ToViewModel();
             var driver = _plugins.GetDriver(result.DriverGuid);
             var profiler = _plugins.GetProfile(driver?.ProfileGuid ?? Guid.Empty);
             result.ProfileOutput = device.Profile.Output;

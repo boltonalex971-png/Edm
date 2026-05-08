@@ -1,6 +1,7 @@
 using System;
 using System.Linq.Expressions;
-using AutoMapper;
+using Microsoft.EntityFrameworkCore;
+using Directory = Microprojects.Edm.Ui.Logistics.Models.Directory;
 using Microprojects.Edm.Intercom;
 using Microprojects.Edm.Ui.Logistics.Contracts;
 using Microprojects.Edm.Ui.Logistics.Events;
@@ -8,8 +9,6 @@ using Microprojects.Edm.Ui.Logistics.Models;
 using Microprojects.Edm.Ui.Logistics.Persistence;
 using Microprojects.Edm.Ui.Logistics.Utils;
 using Microprojects.Edm.Ui.Logistics.ViewModels;
-using Microsoft.EntityFrameworkCore;
-using Directory = Microprojects.Edm.Ui.Logistics.Models.Directory;
 
 namespace Microprojects.Edm.Ui.Logistics.Services;
 
@@ -18,7 +17,6 @@ public class OrderService : ServiceBase<Order>, IOrderService
     private const double Eps = 1e-9;
 
     private IItemService _itemService;
-    private IMapper? _mapper;
     private IIntercom? _intercom;
     private IConnectionOrigin? _origin;
 
@@ -30,12 +28,10 @@ public class OrderService : ServiceBase<Order>, IOrderService
         LogisticsContext db,
         IUserService userService,
         IItemService itemService,
-        IMapper mapper,
         IIntercom? intercom = null,
         IConnectionOrigin? origin = null) : base(db, userService)
     {
         _itemService = itemService;
-        _mapper = mapper;
         _intercom = intercom;
         _origin = origin;
     }
@@ -698,12 +694,8 @@ public class OrderService : ServiceBase<Order>, IOrderService
         return new OrderOutputItems
         {
             ProcessId = order?.ProcessId,
-            Allocated = _mapper != null
-                ? _mapper.Map<IEnumerable<ItemViewModel>>(allocated)
-                : [],
-            Unallocated = _mapper != null
-                ? _mapper.Map<IEnumerable<ItemViewModel>>(unallocated)
-                : [],
+            Allocated = allocated.Select(i => i.ToViewModel()).ToList(),
+            Unallocated = unallocated.Select(i => i.ToViewModel()).ToList(),
         };
     }
 
@@ -907,9 +899,8 @@ public class OrderService : ServiceBase<Order>, IOrderService
     /// <summary>
     /// Returns per-order view-model annotations derived from execution state:
     /// <c>Status</c>, <c>Executor</c>, and <c>Mine</c>. Used by controllers to
-    /// enrich the mapped <see cref="OrderViewModel"/>s with state the
-    /// AutoMapper profile cannot produce on its own (Mine depends on the
-    /// current user).
+    /// enrich the mapped <see cref="OrderViewModel"/>s with state the entity
+    /// mapper cannot produce on its own (Mine depends on the current user).
     /// </summary>
     public async Task<IReadOnlyDictionary<Guid, OrderExecutionState>> GetExecutionStates(IEnumerable<Guid> orderIds)
     {

@@ -1,13 +1,11 @@
-using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
+using Directory = Microprojects.Edm.Ui.Logistics.Models.Directory;
 using Microprojects.Edm.Cache;
+using Microprojects.Edm.Controllers;
 using Microprojects.Edm.Ui.Logistics.Contracts;
 using Microprojects.Edm.Ui.Logistics.Models;
 using Microprojects.Edm.Ui.Logistics.Utils;
 using Microprojects.Edm.Ui.Logistics.ViewModels;
-using Microsoft.AspNetCore.Mvc;
-using Microprojects.Edm.Controllers;
-using Microprojects.Edm.Plugins;
-using Directory = Microprojects.Edm.Ui.Logistics.Models.Directory;
 
 namespace Microprojects.Edm.Ui.Logistics.Controllers;
 
@@ -16,16 +14,14 @@ namespace Microprojects.Edm.Ui.Logistics.Controllers;
 public class DirectoriesController : AuthControllerBase
 {
     private readonly ILogger<DirectoriesController> _logger;
-    private readonly IMapper _mapper;
     private readonly IDirectoryService _directoryService;
     private readonly ICache _cache;
 
-    public DirectoriesController(ILogger<DirectoriesController> logger, IMapper mapper, ICache cache,
+    public DirectoriesController(ILogger<DirectoriesController> logger, ICache cache,
         IDirectoryService directoryService, IConfiguration configuration) :
         base(configuration)
     {
         _logger = logger;
-        _mapper = mapper;
         _directoryService = directoryService;
         _cache = cache;
     }
@@ -41,7 +37,7 @@ public class DirectoriesController : AuthControllerBase
     {
         if (id != Guid.Empty)
         {
-            return _mapper.Map<DirectoryViewModel>(await _directoryService.Get(id));
+            return (await _directoryService.Get(id)).ToViewModel();
         }
 
         return new DirectoryViewModel();
@@ -62,8 +58,8 @@ public class DirectoriesController : AuthControllerBase
         var rootId = WellKnownDirectoryIds.ResolveRoot(entryType, kind)
             ?? throw new EdmException($"No type root configured for {entryType}.");
 
-        var folders = _mapper
-            .Map<IEnumerable<DirectoryEntryViewModel>>(await _directoryService.GetSubtreeFolders(rootId))
+        var folders = (await _directoryService.GetSubtreeFolders(rootId))
+            .Select(d => d.ToEntryViewModel())
             .ToList();
         return folders.ToTree();
     }
@@ -82,7 +78,7 @@ public class DirectoriesController : AuthControllerBase
             throw new EdmException("Parent folder is not under a recognized type root.");
         }
 
-        var directory = _mapper.Map<Directory>(model);
+        var directory = model.ToEntity();
         var groups = (model.Groups ?? [])
             .Where(g => !string.IsNullOrWhiteSpace(g))
             .Select(g => g.Trim())
@@ -94,7 +90,7 @@ public class DirectoriesController : AuthControllerBase
             Groups = groups
         };
         var saved = await _directoryService.Save(directory);
-        return _mapper.Map<DirectoryViewModel>(saved);
+        return saved.ToViewModel();
     }
 
     [HttpPut("{id:guid}")]
@@ -105,7 +101,7 @@ public class DirectoriesController : AuthControllerBase
             throw new EdmException("Built-in folders cannot be edited.");
         }
 
-        var directory = _mapper.Map<Directory>(model);
+        var directory = model.ToEntity();
         var groups = (model.Groups ?? [])
             .Where(g => !string.IsNullOrWhiteSpace(g))
             .Select(g => g.Trim())
@@ -117,7 +113,7 @@ public class DirectoriesController : AuthControllerBase
             Groups = groups
         };
         var saved = await _directoryService.Save(directory);
-        return _mapper.Map<DirectoryViewModel>(saved);
+        return saved.ToViewModel();
     }
 
     [HttpDelete("{id:guid}")]
@@ -129,6 +125,6 @@ public class DirectoriesController : AuthControllerBase
         }
 
         var deleted = await _directoryService.Delete(id);
-        return _mapper.Map<DirectoryViewModel>(deleted);
+        return deleted.ToViewModel();
     }
 }

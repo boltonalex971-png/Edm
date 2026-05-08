@@ -1,20 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Security.Claims;
-using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using Microprojects.Edm.Models;
-using Microprojects.Edm.Domain;
 using Microsoft.Extensions.Configuration;
-using System.Security.Principal;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microprojects.Edm.Auth;
 using Microprojects.Edm.Controllers;
 using Microprojects.Edm.Host.Auth;
@@ -26,14 +17,12 @@ namespace Microprojects.Edm.Host.Controllers
     public class AuthController : AuthControllerBase
     {
         private readonly ILogger<AuthController> _logger;
-        private readonly IMapper _mapper;
         private readonly IHostEnvironment _env;
         private readonly IJwtService _jwtService;
 
-        public AuthController(ILogger<AuthController> logger, IMapper mapper, IConfiguration configuration, IHostEnvironment env, IJwtService jwtService) : base(configuration)
+        public AuthController(ILogger<AuthController> logger, IConfiguration configuration, IHostEnvironment env, IJwtService jwtService) : base(configuration)
         {
             _logger = logger;
-            _mapper = mapper;
             _env = env;
             _jwtService = jwtService;
         }

@@ -2,17 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microprojects.Edm.Controllers;
+using Microprojects.Edm.Plugins;
 using Microprojects.Edm.Ui.Technologies.Contracts;
 using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Plugins;
-using Microprojects.Edm.Controllers;
-using Microprojects.Edm.Ui.Technologies.Models;
 using Microprojects.Edm.Ui.Technologies.Utils;
-using Microsoft.Extensions.Configuration;
 
 namespace Microprojects.Edm.Ui.Technologies.Controllers
 {
@@ -21,16 +18,14 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
     public class ProcessesController : AuthControllerBase
     {
         private readonly ILogger<ProcessesController> _logger;
-        private readonly IMapper _mapper;
         private readonly IProcessService _processService;
         private readonly IHierarchyService _hierarchyService;
         private readonly IPluginContainer _plugins;
 
-        public ProcessesController(ILogger<ProcessesController> logger, IMapper mapper, IProcessService processService, IHierarchyService hierarchyService, IPluginContainer plugins, IConfiguration configuration) :
+        public ProcessesController(ILogger<ProcessesController> logger, IProcessService processService, IHierarchyService hierarchyService, IPluginContainer plugins, IConfiguration configuration) :
             base(configuration)
         {
             _logger = logger;
-            _mapper = mapper;
             _processService = processService;
             _hierarchyService = hierarchyService;
             _plugins = plugins;
@@ -48,15 +43,7 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
             if (id > 0)
             {
                 var process = await _processService.Get(id, p => p.Profiles, p => p.Qualifiers);
-                var model = _mapper.Map<ProcessViewModel>(process);
-                //var inputs = process.Profiles
-                //    .SelectMany(p => JsonConvert.DeserializeObject<string[]>(p.Input ?? "[]"))
-                //    .Distinct();
-                //var outputs = process.Profiles
-                //    .SelectMany(p => JsonConvert.DeserializeObject<string[]>(p.Output ?? "[]"))
-                //    .Distinct();
-                //var absent = inputs.Except(outputs);
-                return model;
+                return process.ToViewModel();
             }
             else
             {
@@ -107,16 +94,10 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
         [HttpGet("hierarchy")]
         public async Task<IEnumerable<HierarchyItemViewModel>> GetHierarchy()
         {
-            var processes = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(
-                await _processService.GetAll(),
-                o => o.Items["Type"] = HierarchyType.Process);
-            var folders = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(
-                await _hierarchyService.GetTree(HierarchyType.Process, UserInfo.Groups));
-            //var expanded = _cache.RestoreMany<TreeExpanedState>(UiCacheHelper.OwnerKey(this), () => HierarchyType.Host);
-            //foreach (var folder in folders)
-            //{
-            //    folder.expanded = expanded?.Any(e => e.Id == folder.Id) ?? false;
-            //}
+            var processes = (await _processService.GetAll())
+                .Select(p => p.ToHierarchyItem()).ToList();
+            var folders = (await _hierarchyService.GetTree(HierarchyType.Process, UserInfo.Groups))
+                .Select(h => h.ToHierarchyItem()).ToList();
 
             var tree = folders.Concat(processes).ToTree().ToList();
             // always expand root if just one
@@ -145,7 +126,7 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
         public async Task<IEnumerable<ProfileViewModel>> GetProfiles(int id)
         {
             var profiles = await _processService.GetProfiles(id);
-            var result = _mapper.Map<IEnumerable<ProfileViewModel>>(profiles);
+            var result = profiles.Select(p => p.ToViewModel()).ToList();
             foreach (var profile in result)
             {
                 var profiler = _plugins.GetProfile(profile.ProfilerGuid);
@@ -159,17 +140,18 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
         [HttpPost("{id:int}/profiles")]
         public async Task<ProfileViewModel> AddProfile(int id, ProfileViewModel model)
         {
-            var profile = _mapper.Map<Microprojects.Edm.Ui.Technologies.Models.Profile>(model);
+            var profile = model.ToEntity();
             profile = await _processService.AddProfile(id, profile);
-            return _mapper.Map<ProfileViewModel>(profile);
+            return profile.ToViewModel();
         }
 
         [HttpPut("{id:int}/profiles")]
         public async Task<ProfileViewModel> SaveProfile(int id, ProfileViewModel model)
         {
-            var profile = _mapper.Map<Microprojects.Edm.Ui.Technologies.Models.Profile>(model, o => o.AfterMap((s, d) => d.ProcessId = id));
+            var profile = model.ToEntity();
+            profile.ProcessId = id;
             var result = await _processService.SaveProfile(profile);
-            return _mapper.Map<ProfileViewModel>(result);
+            return result.ToViewModel();
         }
 
         [HttpDelete("{id:int}/profiles/{profileId:int}")]
@@ -188,16 +170,15 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
         public async Task<IEnumerable<QualifierViewModel>> GetQualifiers(int id)
         {
             var qualifiers = await _processService.GetQualifiers(id);
-            var result = _mapper.Map<IEnumerable<QualifierViewModel>>(qualifiers);
-            return result;
+            return qualifiers.Select(q => q.ToViewModel()).ToList();
         }
 
         [HttpPost("{id:int}/qualifiers")]
         public async Task<QualifierViewModel> AddQualifier(int id, QualifierViewModel model)
         {
-            var qualifier = _mapper.Map<Qualifier>(model);
+            var qualifier = model.ToEntity();
             qualifier = await _processService.AddQualifier(id, qualifier);
-            return _mapper.Map<QualifierViewModel>(qualifier);
+            return qualifier.ToViewModel();
         }
 
         [HttpDelete("{id:int}/qualifiers/{qualifierId:int}")]
@@ -206,13 +187,14 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
             var wasDetached = await _processService.DeleteQualifier(id, qualifierId);
             return wasDetached;
         }
-        
+
         [HttpPut("{processId:int}/qualifiers")]
         public async Task<QualifierViewModel> SaveQualifier(int processId, QualifierViewModel model)
         {
-            var qualifier = _mapper.Map<Qualifier>(model, o => o.AfterMap((s, d) => d.ProcessId = processId));
+            var qualifier = model.ToEntity();
+            qualifier.ProcessId = processId;
             var result = await _processService.SaveQualifier(qualifier);
-            return _mapper.Map<QualifierViewModel>(result);
+            return result.ToViewModel();
         }
 
         #endregion

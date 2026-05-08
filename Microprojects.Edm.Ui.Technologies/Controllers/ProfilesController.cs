@@ -2,14 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AutoMapper;
-//using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microprojects.Edm.Ui.Technologies.Contracts;
-using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Plugins;
 using Microprojects.Edm.Ui.Technologies.Models;
 
 namespace Microprojects.Edm.Ui.Technologies.Controllers
@@ -19,13 +14,11 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
     public class ProfilesController : ControllerBase
     {
         private readonly ILogger<ProfilesController> _logger;
-        private readonly IMapper _mapper;
         private readonly IProfileService _profileService;
 
-        public ProfilesController(ILogger<ProfilesController> logger, IMapper mapper, IProfileService profileService)
+        public ProfilesController(ILogger<ProfilesController> logger, IProfileService profileService)
         {
             _logger = logger;
-            _mapper = mapper;
             _profileService = profileService;
         }
 

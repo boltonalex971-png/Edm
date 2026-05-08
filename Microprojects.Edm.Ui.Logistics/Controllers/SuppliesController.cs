@@ -1,8 +1,7 @@
-using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using Microprojects.Edm.Ui.Logistics.Contracts;
 using Microprojects.Edm.Ui.Logistics.Models;
 using Microprojects.Edm.Ui.Logistics.ViewModels;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Microprojects.Edm.Ui.Logistics.Controllers;
 
@@ -10,23 +9,26 @@ namespace Microprojects.Edm.Ui.Logistics.Controllers;
 [Route("api/logistics/[controller]")]
 public class SuppliesController : CrudControllerBase<Supply, SupplyViewModel, ISupplyService>
 {
-    public SuppliesController(IMapper mapper, ISupplyService service, IConfiguration configuration) : base(mapper, service, configuration)
+    public SuppliesController(ISupplyService service, IConfiguration configuration) : base(service, configuration)
     {
     }
+
+    protected override SupplyViewModel ToViewModel(Supply entry) => entry.ToViewModel();
+    protected override Supply ToEntity(SupplyViewModel model) => model.ToEntity();
 
     [HttpGet("{id:guid}/items")]
     public async Task<IEnumerable<ItemViewModel>> GetItems(Guid id)
     {
         var items = await Service.GetItems(id);
-        return Mapper.Map<IEnumerable<ItemViewModel>>(items);
+        return items.Select(i => i.ToViewModel()).ToList();
     }
 
     [HttpPost("{id:guid}/items")]
     public async Task<ItemViewModel> AddItem(Guid id, [FromBody] ItemViewModel itemModel)
     {
-        var item = Mapper.Map<Item>(itemModel);
+        var item = itemModel.ToEntity();
         var created = await Service.AddItem(id, item);
-        return Mapper.Map<ItemViewModel>(created);
+        return created.ToViewModel();
     }
 
     [HttpDelete("{id:guid}/items/{itemId:guid}")]
@@ -36,4 +38,3 @@ public class SuppliesController : CrudControllerBase<Supply, SupplyViewModel, IS
         return true;
     }
 }
-

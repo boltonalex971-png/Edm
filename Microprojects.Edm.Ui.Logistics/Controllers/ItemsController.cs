@@ -1,17 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using Microprojects.Edm.Ui.Logistics.Contracts;
 using Microprojects.Edm.Ui.Logistics.Models;
 using Microprojects.Edm.Ui.Logistics.Persistence;
 using Microprojects.Edm.Ui.Logistics.Utils;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Microprojects.Edm.Ui.Logistics.ViewModels;
-using Microprojects.Edm.Controllers;
-using Microprojects.Edm.Plugins;
 
 namespace Microprojects.Edm.Ui.Logistics.Controllers;
 
@@ -22,13 +14,16 @@ public class ItemsController : CrudControllerBase<Item, ItemViewModel, IItemServ
     private readonly ILogger<ItemsController> _logger;
     private readonly LogisticsContext _db;
 
-    public ItemsController(ILogger<ItemsController> logger, IMapper mapper,
+    public ItemsController(ILogger<ItemsController> logger,
         IItemService service, LogisticsContext db, IConfiguration configuration) :
-        base(mapper, service, configuration)
+        base(service, configuration)
     {
         _logger = logger;
         _db = db;
     }
+
+    protected override ItemViewModel ToViewModel(Item entry) => entry.ToViewModel();
+    protected override Item ToEntity(ItemViewModel model) => model.ToEntity();
 
     public override async Task<ItemViewModel> GetObjectById(Guid id)
     {
@@ -44,7 +39,7 @@ public class ItemsController : CrudControllerBase<Item, ItemViewModel, IItemServ
     public async Task<IEnumerable<ItemViewModel>> Search([FromBody] ItemSearchQuery query)
     {
         var result = await Service.Search(query);
-        var dtos = Mapper.Map<List<ItemViewModel>>(result);
+        var dtos = result.Select(i => i.ToViewModel()).ToList();
         await ItemFlags.Apply(_db, dtos);
         return dtos;
     }
@@ -59,7 +54,7 @@ public class ItemsController : CrudControllerBase<Item, ItemViewModel, IItemServ
     public async Task<IEnumerable<ItemViewModel>> GetByTare([FromRoute] Guid tareId)
     {
         var items = await Service.GetByTare(tareId);
-        var dtos = Mapper.Map<List<ItemViewModel>>(items);
+        var dtos = items.Select(i => i.ToViewModel()).ToList();
         await ItemFlags.Apply(_db, dtos);
         return dtos;
     }

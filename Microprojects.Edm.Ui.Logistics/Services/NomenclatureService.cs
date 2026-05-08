@@ -1,10 +1,9 @@
 using System;
 using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
 using Microprojects.Edm.Ui.Logistics.Contracts;
 using Microprojects.Edm.Ui.Logistics.Models;
 using Microprojects.Edm.Ui.Logistics.Persistence;
-using Microsoft.EntityFrameworkCore;
-using Microprojects.Edm.Plugins;
 
 namespace Microprojects.Edm.Ui.Logistics.Services;
 
@@ -95,7 +94,8 @@ public class NomenclatureService : ServiceBase<Nomenclature>, INomenclatureServi
         // Trivial = only Name/Description/DirectoryId differ. Category and
         // Countable affect quantity semantics across existing items, so
         // changing them must fork. DefaultTareTypeId is intentionally ignored
-        // because the AutoMapper config forbids changing it via plain PUT.
+        // because NomenclatureViewModel.ToEntity() does not copy it; the
+        // default tare is set via the AllowedTareTypes sub-route.
         return persisted.Category == proposed.Category
             && persisted.Countable == proposed.Countable;
     }

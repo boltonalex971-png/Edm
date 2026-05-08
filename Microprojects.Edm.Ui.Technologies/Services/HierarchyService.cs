@@ -1,14 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microprojects.Edm.Ui.Technologies.Contracts;
-using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Ui.Technologies.Models;
 using Microprojects.Edm.Ui.Technologies.Models;
 using Microprojects.Edm.Ui.Technologies.Persistence;
 

@@ -1,17 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using AutoMapper;
-using Microprojects.Edm.Ui.Logistics.Contracts;
-using Microprojects.Edm.Ui.Logistics.Models;
-using Microprojects.Edm.Ui.Logistics.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Microprojects.Edm.Auth;
-using Microsoft.Extensions.Logging;
+using Microprojects.Edm.Ui.Logistics.Contracts;
+using Microprojects.Edm.Ui.Logistics.Models;
 using Microprojects.Edm.Ui.Logistics.ViewModels;
-using Microprojects.Edm.Controllers;
-using Microprojects.Edm.Plugins;
 
 namespace Microprojects.Edm.Ui.Logistics.Controllers;
 
@@ -21,12 +12,15 @@ public class OrdersController : CrudControllerBase<Order, OrderViewModel, IOrder
 {
     private readonly ILogger<OrdersController> _logger;
 
-    public OrdersController(ILogger<OrdersController> logger, IMapper mapper,
+    public OrdersController(ILogger<OrdersController> logger,
         IOrderService service, IConfiguration configuration) :
-        base(mapper, service, configuration)
+        base(service, configuration)
     {
         _logger = logger;
     }
+
+    protected override OrderViewModel ToViewModel(Order entry) => entry.ToViewModel();
+    protected override Order ToEntity(OrderViewModel model) => model.ToEntity();
 
     [RequireRoles("Operator", "Technologist", "Admin")]
     public override async Task<OrderViewModel> GetObjectById(Guid id)
@@ -42,7 +36,7 @@ public class OrdersController : CrudControllerBase<Order, OrderViewModel, IOrder
             return new OrderViewModel();
         }
 
-        var model = Mapper.Map<OrderViewModel>(entry);
+        var model = entry.ToViewModel();
         var states = await Service.GetExecutionStates(new[] { id });
         if (states.TryGetValue(id, out var state))
         {
@@ -58,7 +52,7 @@ public class OrdersController : CrudControllerBase<Order, OrderViewModel, IOrder
     public async Task<IEnumerable<OrderSpecificationViewModel>> GetSpecification(Guid id)
     {
         var items = await Service.GetSpecifications(id);
-        return Mapper.Map<IEnumerable<OrderSpecificationViewModel>>(items);
+        return items.Select(i => i.ToViewModel()).ToList();
     }
 
     [HttpGet("{id:Guid}/items")]
@@ -66,16 +60,16 @@ public class OrdersController : CrudControllerBase<Order, OrderViewModel, IOrder
     public async Task<IEnumerable<ItemViewModel>> GetItems(Guid id)
     {
         var items = await Service.GetItems(id);
-        return Mapper.Map<IEnumerable<ItemViewModel>>(items);
+        return items.Select(i => i.ToViewModel()).ToList();
     }
 
     [HttpPost("{id:Guid}/items")]
     [RequireRoles("Operator", "Technologist", "Admin")]
     public async Task<ItemViewModel> AddItem(Guid id, [FromBody]  ItemViewModel itemModel)
     {
-        var item = Mapper.Map<Item>(itemModel);
+        var item = itemModel.ToEntity();
         var orderItem = await Service.AddItem(id, item);
-        return Mapper.Map<ItemViewModel>(orderItem);
+        return orderItem.ToViewModel();
     }
 
     [HttpPost("{id:Guid}/items/batch")]
@@ -90,7 +84,7 @@ public class OrdersController : CrudControllerBase<Order, OrderViewModel, IOrder
     public async Task<IEnumerable<OrderProcessViewModel>> GetOrderProcesses(Guid id)
     {
         var items = await Service.GetOrderProcesses(id);
-        return Mapper.Map<IEnumerable<OrderProcessViewModel>>(items);
+        return items.Select(i => i.ToViewModel()).ToList();
     }
 
     /// <summary>
@@ -159,7 +153,7 @@ public class OrdersController : CrudControllerBase<Order, OrderViewModel, IOrder
     public async Task<IEnumerable<OrderViewModel>> Search([FromBody] OrderSearchQuery query)
     {
         var result = (await Service.Search(query)).ToList();
-        var viewModels = Mapper.Map<List<OrderViewModel>>(result);
+        var viewModels = result.Select(o => o.ToViewModel()).ToList();
         var states = await Service.GetExecutionStates(result.Select(o => o.Id));
         foreach (var vm in viewModels)
         {

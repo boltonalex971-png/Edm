@@ -1,13 +1,12 @@
-﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microprojects.Edm.Auth;
+using Microprojects.Edm.Controllers;
 using Microprojects.Edm.Ui.Logistics.Contracts;
 using Microprojects.Edm.Ui.Logistics.Models;
+using Microprojects.Edm.Ui.Logistics.Persistence;
 using Microprojects.Edm.Ui.Logistics.Utils;
 using Microprojects.Edm.Ui.Logistics.ViewModels;
-using Microsoft.AspNetCore.Mvc;
-using Microprojects.Edm.Auth;
-using Microsoft.EntityFrameworkCore;
-using Microprojects.Edm.Ui.Logistics.Persistence;
-using Microprojects.Edm.Controllers;
 
 namespace Microprojects.Edm.Ui.Logistics.Controllers;
 
@@ -15,15 +14,13 @@ namespace Microprojects.Edm.Ui.Logistics.Controllers;
 [Route("api/logistics/[controller]")]
 public class TaresController : AuthControllerBase
 {
-    private readonly IMapper _mapper;
     private readonly LogisticsContext _db;
     private readonly ITareService _tareService;
     private readonly IUserService _userService;
 
-    public TaresController(IMapper mapper, LogisticsContext db, ITareService tareService, IUserService userService, IConfiguration configuration)
+    public TaresController(LogisticsContext db, ITareService tareService, IUserService userService, IConfiguration configuration)
         : base(configuration)
     {
-        _mapper = mapper;
         _db = db;
         _tareService = tareService;
         _userService = userService;

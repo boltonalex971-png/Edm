@@ -2,17 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microprojects.Edm.Controllers;
+using Microprojects.Edm.Plugins;
 using Microprojects.Edm.Ui.Technologies.Contracts;
 using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Plugins;
-using Microprojects.Edm.Controllers;
-using Microprojects.Edm.Ui.Technologies.Models;
 using Microprojects.Edm.Ui.Technologies.Utils;
-using Microsoft.Extensions.Configuration;
 
 namespace Microprojects.Edm.Ui.Technologies.Controllers
 {
@@ -24,13 +21,11 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
         private readonly IDeviceService _deviceService;
         private readonly IHierarchyService _hierarchyService;
         private readonly IPluginContainer _plugins;
-        private readonly IMapper _mapper;
 
-        public DevicesController(ILogger<DevicesController> logger, IMapper mapper, IDeviceService deviceService, IHierarchyService hierarchyService, IPluginContainer pluginContainer, IConfiguration configuration) :
+        public DevicesController(ILogger<DevicesController> logger, IDeviceService deviceService, IHierarchyService hierarchyService, IPluginContainer pluginContainer, IConfiguration configuration) :
             base(configuration)
         {
             _logger = logger;
-            _mapper = mapper;
             _deviceService = deviceService;
             _hierarchyService = hierarchyService;
             _plugins = pluginContainer;
@@ -51,7 +46,7 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
             }
             else
             {
-                return new Device { 
+                return new Device {
                     Name = string.Empty,
                     Description = string.Empty,
                     IsActive = true
@@ -97,16 +92,10 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
         [HttpGet("hierarchy")]
         public async Task<IEnumerable<HierarchyItemViewModel>> GetHierarchy()
         {
-            var devices = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(
-                await _deviceService.GetAll(),
-                o => o.Items["Type"] = HierarchyType.Device);
-            var folders = _mapper.Map<IEnumerable<HierarchyItemViewModel>>(
-                await _hierarchyService.GetTree(HierarchyType.Device, UserInfo.Groups));
-            //var expanded = _cache.RestoreMany<TreeExpanedState>(UiCacheHelper.OwnerKey(this), () => HierarchyType.Host);
-            //foreach (var folder in folders)
-            //{
-            //    folder.expanded = expanded?.Any(e => e.Id == folder.Id) ?? false;
-            //}
+            var devices = (await _deviceService.GetAll())
+                .Select(d => d.ToHierarchyItem()).ToList();
+            var folders = (await _hierarchyService.GetTree(HierarchyType.Device, UserInfo.Groups))
+                .Select(h => h.ToHierarchyItem()).ToList();
 
             var tree = folders.Concat(devices).ToTree().ToList();
             // always expand root if just one
@@ -145,16 +134,16 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
         public async Task<IEnumerable<HostDeviceModel>> GetDevices(int id)
         {
             var hosts = await _deviceService.GetHosts(id);
-            return _mapper.Map<IEnumerable<HostDeviceModel>>(hosts);
+            return hosts.Select(h => h.ToModel()).ToList();
         }
 
         [HttpPost("{id:int}/hosts")]
         public async Task<HostDeviceModel> AttachHostDevice(int id, HostDeviceModel model)
         {
-            var hostDevice = _mapper.Map<HostDevice>(model);
+            var hostDevice = model.ToEntity();
             hostDevice.DeviceId = id;
             var host = await _deviceService.AttachHost(hostDevice);
-            return _mapper.Map<HostDeviceModel>(host);
+            return host.ToModel();
         }
 
         [HttpDelete("{id:int}/hosts/{hostId:int}")]
@@ -168,14 +157,14 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
         public async Task<IEnumerable<IdNameModel>> GetAvailableDevices()
         {
             var hosts = await _deviceService.GetAvailableHosts();
-            return _mapper.Map<IEnumerable<IdNameModel>>(hosts);
+            return hosts.Select(h => h.ToIdNameModel()).ToList();
         }
 
         [HttpGet("hosts/{id:int}")]
         public async Task<HostDeviceModel> GetHostDevice(int id)
         {
             var host = await _deviceService.GetHostDevice(id);
-            return _mapper.Map<HostDeviceModel>(host);
+            return host.ToModel();
         }
 
         #endregion
