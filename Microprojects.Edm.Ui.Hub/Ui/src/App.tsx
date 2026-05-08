@@ -120,7 +120,11 @@ export default function App() {
                         />
                     </SmartScrollContent>
                     <SmartScrollContent className="landing-right">
-                        <AboutPanel markdown={activeAbout} loading={loading}/>
+                        <AboutPanel
+                            key={activeGuid ?? 'hub'}
+                            markdown={activeAbout}
+                            loading={loading}
+                        />
                     </SmartScrollContent>
                 </SmartScroll>
             </Box>

@@ -16,9 +16,7 @@ export function PluginList({
     onActivate,
 }: PluginListProps) {
     if (error) {
-        return (
-            <div className="plugin-list-error">{error}</div>
-        )
+        return <div className="plugin-list-error">{error}</div>
     }
     if (loading && plugins.length === 0) {
         return <div className="plugin-list-empty">Loading modules…</div>
@@ -31,7 +29,20 @@ export function PluginList({
         )
     }
     return (
-        <ul className="plugin-list" role="list">
+        // Activate-clear handlers live at the panel level (not per tile) so the
+        // cursor moving between tiles, or focus moving between tiles, does not
+        // bounce the right column back to the Hub default mid-traversal.
+        // Only leaving the list as a whole reverts to Hub.
+        <ul
+            className="plugin-list"
+            role="list"
+            onMouseLeave={() => onActivate(null)}
+            onBlur={(e) => {
+                if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                    onActivate(null)
+                }
+            }}
+        >
             {plugins.map((p) => {
                 const active = p.guid === activeGuid
                 return (
@@ -42,9 +53,7 @@ export function PluginList({
                             tabIndex={0}
                             aria-current={active ? 'true' : undefined}
                             onMouseEnter={() => onActivate(p.guid)}
-                            onMouseLeave={() => onActivate(null)}
                             onFocus={() => onActivate(p.guid)}
-                            onBlur={() => onActivate(null)}
                         >
                             <div className="lead-row">
                                 <div

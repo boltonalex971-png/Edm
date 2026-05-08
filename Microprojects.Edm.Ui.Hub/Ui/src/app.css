@@ -216,9 +216,21 @@
     line-height: 1.5;
 }
 
-/* --- About panel: markdown rendered on the right --- */
+/* --- About panel: markdown rendered on the right ---
+   Animated swap on every content change: AboutPanel is keyed to the active
+   plugin's GUID so React remounts it, replaying this animation. Duration and
+   easing follow the design handoff "Standard" tier (--dur-3 / --ease-std):
+   route-transition / drawer-slide territory; nothing bouncy, < 400ms. */
+@keyframes about-panel-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
 .about-panel {
     color: var(--ink-2);
+    animation: about-panel-in var(--dur-3) var(--ease-std);
+}
+@media (prefers-reduced-motion: reduce) {
+    .about-panel { animation: none; }
 }
 .about-panel--loading {
     color: var(--ink-4);
