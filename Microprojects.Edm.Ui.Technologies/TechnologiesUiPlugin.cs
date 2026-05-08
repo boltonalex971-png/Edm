@@ -13,7 +13,7 @@ namespace Microprojects.Edm.Ui.Technologies
 {
     [ApplicationPlugin(
         Name = "Technologies",
-        Description = "Technologies UI",
+        Description = "Manufacturing process tree — profiles, devices, hosts and routings authored once and consumed across the platform.",
         Guid = "76123DAA-9A68-4F90-B6A9-F5F16633C7D6",
         SpaPath = "Ui/dist",
         UiRoot = "technologies")]
