@@ -12,6 +12,7 @@
     <Compile Remove="ui\node_modules\**" />
     <EmbeddedResource Include="ui\build\**" />
     <EmbeddedResource Remove="ui\node_modules\**" />
+    <EmbeddedResource Include="ABOUT.md" />
     <None Remove="ui\build\**" />
     <None Remove="ui\node_modules\**" />
   </ItemGroup>

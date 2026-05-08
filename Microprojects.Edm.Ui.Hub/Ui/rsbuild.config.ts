@@ -10,6 +10,13 @@ const httpsCfg = fs.existsSync(certPath) && fs.existsSync(keyPath)
     ? { cert: fs.readFileSync(certPath), key: fs.readFileSync(keyPath) }
     : undefined
 
+// `@microprojects/tools` is junctioned in via `file:` and ships its own dev
+// `node_modules/react`. Pin react/react-dom resolution to the Hub's copy so we
+// don't end up with two React instances at runtime (which breaks hooks with
+// "Cannot read properties of null (reading 'useRef')").
+const reactDir    = path.resolve(__dirname, 'node_modules/react')
+const reactDomDir = path.resolve(__dirname, 'node_modules/react-dom')
+
 export default defineConfig({
     plugins: [
         pluginReact(),
@@ -23,6 +30,12 @@ export default defineConfig({
     output: {
         // Hub mounts at the URL root, so its built assets are also served from /.
         assetPrefix: '/',
+    },
+    resolve: {
+        alias: {
+            react: reactDir,
+            'react-dom': reactDomDir,
+        },
     },
     html: {
         title: 'EDM Hub',

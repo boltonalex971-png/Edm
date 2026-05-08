@@ -1,6 +1,7 @@
 /* Hub landing — Direction A · Steel.
-   Custom layout for greeting hero + separated plugin cards.
-   All colors come from tokens.css custom properties. */
+   Two-column landing: greeting + plugin list (left) and ABOUT promo (right).
+   Greeting sits above SmartScroll; SmartScroll wraps only the tile list.
+   Colors come from tokens.css custom properties. */
 
 /* --- Page shell: keep footer at the bottom on short pages --- */
 .page-root {
@@ -8,7 +9,13 @@
     display: flex;
     flex-direction: column;
 }
-.page-main { flex: 1 0 auto; }
+.page-main {
+    flex: 1 0 auto;
+    padding: 32px 56px 64px;
+    max-width: 1400px;
+    width: 100%;
+    margin: 0 auto;
+}
 .page-footer {
     flex: 0 0 auto;
     border-top: 1px solid var(--line);
@@ -29,6 +36,7 @@
     background: var(--surface) !important;
 }
 @media (max-width: 980px) {
+    .page-main { padding: 24px 24px 48px; }
     .page-footer { padding: 14px 24px; }
 }
 
@@ -61,7 +69,28 @@
     font-weight: 600;
 }
 
-/* --- Greeting + promo hero --- */
+/* --- Landing 2-column outer grid: greeting/SmartScroll left, ABOUT right --- */
+.landing-grid {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 56px;
+    /* Baseline-align across columns so the greeting's text baseline lines up
+       with the about title's first-line baseline. */
+    align-items: baseline;
+}
+.landing-left {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    /* `landing-left`'s own first baseline is the greeting's baseline, so
+       baseline alignment on `.landing-grid` references it cleanly. */
+    min-width: 0;
+}
+.landing-right {
+    min-width: 0;
+}
+
+/* --- Greeting (above SmartScroll) --- */
 .greeting {
     font-family: var(--font-mono);
     font-size: 12px;
@@ -69,43 +98,68 @@
     letter-spacing: 0.12em;
     color: var(--accent);
     font-weight: 600;
+    margin: 0 0 1rem;
+    line-height: 1.4;
 }
-.promo {
-    font-size: 17px;
-    line-height: 1.65;
-    color: var(--ink-2);
-    margin: 0 0 18px;
-    max-width: 64ch;
-}
-.promo:last-child { margin-bottom: 0; }
 
-/* --- Plugin cards (separated, not a unified table) --- */
-.plugin-cards {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 20px;
+/* SmartScroll wraps only the tile list; its container is just a flex item. */
+.landing-tiles {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
 }
-.plugin-card {
+
+/* --- Plugin list (vertical, focusable cards) --- */
+.plugin-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
     display: flex;
     flex-direction: column;
     gap: 14px;
-    padding: 24px 24px 22px;
+}
+.plugin-list-empty,
+.plugin-list-error {
+    padding: 24px;
+    text-align: center;
+    border: 1px dashed var(--line-strong);
+    border-radius: var(--r-2);
+    background: var(--surface);
+    color: var(--ink-3);
+    font-size: 13px;
+}
+.plugin-list-error {
+    border-style: solid;
+    border-color: var(--sig-fault);
+    background: var(--sig-fault-soft);
+    color: var(--sig-fault-deep);
+    text-align: left;
+}
+
+.plugin-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 18px 20px 16px;
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: var(--r-2);
     box-shadow: var(--elev-1);
     text-decoration: none;
     color: inherit;
+    cursor: pointer;
     transition:
         transform var(--dur-2) var(--ease-std),
         box-shadow var(--dur-2) var(--ease-std),
         border-color var(--dur-2) var(--ease-std);
 }
-.plugin-card:hover {
+.plugin-card:hover,
+.plugin-card--active {
     text-decoration: none;
-    transform: translateY(-2px);
+    transform: translateY(-1px);
     box-shadow: var(--elev-2);
-    border-color: var(--line-strong);
+    border-color: var(--accent);
 }
 .plugin-card:focus-visible {
     outline: 2px solid var(--accent);
@@ -118,14 +172,14 @@
     gap: 12px;
 }
 .plugin-card .glyph {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     border-radius: var(--r-2);
     display: grid;
     place-items: center;
     color: #fff;
     font-family: var(--font-mono);
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 700;
     letter-spacing: -0.02em;
     position: relative;
@@ -141,7 +195,7 @@
     background: rgba(255, 255, 255, 0.45);
 }
 .plugin-card .name {
-    font-size: 17px;
+    font-size: 16px;
     font-weight: 700;
     color: var(--ink-1);
     letter-spacing: -0.005em;
@@ -157,15 +211,79 @@
     vertical-align: 2px;
 }
 .plugin-card .desc {
-    font-size: 13.5px;
+    font-size: 13px;
     color: var(--ink-3);
-    line-height: 1.55;
-    flex: 1;
+    line-height: 1.5;
 }
 
+/* --- About panel: markdown rendered on the right --- */
+.about-panel {
+    color: var(--ink-2);
+}
+.about-panel--loading {
+    color: var(--ink-4);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+.about-panel h1 {
+    font-size: 56px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    color: var(--ink-1);
+    margin: 0 0 28px;
+}
+.about-panel h2 {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--ink-1);
+    margin: 32px 0 12px;
+}
+.about-panel h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink-1);
+    margin: 24px 0 10px;
+}
+.about-panel p {
+    font-size: 16px;
+    line-height: 1.65;
+    color: var(--ink-2);
+    margin: 0 0 18px;
+    max-width: 64ch;
+}
+.about-panel p:last-child { margin-bottom: 0; }
+.about-panel ul,
+.about-panel ol {
+    margin: 0 0 18px 20px;
+    padding: 0;
+    color: var(--ink-2);
+    line-height: 1.65;
+    max-width: 64ch;
+}
+.about-panel li { margin-bottom: 6px; }
+.about-panel a {
+    color: var(--accent);
+    text-decoration: none;
+}
+.about-panel a:hover { text-decoration: underline; }
+.about-panel code {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    background: var(--surface-3);
+    border: 1px solid var(--line-soft);
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: var(--ink-1);
+}
+.about-panel strong { color: var(--ink-1); font-weight: 700; }
+
 @media (max-width: 980px) {
-    .plugin-cards { grid-template-columns: 1fr; }
+    .landing-grid { grid-template-columns: 1fr; gap: 32px; }
+    .about-panel h1 { font-size: 40px; }
 }
 @media (min-width: 981px) and (max-width: 1280px) {
-    .plugin-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .landing-grid { grid-template-columns: 320px 1fr; gap: 32px; }
 }

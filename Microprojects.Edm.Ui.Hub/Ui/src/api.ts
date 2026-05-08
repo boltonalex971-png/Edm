@@ -16,6 +16,10 @@ export interface UserInfo {
     divisions: string[]
 }
 
+export interface VersionInfo {
+    product: string
+}
+
 export async function fetchPlugins(): Promise<PluginSummary[]> {
     const r = await axios.get<PluginSummary[]>('/api/hub/plugins')
     return r.data
@@ -26,12 +30,18 @@ export async function fetchUser(): Promise<UserInfo> {
     return r.data
 }
 
-export interface VersionInfo {
-    product: string
-}
-
 export async function fetchVersion(): Promise<VersionInfo> {
     const r = await axios.get<VersionInfo>('/api/hub/meta/version')
+    return r.data
+}
+
+export async function fetchHubAbout(): Promise<string> {
+    const r = await axios.get<string>('/api/hub/meta/about', { responseType: 'text' })
+    return r.data
+}
+
+export async function fetchPluginAbout(guid: string): Promise<string> {
+    const r = await axios.get<string>(`/api/hub/meta/about/${guid}`, { responseType: 'text' })
     return r.data
 }
 
