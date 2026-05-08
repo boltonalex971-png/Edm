@@ -24,7 +24,7 @@ export function OperationLayout() {
                 <>
                     <IconButton
                         onClick={() => setHidden((h) => !h)}
-                        sx={{ position: 'absolute', top: 8, right: 15, zIndex: 1301, backgroundColor: 'rgba(255,255,255,0.8)', '&:hover': { backgroundColor: '#fff' } }}
+                        sx={{ position: 'absolute', top: 8, right: 15, zIndex: 1301, backgroundColor: 'rgba(255,255,255,0.8)', '&:hover': { backgroundColor: 'var(--surface)' } }}
                         size="small"
                     >
                         {hidden ? <ArrowDownIcon /> : <ArrowUpIcon />}
@@ -51,7 +51,7 @@ export function OperationLayout() {
                     </Box>
 
                     {!hidden && (
-                        <Box sx={{ p: 1, borderTop: '1px solid #e0e0e0' }}>
+                        <Box sx={{ p: 1, borderTop: '1px solid var(--line)' }}>
                             <Typography variant="caption" color="textSecondary">
                                 &#169; Microprojects {new Date().getFullYear()}
                             </Typography>

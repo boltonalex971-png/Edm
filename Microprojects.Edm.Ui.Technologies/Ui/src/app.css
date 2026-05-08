@@ -1,0 +1,718 @@
+/* EDM Technologies — Direction A · Steel.
+   Chrome layout + role/plugin overlays + data primitives.
+   Tokens come from tokens.css; no hex literals here. */
+
+/* --- Page shell --------------------------------------------------------- */
+.page-root {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    color: var(--ink-2);
+}
+
+.page-main {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.page-footer {
+    flex: 0 0 auto;
+    border-top: 1px solid var(--line);
+    background: var(--surface);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    color: var(--ink-3);
+}
+
+.page-footer .footer-left,
+.page-footer .footer-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.page-footer .footer-link {
+    color: var(--ink-2);
+    text-decoration: none;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.page-footer .footer-link:hover {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.version-chip {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    border: 1px solid var(--line-strong);
+    background: var(--surface);
+    border-radius: var(--r-pill);
+    padding: 2px 10px;
+}
+
+/* --- Top bar (chrome) --------------------------------------------------- */
+.doc-top {
+    height: 56px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: stretch;
+    position: sticky;
+    top: 0;
+    z-index: var(--z-header);
+}
+
+/* Plugin tint: cobalt wash + 2px accent stripe at the bottom. The accent
+   itself comes from --accent (role-driven), so admin/tech keep cobalt and
+   operator picks up green automatically. */
+[data-plugin="technologies"] .doc-top {
+    background: var(--accent-tint);
+    box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+.doc-brand {
+    display: flex;
+    align-items: center;
+    padding: 0 18px 0 20px;
+    border-right: 1px solid var(--line);
+    height: 100%;
+    text-decoration: none;
+    color: inherit;
+}
+
+.doc-brand:hover {
+    text-decoration: none;
+}
+
+/* The brand line treats EDµ and the plugin name as a single inline-text
+   block, sharing one baseline. Centering happens once at the .doc-brand
+   level via flex alignment — no nested flex on the children. */
+.doc-brand .brand-line {
+    display: inline-block;
+    white-space: nowrap;
+    line-height: 1;
+    color: var(--ink-1);
+    font-family: var(--font-sans);
+}
+
+.doc-brand .brand-block {
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+}
+
+.doc-brand .brand-block .ed {
+    color: var(--accent);
+}
+
+.doc-brand .brand-block .mu {
+    color: #009900;
+    font-size: 1.36em;
+    margin-left: -1px;
+    line-height: 0;
+    vertical-align: baseline;
+}
+
+.doc-brand .brand-name {
+    margin-left: 8px;
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--ink-1);
+    letter-spacing: -0.005em;
+    vertical-align: baseline;
+}
+
+.doc-nav {
+    display: flex;
+    align-items: stretch;
+    flex: 1 1 auto;
+    padding-left: 8px;
+    overflow-x: auto;
+    min-width: 0;
+}
+
+.doc-nav .nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 14px;
+    color: var(--ink-3);
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    height: 100%;
+}
+
+.doc-nav .nav-link:hover {
+    color: var(--ink-1);
+    text-decoration: none;
+}
+
+.doc-nav .nav-link.active {
+    color: var(--ink-1);
+    border-bottom-color: var(--accent);
+    font-weight: 600;
+}
+
+.doc-nav .nav-link .mi {
+    color: inherit;
+}
+
+.doc-end {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 14px 0 14px;
+    border-left: 1px solid var(--line);
+    height: 100%;
+}
+
+/* Role pill — replaces the prior MUI Select chrome. */
+.role-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 28px;
+    padding: 0 10px 0 8px;
+    border-radius: var(--r-pill);
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    color: var(--ink-2);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.role-pill:hover {
+    border-color: var(--ink-3);
+}
+
+.role-pill .mi {
+    color: var(--accent);
+    font-size: 16px;
+}
+
+/* Avatar square (per design schemes.html `.av`) */
+.av {
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    background: var(--accent);
+    color: var(--accent-fg);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+}
+
+.av:hover {
+    background: var(--accent-deep);
+}
+
+/* --- Sub-root tab strip (replaces SubRootPage segmented control) --------
+   Page title and tabs share one row; the breadcrumbs sit above. Both row
+   and crumbs collapse to zero height in the dense scroll state so only the
+   tab strip remains visible at the sticky top. */
+.doc-sub {
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    padding: 6px 24px 0;
+    position: sticky;
+    top: 56px;
+    z-index: calc(var(--z-header) - 1);
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    transition: padding var(--dur-3) var(--ease-std);
+}
+
+.doc-sub[data-dense="true"] {
+    padding-top: 0;
+}
+
+.doc-sub .sub-crumbs {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    line-height: 1.2;
+    margin-bottom: 2px;
+    transition: max-height var(--dur-3) var(--ease-std), opacity var(--dur-3) var(--ease-std), margin var(--dur-3) var(--ease-std);
+    max-height: 18px;
+    overflow: hidden;
+}
+
+.doc-sub[data-dense="true"] .sub-crumbs {
+    max-height: 0;
+    opacity: 0;
+    margin-bottom: 0;
+}
+
+.doc-sub .sub-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: nowrap;
+    min-width: 0;
+}
+
+.doc-sub .sub-title {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--ink-1);
+    margin: 0;
+    flex-shrink: 0;
+    line-height: 1.2;
+    padding-bottom: 4px;
+    transition: font-size var(--dur-3) var(--ease-std), max-width var(--dur-3) var(--ease-std), opacity var(--dur-3) var(--ease-std);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.doc-sub[data-dense="true"] .sub-title {
+    font-size: 0;
+    max-width: 0;
+    opacity: 0;
+    padding-bottom: 0;
+}
+
+.doc-sub .sub-row .scheme-tabs {
+    flex: 0 1 auto;
+    min-width: 0;
+}
+
+.scheme-tabs {
+    display: flex;
+    gap: 2px;
+    margin: 0;
+}
+
+.scheme-tabs .tab {
+    background: transparent;
+    border: 0;
+    padding: 10px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-3);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: inherit;
+}
+
+.scheme-tabs .tab:hover {
+    color: var(--ink-1);
+    text-decoration: none;
+}
+
+.scheme-tabs .tab.active {
+    color: var(--ink-1);
+    border-bottom-color: var(--accent);
+    font-weight: 700;
+}
+
+.scheme-tabs .tab .mi {
+    color: inherit;
+    font-size: 16px;
+}
+
+/* --- Page body (master/detail container) -------------------------------- */
+.doc-body {
+    flex: 1 1 auto;
+    background: var(--surface-2);
+    padding: 16px 24px 24px;
+    min-height: 0;
+    min-width: 0;
+}
+
+/* --- Buttons (CSS primitives — used outside MUI surfaces) --------------- */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: var(--btn-h);
+    padding: 0 14px;
+    border-radius: var(--r-2);
+    border: 1px solid var(--line-strong);
+    background: var(--surface);
+    color: var(--ink-1);
+    font: 600 13px/1 var(--font-sans);
+    cursor: pointer;
+    transition: background var(--dur-1) var(--ease-std), border-color var(--dur-1) var(--ease-std);
+    white-space: nowrap;
+}
+
+.btn:hover {
+    background: var(--surface-2);
+    border-color: var(--ink-3);
+}
+
+.btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
+
+.btn.accent {
+    background: var(--accent);
+    color: var(--accent-fg);
+    border-color: var(--accent);
+}
+
+.btn.accent:hover {
+    background: var(--accent-deep);
+    border-color: var(--accent-deep);
+}
+
+.btn.ghost {
+    background: transparent;
+    border-color: transparent;
+    color: var(--ink-2);
+}
+
+.btn.ghost:hover {
+    background: var(--surface-3);
+}
+
+.btn.icon {
+    width: var(--btn-h);
+    padding: 0;
+}
+
+/* --- Data primitives (mirrors design schemes.html `.s-row` family) ------ */
+.s-row {
+    display: grid;
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-2);
+    padding: 8px 12px;
+    gap: 10px;
+    font-size: 12.5px;
+    color: var(--ink-2);
+}
+
+.s-row.selected {
+    background: var(--accent-tint);
+    border-color: var(--accent);
+    box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.s-row b {
+    color: var(--ink-1);
+    font-family: var(--font-mono);
+    font-weight: 700;
+}
+
+.s-pip {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.s-pip.run    { background: var(--sig-run); }
+.s-pip.warn   { background: var(--sig-warn); }
+.s-pip.fault  { background: var(--sig-fault); }
+.s-pip.idle   { background: var(--sig-idle); }
+.s-pip.info   { background: var(--sig-info); }
+.s-pip.queued { background: var(--sig-queued); }
+
+.s-mono {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+}
+
+.s-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-3);
+    font-weight: 600;
+}
+
+/* Icon-frame square used in Detail header and entity cards. Surface-2
+   neutral background — entity identity comes from the icon glyph itself,
+   not a tinted background. */
+.icon-wrapper {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--r-2);
+    background: var(--surface-2);
+    color: var(--ink-2);
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+}
+
+.icon-wrapper.accent {
+    background: var(--accent-tint);
+    color: var(--accent);
+}
+
+/* --- Detail card (master-detail right pane) ----------------------------- */
+.detail-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-2);
+    box-shadow: var(--elev-1);
+    overflow: hidden;
+    width: 100%;
+    min-width: 0;
+}
+
+.detail-sticky-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    padding: 14px 18px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    position: sticky;
+    z-index: calc(var(--z-header) - 2);
+    box-shadow: inset 0 -1px 0 var(--accent-tint);
+}
+
+.detail-sticky-header .header-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+}
+
+.detail-sticky-header .title-area {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    flex: 1;
+}
+
+.detail-sticky-header .title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink-1);
+    letter-spacing: -0.01em;
+    margin: 0;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.detail-sticky-header .description {
+    font-size: 13px;
+    color: var(--ink-3);
+    margin: 0;
+    line-height: 1.4;
+}
+
+.detail-sticky-header .breadcrumbs {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-3);
+}
+
+.detail-sticky-header .actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.detail-content-body {
+    padding: 20px;
+}
+
+.detail-sticky-footer {
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+    padding: 12px 18px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    position: sticky;
+    bottom: 0;
+    z-index: calc(var(--z-header) - 2);
+}
+
+/* --- Card primitive (used by Home launcher tiles) ----------------------- */
+.card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-2);
+    box-shadow: var(--elev-1);
+    transition: border-color var(--dur-2) var(--ease-std), box-shadow var(--dur-2) var(--ease-std), transform var(--dur-2) var(--ease-std);
+    position: relative;
+    overflow: hidden;
+}
+
+.card.clickable {
+    cursor: pointer;
+}
+
+.card.clickable:hover {
+    border-color: var(--accent);
+    box-shadow: var(--elev-2);
+}
+
+.card.clickable::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--accent);
+    opacity: 0;
+    transition: opacity var(--dur-2) var(--ease-std);
+}
+
+.card.clickable:hover::before {
+    opacity: 1;
+}
+
+.card-b {
+    padding: var(--card-pad);
+}
+
+/* --- Markdown (changelog) ----------------------------------------------- */
+.markdown {
+    color: var(--ink-2);
+    line-height: 1.6;
+    font-size: var(--t-14);
+}
+
+.markdown h1,
+.markdown h2,
+.markdown h3 {
+    color: var(--ink-1);
+    letter-spacing: -0.01em;
+    margin: 1.4em 0 0.6em;
+}
+
+.markdown h1 { font-size: var(--t-24); }
+.markdown h2 { font-size: var(--t-20); }
+.markdown h3 { font-size: var(--t-16); }
+
+.markdown code {
+    font-family: var(--font-mono);
+    background: var(--surface-3);
+    padding: 1px 6px;
+    border-radius: 3px;
+    border: 1px solid var(--line-soft);
+    color: var(--ink-1);
+    font-size: 0.9em;
+}
+
+.markdown pre {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: var(--r-2);
+    padding: 14px 16px;
+    overflow-x: auto;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.markdown pre code {
+    background: transparent;
+    border: 0;
+    padding: 0;
+}
+
+/* --- Entity-type icon tokens ------------------------------------------------
+   Each entity type owns a pair: a soft background tint and a deeper foreground
+   that the icon glyph and label inherit. The Detail title icon-wrapper takes
+   both (background + colour); TreeViewMaster items take only the colour and
+   keep a transparent background. Hues are picked to read as distinct at the
+   tile size (~36px square) without breaking the calibrated signal palette
+   — none of these tones are reused for run/warn/fault/idle/info/queued. */
+:root {
+    --ent-process-soft:   #E1E8FF;
+    --ent-process-deep:   #1838AB;
+    --ent-device-soft:    #ECE5FF;
+    --ent-device-deep:    #5B21B6;
+    --ent-host-soft:      #DAF1E6;
+    --ent-host-deep:      #06673F;
+    --ent-workplace-soft: #FCEDDF;
+    --ent-workplace-deep: #9A330A;
+    --ent-workbench-soft: #EAF1D8;
+    --ent-workbench-deep: #4D6B0F;
+    --ent-operation-soft: #DBEEF1;
+    --ent-operation-deep: #0F766E;
+    --ent-audit-soft:     #FAEFCD;
+    --ent-audit-deep:     #855B00;
+    --ent-profile-soft:   #EFE7E1;
+    --ent-profile-deep:   #5C3F2A;
+    --ent-driver-soft:    #DDE4EE;
+    --ent-driver-deep:    #324A66;
+    --ent-plugin-soft:    #FBDBE6;
+    --ent-plugin-deep:    #8B2A52;
+    --ent-folder-soft:    #FCE3B0;
+    --ent-folder-deep:    #7A4E00;
+}
+
+/* --- Modal-shift fix (kept from custom.css) ----------------------------- */
+.MuiPopover-root,
+.MuiPaper-root {
+    /* Prevent MUI from adding right padding to the body when a modal opens —
+       it shifts the whole page on Windows (visible scrollbar gutter). */
+}
+
+body.MuiBody-root {
+    padding-right: 0 !important;
+}
+
+/* --- Material Symbols icon class --------------------------------------- */
+.mi {
+    font-family: var(--font-icon);
+    font-weight: 400;
+    font-style: normal;
+    display: inline-block;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 20;
+    font-size: 18px;
+    vertical-align: middle;
+    user-select: none;
+    flex-shrink: 0;
+}

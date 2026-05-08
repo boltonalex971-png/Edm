@@ -1,98 +1,22 @@
+/* Minimal reset that complements MUI CssBaseline. Tokens and primitives
+   live in tokens.css and app.css. */
 html, body, #root {
     margin: 0;
     padding: 0;
-    font-family: "Roboto", "Helvetica", "Arial", sans-serif;
-    scrollbar-gutter: stable both-edges; /* Reserve space for scrollbar on both sides to keep content centered if needed, or just 'stable' */
+    scrollbar-gutter: stable both-edges;
 }
 
-/* Prevent MUI from shifting content when opening modals/dropdowns */
+/* Prevent MUI from right-padding the body when opening modals/dropdowns —
+   on Windows it shifts visible content because of the scrollbar gutter. */
 body {
     padding-right: 0 !important;
 }
 
-/* Also prevent fixed elements (like NavMenu header) from shifting */
-.MuiAppBar-root, .MuiDialog-root {
+.MuiAppBar-root,
+.MuiDialog-root {
     padding-right: 0 !important;
-}
-
-
-/* Provide sufficient contrast against white background */
-
-a {
-    color: #0366d6;
-}
-
-code {
-    color: #e01a76;
-}
-
-.btn-primary {
-    color: #fff;
-    background-color: #1b6ec2;
-    border-color: #1861ac;
 }
 
 .disable-select {
     user-select: none;
-    /* supported by Chrome and Opera */
-    -webkit-user-select: none;
-    /* Safari */
-    -khtml-user-select: none;
-    /* Konqueror HTML */
-    -moz-user-select: none;
-    /* Firefox */
-    -ms-user-select: none;
-    /* Internet Explorer/Edge */
 }
-
-.changelog {
-    max-width: 860px;
-    margin: 1rem auto;
-    padding: 0 1rem;
-    line-height: 1.55;
-}
-
-.changelog h1 {
-    font-size: 1.6rem;
-    margin: 0 0 1rem;
-}
-
-.changelog h2 {
-    font-size: 1.25rem;
-    margin: 1.5rem 0 0.5rem;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 0.25rem;
-}
-
-.changelog h3 {
-    font-size: 1.05rem;
-    margin: 1rem 0 0.5rem;
-}
-
-.changelog ul {
-    padding-left: 1.5rem;
-}
-
-.changelog code {
-    background: #f6f8fa;
-    padding: 0.1em 0.3em;
-    border-radius: 3px;
-    font-size: 0.92em;
-}
-
-.changelog pre code {
-    display: block;
-    padding: 0.5rem 0.75rem;
-}
-
-.changelog table {
-    border-collapse: collapse;
-    margin: 0.5rem 0;
-}
-
-.changelog th,
-.changelog td {
-    border: 1px solid #ddd;
-    padding: 0.25rem 0.5rem;
-}
-

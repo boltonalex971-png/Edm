@@ -1,102 +1,110 @@
-@import '../../styles/variables';
-
 .cardGrid {
-  display: grid;
-  // Limit to maximum 6 columns, but responsive for smaller screens
-  grid-template-columns: repeat(auto-fill, minmax(max(180px, calc(100% / 5 - 12px)), 1fr));
-  gap: 12px; // Decreased gap
-  width: 100%;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(max(180px, calc(100% / 5 - 12px)), 1fr));
+    gap: 12px;
+    width: 100%;
 }
 
 .opCard {
-  display: flex;
-  flex-direction: column;
-  height: 180px; // Decreased height for higher density
-  cursor: pointer;
-  position: relative;
-  transition: transform 0.2s, box-shadow 0.2s;
-  border: 1px solid $border-color !important;
-  border-radius: 4px !important;
-  box-shadow: none !important;
-  width: 100%; // Ensure same width in grid cell
+    display: flex;
+    flex-direction: column;
+    height: 180px;
+    cursor: pointer;
+    position: relative;
+    transition: transform var(--dur-2) var(--ease-std), box-shadow var(--dur-2) var(--ease-std), border-color var(--dur-2) var(--ease-std);
+    border: 1px solid var(--line) !important;
+    border-radius: var(--r-2) !important;
+    box-shadow: var(--elev-1) !important;
+    background: var(--surface) !important;
+    width: 100%;
 
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
-  }
+    &:hover {
+        transform: translateY(-1px);
+        box-shadow: var(--elev-2) !important;
+        border-color: var(--accent) !important;
+    }
 
-  &.faulted {
-    background-color: $status-error-subtle !important;
-    border-left: 4px solid $status-offline !important;
-  }
+    // Status overlay — left stripe in the calibrated signal color +
+    // a soft tint background so the run state is legible at a glance.
+    &.faulted {
+        background: var(--sig-fault-soft) !important;
+        border-left: 4px solid var(--sig-fault) !important;
+    }
 
-  &.idle, &.scheduled {
-    background-color: $status-warning-subtle !important;
-    border-left: 4px solid #ed6c02 !important;
-  }
+    &.idle,
+    &.scheduled {
+        background: var(--sig-warn-soft) !important;
+        border-left: 4px solid var(--sig-warn) !important;
+    }
 
-  &.inProgress {
-    background-color: $status-success-subtle !important;
-    border-left: 4px solid $status-online !important;
-  }
+    &.inProgress {
+        background: var(--sig-run-soft) !important;
+        border-left: 4px solid var(--sig-run) !important;
+    }
 
-  &.completed, &.cancelled {
-    background-color: $status-default-subtle !important;
-    border-left: 4px solid #757575 !important;
-  }
+    &.completed,
+    &.cancelled {
+        background: var(--surface-2) !important;
+        border-left: 4px solid var(--ink-4) !important;
+    }
 }
 
 .moreBtn {
-  color: $text-secondary !important;
-  margin-right: -8px !important; // Offset MUI padding
+    color: var(--ink-3) !important;
+    margin-right: -8px !important;
 }
 
 .cardContent {
-  padding: 0 12px 12px 12px !important; // Decreased padding
-  display: flex;
-  flex-direction: column;
-  height: calc(100% - 32px); // Adjusted for headerRow height
+    padding: 0 12px 12px !important;
+    display: flex;
+    flex-direction: column;
+    height: calc(100% - 32px);
 }
 
 .headerRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 2px 4px 2px 12px; // Decreased vertical padding
-  background-color: rgba(0, 0, 0, 0.03);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  min-height: 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2px 4px 2px 12px;
+    background: rgba(14, 22, 32, 0.04);
+    border-bottom: 1px solid var(--line-soft);
+    min-height: 32px;
 }
 
 .processName {
-  font-size: 1rem !important; // Slightly smaller
-  font-weight: 700 !important;
-  line-height: 1.1 !important;
-  margin-top: 8px !important;
-  margin-bottom: 4px !important; // Decreased gap
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  height: 2.2rem; // Adjusted height
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    line-height: 1.15 !important;
+    margin-top: 8px !important;
+    margin-bottom: 4px !important;
+    color: var(--ink-1);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    height: 2.2rem;
 }
 
 .metaRow {
-  display: flex;
-  flex-direction: column;
-  gap: 2px; // Decreased gap
-  flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    color: var(--ink-3);
+    font-size: 12.5px;
 }
 
 .statusLabel {
-  margin-top: auto !important;
-  font-weight: 700 !important;
-  text-transform: uppercase;
-  font-size: 11px !important;
-  letter-spacing: 0.5px;
+    margin-top: auto !important;
+    font-family: var(--font-mono) !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    font-size: 10.5px !important;
+    letter-spacing: 0.06em;
 
-  &.faulted { color: $status-offline; }
-  &.idle, &.scheduled { color: #ed6c02; }
-  &.inProgress { color: $status-online; }
-  &.default { color: #757575; }
+    &.faulted { color: var(--sig-fault-deep); }
+    &.idle,
+    &.scheduled { color: var(--sig-warn-deep); }
+    &.inProgress { color: var(--sig-run-deep); }
+    &.default { color: var(--ink-3); }
 }

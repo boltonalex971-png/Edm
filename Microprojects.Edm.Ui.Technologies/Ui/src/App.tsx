@@ -1,28 +1,28 @@
-import React, {useState} from "react";
-import {Route, MemoryRouter, Switch} from "react-router";
+import React from "react";
+import {Route, Switch} from "react-router";
 import {Layout} from "./components/Layout.js";
 import {Changelog} from "./components/Changelog";
 import {Home} from "./components/home/Home";
 import {Dashboard} from "./components/dashboard/Dashboard";
 import {Config} from "./components/config/Config";
-import "./custom.css";
 import {NewOperationWizard} from "./components/operation/NewOperationWizard";
 import {Plugins} from "./components/plugins/Plugins";
-import {ApiContext, appRoles} from './ApiContext';
+import {ApiContext} from './ApiContext';
+import {roleAttr} from './styles/role';
 import api from "./components/api";
 
 import {getUserFromToken} from "./components/hooks/hooks";
 import Operations from "./components/dashboard/Operations";
 import {OperationLayout} from "./components/operation/OperationLayout";
 import {useDispatch, useSelector} from "react-redux";
-import {changeRole, setUser, type UserState} from "./slices/userSlice";
+import {setUser} from "./slices/userSlice";
 import type {RootState} from "@edm/store.ts";
+import {appRoles} from './ApiContext';
 
 export default function App() {
-    const userRole = useSelector((state : RootState) => state.user.role)
-    const user = useSelector((state : RootState) => state.user.name)
+    const userRole = useSelector((state: RootState) => state.user.role)
+    const user = useSelector((state: RootState) => state.user.name)
     const userDispatch = useDispatch()
-    //const [homebase] = useState(`${import.meta.env.ASSET_PREFIX || window.location.origin}`);
     const apiBase = api.baseUrl
 
     React.useEffect(() => {
@@ -33,7 +33,8 @@ export default function App() {
     }, [userDispatch]);
 
     return (
-            <ApiContext.Provider value={apiBase}>
+        <ApiContext.Provider value={apiBase}>
+            <div className="page-root" data-role={roleAttr(userRole)} data-scheme="light" data-plugin="technologies">
                 <Switch>
                     <Route path='/operations/:id' component={OperationLayout}/>
                     <Layout>
@@ -51,19 +52,20 @@ export default function App() {
                         }
                         {user && !userRole &&
                             <span>
-                            As user {user} you are not authorized to access ISTP application.
-                            No role is assigned to your account.
-                            Please refer to your system administrator.
-                        </span>
+                                As user {user} you are not authorized to access ISTP application.
+                                No role is assigned to your account.
+                                Please refer to your system administrator.
+                            </span>
                         }
                         {!user &&
                             <span>
-                            You are not authenticated to access ISTP application.
-                            Please refer to your system administrator.
-                        </span>
+                                You are not authenticated to access ISTP application.
+                                Please refer to your system administrator.
+                            </span>
                         }
                     </Layout>
                 </Switch>
-            </ApiContext.Provider>
+            </div>
+        </ApiContext.Provider>
     );
 }

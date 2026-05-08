@@ -27,7 +27,7 @@ import api from "../api.js";
 
 export function OperationMenu({ operation, to }) {
     return (
-        <AppBar position="static" color="default" elevation={1} sx={{ backgroundColor: '#fff', borderBottom: '1px solid #e0e0e0' }}>
+        <AppBar position="static" color="default" elevation={0} sx={{ backgroundColor: 'var(--surface)', borderBottom: '1px solid var(--line)' }}>
             <Toolbar variant="dense" sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                     <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
@@ -192,7 +192,6 @@ function OperationToolbar({ operation }) {
                         startIcon={<PlayIcon />} 
                         onClick={start}
                         disabled={loading}
-                        sx={{ textTransform: 'none' }}
                     >
                         Start
                     </Button>
@@ -205,7 +204,6 @@ function OperationToolbar({ operation }) {
                         startIcon={<StopIcon />} 
                         onClick={stop}
                         disabled={loading}
-                        sx={{ textTransform: 'none' }}
                     >
                         Stop
                     </Button>
@@ -217,7 +215,6 @@ function OperationToolbar({ operation }) {
                         startIcon={<CopyIcon />} 
                         onClick={copy}
                         disabled={loading}
-                        sx={{ textTransform: 'none' }}
                     >
                         Copy
                     </Button>
@@ -230,7 +227,6 @@ function OperationToolbar({ operation }) {
                         startIcon={<CheckIcon />} 
                         onClick={complete}
                         disabled={loading}
-                        sx={{ textTransform: 'none' }}
                     >
                         Complete
                     </Button>

@@ -20,7 +20,7 @@ import {
 export function Loading() {
     return (
         <Box sx={{ width: '100%', flex: 1, display: 'flex', flexDirection: 'column' }}>
-            <Box sx={{ p: 3, borderBottom: '1px solid #e0e0e0', display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box sx={{ p: 3, borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', gap: 2 }}>
                 <Skeleton variant="rectangular" width={56} height={56} sx={{ borderRadius: 2 }} />
                 <Box sx={{ flex: 1 }}>
                     <Skeleton variant="text" width="60%" height={24} />
@@ -29,7 +29,7 @@ export function Loading() {
             </Box>
             <LinearProgress sx={{ height: 4 }} />
             <Box sx={{ p: 3, flex: 1 }}>
-                <Box sx={{ border: '1px solid #e0e0e0', borderRadius: 1, p: 3, mb: 2 }}>
+                <Box sx={{ border: '1px solid var(--line)', borderRadius: 1, p: 3, mb: 2 }}>
                     <Skeleton variant="text" width="30%" height={20} sx={{ mb: 3 }} />
                     <Grid container spacing={3}>
                         <Grid item xs={6}><Skeleton variant="rectangular" height={48} sx={{ borderRadius: 1 }} /></Grid>
@@ -38,7 +38,7 @@ export function Loading() {
                         <Grid item xs={6}><Skeleton variant="rectangular" height={48} sx={{ borderRadius: 1 }} /></Grid>
                     </Grid>
                 </Box>
-                <Box sx={{ border: '1px solid #e0e0e0', borderRadius: 1, p: 3 }}>
+                <Box sx={{ border: '1px solid var(--line)', borderRadius: 1, p: 3 }}>
                     <Skeleton variant="text" width="30%" height={20} sx={{ mb: 3 }} />
                     <Grid container spacing={3}>
                         <Grid item xs={6}><Skeleton variant="rectangular" height={48} sx={{ borderRadius: 1 }} /></Grid>
@@ -102,21 +102,21 @@ export function DetailStub({ message, onAdd }) {
                 sx={{
                     width: 120,
                     height: 120,
-                    backgroundColor: '#f5f5f5',
+                    backgroundColor: 'var(--surface-2)',
                     borderRadius: '50%',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     marginBottom: 3,
-                    color: '#bdbdbd'
+                    color: 'var(--ink-4)'
                 }}
             >
                 <TouchAppIcon sx={{ fontSize: 64 }} />
             </Box>
-            <Typography variant="h5" sx={{ fontWeight: 600, color: '#424242', mb: 1 }}>
+            <Typography variant="h5" sx={{ fontWeight: 700, color: 'var(--ink-1)', mb: 1 }}>
                 Select an Item
             </Typography>
-            <Typography variant="body2" sx={{ color: 'text.secondary', maxWidth: 400, mb: 3, lineHeight: 1.6 }}>
+            <Typography variant="body2" sx={{ color: 'var(--ink-3)', maxWidth: 400, mb: 3, lineHeight: 1.6 }}>
                 {message || 'Choose an item from the list on the left to view its details, or create a new item to get started.'}
             </Typography>
             {onAdd && (
@@ -125,7 +125,7 @@ export function DetailStub({ message, onAdd }) {
                     color="primary"
                     startIcon={<AddIcon />}
                     onClick={onAdd}
-                    sx={{ textTransform: 'none', borderRadius: '4px', px: 3, py: 1.5 }}
+                    sx={{ px: 3, py: 1.5 }}
                 >
                     Create New Item
                 </Button>
@@ -159,32 +159,32 @@ export function ErrorStub({ error, code, onRefresh, onBack }) {
                 sx={{
                     width: 80,
                     height: 80,
-                    backgroundColor: '#ffebee',
+                    backgroundColor: 'var(--sig-fault-soft)',
                     borderRadius: '50%',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     marginBottom: 3,
-                    color: '#d32f2f'
+                    color: 'var(--sig-fault)'
                 }}
             >
                 <ErrorOutlineIcon sx={{ fontSize: 40 }} />
             </Box>
-            <Typography variant="h6" sx={{ fontWeight: 600, color: '#c62828', mb: 1 }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, color: 'var(--sig-fault-deep)', mb: 1 }}>
                 Failed to Load Data
             </Typography>
-            <Typography variant="body2" sx={{ color: 'text.secondary', maxWidth: 400, mb: 3, lineHeight: 1.6 }}>
+            <Typography variant="body2" sx={{ color: 'var(--ink-3)', maxWidth: 400, mb: 3, lineHeight: 1.6 }}>
                 {error || "We couldn't load the requested information. This might be due to a network issue or the item may no longer exist."}
             </Typography>
             {code && (
                 <Typography
                     sx={{
-                        backgroundColor: '#f5f5f5',
+                        backgroundColor: 'var(--surface-2)',
                         padding: '8px 16px',
-                        borderRadius: '4px',
-                        fontFamily: 'monospace',
+                        borderRadius: 'var(--r-2)',
+                        fontFamily: 'var(--font-mono)',
                         fontSize: '12px',
-                        color: '#616161',
+                        color: 'var(--ink-3)',
                         marginBottom: 3
                     }}
                 >
@@ -198,7 +198,6 @@ export function ErrorStub({ error, code, onRefresh, onBack }) {
                         color="primary"
                         startIcon={<RefreshIcon />}
                         onClick={onRefresh}
-                        sx={{ textTransform: 'none', borderRadius: '4px' }}
                     >
                         Try Again
                     </Button>
@@ -206,10 +205,8 @@ export function ErrorStub({ error, code, onRefresh, onBack }) {
                 {onBack && (
                     <Button
                         variant="outlined"
-                        color="inherit"
                         startIcon={<ArrowBackIcon />}
                         onClick={onBack}
-                        sx={{ textTransform: 'none', borderRadius: '4px', color: '#616161', borderColor: '#e0e0e0' }}
                     >
                         Go Back
                     </Button>

@@ -314,14 +314,16 @@ export function Detail(props) {
                     ) : (
 
                         <>
-                                {/* Sticky Industrial Header */}
-                                <Box 
+                                {/* Sticky header — entity identity is carried by the icon glyph,
+                                    not by a tinted surface (per the EDM design system). */}
+                                <Box
                                     data-card-header="true"
-                                    className={`${styles.stickyHeader} ${displayProps.type ? styles[displayProps.type] : ''}`}
+                                    data-sticky-header="true"
+                                    className={styles.stickyHeader}
                                 >
 
                                 <Box className={styles.headerContent}>
-                                    <Box className={`${styles.iconWrapper} ${displayProps.type === 'folder' ? styles.orange : styles.gray}`}>
+                                    <Box className={`${styles.iconWrapper} ${displayProps.type ? styles[displayProps.type] : ''}`}>
                                         {displayProps.icon || (displayProps.type === 'folder' ? <FolderIcon /> : <FileIcon />)}
                                     </Box>
                                         <Box className={styles.titleArea}>
@@ -655,7 +657,6 @@ export function Editor(props) {
                     variant="contained"
                     color="primary"
                     startIcon={<SaveIcon />}
-                    sx={{ borderRadius: '4px', textTransform: 'none' }}
                 >
                     Save Changes
                 </MuiButton>

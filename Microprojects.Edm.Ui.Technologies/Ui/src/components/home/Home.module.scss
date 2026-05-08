@@ -1,98 +1,119 @@
-@import '../../styles/variables';
-
 .homeContainer {
-  display: flex;
-  flex-direction: column;
-  margin: -64px -#{$subroot-horizontal-margin} 0; // Hit header and sides, but not footer
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    flex: 1;
+    background: var(--bg);
 }
 
 .hero {
-  background: linear-gradient(135deg, $primary-dark 0%, $primary-light 100%);
-  color: $white;
-  padding: 100px 24px 32px; // Even more compact hero padding
-  text-align: center;
-  box-shadow: inset 0 -10px 20px rgba(0, 0, 0, 0.1);
-  margin-bottom: 24px;
+    background: linear-gradient(135deg, var(--accent-deep) 0%, var(--accent) 100%);
+    color: var(--accent-fg);
+    padding: 48px 24px 36px;
+    text-align: center;
+    box-shadow: inset 0 -1px 0 var(--line-vivid);
+    margin-bottom: 24px;
 
-  h1 {
-    font-size: 32px;
-    font-weight: 300;
-    margin-bottom: 12px;
-  }
+    h1 {
+        font-size: 32px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        margin: 0 0 12px;
+    }
 
-  p {
-    font-size: 16px;
-    opacity: 0.8;
-    max-width: 600px;
-    margin: 0 auto;
-    line-height: 1.6;
-  }
+    p {
+        font-size: 15px;
+        opacity: 0.85;
+        max-width: 600px;
+        margin: 0 auto;
+        line-height: 1.55;
+    }
 }
 
 .launcherGrid {
-  max-width: 1200px;
-  margin: 0 auto 40px;
-  padding: 0 24px;
-  width: 100%;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 24px;
+    max-width: 1200px;
+    margin: 0 auto 40px;
+    padding: 0 24px;
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
 }
 
 .card {
-  background: $white;
-  border-radius: 8px;
-  padding: 32px 24px;
-  text-align: center;
-  text-decoration: none;
-  color: inherit;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  transition: $transition-dense;
-  border: 1px solid $border-color;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  cursor: pointer;
+    background: var(--surface);
+    border-radius: var(--r-2);
+    padding: 28px 22px;
+    text-align: center;
+    text-decoration: none;
+    color: inherit;
+    box-shadow: var(--elev-1);
+    transition: transform var(--dur-2) var(--ease-std), box-shadow var(--dur-2) var(--ease-std), border-color var(--dur-2) var(--ease-std);
+    border: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
 
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-    border-color: $primary-main;
-  }
+    &::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: var(--accent);
+        opacity: 0;
+        transition: opacity var(--dur-2) var(--ease-std);
+    }
 
-  h3 {
-    font-size: 18px;
-    font-weight: 600;
-    color: $text-primary;
-    margin: 0;
-  }
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--elev-2);
+        border-color: var(--accent);
+    }
 
-  p {
-    font-size: 14px;
-    color: $text-secondary;
-    line-height: 1.4;
-    margin: 0;
-  }
+    &:hover::before {
+        opacity: 1;
+    }
+
+    h3 {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--ink-1);
+        letter-spacing: -0.005em;
+        margin: 0;
+    }
+
+    p {
+        font-size: 13px;
+        color: var(--ink-3);
+        line-height: 1.5;
+        margin: 0;
+    }
 }
 
 .iconCircle {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 8px;
-  
-  svg {
-    font-size: 32px;
-    color: $white;
-  }
+    width: 56px;
+    height: 56px;
+    border-radius: var(--r-2);
+    display: grid;
+    place-items: center;
+    margin-bottom: 4px;
+
+    svg {
+        font-size: 30px;
+        color: var(--accent-fg);
+    }
 }
 
-// Background Colors for Icons (matching Industrial design tokens)
-.bgSuccess { background-color: $status-online; }
-.bgInfo { background-color: $primary-main; }
-.bgWarning { background-color: #f57c00; } // Using standard warning orange
-.bgIndigo { background-color: $primary-light; }
+// Tile-icon backgrounds — keep four distinct hues so the four launcher
+// tiles stay visually distinct, all pulled from the calibrated signal /
+// accent palette (no raw hex literals).
+.bgSuccess { background: var(--sig-run); }
+.bgInfo    { background: var(--accent); }
+.bgWarning { background: var(--sig-warn); }
+.bgIndigo  { background: var(--sig-queued); }

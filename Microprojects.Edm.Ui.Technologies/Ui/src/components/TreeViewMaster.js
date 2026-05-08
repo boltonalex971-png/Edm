@@ -108,17 +108,18 @@ const collectItemsWithChildren = (nodes, set = new Set()) => {
 };
 
 const getEntityType = (apiPath) => {
-    if (apiPath.includes('/api/processes')) return 'process';
-    if (apiPath.includes('/api/devices')) return 'device';
-    if (apiPath.includes('/api/hosts')) return 'host';
-    if (apiPath.includes('workbenches')) return 'workbench';
-    if (apiPath.includes('/api/workplaces')) return 'workplace';
-    if (apiPath.includes('/api/operations')) return 'operation';
-    if (apiPath.includes('/api/audits')) return 'audit';
-    if (apiPath.includes('/api/profiles')) return 'profile';
-    if (apiPath.includes('/api/plugins/drivers')) return 'driver';
-    if (apiPath.includes('/api/plugins/profiles')) return 'profile';
-    if (apiPath.includes('/api/plugins/operations')) return 'plugin';
+    if (!apiPath) return '';
+    if (apiPath.includes('/plugins/drivers')) return 'driver';
+    if (apiPath.includes('/plugins/profiles')) return 'profile';
+    if (apiPath.includes('/plugins/operations')) return 'plugin';
+    if (apiPath.includes('/processes')) return 'process';
+    if (apiPath.includes('/devices')) return 'device';
+    if (apiPath.includes('/hosts')) return 'host';
+    if (apiPath.includes('/workbenches')) return 'workbench';
+    if (apiPath.includes('/workplaces')) return 'workplace';
+    if (apiPath.includes('/operations')) return 'operation';
+    if (apiPath.includes('/audits')) return 'audit';
+    if (apiPath.includes('/profiles')) return 'profile';
     return '';
 };
 
@@ -447,12 +448,12 @@ export function TreeViewMaster(props) {
                                 const DragIcon = getIconForType(apiPath, isNode, false);
                                 return (
                                     <Box className={styles.dragGhost}>
-                                        <DragIcon 
-                                            fontSize="small" 
-                                            sx={{ 
-                                                mr: 1, 
-                                                color: isNode ? '#ffa726' : '#757575' 
-                                            }} 
+                                        <DragIcon
+                                            fontSize="small"
+                                            sx={{
+                                                mr: 1,
+                                                color: isNode ? 'var(--accent)' : 'var(--ink-3)'
+                                            }}
                                         />
                                         <Typography variant="body2" sx={{ fontWeight: isNode ? 600 : 400, fontSize: '14px' }}>
                                             {activeNode?.label}
