@@ -1,0 +1,40 @@
+import { defineConfig } from '@rsbuild/core'
+import { pluginReact } from '@rsbuild/plugin-react'
+import { pluginBasicSsl } from '@rsbuild/plugin-basic-ssl'
+import * as fs from 'node:fs'
+import * as path from 'node:path'
+
+const certPath = path.resolve(__dirname, '../../.dev-certs/localhost.pem')
+const keyPath  = path.resolve(__dirname, '../../.dev-certs/localhost-key.pem')
+const httpsCfg = fs.existsSync(certPath) && fs.existsSync(keyPath)
+    ? { cert: fs.readFileSync(certPath), key: fs.readFileSync(keyPath) }
+    : undefined
+
+export default defineConfig({
+    plugins: [
+        pluginReact(),
+        pluginBasicSsl(),
+    ],
+    dev: {
+        assetPrefix: '/console/',
+        liveReload: true,
+        hmr: true,
+    },
+    output: {
+        // Console mounts at /console, so its built assets are served from /console/.
+        assetPrefix: '/console/',
+    },
+    html: {
+        title: 'EDM Console',
+        favicon: './public/favicon.ico',
+    },
+    server: {
+        port: 3060,
+        ...(httpsCfg ? { https: httpsCfg } : {}),
+        proxy: {
+            '/api':      { target: 'https://localhost:16332', secure: false, changeOrigin: false, ws: true },
+            '/intercom': { target: 'https://localhost:16332', secure: false, changeOrigin: false, ws: true },
+            '/hub':      { target: 'https://localhost:16332', secure: false, changeOrigin: false, ws: true },
+        },
+    },
+})

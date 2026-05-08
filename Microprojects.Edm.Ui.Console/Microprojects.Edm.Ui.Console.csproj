@@ -1,29 +1,20 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-	<OutputType>Library</OutputType>
+    <OutputType>Library</OutputType>
     <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
     <LangVersion>14</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="ui\build\**" />
-    <Compile Remove="ui\node_modules\**" />
-    <EmbeddedResource Include="ui\build\**" />
-    <EmbeddedResource Remove="ui\node_modules\**" />
+    <Compile Remove="Ui\dist\**" />
+    <Compile Remove="Ui\node_modules\**" />
+    <EmbeddedResource Include="Ui\dist\**" />
+    <EmbeddedResource Remove="Ui\node_modules\**" />
     <EmbeddedResource Include="ABOUT.md" />
-    <None Remove="ui\build\**" />
-    <None Remove="ui\node_modules\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Remove="ui\.env.local" />
-    <None Remove="ui\.eslintcache" />
-    <None Remove="ui\.gitignore" />
-    <None Remove="ui\yarn-error.log" />
-    <None Remove="ui\yarn.lock" />
-    <None Remove="ui\*.local" />
+    <None Remove="Ui\dist\**" />
+    <None Remove="Ui\node_modules\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -34,10 +25,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Edm\Edm.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="ui\src\components\" />
   </ItemGroup>
 
 </Project>
