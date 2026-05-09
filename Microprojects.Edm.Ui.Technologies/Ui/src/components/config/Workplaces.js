@@ -3,10 +3,12 @@ import PropTypes from 'prop-types';
 import { useGet } from '../hooks/hooks';
 import { useHistory, useParams, useRouteMatch } from 'react-router-dom';
 import { Business as BusinessIcon } from '@mui/icons-material';
-import { MasterDetail, reloadMaster, Detail, Info, Editor, InfoItem } from '../MasterDetail';
-import { TextField, Box } from '@mui/material';
+import { MasterDetail, reloadMaster, Detail, Editor } from '../MasterDetail';
+import { Box } from '@mui/material';
 import { WorkplaceTabs } from './workplace/WorkplaceTabs';
 import Api from '../api';
+import { EditorSection } from '../forms/EditorSection';
+import { Field } from '../forms/Field';
 
 
 export function Workplaces() {
@@ -53,51 +55,54 @@ export function WorkplaceDetail({ workplaceId, parents, ...props }) {
             id={id}
             type={type}
             icon={<BusinessIcon />}
-
             loading={loading}
             error={error}
             data={data}
             parents={parents}
             subDetail={sub}
-            card={
-                <Info {...props}
-                    data={data}
-                    content={
-                        <>
-                            <InfoItem label="Workplace Name" value={data.name} />
-                            <InfoItem label="Description" value={data.description} />
-                        </>
-                    }
-                />
-            }
 
             editor={
                 <Editor {...props}
                     data={data}
                     setData={setData}
                     onUpdate={props.onUpdate}
-                    content={({ values, handleChange }) => (
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                            <TextField
-                                fullWidth
-                                label="Name"
-                                name="name"
-                                value={values.name || ''}
-                                onChange={handleChange}
-                                size="small"
-                            />
-                            <TextField
-                                fullWidth
-                                label="Description"
-                                name="description"
-                                value={values.description || ''}
-                                onChange={handleChange}
-                                size="small"
-                                multiline
-                                rows={2}
-                            />
-                        </Box>
-                    )}
+                    content={({ values, handleChange }) => {
+                        const identityFilled = [values.name, values.description]
+                            .filter(v => v && String(v).trim().length > 0).length;
+                        const nameMissing = !!values.id && (!values.name || !values.name.trim());
+
+                        return (
+                            <Box>
+                                <EditorSection
+                                    number={1}
+                                    title="Identity"
+                                    filled={identityFilled}
+                                    total={2}
+                                    done={identityFilled === 2 && !nameMissing}
+                                >
+                                    <Field
+                                        full
+                                        name="name"
+                                        label="Name"
+                                        required
+                                        value={values.name}
+                                        onChange={handleChange}
+                                        state={nameMissing ? 'invalid' : 'pristine'}
+                                        help={nameMissing ? 'A workplace must have a name.' : 'Shown across the tree, breadcrumbs, and dispatch board.'}
+                                    />
+                                    <Field
+                                        full
+                                        kind="textarea"
+                                        name="description"
+                                        label="Description"
+                                        rows={2}
+                                        value={values.description}
+                                        onChange={handleChange}
+                                    />
+                                </EditorSection>
+                            </Box>
+                        );
+                    }}
                 />
             }
 
@@ -107,4 +112,3 @@ export function WorkplaceDetail({ workplaceId, parents, ...props }) {
         />
     );
 }
-

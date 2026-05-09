@@ -1,0 +1,107 @@
+// HANDOFF · v2 forms.html 04d.1 · multi-section editor. Each section has
+// a header strip with a number circle (or check-mark when complete), title,
+// fill-progress hint, and a chevron. Body is a 2-column field grid.
+// Sections are collapsible; complete sections can collapse to header-only.
+
+.section {
+    border: 1px solid var(--line);
+    border-radius: var(--r-2);
+    background: var(--surface);
+    overflow: hidden;
+    margin-bottom: 14px;
+
+    &:last-child {
+        margin-bottom: 0;
+    }
+}
+
+.header {
+    display: grid;
+    grid-template-columns: 28px 1fr auto auto;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 18px;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+    user-select: none;
+
+    &:hover {
+        background: var(--surface-3);
+    }
+}
+
+.header.collapsed {
+    border-bottom-color: transparent;
+}
+
+.numCircle {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    display: grid;
+    place-items: center;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--ink-3);
+}
+
+.numCircle.done {
+    background: var(--sig-run);
+    border-color: var(--sig-run);
+    color: #fff;
+}
+
+.numCircle.done :global(.MuiSvgIcon-root) {
+    font-size: 14px;
+}
+
+.title {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink-1);
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+}
+
+.fill {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--ink-3);
+    letter-spacing: 0.04em;
+
+    b {
+        color: var(--ink-1);
+        font-weight: 700;
+    }
+}
+
+.chev {
+    color: var(--ink-3);
+    font-size: 20px;
+    line-height: 1;
+    transition: transform 160ms cubic-bezier(.2, .6, .2, 1);
+}
+
+.chev.up {
+    transform: rotate(180deg);
+}
+
+.body {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px 18px;
+    padding: 18px;
+    background: var(--surface);
+}
+
+.body.collapsed {
+    display: none;
+}

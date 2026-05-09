@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useGet } from '../hooks/hooks';
-import { useHistory, useParams, useRouteMatch } from 'react-router-dom';
-import { MasterDetail, reloadMaster, Detail, Info, Editor, InfoItem } from '../MasterDetail';
+import { useParams } from 'react-router-dom';
+import { Detail, Editor } from '../MasterDetail';
 import { ProfileTabs } from './profile/ProfileTabs';
-import { TextField, Box, Chip, Autocomplete } from '@mui/material';
+import { Box, Chip, TextField, Autocomplete } from '@mui/material';
 import { Description as ProfileIcon } from '@mui/icons-material';
+import { Properties, Property } from '../forms/Properties';
+import { EditorSection } from '../forms/EditorSection';
+import { Field } from '../forms/Field';
 
 
 ProfileDetail.propTypes = {
@@ -27,12 +30,23 @@ export function ProfileDetail({ profileId, parents, deletable = true, ...props }
         data = { ...data, name: '', description: '', url: '' };
     }
 
+    const inputs = JSON.parse(data.input || '[]');
+    const outputs = JSON.parse(data.output || '[]');
+    const renderParams = (params) => params.length === 0
+        ? <span style={{ color: 'var(--ink-4)', fontStyle: 'italic' }}>None</span>
+        : (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                {params.map(p => (
+                    <Chip key={p} label={p} size="small" variant="outlined" />
+                ))}
+            </Box>
+        );
+
     return (
         <Detail {...props}
             id={id}
             type={type}
             icon={<ProfileIcon />}
-
             loading={loading}
             error={error}
             data={data}
@@ -40,104 +54,99 @@ export function ProfileDetail({ profileId, parents, deletable = true, ...props }
             subDetail={sub}
             deletable={deletable}
             card={
-                <Info {...props}
-                    data={data}
-                    content={
-                        <>
-                            <InfoItem label="Profiler" value={data.profilerName || 'No profiler attached'} />
-                            <InfoItem label="Input Parameters" xs={12}>
-                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                                    {JSON.parse(data.input || '[]').map((param) => (
-                                        <Chip key={param} label={param} size="small" variant="outlined" sx={{ borderRadius: '4px' }} />
-                                    ))}
-                                    {JSON.parse(data.input || '[]').length === 0 && "—"}
-                                </Box>
-                            </InfoItem>
-                            <InfoItem label="Output Parameters" xs={12}>
-                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                                    {JSON.parse(data.output || '[]').map((param) => (
-                                        <Chip key={param} label={param} size="small" variant="outlined" sx={{ borderRadius: '4px' }} />
-                                    ))}
-                                    {JSON.parse(data.output || '[]').length === 0 && "—"}
-                                </Box>
-                            </InfoItem>
-                        </>
-                    }
-                />
+                <Properties>
+                    <Property
+                        label="Profiler"
+                        value={data.profilerName}
+                        muted={!data.profilerName}
+                        placeholder="No profiler attached"
+                        full
+                    />
+                    <Property
+                        label="Input parameters"
+                        full
+                        multiline
+                    >
+                        {renderParams(inputs)}
+                    </Property>
+                    <Property
+                        label="Output parameters"
+                        full
+                        multiline
+                    >
+                        {renderParams(outputs)}
+                    </Property>
+                </Properties>
             }
             editor={
                 <Editor {...props}
                     data={data}
                     setData={setData}
                     onUpdate={props.onUpdate}
-                    content={({ values, handleChange }) => (
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                            <TextField
-                                fullWidth
-                                label="Name"
-                                name="name"
-                                value={values.name || ''}
-                                onChange={handleChange}
-                                size="small"
-                            />
-                            <TextField
-                                fullWidth
-                                label="Description"
-                                name="description"
-                                value={values.description || ''}
-                                onChange={handleChange}
-                                size="small"
-                                multiline
-                                rows={2}
-                            />
-                            <Autocomplete
-                                multiple
-                                freeSolo
-                                options={[]}
-                                value={JSON.parse(values.input || '[]')}
-                                onChange={(event, newValue) => {
-                                    handleChange({ target: { name: 'input', value: JSON.stringify(newValue) } });
-                                }}
-                                renderTags={(value, getTagProps) =>
-                                    value.map((option, index) => (
-                                        <Chip 
-                                            variant="outlined" 
-                                            label={option} 
-                                            size="small" 
-                                            sx={{ borderRadius: '4px' }} 
-                                            {...getTagProps({ index })} 
-                                        />
-                                    ))
-                                }
-                                renderInput={(params) => (
-                                    <TextField {...params} label="Input Parameters" placeholder="Add parameters..." size="small" />
-                                )}
-                            />
-                            <Autocomplete
-                                multiple
-                                freeSolo
-                                options={[]}
-                                value={JSON.parse(values.output || '[]')}
-                                onChange={(event, newValue) => {
-                                    handleChange({ target: { name: 'output', value: JSON.stringify(newValue) } });
-                                }}
-                                renderTags={(value, getTagProps) =>
-                                    value.map((option, index) => (
-                                        <Chip 
-                                            variant="outlined" 
-                                            label={option} 
-                                            size="small" 
-                                            sx={{ borderRadius: '4px' }} 
-                                            {...getTagProps({ index })} 
-                                        />
-                                    ))
-                                }
-                                renderInput={(params) => (
-                                    <TextField {...params} label="Output Parameters" placeholder="Add parameters..." size="small" />
-                                )}
-                            />
-                        </Box>
-                    )}
+                    content={({ values, handleChange }) => {
+                        const identityFilled = [values.name, values.description]
+                            .filter(v => v && String(v).trim().length > 0).length;
+                        const inputArr = JSON.parse(values.input || '[]');
+                        const outputArr = JSON.parse(values.output || '[]');
+                        const paramsFilled = (inputArr.length > 0 ? 1 : 0) + (outputArr.length > 0 ? 1 : 0);
+                        const nameMissing = !!values.id && (!values.name || !values.name.trim());
+
+                        return (
+                            <Box>
+                                <EditorSection
+                                    number={1}
+                                    title="Identity"
+                                    filled={identityFilled}
+                                    total={2}
+                                    done={identityFilled === 2 && !nameMissing}
+                                >
+                                    <Field
+                                        full
+                                        name="name"
+                                        label="Name"
+                                        required
+                                        value={values.name}
+                                        onChange={handleChange}
+                                        state={nameMissing ? 'invalid' : 'pristine'}
+                                        help={nameMissing ? 'A profile must have a name.' : 'Shown across the tree, breadcrumbs, and process bindings.'}
+                                    />
+                                    <Field
+                                        full
+                                        kind="textarea"
+                                        name="description"
+                                        label="Description"
+                                        rows={2}
+                                        value={values.description}
+                                        onChange={handleChange}
+                                    />
+                                </EditorSection>
+
+                                <EditorSection
+                                    number={2}
+                                    title="Parameters"
+                                    filled={paramsFilled}
+                                    total={2}
+                                    done={paramsFilled === 2}
+                                    fillNote={paramsFilled < 2 ? 'declare inputs and outputs' : undefined}
+                                >
+                                    <ParamsField
+                                        label="Input parameters"
+                                        name="input"
+                                        value={inputArr}
+                                        onChange={(v) => handleChange({ target: { name: 'input', value: JSON.stringify(v) } })}
+                                        help="Names of parameters this profile consumes from upstream operations."
+                                    />
+                                    <ParamsField
+                                        label="Output parameters"
+                                        name="output"
+                                        value={outputArr}
+                                        onChange={(v) => handleChange({ target: { name: 'output', value: JSON.stringify(v) } })}
+                                        help="Names of parameters this profile produces for downstream consumers."
+                                    />
+                                </EditorSection>
+                            </Box>
+                        );
+                    }}
                 />
             }
 
@@ -148,3 +157,34 @@ export function ProfileDetail({ profileId, parents, deletable = true, ...props }
     );
 }
 
+// Parameter chip-list editor — keeps MUI Autocomplete (freeSolo + chips) wrapped
+// in a v2-style label/help frame so it sits alongside the Field primitives.
+function ParamsField({ label, name, value, onChange, help }) {
+    return (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: '5px', gridColumn: '1 / -1' }}>
+            <span style={{
+                fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700,
+                textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--ink-3)'
+            }}>{label}</span>
+            <Autocomplete
+                multiple
+                freeSolo
+                size="small"
+                options={[]}
+                value={value}
+                onChange={(event, newValue) => onChange(newValue)}
+                renderTags={(vals, getTagProps) =>
+                    vals.map((option, index) => (
+                        <Chip variant="outlined" label={option} size="small" {...getTagProps({ index })} />
+                    ))
+                }
+                renderInput={(params) => (
+                    <TextField {...params} name={name} placeholder="Add parameter and press Enter" />
+                )}
+            />
+            {help && <span style={{
+                fontFamily: 'var(--font-sans)', fontSize: 11.5, color: 'var(--ink-3)'
+            }}>{help}</span>}
+        </Box>
+    );
+}

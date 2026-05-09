@@ -1,15 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useGet } from '../hooks/hooks';
-import { useHistory, useParams, useRouteMatch } from 'react-router-dom';
-import { MasterDetail, reloadMaster, Detail, Info, Editor, InfoItem } from '../MasterDetail';
+import { useHistory, useParams } from 'react-router-dom';
+import { Detail, Editor } from '../MasterDetail';
 import { WorkbenchDevicesTab } from './workplace/WorkbenchDevicesTab';
-import { Box, Button as MuiButton, Typography, Grid, TextField } from '@mui/material';
+import { Box, Button as MuiButton, Typography } from '@mui/material';
 import { PlayArrow as PlayIcon, Handyman as WorkbenchIcon } from '@mui/icons-material';
 import axios from 'axios';
 import api from '../api';
 import { useDispatch } from 'react-redux';
 import { setProcess, setWorkbench } from '../../slices/newOperationSlice.ts';
+import { Properties, Property } from '../forms/Properties';
+import { EditorSection } from '../forms/EditorSection';
+import { Field } from '../forms/Field';
 
 
 WorkbenchDetail.propTypes = {
@@ -42,6 +45,8 @@ export function WorkbenchDetail({ workbenchId, parents, ...props }) {
         data = { ...data, name: '', description: '', url: '' };
     }
 
+    const showProperties = !!data.commonUid;
+
     return (
         <Detail {...props}
             id={id}
@@ -54,79 +59,83 @@ export function WorkbenchDetail({ workbenchId, parents, ...props }) {
             subDetail={sub}
             copyable={false}
             deletable={false}
-            card={
-                <Info {...props}
-                    data={data}
-                    title="Workbench Details"
-                    content={
-                        <>
-                            <InfoItem label="Name" value={data.name} />
-                            <InfoItem label="Description" value={data.description} />
-                            {data.commonUid && <InfoItem label="Common UID" value={data.commonUid} />}
-                        </>
-                    }
-                />
-            }
+            card={showProperties ? (
+                <Properties>
+                    <Property label="Common UID" value={data.commonUid} mono />
+                </Properties>
+            ) : null}
             relations={
                 <Box>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', fontSize: '12px', letterSpacing: '0.5px' }}>
-                            Device Configurations
+                        <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'var(--ink-3)', textTransform: 'uppercase', fontSize: '11px', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>
+                            Device configurations
                         </Typography>
-                        <MuiButton 
-                            variant="contained" 
-                            color="primary" 
-                            startIcon={<PlayIcon />} 
+                        <MuiButton
+                            variant="contained"
+                            color="primary"
+                            startIcon={<PlayIcon />}
                             onClick={onOperationStart}
                             size="small"
-                            sx={{ textTransform: 'none', borderRadius: '4px' }}
                         >
-                            Start Operation
+                            Start operation
                         </MuiButton>
                     </Box>
                     <WorkbenchDevicesTab id={parseInt(id)} processId={data.processId} api={props.api} onDetailSelected={setSub} />
                 </Box>
             }
             editor={
-
                 <Editor {...props}
                     data={data}
                     setData={setData}
                     onUpdate={props.onUpdate}
-                    content={({ values, handleChange }) => (
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                            <TextField
-                                fullWidth
-                                label="Name"
-                                name="name"
-                                value={values.name || ''}
-                                onChange={handleChange}
-                                size="small"
-                            />
-                            <TextField
-                                fullWidth
-                                label="Description"
-                                name="description"
-                                value={values.description || ''}
-                                onChange={handleChange}
-                                size="small"
-                                multiline
-                                rows={2}
-                            />
-                            <TextField
-                                fullWidth
-                                label="Common UID"
-                                name="commonUid"
-                                value={values.commonUid || ''}
-                                onChange={handleChange}
-                                size="small"
-                            />
-                        </Box>
-                    )}
+                    content={({ values, handleChange }) => {
+                        const identityFilled = [values.name, values.description, values.commonUid]
+                            .filter(v => v && String(v).trim().length > 0).length;
+                        const nameMissing = !!values.id && (!values.name || !values.name.trim());
+
+                        return (
+                            <Box>
+                                <EditorSection
+                                    number={1}
+                                    title="Identity"
+                                    filled={identityFilled}
+                                    total={3}
+                                    done={identityFilled === 3 && !nameMissing}
+                                >
+                                    <Field
+                                        full
+                                        name="name"
+                                        label="Name"
+                                        required
+                                        value={values.name}
+                                        onChange={handleChange}
+                                        state={nameMissing ? 'invalid' : 'pristine'}
+                                        help={nameMissing ? 'A workbench must have a name.' : 'Shown across the tree, breadcrumbs, and dispatch board.'}
+                                    />
+                                    <Field
+                                        full
+                                        kind="textarea"
+                                        name="description"
+                                        label="Description"
+                                        rows={2}
+                                        value={values.description}
+                                        onChange={handleChange}
+                                    />
+                                    <Field
+                                        full
+                                        name="commonUid"
+                                        label="Common UID"
+                                        value={values.commonUid}
+                                        onChange={handleChange}
+                                        placeholder="e.g. WB-014-A"
+                                        help="Stable identifier shared with external systems (ERP, MES). Optional."
+                                    />
+                                </EditorSection>
+                            </Box>
+                        );
+                    }}
                 />
             }
         />
     );
 }
-
-

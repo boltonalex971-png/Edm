@@ -31,7 +31,11 @@ export const SubRootPage = ({ title, menuItems, children }) => {
 
     return (
         <>
-            <div className="doc-crumbs" data-sticky-header="true">
+            <div
+                className="doc-crumbs"
+                data-sticky-header="true"
+                data-squeezed={isSqueezed ? 'true' : 'false'}
+            >
                 <span className="sep">/</span>
                 {crumbSegments.length === 0
                     ? <span>Home</span>

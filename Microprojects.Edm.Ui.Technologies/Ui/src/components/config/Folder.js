@@ -1,11 +1,14 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { useGet } from '../hooks/hooks';
-import { Detail, Info, Editor, InfoItem } from '../MasterDetail';
+import { Detail, Editor } from '../MasterDetail';
 import { useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { TextField, FormControl, InputLabel, Select, MenuItem, Box } from '@mui/material';
+import { Box } from '@mui/material';
 import { Folder as FolderIcon } from '@mui/icons-material';
+import { Properties, Property } from '../forms/Properties';
+import { EditorSection } from '../forms/EditorSection';
+import { Field } from '../forms/Field';
 
 Folder.propTypes = {
     onChange: PropTypes.func,
@@ -31,61 +34,75 @@ export function Folder(props) {
             loading={loading}
             error={error}
             data={data}
-            card={
-                <Info {...props}
-                    data={data}
-                    content={
-                        <>
-                            <InfoItem label="Folder Name" value={data.name} />
-                            <InfoItem label="Description" value={data.description} />
-                            {data.group && <InfoItem label="Division" value={data.group} />}
-                        </>
-                    }
-                />
-            }
+            card={data.group ? (
+                <Properties>
+                    <Property label="Division" value={data.group} />
+                </Properties>
+            ) : null}
             editor={
                 <Editor {...props}
                     type={type}
                     data={data}
                     setData={setData}
-                    content={({ values, handleChange }) => (
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                            <TextField
-                                fullWidth
-                                label="Name"
-                                name="name"
-                                value={values.name || ''}
-                                onChange={handleChange}
-                                size="small"
-                            />
-                            <TextField
-                                fullWidth
-                                label="Description"
-                                name="description"
-                                value={values.description || ''}
-                                onChange={handleChange}
-                                size="small"
-                                multiline
-                                rows={2}
-                            />
-                            <FormControl fullWidth size="small">
-                                <InputLabel>Division</InputLabel>
-                                <Select
-                                    name="group"
-                                    value={values.group || ''}
-                                    onChange={handleChange}
-                                    label="Division"
+                    content={({ values, handleChange }) => {
+                        const identityFilled = [values.name, values.description]
+                            .filter(v => v && String(v).trim().length > 0).length;
+                        const nameMissing = !!values.id && (!values.name || !values.name.trim());
+                        const divisions = user?.divisions || [];
+
+                        return (
+                            <Box>
+                                <EditorSection
+                                    number={1}
+                                    title="Identity"
+                                    filled={identityFilled}
+                                    total={2}
+                                    done={identityFilled === 2 && !nameMissing}
                                 >
-                                    <MenuItem value=""><em>None</em></MenuItem>
-                                    {user?.divisions?.map((division) => (
-                                        <MenuItem key={division} value={division}>
-                                            {division}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-                        </Box>
-                    )}
+                                    <Field
+                                        full
+                                        name="name"
+                                        label="Name"
+                                        required
+                                        value={values.name}
+                                        onChange={handleChange}
+                                        state={nameMissing ? 'invalid' : 'pristine'}
+                                        help={nameMissing ? 'A folder must have a name.' : 'Shown in the master tree.'}
+                                    />
+                                    <Field
+                                        full
+                                        kind="textarea"
+                                        name="description"
+                                        label="Description"
+                                        rows={2}
+                                        value={values.description}
+                                        onChange={handleChange}
+                                    />
+                                </EditorSection>
+
+                                {divisions.length > 0 && (
+                                    <EditorSection
+                                        number={2}
+                                        title="Organization"
+                                        filled={values.group ? 1 : 0}
+                                        total={1}
+                                        done={!!values.group}
+                                    >
+                                        <Field
+                                            full
+                                            kind="select"
+                                            name="group"
+                                            label="Division"
+                                            value={values.group}
+                                            onChange={handleChange}
+                                            placeholder="No division"
+                                            options={divisions.map(d => ({ value: d, label: d }))}
+                                        />
+                                    </EditorSection>
+                                )}
+                            </Box>
+                        );
+                    }}
                 />
             }
         />

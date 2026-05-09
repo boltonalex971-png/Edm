@@ -2,11 +2,14 @@ import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useGet } from '../hooks/hooks';
 import { useHistory, useParams, useRouteMatch } from 'react-router-dom';
-import { MasterDetail, reloadMaster, Detail, Info, Editor, InfoItem } from '../MasterDetail';
+import { MasterDetail, reloadMaster, Detail, Editor } from '../MasterDetail';
 import { DeviceTabs } from './device/DeviceTabs';
 import Api from '../api';
-import { TextField, FormControl, InputLabel, Select, MenuItem, Box, Autocomplete } from '@mui/material';
+import { Box } from '@mui/material';
 import { Memory as MemoryIcon } from '@mui/icons-material';
+import { Properties, Property } from '../forms/Properties';
+import { EditorSection } from '../forms/EditorSection';
+import { Field } from '../forms/Field';
 
 export function Devices() {
     const history = useHistory();
@@ -45,7 +48,7 @@ export function DeviceDetail({ deviceId, parents, ...props }) {
     let [[data, setData], loading, error] = useGet(`${props.api}/${id}`, [id]);
     const [[models]] = useGet(`${props.api}/models`, []);
     const [[drivers]] = useGet(`${props.api}/drivers`, []);
-    
+
     data = data || {};
     return (
         <Detail {...props}
@@ -57,70 +60,88 @@ export function DeviceDetail({ deviceId, parents, ...props }) {
             loading={loading}
             error={error}
             data={data}
-            card={(
-                <Info {...props}
-                    data={data}
-                    content={
-                        <>
-                            <InfoItem label="Driver" value={data.driverName} />
-                            <InfoItem label="Device Type" value={data.profilerName || 'Any'} />
-                        </>
-                    }
-                />
-            )}
+            card={
+                <Properties>
+                    <Property label="Driver" value={data.driverName} muted={!data.driverName} placeholder="No driver" />
+                    <Property label="Device type" value={data.profilerName} muted={!data.profilerName} placeholder="Any" />
+                    <Property label="Model" value={data.model} mono placeholder="—" />
+                </Properties>
+            }
             editor={
                 <Editor {...props}
                     data={data}
                     setData={setData}
                     onUpdate={props.onUpdate}
-                    content={({ values, handleChange }) => (
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                            <TextField
-                                fullWidth
-                                label="Name"
-                                name="name"
-                                value={values.name || ''}
-                                onChange={handleChange}
-                                size="small"
-                            />
-                            <TextField
-                                fullWidth
-                                label="Description"
-                                name="description"
-                                value={values.description || ''}
-                                onChange={handleChange}
-                                size="small"
-                                multiline
-                                rows={2}
-                            />
-                            <Autocomplete
-                                fullWidth
-                                size="small"
-                                options={models || []}
-                                value={values.model || ''}
-                                onChange={(event, newValue) => {
-                                    handleChange({ target: { name: 'model', value: newValue } });
-                                }}
-                                renderInput={(params) => <TextField {...params} label="Model" />}
-                            />
-                            <FormControl fullWidth size="small">
-                                <InputLabel>Driver</InputLabel>
-                                <Select
-                                    name="driverGuid"
-                                    value={values.driverGuid || ''}
-                                    onChange={handleChange}
-                                    label="Driver"
+                    content={({ values, handleChange }) => {
+                        const identityFilled = [values.name, values.description]
+                            .filter(v => v && String(v).trim().length > 0).length;
+                        const hardwareFilled = [values.model, values.driverGuid]
+                            .filter(v => v && String(v).trim().length > 0).length;
+                        const nameMissing = !!values.id && (!values.name || !values.name.trim());
+                        const driverMissing = !!values.id && !values.driverGuid;
+
+                        return (
+                            <Box>
+                                <EditorSection
+                                    number={1}
+                                    title="Identity"
+                                    filled={identityFilled}
+                                    total={2}
+                                    done={identityFilled === 2 && !nameMissing}
                                 >
-                                    <MenuItem value=""><em>None</em></MenuItem>
-                                    {drivers?.map((driver) => (
-                                        <MenuItem key={driver.guid} value={driver.guid}>
-                                            {driver.name}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-                        </Box>
-                    )}
+                                    <Field
+                                        full
+                                        name="name"
+                                        label="Name"
+                                        required
+                                        value={values.name}
+                                        onChange={handleChange}
+                                        state={nameMissing ? 'invalid' : 'pristine'}
+                                        help={nameMissing ? 'A device must have a name.' : 'Shown in the master tree and in workplace device-config rows.'}
+                                    />
+                                    <Field
+                                        full
+                                        kind="textarea"
+                                        name="description"
+                                        label="Description"
+                                        rows={2}
+                                        value={values.description}
+                                        onChange={handleChange}
+                                    />
+                                </EditorSection>
+
+                                <EditorSection
+                                    number={2}
+                                    title="Hardware"
+                                    filled={hardwareFilled}
+                                    total={2}
+                                    done={hardwareFilled === 2 && !driverMissing}
+                                >
+                                    <Field
+                                        kind="select"
+                                        name="model"
+                                        label="Model"
+                                        value={values.model}
+                                        onChange={handleChange}
+                                        placeholder="Select model"
+                                        options={(models || []).map(m => ({ value: m, label: m }))}
+                                    />
+                                    <Field
+                                        kind="select"
+                                        name="driverGuid"
+                                        label="Driver"
+                                        required
+                                        value={values.driverGuid}
+                                        onChange={handleChange}
+                                        placeholder="Select driver"
+                                        options={(drivers || []).map(d => ({ value: d.guid, label: d.name }))}
+                                        state={driverMissing ? 'invalid' : 'pristine'}
+                                        help={driverMissing ? 'Pick the driver that talks to this device.' : undefined}
+                                    />
+                                </EditorSection>
+                            </Box>
+                        );
+                    }}
                 />
             }
             relations={

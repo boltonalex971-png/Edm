@@ -1,0 +1,69 @@
+// HANDOFF · v2 patterns.html PAT-01 zone 2 · Properties grid. 2-column,
+// mono-eyebrow label above value, 12 px row gap, 24 px column gap,
+// ellipsis on overflow. Used inside the Detail's `card` slot to render
+// entity-field key/value pairs.
+
+.properties {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px 24px;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 16px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-2);
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+
+    &.full {
+        grid-column: 1 / -1;
+    }
+}
+
+.label {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--ink-3);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+}
+
+.value {
+    font-size: 13px;
+    color: var(--ink-1);
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    &.mono {
+        font-family: var(--font-mono);
+        font-weight: 600;
+    }
+
+    &.muted {
+        color: var(--ink-3);
+        font-weight: 400;
+    }
+
+    // Multi-line wrap for long-form text (descriptions, notes). Drops the
+    // ellipsis; row height grows to fit content.
+    &.multiline {
+        white-space: normal;
+        line-height: 1.45;
+        text-overflow: clip;
+    }
+}
+
+.placeholder {
+    color: var(--ink-4);
+    font-weight: 400;
+    font-style: italic;
+}
