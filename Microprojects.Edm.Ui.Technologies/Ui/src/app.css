@@ -49,11 +49,42 @@
     text-decoration: none;
     text-transform: uppercase;
     font-weight: 600;
+    /* Anchor for the nudge dot. */
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .page-footer .footer-link:hover {
     color: var(--accent);
     text-decoration: none;
+}
+
+/* HANDOFF · v2 chrome.html footer · "What's new" red-dot nudge. 7 px
+   signal-fault dot with a soft ring; gentle pulse so it draws the eye
+   without nagging. Cleared once the user opens /changes (Layout.js
+   writes the version to localStorage). */
+.page-footer .footer-link .nudge-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--sig-fault);
+    box-shadow: 0 0 0 2px var(--sig-fault-soft);
+    animation: nudge-pulse 2.4s ease-in-out infinite;
+}
+
+.page-footer .footer-link.has-nudge {
+    color: var(--ink-1);
+}
+
+@keyframes nudge-pulse {
+    0%, 70%, 100% { box-shadow: 0 0 0 2px var(--sig-fault-soft); }
+    35%           { box-shadow: 0 0 0 4px var(--sig-fault-soft); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .page-footer .footer-link .nudge-dot { animation: none; }
 }
 
 .version-chip {
