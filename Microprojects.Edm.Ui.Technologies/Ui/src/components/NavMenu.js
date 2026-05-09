@@ -28,6 +28,7 @@ import axios from 'axios';
 import api from './api';
 import { appRoles } from '../ApiContext';
 import { displayUserName, userInitials } from './utils/userName';
+import { useConnectionState, STATUS_TO_PIP } from './realtime/useConnectionState';
 import applogo from '../assets/applogo.svg';
 
 const ROLES = {
@@ -36,16 +37,14 @@ const ROLES = {
     [appRoles.operator]: { label: 'Operator', icon: <OperatorIcon fontSize="small" /> }
 };
 
-// IMPROVISED · v2 04f.4 chrome demands a connection pip. Real status will
-// come from useConnectionState (Phase F) once the SignalR lifecycle is
-// surfaced; for now the pip is hardcoded to 'connected' so the slot ships.
-const CONNECTION_STATUS = { kind: 'connected', label: 'Live' };
-
 export const NavMenu = () => {
     const user = useSelector(s => s.user);
     const location = useLocation();
     const [userMenuAnchor, setUserMenuAnchor] = useState(null);
     const [roleMenuAnchor, setRoleMenuAnchor] = useState(null);
+    /* HANDOFF · v2 04f.4 · live SignalR status drives the chrome pip. */
+    const { status: connStatus } = useConnectionState(`${api.baseUrl}/hub`);
+    const pip = STATUS_TO_PIP[connStatus];
 
     const setRole = (role) =>
         axios.put(`${api.auth}/user/role`, JSON.stringify(role), { headers: { 'Content-Type': 'application/json' } })
@@ -111,9 +110,9 @@ export const NavMenu = () => {
                 </button>
             )}
 
-            <span className={`tb-pip ${CONNECTION_STATUS.kind}`}>
+            <span className={`tb-pip ${pip.kind}`} title={`Hub status: ${pip.label.toLowerCase()}`}>
                 <span className="dot" />
-                <span className="tb-pip-text">{CONNECTION_STATUS.label}</span>
+                <span className="tb-pip-text">{pip.label}</span>
             </span>
 
             {user?.name && (
