@@ -1,6 +1,125 @@
+// HANDOFF · v2 PAT-04 (dashboard) × PAT-02 (dispatch board ticket).
+// Operations are rendered as v2 tickets — surface card with a 3 px
+// signal-tinted left rail. The whole-card tinting from v1 is gone:
+// status hue rides on the rail and the badge only.
+
+// --- Toolbar (period tabs + auto-refresh hint) ---------------------------
+.toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 0 0 16px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 16px;
+}
+
+.periodTabs {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+}
+
+.periodTab {
+    background: transparent;
+    border: 0;
+    padding: 8px 14px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-3);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: color 120ms ease, border-color 120ms ease;
+}
+
+.periodTab:hover {
+    color: var(--ink-1);
+}
+
+.periodTab.active {
+    color: var(--ink-1);
+    border-bottom-color: var(--accent);
+    font-weight: 700;
+}
+
+.periodTab .count {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    background: var(--surface-3);
+    color: var(--ink-3);
+    padding: 1px 6px;
+    border-radius: var(--r-pill);
+    line-height: 1.4;
+}
+
+.periodTab.active .count {
+    background: var(--accent-tint);
+    color: var(--accent-deep);
+}
+
+.refreshHint {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-4);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.refreshHint :global(.MuiSvgIcon-root) {
+    font-size: 14px;
+}
+
+// --- Empty state (per v2 04c.3 — icon-in-circle on surface-2) -----------
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    gap: 12px;
+    text-align: center;
+}
+
+.emptyIcon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--surface-2);
+    color: var(--ink-4);
+    display: grid;
+    place-items: center;
+}
+
+.emptyIcon :global(.MuiSvgIcon-root) {
+    font-size: 32px;
+}
+
+.emptyTitle {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ink-1);
+    letter-spacing: -0.01em;
+}
+
+.emptyHelp {
+    font-size: 13px;
+    color: var(--ink-3);
+    max-width: 360px;
+    line-height: 1.5;
+}
+
+// --- Card grid -----------------------------------------------------------
 .cardGrid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(max(180px, calc(100% / 5 - 12px)), 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     gap: 12px;
     width: 100%;
 }
@@ -8,103 +127,154 @@
 .opCard {
     display: flex;
     flex-direction: column;
-    height: 180px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--ink-4);
+    border-radius: var(--r-2);
+    box-shadow: var(--elev-1);
     cursor: pointer;
+    overflow: hidden;
+    transition:
+        transform 160ms cubic-bezier(.2, .6, .2, 1),
+        box-shadow 160ms cubic-bezier(.2, .6, .2, 1),
+        border-color 160ms cubic-bezier(.2, .6, .2, 1);
+    min-height: 132px;
     position: relative;
-    transition: transform var(--dur-2) var(--ease-std), box-shadow var(--dur-2) var(--ease-std), border-color var(--dur-2) var(--ease-std);
-    border: 1px solid var(--line) !important;
-    border-radius: var(--r-2) !important;
-    box-shadow: var(--elev-1) !important;
-    background: var(--surface) !important;
-    width: 100%;
+}
+
+.opCard:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--elev-2);
+    border-color: var(--accent);
+}
+
+.opCard:hover .opCardHead {
+    background: var(--accent-tint);
+}
+
+// Per-state left rail.
+.opCard.run        { border-left-color: var(--sig-run); }
+.opCard.queued     { border-left-color: var(--sig-queued); }
+.opCard.warn       { border-left-color: var(--sig-warn); }
+.opCard.fault      { border-left-color: var(--sig-fault); }
+.opCard.idle       { border-left-color: var(--sig-idle); }
+.opCard.done       { border-left-color: var(--ink-4); }
+
+// Loading-skeleton variant — no signal rail (the state isn't known yet),
+// no hover affordance (placeholders aren't clickable). MUI Skeleton
+// inside provides the pulse animation.
+.opCard.skeleton {
+    cursor: default;
+    border-left-color: var(--line);
 
     &:hover {
-        transform: translateY(-1px);
-        box-shadow: var(--elev-2) !important;
-        border-color: var(--accent) !important;
+        transform: none;
+        box-shadow: var(--elev-1);
+        border-color: var(--line);
     }
 
-    // Status overlay — left stripe in the calibrated signal color +
-    // a soft tint background so the run state is legible at a glance.
-    &.faulted {
-        background: var(--sig-fault-soft) !important;
-        border-left: 4px solid var(--sig-fault) !important;
-    }
-
-    &.idle,
-    &.scheduled {
-        background: var(--sig-warn-soft) !important;
-        border-left: 4px solid var(--sig-warn) !important;
-    }
-
-    &.inProgress {
-        background: var(--sig-run-soft) !important;
-        border-left: 4px solid var(--sig-run) !important;
-    }
-
-    &.completed,
-    &.cancelled {
-        background: var(--surface-2) !important;
-        border-left: 4px solid var(--ink-4) !important;
+    &:hover .opCardHead {
+        background: var(--surface-2);
     }
 }
 
-.moreBtn {
+// --- Card head (eyebrow ID · status badge · more) -----------------------
+.opCardHead {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 6px 8px 12px;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--line-soft);
+    transition: background 160ms ease;
+}
+
+.opCardId {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-3);
+}
+
+.opCardBadgeWrap {
+    display: flex;
+    justify-content: center;
+}
+
+.opCardMore {
     color: var(--ink-3) !important;
-    margin-right: -8px !important;
+    width: 28px !important;
+    height: 28px !important;
+
+    &:hover {
+        background: var(--surface-3) !important;
+        color: var(--ink-1) !important;
+    }
 }
 
-.cardContent {
-    padding: 0 12px 12px !important;
+// --- Card body (process name + location) --------------------------------
+.opCardBody {
+    flex: 1;
+    padding: 12px 14px 8px;
     display: flex;
     flex-direction: column;
-    height: calc(100% - 32px);
+    gap: 6px;
+    min-height: 0;
 }
 
-.headerRow {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 2px 4px 2px 12px;
-    background: rgba(14, 22, 32, 0.04);
-    border-bottom: 1px solid var(--line-soft);
-    min-height: 32px;
-}
-
-.processName {
-    font-size: 15px !important;
-    font-weight: 700 !important;
-    line-height: 1.15 !important;
-    margin-top: 8px !important;
-    margin-bottom: 4px !important;
+.opCardTitle {
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.25;
     color: var(--ink-1);
+    letter-spacing: -0.005em;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    height: 2.2rem;
 }
 
-.metaRow {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    flex: 1;
+.opCardLocation {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--font-mono);
+    font-size: 11px;
     color: var(--ink-3);
-    font-size: 12.5px;
+    letter-spacing: 0.02em;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
-.statusLabel {
-    margin-top: auto !important;
-    font-family: var(--font-mono) !important;
-    font-weight: 700 !important;
-    text-transform: uppercase;
-    font-size: 10.5px !important;
-    letter-spacing: 0.06em;
+.opCardLocation :global(.MuiSvgIcon-root) {
+    font-size: 13px;
+    color: var(--ink-4);
+}
 
-    &.faulted { color: var(--sig-fault-deep); }
-    &.idle,
-    &.scheduled { color: var(--sig-warn-deep); }
-    &.inProgress { color: var(--sig-run-deep); }
-    &.default { color: var(--ink-3); }
+// --- Card foot (single-line meta) ---------------------------------------
+.opCardFoot {
+    padding: 6px 14px 10px;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-4);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-top: 1px solid var(--line-soft);
+    background: var(--surface);
+}
+
+.opCardFoot .footLabel {
+    color: var(--ink-4);
+}
+
+.opCardFoot .footValue {
+    color: var(--ink-2);
+    font-weight: 600;
 }
