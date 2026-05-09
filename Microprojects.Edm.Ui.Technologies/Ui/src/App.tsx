@@ -12,6 +12,7 @@ import {roleAttr} from './styles/role';
 import api from "./components/api";
 import {ToastProvider} from "./components/states/Toast";
 import {AuthInterstitial} from "./components/auth/AuthInterstitial";
+import {displayUserName} from "./components/utils/userName";
 import {readDensity, densityClass} from "./styles/density";
 import {readScheme} from "./styles/scheme";
 
@@ -63,7 +64,7 @@ export default function App() {
                             </>
                         }
                         {user && !userRole &&
-                            <AuthInterstitial kind="no-role" user={user}/>
+                            <AuthInterstitial kind="no-role" user={displayUserName(user)}/>
                         }
                         {!user &&
                             <AuthInterstitial kind="signin"/>

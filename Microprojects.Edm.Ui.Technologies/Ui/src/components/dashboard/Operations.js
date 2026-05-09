@@ -19,7 +19,7 @@ import {Loading, dateToHumanSpan, utcDateToLocal} from '../utils/Utils';
 import {useParams, useLocation, useHistory} from "react-router-dom";
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import Axios from "axios";
-import {useDialog} from "../hooks/DialogHooks.js";
+import {useToast} from "../states/Toast";
 import styles from './Operations.module.scss';
 
 let interval;
@@ -53,7 +53,7 @@ const OperationsWhen = ({period}) => {
     const [menu, setMenu] = useState(null);
     const [time, setTime] = useState();
     const [[operations]] = useGet(`${api.operations}/${period}`, [time, period], null, true);
-    const {dialog, alert} = useDialog()
+    const toast = useToast();
 
     const openCardMenu = (ev, operationId) => {
         ev.stopPropagation();
@@ -62,17 +62,15 @@ const OperationsWhen = ({period}) => {
     const closeCardMenu = (ev) => {
         setMenu(null);
     }
+    const errorOf = (error, fallback) =>
+        error.response?.data?.detail || error.response?.data?.title || error.message || fallback;
     const completeOperation = (ev) => {
         Axios.post(`${api.operations}/${menu.id}/complete`)
             .then(() => {
+                toast.success('Operation completed');
                 setTime(Date.now());
             })
-            .catch((error) => {
-                alert({
-                    target: menu.target,
-                    message: error.response?.data?.detail || error.message,
-                })
-            })
+            .catch((error) => toast.error(errorOf(error, 'Failed to complete operation')))
             .finally(() => setMenu(null));
     }
     const copyOperation = (ev) => {
@@ -80,9 +78,7 @@ const OperationsWhen = ({period}) => {
             .then((response) => {
                 window.open(spaUrl(`/operations/${response.data.id}`), '_blank');
             })
-            .catch((error) => {
-                alert({target: menu.target, message: error.response?.data?.detail || error.message});
-            })
+            .catch((error) => toast.error(errorOf(error, 'Failed to copy operation')))
             .finally(() => setMenu(null));
     };
 
@@ -115,7 +111,6 @@ const OperationsWhen = ({period}) => {
 
     return (
         <>
-            {dialog}
             {operations?.length === 0 &&
                 <Typography sx={{ p: 4, textAlign: 'center', color: 'text.secondary' }}>
                     {period === 'today' ?

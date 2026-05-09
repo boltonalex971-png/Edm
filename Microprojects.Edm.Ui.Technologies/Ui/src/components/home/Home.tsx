@@ -9,6 +9,7 @@ import {
     Extension as ExtensionIcon
 } from '@mui/icons-material';
 import { appRoles } from '../../ApiContext';
+import { displayUserName } from '../utils/userName';
 import styles from './Home.module.scss';
 import type { RootState } from '../../store';
 
@@ -22,7 +23,8 @@ interface LauncherCard {
 }
 
 export function Home() {
-    const user = useSelector((state: RootState) => state.user.name);
+    const userFull = useSelector((state: RootState) => state.user.name);
+    const user = displayUserName(userFull);
     const userRole = useSelector((state: RootState) => state.user.role);
 
     const cards: LauncherCard[] = [
@@ -65,7 +67,7 @@ export function Home() {
     return (
         <Box className={styles.homeContainer}>
             <section className={styles.hero}>
-                <Typography variant="h1">
+                <Typography variant="h1" title={userFull || undefined}>
                     Welcome, {user}
                 </Typography>
                 <Typography variant="body1">

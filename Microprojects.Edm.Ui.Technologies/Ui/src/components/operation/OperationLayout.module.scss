@@ -1,0 +1,324 @@
+// HANDOFF · v2 patterns.html PAT-03 · operator workstation. One job,
+// one screen, touch density, dark by default. Single-row chrome with
+// a left-edge collapse button that hides the whole bar (and floats at
+// top-right when hidden so the operator can bring it back).
+
+.shell {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100%;
+    background: var(--bg);
+    color: var(--ink-1);
+    overflow: hidden;
+    position: relative;
+}
+
+.body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    background: var(--surface);
+
+    iframe {
+        flex: 1;
+        border: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--surface);
+    }
+}
+
+// Chrome — single-row grid: identity · nav · spacer · status cluster ·
+// close · collapse. Right padding leaves room for the rightmost collapse
+// chevron, which always sits at the same x-position regardless of state
+// (so the operator's eye doesn't have to hunt for it).
+.menu {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0 56px 0 18px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    height: 56px;
+    box-sizing: border-box;
+    position: relative;
+    overflow: hidden;
+    transition:
+        height 180ms cubic-bezier(.2, .6, .2, 1),
+        opacity 120ms cubic-bezier(.2, .6, .2, 1),
+        border-bottom-color 120ms cubic-bezier(.2, .6, .2, 1);
+}
+
+// Collapsed: row shrinks to nothing, fades out, border line gone too.
+// Children are clipped (overflow:hidden) so the inner controls don't
+// pile up against the top edge mid-animation.
+.menu[data-collapsed="true"] {
+    height: 0;
+    opacity: 0;
+    border-bottom-color: transparent;
+    pointer-events: none;
+}
+
+// Collapse chevron — anchored to the right edge of the row, vertically
+// centered. Matches the floating "expand" button below in size and
+// position, so both states read the same.
+.collapseInline {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--ink-3);
+    border-radius: var(--r-2);
+    cursor: pointer;
+    transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+
+.collapseInline:hover {
+    background: var(--surface-2);
+    color: var(--ink-1);
+    border-color: var(--line);
+}
+
+// Floating expand button — always mounted; visibility/interactivity
+// is driven by data-visible. Fades in 60 ms after the menu finishes
+// collapsing (180 ms transition + 60 ms delay), and fades out instantly
+// when the operator triggers it (no delay so the menu can start growing
+// immediately). Slides 4 px on enter for a v2-feel ease-in.
+.collapseFloat {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    z-index: 20;
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink-2);
+    border-radius: var(--r-2);
+    cursor: pointer;
+    box-shadow: var(--elev-1);
+    opacity: 0;
+    transform: translateY(-4px);
+    pointer-events: none;
+    transition:
+        opacity 120ms cubic-bezier(.2, .6, .2, 1),
+        transform 180ms cubic-bezier(.2, .6, .2, 1),
+        background 120ms ease,
+        color 120ms ease;
+}
+
+.collapseFloat[data-visible="true"] {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+    transition-delay: 60ms;
+}
+
+.collapseFloat:hover {
+    background: var(--accent-tint);
+    color: var(--accent-deep);
+}
+
+// Identity block — single inline line. `#4611 · Process 1`.
+// The mono code is the eyebrow, the bold name is the title. They share
+// a baseline; the dot separator in between keeps the row legible.
+.identity {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    min-width: 0;
+    flex: 0 1 auto;
+}
+
+.opCode {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--ink-3);
+    flex-shrink: 0;
+}
+
+.opSep {
+    color: var(--ink-4);
+    font-family: var(--font-mono);
+    flex-shrink: 0;
+}
+
+.processName {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink-1);
+    letter-spacing: -0.01em;
+    line-height: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
+
+// Operator name — sits inline after the process name, styled as a mono
+// caption so it reads as ownership context, not as part of the title.
+.operatorName {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-3);
+    letter-spacing: 0.02em;
+    line-height: 1;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+// Touch-comfort gap between nav icons — 10 px keeps fingertips from
+// triggering the wrong target on a 44 px touch ring.
+.navGroup {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 0 0 auto;
+    margin-left: 12px;
+}
+
+.navBtn {
+    width: 36px !important;
+    height: 36px !important;
+    color: var(--ink-3) !important;
+
+    &:hover {
+        background: var(--accent-tint) !important;
+        color: var(--accent-deep) !important;
+    }
+}
+
+.spacer {
+    flex: 1 1 auto;
+    min-width: 12px;
+}
+
+// Right cluster — single row, vertical-center, fixed 38 px controls.
+.cluster {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 0 0 auto;
+}
+
+// Status badge — uses v2 .badge.{run,warn,fault,idle,queued} from tokens.css
+// at the call site. We just constrain height here to match the row.
+.cluster :global(.badge) {
+    height: 24px;
+}
+
+.clock {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-2);
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+
+// Timeline label + value (or datetime picker when Idle). Single row,
+// label stays mono-eyebrow on the left, value/picker on the right.
+.timeline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 38px;
+}
+
+.timelineLabel {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-4);
+    white-space: nowrap;
+}
+
+.timelineValue {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-2);
+    white-space: nowrap;
+}
+
+.startAt {
+    width: 200px;
+
+    :global(.MuiInputBase-root) {
+        height: 38px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+    }
+}
+
+// Touch-friendly action buttons — single height (38 px) so the whole
+// row aligns on one baseline. Tinted by signal palette via modifiers.
+.action {
+    height: 38px !important;
+    min-width: 110px;
+    padding: 0 14px !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    text-transform: none !important;
+    border-radius: var(--r-2) !important;
+}
+
+.action.start {
+    background: var(--sig-run) !important;
+    color: #fff !important;
+    border-color: var(--sig-run) !important;
+
+    &:hover { background: var(--sig-run-deep) !important; border-color: var(--sig-run-deep) !important; }
+}
+
+.action.stop {
+    background: var(--sig-fault) !important;
+    color: #fff !important;
+    border-color: var(--sig-fault) !important;
+
+    &:hover { background: var(--sig-fault-deep) !important; border-color: var(--sig-fault-deep) !important; }
+}
+
+.action.complete {
+    background: transparent !important;
+    color: var(--sig-run-deep) !important;
+    border: 1px solid var(--sig-run) !important;
+
+    &:hover { background: var(--sig-run-soft) !important; }
+}
+
+.action.copy {
+    background: transparent !important;
+    color: var(--ink-1) !important;
+    border: 1px solid var(--line-strong) !important;
+
+    &:hover { background: var(--surface-2) !important; border-color: var(--ink-3) !important; }
+}
+
+.closeBtn {
+    color: var(--ink-3) !important;
+    height: 32px !important;
+    width: 32px !important;
+    margin-left: 4px !important;
+
+    &:hover {
+        background: var(--sig-fault-soft) !important;
+        color: var(--sig-fault-deep) !important;
+    }
+}

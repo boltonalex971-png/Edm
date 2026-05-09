@@ -27,6 +27,7 @@ import { Link, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import api from './api';
 import { appRoles } from '../ApiContext';
+import { displayUserName, userInitials } from './utils/userName';
 import applogo from '../assets/applogo.svg';
 
 const ROLES = {
@@ -65,7 +66,8 @@ export const NavMenu = () => {
         navItems.push({ id: 'plugins', label: 'Plugins', path: '/plugins', icon: <PluginsIcon fontSize="small" /> });
     }
 
-    const initials = user?.name ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'U';
+    const initials = userInitials(user?.name);
+    const userShort = displayUserName(user?.name);
     const activeRole = user?.role ? ROLES[user.role] : null;
 
     return (
@@ -167,8 +169,11 @@ export const NavMenu = () => {
                             {initials}
                         </Avatar>
                         <Box>
-                            <Typography sx={{ fontSize: 13, fontWeight: 700, color: 'var(--ink-1)' }}>
-                                {user.name}
+                            <Typography
+                                title={user.name}
+                                sx={{ fontSize: 13, fontWeight: 700, color: 'var(--ink-1)' }}
+                            >
+                                {userShort}
                             </Typography>
                             <Chip label={user.role} size="small" sx={{ mt: 0.5 }} />
                         </Box>
