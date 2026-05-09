@@ -75,8 +75,8 @@
 
         .MuiTreeItem-root {
             .MuiTreeItem-content {
-                padding-top: 6px;
-                padding-bottom: 6px;
+                padding-top: 2px;
+                padding-bottom: 2px;
                 padding-right: 12px;
                 border-radius: 0;
 
@@ -148,4 +148,37 @@
     color: var(--ink-1);
     font-size: 13px;
     font-weight: 600;
+}
+
+// HANDOFF · v2 04d.7 · drop-target visual feedback. Two states active
+// today (`into` for valid targets, `forbidden` for invalid). The third
+// state (`between`) from the spec maps to sibling reorder, which the
+// data model doesn't support — the tree is folder-only, no explicit
+// ordering — so we omit it. The class lands on the .MuiTreeItem-root
+// wrapper; styling targets the inner .MuiTreeItem-content row.
+.dropInto {
+    :global(.MuiTreeItem-content) {
+        background: var(--accent-tint) !important;
+        box-shadow: inset 0 0 0 2px var(--accent) !important;
+    }
+
+    :global(.MuiTreeItem-label) {
+        color: var(--accent-deep) !important;
+    }
+}
+
+.dropForbid {
+    :global(.MuiTreeItem-content) {
+        background: var(--sig-fault-soft) !important;
+        box-shadow: inset 0 0 0 2px var(--sig-fault) !important;
+        cursor: not-allowed !important;
+    }
+
+    :global(.MuiTreeItem-label) {
+        color: var(--sig-fault-deep) !important;
+    }
+
+    :global(.MuiTreeItem-iconContainer) {
+        color: var(--sig-fault) !important;
+    }
 }
