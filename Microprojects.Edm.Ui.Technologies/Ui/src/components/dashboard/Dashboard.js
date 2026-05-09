@@ -3,21 +3,18 @@ import { Switch, Route, useRouteMatch, Redirect } from 'react-router-dom';
 import { SubRootPage } from '../SubRootPage';
 import {
     PlayCircleOutline as PlayCircleOutlineIcon,
-    WorkOutline as WorkOutlineIcon,
     PeopleOutline as PeopleOutlineIcon,
     EventNote as EventNoteIcon
 } from '@mui/icons-material';
 import Schedule from './Schedule';
 import Users from './Users';
 import Operations from './Operations';
-import Workplaces from './Workplaces';
 
 export function Dashboard() {
     let { path } = useRouteMatch();
 
     const menuItems = [
         { label: 'Operations', path: `${path}/operations`, icon: <PlayCircleOutlineIcon fontSize="small" /> },
-        { label: 'Workplaces', path: `${path}/workplaces`, icon: <WorkOutlineIcon fontSize="small" /> },
         { label: 'Users', path: `${path}/users`, icon: <PeopleOutlineIcon fontSize="small" /> },
         { label: 'Schedule', path: `${path}/schedule`, icon: <EventNoteIcon fontSize="small" /> }
     ];
@@ -30,9 +27,6 @@ export function Dashboard() {
                 </Route>
                 <Route path={`${path}/operations/:when?`}>
                     <Operations />
-                </Route>
-                <Route path={`${path}/workplaces`}>
-                    <Workplaces />
                 </Route>
                 <Route path={`${path}/users`}>
                     <Users />

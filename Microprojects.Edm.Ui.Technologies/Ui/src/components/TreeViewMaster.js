@@ -107,18 +107,54 @@ const collectItemsWithChildren = (nodes, set = new Set()) => {
     return set;
 };
 
+// Drop-target validity for v2 04d.7. Returns 'valid' (drop allowed —
+// renders as `into`) or 'invalid' (renders as `forbidden`). Shared
+// between the item slot (visual feedback) and handleDragEnd (write
+// guard) so the two can never disagree.
+const checkMoveValidity = (draggedNode, targetNode) => {
+    if (!draggedNode || !targetNode) return null;
+    if (draggedNode.id === targetNode.id) return 'invalid';
+
+    /* Where the move would actually land:
+       - target is a folder -> into that folder
+       - target is a leaf   -> next to the leaf, i.e. into its parent  */
+    const targetParentNumericId = targetNode.isNode
+        ? targetNode.numericId
+        : targetNode.parentId;
+    const targetParentPrefixedId = targetNode.isNode
+        ? targetNode.id
+        : `node-${targetNode.parentId}`;
+
+    /* Folder dropped into itself. */
+    if (targetParentNumericId === draggedNode.numericId) return 'invalid';
+
+    /* Folder dropped into one of its descendants. */
+    const isDescendant = (parent, targetId) => {
+        if (!parent.children) return false;
+        for (const child of parent.children) {
+            if (child.id === targetId) return true;
+            if (isDescendant(child, targetId)) return true;
+        }
+        return false;
+    };
+    if (isDescendant(draggedNode, targetParentPrefixedId)) return 'invalid';
+
+    return 'valid';
+};
+
 const getEntityType = (apiPath) => {
-    if (apiPath.includes('/api/processes')) return 'process';
-    if (apiPath.includes('/api/devices')) return 'device';
-    if (apiPath.includes('/api/hosts')) return 'host';
-    if (apiPath.includes('workbenches')) return 'workbench';
-    if (apiPath.includes('/api/workplaces')) return 'workplace';
-    if (apiPath.includes('/api/operations')) return 'operation';
-    if (apiPath.includes('/api/audits')) return 'audit';
-    if (apiPath.includes('/api/profiles')) return 'profile';
-    if (apiPath.includes('/api/plugins/drivers')) return 'driver';
-    if (apiPath.includes('/api/plugins/profiles')) return 'profile';
-    if (apiPath.includes('/api/plugins/operations')) return 'plugin';
+    if (!apiPath) return '';
+    if (apiPath.includes('/plugins/drivers')) return 'driver';
+    if (apiPath.includes('/plugins/profiles')) return 'profile';
+    if (apiPath.includes('/plugins/operations')) return 'plugin';
+    if (apiPath.includes('/processes')) return 'process';
+    if (apiPath.includes('/devices')) return 'device';
+    if (apiPath.includes('/hosts')) return 'host';
+    if (apiPath.includes('/workbenches')) return 'workbench';
+    if (apiPath.includes('/workplaces')) return 'workplace';
+    if (apiPath.includes('/operations')) return 'operation';
+    if (apiPath.includes('/audits')) return 'audit';
+    if (apiPath.includes('/profiles')) return 'profile';
     return '';
 };
 
@@ -145,7 +181,11 @@ const getIconForType = (apiPath, isNode, isExpanded) => {
 
 // Custom Tree Item with D&D integration
 const IndustrialTreeItem = React.forwardRef((props, ref) => {
-    const { itemId, label, isNode, apiPath, itemsWithChildren, expandedSet, selectedId } = props;
+    const {
+        itemId, label, isNode, apiPath,
+        itemsWithChildren, expandedSet, selectedId,
+        activeNode, treeData,
+    } = props;
 
     // Fallback detection if RichTreeView doesn't spread item properties
     const itemIsNode = isNode ?? itemId?.startsWith('node-');
@@ -164,9 +204,18 @@ const IndustrialTreeItem = React.forwardRef((props, ref) => {
         data: { id: itemId, label, isNode: itemIsNode }
     });
 
+    /* Drop-target visual state per v2 04d.7. While a drag is active and
+       the cursor sits over this row, look up the move-validity using the
+       same predicate the write path uses. Result drives one of two CSS
+       classes — `into` (accent-tinted) or `forbidden` (fault-tinted). */
+    const dropValidity = useMemo(() => {
+        if (!isOver || !activeNode || !treeData) return null;
+        const targetNode = findNode(treeData, itemId);
+        return checkMoveValidity(activeNode, targetNode);
+    }, [isOver, activeNode, treeData, itemId]);
+
     const style = {
         opacity: isDragging ? 0.4 : 1,
-        backgroundColor: isOver ? 'rgba(25, 118, 210, 0.08)' : undefined,
     };
 
     const handleRef = (node) => {
@@ -216,6 +265,12 @@ const IndustrialTreeItem = React.forwardRef((props, ref) => {
         return Slot;
     }, [itemIsNode, iconCursor]);
 
+    const dropClass = dropValidity === 'valid'
+        ? styles.dropInto
+        : dropValidity === 'invalid'
+            ? styles.dropForbid
+            : '';
+
     return (
         <TreeItem
             {...props}
@@ -223,7 +278,7 @@ const IndustrialTreeItem = React.forwardRef((props, ref) => {
             style={style}
             {...attributes}
             {...listeners}
-            className={`${itemClass} ${isSelected ? styles.selectedItem : ''}`}
+            className={`${itemClass} ${isSelected ? styles.selectedItem : ''} ${dropClass}`}
             slots={{
                 icon: IconComponent,
                 iconContainer: IconContainerSlot
@@ -347,40 +402,32 @@ export function TreeViewMaster(props) {
 
         const draggedNode = findNode(treeData, active.id);
         const targetNode = findNode(treeData, over.id);
-
         if (!draggedNode || !targetNode) return;
 
-        // "Move-to-Folder" Logic:
-        // If target is a folder, move into it.
-        // If target is a file, move into its parent folder.
-        let targetNumericParentId = targetNode.isNode ? targetNode.numericId : targetNode.parentId;
+        /* Same predicate as the drop-feedback class — never write what
+           the UI just told the user wouldn't be allowed. */
+        if (checkMoveValidity(draggedNode, targetNode) !== 'valid') return;
 
-        // Prevent moving a folder into its own children or itself
-        const isDescendant = (parent, targetId) => {
-            if (parent.children) {
-                for (const child of parent.children) {
-                    if (child.id === targetId) return true;
-                    if (isDescendant(child, targetId)) return true;
-                }
-            }
-            return false;
-        };
-
-        const targetPrefixedId = targetNode.isNode ? targetNode.id : `node-${targetNode.parentId}`;
-        if (targetNumericParentId === draggedNode.numericId || isDescendant(draggedNode, targetPrefixedId)) {
-            console.warn("Invalid move");
-            return;
-        }
+        const targetNumericParentId = targetNode.isNode
+            ? targetNode.numericId
+            : targetNode.parentId;
 
         try {
             const link = draggedNode.isNode ? api.hierarchies : apiPath;
             await axios.put(`${link}/${draggedNode.numericId}/parent`, { id: parseInt(targetNumericParentId) });
-            setRender(r => r + 1); 
+            setRender(r => r + 1);
         } catch (err) {
             console.error("Failed to move item", err);
             alert("Failed to move item: " + (err.response?.data?.detail || err.message));
         }
     };
+
+    /* Pre-compute the dragged node so each tree item can read it via
+       slotProps without re-walking the tree on every render. */
+    const activeNode = useMemo(
+        () => activeId ? findNode(treeData, activeId) : null,
+        [activeId, treeData]
+    );
 
     const entityType = useMemo(() => getEntityType(apiPath), [apiPath]);
 
@@ -436,7 +483,9 @@ export function TreeViewMaster(props) {
                                     apiPath: apiPath,
                                     itemsWithChildren: itemsWithChildren,
                                     expandedSet: expandedSet,
-                                    selectedId: currentSelectedId
+                                    selectedId: currentSelectedId,
+                                    activeNode: activeNode,
+                                    treeData: treeData,
                                 }
                             }}
                         />
@@ -447,12 +496,12 @@ export function TreeViewMaster(props) {
                                 const DragIcon = getIconForType(apiPath, isNode, false);
                                 return (
                                     <Box className={styles.dragGhost}>
-                                        <DragIcon 
-                                            fontSize="small" 
-                                            sx={{ 
-                                                mr: 1, 
-                                                color: isNode ? '#ffa726' : '#757575' 
-                                            }} 
+                                        <DragIcon
+                                            fontSize="small"
+                                            sx={{
+                                                mr: 1,
+                                                color: isNode ? 'var(--accent)' : 'var(--ink-3)'
+                                            }}
                                         />
                                         <Typography variant="body2" sx={{ fontWeight: isNode ? 600 : 400, fontSize: '14px' }}>
                                             {activeNode?.label}

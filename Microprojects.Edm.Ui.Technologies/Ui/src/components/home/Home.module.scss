@@ -1,98 +1,293 @@
-@import '../../styles/variables';
+// HANDOFF · v2 patterns.html PAT-04 (dashboard) × .page-h hero × .sec
+// section + card with hue-tinted icon. The home page is the operator's
+// front door — surface chrome (no gradient), section header with eyebrow
+// underline, launcher cards driven by entity hues from app.css.
 
 .homeContainer {
-  display: flex;
-  flex-direction: column;
-  margin: -64px -#{$subroot-horizontal-margin} 0; // Hit header and sides, but not footer
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    background: var(--bg);
+    width: 100%;
+    min-width: 0;
 }
 
-.hero {
-  background: linear-gradient(135deg, $primary-dark 0%, $primary-light 100%);
-  color: $white;
-  padding: 100px 24px 32px; // Even more compact hero padding
-  text-align: center;
-  box-shadow: inset 0 -10px 20px rgba(0, 0, 0, 0.1);
-  margin-bottom: 24px;
-
-  h1 {
-    font-size: 32px;
-    font-weight: 300;
-    margin-bottom: 12px;
-  }
-
-  p {
-    font-size: 16px;
-    opacity: 0.8;
-    max-width: 600px;
+.page {
+    max-width: 1180px;
+    width: 100%;
     margin: 0 auto;
-    line-height: 1.6;
-  }
+    padding: 32px 24px 64px;
+    box-sizing: border-box;
 }
 
+// --- Hero (.page-h pattern) ---------------------------------------------
+.hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 32px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 24px;
+    margin-bottom: 36px;
+}
+
+.heroMain {
+    min-width: 0;
+}
+
+.heroEyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    margin-bottom: 10px;
+}
+
+.heroEyebrow::after {
+    content: "";
+    height: 1px;
+    width: 60px;
+    background: var(--accent);
+    opacity: 0.35;
+}
+
+.heroTitle {
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -0.018em;
+    color: var(--ink-1);
+    margin: 0 0 10px;
+    line-height: 1.05;
+}
+
+.heroLead {
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--ink-3);
+    max-width: 56ch;
+    margin: 0;
+}
+
+.heroMeta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-end;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-4);
+    text-align: right;
+    white-space: nowrap;
+}
+
+.heroMeta b {
+    color: var(--ink-2);
+    font-weight: 700;
+}
+
+// --- Section header (.sec-h pattern) ------------------------------------
+.section {
+    margin-top: 0;
+}
+
+.sectionHeader {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 18px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed var(--line-strong);
+}
+
+.sectionNum {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ink-4);
+    letter-spacing: 0.05em;
+}
+
+.sectionTitle {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0;
+    color: var(--ink-1);
+    letter-spacing: -0.005em;
+}
+
+.sectionTagline {
+    margin: 0 0 0 auto;
+    font-size: 13px;
+    color: var(--ink-3);
+    max-width: 50ch;
+    text-align: right;
+}
+
+// --- Launcher card grid -------------------------------------------------
 .launcherGrid {
-  max-width: 1200px;
-  margin: 0 auto 40px;
-  padding: 0 24px;
-  width: 100%;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 24px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
 }
 
 .card {
-  background: $white;
-  border-radius: 8px;
-  padding: 32px 24px;
-  text-align: center;
-  text-decoration: none;
-  color: inherit;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  transition: $transition-dense;
-  border: 1px solid $border-color;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  cursor: pointer;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 18px 20px 14px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-2);
+    box-shadow: var(--elev-1);
+    color: inherit;
+    text-decoration: none;
+    cursor: pointer;
+    overflow: hidden;
+    transition:
+        transform 160ms cubic-bezier(.2, .6, .2, 1),
+        box-shadow 160ms cubic-bezier(.2, .6, .2, 1),
+        border-color 160ms cubic-bezier(.2, .6, .2, 1);
+}
 
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-    border-color: $primary-main;
-  }
+.card::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--accent);
+    opacity: 0;
+    transition: opacity 160ms cubic-bezier(.2, .6, .2, 1);
+}
 
-  h3 {
+.card:hover,
+.card:focus-visible {
+    transform: translateY(-1px);
+    box-shadow: var(--elev-2);
+    border-color: var(--accent);
+    text-decoration: none;
+    outline: 0;
+}
+
+.card:hover::before,
+.card:focus-visible::before {
+    opacity: 1;
+}
+
+// Card head row — hue-tinted icon on the left, CTA arrow on the right.
+.cardHead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.cardIcon {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--r-2);
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    background: var(--surface-2);
+    color: var(--ink-2);
+    transition: transform 160ms cubic-bezier(.2, .6, .2, 1);
+}
+
+.card:hover .cardIcon,
+.card:focus-visible .cardIcon {
+    transform: scale(1.04);
+}
+
+.cardIcon :global(.MuiSvgIcon-root) {
+    font-size: 24px;
+}
+
+// Per-launcher hue (entity-color tokens from app.css).
+.cardIcon.run        { background: var(--ent-operation-soft); color: var(--ent-operation-deep); }
+.cardIcon.dashboard  { background: var(--ent-process-soft);   color: var(--ent-process-deep); }
+.cardIcon.config     { background: var(--ent-workplace-soft); color: var(--ent-workplace-deep); }
+.cardIcon.plugin     { background: var(--ent-plugin-soft);    color: var(--ent-plugin-deep); }
+
+.cardArrow {
+    color: var(--ink-4);
+    transform: translateX(0);
+    transition: transform 160ms cubic-bezier(.2, .6, .2, 1), color 160ms cubic-bezier(.2, .6, .2, 1);
+}
+
+.cardArrow :global(.MuiSvgIcon-root) {
     font-size: 18px;
-    font-weight: 600;
-    color: $text-primary;
-    margin: 0;
-  }
-
-  p {
-    font-size: 14px;
-    color: $text-secondary;
-    line-height: 1.4;
-    margin: 0;
-  }
 }
 
-.iconCircle {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 8px;
-  
-  svg {
-    font-size: 32px;
-    color: $white;
-  }
+.card:hover .cardArrow,
+.card:focus-visible .cardArrow {
+    color: var(--accent);
+    transform: translateX(2px);
 }
 
-// Background Colors for Icons (matching Industrial design tokens)
-.bgSuccess { background-color: $status-online; }
-.bgInfo { background-color: $primary-main; }
-.bgWarning { background-color: #f57c00; } // Using standard warning orange
-.bgIndigo { background-color: $primary-light; }
+.cardTitle {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink-1);
+    letter-spacing: -0.005em;
+    margin: 4px 0 0;
+}
+
+.cardDescription {
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--ink-3);
+    margin: 0;
+}
+
+// CTA tag at the bottom of the card — mono uppercase, picks up the
+// hue-deep token of the matching icon so the row visually links to it.
+.cardCta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: auto;
+    padding-top: 10px;
+    border-top: 1px solid var(--line-soft);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-3);
+}
+
+.card.run        .cardCta { color: var(--ent-operation-deep); }
+.card.dashboard  .cardCta { color: var(--ent-process-deep); }
+.card.config     .cardCta { color: var(--ent-workplace-deep); }
+.card.plugin     .cardCta { color: var(--ent-plugin-deep); }
+
+@media (max-width: 720px) {
+    .hero {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .heroMeta {
+        align-items: flex-start;
+        text-align: left;
+    }
+
+    .sectionHeader {
+        flex-wrap: wrap;
+    }
+
+    .sectionTagline {
+        margin-left: 0;
+        text-align: left;
+    }
+}

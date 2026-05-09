@@ -1,0 +1,887 @@
+/* EDM Technologies — Direction A · Steel.
+   Chrome layout + role/plugin overlays + data primitives.
+   Tokens come from tokens.css; no hex literals here. */
+
+/* --- Page shell --------------------------------------------------------- */
+.page-root {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    color: var(--ink-2);
+}
+
+.page-main {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* HANDOFF · v2 04f.7 — footer is 36 px tall, never sticky-overlay. The
+   wrapper around .page-main keeps it in flow so it pushes below content
+   when content overflows the viewport. */
+.page-footer {
+    flex: 0 0 auto;
+    height: 36px;
+    border-top: 1px solid var(--line);
+    background: var(--surface);
+    padding: 0 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    letter-spacing: 0.02em;
+    color: var(--ink-3);
+}
+
+.page-footer .footer-left,
+.page-footer .footer-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.page-footer .footer-link {
+    color: var(--ink-2);
+    text-decoration: none;
+    text-transform: uppercase;
+    font-weight: 600;
+    /* Anchor for the nudge dot. */
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.page-footer .footer-link:hover {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+/* HANDOFF · v2 chrome.html footer · "What's new" red-dot nudge. 7 px
+   signal-fault dot with a soft ring; gentle pulse so it draws the eye
+   without nagging. Cleared once the user opens /changes (Layout.js
+   writes the version to localStorage). */
+.page-footer .footer-link .nudge-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--sig-fault);
+    box-shadow: 0 0 0 2px var(--sig-fault-soft);
+    animation: nudge-pulse 2.4s ease-in-out infinite;
+}
+
+.page-footer .footer-link.has-nudge {
+    color: var(--ink-1);
+}
+
+@keyframes nudge-pulse {
+    0%, 70%, 100% { box-shadow: 0 0 0 2px var(--sig-fault-soft); }
+    35%           { box-shadow: 0 0 0 4px var(--sig-fault-soft); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .page-footer .footer-link .nudge-dot { animation: none; }
+}
+
+.version-chip {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    border: 1px solid var(--line-strong);
+    background: var(--surface);
+    border-radius: var(--r-pill);
+    padding: 2px 10px;
+}
+
+/* --- Top bar (chrome) ---------------------------------------------------
+   HANDOFF · v2 04f.1 · seven-slot grid: brand → nav → flex spacer → search
+   → role pill → connection pip → profile. Slots collapse from the spacer
+   outward when width drops (see narrow-width rules below). */
+.doc-top {
+    height: 56px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: auto auto 1fr auto auto auto auto;
+    align-items: stretch;
+    column-gap: 14px;
+    padding-right: 14px;
+    position: sticky;
+    top: 0;
+    z-index: var(--z-header);
+}
+
+/* Plugin tint: cobalt wash + 2px accent stripe at the bottom. The accent
+   itself comes from --accent (role-driven), so admin/tech keep cobalt and
+   operator picks up green automatically. */
+[data-plugin="technologies"] .doc-top {
+    background: var(--accent-tint);
+    box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+.doc-brand {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 18px 0 20px;
+    border-right: 1px solid var(--line);
+    height: 100%;
+    text-decoration: none;
+    color: inherit;
+}
+
+.doc-brand:hover {
+    text-decoration: none;
+}
+
+/* HANDOFF · v2 04f · brand mark is the EDµ wordmark image (42×30 box,
+   SVG sized 42×auto and nudged 1px up so the cap-line of "ED" reads
+   centered against the plugin name). DEVIATION · the previous CSS-rendered
+   wordmark drove the "ED" colour from --accent, picking up the per-role
+   tint; the SVG is fixed-colour and loses that tint — accepted for brand
+   fidelity per v2 sign-off. */
+.doc-brand .brand-mark {
+    width: 42px;
+    height: 30px;
+    flex: 0 0 auto;
+    display: block;
+}
+
+.doc-brand .brand-name {
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--ink-1);
+    letter-spacing: -0.005em;
+    line-height: 1;
+}
+
+.doc-nav {
+    display: flex;
+    align-items: stretch;
+    flex: 1 1 auto;
+    padding-left: 8px;
+    overflow-x: auto;
+    min-width: 0;
+}
+
+.doc-nav .nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 14px;
+    color: var(--ink-3);
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    height: 100%;
+}
+
+.doc-nav .nav-link:hover {
+    color: var(--ink-1);
+    text-decoration: none;
+}
+
+.doc-nav .nav-link.active {
+    color: var(--ink-1);
+    border-bottom-color: var(--accent);
+    font-weight: 600;
+}
+
+.doc-nav .nav-link .mi {
+    color: inherit;
+}
+
+/* The 1fr column between nav and the right-hand cluster. */
+.tb-spacer {
+    align-self: stretch;
+}
+
+/* HANDOFF · v2 04f.3 · search slot. Visual stub for now — wired in
+   IMPROVISED state until the search backend lands. */
+.tb-search {
+    display: inline-flex;
+    align-items: center;
+    align-self: center;
+    gap: 8px;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: var(--r-2);
+    padding: 6px 10px;
+    min-width: 220px;
+    color: var(--ink-3);
+    font: 500 12.5px/1 var(--font-sans);
+    font-family: inherit;
+    cursor: text;
+}
+
+.tb-search:hover {
+    border-color: var(--ink-3);
+    color: var(--ink-2);
+}
+
+.tb-search .tb-search-icon {
+    color: var(--ink-3);
+    font-size: 16px;
+}
+
+.tb-search .tb-search-text {
+    flex: 1 1 auto;
+    text-align: left;
+}
+
+.tb-search .kbd {
+    margin-left: auto;
+    font: 700 10.5px/1 var(--font-mono);
+    color: var(--ink-3);
+    padding: 3px 5px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    border-radius: 3px;
+    letter-spacing: 0.04em;
+}
+
+/* HANDOFF · v2 04f.4 · role pill. Tinted background pill, mono uppercase
+   11 px, tinted to match the active role's accent. */
+.tb-role {
+    display: inline-flex;
+    align-items: center;
+    align-self: center;
+    gap: 6px;
+    background: var(--accent-tint);
+    color: var(--accent-deep);
+    padding: 5px 8px 5px 7px;
+    border: 1px solid transparent;
+    border-radius: var(--r-2);
+    font: 700 11px/1 var(--font-mono);
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    height: 28px;
+}
+
+.tb-role:hover {
+    border-color: var(--accent);
+}
+
+.tb-role .tb-role-icon {
+    display: inline-flex;
+    color: var(--accent-deep);
+}
+
+.tb-role .tb-role-icon .MuiSvgIcon-root {
+    font-size: 14px;
+}
+
+.tb-role .tb-role-chev {
+    font-size: 14px;
+    color: inherit;
+    opacity: 0.7;
+}
+
+/* Operator role uses the green run signal palette. */
+.tb-role.operator {
+    background: var(--sig-run-soft);
+    color: var(--sig-run-deep);
+}
+
+.tb-role.operator .tb-role-icon {
+    color: var(--sig-run-deep);
+}
+
+.tb-role.operator:hover {
+    border-color: var(--sig-run);
+}
+
+/* HANDOFF · v2 04f.4 · connection pip. Mono uppercase status with a
+   8 px pulsing dot. Default = sig-run (Live); warn = sig-warn pulse;
+   fault = sig-fault. Stubbed at 'connected' for now (Phase F wiring). */
+.tb-pip {
+    display: inline-flex;
+    align-items: center;
+    align-self: center;
+    gap: 6px;
+    font: 700 10.5px/1 var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-3);
+    height: 28px;
+}
+
+.tb-pip .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--sig-run);
+    box-shadow: 0 0 0 3px var(--sig-run-soft);
+}
+
+.tb-pip.connecting .dot,
+.tb-pip.reconnecting .dot {
+    background: var(--sig-warn);
+    box-shadow: 0 0 0 3px var(--sig-warn-soft);
+    animation: tb-pip-pulse 1.4s ease-in-out infinite;
+}
+
+.tb-pip.disconnected .dot,
+.tb-pip.fault .dot {
+    background: var(--sig-fault);
+    box-shadow: 0 0 0 3px var(--sig-fault-soft);
+}
+
+.tb-pip.stale .dot {
+    background: var(--sig-idle);
+    box-shadow: 0 0 0 3px var(--sig-idle-soft);
+}
+
+@keyframes tb-pip-pulse {
+    50% { opacity: 0.4; }
+}
+
+/* Avatar square (per v2 04f.5 — keeps the existing 28×28 surface but tied
+   to the role accent so admin/tech wear cobalt and operator wears green). */
+.av {
+    width: 28px;
+    height: 28px;
+    align-self: center;
+    border-radius: var(--r-2);
+    background: var(--accent);
+    color: var(--accent-fg);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+}
+
+.av:hover {
+    background: var(--accent-deep);
+}
+
+/* HANDOFF · v2 04f.6 narrow-width overflow.
+   Below ~1080 px hide the search text (icon stays); below ~880 px hide
+   the search slot completely; below ~720 px collapse the role pill text. */
+@media (max-width: 1080px) {
+    .tb-search { min-width: 0; padding: 6px 8px; }
+    .tb-search .tb-search-text,
+    .tb-search .kbd { display: none; }
+}
+
+@media (max-width: 880px) {
+    .doc-nav .nav-link .nav-label { display: none; }
+    .tb-search { display: none; }
+}
+
+@media (max-width: 720px) {
+    .tb-role .tb-role-text { display: none; }
+}
+
+/* --- Page head (crumbs + title + tabs) ----------------------------------
+   HANDOFF · v2 04f.9 — two thin rows under the chrome: a 28 px crumb
+   strip and a 72 px page-head row that squeezes to 48 px once the body
+   scrolls past 12 px. Title shrinks 28 → 16 px; tabs stay 14 px so they
+   remain reachable while content gets the screen. 180 ms easing both ways. */
+.doc-crumbs {
+    height: 28px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    padding: 0 22px;
+    gap: 6px;
+    font: 700 10.5px/1 var(--font-mono);
+    color: var(--ink-3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    position: sticky;
+    top: 56px;
+    z-index: calc(var(--z-header) - 1);
+    overflow: hidden;
+    transition:
+        height 180ms cubic-bezier(.2, .6, .2, 1),
+        opacity 120ms cubic-bezier(.2, .6, .2, 1),
+        border-color 120ms cubic-bezier(.2, .6, .2, 1);
+}
+
+/* Squeezed page-head also collapses the crumb strip — the trail just
+   scrolled out of view, so its border-bottom must go too (otherwise we
+   keep a stray 1 px line under the chrome). */
+.doc-crumbs[data-squeezed="true"] {
+    height: 0;
+    opacity: 0;
+    border-bottom-color: transparent;
+}
+
+.doc-crumbs .sep {
+    color: var(--ink-4);
+}
+
+.doc-crumbs a {
+    color: var(--ink-3);
+    text-decoration: none;
+}
+
+.doc-crumbs a:hover {
+    color: var(--ink-1);
+    text-decoration: none;
+}
+
+.page-head {
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: stretch;
+    padding: 0 22px;
+    gap: 28px;
+    height: 72px;
+    overflow: hidden;
+    transition:
+        height 180ms cubic-bezier(.2, .6, .2, 1),
+        top 180ms cubic-bezier(.2, .6, .2, 1);
+    position: sticky;
+    top: 84px; /* 56 chrome + 28 crumbs */
+    z-index: calc(var(--z-header) - 2);
+}
+
+/* Squeezed: tighter vertical box (36 px), smaller title, and the sticky
+   pin moves up to sit flush against the chrome since the crumb strip
+   collapses to 0 above us. */
+.page-head[data-squeezed="true"] {
+    height: 36px;
+    top: 56px;
+}
+
+.page-head .ph-title {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    flex: 0 0 auto;
+    font: 700 28px/1.05 var(--font-sans);
+    color: var(--ink-1);
+    letter-spacing: -0.012em;
+    white-space: nowrap;
+    transition: font-size 180ms cubic-bezier(.2, .6, .2, 1);
+}
+
+.page-head[data-squeezed="true"] .ph-title {
+    font-size: 14px;
+}
+
+.page-head .ph-tabs {
+    display: flex;
+    align-items: stretch;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    gap: 0;
+}
+
+.page-head .ph-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+.page-head .ph-tabs a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 16px;
+    font: 500 14px/1 var(--font-sans);
+    color: var(--ink-2);
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    white-space: nowrap;
+    transition: color 120ms;
+}
+
+.page-head .ph-tabs a:hover {
+    color: var(--ink-1);
+    text-decoration: none;
+}
+
+.page-head .ph-tabs a.active {
+    color: var(--ink-1);
+    border-bottom-color: var(--accent);
+}
+
+.page-head .ph-tabs a .MuiSvgIcon-root,
+.page-head .ph-tabs a .mi {
+    color: var(--ink-3);
+    font-size: 18px;
+}
+
+.page-head .ph-tabs a.active .MuiSvgIcon-root,
+.page-head .ph-tabs a.active .mi {
+    color: var(--accent);
+}
+
+/* --- Page body (master/detail container) -------------------------------- */
+.doc-body {
+    flex: 1 1 auto;
+    background: var(--surface-2);
+    padding: 16px 24px 24px;
+    min-height: 0;
+    min-width: 0;
+}
+
+/* --- Buttons (CSS primitives — used outside MUI surfaces) --------------- */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: var(--btn-h);
+    padding: 0 14px;
+    border-radius: var(--r-2);
+    border: 1px solid var(--line-strong);
+    background: var(--surface);
+    color: var(--ink-1);
+    font: 600 13px/1 var(--font-sans);
+    cursor: pointer;
+    transition: background var(--dur-1) var(--ease-std), border-color var(--dur-1) var(--ease-std);
+    white-space: nowrap;
+}
+
+.btn:hover {
+    background: var(--surface-2);
+    border-color: var(--ink-3);
+}
+
+.btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
+
+.btn.accent {
+    background: var(--accent);
+    color: var(--accent-fg);
+    border-color: var(--accent);
+}
+
+.btn.accent:hover {
+    background: var(--accent-deep);
+    border-color: var(--accent-deep);
+}
+
+.btn.ghost {
+    background: transparent;
+    border-color: transparent;
+    color: var(--ink-2);
+}
+
+.btn.ghost:hover {
+    background: var(--surface-3);
+}
+
+.btn.icon {
+    width: var(--btn-h);
+    padding: 0;
+}
+
+/* --- Data primitives (mirrors design schemes.html `.s-row` family) ------ */
+.s-row {
+    display: grid;
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-2);
+    padding: 8px 12px;
+    gap: 10px;
+    font-size: 12.5px;
+    color: var(--ink-2);
+}
+
+.s-row.selected {
+    background: var(--accent-tint);
+    border-color: var(--accent);
+    box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.s-row b {
+    color: var(--ink-1);
+    font-family: var(--font-mono);
+    font-weight: 700;
+}
+
+.s-pip {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.s-pip.run    { background: var(--sig-run); }
+.s-pip.warn   { background: var(--sig-warn); }
+.s-pip.fault  { background: var(--sig-fault); }
+.s-pip.idle   { background: var(--sig-idle); }
+.s-pip.info   { background: var(--sig-info); }
+.s-pip.queued { background: var(--sig-queued); }
+
+.s-mono {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+}
+
+.s-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-3);
+    font-weight: 600;
+}
+
+/* Icon-frame square used in Detail header and entity cards. Surface-2
+   neutral background — entity identity comes from the icon glyph itself,
+   not a tinted background. */
+.icon-wrapper {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--r-2);
+    background: var(--surface-2);
+    color: var(--ink-2);
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+}
+
+.icon-wrapper.accent {
+    background: var(--accent-tint);
+    color: var(--accent);
+}
+
+/* --- Detail card (master-detail right pane) ----------------------------- */
+.detail-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-2);
+    box-shadow: var(--elev-1);
+    overflow: hidden;
+    width: 100%;
+    min-width: 0;
+}
+
+.detail-sticky-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    padding: 14px 18px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    position: sticky;
+    z-index: calc(var(--z-header) - 2);
+    box-shadow: inset 0 -1px 0 var(--accent-tint);
+}
+
+.detail-sticky-header .header-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+}
+
+.detail-sticky-header .title-area {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    flex: 1;
+}
+
+.detail-sticky-header .title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink-1);
+    letter-spacing: -0.01em;
+    margin: 0;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.detail-sticky-header .description {
+    font-size: 13px;
+    color: var(--ink-3);
+    margin: 0;
+    line-height: 1.4;
+}
+
+.detail-sticky-header .breadcrumbs {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-3);
+}
+
+.detail-sticky-header .actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.detail-content-body {
+    padding: 20px;
+}
+
+.detail-sticky-footer {
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+    padding: 12px 18px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    position: sticky;
+    bottom: 0;
+    z-index: calc(var(--z-header) - 2);
+}
+
+/* --- Card primitive (used by Home launcher tiles) ----------------------- */
+.card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-2);
+    box-shadow: var(--elev-1);
+    transition: border-color var(--dur-2) var(--ease-std), box-shadow var(--dur-2) var(--ease-std), transform var(--dur-2) var(--ease-std);
+    position: relative;
+    overflow: hidden;
+}
+
+.card.clickable {
+    cursor: pointer;
+}
+
+.card.clickable:hover {
+    border-color: var(--accent);
+    box-shadow: var(--elev-2);
+}
+
+.card.clickable::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--accent);
+    opacity: 0;
+    transition: opacity var(--dur-2) var(--ease-std);
+}
+
+.card.clickable:hover::before {
+    opacity: 1;
+}
+
+.card-b {
+    padding: var(--card-pad);
+}
+
+/* --- Markdown (changelog) ----------------------------------------------- */
+.markdown {
+    color: var(--ink-2);
+    line-height: 1.6;
+    font-size: var(--t-14);
+}
+
+.markdown h1,
+.markdown h2,
+.markdown h3 {
+    color: var(--ink-1);
+    letter-spacing: -0.01em;
+    margin: 1.4em 0 0.6em;
+}
+
+.markdown h1 { font-size: var(--t-24); }
+.markdown h2 { font-size: var(--t-20); }
+.markdown h3 { font-size: var(--t-16); }
+
+.markdown code {
+    font-family: var(--font-mono);
+    background: var(--surface-3);
+    padding: 1px 6px;
+    border-radius: 3px;
+    border: 1px solid var(--line-soft);
+    color: var(--ink-1);
+    font-size: 0.9em;
+}
+
+.markdown pre {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: var(--r-2);
+    padding: 14px 16px;
+    overflow-x: auto;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.markdown pre code {
+    background: transparent;
+    border: 0;
+    padding: 0;
+}
+
+/* --- Entity-type icon tokens ------------------------------------------------
+   HANDOFF · v2 04b · plugins pin per-entity hues on top of the generic
+   `--hue-*` tokens defined in tokens.css. The hue rides on the icon only:
+   Detail title icon-wrapper takes both (background + colour); TreeViewMaster
+   items take only the colour and keep a transparent background. Picked
+   so hosts read jade-green and the rest stay desaturated against a tree
+   of mixed types. */
+:root {
+    --ent-process-soft:   var(--hue-cobalt-soft);   --ent-process-deep:   var(--hue-cobalt-deep);
+    --ent-workplace-soft: var(--hue-amber-soft);    --ent-workplace-deep: var(--hue-amber-deep);
+    --ent-host-soft:      var(--hue-jade-soft);     --ent-host-deep:      var(--hue-jade-deep);
+    --ent-device-soft:    var(--hue-violet-soft);   --ent-device-deep:    var(--hue-violet-deep);
+    --ent-workbench-soft: var(--hue-ochre-soft);    --ent-workbench-deep: var(--hue-ochre-deep);
+    --ent-operation-soft: var(--hue-teal-soft);     --ent-operation-deep: var(--hue-teal-deep);
+    --ent-audit-soft:     var(--hue-ochre-soft);    --ent-audit-deep:     var(--hue-ochre-deep);
+    --ent-profile-soft:   var(--hue-mauve-soft);    --ent-profile-deep:   var(--hue-mauve-deep);
+    --ent-driver-soft:    var(--hue-slate-soft);    --ent-driver-deep:    var(--hue-slate-deep);
+    --ent-plugin-soft:    var(--hue-plum-soft);     --ent-plugin-deep:    var(--hue-plum-deep);
+    --ent-folder-soft:    var(--hue-amber-soft);    --ent-folder-deep:    var(--hue-amber-deep);
+}
+
+/* --- Modal-shift fix (kept from custom.css) ----------------------------- */
+.MuiPopover-root,
+.MuiPaper-root {
+    /* Prevent MUI from adding right padding to the body when a modal opens —
+       it shifts the whole page on Windows (visible scrollbar gutter). */
+}
+
+body.MuiBody-root {
+    padding-right: 0 !important;
+}
+
+/* --- Material Symbols icon class --------------------------------------- */
+.mi {
+    font-family: var(--font-icon);
+    font-weight: 400;
+    font-style: normal;
+    display: inline-block;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 20;
+    font-size: 18px;
+    vertical-align: middle;
+    user-select: none;
+    flex-shrink: 0;
+}

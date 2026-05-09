@@ -1,237 +1,176 @@
-@import '../styles/variables';
-
-.tableHeader {
-  padding: 12px 16px;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  background-color: transparent;
-}
+// HANDOFF · v2 04c.2 production data table chrome.
+// Most cell/row/header styling lives in theme.ts MuiDataGrid override.
+// This module covers the toolbar (search · spacer · add) that sits ABOVE
+// the grid and the per-row hover actions that the theme can't reach.
 
 .tableContainer {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  background-color: transparent;
-  border: none;
-  margin-top: 8px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    background: transparent;
+    margin-top: 8px;
+    gap: 8px;
 }
 
-.gridWrapper {
-  width: 100%;
-  height: 100%;
-  background-color: $white;
-  border: 1px solid $border-color;
-  border-radius: 4px;
-  overflow: hidden;
-  position: relative;
-  transition: opacity 0.2s ease;
-
-  &.dimmed {
-    opacity: 0.4;
-    filter: grayscale(0.5);
-    pointer-events: none;
-  }
-  
-  :global {
-
-    .MuiDataGrid-root {
-      border: none;
-      
-      .MuiDataGrid-columnHeaders {
-        background-color: #fafafa;
-        border-bottom: 1px solid $border-color;
-        min-height: 36px !important;
-        max-height: 36px !important;
-        line-height: 36px !important;
-      }
-
-      .MuiDataGrid-columnHeaderTitle {
-        font-family: "Roboto", "Helvetica", "Arial", sans-serif !important;
-        font-size: 11px !important;
-        font-weight: 600 !important;
-        text-transform: uppercase !important;
-        letter-spacing: 0.5px !important;
-        color: $text-secondary;
-      }
-
-
-
-      .MuiDataGrid-row {
-        
-        &:hover {
-          background-color: #f5f5f5;
-        }
-
-        &.Mui-selected {
-          background-color: #e3f2fd !important;
-          border-left: 4px solid $primary-main;
-          
-          &:hover {
-            background-color: #e3f2fd !important;
-          }
-        }
-      }
-
-      .MuiDataGrid-cell {
-        color: $text-primary;
-        border-bottom: 1px solid #f0f0f0;
-        padding: 0 12px;
-        display: flex;
-        align-items: center;
-        
-        &:focus, &:focus-within {
-          outline: none !important;
-        }
-
-        :global {
-          .MuiInputBase-input {
-          }
-          .MuiSelect-select {
-          }
-        }
-      }
-
-      .MuiDataGrid-footerContainer {
-        min-height: 40px !important;
-        border-top: 1px solid $border-color;
-        background-color: #fafafa;
-        display: flex;
-        align-items: center;
-        
-        :global {
-          .MuiTablePagination-root {
-            color: $text-secondary;
-          }
-          .MuiTablePagination-toolbar {
-            min-height: 40px;
-            padding-top: 0;
-            padding-bottom: 0;
-          }
-          .MuiTablePagination-selectLabel,
-          .MuiTablePagination-displayedRows {
-            margin-bottom: 0;
-          }
-        }
-      }
-    }
-  }
-}
-
+// --- Toolbar (left search · right primary action) -----------------------
 .toolbar {
-  padding: 8px 12px;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  background-color: $white;
-  border-bottom: 1px solid $border-color;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0;
 }
 
 .searchField {
-  :global {
-    .MuiInputBase-root {
-      height: 32px;
-      width: 200px;
-      background-color: #f5f5f5;
-      
-      fieldset {
-        border-color: transparent;
-      }
-      
-      &:hover fieldset {
-        border-color: #bdbdbd;
-      }
-      
-      &.Mui-focused fieldset {
-        border-color: $primary-main;
-      }
+    flex: 1 1 auto;
+    max-width: 320px;
+
+    :global {
+        .MuiInputBase-root {
+            height: 34px;
+            font-size: 13px;
+            background: var(--surface);
+        }
+        .MuiOutlinedInput-notchedOutline { border-color: var(--line-strong); }
+        .MuiInputBase-root:hover .MuiOutlinedInput-notchedOutline { border-color: var(--ink-3); }
+        .MuiInputBase-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+            border-color: var(--accent);
+            border-width: 1px;
+        }
     }
-  }
 }
 
-.loadingOverlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  justify-content: center;
-  z-index: 100;
-  background-color: rgba(255, 255, 255, 0.3);
-  pointer-events: none;
+.toolbarSpacer {
+    flex: 1 1 auto;
 }
 
-.stickyIndicator {
-  position: sticky;
-  top: 50%;
-  height: min-content;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transform: translateY(-50%);
+.addBtn {
+    height: 34px !important;
+    padding: 0 14px !important;
+    text-transform: none !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+}
+
+// --- Grid wrapper -------------------------------------------------------
+.gridWrapper {
+    width: 100%;
+    background: var(--surface);
+    border-radius: var(--r-2);
+    overflow: hidden;
+    position: relative;
+    transition: opacity 160ms cubic-bezier(.2, .6, .2, 1);
+
+    &.dimmed {
+        opacity: 0.4;
+        filter: grayscale(0.5);
+        pointer-events: none;
+    }
+
+    :global(.MuiDataGrid-root) {
+        border: 1px solid var(--line);
+    }
+}
+
+// --- Per-row actions cell -----------------------------------------------
+// Lives in a fixed-width "actions" GridColDef appended to the columns
+// list. Hidden by default; revealed on row hover or while editing.
+// The cell itself is always 96 px so the row layout doesn't reflow.
+.actionsCell {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 2px;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 120ms ease;
+}
+
+:global(.MuiDataGrid-row:hover) .actionsCell,
+:global(.MuiDataGrid-row.Mui-selected) .actionsCell,
+.actionsCell.editing {
+    opacity: 1;
 }
 
 .actionBtn {
-  color: $text-secondary !important;
-  padding: 4px !important;
-  
-  &:hover {
-    background-color: rgba(25, 118, 210, 0.08) !important;
-    color: $primary-main !important;
-  }
-  
-  &.save:hover {
-    color: #2e7d32 !important;
-    background-color: rgba(46, 125, 50, 0.08) !important;
-  }
-  
-  &.delete:hover {
-    color: #d32f2f !important;
-    background-color: rgba(211, 47, 47, 0.08) !important;
-  }
+    width: 28px !important;
+    height: 28px !important;
+    padding: 0 !important;
+    color: var(--ink-3) !important;
+    border-radius: var(--r-2) !important;
+
+    &:hover {
+        background: var(--accent-tint) !important;
+        color: var(--accent-deep) !important;
+    }
 }
 
-.cellWithActions {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  height: 100%;
-  position: relative;
-  overflow: visible; // Allow actions to float outside if necessary
+.actionBtn.save:hover {
+    color: var(--sig-run-deep) !important;
+    background: var(--sig-run-soft) !important;
 }
 
-.cellContent {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.actionBtn.delete:hover {
+    color: var(--sig-fault-deep) !important;
+    background: var(--sig-fault-soft) !important;
 }
 
-.rowActions {
-  display: none;
-  position: absolute;
-  right: -12px; // Move closer to the edge
-  top: 0;
-  bottom: 0;
-  background: linear-gradient(to left, $white 80%, transparent 100%);
-  padding-left: 16px; // Space for the gradient
-  padding-right: 4px;
-  align-items: center;
-  z-index: 10;
-  
-  :global(.MuiDataGrid-row:hover) &,
-  :global(.MuiDataGrid-row.Mui-selected) & {
+// --- Loading overlay (used during cross-tab data swap) ------------------
+.loadingOverlay {
+    position: absolute;
+    inset: 0;
     display: flex;
-  }
-  
-  :global(.MuiDataGrid-row.Mui-selected) & {
-    background: linear-gradient(to left, #e3f2fd 80%, transparent 100%);
-  }
-  
-  &.active {
-    display: flex;
-    background: $white;
-  }
+    justify-content: center;
+    z-index: 100;
+    background: var(--surface-2);
+    opacity: 0.6;
+    pointer-events: none;
 }
 
+.stickyIndicator {
+    position: sticky;
+    top: 50%;
+    height: min-content;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: translateY(-50%);
+}
+
+// --- Empty state (v2 04c.3 small-surface variant) -----------------------
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 20px;
+    gap: 10px;
+    text-align: center;
+    color: var(--ink-3);
+}
+
+.emptyIcon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--surface-2);
+    color: var(--ink-4);
+    display: grid;
+    place-items: center;
+}
+
+.emptyIcon :global(.MuiSvgIcon-root) { font-size: 26px; }
+
+.emptyTitle {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink-1);
+    letter-spacing: -0.005em;
+}
+
+.emptyHelp {
+    font-size: 12.5px;
+    color: var(--ink-3);
+    max-width: 320px;
+    line-height: 1.5;
+}

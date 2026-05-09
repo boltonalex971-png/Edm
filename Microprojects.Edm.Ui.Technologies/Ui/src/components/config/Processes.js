@@ -4,12 +4,15 @@ import Api from '../api';
 import { useGet } from '../hooks/hooks';
 import { useHistory, useParams } from 'react-router-dom';
 import { useRouteMatch } from 'react-router-dom';
-import { MasterDetail, reloadMaster, Detail, Info, Editor, InfoItem } from '../MasterDetail';
+import { MasterDetail, reloadMaster, Detail, Editor } from '../MasterDetail';
 import { ProcessTabs } from './process/ProcessTabs';
-import { TextField, FormControl, InputLabel, Select, MenuItem, Box } from '@mui/material';
+import { Box } from '@mui/material';
 import {
     AccountTree as AccountTreeIcon,
 } from '@mui/icons-material';
+import { Properties, Property } from '../forms/Properties';
+import { EditorSection } from '../forms/EditorSection';
+import { Field } from '../forms/Field';
 
 export function Processes() {
     let { path } = useRouteMatch();
@@ -53,6 +56,8 @@ export function ProcessDetail({ processId, parents, ...props }) {
     }
 
     const missedInputs = JSON.parse(data.message || '[]');
+    const operationName = ops?.find(o => o.guid === data.operationGuid)?.name;
+
     return (
         <Detail {...props}
             id={id}
@@ -68,68 +73,106 @@ export function ProcessDetail({ processId, parents, ...props }) {
             parents={parents}
             subDetail={sub}
             card={
-                <Info {...props}
-                    data={data}
-                    content={
-                        <>
-                            <InfoItem label="Name" value={data.name} />
-                            <InfoItem label="Description" value={data.description} />
-                            {data.commonUid && <InfoItem label="Common UID" value={data.commonUid} />}
-                        </>
-                    }
-                />
+                <Properties>
+                    <Property
+                        label="Operation"
+                        value={operationName}
+                        muted={!operationName}
+                        placeholder="Not bound"
+                    />
+                    <Property
+                        label="Common UID"
+                        value={data.commonUid}
+                        mono
+                        placeholder="—"
+                    />
+                </Properties>
             }
             editor={
                 <Editor {...props}
                     data={data}
                     setData={setData}
                     onUpdate={props.onUpdate}
-                    content={({ values, handleChange }) => (
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                            <TextField
-                                fullWidth
-                                label="Name"
-                                name="name"
-                                value={values.name || ''}
-                                onChange={handleChange}
-                                size="small"
-                            />
-                            <TextField
-                                fullWidth
-                                label="Description"
-                                name="description"
-                                value={values.description || ''}
-                                onChange={handleChange}
-                                size="small"
-                                multiline
-                                rows={2}
-                            />
-                            <TextField
-                                fullWidth
-                                label="Common UID"
-                                name="commonUid"
-                                value={values.commonUid || ''}
-                                onChange={handleChange}
-                                size="small"
-                            />
-                            <FormControl fullWidth size="small">
-                                <InputLabel>Operation</InputLabel>
-                                <Select
-                                    name="operationGuid"
-                                    value={values.operationGuid || ''}
-                                    onChange={handleChange}
-                                    label="Operation"
+                    content={({ values, handleChange }) => {
+                        const identityFilled = [values.name, values.description, values.commonUid]
+                            .filter(v => v && String(v).trim().length > 0).length;
+                        const identityValid = !!(values.name && values.name.trim().length > 0);
+                        const operationFilled = values.operationGuid ? 1 : 0;
+
+                        return (
+                            <Box>
+                                <EditorSection
+                                    number={1}
+                                    title="Identity"
+                                    filled={identityFilled}
+                                    total={3}
+                                    done={identityFilled === 3 && identityValid}
                                 >
-                                    <MenuItem value=""><em>None</em></MenuItem>
-                                    {ops?.map((op) => (
-                                        <MenuItem key={op.guid} value={op.guid}>
-                                            {op.name}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-                        </Box>
-                    )}
+                                    <Field
+                                        full
+                                        name="name"
+                                        label="Name"
+                                        required
+                                        value={values.name}
+                                        onChange={handleChange}
+                                        state={values.name && values.name.trim() ? 'pristine' : (values.id ? 'invalid' : 'pristine')}
+                                        help={
+                                            values.id && (!values.name || !values.name.trim())
+                                                ? 'A process must have a name.'
+                                                : 'Shown across the tree, breadcrumbs, and dispatch board.'
+                                        }
+                                    />
+                                    <Field
+                                        full
+                                        kind="textarea"
+                                        name="description"
+                                        label="Description"
+                                        rows={2}
+                                        value={values.description}
+                                        onChange={handleChange}
+                                        help="Free-form notes — what this process does, where it's used."
+                                    />
+                                    <Field
+                                        full
+                                        name="commonUid"
+                                        label="Common UID"
+                                        value={values.commonUid}
+                                        onChange={handleChange}
+                                        placeholder="e.g. 7G-MNT-014"
+                                        help="Stable identifier shared with external systems (ERP, MES). Optional."
+                                    />
+                                </EditorSection>
+
+                                <EditorSection
+                                    number={2}
+                                    title="Operation binding"
+                                    filled={operationFilled}
+                                    total={1}
+                                    done={operationFilled === 1 && missedInputs.length === 0}
+                                    defaultCollapsed={!values.operationGuid && !!values.name}
+                                >
+                                    <Field
+                                        full
+                                        kind="select"
+                                        name="operationGuid"
+                                        label="Operation"
+                                        value={values.operationGuid}
+                                        onChange={handleChange}
+                                        placeholder="No operation"
+                                        options={(ops || []).map(op => ({ value: op.guid, label: op.name }))}
+                                        state={missedInputs.length > 0 ? 'warn' : (values.operationGuid ? 'ok' : 'pristine')}
+                                        help={
+                                            missedInputs.length > 0
+                                                ? `${missedInputs.length} parameter${missedInputs.length > 1 ? 's' : ''} unresolved: ${missedInputs.join(', ')}`
+                                                : values.operationGuid
+                                                    ? 'Operation is wired to upstream parameters.'
+                                                    : 'Pick the operation plugin that drives this process.'
+                                        }
+                                    />
+                                </EditorSection>
+                            </Box>
+                        );
+                    }}
                 />
             }
             relations={

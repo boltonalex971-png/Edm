@@ -1,281 +1,262 @@
 import React, { useState } from 'react';
 import {
-    AppBar,
-    Toolbar,
-    Typography,
-    IconButton,
     Box,
     Menu,
     MenuItem,
     Avatar,
     Divider,
-    Button,
-    Tooltip,
-    Badge,
+    Typography,
     Chip,
-    Select,
-    FormControl,
-    useTheme
+    ListSubheader
 } from '@mui/material';
 import {
-    Notifications as NotificationsIcon,
     Settings as SettingsIcon,
     ExitToApp as LogoutIcon,
     Person as PersonIcon,
+    Business as BusinessIcon,
+    Engineering as EngineeringIcon,
+    PersonOutline as OperatorIcon,
     Dashboard as DashboardIcon,
     SettingsApplications as ConfigIcon,
     Extension as PluginsIcon,
-    Help as HelpIcon,
+    Home as HomeIcon,
+    Search as SearchIcon,
     KeyboardArrowDown as ArrowDownIcon,
-    Business as BusinessIcon,
-    Engineering as EngineeringIcon,
-    PersonOutline as OperatorIcon
+    DensitySmall as DensityCompactIcon,
+    DensityMedium as DensityComfortIcon,
+    DensityLarge as DensityTouchIcon,
+    LightModeOutlined as LightIcon,
+    DarkModeOutlined as DarkIcon,
+    Check as CheckIcon
 } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
-import { Link, useLocation, useHistory } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import api from './api';
 import { appRoles } from '../ApiContext';
-import logo from '../../public/applogo.svg';
-import styles from './NavMenu.module.scss';
+import { displayUserName, userInitials } from './utils/userName';
+import { useConnectionState, STATUS_TO_PIP } from './realtime/useConnectionState';
+import { useUiPreferences } from '../styles/UiPreferencesContext';
+import applogo from '../assets/applogo.svg';
 
 const ROLES = {
-    [appRoles.admin]: {
-        label: 'Administrator',
-        icon: <BusinessIcon fontSize="small" />,
-    },
-    [appRoles.technologist]: {
-        label: 'Technologist',
-        icon: <EngineeringIcon fontSize="small" />,
-    },
-    [appRoles.operator]: {
-        label: 'Operator',
-        icon: <OperatorIcon fontSize="small" />,
-    }
+    [appRoles.admin]: { label: 'Administrator', icon: <BusinessIcon fontSize="small" /> },
+    [appRoles.technologist]: { label: 'Technologist', icon: <EngineeringIcon fontSize="small" /> },
+    [appRoles.operator]: { label: 'Operator', icon: <OperatorIcon fontSize="small" /> }
 };
 
-export const NavMenu = (props) => {
+export const NavMenu = () => {
     const user = useSelector(s => s.user);
     const location = useLocation();
-    const history = useHistory();
     const [userMenuAnchor, setUserMenuAnchor] = useState(null);
-    const [notificationsAnchor, setNotificationsAnchor] = useState(null);
+    const [roleMenuAnchor, setRoleMenuAnchor] = useState(null);
+    /* HANDOFF · v2 04f.4 · live SignalR status drives the chrome pip. */
+    const { status: connStatus } = useConnectionState(`${api.baseUrl}/hub`);
+    const pip = STATUS_TO_PIP[connStatus];
 
     const setRole = (role) =>
         axios.put(`${api.auth}/user/role`, JSON.stringify(role), { headers: { 'Content-Type': 'application/json' } })
-            .then(r => {
-                window.location.reload();
-            })
+            .then(() => window.location.reload())
             .catch(r => alert(r.response?.data?.detail || r.message));
 
-    const handleUserMenuOpen = (event) => {
-        setUserMenuAnchor(event.currentTarget);
-    };
-
-    const handleUserMenuClose = () => {
-        setUserMenuAnchor(null);
-    };
-
-    const handleNotificationsOpen = (event) => {
-        setNotificationsAnchor(event.currentTarget);
-    };
-
-    const handleNotificationsClose = () => {
-        setNotificationsAnchor(null);
-    };
-
-    const handleLogout = () => {
-        handleUserMenuClose();
-    };
-
-    const isPathActive = (path) => {
-        if (path === '/') return location.pathname === '/';
+    const isPathActive = (path, exact) => {
+        if (exact) return location.pathname === path;
         return location.pathname.startsWith(path);
     };
 
-    const navItems = [];
+    const navItems = [{ id: 'home', label: 'Home', path: '/', icon: <HomeIcon fontSize="small" />, exact: true }];
     if (user && user.role === appRoles.operator) {
-        navItems.push({ id: 'operations', label: 'Operations', path: '/dashboard/operations', icon: <ConfigIcon /> });
+        navItems.push({ id: 'operations', label: 'Operations', path: '/dashboard/operations', icon: <ConfigIcon fontSize="small" /> });
     } else if (user && user.role) {
-        navItems.push({ id: 'dashboard', label: 'Dashboard', path: '/dashboard/operations', icon: <DashboardIcon /> });
-        navItems.push({ id: 'config', label: 'Configuration', path: '/config/processes', icon: <ConfigIcon /> });
-        navItems.push({ id: 'plugins', label: 'Plugins', path: '/plugins/drivers', icon: <PluginsIcon /> });
+        navItems.push({ id: 'dashboard', label: 'Dashboard', path: '/dashboard', icon: <DashboardIcon fontSize="small" /> });
+        navItems.push({ id: 'config', label: 'Configuration', path: '/config', icon: <ConfigIcon fontSize="small" /> });
+        navItems.push({ id: 'plugins', label: 'Plugins', path: '/plugins', icon: <PluginsIcon fontSize="small" /> });
     }
 
+    const initials = userInitials(user?.name);
+    const userShort = displayUserName(user?.name);
+    const activeRole = user?.role ? ROLES[user.role] : null;
+    const { density, scheme, setDensity, setScheme } = useUiPreferences();
+
+    const DENSITY_OPTIONS = [
+        { value: 'compact',     label: 'Compact',     Icon: DensityCompactIcon },
+        { value: 'comfortable', label: 'Comfortable', Icon: DensityComfortIcon },
+        { value: 'touch',       label: 'Touch',       Icon: DensityTouchIcon },
+    ];
+    const SCHEME_OPTIONS = [
+        { value: 'light', label: 'Light', Icon: LightIcon },
+        { value: 'dark',  label: 'Dark',  Icon: DarkIcon  },
+    ];
+
     return (
-        <AppBar position="fixed" className={styles.appBar} data-sticky-header="true">
-            <Toolbar sx={{ minHeight: '64px', px: 3 }}>
-                {/* Logo */}
-                <Box component={Link} to="/" className={styles.logoContainer}>
-                    <img src={logo} alt="EDμ" />
-                    <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '18px' }}>
-                        Technologies
-                    </Typography>
-                </Box>
+        <header className="doc-top" data-sticky-header="true">
+            <Link to="/" className="doc-brand">
+                <img className="brand-mark" src={applogo} alt="EDµ" width="42" height="30" />
+                <span className="brand-name">Technologies</span>
+            </Link>
 
-                {/* Navigation */}
-                <Box className={styles.navContainer}>
-                    <Button
-                        component={Link}
-                        to="/"
-                        className={`${styles.navButton} ${isPathActive('/') ? styles.active : ''}`}
+            <nav className="doc-nav">
+                {navItems.map((item) => (
+                    <Link
+                        key={item.id}
+                        to={item.path}
+                        className={`nav-link ${isPathActive(item.path, item.exact) ? 'active' : ''}`}
                     >
-                        Home
-                    </Button>
-                    {navItems.map((item) => (
-                        <Button
-                            key={item.id}
-                            component={Link}
-                            to={item.path}
-                            startIcon={item.icon}
-                            className={`${styles.navButton} ${isPathActive(item.path) ? styles.active : ''}`}
-                        >
-                            {item.label}
-                        </Button>
-                    ))}
+                        {item.icon}
+                        <span className="nav-label">{item.label}</span>
+                    </Link>
+                ))}
+            </nav>
+
+            <div className="tb-spacer" aria-hidden="true" />
+
+            {/* IMPROVISED · v2 04f.3 search slot — visual only; ⌘K wiring lands when search is built. */}
+            <button type="button" className="tb-search" tabIndex={-1}>
+                <SearchIcon fontSize="small" className="tb-search-icon" />
+                <span className="tb-search-text">Search…</span>
+                <span className="kbd">⌘K</span>
+            </button>
+
+            {user && user.roles && activeRole && (
+                <button
+                    type="button"
+                    className={`tb-role ${user.role}`}
+                    onClick={(e) => setRoleMenuAnchor(e.currentTarget)}
+                >
+                    <span className="tb-role-icon">{activeRole.icon}</span>
+                    <span className="tb-role-text">{activeRole.label}</span>
+                    <ArrowDownIcon fontSize="small" className="tb-role-chev" />
+                </button>
+            )}
+
+            <span className={`tb-pip ${pip.kind}`} title={`Hub status: ${pip.label.toLowerCase()}`}>
+                <span className="dot" />
+                <span className="tb-pip-text">{pip.label}</span>
+            </span>
+
+            {user?.name && (
+                <Box
+                    className="av"
+                    onClick={(e) => setUserMenuAnchor(e.currentTarget)}
+                    title={user.name}
+                >
+                    {initials}
                 </Box>
+            )}
 
-                {/* Actions */}
-                <Box className={styles.actionContainer}>
-                    {/* Role Selector */}
-                    {user && user.roles && (
-                        <FormControl size="small" className={styles.roleSelector}>
-                            <Select
-                                value={user.role}
-                                onChange={(e) => setRole(e.target.value)}
-                                displayEmpty
-                                variant="outlined"
-                                renderValue={(value) => (
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        {ROLES[value]?.icon}
-                                        <Typography variant="body2" sx={{ fontSize: '13px' }}>
-                                            {ROLES[value]?.label || value}
-                                        </Typography>
-                                    </Box>
-                                )}
-                            >
-                                {user.roles.map((role) => (
-                                    <MenuItem key={role} value={role}>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            {ROLES[role]?.icon}
-                                            <Typography variant="body2">{ROLES[role]?.label || role}</Typography>
-                                        </Box>
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                    )}
+            <Menu
+                anchorEl={roleMenuAnchor}
+                open={Boolean(roleMenuAnchor)}
+                onClose={() => setRoleMenuAnchor(null)}
+                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+            >
+                {user?.roles?.map((role) => (
+                    <MenuItem
+                        key={role}
+                        selected={role === user.role}
+                        onClick={() => { setRoleMenuAnchor(null); setRole(role); }}
+                    >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            {ROLES[role]?.icon}
+                            {ROLES[role]?.label || role}
+                        </Box>
+                    </MenuItem>
+                ))}
+            </Menu>
 
-                    {/* Notifications */}
-                    <Tooltip title="Notifications">
-                        <IconButton onClick={handleNotificationsOpen} className={styles.iconBtn}>
-                            <Badge badgeContent={3} color="error">
-                                <NotificationsIcon />
-                            </Badge>
-                        </IconButton>
-                    </Tooltip>
-
-                    {/* Help */}
-                    <Tooltip title="Help">
-                        <IconButton className={styles.iconBtn}>
-                            <HelpIcon />
-                        </IconButton>
-                    </Tooltip>
-
-                    <Divider orientation="vertical" flexItem sx={{ backgroundColor: 'rgba(255,255,255,0.2)', mx: 1 }} />
-
-                    {/* User Menu */}
-                    <Box onClick={handleUserMenuOpen} className={styles.userContainer}>
-                        <Avatar sx={{ width: 32, height: 32, backgroundColor: '#5c6bc0', fontSize: '14px', fontWeight: 600 }}>
-                            {user.name ? user.name.split(' ').map(n => n[0]).join('') : 'U'}
+            <Menu
+                anchorEl={userMenuAnchor}
+                open={Boolean(userMenuAnchor)}
+                onClose={() => setUserMenuAnchor(null)}
+                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                slotProps={{ paper: { sx: { width: 260, mt: 1 } } }}
+            >
+                {user?.name && (
+                    <Box sx={{ p: 2, pb: 1.5, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                        <Avatar sx={{
+                            width: 40,
+                            height: 40,
+                            bgcolor: 'var(--accent)',
+                            color: 'var(--accent-fg)',
+                            fontSize: 14,
+                            fontWeight: 700,
+                            borderRadius: 1,
+                        }}>
+                            {initials}
                         </Avatar>
-                        <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
-                            <Typography variant="body2" sx={{ fontWeight: 500, fontSize: '13px', lineHeight: 1.2, color: '#fff' }}>
-                                {user.name}
-                            </Typography>
-                            <Typography variant="caption" sx={{ opacity: 0.7, fontSize: '11px', color: '#fff' }}>
-                                {user.role}
-                            </Typography>
-                        </Box>
-                        <ArrowDownIcon fontSize="small" sx={{ opacity: 0.7, color: '#fff' }} />
-                    </Box>
-                </Box>
-
-                {/* Menus... (omitted for brevity, they don't use styled components but standard MUI) */}
-                <Menu
-                    anchorEl={userMenuAnchor}
-                    open={Boolean(userMenuAnchor)}
-                    onClose={handleUserMenuClose}
-                    PaperProps={{
-                        sx: { width: 280, mt: 1.5, boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }
-                    }}
-                    transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                    anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-                >
-                    <Box sx={{ p: 2, pb: 1 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-                            <Avatar sx={{ width: 48, height: 48, backgroundColor: '#1a237e', fontSize: '18px', fontWeight: 600 }}>
-                                {user.name ? user.name.split(' ').map(n => n[0]).join('') : 'U'}
-                            </Avatar>
-                            <Box>
-                                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                                    {user.name}
-                                </Typography>
-                                <Box sx={{ mt: 0.5 }}>
-                                    <Chip label={user.role} size="small" />
-                                </Box>
-                            </Box>
-                        </Box>
-                    </Box>
-                    <Divider />
-                    <MenuItem onClick={handleUserMenuClose} sx={{ py: 1.5 }}>
-                        <PersonIcon fontSize="small" sx={{ mr: 1.5, color: '#616161' }} />
-                        Profile
-                    </MenuItem>
-                    <MenuItem onClick={handleUserMenuClose} sx={{ py: 1.5 }}>
-                        <SettingsIcon fontSize="small" sx={{ mr: 1.5, color: '#616161' }} />
-                        Account Settings
-                    </MenuItem>
-                    <Divider />
-                    <MenuItem onClick={handleLogout} sx={{ py: 1.5, color: '#d32f2f' }}>
-                        <LogoutIcon fontSize="small" sx={{ mr: 1.5 }} />
-                        Logout
-                    </MenuItem>
-                </Menu>
-
-                <Menu
-                    anchorEl={notificationsAnchor}
-                    open={Boolean(notificationsAnchor)}
-                    onClose={handleNotificationsClose}
-                    PaperProps={{
-                        sx: { width: 360, maxHeight: 480, mt: 1.5, boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }
-                    }}
-                    transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                    anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-                >
-                    <Box sx={{ p: 2, borderBottom: '1px solid #e0e0e0' }}>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                            Notifications (3)
-                        </Typography>
-                    </Box>
-                    <MenuItem sx={{ py: 2, borderBottom: '1px solid #f0f0f0' }}>
                         <Box>
-                            <Typography variant="body2" sx={{ fontWeight: 500, mb: 0.5 }}>Process completed successfully</Typography>
-                            <Typography variant="caption" color="textSecondary">5 minutes ago</Typography>
+                            <Typography
+                                title={user.name}
+                                sx={{ fontSize: 13, fontWeight: 700, color: 'var(--ink-1)' }}
+                            >
+                                {userShort}
+                            </Typography>
+                            <Chip label={user.role} size="small" sx={{ mt: 0.5 }} />
                         </Box>
-                    </MenuItem>
-                    <MenuItem sx={{ py: 2, borderBottom: '1px solid #f0f0f0' }}>
-                        <Box>
-                            <Typography variant="body2" sx={{ fontWeight: 500, mb: 0.5 }}>New device connected</Typography>
-                            <Typography variant="caption" color="textSecondary">1 hour ago</Typography>
-                        </Box>
-                    </MenuItem>
-                    <Divider />
-                    <Box sx={{ p: 1.5, textAlign: 'center' }}>
-                        <Typography variant="body2" color="primary" sx={{ cursor: 'pointer' }}>View all notifications</Typography>
                     </Box>
-                </Menu>
-            </Toolbar>
-        </AppBar>
+                )}
+                <Divider />
+                <MenuItem onClick={() => setUserMenuAnchor(null)}>
+                    <PersonIcon fontSize="small" sx={{ mr: 1.5 }} />
+                    Profile
+                </MenuItem>
+                <MenuItem onClick={() => setUserMenuAnchor(null)}>
+                    <SettingsIcon fontSize="small" sx={{ mr: 1.5 }} />
+                    Account Settings
+                </MenuItem>
+
+                <Divider />
+                <ListSubheader sx={{
+                    fontFamily: 'var(--font-mono)', fontSize: 10.5, lineHeight: '24px',
+                    textTransform: 'uppercase', letterSpacing: '0.06em',
+                    color: 'var(--ink-4)', background: 'transparent',
+                    pl: 2,
+                }}>
+                    Density
+                </ListSubheader>
+                {DENSITY_OPTIONS.map(({ value, label, Icon }) => (
+                    <MenuItem
+                        key={value}
+                        selected={density === value}
+                        onClick={() => setDensity(value)}
+                        sx={{ pr: 2 }}
+                    >
+                        <Icon fontSize="small" sx={{ mr: 1.5, color: 'var(--ink-3)' }} />
+                        <span style={{ flex: 1 }}>{label}</span>
+                        {density === value && <CheckIcon fontSize="small" sx={{ color: 'var(--accent)' }} />}
+                    </MenuItem>
+                ))}
+
+                <Divider />
+                <ListSubheader sx={{
+                    fontFamily: 'var(--font-mono)', fontSize: 10.5, lineHeight: '24px',
+                    textTransform: 'uppercase', letterSpacing: '0.06em',
+                    color: 'var(--ink-4)', background: 'transparent',
+                    pl: 2,
+                }}>
+                    Scheme
+                </ListSubheader>
+                {SCHEME_OPTIONS.map(({ value, label, Icon }) => (
+                    <MenuItem
+                        key={value}
+                        selected={scheme === value}
+                        onClick={() => setScheme(value)}
+                        sx={{ pr: 2 }}
+                    >
+                        <Icon fontSize="small" sx={{ mr: 1.5, color: 'var(--ink-3)' }} />
+                        <span style={{ flex: 1 }}>{label}</span>
+                        {scheme === value && <CheckIcon fontSize="small" sx={{ color: 'var(--accent)' }} />}
+                    </MenuItem>
+                ))}
+
+                <Divider />
+                <MenuItem onClick={() => setUserMenuAnchor(null)} sx={{ color: 'var(--sig-fault-deep)' }}>
+                    <LogoutIcon fontSize="small" sx={{ mr: 1.5 }} />
+                    Logout
+                </MenuItem>
+            </Menu>
+        </header>
     );
 };

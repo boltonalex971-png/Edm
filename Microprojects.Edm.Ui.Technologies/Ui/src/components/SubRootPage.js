@@ -1,18 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Button } from '@mui/material';
 import { NavLink, useLocation } from 'react-router-dom';
-import styles from './SubRootPage.module.scss';
+
+// HANDOFF · v2 04f.9 · page-head squeeze. Body scroll past 12 px collapses
+// the title from 28 → 16 px (height 72 → 48 px), 180 ms cubic-bezier easing.
+// Hysteresis at 4 px on the way back up to avoid flicker at the threshold.
+const SQUEEZE_ON = 12;
+const SQUEEZE_OFF = 4;
 
 export const SubRootPage = ({ title, menuItems, children }) => {
-    const [isDense, setIsDense] = useState(false);
+    const [isSqueezed, setIsSqueezed] = useState(false);
     const location = useLocation();
 
     useEffect(() => {
         const handleScroll = () => {
             const scrollY = window.scrollY;
-            setIsDense(prev => {
-                if (!prev && scrollY > 25) return true;
-                if (prev && scrollY < 10) return false;
+            setIsSqueezed(prev => {
+                if (!prev && scrollY > SQUEEZE_ON) return true;
+                if (prev && scrollY < SQUEEZE_OFF) return false;
                 return prev;
             });
         };
@@ -21,34 +25,50 @@ export const SubRootPage = ({ title, menuItems, children }) => {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    const isPathActive = (path) => {
-        return location.pathname.startsWith(path);
-    };
+    const isPathActive = (path) => location.pathname.startsWith(path);
+
+    const crumbSegments = location.pathname.replace(/^\/+/, '').split('/').filter(Boolean).slice(0, 2);
 
     return (
-        <Box className={styles.container}>
-            <Box className={`${styles.header} ${isDense ? styles.isDense : ''}`} data-sticky-header="true">
-                <Typography variant="h5" className={styles.title}>
-                    {title}
-                </Typography>
-                <Box className={styles.segmentedControl}>
-                    {menuItems.map((item) => (
-                        <Button
-                            key={item.path}
-                            component={NavLink}
-                            to={item.path}
-                            className={`${styles.segmentBtn} ${isPathActive(item.path) ? styles.active : ''}`}
-                            startIcon={item.icon}
-                        >
-                            {item.label}
-                        </Button>
+        <>
+            <div
+                className="doc-crumbs"
+                data-sticky-header="true"
+                data-squeezed={isSqueezed ? 'true' : 'false'}
+            >
+                <span className="sep">/</span>
+                {crumbSegments.length === 0
+                    ? <span>Home</span>
+                    : crumbSegments.map((seg, i) => (
+                        <React.Fragment key={`${i}-${seg}`}>
+                            {i > 0 && <span className="sep">/</span>}
+                            <span>{seg}</span>
+                        </React.Fragment>
                     ))}
-                </Box>
-            </Box>
-            <Box className={styles.content}>
+            </div>
+            <header
+                className="page-head"
+                data-sticky-header="true"
+                data-squeezed={isSqueezed ? 'true' : 'false'}
+            >
+                <h1 className="ph-title">{title}</h1>
+                <nav className="ph-tabs">
+                    {menuItems.map((item) => (
+                        <NavLink
+                            key={item.path}
+                            to={item.path}
+                            className={isPathActive(item.path) ? 'active' : ''}
+                        >
+                            {item.icon}
+                            {item.label}
+                        </NavLink>
+                    ))}
+                </nav>
+            </header>
+            <div className="doc-body">
                 {children}
-            </Box>
-        </Box>
+            </div>
+        </>
     );
 };
 

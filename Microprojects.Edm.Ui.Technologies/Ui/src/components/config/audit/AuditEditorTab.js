@@ -168,14 +168,14 @@ export function AuditEditorTab({ id, api, params }) {
             <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: '4px', boxShadow: 'none' }}>
                 <Table size="small" aria-label="audit zones table">
                     <TableHead>
-                        <TableRow sx={{ backgroundColor: '#fafafa' }}>
-                            <TableCell colSpan={3} align="center" sx={{ fontWeight: 700, borderRight: '1px solid #e0e0e0', fontSize: '12px', py: 1 }}>ZONE</TableCell>
+                        <TableRow sx={{ backgroundColor: 'var(--surface-2)' }}>
+                            <TableCell colSpan={3} align="center" sx={{ fontWeight: 700, borderRight: '1px solid var(--line)', fontSize: '12px', py: 1 }}>ZONE</TableCell>
                             <TableCell colSpan={parameters.length} align="center" sx={{ fontWeight: 700, fontSize: '12px', py: 1 }}>PARAMETERS</TableCell>
                         </TableRow>
-                        <TableRow sx={{ backgroundColor: '#fafafa' }}>
+                        <TableRow sx={{ backgroundColor: 'var(--surface-2)' }}>
                             <TableCell sx={{ fontWeight: 600, fontSize: '11px', width: 50 }}>#</TableCell>
                             <TableCell sx={{ fontWeight: 600, fontSize: '11px', width: 120 }}>INTERVAL</TableCell>
-                            <TableCell sx={{ fontWeight: 600, fontSize: '11px', borderRight: '1px solid #e0e0e0' }}>ACTIVE WHEN</TableCell>
+                            <TableCell sx={{ fontWeight: 600, fontSize: '11px', borderRight: '1px solid var(--line)' }}>ACTIVE WHEN</TableCell>
                             {parameters.map(p => (
                                 <TableCell key={p} sx={{ fontWeight: 600, fontSize: '11px' }}>{p}</TableCell>
                             ))}
@@ -200,7 +200,7 @@ export function AuditEditorTab({ id, api, params }) {
                                 </TableCell>
                                 <TableCell 
                                     onClick={() => toggleZoneEditor(zone)} 
-                                    sx={{ cursor: 'pointer', borderRight: '1px solid #e0e0e0' }}
+                                    sx={{ cursor: 'pointer', borderRight: '1px solid var(--line)' }}
                                 >
                                     <Typography variant="body2" sx={{ fontSize: '13px' }}>
                                         {zone.activeWhen}

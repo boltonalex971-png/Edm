@@ -26,7 +26,7 @@ import {
     CheckCircle as CheckCircleIcon,
     ArrowForward as ArrowForwardIcon
 } from '@mui/icons-material';
-import api from '../api';
+import api, {spaUrl} from '../api';
 import { useGet } from '../hooks/hooks';
 import { SmartScroll, SmartScrollContent } from '@microprojects/tools';
 import { Loading } from '../utils/Utils';
@@ -120,7 +120,7 @@ export function NewOperationWizard() {
         };
         axios.post(api.operations, data)
             .then((op) => {
-                window.open(`${api.baseUrl}/operations/${op.data.id}`, '_blank')
+                window.open(spaUrl(`/operations/${op.data.id}`), '_blank')
             })
             .catch((error) => setError(error.message || error));
     };
@@ -244,7 +244,7 @@ export function NewOperationWizard() {
                 </SmartScrollContent>
 
                 <SmartScrollContent style={{ flex: 1 }}>
-                    <Paper variant="outlined" sx={{ p: 3, borderRadius: '4px', minHeight: '400px', backgroundColor: '#fafafa' }}>
+                    <Paper variant="outlined" sx={{ p: 3, minHeight: '400px', backgroundColor: 'var(--surface-2)' }}>
                         {detail}
                     </Paper>
                 </SmartScrollContent>
@@ -287,14 +287,13 @@ const ProcessDetail = ({ id }) => {
 
 function Step({ step, children, disabled, description, active }) {
     return (
-        <Paper 
-            variant="outlined" 
-            sx={{ 
-                p: 2, 
-                borderRadius: '4px',
+        <Paper
+            variant="outlined"
+            sx={{
+                p: 2,
                 opacity: disabled ? 0.5 : 1,
                 pointerEvents: disabled ? 'none' : 'auto',
-                borderLeft: active || !disabled ? '4px solid #1976d2' : undefined,
+                borderLeft: active || !disabled ? '4px solid var(--accent)' : undefined,
                 transition: 'all 0.2s'
             }}
         >

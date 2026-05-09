@@ -4,9 +4,16 @@ import {useGet} from '../hooks/hooks';
 import api from '../api';
 import {OperationPluginContainer} from './OperationPluginContainer';
 import {OperationMenu} from './OperationMenu.js';
-import { IconButton, Box, Divider, Typography } from '@mui/material';
-import { KeyboardArrowUp as ArrowUpIcon, KeyboardArrowDown as ArrowDownIcon } from '@mui/icons-material';
+import {KeyboardArrowDown as ArrowDownIcon} from '@mui/icons-material';
 import axios from 'axios';
+import styles from './OperationLayout.module.scss';
+
+// HANDOFF · v2 PAT-03 · operator workstation. Force `data-role="op"`
+// (green accent), `data-scheme="dark"` (operator default per spec — kept
+// at "light" for now since dark token overlays aren't keyed off the
+// attribute yet, see `styles/scheme.ts` PENDING note), and `density-touch`
+// for gloved-fingertip targets. Skip the regular plugin chrome — the
+// operator console is a single-job screen, not a browser of entities.
 
 export function OperationLayout() {
     const {id} = useParams()
@@ -17,29 +24,36 @@ export function OperationLayout() {
     const [to, setTo] = useState('')
     const [hidden, setHidden] = useState(false)
     const saveSettings = (msg) => msg.type === 'Settings' && axios.put(`${api.operations}/${id}/settings`, msg.data)
-    
+
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100%', position: 'relative' }}>
+        <div
+            className={`${styles.shell} density-touch`}
+            data-role="op"
+            data-scheme="light"
+            data-plugin="technologies"
+        >
             {(info && options) && (
                 <>
-                    <IconButton
-                        onClick={() => setHidden((h) => !h)}
-                        sx={{ position: 'absolute', top: 8, right: 15, zIndex: 1301, backgroundColor: 'rgba(255,255,255,0.8)', '&:hover': { backgroundColor: '#fff' } }}
-                        size="small"
-                    >
-                        {hidden ? <ArrowDownIcon /> : <ArrowUpIcon />}
-                    </IconButton>
-                    
-                    {!hidden && (
-                        <Box sx={{ zIndex: 1300 }}>
-                            <OperationMenu
-                                operation={info}
-                                to={setTo}
-                            />
-                        </Box>
-                    )}
+                    <OperationMenu
+                        operation={info}
+                        to={setTo}
+                        collapsed={hidden}
+                        onCollapse={() => setHidden(true)}
+                    />
 
-                    <Box sx={{ flex: 1, display: 'flex', minHeight: 0 }}>
+                    <button
+                        type="button"
+                        className={styles.collapseFloat}
+                        data-visible={hidden ? 'true' : 'false'}
+                        onClick={() => setHidden(false)}
+                        title="Show toolbar"
+                        aria-label="Show toolbar"
+                        tabIndex={hidden ? 0 : -1}
+                    >
+                        <ArrowDownIcon fontSize="small" />
+                    </button>
+
+                    <div className={styles.body}>
                         <OperationPluginContainer
                             title='Operation Console'
                             id={id}
@@ -48,19 +62,9 @@ export function OperationLayout() {
                             src={`${api.baseUrl}/${options.homepage}?id=${id}`}
                             onMessage={saveSettings}
                         />
-                    </Box>
-
-                    {!hidden && (
-                        <Box sx={{ p: 1, borderTop: '1px solid #e0e0e0' }}>
-                            <Typography variant="caption" color="textSecondary">
-                                &#169; Microprojects {new Date().getFullYear()}
-                            </Typography>
-                        </Box>
-                    )}
+                    </div>
                 </>
             )}
-        </Box>
+        </div>
     )
 }
-
-

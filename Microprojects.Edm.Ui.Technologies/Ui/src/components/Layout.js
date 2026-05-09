@@ -1,14 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import { Box, Typography, Divider, Stack, Chip } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { NavMenu } from './NavMenu';
 import api from './api';
-import styles from './Layout.module.scss';
 
-export const Layout = (props) => {
+const SEEN_KEY = 'edm.changelog.seen';
+
+export const Layout = ({ children }) => {
     const currYear = new Date().getFullYear();
     const [versions, setVersions] = useState(null);
+    const [seenVersion, setSeenVersion] = useState(() => {
+        try { return localStorage.getItem(SEEN_KEY) || ''; } catch { return ''; }
+    });
+    const location = useLocation();
 
     useEffect(() => {
         const controller = new AbortController();
@@ -19,53 +23,46 @@ export const Layout = (props) => {
         return () => controller.abort();
     }, []);
 
+    /* HANDOFF · v2 chrome.html footer · "What's new" nudge. Compare the
+       latest backend `main` version against the version the user has
+       previously seen (localStorage). On visit to /changes mark seen. */
+    useEffect(() => {
+        if (location.pathname.startsWith('/changes') && versions?.main && versions.main !== seenVersion) {
+            try { localStorage.setItem(SEEN_KEY, versions.main); } catch { /* ignore */ }
+            setSeenVersion(versions.main);
+        }
+    }, [location.pathname, versions?.main, seenVersion]);
+
+    const hasNudge = !!(versions?.main && versions.main !== seenVersion);
+
     return (
-        <Box className={styles.layoutRoot}>
+        <>
             <NavMenu />
 
-            <Box component="main" className={styles.mainContent}>
-                <Box className={styles.detailWrapper}>
-                    {props.children}
-                </Box>
-            </Box>
+            <main className="page-main">
+                {children}
+            </main>
 
-            <Box component="footer" className={styles.footer}>
-                <Stack direction="row" spacing={3} alignItems="center">
-                    <Typography variant="caption" color="textSecondary" sx={{ fontWeight: 500 }}>
-                        &copy; Microprojects 2020 &ndash; {currYear}
-                    </Typography>
-                    <Divider orientation="vertical" flexItem />
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Box className={`${styles.statusIndicator} ${styles.online}`} />
-                        <Typography variant="caption" color="textSecondary">
-                            System Connected
-                        </Typography>
-                    </Box>
-                </Stack>
-
-                <Stack direction="row" spacing={2} alignItems="center">
-                    <Chip
-                        label={`Main ${versions?.main ?? '—'}`}
-                        size="small"
-                        variant="outlined"
-                        className={styles.versionChip}
-                    />
-                    <Chip
-                        label={`EDM ${versions?.product ?? '—'}`}
-                        size="small"
-                        variant="outlined"
-                        className={styles.versionChip}
-                    />
-                    <RouterLink to="/changes" className={styles.footerLink}>
-                        <Typography variant="caption" color="textSecondary">
-                            What's new
-                        </Typography>
+            <footer className="page-footer">
+                <div className="footer-left">
+                    <span>&copy; Microprojects 2020 &ndash; {currYear}</span>
+                </div>
+                <div className="footer-right">
+                    <span className="version-chip">Main {versions?.main ?? '—'}</span>
+                    <span className="version-chip">EDM {versions?.product ?? '—'}</span>
+                    <RouterLink
+                        to="/changes"
+                        className={`footer-link ${hasNudge ? 'has-nudge' : ''}`}
+                        title={hasNudge ? `Updated to ${versions.main}` : undefined}
+                    >
+                        What's new
+                        {hasNudge && <span className="nudge-dot" aria-hidden="true" />}
                     </RouterLink>
-                </Stack>
-            </Box>
-        </Box>
+                </div>
+            </footer>
+        </>
     );
-}
+};
 
 Layout.propTypes = {
     children: PropTypes.any

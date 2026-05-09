@@ -2,18 +2,15 @@ import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useGet } from '../hooks/hooks';
 import { useHistory, useParams, useRouteMatch } from 'react-router-dom';
-import { MasterDetail, reloadMaster, Detail, Info, Editor, InfoItem } from '../MasterDetail';
+import { MasterDetail, reloadMaster, Detail, Editor } from '../MasterDetail';
 import { HostTabs } from './host/HostTabs';
 import Api from '../api';
 import { HostConsole } from './host/HostConsole';
 import { Dns as DnsIcon, Terminal as ConsoleIcon } from '@mui/icons-material';
-import { 
-    Box, 
-    Button as MuiButton,
-    Chip,
-    Grid,
-    TextField
-} from '@mui/material';
+import { Box, Button as MuiButton } from '@mui/material';
+import { Properties, Property } from '../forms/Properties';
+import { EditorSection } from '../forms/EditorSection';
+import { Field } from '../forms/Field';
 
 export function Hosts() {
     const history = useHistory();
@@ -53,56 +50,50 @@ export function HostDetail({ hostId, parents, ...props }) {
     if (!data || data.id === 0) {
         data = { ...data, name: '', description: '', url: '' };
     }
+
+    const statusBadge = (
+        <span className={`badge ${data.active ? 'run' : 'idle'}`}>
+            <span className="dot" />
+            {data.active ? 'Online' : 'Offline'}
+        </span>
+    );
+
     return (
         <Detail {...props}
             id={id}
             type={type}
             icon={<DnsIcon />}
-
             loading={loading}
             error={error}
             data={data}
             parents={parents}
             subDetail={sub}
+            status={statusBadge}
             card={
-                <Info {...props}
-                    data={data}
-                    content={
-                        <>
-                            <InfoItem label="Address" value={`${data.url}:${data.port}`} />
-                            <InfoItem label="Status">
-                                <Chip 
-                                    label={data.active ? 'Online' : 'Offline'} 
-                                    color={data.active ? 'success' : 'error'} 
-                                    size="small" 
-                                    variant="outlined"
-                                    sx={{ borderRadius: '4px' }}
-                                />
-                            </InfoItem>
-                            {data.version && <InfoItem label="Version" value={data.version} />}
-                            {data.mode && <InfoItem label="Mode" value={data.mode} />}
-                            {data.environment && <InfoItem label="Environment" value={data.environment} />}
-                            
-                            <Grid item xs={12}>
-                                <MuiButton 
-                                    variant="outlined"
-                                    size="small"
-                                    startIcon={<ConsoleIcon />}
-                                    disabled={data.active === false}
-                                    onClick={() => setSub(
-                                        <HostConsole
-                                            data={data}
-                                            onClose={() => setSub()}
-                                        />)
-                                    }
-                                    sx={{ mt: 1, textTransform: 'none', borderRadius: '4px' }}
-                                >
-                                    Open Host Console
-                                </MuiButton>
-                            </Grid>
-                        </>
-                    }
-                />
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    <Properties>
+                        <Property label="Address" value={`${data.url || ''}${data.port ? `:${data.port}` : ''}`} mono placeholder="—" />
+                        <Property label="Version" value={data.version} mono placeholder="—" />
+                        <Property label="Mode" value={data.mode} placeholder="—" />
+                        <Property label="Environment" value={data.environment} placeholder="—" />
+                    </Properties>
+                    <Box>
+                        <MuiButton
+                            variant="outlined"
+                            size="small"
+                            startIcon={<ConsoleIcon />}
+                            disabled={data.active === false}
+                            onClick={() => setSub(
+                                <HostConsole
+                                    data={data}
+                                    onClose={() => setSub()}
+                                />)
+                            }
+                        >
+                            Open Host Console
+                        </MuiButton>
+                    </Box>
+                </Box>
             }
             editor={
                 <Editor {...props}
@@ -110,45 +101,73 @@ export function HostDetail({ hostId, parents, ...props }) {
                     data={data}
                     setData={setData}
                     onUpdate={props.onUpdate}
-                    content={({ values, handleChange }) => (
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                            <TextField
-                                fullWidth
-                                label="Name"
-                                name="name"
-                                value={values.name || ''}
-                                onChange={handleChange}
-                                size="small"
-                            />
-                            <TextField
-                                fullWidth
-                                label="Description"
-                                name="description"
-                                value={values.description || ''}
-                                onChange={handleChange}
-                                size="small"
-                                multiline
-                                rows={2}
-                            />
-                            <TextField
-                                fullWidth
-                                label="Port"
-                                name="port"
-                                type="number"
-                                value={values.port || ''}
-                                onChange={handleChange}
-                                size="small"
-                            />
-                            <TextField
-                                fullWidth
-                                label="Address"
-                                name="url"
-                                value={values.url || ''}
-                                onChange={handleChange}
-                                size="small"
-                            />
-                        </Box>
-                    )}
+                    content={({ values, handleChange }) => {
+                        const identityFilled = [values.name, values.description]
+                            .filter(v => v && String(v).trim().length > 0).length;
+                        const endpointFilled = [values.url, values.port]
+                            .filter(v => v !== undefined && v !== null && String(v).trim().length > 0).length;
+                        const nameMissing = !!values.id && (!values.name || !values.name.trim());
+                        const urlMissing = !!values.id && (!values.url || !String(values.url).trim());
+
+                        return (
+                            <Box>
+                                <EditorSection
+                                    number={1}
+                                    title="Identity"
+                                    filled={identityFilled}
+                                    total={2}
+                                    done={identityFilled === 2 && !nameMissing}
+                                >
+                                    <Field
+                                        full
+                                        name="name"
+                                        label="Name"
+                                        required
+                                        value={values.name}
+                                        onChange={handleChange}
+                                        state={nameMissing ? 'invalid' : 'pristine'}
+                                        help={nameMissing ? 'A host must have a name.' : 'Shown across the tree, breadcrumbs, and dispatch board.'}
+                                    />
+                                    <Field
+                                        full
+                                        kind="textarea"
+                                        name="description"
+                                        label="Description"
+                                        rows={2}
+                                        value={values.description}
+                                        onChange={handleChange}
+                                    />
+                                </EditorSection>
+
+                                <EditorSection
+                                    number={2}
+                                    title="Endpoint"
+                                    filled={endpointFilled}
+                                    total={2}
+                                    done={endpointFilled === 2 && !urlMissing}
+                                >
+                                    <Field
+                                        name="url"
+                                        label="Address"
+                                        required
+                                        value={values.url}
+                                        onChange={handleChange}
+                                        placeholder="hostname or IP"
+                                        state={urlMissing ? 'invalid' : 'pristine'}
+                                        help={urlMissing ? 'Required to reach the host.' : 'gRPC endpoint, no protocol prefix.'}
+                                    />
+                                    <Field
+                                        name="port"
+                                        label="Port"
+                                        type="number"
+                                        value={values.port}
+                                        onChange={handleChange}
+                                        placeholder="e.g. 16332"
+                                    />
+                                </EditorSection>
+                            </Box>
+                        );
+                    }}
                 />
             }
             relations={

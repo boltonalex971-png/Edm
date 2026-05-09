@@ -26,7 +26,7 @@ export function Changelog() {
     }, [])
 
     return (
-        <Box className="changelog">
+        <Box className="markdown" sx={{ maxWidth: 860, margin: '24px auto', padding: '0 16px' }}>
             {error && (
                 <Typography color="error">
                     Failed to load changelog: {error}
