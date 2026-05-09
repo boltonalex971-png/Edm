@@ -257,9 +257,10 @@ export const theme = createTheme({
                 },
             },
         },
-        // DataGrid v8 — the chrome the design's `.s-row` family describes
-        // adapted for the MUI grid slots. Kept here so RelationTable can
-        // be a thin pass-through.
+        // HANDOFF · v2 04c.2 production data table. DataGrid slots are
+        // restyled to match the v2 .s-row / .row family + sortable header
+        // arrow + active-sort accent tint + checkbox + v2 pagination foot.
+        // RelationTable is a thin pass-through so all visual rules live here.
         MuiDataGrid: {
             styleOverrides: {
                 root: {
@@ -279,9 +280,26 @@ export const theme = createTheme({
                     textTransform: 'uppercase',
                     letterSpacing: '0.06em',
                     fontWeight: 600,
+                    /* Active-sort tint per v2 04c.2 — header text + arrow
+                       lift to accent-deep so the user sees which column
+                       is driving the order. */
+                    '&[aria-sort]:not([aria-sort="none"])': {
+                        color: 'var(--accent-deep)',
+                        background: 'var(--accent-tint)',
+                    },
+                    '& .MuiDataGrid-iconButtonContainer .MuiSvgIcon-root': {
+                        fontSize: 16,
+                    },
+                    '& .MuiDataGrid-sortIcon': {
+                        color: 'var(--accent-deep)',
+                        opacity: 0.85,
+                    },
                 },
                 columnHeaders: {
                     borderBottom: '1px solid var(--line)',
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 2,
                 },
                 columnHeaderTitle: { fontWeight: 600 },
                 row: {
@@ -291,17 +309,74 @@ export const theme = createTheme({
                         boxShadow: 'inset 3px 0 0 var(--accent)',
                         '&:hover': { background: 'var(--accent-tint)' },
                     },
+                    /* Row-edit signal: darken the whole row with the
+                       accent-soft wash. No border, no per-cell ring —
+                       contrast against the editing cells (which stay on
+                       --surface) does the work of showing what's
+                       editable inside it. */
+                    '&.MuiDataGrid-row--editing': {
+                        background: 'var(--accent-soft)',
+                        '&:hover': { background: 'var(--accent-soft)' },
+                    },
                 },
                 cell: {
                     borderBottom: '1px solid var(--line-soft)',
                     color: 'var(--ink-2)',
+                    '&:focus, &:focus-within': { outline: 'none' },
+                    /* Editing cell — clean transparent surface; the
+                       MUI input controls inside (TextField / Select /
+                       Autocomplete) carry their own outlined border via
+                       MuiOutlinedInput, so we don't double-frame them. */
+                    '&.MuiDataGrid-cell--editing': {
+                        background: 'transparent',
+                        boxShadow: 'none',
+                        padding: '0 6px',
+                    },
+                    '& .MuiDataGrid-editInputCell input': {
+                        font: 'inherit',
+                        padding: '0 4px',
+                    },
+                },
+                /* Multi-select checkbox column — accent-tinted when checked,
+                   indeterminate header state inherits from MuiCheckbox. */
+                checkboxInput: {
+                    color: 'var(--ink-3)',
+                    '&.Mui-checked, &.MuiCheckbox-indeterminate': {
+                        color: 'var(--accent)',
+                    },
                 },
                 footerContainer: {
                     borderTop: '1px solid var(--line)',
-                    background: 'var(--surface)',
+                    background: 'var(--surface-2)',
                     color: 'var(--ink-3)',
-                    fontSize: 12,
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 11,
+                    minHeight: 36,
+                    letterSpacing: '0.04em',
                 },
+                selectedRowCount: {
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 11,
+                    color: 'var(--accent-deep)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.06em',
+                },
+                /* Pagination labels — mono uppercase to match the
+                   `.row.head` family. */
+                root2: {},
+            },
+        },
+        MuiTablePagination: {
+            styleOverrides: {
+                root: {
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 11,
+                    color: 'var(--ink-3)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.04em',
+                },
+                selectLabel: { fontFamily: 'inherit', fontSize: 'inherit' },
+                displayedRows: { fontFamily: 'inherit', fontSize: 'inherit' },
             },
         },
     },

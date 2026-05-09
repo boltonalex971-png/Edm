@@ -154,12 +154,13 @@
 // today (`into` for valid targets, `forbidden` for invalid). The third
 // state (`between`) from the spec maps to sibling reorder, which the
 // data model doesn't support — the tree is folder-only, no explicit
-// ordering — so we omit it. The class lands on the .MuiTreeItem-root
-// wrapper; styling targets the inner .MuiTreeItem-content row.
+// ordering — so we omit it. Same lesson learned from the row-edit ring
+// in RelationTable: a single 1 px inset ring + soft tint reads as
+// "drop target" without going chunky on a tight row.
 .dropInto {
     :global(.MuiTreeItem-content) {
         background: var(--accent-tint) !important;
-        box-shadow: inset 0 0 0 2px var(--accent) !important;
+        box-shadow: inset 0 0 0 1px var(--accent) !important;
     }
 
     :global(.MuiTreeItem-label) {
@@ -170,7 +171,7 @@
 .dropForbid {
     :global(.MuiTreeItem-content) {
         background: var(--sig-fault-soft) !important;
-        box-shadow: inset 0 0 0 2px var(--sig-fault) !important;
+        box-shadow: inset 0 0 0 1px var(--sig-fault) !important;
         cursor: not-allowed !important;
     }
 
