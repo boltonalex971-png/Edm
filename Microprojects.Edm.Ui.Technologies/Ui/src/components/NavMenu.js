@@ -62,7 +62,7 @@ export const NavMenu = () => {
     const initials = user?.name ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'U';
 
     return (
-        <header className="doc-top">
+        <header className="doc-top" data-sticky-header="true">
             <Link to="/" className="doc-brand">
                 <span className="brand-line">
                     <span className="brand-block"><span className="ed">ED</span><span className="mu">µ</span></span>

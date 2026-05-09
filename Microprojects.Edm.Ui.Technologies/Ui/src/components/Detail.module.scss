@@ -1,3 +1,10 @@
+// Note: no `overflow: hidden` here. With overflow:hidden, the container
+// becomes a sticky scrollport, and the inner .stickyHeader's `top` value
+// is then applied as an offset from the container top (since the scrollport
+// never actually scrolls), pushing the header below the card body. The
+// rounded corners are kept by the border-radius alone — the sticky header's
+// background is `--surface`, same as the container, so the corners don't
+// reveal anything visually different.
 .detailContainer {
     display: flex;
     flex-direction: column;
@@ -5,17 +12,20 @@
     border: 1px solid var(--line);
     border-radius: var(--r-2);
     box-shadow: var(--elev-1);
-    overflow: hidden;
     position: relative;
     min-height: 400px;
 }
 
+// Not sticky — SmartScroll handles keeping the whole card pinned in the
+// viewport during scroll. A second sticky inside that already-sticky card
+// only fights it (and broke under sticky scrollport rules when the
+// container had `overflow: hidden`). The class name is kept for legacy
+// reasons; only the visual styling remains.
 .stickyHeader {
-    position: sticky;
-    top: 0;
-    z-index: 100;
     background: var(--surface);
     border-bottom: 1px solid var(--line);
+    border-top-left-radius: var(--r-2);
+    border-top-right-radius: var(--r-2);
     padding: 14px 18px;
     display: flex;
     justify-content: space-between;
@@ -175,7 +185,7 @@
 .stickyFooter {
     position: sticky;
     bottom: 0;
-    z-index: 100;
+    z-index: 40;
     background: var(--surface);
     border-top: 1px solid var(--line);
     padding: 12px 18px;

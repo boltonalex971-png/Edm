@@ -70,10 +70,9 @@ export function MasterDetail(props) {
             let maxBottom = 0;
             stickyHeaders.forEach(header => {
                 const rect = header.getBoundingClientRect();
-                // We only care about headers that are fixed or sticky at the top
                 maxBottom = Math.max(maxBottom, rect.bottom);
             });
-            setDynamicOffset(maxBottom + 10); // 10px gap
+            setDynamicOffset(maxBottom + 10);
         };
 
         const observer = new ResizeObserver(updateOffset);
@@ -315,10 +314,11 @@ export function Detail(props) {
 
                         <>
                                 {/* Sticky header — entity identity is carried by the icon glyph,
-                                    not by a tinted surface (per the EDM design system). */}
+                                    not by a tinted surface (per the EDM design system).
+                                    Only the chrome carries data-sticky-header; this card-level
+                                    sticky stays out of SmartScroll's offset calculation. */}
                                 <Box
                                     data-card-header="true"
-                                    data-sticky-header="true"
                                     className={styles.stickyHeader}
                                 >
 
