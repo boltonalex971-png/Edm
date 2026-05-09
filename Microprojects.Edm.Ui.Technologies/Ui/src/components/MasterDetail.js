@@ -41,6 +41,7 @@ import api from './api';
 
 import { Folder } from "./config/Folder";
 import { SmartScroll, SmartScrollContent } from "@microprojects/tools";
+import { useToast } from "./states/Toast";
 import styles from './Detail.module.scss';
 
 export function reloadMaster() {
@@ -175,7 +176,11 @@ Detail.propTypes = {
         name: PropTypes.string,
         icon: PropTypes.node,
         ref: PropTypes.any
-    }))
+    })),
+    // v2 patterns.html · top-right slot in the Detail header grid for a
+    // status badge (Live, Idle, Out-of-spec…). Optional; renders nothing
+    // when omitted, leaving the toolbar to fill the right edge.
+    status: PropTypes.node
 };
 
 
@@ -187,6 +192,7 @@ Detail.defaultProps = {
 
 export function Detail(props) {
     const history = useHistory();
+    const toast = useToast();
     const subDetailRef = React.useRef(null);
     const detailContainerRef = React.useRef(null);
     const [bufferedSubDetail, setBufferedSubDetail] = useState(props.subDetail);
@@ -275,9 +281,11 @@ export function Detail(props) {
         setDeleteDialogOpen(false);
         axios.delete(`${props.api}/${props.data.id}`)
             .then(() => {
+                toast.success(`${props.data.name || 'Item'} deleted`);
                 props.onChange();
                 history.push(props.path);
-            });
+            })
+            .catch((err) => toast.error(err.response?.data?.detail || err.message || 'Delete failed'));
     };
 
     if (props.error) {
@@ -313,63 +321,65 @@ export function Detail(props) {
                     ) : (
 
                         <>
-                                {/* Sticky header — entity identity is carried by the icon glyph,
-                                    not by a tinted surface (per the EDM design system).
-                                    Only the chrome carries data-sticky-header; this card-level
-                                    sticky stays out of SmartScroll's offset calculation. */}
+                                {/* HANDOFF · v2 patterns.html · Detail-panel 4-zone grid header.
+                                    Children carry only their `grid-area` — the layout itself is in
+                                    Detail.module.scss. Status slot is opt-in via `displayProps.status`. */}
                                 <Box
                                     data-card-header="true"
                                     className={styles.stickyHeader}
                                 >
-
-                                <Box className={styles.headerContent}>
                                     <Box className={`${styles.iconWrapper} ${displayProps.type ? styles[displayProps.type] : ''}`}>
                                         {displayProps.icon || (displayProps.type === 'folder' ? <FolderIcon /> : <FileIcon />)}
                                     </Box>
-                                        <Box className={styles.titleArea}>
-                                            <Breadcrumbs 
-                                                separator={<NavigateNextIcon fontSize="inherit" />} 
-                                                aria-label="breadcrumb"
-                                                className={styles.breadcrumbs}
-                                            >
-                                                {displayProps.parents && displayProps.parents.map((p, idx) => (
-                                                    <Link 
-                                                        key={idx}
-                                                        variant="caption" 
-                                                        underline="hover" 
-                                                        color="inherit" 
-                                                        href="#" 
-                                                        component="span"
-                                                        onClick={(e) => { e.preventDefault(); scrollToRef(p.ref); }}
-                                                        sx={{ display: 'flex', alignItems: 'center', gap: 0.5, cursor: 'pointer' }}
-                                                    >
-                                                        {p.icon && React.cloneElement(p.icon, { sx: { fontSize: '12px !important' } })}
-                                                        {p.name}
-                                                    </Link>
-                                                ))}
-                                                <Typography 
-                                                    variant="caption" 
-                                                    color="inherit" 
-                                                    component="span"
-                                                    sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
-                                                >
-                                                    {displayProps.icon && React.cloneElement(displayProps.icon, { sx: { fontSize: '12px !important' } })}
-                                                    {pluralize(displayProps.type)}
-                                                </Typography>
-                                            </Breadcrumbs>
-                                            <Typography variant="h6" className={styles.title}>
 
+                                    <Breadcrumbs
+                                        separator={<NavigateNextIcon fontSize="inherit" />}
+                                        aria-label="breadcrumb"
+                                        className={styles.breadcrumbs}
+                                    >
+                                        {displayProps.parents && displayProps.parents.map((p, idx) => (
+                                            <Link
+                                                key={idx}
+                                                variant="caption"
+                                                underline="hover"
+                                                color="inherit"
+                                                href="#"
+                                                component="span"
+                                                onClick={(e) => { e.preventDefault(); scrollToRef(p.ref); }}
+                                                sx={{ display: 'flex', alignItems: 'center', gap: 0.5, cursor: 'pointer' }}
+                                            >
+                                                {p.icon && React.cloneElement(p.icon, { sx: { fontSize: '12px !important' } })}
+                                                {p.name}
+                                            </Link>
+                                        ))}
+                                        <Typography
+                                            variant="caption"
+                                            color="inherit"
+                                            component="span"
+                                            sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+                                        >
+                                            {displayProps.icon && React.cloneElement(displayProps.icon, { sx: { fontSize: '12px !important' } })}
+                                            {pluralize(displayProps.type)}
+                                        </Typography>
+                                    </Breadcrumbs>
+
+                                    <Box className={styles.dpName}>
+                                        <Typography variant="h6" className={styles.title}>
                                             {displayProps.data.name || 'New Item'}
                                         </Typography>
-                                        {displayProps.data.description && (
-                                            <Typography variant="body2" className={styles.description}>
-                                                {displayProps.data.description}
-                                            </Typography>
-                                        )}
                                     </Box>
-                                </Box>
 
-                                <Box className={styles.actions}>
+                                    {displayProps.status && (
+                                        <Box className={styles.dpStatus}>{displayProps.status}</Box>
+                                    )}
+
+                                    {displayProps.data.description && (
+                                        <Typography variant="body2" className={styles.description}>
+                                            {displayProps.data.description}
+                                        </Typography>
+                                    )}
+
+                                    <Box className={styles.actions}>
                                     {displayProps.editor && (
                                         <>
                                             <Tooltip title={editMode ? 'View mode' : 'Edit mode'}>
@@ -389,9 +399,11 @@ export function Detail(props) {
                                                         let data = { ...displayProps.data, id: 0, name: `${displayProps.data.name} (Copy)` };
                                                         axios.post(`${displayProps.api}`, data)
                                                             .then((response) => {
+                                                                toast.success('Copied');
                                                                 displayProps.onChange();
                                                                 history.push(`${displayProps.path}/${response.data.id}`);
-                                                            });
+                                                            })
+                                                            .catch((err) => toast.error(err.response?.data?.detail || err.message || 'Copy failed'));
                                                     }}
                                                     size="small"
                                                 >
@@ -456,21 +468,28 @@ export function Detail(props) {
                                 </Stack>
                             </Box>
 
-                            {/* Delete Confirmation Dialog */}
+                            {/* HANDOFF · v2 04d.8 destructive dialog · sm 380 px paper, red
+                                commit copy reads "Delete <type>", title carries the entity
+                                name in mono. */}
                             <Dialog
                                 open={deleteDialogOpen}
                                 onClose={() => setDeleteDialogOpen(false)}
+                                PaperProps={{ sx: { width: 380, maxWidth: '90vw' } }}
                             >
-                                <DialogTitle>Confirm Deletion</DialogTitle>
-                                <DialogContent>
-                                    <DialogContentText>
-                                        Are you sure you want to delete "{displayProps.data.name}"? This action cannot be undone.
+                                <DialogTitle>Delete {displayProps.type || 'item'}</DialogTitle>
+                                <DialogContent sx={{ pt: 2 }}>
+                                    <DialogContentText sx={{ color: 'var(--ink-2)' }}>
+                                        Permanently delete{' '}
+                                        <Box component="span" sx={{ fontFamily: 'var(--font-mono)', color: 'var(--ink-1)', fontWeight: 700 }}>
+                                            {displayProps.data.name}
+                                        </Box>
+                                        ? This action cannot be undone.
                                     </DialogContentText>
                                 </DialogContent>
                                 <DialogActions>
                                     <MuiButton onClick={() => setDeleteDialogOpen(false)}>Cancel</MuiButton>
                                     <MuiButton onClick={handleDelete} color="error" variant="contained" autoFocus>
-                                        Delete
+                                        Delete {displayProps.type || 'item'}
                                     </MuiButton>
                                 </DialogActions>
                             </Dialog>
@@ -608,6 +627,7 @@ Editor.propTypes = {
 
 export function Editor(props) {
     const history = useHistory();
+    const toast = useToast();
     const [values, setValues] = useState(props.data);
 
     const handleChange = (e) => {
@@ -619,22 +639,29 @@ export function Editor(props) {
         if (e) e.preventDefault();
         const data = values;
 
+        const onSaveError = (err) =>
+            toast.error(err.response?.data?.detail || err.message || 'Save failed');
+
         if (data.id) {
             axios.put(`${props.api}/${props.data.id}`, data)
                 .then((response) => {
+                    toast.success('Saved');
                     props.onUpdate && props.onUpdate(response.data);
                     props.onChange && props.onChange(response.data)
                     props.setData(response.data);
                 })
+                .catch(onSaveError);
         } else {
             const parentId = _selectedItem ? (_selectedItem.isNode ? _selectedItem.id : _selectedItem.parentId) : 0;
             axios.post(`${props.api}`, { ...data, type: props.type, parentId: parentId, hierarchyId: parentId })
                 .then((response) => {
+                    toast.success('Created');
                     props.onUpdate && props.onUpdate(response.data);
                     props.onChange && props.onChange(response.data)
                     props.setData(response.data);
                     history.push(`${props.path}${response.data.isNode ? '/folder' : ''}/${response.data.id}`);
-                });
+                })
+                .catch(onSaveError);
         }
     };
 

@@ -27,10 +27,28 @@
 
   /* Accent — cobalt (EDM brand) */
   --accent:        #1F4DE5;
-  --accent-deep:   #1838AB;
-  --accent-soft:   #E1E8FF;
+  --accent-deep:   #36488A;
+  --accent-soft:   #DEE3F2;
   --accent-tint:   #F2F5FF;
   --accent-fg:     #FFFFFF;
+
+  /* Entity hues — a curated palette of 12 soft+deep pairs.
+     Plugins pick a hue per entity type and pin it in their own override
+     (see app.css `--ent-*` aliases). The hue rides on the icon only —
+     never on surfaces, headers, or rows. Tones are deliberately
+     desaturated so a tree of mixed types reads calm. */
+  --hue-azure-soft:  #DBEAF1;  --hue-azure-deep:  #335E73;
+  --hue-cobalt-soft: #DEE3F2;  --hue-cobalt-deep: #36488A;
+  --hue-indigo-soft: #DEE0EE;  --hue-indigo-deep: #3F4475;
+  --hue-violet-soft: #E4DEEE;  --hue-violet-deep: #564879;
+  --hue-plum-soft:   #ECDDEA;  --hue-plum-deep:   #6A3F66;
+  --hue-mauve-soft:  #E8DDDF;  --hue-mauve-deep:  #5C4951;
+  --hue-jade-soft:   #DCEAE2;  --hue-jade-deep:   #2D5E47;
+  --hue-teal-soft:   #D9E5E3;  --hue-teal-deep:   #2F5E59;
+  --hue-amber-soft:  #EFE4D2;  --hue-amber-deep:  #6E5224;
+  --hue-ochre-soft:  #E9E2CE;  --hue-ochre-deep:  #6B5526;
+  --hue-rose-soft:   #ECDADD;  --hue-rose-deep:   #6E3942;
+  --hue-slate-soft:  #E2E5E9;  --hue-slate-deep:  #3D4654;
 
   /* Plugin marks (each plugin in EDM gets its own accent stripe) */
   --plugin-routing:  #1F4DE5;   /* cobalt   */

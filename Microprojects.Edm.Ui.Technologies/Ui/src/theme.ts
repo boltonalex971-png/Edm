@@ -7,7 +7,7 @@ import { createTheme } from '@mui/material/styles'
 export const theme = createTheme({
     palette: {
         mode: 'light',
-        primary: { main: '#1F4DE5', dark: '#1838AB', light: '#E1E8FF' },
+        primary: { main: '#1F4DE5', dark: '#36488A', light: '#DEE3F2' },
         text: { primary: '#0E1620', secondary: '#5A6472', disabled: '#B5BCC6' },
         background: { default: '#EEF0F3', paper: '#FFFFFF' },
         divider: '#DCE0E6',
@@ -112,7 +112,7 @@ export const theme = createTheme({
                     fontWeight: 500,
                     fontSize: 13,
                     color: 'var(--ink-3)',
-                    minHeight: 40,
+                    minHeight: 36,
                     padding: '10px 14px',
                     '&.Mui-selected': { color: 'var(--ink-1)', fontWeight: 700 },
                     '&:hover': { color: 'var(--ink-1)' },
@@ -166,22 +166,27 @@ export const theme = createTheme({
         },
         MuiAlert: {
             styleOverrides: {
-                root: { borderRadius: 'var(--r-2)' },
+                // HANDOFF · platform.html 04e.7 · 4px left rail per severity.
+                root: { borderRadius: 'var(--r-2)', borderLeftWidth: 4, borderLeftStyle: 'solid' },
                 standardError: {
                     background: 'var(--sig-fault-soft)',
                     color: 'var(--sig-fault-deep)',
+                    borderLeftColor: 'var(--sig-fault)',
                 },
                 standardWarning: {
                     background: 'var(--sig-warn-soft)',
                     color: 'var(--sig-warn-deep)',
+                    borderLeftColor: 'var(--sig-warn)',
                 },
                 standardSuccess: {
                     background: 'var(--sig-run-soft)',
                     color: 'var(--sig-run-deep)',
+                    borderLeftColor: 'var(--sig-run)',
                 },
                 standardInfo: {
                     background: 'var(--sig-info-soft)',
                     color: 'var(--sig-info)',
+                    borderLeftColor: 'var(--sig-info)',
                 },
             },
         },

@@ -10,6 +10,10 @@ import {Plugins} from "./components/plugins/Plugins";
 import {ApiContext} from './ApiContext';
 import {roleAttr} from './styles/role';
 import api from "./components/api";
+import {ToastProvider} from "./components/states/Toast";
+import {AuthInterstitial} from "./components/auth/AuthInterstitial";
+import {readDensity, densityClass} from "./styles/density";
+import {readScheme} from "./styles/scheme";
 
 import {getUserFromToken} from "./components/hooks/hooks";
 import Operations from "./components/dashboard/Operations";
@@ -24,6 +28,8 @@ export default function App() {
     const user = useSelector((state: RootState) => state.user.name)
     const userDispatch = useDispatch()
     const apiBase = api.baseUrl
+    const density = React.useMemo(() => readDensity(), [])
+    const scheme = React.useMemo(() => readScheme(), [])
 
     React.useEffect(() => {
         const u = getUserFromToken();
@@ -34,7 +40,13 @@ export default function App() {
 
     return (
         <ApiContext.Provider value={apiBase}>
-            <div className="page-root" data-role={roleAttr(userRole)} data-scheme="light" data-plugin="technologies">
+            <ToastProvider>
+            <div
+                className={`page-root ${densityClass(density)}`}
+                data-role={roleAttr(userRole)}
+                data-scheme={scheme}
+                data-plugin="technologies"
+            >
                 <Switch>
                     <Route path='/operations/:id' component={OperationLayout}/>
                     <Layout>
@@ -51,21 +63,15 @@ export default function App() {
                             </>
                         }
                         {user && !userRole &&
-                            <span>
-                                As user {user} you are not authorized to access ISTP application.
-                                No role is assigned to your account.
-                                Please refer to your system administrator.
-                            </span>
+                            <AuthInterstitial kind="no-role" user={user}/>
                         }
                         {!user &&
-                            <span>
-                                You are not authenticated to access ISTP application.
-                                Please refer to your system administrator.
-                            </span>
+                            <AuthInterstitial kind="signin"/>
                         }
                     </Layout>
                 </Switch>
             </div>
+            </ToastProvider>
         </ApiContext.Provider>
     );
 }

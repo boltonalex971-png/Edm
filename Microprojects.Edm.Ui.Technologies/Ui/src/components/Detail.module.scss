@@ -16,46 +16,45 @@
     min-height: 400px;
 }
 
-// Not sticky — SmartScroll handles keeping the whole card pinned in the
-// viewport during scroll. A second sticky inside that already-sticky card
-// only fights it (and broke under sticky scrollport rules when the
-// container had `overflow: hidden`). The class name is kept for legacy
-// reasons; only the visual styling remains.
+// HANDOFF · v2 patterns.html · Detail-panel 4-zone CSS Grid header. Three
+// columns (44 px icon · 1 fr name · auto toolbar/status). Three rows lay
+// out as: crumbs/toolbar above, icon/name/status middle, description spans
+// across name+status below. Not sticky — SmartScroll handles keeping the
+// card pinned; an inner sticky here would fight it under sticky-scrollport
+// rules.
 .stickyHeader {
+    display: grid;
+    grid-template-columns: 44px 1fr auto;
+    grid-template-areas:
+        ".    crumbs toolbar"
+        "icon name   status"
+        ".    desc   desc";
+    column-gap: 14px;
+    row-gap: 4px;
     background: var(--surface);
     border-bottom: 1px solid var(--line);
     border-top-left-radius: var(--r-2);
     border-top-right-radius: var(--r-2);
-    padding: 14px 18px;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
+    padding: 14px 18px 12px;
     box-shadow: inset 0 -1px 0 var(--accent-tint);
-}
-
-.headerContent {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    flex: 1;
-    min-width: 0;
 }
 
 // Each entity type owns a soft background + deeper foreground pair. The icon
 // glyph picks the deep colour; the surface picks the soft tint. Defaults
 // cover unknown types with a neutral surface-2 frame.
 .iconWrapper {
+    grid-area: icon;
+    align-self: center;
     display: grid;
     place-items: center;
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
     border-radius: var(--r-2);
     background: var(--surface-2);
     color: var(--ink-2);
-    flex-shrink: 0;
 
     :global(.MuiSvgIcon-root) {
-        font-size: 22px;
+        font-size: 24px;
     }
 
     &.process   { background: var(--ent-process-soft);   color: var(--ent-process-deep); }
@@ -71,16 +70,26 @@
     &.folder    { background: var(--ent-folder-soft);    color: var(--ent-folder-deep); }
 }
 
-.titleArea {
+.dpName {
+    grid-area: name;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    justify-content: center;
     min-width: 0;
-    flex: 1;
+}
+
+.dpStatus {
+    grid-area: status;
+    align-self: center;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .breadcrumbs {
-    margin-bottom: 2px;
+    grid-area: crumbs;
+    align-self: center;
+    margin: 0;
 
     :global {
         .MuiBreadcrumbs-ol {
@@ -123,18 +132,24 @@
     letter-spacing: -0.01em !important;
     color: var(--ink-1);
     margin: 0 !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .description {
+    grid-area: desc;
     color: var(--ink-3);
     font-size: 13px !important;
     margin: 0 !important;
+    line-height: 1.4;
 }
 
 .actions {
+    grid-area: toolbar;
+    align-self: center;
     display: flex;
     gap: 4px;
-    flex-shrink: 0;
 }
 
 .actionBtn {

@@ -1,14 +1,11 @@
 import React, { useState } from 'react';
 import {
-    IconButton,
     Box,
     Menu,
     MenuItem,
     Avatar,
     Divider,
     Typography,
-    Select,
-    FormControl,
     Chip
 } from '@mui/material';
 import {
@@ -21,13 +18,16 @@ import {
     Dashboard as DashboardIcon,
     SettingsApplications as ConfigIcon,
     Extension as PluginsIcon,
-    Home as HomeIcon
+    Home as HomeIcon,
+    Search as SearchIcon,
+    KeyboardArrowDown as ArrowDownIcon
 } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { Link, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import api from './api';
 import { appRoles } from '../ApiContext';
+import applogo from '../assets/applogo.svg';
 
 const ROLES = {
     [appRoles.admin]: { label: 'Administrator', icon: <BusinessIcon fontSize="small" /> },
@@ -35,10 +35,16 @@ const ROLES = {
     [appRoles.operator]: { label: 'Operator', icon: <OperatorIcon fontSize="small" /> }
 };
 
+// IMPROVISED · v2 04f.4 chrome demands a connection pip. Real status will
+// come from useConnectionState (Phase F) once the SignalR lifecycle is
+// surfaced; for now the pip is hardcoded to 'connected' so the slot ships.
+const CONNECTION_STATUS = { kind: 'connected', label: 'Live' };
+
 export const NavMenu = () => {
     const user = useSelector(s => s.user);
     const location = useLocation();
     const [userMenuAnchor, setUserMenuAnchor] = useState(null);
+    const [roleMenuAnchor, setRoleMenuAnchor] = useState(null);
 
     const setRole = (role) =>
         axios.put(`${api.auth}/user/role`, JSON.stringify(role), { headers: { 'Content-Type': 'application/json' } })
@@ -60,14 +66,13 @@ export const NavMenu = () => {
     }
 
     const initials = user?.name ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'U';
+    const activeRole = user?.role ? ROLES[user.role] : null;
 
     return (
         <header className="doc-top" data-sticky-header="true">
             <Link to="/" className="doc-brand">
-                <span className="brand-line">
-                    <span className="brand-block"><span className="ed">ED</span><span className="mu">µ</span></span>
-                    <span className="brand-name">Technologies</span>
-                </span>
+                <img className="brand-mark" src={applogo} alt="EDµ" width="42" height="30" />
+                <span className="brand-name">Technologies</span>
             </Link>
 
             <nav className="doc-nav">
@@ -78,56 +83,67 @@ export const NavMenu = () => {
                         className={`nav-link ${isPathActive(item.path, item.exact) ? 'active' : ''}`}
                     >
                         {item.icon}
-                        {item.label}
+                        <span className="nav-label">{item.label}</span>
                     </Link>
                 ))}
             </nav>
 
-            <Box className="doc-end">
-                {user && user.roles && (
-                    <FormControl size="small" sx={{ minWidth: 150 }}>
-                        <Select
-                            value={user.role || ''}
-                            onChange={(e) => setRole(e.target.value)}
-                            displayEmpty
-                            variant="outlined"
-                            sx={{
-                                height: 32,
-                                fontFamily: 'var(--font-mono)',
-                                fontSize: 11,
-                                letterSpacing: '0.06em',
-                                textTransform: 'uppercase',
-                                fontWeight: 700,
-                            }}
-                            renderValue={(value) => (
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    {ROLES[value]?.icon}
-                                    <span>{ROLES[value]?.label || value}</span>
-                                </Box>
-                            )}
-                        >
-                            {user.roles.map((role) => (
-                                <MenuItem key={role} value={role}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        {ROLES[role]?.icon}
-                                        {ROLES[role]?.label || role}
-                                    </Box>
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                )}
+            <div className="tb-spacer" aria-hidden="true" />
 
-                {user?.name && (
-                    <Box
-                        className="av"
-                        onClick={(e) => setUserMenuAnchor(e.currentTarget)}
-                        title={user.name}
+            {/* IMPROVISED · v2 04f.3 search slot — visual only; ⌘K wiring lands when search is built. */}
+            <button type="button" className="tb-search" tabIndex={-1}>
+                <SearchIcon fontSize="small" className="tb-search-icon" />
+                <span className="tb-search-text">Search…</span>
+                <span className="kbd">⌘K</span>
+            </button>
+
+            {user && user.roles && activeRole && (
+                <button
+                    type="button"
+                    className={`tb-role ${user.role}`}
+                    onClick={(e) => setRoleMenuAnchor(e.currentTarget)}
+                >
+                    <span className="tb-role-icon">{activeRole.icon}</span>
+                    <span className="tb-role-text">{activeRole.label}</span>
+                    <ArrowDownIcon fontSize="small" className="tb-role-chev" />
+                </button>
+            )}
+
+            <span className={`tb-pip ${CONNECTION_STATUS.kind}`}>
+                <span className="dot" />
+                <span className="tb-pip-text">{CONNECTION_STATUS.label}</span>
+            </span>
+
+            {user?.name && (
+                <Box
+                    className="av"
+                    onClick={(e) => setUserMenuAnchor(e.currentTarget)}
+                    title={user.name}
+                >
+                    {initials}
+                </Box>
+            )}
+
+            <Menu
+                anchorEl={roleMenuAnchor}
+                open={Boolean(roleMenuAnchor)}
+                onClose={() => setRoleMenuAnchor(null)}
+                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+            >
+                {user?.roles?.map((role) => (
+                    <MenuItem
+                        key={role}
+                        selected={role === user.role}
+                        onClick={() => { setRoleMenuAnchor(null); setRole(role); }}
                     >
-                        {initials}
-                    </Box>
-                )}
-            </Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            {ROLES[role]?.icon}
+                            {ROLES[role]?.label || role}
+                        </Box>
+                    </MenuItem>
+                ))}
+            </Menu>
 
             <Menu
                 anchorEl={userMenuAnchor}

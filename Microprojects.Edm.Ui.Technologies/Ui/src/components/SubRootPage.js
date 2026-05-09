@@ -1,16 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 
+// HANDOFF · v2 04f.9 · page-head squeeze. Body scroll past 12 px collapses
+// the title from 28 → 16 px (height 72 → 48 px), 180 ms cubic-bezier easing.
+// Hysteresis at 4 px on the way back up to avoid flicker at the threshold.
+const SQUEEZE_ON = 12;
+const SQUEEZE_OFF = 4;
+
 export const SubRootPage = ({ title, menuItems, children }) => {
-    const [isDense, setIsDense] = useState(false);
+    const [isSqueezed, setIsSqueezed] = useState(false);
     const location = useLocation();
 
     useEffect(() => {
         const handleScroll = () => {
             const scrollY = window.scrollY;
-            setIsDense(prev => {
-                if (!prev && scrollY > 25) return true;
-                if (prev && scrollY < 10) return false;
+            setIsSqueezed(prev => {
+                if (!prev && scrollY > SQUEEZE_ON) return true;
+                if (prev && scrollY < SQUEEZE_OFF) return false;
                 return prev;
             });
         };
@@ -25,25 +31,35 @@ export const SubRootPage = ({ title, menuItems, children }) => {
 
     return (
         <>
-            <header className="doc-sub" data-sticky-header="true" data-dense={isDense ? 'true' : 'false'}>
-                {crumbSegments.length > 0 && (
-                    <div className="sub-crumbs">/ {crumbSegments.join(' / ')}</div>
-                )}
-                <div className="sub-row">
-                    <h2 className="sub-title">{title}</h2>
-                    <nav className="scheme-tabs">
-                        {menuItems.map((item) => (
-                            <NavLink
-                                key={item.path}
-                                to={item.path}
-                                className={`tab ${isPathActive(item.path) ? 'active' : ''}`}
-                            >
-                                {item.icon}
-                                {item.label}
-                            </NavLink>
-                        ))}
-                    </nav>
-                </div>
+            <div className="doc-crumbs" data-sticky-header="true">
+                <span className="sep">/</span>
+                {crumbSegments.length === 0
+                    ? <span>Home</span>
+                    : crumbSegments.map((seg, i) => (
+                        <React.Fragment key={`${i}-${seg}`}>
+                            {i > 0 && <span className="sep">/</span>}
+                            <span>{seg}</span>
+                        </React.Fragment>
+                    ))}
+            </div>
+            <header
+                className="page-head"
+                data-sticky-header="true"
+                data-squeezed={isSqueezed ? 'true' : 'false'}
+            >
+                <h1 className="ph-title">{title}</h1>
+                <nav className="ph-tabs">
+                    {menuItems.map((item) => (
+                        <NavLink
+                            key={item.path}
+                            to={item.path}
+                            className={isPathActive(item.path) ? 'active' : ''}
+                        >
+                            {item.icon}
+                            {item.label}
+                        </NavLink>
+                    ))}
+                </nav>
             </header>
             <div className="doc-body">
                 {children}
