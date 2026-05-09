@@ -26,7 +26,17 @@ import {useGet} from './hooks/hooks';
 import {ParentContext} from './ParentContext';
 import {useDialog} from './hooks/DialogHooks';
 import {useToast} from './states/Toast';
+import {useUiPreferences} from '../styles/UiPreferencesContext';
 import styles from './RelationTable.module.scss';
+
+/* DataGrid's own density names don't match ours: map the global
+   density choice to the closest DataGrid preset so the data table
+   visibly grows/shrinks with the rest of the chrome. */
+const DENSITY_TO_GRID = {
+    compact: 'compact',
+    comfortable: 'standard',
+    touch: 'comfortable',
+};
 
 // HANDOFF · v2 04c.2 production data table.
 // Toolbar (search · spacer · primary add) sits ABOVE the grid; per-row
@@ -40,8 +50,9 @@ import styles from './RelationTable.module.scss';
 // outlined input chrome — wrapping in TextField gives every editable
 // column the same look (Description, Name, etc.) without each call site
 // having to provide its own `cell` prop. The outer Box centres the
-// 32 px TextField vertically inside the cell so it matches the height
-// of LinkTextCell-style custom editors.
+// TextField vertically inside the cell so it matches the height of
+// LinkTextCell-style custom editors. Field height comes from theme.ts'
+// MuiOutlinedInput minHeight (--field-h), so compact/touch flips here too.
 function DefaultEditCell({ id, field, value, api }) {
     return (
         <Box sx={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', px: 0.5 }}>
@@ -54,7 +65,6 @@ function DefaultEditCell({ id, field, value, api }) {
                 fullWidth
                 sx={{
                     '& .MuiInputBase-root': {
-                        height: '32px',
                         fontSize: '14px',
                         background: 'var(--surface)',
                     },
@@ -126,6 +136,7 @@ export function RelationTable({api, children, columns: propColumns, data: propDa
     const gridWrapperRef = React.useRef(null);
     const toast = useToast();
     const {dialog, warning} = useDialog();
+    const {density: uiDensity} = useUiPreferences();
 
     const [isFading, setIsFading] = useState(false);
     const [lockHeight, setLockHeight] = useState(0);
@@ -466,7 +477,7 @@ export function RelationTable({api, children, columns: propColumns, data: propDa
                                     rows={filteredRows}
                                     columns={columns}
                                     editMode="row"
-                                    density="compact"
+                                    density={DENSITY_TO_GRID[uiDensity] || 'standard'}
                                     rowModesModel={rowModesModel}
                                     onRowModesModelChange={(newModel) => setRowModesModel(newModel)}
                                     onRowEditStart={(params, event) => { event.defaultMuiPrevented = true; }}

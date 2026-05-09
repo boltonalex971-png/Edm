@@ -167,7 +167,7 @@
 }
 
 .contentBody {
-    padding: 20px;
+    padding: var(--card-pad);
     flex: 1;
 }
 

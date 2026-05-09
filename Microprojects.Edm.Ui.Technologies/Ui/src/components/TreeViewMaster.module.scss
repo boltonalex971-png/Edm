@@ -75,6 +75,10 @@
 
         .MuiTreeItem-root {
             .MuiTreeItem-content {
+                /* Density-driven row height: compact stays tight, touch grows
+                   so finger targets clear the 44 px floor. min-height keeps
+                   the row from collapsing below the icon container. */
+                min-height: calc(var(--row-h) - 8px);
                 padding-top: 2px;
                 padding-bottom: 2px;
                 padding-right: 12px;

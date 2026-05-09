@@ -75,6 +75,10 @@ export const theme = createTheme({
                 root: {
                     borderRadius: 'var(--r-2)',
                     background: 'var(--surface)',
+                    /* Honor density (--field-h cascades from .density-* on
+                       .page-root). minHeight so size="small" instances
+                       still fit; touch grows 36 → 52, compact stays 30. */
+                    minHeight: 'var(--field-h)',
                     '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--ink-3)' },
                     '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
                         borderColor: 'var(--accent)',
@@ -303,6 +307,11 @@ export const theme = createTheme({
                 },
                 columnHeaderTitle: { fontWeight: 600 },
                 row: {
+                    /* Density-driven row height. DataGrid sets row height
+                       inline via virtualizer style on the row's wrapper, so
+                       we override the cell min-height instead — see `cell`
+                       below. The hover/selected/editing rules continue to
+                       cover the row regardless of height. */
                     '&:hover': { background: 'var(--surface-2)' },
                     '&.Mui-selected': {
                         background: 'var(--accent-tint)',

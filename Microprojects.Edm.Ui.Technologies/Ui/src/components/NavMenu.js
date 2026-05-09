@@ -6,7 +6,8 @@ import {
     Avatar,
     Divider,
     Typography,
-    Chip
+    Chip,
+    ListSubheader
 } from '@mui/material';
 import {
     Settings as SettingsIcon,
@@ -20,7 +21,13 @@ import {
     Extension as PluginsIcon,
     Home as HomeIcon,
     Search as SearchIcon,
-    KeyboardArrowDown as ArrowDownIcon
+    KeyboardArrowDown as ArrowDownIcon,
+    DensitySmall as DensityCompactIcon,
+    DensityMedium as DensityComfortIcon,
+    DensityLarge as DensityTouchIcon,
+    LightModeOutlined as LightIcon,
+    DarkModeOutlined as DarkIcon,
+    Check as CheckIcon
 } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { Link, useLocation } from 'react-router-dom';
@@ -29,6 +36,7 @@ import api from './api';
 import { appRoles } from '../ApiContext';
 import { displayUserName, userInitials } from './utils/userName';
 import { useConnectionState, STATUS_TO_PIP } from './realtime/useConnectionState';
+import { useUiPreferences } from '../styles/UiPreferencesContext';
 import applogo from '../assets/applogo.svg';
 
 const ROLES = {
@@ -68,6 +76,17 @@ export const NavMenu = () => {
     const initials = userInitials(user?.name);
     const userShort = displayUserName(user?.name);
     const activeRole = user?.role ? ROLES[user.role] : null;
+    const { density, scheme, setDensity, setScheme } = useUiPreferences();
+
+    const DENSITY_OPTIONS = [
+        { value: 'compact',     label: 'Compact',     Icon: DensityCompactIcon },
+        { value: 'comfortable', label: 'Comfortable', Icon: DensityComfortIcon },
+        { value: 'touch',       label: 'Touch',       Icon: DensityTouchIcon },
+    ];
+    const SCHEME_OPTIONS = [
+        { value: 'light', label: 'Light', Icon: LightIcon },
+        { value: 'dark',  label: 'Dark',  Icon: DarkIcon  },
+    ];
 
     return (
         <header className="doc-top" data-sticky-header="true">
@@ -187,6 +206,51 @@ export const NavMenu = () => {
                     <SettingsIcon fontSize="small" sx={{ mr: 1.5 }} />
                     Account Settings
                 </MenuItem>
+
+                <Divider />
+                <ListSubheader sx={{
+                    fontFamily: 'var(--font-mono)', fontSize: 10.5, lineHeight: '24px',
+                    textTransform: 'uppercase', letterSpacing: '0.06em',
+                    color: 'var(--ink-4)', background: 'transparent',
+                    pl: 2,
+                }}>
+                    Density
+                </ListSubheader>
+                {DENSITY_OPTIONS.map(({ value, label, Icon }) => (
+                    <MenuItem
+                        key={value}
+                        selected={density === value}
+                        onClick={() => setDensity(value)}
+                        sx={{ pr: 2 }}
+                    >
+                        <Icon fontSize="small" sx={{ mr: 1.5, color: 'var(--ink-3)' }} />
+                        <span style={{ flex: 1 }}>{label}</span>
+                        {density === value && <CheckIcon fontSize="small" sx={{ color: 'var(--accent)' }} />}
+                    </MenuItem>
+                ))}
+
+                <Divider />
+                <ListSubheader sx={{
+                    fontFamily: 'var(--font-mono)', fontSize: 10.5, lineHeight: '24px',
+                    textTransform: 'uppercase', letterSpacing: '0.06em',
+                    color: 'var(--ink-4)', background: 'transparent',
+                    pl: 2,
+                }}>
+                    Scheme
+                </ListSubheader>
+                {SCHEME_OPTIONS.map(({ value, label, Icon }) => (
+                    <MenuItem
+                        key={value}
+                        selected={scheme === value}
+                        onClick={() => setScheme(value)}
+                        sx={{ pr: 2 }}
+                    >
+                        <Icon fontSize="small" sx={{ mr: 1.5, color: 'var(--ink-3)' }} />
+                        <span style={{ flex: 1 }}>{label}</span>
+                        {scheme === value && <CheckIcon fontSize="small" sx={{ color: 'var(--accent)' }} />}
+                    </MenuItem>
+                ))}
+
                 <Divider />
                 <MenuItem onClick={() => setUserMenuAnchor(null)} sx={{ color: 'var(--sig-fault-deep)' }}>
                     <LogoutIcon fontSize="small" sx={{ mr: 1.5 }} />

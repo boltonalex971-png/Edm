@@ -20,7 +20,9 @@
     grid-template-columns: 28px 1fr auto auto;
     align-items: center;
     gap: 12px;
-    padding: 12px 18px;
+    /* Density: vertical compresses with --section-pad/2; horizontal stays
+       at --section-pad so titles don't crowd the chevron in compact mode. */
+    padding: calc(var(--section-pad) * 0.6) var(--section-pad);
     background: var(--surface-2);
     border-bottom: 1px solid var(--line);
     cursor: pointer;
@@ -98,7 +100,7 @@
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 14px 18px;
-    padding: 18px;
+    padding: var(--section-pad);
     background: var(--surface);
 }
 

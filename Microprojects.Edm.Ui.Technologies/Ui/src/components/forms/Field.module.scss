@@ -46,6 +46,8 @@
     transition: border-color 100ms ease, box-shadow 100ms ease;
     width: 100%;
     box-sizing: border-box;
+    /* Density-driven height so compact/touch flips visibly resize fields. */
+    min-height: var(--field-h);
 
     &::placeholder {
         color: var(--ink-4);
@@ -70,7 +72,8 @@
 
 .textarea {
     resize: vertical;
-    min-height: 80px;
+    /* Override the field min-height; textarea grows beyond a single field row. */
+    min-height: calc(var(--field-h) * 2.4);
     font-family: var(--font-sans);
 }
 
