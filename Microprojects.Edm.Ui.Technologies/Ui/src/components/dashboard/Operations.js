@@ -13,7 +13,7 @@ import {
     Stack,
     Divider
 } from '@mui/material';
-import api from '../api';
+import api, {spaUrl} from '../api';
 import {useGet} from '../hooks/hooks';
 import {Loading, dateToHumanSpan, utcDateToLocal} from '../utils/Utils';
 import {useParams, useLocation, useHistory} from "react-router-dom";
@@ -78,7 +78,7 @@ const OperationsWhen = ({period}) => {
     const copyOperation = (ev) => {
         Axios.post(`${api.operations}/${menu.id}`)
             .then((response) => {
-                window.open(`/operations/${response.data.id}`, '_blank');
+                window.open(spaUrl(`/operations/${response.data.id}`), '_blank');
             })
             .catch((error) => {
                 alert({target: menu.target, message: error.response?.data?.detail || error.message});
@@ -130,7 +130,7 @@ const OperationsWhen = ({period}) => {
                     {operations.map((o) => (
                         <Card 
                             key={o.id}
-                            onClick={() => window.open(`/operations/${o.id}`, '_blank')}
+                            onClick={() => window.open(spaUrl(`/operations/${o.id}`), '_blank')}
                             className={`${styles.opCard} ${getStatusClass(o.state)}`}
                         >
                             <Box className={styles.headerRow}>

@@ -374,6 +374,20 @@
     position: sticky;
     top: 56px;
     z-index: calc(var(--z-header) - 1);
+    overflow: hidden;
+    transition:
+        height 180ms cubic-bezier(.2, .6, .2, 1),
+        opacity 120ms cubic-bezier(.2, .6, .2, 1),
+        border-color 120ms cubic-bezier(.2, .6, .2, 1);
+}
+
+/* Squeezed page-head also collapses the crumb strip — the trail just
+   scrolled out of view, so its border-bottom must go too (otherwise we
+   keep a stray 1 px line under the chrome). */
+.doc-crumbs[data-squeezed="true"] {
+    height: 0;
+    opacity: 0;
+    border-bottom-color: transparent;
 }
 
 .doc-crumbs .sep {
@@ -399,14 +413,20 @@
     gap: 28px;
     height: 72px;
     overflow: hidden;
-    transition: height 180ms cubic-bezier(.2, .6, .2, 1);
+    transition:
+        height 180ms cubic-bezier(.2, .6, .2, 1),
+        top 180ms cubic-bezier(.2, .6, .2, 1);
     position: sticky;
     top: 84px; /* 56 chrome + 28 crumbs */
     z-index: calc(var(--z-header) - 2);
 }
 
+/* Squeezed: tighter vertical box (36 px), smaller title, and the sticky
+   pin moves up to sit flush against the chrome since the crumb strip
+   collapses to 0 above us. */
 .page-head[data-squeezed="true"] {
-    height: 48px;
+    height: 36px;
+    top: 56px;
 }
 
 .page-head .ph-title {
@@ -422,7 +442,7 @@
 }
 
 .page-head[data-squeezed="true"] .ph-title {
-    font-size: 16px;
+    font-size: 14px;
 }
 
 .page-head .ph-tabs {

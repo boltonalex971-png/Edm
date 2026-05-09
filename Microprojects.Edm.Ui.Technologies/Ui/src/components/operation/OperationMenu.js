@@ -23,7 +23,7 @@ import {
 import Axios from 'axios';
 import { useDialog } from "../hooks/DialogHooks";
 import useSignalR from "../hooks/signalRHooks.ts";
-import api from "../api.js";
+import api, {spaUrl} from "../api.js";
 
 export function OperationMenu({ operation, to }) {
     return (
@@ -87,7 +87,7 @@ function OperationToolbar({ operation }) {
         setLoading(true);
         Axios.post(`${api.operations}/${operation.id}`)
             .then((response) => {
-                window.open(`/operations/${response.data.id}`, '_self');
+                window.open(spaUrl(`/operations/${response.data.id}`), '_self');
             })
             .catch((error) => {
                 setLoading(false);

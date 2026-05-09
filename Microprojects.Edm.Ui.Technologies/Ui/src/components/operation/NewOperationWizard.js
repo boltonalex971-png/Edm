@@ -26,7 +26,7 @@ import {
     CheckCircle as CheckCircleIcon,
     ArrowForward as ArrowForwardIcon
 } from '@mui/icons-material';
-import api from '../api';
+import api, {spaUrl} from '../api';
 import { useGet } from '../hooks/hooks';
 import { SmartScroll, SmartScrollContent } from '@microprojects/tools';
 import { Loading } from '../utils/Utils';
@@ -120,7 +120,7 @@ export function NewOperationWizard() {
         };
         axios.post(api.operations, data)
             .then((op) => {
-                window.open(`${api.baseUrl}/operations/${op.data.id}`, '_blank')
+                window.open(spaUrl(`/operations/${op.data.id}`), '_blank')
             })
             .catch((error) => setError(error.message || error));
     };
