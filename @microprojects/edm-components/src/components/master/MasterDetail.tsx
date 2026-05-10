@@ -1,6 +1,7 @@
-﻿import React, {useCallback, useEffect, useRef, useState} from 'react';
-import {useNavigate, Routes, Route} from 'react-router-dom';
+﻿import React, {createContext, useCallback, useContext, useEffect, useRef, useState} from 'react';
+import {useNavigate, Routes, Route, useLocation} from 'react-router-dom';
 import axios from 'axios';
+import {useAcquireEntityLock, useEntityLockState} from '../../hooks/entityLocks';
 import {
     Box,
     Typography,
@@ -56,6 +57,12 @@ const Link: any = MuiLink;
 let _selectedItem: TreeNode | null = null;
 let _render = 0;
 let _renderFunc: ((next: number) => void) | undefined;
+
+/** Lets a nested Editor flip its parent Detail out of edit mode after a
+ *  successful save. Detail provides the setter; Editor consumes it. Lifted
+ *  from Logistics — opt-in: if no Detail is mounted above the Editor, the
+ *  consumer just gets `undefined` and skips the flip. */
+export const DetailEditModeContext = createContext<((editMode: boolean) => void) | undefined>(undefined);
 
 export function reloadMaster() {
     refresh();
@@ -370,6 +377,13 @@ export interface DetailProps {
     parents?: DetailParent[];
     /** Optional top-right slot in the Detail header grid. */
     status?: React.ReactNode;
+    /** Current user — required to acquire a cross-user edit lock. When omitted
+     *  the lock is not acquired (Tech consumers can leave it blank). */
+    username?: string;
+    /** Treat this record as outdated (auto-forked / superseded). Disables the
+     *  edit + copy actions and shows an "outdated" badge next to the title.
+     *  When omitted, falls back to `data.outdated`. */
+    outdated?: boolean;
 }
 
 export function Detail(props: DetailProps) {
@@ -391,6 +405,25 @@ export function Detail(props: DetailProps) {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
     editMode = editMode || props.id === 0;
+
+    // Cross-user edit lock — opt-in. Only effective when LockProvider is
+    // mounted (Logistics) AND props.type / props.id / props.username are
+    // present; otherwise the hooks return NO_LOCK and the acquire effect
+    // skips. Tech doesn't mount LockProvider so all of this is inert there.
+    const lockableId = props.id && props.id !== 0 ? String(props.id) : undefined;
+    useAcquireEntityLock(props.type, lockableId, editMode, props.username || '');
+    const remoteLock = useEntityLockState(props.type, lockableId);
+    const lockedByOther = !!remoteLock.lockedBy && !remoteLock.isOwn;
+    const outdated = props.outdated ?? !!props.data?.outdated;
+
+    // Force out of edit mode if another client took the lock first (race when
+    // both users press Edit nearly simultaneously and the remote message
+    // arrives after our own local flip).
+    React.useEffect(() => {
+        if (lockedByOther && editMode && props.id && props.id !== 0) {
+            setEditMode(false);
+        }
+    }, [lockedByOther, editMode, props.id]);
 
     // Handle main detail transitions
     React.useLayoutEffect(() => {
@@ -476,6 +509,7 @@ export function Detail(props: DetailProps) {
     }
 
     return (
+        <DetailEditModeContext.Provider value={setEditMode}>
         <Stack spacing={2} ref={detailContainerRef as any} sx={{minHeight: lockHeight > 0 ? `${lockHeight}px` : 'auto', width: '100%', minWidth: 0, position: 'relative'}}>
             <Box className={styles.detailContainer} sx={{width: '100%', minWidth: 0, position: 'relative'}}>
                 {isMainFading && (
@@ -538,6 +572,23 @@ export function Detail(props: DetailProps) {
                                 <Box className={styles.dpName}>
                                     <Typography variant="h6" className={styles.title}>
                                         {displayProps.data?.name || 'New Item'}
+                                        {lockedByOther && (
+                                            <Box
+                                                component="span"
+                                                sx={{ml: '0.6rem', fontSize: '0.75em', fontWeight: 'normal', color: '#b58900'}}
+                                            >
+                                                🔒 Locked by {remoteLock.lockedBy}
+                                            </Box>
+                                        )}
+                                        {outdated && (
+                                            <Box
+                                                component="span"
+                                                title="A newer version exists. This record is preserved for historical references and cannot be edited."
+                                                sx={{ml: '0.6rem', fontSize: '0.75em', fontWeight: 'normal', color: 'var(--ink-3)', fontStyle: 'italic'}}
+                                            >
+                                                outdated
+                                            </Box>
+                                        )}
                                     </Typography>
                                 </Box>
 
@@ -554,42 +605,59 @@ export function Detail(props: DetailProps) {
                                 <Box className={styles.actions}>
                                     {displayProps.editor && (
                                         <>
-                                            <Tooltip title={editMode ? 'View mode' : 'Edit mode'}>
-                                                <IconButton
-                                                    className={styles.actionBtn}
-                                                    onClick={() => setEditMode(!editMode)}
-                                                    size="small"
-                                                >
-                                                    {editMode ? <ViewIcon fontSize="small" /> : <EditIcon fontSize="small" />}
-                                                </IconButton>
+                                            <Tooltip
+                                                title={
+                                                    outdated
+                                                        ? 'Outdated — open the current version to edit'
+                                                        : lockedByOther
+                                                            ? `Locked by ${remoteLock.lockedBy}`
+                                                            : editMode ? 'View mode' : 'Edit mode'
+                                                }
+                                            >
+                                                <span>
+                                                    <IconButton
+                                                        className={styles.actionBtn}
+                                                        onClick={() => setEditMode(!editMode)}
+                                                        size="small"
+                                                        disabled={lockedByOther || outdated}
+                                                    >
+                                                        {editMode ? <ViewIcon fontSize="small" /> : <EditIcon fontSize="small" />}
+                                                    </IconButton>
+                                                </span>
                                             </Tooltip>
-                                            <Tooltip title='Copy'>
-                                                <IconButton
-                                                    className={styles.actionBtn}
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        const data = {...displayProps.data, id: 0, name: `${displayProps.data?.name} (Copy)`};
-                                                        axios.post(`${displayProps.api}`, data)
-                                                            .then((response) => {
-                                                                toast.success('Copied');
-                                                                displayProps.onChange && displayProps.onChange();
-                                                                if (displayProps.path) navigate(`${displayProps.path}/${response.data.id}`);
-                                                            })
-                                                            .catch((err: any) => toast.error(err.response?.data?.detail || err.message || 'Copy failed'));
-                                                    }}
-                                                    size="small"
-                                                >
-                                                    <CopyIcon fontSize="small" />
-                                                </IconButton>
+                                            <Tooltip title={lockedByOther ? `Locked by ${remoteLock.lockedBy}` : 'Copy'}>
+                                                <span>
+                                                    <IconButton
+                                                        className={styles.actionBtn}
+                                                        disabled={lockedByOther || outdated}
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            const data = {...displayProps.data, id: 0, name: `${displayProps.data?.name} (Copy)`};
+                                                            axios.post(`${displayProps.api}`, data)
+                                                                .then((response) => {
+                                                                    toast.success('Copied');
+                                                                    displayProps.onChange && displayProps.onChange();
+                                                                    if (displayProps.path) navigate(`${displayProps.path}/${response.data.id}`);
+                                                                })
+                                                                .catch((err: any) => toast.error(err.response?.data?.detail || err.message || 'Copy failed'));
+                                                        }}
+                                                        size="small"
+                                                    >
+                                                        <CopyIcon fontSize="small" />
+                                                    </IconButton>
+                                                </span>
                                             </Tooltip>
-                                            <Tooltip title='Delete'>
-                                                <IconButton
-                                                    className={`${styles.actionBtn} ${styles.delete}`}
-                                                    onClick={() => setDeleteDialogOpen(true)}
-                                                    size="small"
-                                                >
-                                                    <DeleteIcon fontSize="small" />
-                                                </IconButton>
+                                            <Tooltip title={lockedByOther ? `Locked by ${remoteLock.lockedBy}` : 'Delete'}>
+                                                <span>
+                                                    <IconButton
+                                                        className={`${styles.actionBtn} ${styles.delete}`}
+                                                        onClick={() => setDeleteDialogOpen(true)}
+                                                        size="small"
+                                                        disabled={lockedByOther}
+                                                    >
+                                                        <DeleteIcon fontSize="small" />
+                                                    </IconButton>
+                                                </span>
                                             </Tooltip>
                                         </>
                                     )}
@@ -692,6 +760,7 @@ export function Detail(props: DetailProps) {
                 </Box>
             </Collapse>
         </Stack>
+        </DetailEditModeContext.Provider>
     );
 }
 
@@ -802,9 +871,28 @@ export interface EditorProps {
     data: any;
 }
 
+/** Flattens foreign-key-shaped values to their `.id` before sending. So
+ *  `{nomenclature: {id: 5, name: 'Foo'}}` becomes `{nomenclature: 5}` —
+ *  the wire format the EDM controllers expect. Dates and arrays are passed
+ *  through untouched. Lifted from Logistics's Editor. */
+function flattenForeignData(data: Record<string, any>): Record<string, any> {
+    const out: Record<string, any> = {};
+    for (const k of Object.keys(data)) {
+        const v = data[k];
+        if (v && typeof v === 'object' && !(v instanceof Date) && !Array.isArray(v)) {
+            out[k] = (v as any).id;
+        } else {
+            out[k] = v;
+        }
+    }
+    return out;
+}
+
 export function Editor(props: EditorProps) {
     const navigate = useNavigate();
+    const location = useLocation();
     const toast = useToast();
+    const setDetailEditMode = useContext(DetailEditModeContext);
     const [values, setValues] = useState<any>(props.data);
 
     const handleChange = (e: any) => {
@@ -815,19 +903,47 @@ export function Editor(props: EditorProps) {
     const handleSubmit = (e?: React.FormEvent) => {
         if (e) e.preventDefault();
         const data = values;
+        const foreignData = flattenForeignData(data);
 
         const onSaveError = (err: any) =>
             toast.error(err.response?.data?.detail || err.message || 'Save failed');
 
         if (data.id) {
-            axios.put(`${props.api}/${props.data.id}`, data)
-                .then((response) => {
-                    toast.success('Saved');
-                    props.onUpdate && props.onUpdate(response.data);
-                    props.onChange && props.onChange(response.data);
-                    props.setData(response.data);
-                })
-                .catch(onSaveError);
+            // PUT path with fork-required handling: backends signal "this change
+            // creates a new version" via 409 + `code: 'fork-required'`. The
+            // user is asked to confirm; on yes we resend with `?force=true`.
+            const sendUpdate = (force: boolean): Promise<any> => {
+                const url = force
+                    ? `${props.api}/${props.data.id}?force=true`
+                    : `${props.api}/${props.data.id}`;
+                return axios.put(url, foreignData)
+                    .then((response) => {
+                        toast.success(force ? 'Saved as a new version' : 'Saved');
+                        props.onUpdate && props.onUpdate(response.data);
+                        props.onChange && props.onChange(response.data);
+                        props.setData(response.data);
+                        setDetailEditMode?.(false);
+                        if (force && props.path) {
+                            navigate(`${props.path}/${response.data.id}`);
+                        }
+                    })
+                    .catch((r) => {
+                        if (
+                            !force
+                            && r.response?.status === 409
+                            && r.response?.data?.code === 'fork-required'
+                        ) {
+                            const detail = r.response?.data?.detail
+                                || 'This change will create a new version.';
+                            if (window.confirm(`${detail}\n\nProceed and create a new version?`)) {
+                                return sendUpdate(true);
+                            }
+                            return;
+                        }
+                        onSaveError(r);
+                    });
+            };
+            sendUpdate(false);
         } else {
             // _selectedItem.id is the MUI-prefixed tree id (e.g., "folder-1033"); the backend
             // wants the raw numeric id. numericId is the unprefixed string; parentId on a leaf
@@ -836,12 +952,23 @@ export function Editor(props: EditorProps) {
                 ? (_selectedItem.isFolder ? _selectedItem.numericId : _selectedItem.parentId)
                 : '0';
             const parentId = parseInt(rawParent, 10) || 0;
-            axios.post(`${props.api}`, {...data, type: props.type, parentId, hierarchyId: parentId})
+            // Honor a route-state-supplied parentId (e.g. "Add child" navigations
+            // that attach `state: {parentId}` so the new item lands in the right
+            // folder regardless of which tree node is currently selected).
+            const stateParent = (location.state as any)?.parentId;
+            const effectiveParentId = stateParent ?? parentId;
+            axios.post(`${props.api}`, {
+                ...foreignData,
+                type: props.type,
+                parentId: effectiveParentId,
+                hierarchyId: effectiveParentId,
+            })
                 .then((response) => {
                     toast.success('Created');
                     props.onUpdate && props.onUpdate(response.data);
                     props.onChange && props.onChange(response.data);
                     props.setData(response.data);
+                    setDetailEditMode?.(false);
                     if (props.path) navigate(`${props.path}${response.data.isFolder ? '/folder' : ''}/${response.data.id}`);
                 })
                 .catch(onSaveError);

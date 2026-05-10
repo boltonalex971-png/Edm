@@ -33,6 +33,33 @@ Driven by the Phase 2 pre-replacement audit of Logistics components. Adds primit
 - **RelationTable + MasterDetail entity-refresh wiring** — both should consume `useEntityToken` once Logistics is on the package. Hold until Logistics adopts and validates the API shape.
 - **MasterDetail draggable pane separator** — Logistics-only feature today, lift during Phase 3 when Logistics's UX is being preserved.
 
+## 0.4.1 — Lift Logistics `Detail`/`Editor` enrichments into the package
+
+The package's `Detail` and `Editor` now carry the behaviors that were previously Logistics-local. All additions are opt-in via data presence — Tech consumers (which don't trigger any of these) see no behavior change.
+
+### Detail (`MasterDetail.tsx`)
+
+- **Cross-user edit lock UI.** New `useAcquireEntityLock(props.type, id, editMode, props.username)` + `useEntityLockState(props.type, id)` calls. When another client has the lock, a `🔒 Locked by {user}` badge appears next to the title (amber `#b58900`); the edit/copy/delete buttons get disabled and their tooltips switch to `"Locked by {user}"`. A `useEffect` force-flips the local Detail out of edit mode if a remote lock arrives after we entered edit (race when two operators press Edit simultaneously). New `username?: string` prop on `DetailProps` — required to acquire the lock; when absent, the lock is never acquired (Tech path).
+- **Outdated badge.** When `props.outdated` (or `props.data?.outdated`) is true, an italic `outdated` badge appears next to the title; edit + copy buttons get disabled with tooltip `"Outdated — open the current version to edit"`. New `outdated?: boolean` prop with the data-fallback. Delete remains enabled (still allowed on outdated rows).
+- **`DetailEditModeContext`** (NEW export). The Detail provides `setEditMode` via the context; Editor consumes it (see below) so a successful save flips the parent Detail back into view mode.
+
+### Editor (`MasterDetail.tsx`)
+
+- **Foreign-data flattening.** New module-private `flattenForeignData(data)` — converts `{nested: {id: 5, name: 'Foo'}}` to `{nested: 5}` before POST/PUT, matching the wire format EDM controllers expect (Logistics's Editor pattern). Dates and arrays pass through untouched. Applied uniformly to PUT and POST bodies.
+- **Fork-required 409 dialog.** PUT path: when the backend responds `409 + {code: "fork-required"}`, Editor shows a `window.confirm` with the server's `detail` message. On confirm it retries with `?force=true`; on cancel it silently returns. Tech doesn't currently emit this code, so the path is dead for Tech but live for Logistics's nomenclature/tare-type flows.
+- **`DetailEditModeContext` consumer.** After a successful POST or PUT, `setDetailEditMode?.(false)` flips the parent Detail back to view mode (no-op if no Detail above the Editor).
+- **Route-state-supplied `parentId`.** `useLocation().state.parentId` now overrides the `_selectedItem`-derived parent when present — supports "Add child" navigations that target a specific folder regardless of which tree node is selected.
+
+### Lock hooks gracefully no-op without `LockProvider`
+
+Required for the lift since Tech doesn't mount `LockProvider`:
+
+- `useEntityLockState`, `useOrderClaimState`, `useAcquireEntityLock`, `useAcquireOrderClaim` switched from a throwing `useStore()` to an `useOptionalStore()` that returns `null` when context is absent. State hooks return `NO_LOCK` and acquire hooks skip the effect. The bridge-facing `useLockSetters()` still throws (it's plugin-bridge code that genuinely requires the provider).
+
+### Logistics-side
+
+No change required this iteration — Logistics keeps its own Detail/Editor (Kendo Card/Form-based) for now. The package additions prepare the ground for a later visual migration where Logistics Detail consumers swap to the package versions.
+
 ## 0.4.0 — Logistics adopts package `MasterDetail` (chrome swap)
 
 The actual MasterDetail/TreeViewMaster swap that was deferred from Phase 3b. Logistics's local 192-line MasterDetail wrapper + 320-line Kendo-based TreeViewMaster are gone; Logistics's `MasterDetail.tsx` is now a ~50-line thin wrapper around `@microprojects/edm-components`'s MasterDetail. Detail/Editor/Info stay Logistics-local for now (they carry lock/outdated/fork-conflict logic the package doesn't have yet — separate iteration).
