@@ -20,12 +20,14 @@ export interface TreeNode {
     label: string;
     isNode: boolean;
     parentId: string;
+    description?: string;
     children?: TreeNode[];
 }
 
 export interface RawTreeNode {
     id: number | string;
     name: string;
+    description?: string;
     isNode?: boolean;
     items?: RawTreeNode[];
 }
@@ -39,8 +41,20 @@ export const transformData = (nodes: RawTreeNode[] | undefined, parentId: number
         label: node.name,
         isNode: !!node.isNode,
         parentId: parentId.toString(),
+        description: node.description,
         children: transformData(node.items, node.id),
     })).sort((a, b) => a.label.localeCompare(b.label));
+};
+
+// Flatten the tree into an itemId → description map. Used by the tree-item
+// slot to render a native browser tooltip when the row name is clipped.
+export const collectDescriptions = (nodes: TreeNode[] | undefined, map: Map<string, string> = new Map()): Map<string, string> => {
+    if (!nodes) return map;
+    for (const node of nodes) {
+        if (node.description) map.set(node.id, node.description);
+        if (node.children) collectDescriptions(node.children, map);
+    }
+    return map;
 };
 
 // Find node path for auto-expansion

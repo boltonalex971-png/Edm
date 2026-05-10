@@ -34,6 +34,7 @@ import {
     findNodePath,
     getAllFolderIds,
     collectItemsWithChildren,
+    collectDescriptions,
     checkMoveValidity,
     getEntityType,
     getIconForType,
@@ -61,6 +62,7 @@ interface IndustrialTreeItemProps {
     treeData?: TreeNode[];
     entityTypeMap?: Array<{urlPrefix: string; entityType: string}>;
     iconMap?: Record<string, React.ComponentType<any>>;
+    descriptionMap?: Map<string, string>;
 }
 
 // Custom Tree Item with D&D integration
@@ -69,8 +71,20 @@ const IndustrialTreeItem = React.forwardRef<HTMLLIElement, IndustrialTreeItemPro
         itemId, label, isNode, apiPath,
         itemsWithChildren, expandedSet, selectedId,
         activeNode, treeData, entityTypeMap, iconMap,
+        descriptionMap,
         ...treeItemProps
     } = props;
+
+    // Native browser tooltip — exposes the full name when the row gets clipped
+    // (resizable master pane), and surfaces the description when present.
+    const labelText = typeof label === 'string' ? label : '';
+    const description = descriptionMap?.get(itemId);
+    const tooltip = description && description !== labelText
+        ? `${labelText} — ${description}`
+        : labelText;
+    const labelNode = typeof label === 'string'
+        ? <span title={tooltip} className={styles.labelText}>{label}</span>
+        : label;
 
     // Fallback detection if RichTreeView doesn't spread item properties
     const itemIsNode = isNode ?? itemId?.startsWith('node-');
@@ -155,7 +169,7 @@ const IndustrialTreeItem = React.forwardRef<HTMLLIElement, IndustrialTreeItemPro
         <TreeItem
             {...(treeItemProps as any)}
             itemId={itemId}
-            label={label}
+            label={labelNode}
             ref={handleRef as any}
             style={style}
             {...attributes}
@@ -208,6 +222,7 @@ export function TreeViewMaster(props: TreeViewMasterProps) {
 
     const treeData = useMemo(() => transformData(data) || [], [data]);
     const itemsWithChildren = useMemo(() => collectItemsWithChildren(treeData), [treeData]);
+    const descriptionMap = useMemo(() => collectDescriptions(treeData), [treeData]);
     const expandedSet = useMemo(() => new Set(expandedItems), [expandedItems]);
 
     // Handle initial expand all and auto-expansion when route changes
@@ -390,6 +405,7 @@ export function TreeViewMaster(props: TreeViewMasterProps) {
                                     treeData,
                                     entityTypeMap,
                                     iconMap,
+                                    descriptionMap,
                                 } as any,
                             }}
                         />

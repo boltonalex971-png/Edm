@@ -1,4 +1,4 @@
-﻿import React, {useState} from 'react';
+﻿import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {useNavigate, Routes, Route} from 'react-router-dom';
 import axios from 'axios';
 import {
@@ -82,13 +82,22 @@ export interface MasterDetailProps {
     entityTypeMap?: TreeViewMasterProps['entityTypeMap'];
     /** Override TreeViewMaster's icon map. */
     iconMap?: TreeViewMasterProps['iconMap'];
+    /** Allow the user to drag the divider between master and detail panes.
+     *  Default: true. Set to false for layouts that should keep a fixed split. */
+    resizable?: boolean;
 }
+
+const SEPARATOR_MIN_PX = 80;
 
 export function MasterDetail(props: MasterDetailProps) {
     const navigate = useNavigate();
-    const {path} = props;
+    const {path, resizable = true} = props;
     const [dynamicOffset, setDynamicOffset] = useState(10);
     const FolderComponent = props.folderComponent;
+
+    const containerRef = useRef<HTMLDivElement | null>(null);
+    const [masterPx, setMasterPx] = useState<number | null>(null);
+    const [mode, setMode] = useState<'auto' | 'manual'>('auto');
 
     React.useEffect(() => {
         const updateOffset = () => {
@@ -114,48 +123,175 @@ export function MasterDetail(props: MasterDetailProps) {
         };
     }, []);
 
-    return (
-        <SmartScroll offsetTop={dynamicOffset} style={{display: 'flex', flexDirection: 'row', alignItems: 'flex-start', gap: 12, width: '100%', minWidth: 0}}>
-            <SmartScrollContent style={{flex: 1, minWidth: '280px'}}>
-                <TreeViewMaster
-                    api={props.api}
-                    hierarchiesApi={props.hierarchiesApi}
-                    onCurrentRootChanged={(root: TreeNode) => { _selectedItem = root; }}
-                    entityTypeMap={props.entityTypeMap}
-                    iconMap={props.iconMap}
-                />
-            </SmartScrollContent>
-            <SmartScrollContent style={{flex: '5 1 0%', minWidth: 0, width: 0, overflow: 'hidden'}}>
-                <Routes>
-                    <Route
-                        index
-                        element={
-                            <DetailStub
-                                message={props.stubMessage}
-                                onAdd={() => navigate(`${path}/0`)}
-                            />
-                        }
-                    />
+    // Re-clamp the manual master width on viewport changes so the master
+    // pane never exceeds 1/3 of the new container width.
+    useEffect(() => {
+        const el = containerRef.current;
+        if (!el || mode !== 'manual') return;
+        const reclamp = () => {
+            const cap = Math.floor(el.getBoundingClientRect().width / 3);
+            setMasterPx((prev) =>
+                prev != null && prev > cap ? Math.max(SEPARATOR_MIN_PX, cap) : prev,
+            );
+        };
+        const ro = new ResizeObserver(reclamp);
+        ro.observe(el);
+        return () => ro.disconnect();
+    }, [mode]);
 
-                    {FolderComponent && (
+    const onSeparatorDrag = useCallback((clientX: number) => {
+        const el = containerRef.current;
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        const cap = Math.floor(rect.width / 3);
+        const next = Math.max(
+            SEPARATOR_MIN_PX,
+            Math.min(cap, Math.round(clientX - rect.left)),
+        );
+        setMasterPx(next);
+        setMode('manual');
+    }, []);
+
+    const masterStyle: React.CSSProperties = resizable
+        ? mode === 'manual' && masterPx != null
+            ? {flex: `0 0 ${masterPx}px`, maxWidth: '33.333%', minWidth: 0, overflow: 'hidden'}
+            : {flex: '0 0 auto', maxWidth: '33.333%', minWidth: '280px', overflow: 'hidden'}
+        : {flex: 1, minWidth: '280px'};
+
+    const detailStyle: React.CSSProperties = resizable
+        ? {flex: 1, minWidth: 0, overflow: 'hidden'}
+        : {flex: '5 1 0%', minWidth: 0, width: 0, overflow: 'hidden'};
+
+    return (
+        <Box ref={containerRef as any} sx={{width: '100%', minWidth: 0}}>
+            <SmartScroll
+                offsetTop={dynamicOffset}
+                style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'flex-start',
+                    gap: resizable ? 0 : 12,
+                    width: '100%',
+                    minWidth: 0,
+                }}
+            >
+                <SmartScrollContent style={masterStyle}>
+                    <TreeViewMaster
+                        api={props.api}
+                        hierarchiesApi={props.hierarchiesApi}
+                        onCurrentRootChanged={(root: TreeNode) => { _selectedItem = root; }}
+                        entityTypeMap={props.entityTypeMap}
+                        iconMap={props.iconMap}
+                    />
+                </SmartScrollContent>
+                {resizable && <PaneSeparator onDrag={onSeparatorDrag} />}
+                <SmartScrollContent style={detailStyle}>
+                    <Routes>
                         <Route
-                            path="folder/:id"
+                            index
                             element={
-                                <FolderComponent
-                                    api={props.hierarchiesApi}
-                                    path={path}
-                                    onChange={() => reloadMaster()}
-                                    onClose={() => navigate(path)}
+                                <DetailStub
+                                    message={props.stubMessage}
+                                    onAdd={() => navigate(`${path}/0`)}
                                 />
                             }
                         />
-                    )}
-                    <Route path=":id" element={props.detail} />
-                </Routes>
-            </SmartScrollContent>
-        </SmartScroll>
+
+                        {FolderComponent && (
+                            <Route
+                                path="folder/:id"
+                                element={
+                                    <FolderComponent
+                                        api={props.hierarchiesApi}
+                                        path={path}
+                                        onChange={() => reloadMaster()}
+                                        onClose={() => navigate(path)}
+                                    />
+                                }
+                            />
+                        )}
+                        <Route path=":id" element={props.detail} />
+                    </Routes>
+                </SmartScrollContent>
+            </SmartScroll>
+        </Box>
     );
 }
+
+type PaneSeparatorProps = {
+    onDrag: (clientX: number) => void;
+};
+
+const PaneSeparator = ({onDrag}: PaneSeparatorProps) => {
+    // While dragging we render a small vertical guide segment centered on the cursor.
+    // `null` while idle keeps the indicator out of the DOM so the separator stays invisible at rest.
+    const [guide, setGuide] = useState<{x: number; y: number} | null>(null);
+
+    const update = (e: React.PointerEvent<HTMLDivElement>) => {
+        const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+        setGuide({x: rect.left + rect.width / 2, y: e.clientY});
+        onDrag(e.clientX);
+    };
+
+    const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+        (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
+        document.body.style.userSelect = 'none';
+        document.body.style.cursor = 'col-resize';
+        update(e);
+    };
+
+    const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+        if (!guide) return;
+        update(e);
+    };
+
+    const endDrag = (e: React.PointerEvent<HTMLDivElement>) => {
+        if (!guide) return;
+        document.body.style.userSelect = '';
+        document.body.style.cursor = '';
+        (e.currentTarget as HTMLDivElement).releasePointerCapture?.(e.pointerId);
+        setGuide(null);
+    };
+
+    const GUIDE_HALF = 110;
+
+    return (
+        <div
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={endDrag}
+            onPointerCancel={endDrag}
+            role="separator"
+            aria-orientation="vertical"
+            style={{
+                flex: '0 0 16px',
+                alignSelf: 'stretch',
+                cursor: 'col-resize',
+                touchAction: 'none',
+                background: 'transparent',
+                minHeight: '60vh',
+            }}
+        >
+            {guide && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        left: guide.x,
+                        top: guide.y - GUIDE_HALF,
+                        width: 2,
+                        height: GUIDE_HALF * 2,
+                        transform: 'translateX(-50%)',
+                        background:
+                            'linear-gradient(to bottom, rgba(120, 144, 156, 0) 0%, rgba(120, 144, 156, 0.7) 50%, rgba(120, 144, 156, 0) 100%)',
+                        borderRadius: 1,
+                        pointerEvents: 'none',
+                        zIndex: 1000,
+                    }}
+                />
+            )}
+        </div>
+    );
+};
 
 const pluralize = (type?: string): string => {
     if (!type) return 'Items';

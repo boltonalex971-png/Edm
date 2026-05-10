@@ -112,6 +112,11 @@
                 font-size: 14px;
                 color: var(--ink-1);
                 padding-left: 8px;
+                /* min-width:0 lets the label shrink below its intrinsic width
+                   so the inner ellipsis span can clip instead of pushing the
+                   row out. Critical when the master pane is dragged narrow. */
+                min-width: 0;
+                overflow: hidden;
             }
 
             .MuiTreeItem-iconContainer {
@@ -136,6 +141,16 @@
 
 .fileItem {
     :global(.MuiTreeItem-label) { font-weight: 400 !important; }
+}
+
+// Single-line ellipsis on the row name. The native `title` attribute set by
+// IndustrialTreeItem reveals the full text (and description, when present)
+// on hover.
+.labelText {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .dragGhost {
