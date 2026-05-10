@@ -22,3 +22,4 @@ export * from './components/relations/DropDownComp';
 export * from './components/relations/DropDownCell';
 export * from './components/relations/LinkTextCell';
 export * from './components/auth/AuthInterstitial';
+export * from './components/page/Search';
