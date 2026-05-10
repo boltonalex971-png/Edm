@@ -11,6 +11,9 @@
         "./hooks":        { "types": "./dist/hooks.d.ts",      "import": "./dist/hooks.js" },
         "./styles":       { "types": "./dist/styles.d.ts",     "import": "./dist/styles.js" },
         "./utils":        { "types": "./dist/utils.d.ts",      "import": "./dist/utils.js" },
+        "./components/*": { "types": "./dist/components/*.d.ts", "import": "./dist/components/*.js" },
+        "./hooks/*":      { "types": "./dist/hooks/*.d.ts",      "import": "./dist/hooks/*.js" },
+        "./styles/*":     { "types": "./dist/styles/*.d.ts",     "import": "./dist/styles/*.js" },
         "./styles/chrome.css": "./dist/styles/chrome.css",
         "./styles/tokens.css": "./dist/styles/tokens.css"
     },

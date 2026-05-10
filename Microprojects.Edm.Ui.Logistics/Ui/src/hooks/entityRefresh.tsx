@@ -1,103 +1,12 @@
-import {
-    type ReactNode,
-    createContext,
-    useCallback,
-    useContext,
-    useMemo,
-    useRef,
-    useSyncExternalStore,
-} from 'react'
+// Logistics's entity-refresh primitive lives in @microprojects/edm-components
+// since Phase 2. This file is a re-export shim so existing call sites keep
+// working without churn while Phase 3b/3c migrates Logistics screens onto
+// the package directly.
 
-export type EntityTag = {
-    type: string
-    id?: string
-}
-
-// Membership tag, distinct from the broad `{type}` tag. Search/list views
-// can subscribe to it together with per-row id tokens, so they refetch
-// when a row is added or removed (create/delete/complete) but ignore
-// updates to off-list rows. Producers — Editor (create), Detail toolbar
-// (delete), OrderService.complete, and the SignalR bridge — fire it
-// alongside the per-id tag whenever membership changes.
-export const listTag = (type: string): EntityTag => ({ type: `${type}:list` })
-
-type RefMap = { current: Map<string, number> }
-type RefSet = { current: Set<() => void> }
-
-type EntityRefreshValue = {
-    counters: RefMap
-    listeners: RefSet
-    invalidate: (tags: EntityTag[]) => void
-}
-
-const EntityRefreshContext = createContext<EntityRefreshValue | null>(null)
-
-function tagKey(t: EntityTag): string {
-    return t.id ? `${t.type}:${t.id}` : t.type
-}
-
-export function EntityRefreshProvider({ children }: { children: ReactNode }) {
-    const counters = useRef(new Map<string, number>())
-    const listeners = useRef(new Set<() => void>())
-
-    const invalidate = useCallback((tags: EntityTag[]) => {
-        const m = counters.current
-        for (const t of tags) {
-            const k = tagKey(t)
-            m.set(k, (m.get(k) ?? 0) + 1)
-        }
-        for (const l of listeners.current) l()
-    }, [])
-
-    const value = useMemo<EntityRefreshValue>(
-        () => ({ counters, listeners, invalidate }),
-        [invalidate],
-    )
-
-    return (
-        <EntityRefreshContext.Provider value={value}>
-            {children}
-        </EntityRefreshContext.Provider>
-    )
-}
-
-function useCtx(): EntityRefreshValue {
-    const ctx = useContext(EntityRefreshContext)
-    if (!ctx) {
-        throw new Error('EntityRefreshProvider is missing in the tree')
-    }
-    return ctx
-}
-
-// Subscribes the caller to `tags` and returns a token whose value changes
-// only when one of those tags is invalidated. Pass the token into a deps
-// array (e.g. useGet(url, [token])). Components whose tags weren't touched
-// won't even re-render thanks to useSyncExternalStore.
-export function useEntityToken(tags: EntityTag[]): number {
-    const ctx = useCtx()
-    const fingerprint = tags.map(tagKey).join('|')
-    const keys = useMemo(() => tags.map(tagKey), [fingerprint])
-
-    const subscribe = useCallback(
-        (cb: () => void) => {
-            ctx.listeners.current.add(cb)
-            return () => {
-                ctx.listeners.current.delete(cb)
-            }
-        },
-        [ctx],
-    )
-
-    const getSnapshot = useCallback(() => {
-        const m = ctx.counters.current
-        let sum = 0
-        for (const k of keys) sum += m.get(k) ?? 0
-        return sum
-    }, [ctx, keys])
-
-    return useSyncExternalStore(subscribe, getSnapshot)
-}
-
-export function useInvalidateEntities(): (tags: EntityTag[]) => void {
-    return useCtx().invalidate
-}
+export {
+    EntityRefreshProvider,
+    useEntityToken,
+    useInvalidateEntities,
+    listTag,
+    type EntityTag,
+} from '@microprojects/edm-components/hooks';

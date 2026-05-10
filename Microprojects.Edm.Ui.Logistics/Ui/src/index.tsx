@@ -6,11 +6,38 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import { EntityRefreshProvider } from './hooks/entityRefresh'
 import { EntityRefreshSignalRBridge } from './hooks/entityRefreshBridge'
-import { LockProvider } from './hooks/entityLocks'
-import { getCurrentConnectionId } from './hooks/signalRHooks'
+import { LockProvider, type LockPublisher } from './hooks/entityLocks'
+import { getCurrentConnectionId, publishLogisticsMessage } from './hooks/signalRHooks'
+import { events, parseEntityType } from './hooks/logisticsEvents'
+// Use granular subpath imports to avoid pulling the package's RR5-bound
+// chrome (Layout/NavMenu/TreeViewMaster) into Logistics's bundle —
+// Logistics is on react-router-dom@7 and those modules wouldn't link.
+import { ToastProvider } from '@microprojects/edm-components/components/states/Toast'
+import { UiPreferencesProvider } from '@microprojects/edm-components/styles/UiPreferencesContext'
 import store from './store'
 import 'bootstrap/dist/css/bootstrap.css'
 import '@progress/kendo-theme-bootstrap/dist/all.css'
+
+// Bridge Logistics's existing SignalR publisher to the package's lock
+// store. Validates `type` via parseEntityType so a typo never escapes
+// onto the wire as a phantom entity.
+const lockPublisher: LockPublisher = {
+    publishEntityLock: (type, id, username) => {
+        const t = parseEntityType(type)
+        if (!t) return
+        publishLogisticsMessage(events.entityLocked(t, id, username))
+    },
+    publishEntityUnlock: (type, id, username) => {
+        const t = parseEntityType(type)
+        if (!t) return
+        publishLogisticsMessage(events.entityUnlocked(t, id, username))
+    },
+    publishOrderClaim: (orderId, username) =>
+        publishLogisticsMessage(events.orderClaimed(orderId, username)),
+    publishOrderRelease: (orderId, username) =>
+        publishLogisticsMessage(events.orderReleased(orderId, username)),
+    getCurrentConnectionId,
+}
 
 // Required so the X-Auth-Token cookie and Negotiate handshake travel on
 // cross-origin XHR when the SPA is served from the rsbuild dev server
@@ -36,14 +63,18 @@ if (rootEl) {
     root.render(
         <Provider store={store}>
             <React.StrictMode>
-                <EntityRefreshProvider>
-                    <LockProvider>
-                        <EntityRefreshSignalRBridge />
-                        <BrowserRouter basename={base}>
-                            <App />
-                        </BrowserRouter>
-                    </LockProvider>
-                </EntityRefreshProvider>
+                <UiPreferencesProvider storageKeyPrefix="logistics.">
+                    <ToastProvider position="top-right">
+                        <EntityRefreshProvider>
+                            <LockProvider publisher={lockPublisher}>
+                                <EntityRefreshSignalRBridge />
+                                <BrowserRouter basename={base}>
+                                    <App />
+                                </BrowserRouter>
+                            </LockProvider>
+                        </EntityRefreshProvider>
+                    </ToastProvider>
+                </UiPreferencesProvider>
             </React.StrictMode>
         </Provider>,
     )

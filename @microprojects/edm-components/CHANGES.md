@@ -32,3 +32,11 @@ Driven by the Phase 2 pre-replacement audit of Logistics components. Adds primit
 - **`_render`/`_renderFunc`/`_selectedItem` refactor — deliberately deferred.** Tech's four config callers (Workplaces / Devices / Hosts / Processes) all import `reloadMaster` as a free function. The current global pattern works because there's only one MasterDetail per page; converting to a context-based hook is a wider API change that risks Tech regression with no functional payoff. Revisit when Phase 3 wires Logistics through and we have actual multi-instance use cases or a test plan.
 - **RelationTable + MasterDetail entity-refresh wiring** — both should consume `useEntityToken` once Logistics is on the package. Hold until Logistics adopts and validates the API shape.
 - **MasterDetail draggable pane separator** — Logistics-only feature today, lift during Phase 3 when Logistics's UX is being preserved.
+
+## 0.2.1 — Phase 3a (Logistics bootstrap)
+
+Logistics is now a consumer of the package. No screen swaps yet — this iteration only wires the package providers in alongside Logistics's existing Kendo chrome so Phase 3b/3c can do the actual swaps incrementally.
+
+- **Granular subpath exports** — added `./components/*`, `./hooks/*`, `./styles/*` wildcard entries to the exports map so consumers on a different react-router-dom version (Logistics is on RR7) can import individual modules without pulling the whole RR5-bound chrome (Layout, NavMenu, MasterDetail, TreeViewMaster) into their export-resolution graph. Existing barrel imports (`./components`, `./hooks`, etc.) still work for consumers like Tech that use the chrome.
+- Logistics-side: `entityRefresh.tsx` and `entityLocks.tsx` are now thin re-export shims over the package primitives. Only difference: Logistics's `entityLocks.tsx` keeps a wrapper around `useAcquireEntityLock` that pre-validates `type` via `parseEntityType` before delegating, so a typo never publishes a phantom lock onto the wire.
+- `<LockProvider publisher={...}>` is mounted with a `LockPublisher` that wraps Logistics's `publishLogisticsMessage` + event factories. `<UiPreferencesProvider storageKeyPrefix="logistics.">` and `<ToastProvider position="top-right">` are mounted around `<App>`. No visual change yet (no screens swap to package components in 3a).
