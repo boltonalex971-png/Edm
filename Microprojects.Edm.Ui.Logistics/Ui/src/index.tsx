@@ -12,11 +12,14 @@ import { events, parseEntityType } from './hooks/logisticsEvents'
 // Use granular subpath imports to avoid pulling the package's RR5-bound
 // chrome (Layout/NavMenu/TreeViewMaster) into Logistics's bundle —
 // Logistics is on react-router-dom@7 and those modules wouldn't link.
+import { CssBaseline, ThemeProvider } from '@mui/material'
 import { ToastProvider } from '@microprojects/edm-components/components/states/Toast'
 import { UiPreferencesProvider } from '@microprojects/edm-components/styles/UiPreferencesContext'
+import { defaultTheme } from '@microprojects/edm-components/styles/theme'
 import store from './store'
 import 'bootstrap/dist/css/bootstrap.css'
 import '@progress/kendo-theme-bootstrap/dist/all.css'
+import '@microprojects/edm-components/styles/tokens.css'
 
 // Bridge Logistics's existing SignalR publisher to the package's lock
 // store. Validates `type` via parseEntityType so a typo never escapes
@@ -63,18 +66,21 @@ if (rootEl) {
     root.render(
         <Provider store={store}>
             <React.StrictMode>
-                <UiPreferencesProvider storageKeyPrefix="logistics.">
-                    <ToastProvider position="top-right">
-                        <EntityRefreshProvider>
-                            <LockProvider publisher={lockPublisher}>
-                                <EntityRefreshSignalRBridge />
-                                <BrowserRouter basename={base}>
-                                    <App />
-                                </BrowserRouter>
-                            </LockProvider>
-                        </EntityRefreshProvider>
-                    </ToastProvider>
-                </UiPreferencesProvider>
+                <ThemeProvider theme={defaultTheme}>
+                    <CssBaseline />
+                    <UiPreferencesProvider storageKeyPrefix="logistics.">
+                        <ToastProvider position="top-right">
+                            <EntityRefreshProvider>
+                                <LockProvider publisher={lockPublisher}>
+                                    <EntityRefreshSignalRBridge />
+                                    <BrowserRouter basename={base}>
+                                        <App />
+                                    </BrowserRouter>
+                                </LockProvider>
+                            </EntityRefreshProvider>
+                        </ToastProvider>
+                    </UiPreferencesProvider>
+                </ThemeProvider>
             </React.StrictMode>
         </Provider>,
     )
