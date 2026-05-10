@@ -7,3 +7,4 @@ export * from './hooks/useDialog';
 export * from './hooks/useSignalR';
 export * from './hooks/entityRefresh';
 export * from './hooks/entityLocks';
+export * from './hooks/useBasePath';

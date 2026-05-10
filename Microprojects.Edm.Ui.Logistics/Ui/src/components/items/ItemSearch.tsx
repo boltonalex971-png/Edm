@@ -1,7 +1,7 @@
 import api from '@features/api/api'
 import Api from '@features/api/api'
 import { Loading } from '@features/utils/Utils'
-import { type AlertState, InlineAlert } from '@logistics/components/InlineAlert'
+import { type AlertState, useAlertSetter } from '@logistics/components/InlineAlert'
 import { Detail } from '@logistics/components/MasterDetail'
 import { ItemDetail } from '@logistics/components/items/ItemDetail'
 import '@logistics/components/items/ItemGenealogyTree.css'
@@ -66,7 +66,7 @@ export const ItemSearch = (props: ItemSearchProps) => {
     )
     const [subDetail, setSubDetail] = useState<ReactElement | undefined>()
     const [filter, setFilter] = useState<string>('')
-    const [alert, setAlert] = useState<AlertState>()
+    const setAlert = useAlertSetter()
     const [expandedTares, setExpandedTares] = useState<Set<string>>(new Set())
     const [page, setPage] = useState({ skip: 0, take: 10 })
     const [selectedItemIds, setSelectedItemIds] = useState<Set<string>>(
@@ -303,10 +303,6 @@ export const ItemSearch = (props: ItemSearchProps) => {
                     {error && <Error>{error}</Error>}
                     {tareRows && (
                         <>
-                            <InlineAlert
-                                state={alert}
-                                onClose={() => setAlert(undefined)}
-                            />
                             <Grid
                                 data={pagedData}
                                 scrollable="none"

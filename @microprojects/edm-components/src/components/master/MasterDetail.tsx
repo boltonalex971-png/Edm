@@ -1,5 +1,5 @@
 ﻿import React, {useState} from 'react';
-import {useRouteMatch, useHistory, Switch, Route} from 'react-router-dom';
+import {useNavigate, Routes, Route} from 'react-router-dom';
 import axios from 'axios';
 import {
     Box,
@@ -65,6 +65,11 @@ export function reloadMaster() {
 export interface MasterDetailProps {
     /** Data API root passed to TreeViewMaster (e.g. `/api/processes`). */
     api: string;
+    /** Mount path of this MasterDetail (e.g. `/config/workplaces`). The
+     *  consumer's parent Route should be declared with `path="<this>/*"`
+     *  so nested folder/leaf routes resolve. Used to generate "back to root"
+     *  navigation and the folder-route base in `folderComponent`. */
+    path: string;
     /** Hierarchies API root for folder moves + folder edits (e.g. `/api/hierarchies`). */
     hierarchiesApi?: string;
     /** Detail element rendered for a leaf route. */
@@ -80,8 +85,8 @@ export interface MasterDetailProps {
 }
 
 export function MasterDetail(props: MasterDetailProps) {
-    const history = useHistory();
-    const {path} = useRouteMatch();
+    const navigate = useNavigate();
+    const {path} = props;
     const [dynamicOffset, setDynamicOffset] = useState(10);
     const FolderComponent = props.folderComponent;
 
@@ -121,28 +126,32 @@ export function MasterDetail(props: MasterDetailProps) {
                 />
             </SmartScrollContent>
             <SmartScrollContent style={{flex: '5 1 0%', minWidth: 0, width: 0, overflow: 'hidden'}}>
-                <Switch>
-                    <Route exact path={path}>
-                        <DetailStub
-                            message={props.stubMessage}
-                            onAdd={() => history.push(`${path}/0`)}
-                        />
-                    </Route>
+                <Routes>
+                    <Route
+                        index
+                        element={
+                            <DetailStub
+                                message={props.stubMessage}
+                                onAdd={() => navigate(`${path}/0`)}
+                            />
+                        }
+                    />
 
                     {FolderComponent && (
-                        <Route path={`${path}/folder/:id`}>
-                            <FolderComponent
-                                api={props.hierarchiesApi}
-                                path={path}
-                                onChange={() => reloadMaster()}
-                                onClose={() => history.push(path)}
-                            />
-                        </Route>
+                        <Route
+                            path="folder/:id"
+                            element={
+                                <FolderComponent
+                                    api={props.hierarchiesApi}
+                                    path={path}
+                                    onChange={() => reloadMaster()}
+                                    onClose={() => navigate(path)}
+                                />
+                            }
+                        />
                     )}
-                    <Route path={`${path}/:id`}>
-                        {props.detail}
-                    </Route>
-                </Switch>
+                    <Route path=":id" element={props.detail} />
+                </Routes>
             </SmartScrollContent>
         </SmartScroll>
     );
@@ -206,7 +215,7 @@ export interface DetailProps {
 }
 
 export function Detail(props: DetailProps) {
-    const history = useHistory();
+    const navigate = useNavigate();
     const toast = useToast();
     const subDetailRef = React.useRef<HTMLDivElement | null>(null);
     const detailContainerRef = React.useRef<HTMLDivElement | null>(null);
@@ -292,7 +301,7 @@ export function Detail(props: DetailProps) {
             .then(() => {
                 toast.success(`${props.data.name || 'Item'} deleted`);
                 props.onChange && props.onChange();
-                if (props.path) history.push(props.path);
+                if (props.path) navigate(props.path);
             })
             .catch((err: any) => toast.error(err.response?.data?.detail || err.message || 'Delete failed'));
     };
@@ -302,7 +311,7 @@ export function Detail(props: DetailProps) {
             <Box className={styles.detailContainer}>
                 <ErrorStub
                     error={props.error}
-                    onBack={() => props.path && history.push(props.path)}
+                    onBack={() => props.path && navigate(props.path)}
                 />
             </Box>
         );
@@ -406,7 +415,7 @@ export function Detail(props: DetailProps) {
                                                             .then((response) => {
                                                                 toast.success('Copied');
                                                                 displayProps.onChange && displayProps.onChange();
-                                                                if (displayProps.path) history.push(`${displayProps.path}/${response.data.id}`);
+                                                                if (displayProps.path) navigate(`${displayProps.path}/${response.data.id}`);
                                                             })
                                                             .catch((err: any) => toast.error(err.response?.data?.detail || err.message || 'Copy failed'));
                                                     }}
@@ -636,7 +645,7 @@ export interface EditorProps {
 }
 
 export function Editor(props: EditorProps) {
-    const history = useHistory();
+    const navigate = useNavigate();
     const toast = useToast();
     const [values, setValues] = useState<any>(props.data);
 
@@ -669,7 +678,7 @@ export function Editor(props: EditorProps) {
                     props.onUpdate && props.onUpdate(response.data);
                     props.onChange && props.onChange(response.data);
                     props.setData(response.data);
-                    if (props.path) history.push(`${props.path}${response.data.isNode ? '/folder' : ''}/${response.data.id}`);
+                    if (props.path) navigate(`${props.path}${response.data.isNode ? '/folder' : ''}/${response.data.id}`);
                 })
                 .catch(onSaveError);
         }

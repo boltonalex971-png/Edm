@@ -4,7 +4,7 @@ import { DetailLinkText } from '@logistics/components/DropDownCell.tsx'
 import { HierarchyPicker } from '@logistics/components/HierarchyPicker.tsx'
 import {
     type AlertState,
-    InlineAlert,
+    useAlertSetter,
 } from '@logistics/components/InlineAlert.tsx'
 import {
     Detail,
@@ -53,7 +53,7 @@ export function OrderDetail({
     title = 'Order',
     ...props
 }: OrderDetailProps) {
-    const [alert, setAlert] = useState<AlertState>()
+    const setAlert = useAlertSetter()
     const [subDetail, setSubDetail] = useState<React.ReactElement>()
     const [allocateOpen, setAllocateOpen] = useState(false)
     const navigate = useNavigate()
@@ -170,9 +170,6 @@ export function OrderDetail({
                 })
             })
     }
-    // Reset alert after open order changed
-    useEffect(() => setAlert(undefined), [id])
-
     return (
         <>
             {allocateOpen && effectiveId && (
@@ -199,11 +196,6 @@ export function OrderDetail({
                         content={
                             data && (
                                 <>
-                                    <InlineAlert
-                                        state={alert}
-                                        id={id}
-                                        onClose={() => setAlert(undefined)}
-                                    ></InlineAlert>
                                     {data?.number && (
                                         <h3
                                             style={{

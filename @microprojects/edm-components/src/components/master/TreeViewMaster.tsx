@@ -1,5 +1,6 @@
 ﻿import React, {useState, useEffect, useMemo} from 'react';
-import {useHistory, useRouteMatch, useParams} from 'react-router-dom';
+import {useNavigate, useParams} from 'react-router-dom';
+import {useBasePath} from '../../hooks/useBasePath';
 import {
     Box,
     Typography,
@@ -195,8 +196,8 @@ export function TreeViewMaster(props: TreeViewMasterProps) {
     const [render, setRender] = useState(0);
     _render = render;
     _renderFunc = setRender;
-    const history = useHistory();
-    const {url} = useRouteMatch();
+    const navigate = useNavigate();
+    const url = useBasePath();
     const {id: routeId} = useParams<{id?: string}>();
 
     const [[data], loading, error] = useGet(`${apiPath}/hierarchy`, [render]);
@@ -273,9 +274,9 @@ export function TreeViewMaster(props: TreeViewMasterProps) {
         onCurrentRootChanged && onCurrentRootChanged(node);
 
         if (node.isNode) {
-            history.push(`${url}/folder/${node.numericId}`);
+            navigate(`${url}/folder/${node.numericId}`);
         } else {
-            history.push(`${url}/${node.numericId}`);
+            navigate(`${url}/${node.numericId}`);
         }
     };
 
@@ -347,12 +348,12 @@ export function TreeViewMaster(props: TreeViewMasterProps) {
                     }}
                 />
                 <Tooltip title="Add Folder">
-                    <IconButton className={styles.actionBtn} onClick={() => history.push(`${url}/folder/0`)}>
+                    <IconButton className={styles.actionBtn} onClick={() => navigate(`${url}/folder/0`)}>
                         <CreateFolderIcon fontSize="small" />
                     </IconButton>
                 </Tooltip>
                 <Tooltip title="Add Item">
-                    <IconButton className={styles.actionBtn} onClick={() => history.push(`${url}/0`)}>
+                    <IconButton className={styles.actionBtn} onClick={() => navigate(`${url}/0`)}>
                         <AddIcon fontSize="small" />
                     </IconButton>
                 </Tooltip>

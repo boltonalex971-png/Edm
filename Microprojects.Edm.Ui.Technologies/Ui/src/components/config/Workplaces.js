@@ -1,7 +1,8 @@
 ﻿import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useGet } from '@microprojects/edm-components/hooks';
-import { useHistory, useParams, useRouteMatch } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useBasePath } from '@microprojects/edm-components/hooks';
 import { Business as BusinessIcon } from '@mui/icons-material';
 import { MasterDetail, reloadMaster, Detail, Editor } from '@microprojects/edm-components/components';
 import { Box } from '@mui/material';
@@ -13,8 +14,8 @@ import { Field } from '@microprojects/edm-components/components';
 
 
 export function Workplaces() {
-    let { path } = useRouteMatch();
-    const history = useHistory();
+    const path = useBasePath();
+    const navigate = useNavigate();
     const api = Api.workplaces;
     return (
         <MasterDetail
@@ -28,7 +29,7 @@ export function Workplaces() {
                     api={api}
                     path={path}
                     onChange={() => reloadMaster()}
-                    onClose={() => history.push(path)}
+                    onClose={() => navigate(path)}
                 />
             )}
         />

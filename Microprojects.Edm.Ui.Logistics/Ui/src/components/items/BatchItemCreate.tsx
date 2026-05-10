@@ -6,7 +6,7 @@ import {
 } from '@logistics/components/HierarchyPicker'
 import {
     type AlertState,
-    InlineAlert,
+    useAlertSetter,
 } from '@logistics/components/InlineAlert.tsx'
 import { Detail, EMPTY_GUID } from '@logistics/components/MasterDetail'
 import { TareBarcodePicker } from '@logistics/components/tare/TareBarcodePicker'
@@ -57,7 +57,7 @@ export function BatchItemCreate({
         `${Api.taretypes}/hierarchy`,
         [],
     )
-    const [alert, setAlert] = useState<AlertState>()
+    const setAlert = useAlertSetter()
     const invalidate = useInvalidateEntities()
 
     const handleSubmit = async (raw: Dictionary) => {
@@ -128,10 +128,6 @@ export function BatchItemCreate({
             onClose={onClose ?? (() => {})}
             editor={
                 <>
-                    <InlineAlert
-                        state={alert}
-                        onClose={() => setAlert(undefined)}
-                    />
                     <Form
                         onSubmit={handleSubmit}
                         render={(form) => (

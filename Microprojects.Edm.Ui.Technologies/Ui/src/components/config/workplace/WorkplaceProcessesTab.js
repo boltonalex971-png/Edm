@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import { RelationTable } from '@microprojects/edm-components/components';
 import { useGet } from '@microprojects/edm-components/hooks';
 import { ProcessDetail } from '../Processes';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ProcessWorkbenchesDetail } from './ProcessWorkbenches';
 import { Link, Select, MenuItem, FormControl } from '@mui/material';
 
@@ -15,7 +15,7 @@ WorkplaceProcessesTab.propTypes = {
 }
 
 export function WorkplaceProcessesTab({ id, api, onDetailSelected, parents }) {
-    const history = useHistory();
+    const navigate = useNavigate();
     const [[data]] = useGet(`${api}/processes`);
 
     const workbenchesClick = (wsPrId) => {
@@ -50,7 +50,7 @@ export function WorkplaceProcessesTab({ id, api, onDetailSelected, parents }) {
                                     api={Api.processes}
                                     path={path}
                                     onClose={() => onDetailSelected()}
-                                    onUp={() => history.push(`${path}/${params.row.processId}`)}
+                                    onUp={() => navigate(`${path}/${params.row.processId}`)}
                                     parents={parents}
                                 />
                             );

@@ -1,6 +1,7 @@
 ﻿import React from 'react';
-import { Switch, Route, useRouteMatch } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { SubRootPage } from '@microprojects/edm-components/components';
+import { useBasePath } from '@microprojects/edm-components/hooks';
 import {
   AccountTree as AccountTreeIcon,
   Business as BusinessIcon,
@@ -13,7 +14,7 @@ import { Devices } from './Devices';
 import { Workplaces } from './Workplaces';
 
 export function Config() {
-  let { path } = useRouteMatch();
+  const path = useBasePath();
 
   const menuItems = [
     { label: 'Processes', path: `${path}/processes`, icon: <AccountTreeIcon fontSize="small" /> },
@@ -24,23 +25,13 @@ export function Config() {
 
   return (
     <SubRootPage title="Configuration" menuItems={menuItems}>
-        <Switch>
-          <Route exact path={path}>
-            <p>Select one of the options above</p>
-          </Route>
-          <Route path={`${path}/processes`}>
-            <Processes />
-          </Route>
-          <Route path={`${path}/workplaces`}>
-            <Workplaces />
-          </Route>
-          <Route path={`${path}/hosts`}>
-            <Hosts />
-          </Route>
-          <Route path={`${path}/devices`}>
-            <Devices />
-          </Route>
-        </Switch>
+        <Routes>
+          <Route index element={<p>Select one of the options above</p>} />
+          <Route path="processes/*" element={<Processes />} />
+          <Route path="workplaces/*" element={<Workplaces />} />
+          <Route path="hosts/*" element={<Hosts />} />
+          <Route path="devices/*" element={<Devices />} />
+        </Routes>
     </SubRootPage>
   );
 }

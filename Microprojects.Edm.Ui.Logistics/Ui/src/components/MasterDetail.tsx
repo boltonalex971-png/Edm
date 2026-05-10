@@ -1,6 +1,6 @@
 import {
     type AlertState,
-    InlineAlert,
+    useAlertSetter,
 } from '@logistics/components/InlineAlert.tsx'
 import {SmartScroll, SmartScrollContent} from '@microprojects/tools'
 import {
@@ -602,7 +602,7 @@ interface EditorProps extends InfoProps {
 export function Editor(props: EditorProps) {
     const navigate = useNavigate()
     const location = useLocation()
-    const [alert, setAlert] = useState<AlertState>()
+    const setAlert = useAlertSetter()
     const setDetailEditMode = useContext(DetailEditModeContext)
     const rootItem = useContext(RootItemContext)
     const invalidate = useInvalidateEntities()
@@ -709,7 +709,6 @@ export function Editor(props: EditorProps) {
 
     return (
         <>
-            <InlineAlert state={alert} onClose={() => setAlert(undefined)}/>
             <Form
                 key={props.data.id}
                 initialValues={props.data}

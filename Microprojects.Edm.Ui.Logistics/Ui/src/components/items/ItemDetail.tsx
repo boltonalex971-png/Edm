@@ -8,7 +8,7 @@ import {
 } from '@logistics/components/HierarchyPicker.tsx'
 import {
     type AlertState,
-    InlineAlert,
+    useAlertSetter,
 } from '@logistics/components/InlineAlert.tsx'
 import {
     Detail,
@@ -52,7 +52,7 @@ export interface ItemDetailProps extends DetailProps {
 }
 
 export function ItemDetail({ id, title = 'Item', ...props }: ItemDetailProps) {
-    const [alert, setAlert] = useState<AlertState>()
+    const setAlert = useAlertSetter()
     const [subDetail, setSubDetail] = useState<React.ReactElement>()
     useEffect(setSubDetail as EffectCallback, [id])
     //const [[processes]] = useGet<any[]>(api.processes, []);
@@ -105,9 +105,6 @@ export function ItemDetail({ id, title = 'Item', ...props }: ItemDetailProps) {
         (selectedTareType?.sizeX ?? 0) > 0 &&
         (selectedNomenclature?.countable ?? false) === true
 
-    // Reset alert after open item changed
-    useEffect(() => setAlert(undefined), [id])
-
     return (
         <Detail
             {...props}
@@ -124,11 +121,6 @@ export function ItemDetail({ id, title = 'Item', ...props }: ItemDetailProps) {
                     content={
                         data && (
                             <>
-                                <InlineAlert
-                                    state={alert}
-                                    id={id}
-                                    onClose={() => setAlert(undefined)}
-                                />
                                 <dl className="item-info">
                                     <dt className="item-info-label">
                                         Nomenclature

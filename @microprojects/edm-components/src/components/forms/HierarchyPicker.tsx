@@ -21,23 +21,26 @@ import {TreeItem} from '@mui/x-tree-view/TreeItem';
 
 /** Generic hierarchy-node shape consumed by the picker. Folders are
  *  non-selectable and rendered bold; leaves are clickable. `outdated`
- *  leaves are hidden unless they're the current selection. */
+ *  leaves are hidden unless they're the current selection. `expanded`
+ *  seeds the picker's expansion state on mount / data change (matches
+ *  Kendo DropDownTree's `expandField` behaviour). */
 export interface HierarchyNode {
     id: string;
     name: string;
     isFolder?: boolean;
     items?: HierarchyNode[];
     outdated?: boolean;
+    expanded?: boolean;
 }
 
-export function findInHierarchy(
-    nodes: HierarchyNode[] | undefined,
+export function findInHierarchy<T extends HierarchyNode>(
+    nodes: T[] | undefined,
     id: string | undefined,
-): HierarchyNode | null {
+): T | null {
     if (!nodes || !id) return null;
     for (const n of nodes) {
         if (n.id === id) return n;
-        const child = findInHierarchy(n.items, id);
+        const child = findInHierarchy(n.items as T[] | undefined, id);
         if (child) return child;
     }
     return null;
@@ -46,15 +49,15 @@ export function findInHierarchy(
 /** Drop leaves not in `allowedIds` and folders that have no allowed
  *  descendants. Useful for constraining a picker to a policy-derived
  *  subset while preserving the directory grouping. */
-export function pruneHierarchy(
-    nodes: HierarchyNode[] | undefined,
+export function pruneHierarchy<T extends HierarchyNode>(
+    nodes: T[] | undefined,
     allowedIds: Set<string>,
-): HierarchyNode[] {
+): T[] {
     if (!nodes) return [];
-    const out: HierarchyNode[] = [];
+    const out: T[] = [];
     for (const n of nodes) {
         if (n.isFolder) {
-            const children = pruneHierarchy(n.items, allowedIds);
+            const children = pruneHierarchy(n.items as T[] | undefined, allowedIds);
             if (children.length > 0) {
                 out.push({...n, items: children});
             }
@@ -69,15 +72,15 @@ export function pruneHierarchy(
  *  that become empty as a result. The currently selected `keepId` is
  *  preserved even when outdated so existing references on saved records
  *  still resolve to a readable label in the picker input. */
-export function dropOutdated(
-    nodes: HierarchyNode[] | undefined,
+export function dropOutdated<T extends HierarchyNode>(
+    nodes: T[] | undefined,
     keepId: string | undefined,
-): HierarchyNode[] {
+): T[] {
     if (!nodes) return [];
-    const out: HierarchyNode[] = [];
+    const out: T[] = [];
     for (const n of nodes) {
         if (n.isFolder) {
-            const children = dropOutdated(n.items, keepId);
+            const children = dropOutdated(n.items as T[] | undefined, keepId);
             if (children.length > 0) {
                 out.push({...n, items: children});
             }
@@ -136,12 +139,15 @@ function measureTree(
     return {labelPx, rowPx};
 }
 
-function collectFolderIds(nodes: HierarchyNode[] | undefined, into: string[] = []): string[] {
+function collectExpandedIds(nodes: HierarchyNode[] | undefined, into: string[] = []): string[] {
     if (!nodes) return into;
     for (const n of nodes) {
         if (n.isFolder) {
-            into.push(n.id);
-            collectFolderIds(n.items, into);
+            // Default folders to expanded when the data doesn't say otherwise —
+            // matches Kendo DropDownTree's behaviour and surfaces leaves
+            // immediately so single-folder + single-leaf trees aren't confusing.
+            if (n.expanded !== false) into.push(n.id);
+            collectExpandedIds(n.items, into);
         }
     }
     return into;
@@ -201,6 +207,18 @@ export function HierarchyPicker({
     const [popupMinWidth, setPopupMinWidth] = useState<number>();
     const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
+    /* Seed expanded set from the data's `expanded` field (or default-expand
+       all folders if the field is absent). Re-applied on data change so a
+       refetch surfacing new folders gets the same default treatment. */
+    useEffect(() => {
+        setExpandedItems((prev) => {
+            const seed = collectExpandedIds(visibleData);
+            // Preserve user-toggled state across re-renders: union seed with
+            // anything the user already had open.
+            return Array.from(new Set([...seed, ...prev]));
+        });
+    }, [visibleData]);
+
     /* Auto-size input min-width based on widest visible leaf label, using the
        wrapper's actually-rendered font (theme + browser size aware). */
     useEffect(() => {
@@ -255,13 +273,19 @@ export function HierarchyPicker({
         return {...style, ...(labelPx != null ? {minWidth: labelPx} : {})};
     }, [style, width, labelPx]);
 
+    /* `disabled` would also block expand-click on folders, so we rely on
+       the onSelect handler ignoring folder ids instead. The label is dimmed
+       to signal non-selectable. */
     const renderTreeItems = (nodes: HierarchyNode[]): React.ReactNode =>
         nodes.map((n) => (
             <TreeItem
                 key={n.id}
                 itemId={n.id}
-                label={n.isFolder ? <strong>{n.name}</strong> : <span>{n.name}</span>}
-                disabled={n.isFolder}
+                label={
+                    n.isFolder
+                        ? <Box component="strong" sx={{color: 'text.secondary'}}>{n.name}</Box>
+                        : <span>{n.name}</span>
+                }
             >
                 {n.items && n.items.length > 0 ? renderTreeItems(n.items) : null}
             </TreeItem>

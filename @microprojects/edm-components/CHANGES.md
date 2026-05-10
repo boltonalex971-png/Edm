@@ -33,6 +33,38 @@ Driven by the Phase 2 pre-replacement audit of Logistics components. Adds primit
 - **RelationTable + MasterDetail entity-refresh wiring** — both should consume `useEntityToken` once Logistics is on the package. Hold until Logistics adopts and validates the API shape.
 - **MasterDetail draggable pane separator** — Logistics-only feature today, lift during Phase 3 when Logistics's UX is being preserved.
 
+## 0.3.0 — react-router-dom v7
+
+Package migrated from react-router-dom v5 → v7 to unblock Logistics adopting the package's chrome (Layout, NavMenu, MasterDetail, TreeViewMaster, SubRootPage). Tech also migrated in lockstep.
+
+- **MasterDetail** — `useRouteMatch().path` removed; `path` is now a **required prop** on `MasterDetailProps`. Internal `<Switch>` replaced with `<Routes>` using relative paths (`index`, `folder/:id`, `:id`); requires the consumer's parent Route to be declared as `path="<base>/*"` (wildcard) for nested URLs to render. `useHistory` → `useNavigate` throughout.
+- **TreeViewMaster** — `useRouteMatch().url` replaced with `useResolvedPath('').pathname`; `useHistory` → `useNavigate`.
+- **Layout / NavMenu / SubRootPage** — used only `Link`, `NavLink`, `useLocation` which are wire-compatible across v5 and v7. No source changes needed.
+- Peer dep raised to `react-router-dom: ">=7"`. Devs and Tech bumped to `^7.5.0`.
+
+### Tech-side migration mirror
+
+- All `<Switch>` → `<Routes>`, `useHistory` → `useNavigate`, `useRouteMatch().path` → `useResolvedPath('.').pathname`, `<Redirect to>` → `<Navigate to replace>`.
+- App.tsx structural change: previously `<Switch>` had `<Layout>` as a non-Route sibling acting as catch-all. v7 doesn't allow that — layout now sits in a parent Route via Outlet pattern.
+- Sub-root parent Routes (`Config`, `Dashboard`, `Plugins`) now declare child paths as `dashboard/*`, `config/*`, etc. with `/*` so MasterDetail's nested Routes resolve.
+- rsbuild.config.ts: dropped the legacy `react-router` and `history` aliases (RR7 bundles both internally; the dirs don't exist).
+
+### Logistics — unblocked but not yet using the chrome
+
+The reason for the upgrade: Logistics (already on RR7 since pre-Phase-3) can now import package chrome without `ESModulesLinkingError`. The actual chrome swap (MasterDetail/Layout/NavMenu/TreeViewMaster) belongs to the next 3b/3c iteration.
+
+## 0.2.2 — Phase 3b (cosmetic swaps in Logistics)
+
+Two of the four planned swaps landed; the other two surfaced blockers documented below.
+
+- **HierarchyPicker** — Logistics's local `components/HierarchyPicker.tsx` is now a thin re-export shim over the package version. Helpers (`findInHierarchy`, `pruneHierarchy`, `dropOutdated`) made **generic** in the package (`<T extends HierarchyNode>`) so Logistics's richer `TreeDataItem` shape passes through without losing fields like `directoryId`, `expanded`, `groups`. Eight Logistics call sites (Processes, DropDownTreeCell, BatchItemCreate, ItemDetail, AllocateProcessOutput, OrderDetail, Repacking, TreeViewMaster) work unchanged. Picker also now seeds expansion from each node's `expanded` field (defaulting folders to expanded when the field is absent — matches Kendo DropDownTree's behaviour) and removes `disabled={isFolder}` on tree items so the chevron is still clickable; folder labels are dimmed bold to signal non-selectable. **IMPROVISED — v2 design polish deferred:** current implementation uses raw MUI primitives without v2 token treatment (no `--r-2`/`--ink-3`/`--field-h`, default chevron stroke, MUI selected-ring instead of v2 background tint, no v2 folder icon). Restyle alongside the package-wide v2 design pass after Logistics adoption stabilises.
+- **InlineAlert → useToast** — Logistics's `components/InlineAlert.tsx` is rewritten as a bridge: it re-exports `AlertState` (so existing `(setAlert: (s: AlertState) => void)` prop contracts survive), exports a new `useAlertSetter()` hook that maps status → toast severity (`'danger'` → `error`, `'warning'` → `warning`, `undefined` → `success`), and keeps `InlineAlert` as a no-op render stub for safety. Five callers migrated (`ItemSearch`, `BatchItemCreate`, `ItemDetail`, `MasterDetail`, `OrderDetail`); a sixth (`OrderSpecificationTab`) only imports the type and needed no change. Visual surface moves from absolute-within-parent to viewport top-right (matches the `<ToastProvider position="top-right">` mounted in 3a).
+
+### Skipped in 3b
+
+- **MasterDetail / Detail swap** — blocked. Package's MasterDetail uses `useHistory` + `useRouteMatch` (react-router-dom v5); Logistics is on `react-router-dom@^7` which exports `useNavigate` + `useMatch`/`useParams` instead. Either migrate package chrome to v6+ patterns or downgrade Logistics — both are big architectural calls. Defer until decided.
+- **Empty/loading/error chrome** — Logistics has no unified `EmptyState`/`Skeleton*`/`Alert` usage today (grep returned nothing); each screen rolls its own ad-hoc loading indicator. Lifting requires per-screen visual decisions, deferred to 3c.
+
 ## 0.2.1 — Phase 3a (Logistics bootstrap)
 
 Logistics is now a consumer of the package. No screen swaps yet — this iteration only wires the package providers in alongside Logistics's existing Kendo chrome so Phase 3b/3c can do the actual swaps incrementally.
