@@ -103,3 +103,14 @@ export function useEntityToken(tags: EntityTag[]): number {
 export function useInvalidateEntities(): (tags: EntityTag[]) => void {
     return useCtx().invalidate;
 }
+
+/** Optional variant — returns a no-op when EntityRefreshProvider is absent
+ *  instead of throwing. Used by the package's shared Detail/Editor so they
+ *  stay safe in Tech (no provider) while doing real invalidation in Logistics
+ *  (provider mounted). */
+export function useOptionalInvalidateEntities(): (tags: EntityTag[]) => void {
+    const ctx = useContext(EntityRefreshContext);
+    return ctx ? ctx.invalidate : NO_OP_INVALIDATE;
+}
+
+const NO_OP_INVALIDATE: (tags: EntityTag[]) => void = () => {};

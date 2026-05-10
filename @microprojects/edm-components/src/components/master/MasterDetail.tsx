@@ -2,6 +2,7 @@
 import {useNavigate, Routes, Route, useLocation} from 'react-router-dom';
 import axios from 'axios';
 import {useAcquireEntityLock, useEntityLockState} from '../../hooks/entityLocks';
+import {listTag, useOptionalInvalidateEntities} from '../../hooks/entityRefresh';
 import {
     Box,
     Typography,
@@ -63,6 +64,11 @@ let _renderFunc: ((next: number) => void) | undefined;
  *  from Logistics — opt-in: if no Detail is mounted above the Editor, the
  *  consumer just gets `undefined` and skips the flip. */
 export const DetailEditModeContext = createContext<((editMode: boolean) => void) | undefined>(undefined);
+
+/** "Empty" id sentinel for new (not-yet-persisted) entities. Tech uses 0,
+ *  Logistics uses this UUID. Both are recognised as "new" when computing
+ *  initial edit mode and skipping the cross-user lock acquire. */
+export const EMPTY_GUID = '00000000-0000-0000-0000-000000000000';
 
 export function reloadMaster() {
     refresh();
@@ -364,8 +370,8 @@ export interface DetailProps {
     loading?: any;
     error?: any;
     validation?: string;
-    data: any;
-    onChange?: () => void;
+    data?: any;
+    onChange?: (data?: any) => void;
     onClose?: () => void;
     onUp?: () => void;
     path?: string;
@@ -384,11 +390,24 @@ export interface DetailProps {
      *  edit + copy actions and shows an "outdated" badge next to the title.
      *  When omitted, falls back to `data.outdated`. */
     outdated?: boolean;
+    /** Initial edit mode. Falls back to true when `id === 0` or `id === EMPTY_GUID`
+     *  (a fresh, unsaved record). */
+    editMode?: boolean;
+    /** Hide the edit / copy / delete actions entirely. Use for screens that
+     *  embed Detail in a read-only context (e.g. Logistics's SupplyDetail when
+     *  shown as a sub-detail). */
+    readonly?: boolean;
+    /** Override the title shown in the header (default: `data.name`). Used
+     *  for placeholder titles like "New Order" before the record exists. */
+    title?: string;
+    /** Override the description shown in the header (default: `data.description`). */
+    subTitle?: string;
 }
 
 export function Detail(props: DetailProps) {
     const navigate = useNavigate();
     const toast = useToast();
+    const invalidate = useOptionalInvalidateEntities();
     const subDetailRef = React.useRef<HTMLDivElement | null>(null);
     const detailContainerRef = React.useRef<HTMLDivElement | null>(null);
     const [bufferedSubDetail, setBufferedSubDetail] = useState<React.ReactElement | undefined>(props.subDetail);
@@ -401,16 +420,17 @@ export function Detail(props: DetailProps) {
     const [lockHeight, setLockHeight] = useState(0);
     const [, setRefresh] = useState(0);
     _renderFunc = setRefresh;
-    let [editMode, setEditMode] = useState(false);
+    let [editMode, setEditMode] = useState(props.editMode ?? false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-    editMode = editMode || props.id === 0;
+    const isNewItem = props.id === 0 || props.id === EMPTY_GUID;
+    editMode = editMode || isNewItem;
 
     // Cross-user edit lock — opt-in. Only effective when LockProvider is
     // mounted (Logistics) AND props.type / props.id / props.username are
     // present; otherwise the hooks return NO_LOCK and the acquire effect
     // skips. Tech doesn't mount LockProvider so all of this is inert there.
-    const lockableId = props.id && props.id !== 0 ? String(props.id) : undefined;
+    const lockableId = props.id && !isNewItem ? String(props.id) : undefined;
     useAcquireEntityLock(props.type, lockableId, editMode, props.username || '');
     const remoteLock = useEntityLockState(props.type, lockableId);
     const lockedByOther = !!remoteLock.lockedBy && !remoteLock.isOwn;
@@ -420,10 +440,10 @@ export function Detail(props: DetailProps) {
     // both users press Edit nearly simultaneously and the remote message
     // arrives after our own local flip).
     React.useEffect(() => {
-        if (lockedByOther && editMode && props.id && props.id !== 0) {
+        if (lockedByOther && editMode && props.id && !isNewItem) {
             setEditMode(false);
         }
-    }, [lockedByOther, editMode, props.id]);
+    }, [lockedByOther, editMode, props.id, isNewItem]);
 
     // Handle main detail transitions
     React.useLayoutEffect(() => {
@@ -488,10 +508,17 @@ export function Detail(props: DetailProps) {
 
     const handleDelete = () => {
         setDeleteDialogOpen(false);
-        axios.delete(`${props.api}/${props.data.id}`)
+        axios.delete(`${props.api}/${props.data?.id}`)
             .then(() => {
-                toast.success(`${props.data.name || 'Item'} deleted`);
+                toast.success(`${props.data?.name || 'Item'} deleted`);
                 props.onChange && props.onChange();
+                if (props.type) {
+                    invalidate([
+                        {type: props.type},
+                        {type: props.type, id: props.data?.id},
+                        listTag(props.type),
+                    ]);
+                }
                 if (props.path) navigate(props.path);
             })
             .catch((err: any) => toast.error(err.response?.data?.detail || err.message || 'Delete failed'));
@@ -571,7 +598,7 @@ export function Detail(props: DetailProps) {
 
                                 <Box className={styles.dpName}>
                                     <Typography variant="h6" className={styles.title}>
-                                        {displayProps.data?.name || 'New Item'}
+                                        {displayProps.title || displayProps.data?.name || 'New Item'}
                                         {lockedByOther && (
                                             <Box
                                                 component="span"
@@ -596,15 +623,16 @@ export function Detail(props: DetailProps) {
                                     <Box className={styles.dpStatus}>{displayProps.status}</Box>
                                 )}
 
-                                {displayProps.data?.description && (
+                                {(displayProps.subTitle || displayProps.data?.description) && (
                                     <Typography variant="body2" className={styles.description}>
-                                        {displayProps.data.description}
+                                        {displayProps.subTitle || displayProps.data?.description}
                                     </Typography>
                                 )}
 
                                 <Box className={styles.actions}>
-                                    {displayProps.editor && (
+                                    {displayProps.editor && !displayProps.readonly && (
                                         <>
+                                            {displayProps.editable !== false && (
                                             <Tooltip
                                                 title={
                                                     outdated
@@ -625,6 +653,8 @@ export function Detail(props: DetailProps) {
                                                     </IconButton>
                                                 </span>
                                             </Tooltip>
+                                            )}
+                                            {displayProps.copyable !== false && (
                                             <Tooltip title={lockedByOther ? `Locked by ${remoteLock.lockedBy}` : 'Copy'}>
                                                 <span>
                                                     <IconButton
@@ -632,11 +662,19 @@ export function Detail(props: DetailProps) {
                                                         disabled={lockedByOther || outdated}
                                                         onClick={(e) => {
                                                             e.preventDefault();
-                                                            const data = {...displayProps.data, id: 0, name: `${displayProps.data?.name} (Copy)`};
+                                                            const newId = (displayProps.id === 0 || typeof displayProps.id === 'number') ? 0 : EMPTY_GUID;
+                                                            const data = {...displayProps.data, id: newId, name: `${displayProps.data?.name} (Copy)`};
                                                             axios.post(`${displayProps.api}`, data)
                                                                 .then((response) => {
                                                                     toast.success('Copied');
-                                                                    displayProps.onChange && displayProps.onChange();
+                                                                    displayProps.onChange && displayProps.onChange(response.data);
+                                                                    if (displayProps.type) {
+                                                                        invalidate([
+                                                                            {type: displayProps.type},
+                                                                            {type: displayProps.type, id: response.data.id},
+                                                                            listTag(displayProps.type),
+                                                                        ]);
+                                                                    }
                                                                     if (displayProps.path) navigate(`${displayProps.path}/${response.data.id}`);
                                                                 })
                                                                 .catch((err: any) => toast.error(err.response?.data?.detail || err.message || 'Copy failed'));
@@ -647,6 +685,8 @@ export function Detail(props: DetailProps) {
                                                     </IconButton>
                                                 </span>
                                             </Tooltip>
+                                            )}
+                                            {displayProps.deletable !== false && (
                                             <Tooltip title={lockedByOther ? `Locked by ${remoteLock.lockedBy}` : 'Delete'}>
                                                 <span>
                                                     <IconButton
@@ -659,6 +699,7 @@ export function Detail(props: DetailProps) {
                                                     </IconButton>
                                                 </span>
                                             </Tooltip>
+                                            )}
                                         </>
                                     )}
                                     {displayProps.onClose && (
@@ -893,6 +934,7 @@ export function Editor(props: EditorProps) {
     const location = useLocation();
     const toast = useToast();
     const setDetailEditMode = useContext(DetailEditModeContext);
+    const invalidate = useOptionalInvalidateEntities();
     const [values, setValues] = useState<any>(props.data);
 
     const handleChange = (e: any) => {
@@ -922,6 +964,12 @@ export function Editor(props: EditorProps) {
                         props.onUpdate && props.onUpdate(response.data);
                         props.onChange && props.onChange(response.data);
                         props.setData(response.data);
+                        if (props.type) {
+                            invalidate([
+                                {type: props.type},
+                                {type: props.type, id: response.data.id},
+                            ]);
+                        }
                         setDetailEditMode?.(false);
                         if (force && props.path) {
                             navigate(`${props.path}/${response.data.id}`);
@@ -968,6 +1016,13 @@ export function Editor(props: EditorProps) {
                     props.onUpdate && props.onUpdate(response.data);
                     props.onChange && props.onChange(response.data);
                     props.setData(response.data);
+                    if (props.type) {
+                        invalidate([
+                            {type: props.type},
+                            {type: props.type, id: response.data.id},
+                            listTag(props.type),
+                        ]);
+                    }
                     setDetailEditMode?.(false);
                     if (props.path) navigate(`${props.path}${response.data.isFolder ? '/folder' : ''}/${response.data.id}`);
                 })

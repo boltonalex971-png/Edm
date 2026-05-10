@@ -33,6 +33,29 @@ Driven by the Phase 2 pre-replacement audit of Logistics components. Adds primit
 - **RelationTable + MasterDetail entity-refresh wiring** — both should consume `useEntityToken` once Logistics is on the package. Hold until Logistics adopts and validates the API shape.
 - **MasterDetail draggable pane separator** — Logistics-only feature today, lift during Phase 3 when Logistics's UX is being preserved.
 
+## 0.4.2 — Logistics `Detail` adopts package `Detail` (visual swap)
+
+The package's enriched `Detail` is now what every Logistics `Detail` consumer sees. Logistics's local `Detail` (Kendo `Card` + `CardHeader` + `Toolbar`) is gone — its 267-line implementation collapsed into a ~13-line wrapper that just injects `username` from Redux and forwards everything else to the package's `<Detail>`. All ~13 Logistics screens (OrderDetail, ItemDetail, NomenclatureDetail, TareDetail, SupplyDetail, BatchItemCreate, ItemSearch, OrderSearch, ItemGenealogyTree, TareTypes, Processes, Nomenclatures, Folder) automatically get the v2 Stack visual via the same `import {Detail} from '../MasterDetail'` paths they already used. Logistics's `Editor` stays Kendo-Form-based for now (separate, bigger lift).
+
+### Package additions enabling the swap
+
+- **`EMPTY_GUID`** (NEW export, `'00000000-0000-0000-0000-000000000000'`). Used by `Detail` to recognise Logistics's "new item" sentinel alongside Tech's `id === 0`. Both now route through `isNewItem`, which seeds initial edit mode and skips the cross-user lock acquire.
+- **`DetailProps.editMode?: boolean`** — initial edit mode prop. `props.editMode || isNewItem` decides the initial state. Logistics's "New Order" / "New Supply" use this; Tech screens that pass `id={0}` keep working via `isNewItem`.
+- **`DetailProps.readonly?: boolean`** — hides the edit/copy/delete action group entirely. Used by Logistics's read-only sub-detail panels.
+- **`DetailProps.title?: string`**, **`subTitle?: string`** — override the header text (default: `data.name` / `data.description`). Lets consumers show "New Order" before the record exists.
+- **`DetailProps.editable?` / `copyable?` / `deletable?`** — were already on the type; now actually wired into per-button visibility (`!== false` so default-true stays). Logistics's `Folder` uses `copyable={false}`.
+- **`data?` is now optional** on `DetailProps` (was required) — Logistics passes `undefined` while loading; the existing optional-chained accesses make this safe.
+- **`useOptionalInvalidateEntities()`** (NEW hook) — returns a no-op when `EntityRefreshProvider` is missing instead of throwing. Lets package `Detail` (copy + delete) and `Editor` (PUT + POST) emit `useEntityToken` invalidations safely in both Tech (no provider, no-op) and Logistics (provider, real refresh).
+
+### Logistics-side rewrite
+
+- `components/MasterDetail.tsx` — `Detail` function went from 267 lines to ~13. Re-exports `DetailEditModeContext` and `EMPTY_GUID` from the package so legacy import paths (`import {EMPTY_GUID} from '../MasterDetail'` etc.) keep working unchanged. Dead `ToolbarButton` helper deleted. Imports trimmed (Card, CardHeader, CardBody, CardSubtitle, CardTitle, Toolbar, ToolbarItem, ButtonGroup, ButtonProps, Alert, Loading, useEffect, useAcquireEntityLock, useEntityLockState all gone).
+- `Editor`, `Info`, `RootItemContext`, `MasterDetail` exports unchanged.
+
+### What Logistics screens now look like
+
+All Logistics Detail screens render the v2 chrome: MUI Stack with sticky header, breadcrumbs, MUI IconButtons, fade-transition between items, MUI delete-confirm Dialog (replaces `window.confirm`), `🔒 Locked by` badge using the same amber styling, italic `outdated` badge. The lock + outdated behaviors use Logistics's existing `LockProvider` (mounted at app root) and per-record `Meta.Completed` mapping. Visible UX change for Logistics users — worth a smoke test before merging.
+
 ## 0.4.1 — Lift Logistics `Detail`/`Editor` enrichments into the package
 
 The package's `Detail` and `Editor` now carry the behaviors that were previously Logistics-local. All additions are opt-in via data presence — Tech consumers (which don't trigger any of these) see no behavior change.
