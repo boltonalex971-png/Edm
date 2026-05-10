@@ -1,9 +1,9 @@
-import React from 'react';
+﻿import React from 'react';
 import Api from '../../api';
 import PropTypes from 'prop-types';
-import { RelationTable } from '../../RelationTable';
-import { DropDownCell, LinkTextCell } from '../../DropDownCell';
-import { useGet } from '../../hooks/hooks';
+import { RelationTable } from '@microprojects/edm-components/components';
+import { DropDownCell, LinkTextCell } from '@microprojects/edm-components/components';
+import { useGet } from '@microprojects/edm-components/hooks';
 import { ProfileDetail } from '../Profiles';
 import { Chip, Stack, Box, Tooltip } from '@mui/material';
 import { Warning as WarningIcon, CheckCircle as CheckCircleIcon } from '@mui/icons-material';

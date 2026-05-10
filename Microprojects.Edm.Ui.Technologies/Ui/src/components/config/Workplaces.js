@@ -1,14 +1,15 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import { useGet } from '../hooks/hooks';
+import { useGet } from '@microprojects/edm-components/hooks';
 import { useHistory, useParams, useRouteMatch } from 'react-router-dom';
 import { Business as BusinessIcon } from '@mui/icons-material';
-import { MasterDetail, reloadMaster, Detail, Editor } from '../MasterDetail';
+import { MasterDetail, reloadMaster, Detail, Editor } from '@microprojects/edm-components/components';
 import { Box } from '@mui/material';
 import { WorkplaceTabs } from './workplace/WorkplaceTabs';
+import { Folder } from './Folder';
 import Api from '../api';
-import { EditorSection } from '../forms/EditorSection';
-import { Field } from '../forms/Field';
+import { EditorSection } from '@microprojects/edm-components/components';
+import { Field } from '@microprojects/edm-components/components';
 
 
 export function Workplaces() {
@@ -18,6 +19,8 @@ export function Workplaces() {
     return (
         <MasterDetail
             api={api}
+            hierarchiesApi={Api.hierarchies}
+            folderComponent={Folder}
             path={path}
             stubMessage='Please select a workplace'
             detail={(

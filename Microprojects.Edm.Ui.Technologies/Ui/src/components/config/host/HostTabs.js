@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { Tabs, Tab, Box } from '@mui/material';
 import { HostDevicesTab } from './HostDevicesTab';
-import { SmoothTabContainer } from '../../MasterDetail';
+import { SmoothTabContainer } from '@microprojects/edm-components/components';
 
 HostTabs.propTypes = {
     api: PropTypes.string,

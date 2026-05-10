@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import { useGet } from '../hooks/hooks';
+import { useGet } from '@microprojects/edm-components/hooks';
 import { useHistory, useParams } from 'react-router-dom';
-import { Detail, Editor } from '../MasterDetail';
+import { Detail, Editor } from '@microprojects/edm-components/components';
 import { WorkbenchDevicesTab } from './workplace/WorkbenchDevicesTab';
 import { Box, Button as MuiButton, Typography } from '@mui/material';
 import { PlayArrow as PlayIcon, Handyman as WorkbenchIcon } from '@mui/icons-material';
@@ -10,9 +10,9 @@ import axios from 'axios';
 import api from '../api';
 import { useDispatch } from 'react-redux';
 import { setProcess, setWorkbench } from '../../slices/newOperationSlice.ts';
-import { Properties, Property } from '../forms/Properties';
-import { EditorSection } from '../forms/EditorSection';
-import { Field } from '../forms/Field';
+import { Properties, Property } from '@microprojects/edm-components/components';
+import { EditorSection } from '@microprojects/edm-components/components';
+import { Field } from '@microprojects/edm-components/components';
 
 
 WorkbenchDetail.propTypes = {

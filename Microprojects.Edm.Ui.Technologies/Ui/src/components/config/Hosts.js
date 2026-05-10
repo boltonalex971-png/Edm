@@ -1,16 +1,17 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import { useGet } from '../hooks/hooks';
+import { useGet } from '@microprojects/edm-components/hooks';
 import { useHistory, useParams, useRouteMatch } from 'react-router-dom';
-import { MasterDetail, reloadMaster, Detail, Editor } from '../MasterDetail';
+import { MasterDetail, reloadMaster, Detail, Editor } from '@microprojects/edm-components/components';
 import { HostTabs } from './host/HostTabs';
+import { Folder } from './Folder';
 import Api from '../api';
 import { HostConsole } from './host/HostConsole';
 import { Dns as DnsIcon, Terminal as ConsoleIcon } from '@mui/icons-material';
 import { Box, Button as MuiButton } from '@mui/material';
-import { Properties, Property } from '../forms/Properties';
-import { EditorSection } from '../forms/EditorSection';
-import { Field } from '../forms/Field';
+import { Properties, Property } from '@microprojects/edm-components/components';
+import { EditorSection } from '@microprojects/edm-components/components';
+import { Field } from '@microprojects/edm-components/components';
 
 export function Hosts() {
     const history = useHistory();
@@ -19,6 +20,8 @@ export function Hosts() {
     return (
         <MasterDetail
             api={api}
+            hierarchiesApi={Api.hierarchies}
+            folderComponent={Folder}
             stubMessage='Please select a host'
             detail={(
                 <HostDetail

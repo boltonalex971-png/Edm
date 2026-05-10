@@ -1,4 +1,4 @@
-import React, {useRef, useState, useEffect} from 'react';
+﻿import React, {useRef, useState, useEffect} from 'react';
 import {
     TextField,
     Button,
@@ -18,11 +18,11 @@ import {
 } from '@mui/icons-material';
 import Axios from 'axios';
 import {useSelector} from 'react-redux';
-import {useDialog} from "../hooks/DialogHooks";
-import useSignalR from "../hooks/signalRHooks.ts";
+import {useDialog} from "@microprojects/edm-components/hooks";
+import {useSignalR} from "@microprojects/edm-components/hooks";
 import api, {spaUrl} from "../api.js";
-import {useToast} from "../states/Toast";
-import {displayUserName} from "../utils/userName";
+import {useToast} from "@microprojects/edm-components/components";
+import {displayUserName} from "@microprojects/edm-components/utils";
 import styles from './OperationLayout.module.scss';
 
 // Spinner sized to fit the action button's startIcon slot. While an

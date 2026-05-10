@@ -1,6 +1,6 @@
-import React, {useState} from 'react';
+﻿import React, {useState} from 'react';
 import {useParams} from 'react-router-dom'
-import {useGet} from '../hooks/hooks';
+import {useGet} from '@microprojects/edm-components/hooks';
 import api from '../api';
 import {OperationPluginContainer} from './OperationPluginContainer';
 import {OperationMenu} from './OperationMenu.js';

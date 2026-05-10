@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import { useGet } from '../hooks/hooks';
+import { useGet } from '@microprojects/edm-components/hooks';
 import { useParams } from 'react-router-dom';
-import { Detail, Editor } from '../MasterDetail';
+import { Detail, Editor } from '@microprojects/edm-components/components';
 import { AuditTabs } from './audit/AuditTabs';
 import { Box } from '@mui/material';
 import { FactCheck as AuditIcon } from '@mui/icons-material';
-import { EditorSection } from '../forms/EditorSection';
-import { Field } from '../forms/Field';
+import { EditorSection } from '@microprojects/edm-components/components';
+import { Field } from '@microprojects/edm-components/components';
 
 
 AuditDetail.propTypes = {

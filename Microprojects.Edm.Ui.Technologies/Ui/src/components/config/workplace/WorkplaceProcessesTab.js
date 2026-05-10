@@ -1,8 +1,8 @@
-import React from 'react';
+﻿import React from 'react';
 import Api from '../../api';
 import PropTypes from 'prop-types';
-import { RelationTable } from '../../RelationTable';
-import { useGet } from '../../hooks/hooks';
+import { RelationTable } from '@microprojects/edm-components/components';
+import { useGet } from '@microprojects/edm-components/hooks';
 import { ProcessDetail } from '../Processes';
 import { useHistory } from 'react-router-dom';
 import { ProcessWorkbenchesDetail } from './ProcessWorkbenches';

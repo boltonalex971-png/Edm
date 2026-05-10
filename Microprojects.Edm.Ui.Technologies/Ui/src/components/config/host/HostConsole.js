@@ -1,5 +1,5 @@
-import PropTypes from 'prop-types';
-import { Detail } from '../../MasterDetail';
+﻿import PropTypes from 'prop-types';
+import { Detail } from '@microprojects/edm-components/components';
 import { PluginContainer } from '@microprojects/react-utils';
 
 HostConsole.propTypes = {

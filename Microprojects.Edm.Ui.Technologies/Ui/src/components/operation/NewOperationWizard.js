@@ -1,4 +1,4 @@
-/* eslint-disable no-mixed-operators */
+﻿/* eslint-disable no-mixed-operators */
 import React, { useState, useContext, useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { 
@@ -27,15 +27,15 @@ import {
     ArrowForward as ArrowForwardIcon
 } from '@mui/icons-material';
 import api, {spaUrl} from '../api';
-import { useGet } from '../hooks/hooks';
+import { useGet } from '@microprojects/edm-components/hooks';
 import { SmartScroll, SmartScrollContent } from '@microprojects/tools';
-import { Loading } from '../utils/Utils';
+import { Loading } from '@microprojects/edm-components/components';
 import { PluginContainer } from '@microprojects/react-utils';
 import { ApiContext } from '../../ApiContext';
 import { useDispatch, useSelector } from 'react-redux';
 import { clearDevices, reset, setDevice, setDriverOptions, setParameters, setProcess, setProfiles, setWorkbench } from '../../slices/newOperationSlice.ts';
 import axios from 'axios';
-import { SubRootPage } from '../SubRootPage';
+import { SubRootPage } from '@microprojects/edm-components/components';
 
 export function NewOperationWizard() {
     const params = useSelector(s => s.newOperation)

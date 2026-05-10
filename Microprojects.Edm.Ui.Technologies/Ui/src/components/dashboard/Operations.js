@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useState} from 'react';
+﻿import React, {useEffect, useMemo, useState} from 'react';
 import {Box, IconButton, Menu, MenuItem, Skeleton} from '@mui/material';
 import {
     MoreVert as MoreVertIcon,
@@ -11,9 +11,9 @@ import {
 import {useParams, useLocation, useHistory} from "react-router-dom";
 import Axios from "axios";
 import api, {spaUrl} from '../api';
-import {useGet} from '../hooks/hooks';
-import {dateToHumanSpan, utcDateToLocal} from '../utils/Utils';
-import {useToast} from "../states/Toast";
+import {useGet} from '@microprojects/edm-components/hooks';
+import {dateToHumanSpan, utcDateToLocal} from '@microprojects/edm-components/utils';
+import {useToast} from "@microprojects/edm-components/components";
 import styles from './Operations.module.scss';
 
 // HANDOFF · v2 PAT-04 (dashboard) × PAT-02 (dispatch ticket) — operations

@@ -1,18 +1,19 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import Api from '../api';
-import { useGet } from '../hooks/hooks';
+import { useGet } from '@microprojects/edm-components/hooks';
 import { useHistory, useParams } from 'react-router-dom';
 import { useRouteMatch } from 'react-router-dom';
-import { MasterDetail, reloadMaster, Detail, Editor } from '../MasterDetail';
+import { MasterDetail, reloadMaster, Detail, Editor } from '@microprojects/edm-components/components';
 import { ProcessTabs } from './process/ProcessTabs';
+import { Folder } from './Folder';
 import { Box } from '@mui/material';
 import {
     AccountTree as AccountTreeIcon,
 } from '@mui/icons-material';
-import { Properties, Property } from '../forms/Properties';
-import { EditorSection } from '../forms/EditorSection';
-import { Field } from '../forms/Field';
+import { Properties, Property } from '@microprojects/edm-components/components';
+import { EditorSection } from '@microprojects/edm-components/components';
+import { Field } from '@microprojects/edm-components/components';
 
 export function Processes() {
     let { path } = useRouteMatch();
@@ -21,6 +22,8 @@ export function Processes() {
     return (
         <MasterDetail
             api={api}
+            hierarchiesApi={Api.hierarchies}
+            folderComponent={Folder}
             path={path}
             stubMessage='Please select a process'
             detail={

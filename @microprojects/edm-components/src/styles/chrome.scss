@@ -1,0 +1,480 @@
+﻿/* HANDOFF · v2 chrome — global classes used by Layout, NavMenu, SubRootPage.
+   Lifted verbatim from Microprojects.Edm.Ui.Technologies/Ui/src/app.css.
+   Tokens come from tokens.css; consumers either import the package's
+   default tokens.css or supply their own. Per-plugin tints (e.g. Tech's
+   `[data-plugin="technologies"] .doc-top`) stay in the plugin.            */
+
+/* --- Page shell --------------------------------------------------------- */
+.page-root {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    color: var(--ink-2);
+}
+
+.page-main {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* HANDOFF · v2 04f.7 — footer is 36 px tall, never sticky-overlay. */
+.page-footer {
+    flex: 0 0 auto;
+    height: 36px;
+    border-top: 1px solid var(--line);
+    background: var(--surface);
+    padding: 0 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    letter-spacing: 0.02em;
+    color: var(--ink-3);
+
+    .footer-left,
+    .footer-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .footer-link {
+        color: var(--ink-2);
+        text-decoration: none;
+        text-transform: uppercase;
+        font-weight: 600;
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+
+        &:hover {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        &.has-nudge {
+            color: var(--ink-1);
+        }
+
+        .nudge-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--sig-fault);
+            box-shadow: 0 0 0 2px var(--sig-fault-soft);
+            animation: nudge-pulse 2.4s ease-in-out infinite;
+        }
+    }
+}
+
+@keyframes nudge-pulse {
+    0%, 70%, 100% { box-shadow: 0 0 0 2px var(--sig-fault-soft); }
+    35%           { box-shadow: 0 0 0 4px var(--sig-fault-soft); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .page-footer .footer-link .nudge-dot { animation: none; }
+}
+
+.version-chip {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    border: 1px solid var(--line-strong);
+    background: var(--surface);
+    border-radius: var(--r-pill);
+    padding: 2px 10px;
+}
+
+/* --- Top bar (chrome) ---------------------------------------------------
+   HANDOFF · v2 04f.1 · seven-slot grid: brand → nav → flex spacer → search
+   → role pill → connection pip → profile.                                  */
+.doc-top {
+    height: 56px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: auto auto 1fr auto auto auto auto;
+    align-items: stretch;
+    column-gap: 14px;
+    padding-right: 14px;
+    position: sticky;
+    top: 0;
+    z-index: var(--z-header);
+}
+
+.doc-brand {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 18px 0 20px;
+    border-right: 1px solid var(--line);
+    height: 100%;
+    text-decoration: none;
+    color: inherit;
+    position: relative;
+    top: -0.2em;
+
+    &:hover { text-decoration: none; }
+
+    .brand-mark {
+        width: 42px;
+        height: 30px;
+        flex: 0 0 auto;
+        display: block;
+    }
+
+    .brand-name {
+        font-weight: 700;
+        font-size: 14px;
+        color: var(--ink-1);
+        letter-spacing: -0.005em;
+        line-height: 1;
+        position: relative;
+        top: 0.1em;
+    }
+}
+
+.doc-nav {
+    display: flex;
+    align-items: stretch;
+    flex: 1 1 auto;
+    padding-left: 8px;
+    overflow-x: auto;
+    min-width: 0;
+
+    .nav-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 14px;
+        color: var(--ink-3);
+        font-size: 13px;
+        font-weight: 500;
+        text-decoration: none;
+        border-bottom: 2px solid transparent;
+        white-space: nowrap;
+        height: 100%;
+
+        &:hover {
+            color: var(--ink-1);
+            text-decoration: none;
+        }
+
+        &.active {
+            color: var(--ink-1);
+            border-bottom-color: var(--accent);
+            font-weight: 600;
+        }
+
+        .mi { color: inherit; }
+    }
+}
+
+.tb-spacer {
+    align-self: stretch;
+}
+
+/* HANDOFF · v2 04f.3 · search slot. Visual stub for now. */
+.tb-search {
+    display: inline-flex;
+    align-items: center;
+    align-self: center;
+    gap: 8px;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: var(--r-2);
+    padding: 6px 10px;
+    min-width: 220px;
+    color: var(--ink-3);
+    font: 500 12.5px/1 var(--font-sans);
+    font-family: inherit;
+    cursor: text;
+
+    &:hover {
+        border-color: var(--ink-3);
+        color: var(--ink-2);
+    }
+
+    .tb-search-icon {
+        color: var(--ink-3);
+        font-size: 16px;
+    }
+
+    .tb-search-text {
+        flex: 1 1 auto;
+        text-align: left;
+    }
+
+    .kbd {
+        margin-left: auto;
+        font: 700 10.5px/1 var(--font-mono);
+        color: var(--ink-3);
+        padding: 3px 5px;
+        border: 1px solid var(--line);
+        background: var(--surface);
+        border-radius: 3px;
+        letter-spacing: 0.04em;
+    }
+}
+
+/* HANDOFF · v2 04f.4 · role pill. */
+.tb-role {
+    display: inline-flex;
+    align-items: center;
+    align-self: center;
+    gap: 6px;
+    background: var(--accent-tint);
+    color: var(--accent-deep);
+    padding: 5px 8px 5px 7px;
+    border: 1px solid transparent;
+    border-radius: var(--r-2);
+    font: 700 11px/1 var(--font-mono);
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    height: 28px;
+
+    &:hover { border-color: var(--accent); }
+
+    .tb-role-icon {
+        display: inline-flex;
+        color: var(--accent-deep);
+
+        .MuiSvgIcon-root { font-size: 14px; }
+    }
+
+    .tb-role-chev {
+        font-size: 14px;
+        color: inherit;
+        opacity: 0.7;
+    }
+
+    /* Operator role uses the green run signal palette. Keep this in chrome —
+       the styling hook is generic (operator role exists in every plugin). */
+    &.operator {
+        background: var(--sig-run-soft);
+        color: var(--sig-run-deep);
+
+        .tb-role-icon { color: var(--sig-run-deep); }
+        &:hover { border-color: var(--sig-run); }
+    }
+}
+
+/* HANDOFF · v2 04f.4 · connection pip. */
+.tb-pip {
+    display: inline-flex;
+    align-items: center;
+    align-self: center;
+    gap: 6px;
+    font: 700 10.5px/1 var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-3);
+    height: 28px;
+
+    .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--sig-run);
+        box-shadow: 0 0 0 3px var(--sig-run-soft);
+    }
+
+    &.connecting .dot,
+    &.reconnecting .dot {
+        background: var(--sig-warn);
+        box-shadow: 0 0 0 3px var(--sig-warn-soft);
+        animation: tb-pip-pulse 1.4s ease-in-out infinite;
+    }
+
+    &.disconnected .dot,
+    &.fault .dot {
+        background: var(--sig-fault);
+        box-shadow: 0 0 0 3px var(--sig-fault-soft);
+    }
+
+    &.stale .dot {
+        background: var(--sig-idle);
+        box-shadow: 0 0 0 3px var(--sig-idle-soft);
+    }
+}
+
+@keyframes tb-pip-pulse {
+    50% { opacity: 0.4; }
+}
+
+/* Avatar square (per v2 04f.5). */
+.av {
+    width: 28px;
+    height: 28px;
+    align-self: center;
+    border-radius: var(--r-2);
+    background: var(--accent);
+    color: var(--accent-fg);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+
+    &:hover { background: var(--accent-deep); }
+}
+
+/* HANDOFF · v2 04f.6 narrow-width overflow. */
+@media (max-width: 1080px) {
+    .tb-search { min-width: 0; padding: 6px 8px; }
+    .tb-search .tb-search-text,
+    .tb-search .kbd { display: none; }
+}
+
+@media (max-width: 880px) {
+    .doc-nav .nav-link .nav-label { display: none; }
+    .tb-search { display: none; }
+}
+
+@media (max-width: 720px) {
+    .tb-role .tb-role-text { display: none; }
+}
+
+/* --- Page head (crumbs + title + tabs) ----------------------------------
+   HANDOFF · v2 04f.9 — crumb strip + page-head row that squeezes on scroll. */
+.doc-crumbs {
+    height: 28px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    padding: 0 22px;
+    gap: 6px;
+    font: 700 10.5px/1 var(--font-mono);
+    color: var(--ink-3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    position: sticky;
+    top: 56px;
+    z-index: calc(var(--z-header) - 1);
+    overflow: hidden;
+    transition:
+        height 180ms cubic-bezier(.2, .6, .2, 1),
+        opacity 120ms cubic-bezier(.2, .6, .2, 1),
+        border-color 120ms cubic-bezier(.2, .6, .2, 1);
+
+    &[data-squeezed="true"] {
+        height: 0;
+        opacity: 0;
+        border-bottom-color: transparent;
+    }
+
+    .sep { color: var(--ink-4); }
+
+    a {
+        color: var(--ink-3);
+        text-decoration: none;
+
+        &:hover {
+            color: var(--ink-1);
+            text-decoration: none;
+        }
+    }
+}
+
+.page-head {
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: stretch;
+    padding: 0 22px;
+    gap: 28px;
+    height: 72px;
+    overflow: hidden;
+    transition:
+        height 180ms cubic-bezier(.2, .6, .2, 1),
+        top 180ms cubic-bezier(.2, .6, .2, 1);
+    position: sticky;
+    top: 84px; /* 56 chrome + 28 crumbs */
+    z-index: calc(var(--z-header) - 2);
+
+    &[data-squeezed="true"] {
+        height: 36px;
+        top: 56px;
+
+        .ph-title { font-size: 14px; }
+    }
+
+    .ph-title {
+        display: flex;
+        align-items: center;
+        margin: 0;
+        flex: 0 0 auto;
+        font: 700 28px/1.05 var(--font-sans);
+        color: var(--ink-1);
+        letter-spacing: -0.012em;
+        white-space: nowrap;
+        transition: font-size 180ms cubic-bezier(.2, .6, .2, 1);
+    }
+
+    .ph-tabs {
+        display: flex;
+        align-items: stretch;
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow-x: auto;
+        scrollbar-width: none;
+        gap: 0;
+
+        &::-webkit-scrollbar { display: none; }
+
+        a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 16px;
+            font: 500 14px/1 var(--font-sans);
+            color: var(--ink-2);
+            text-decoration: none;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+            white-space: nowrap;
+            transition: color 120ms;
+
+            &:hover {
+                color: var(--ink-1);
+                text-decoration: none;
+            }
+
+            &.active {
+                color: var(--ink-1);
+                border-bottom-color: var(--accent);
+            }
+
+            .MuiSvgIcon-root,
+            .mi {
+                color: var(--ink-3);
+                font-size: 18px;
+            }
+
+            &.active .MuiSvgIcon-root,
+            &.active .mi { color: var(--accent); }
+        }
+    }
+}
+
+/* --- Page body (master/detail container) -------------------------------- */
+.doc-body {
+    flex: 1 1 auto;
+    background: var(--surface-2);
+    padding: 16px 24px 24px;
+    min-height: 0;
+    min-width: 0;
+}

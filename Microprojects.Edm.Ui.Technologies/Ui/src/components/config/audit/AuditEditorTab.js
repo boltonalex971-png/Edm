@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import axios from 'axios';
 import PropTypes from 'prop-types';
 import { 
@@ -25,8 +25,8 @@ import {
     Edit as EditIcon,
     Delete as DeleteIcon
 } from '@mui/icons-material';
-import { useGet } from '../../hooks/hooks';
-import { Loading } from '../../utils/Utils';
+import { useGet } from '@microprojects/edm-components/hooks';
+import { Loading } from '@microprojects/edm-components/components';
 import { CriterionEditor, ZoneEditor } from './AuditZoneEditor';
 
 AuditEditorTab.propTypes = {

@@ -9,6 +9,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
+    "@microprojects/edm-components": "file:../../@microprojects/edm-components",
     "@microprojects/react-utils": "^1.0.23",
     "@microprojects/tools": "^1.0.10",
     "@microsoft/signalr": "^10.0.0",

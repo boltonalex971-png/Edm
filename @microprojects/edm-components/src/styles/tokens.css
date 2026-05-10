@@ -1,0 +1,236 @@
+﻿/* =========================================================================
+   EDM Design System — default token sheet (v2 "Steel" direction).
+   Lifted from Microprojects.Edm.Ui.Technologies/Ui/src/tokens.css.
+   Consumers can either import this file once at the app root for a working
+   baseline, or define their own tokens.css later in the cascade to override
+   any variable. The package's components only READ these variables — they
+   never define or override tokens.
+   ========================================================================= */
+
+@import url("https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..600,0..1,-25..0&display=swap");
+
+/* ---------- Color tokens — Steel (light) ---------- */
+:root {
+    /* Neutrals */
+    --bg:            #EEF0F3;
+    --surface:       #FFFFFF;
+    --surface-2:     #F7F8FA;
+    --surface-3:     #EDEFF3;
+    --surface-sunk:  #E4E7EC;
+    --line:          #DCE0E6;
+    --line-soft:     #E8EAEF;
+    --line-strong:   #BFC5CE;
+    --line-vivid:    #0E1620;
+
+    /* Text */
+    --ink-1:         #0E1620;
+    --ink-2:         #2A323F;
+    --ink-3:         #5A6472;
+    --ink-4:         #8993A2;
+    --ink-disabled:  #B5BCC6;
+
+    /* Accent — cobalt */
+    --accent:        #1F4DE5;
+    --accent-deep:   #36488A;
+    --accent-soft:   #DEE3F2;
+    --accent-tint:   #F2F5FF;
+    --accent-fg:     #FFFFFF;
+
+    /* Entity hues — soft+deep pairs. Plugins map per-entity hues as aliases
+       (e.g. `--ent-host-soft: var(--hue-jade-soft)`). */
+    --hue-azure-soft:  #DBEAF1;  --hue-azure-deep:  #335E73;
+    --hue-cobalt-soft: #DEE3F2;  --hue-cobalt-deep: #36488A;
+    --hue-indigo-soft: #DEE0EE;  --hue-indigo-deep: #3F4475;
+    --hue-violet-soft: #E4DEEE;  --hue-violet-deep: #564879;
+    --hue-plum-soft:   #ECDDEA;  --hue-plum-deep:   #6A3F66;
+    --hue-mauve-soft:  #E8DDDF;  --hue-mauve-deep:  #5C4951;
+    --hue-jade-soft:   #DCEAE2;  --hue-jade-deep:   #2D5E47;
+    --hue-teal-soft:   #D9E5E3;  --hue-teal-deep:   #2F5E59;
+    --hue-amber-soft:  #EFE4D2;  --hue-amber-deep:  #6E5224;
+    --hue-ochre-soft:  #E9E2CE;  --hue-ochre-deep:  #6B5526;
+    --hue-rose-soft:   #ECDADD;  --hue-rose-deep:   #6E3942;
+    --hue-slate-soft:  #E2E5E9;  --hue-slate-deep:  #3D4654;
+
+    /* Industrial signal palette */
+    --sig-run:       #0EA968;
+    --sig-run-soft:  #DFF6E9;
+    --sig-run-deep:  #06673F;
+
+    --sig-warn:      #E89E1A;
+    --sig-warn-soft: #FCEFD2;
+    --sig-warn-deep: #8A5C03;
+
+    --sig-fault:     #D63838;
+    --sig-fault-soft:#FCE3E3;
+    --sig-fault-deep:#8A1818;
+
+    --sig-idle:      #6B7787;
+    --sig-idle-soft: #E8EBEF;
+    --sig-idle-deep: #2F3947;
+
+    --sig-info:      #1F77E0;
+    --sig-info-soft: #DCEAFB;
+
+    --sig-queued:    #8B5CF6;
+    --sig-queued-soft:#ECE5FF;
+
+    /* ---------- Typography ---------- */
+    --font-sans: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    --font-icon: "Material Symbols Outlined";
+
+    /* Type scale */
+    --t-11: 11px; --t-12: 12px; --t-13: 13px; --t-14: 14px; --t-15: 15px;
+    --t-16: 16px; --t-18: 18px; --t-20: 20px; --t-24: 24px; --t-28: 28px;
+    --t-32: 32px; --t-40: 40px; --t-56: 56px;
+
+    /* Tracking */
+    --track-eyebrow: 0.08em;
+    --track-tight: -0.01em;
+
+    /* ---------- Spacing (4px grid) ---------- */
+    --s-1: 2px;  --s-2: 4px;  --s-3: 6px;  --s-4: 8px;
+    --s-5: 12px; --s-6: 16px; --s-7: 20px; --s-8: 24px;
+    --s-9: 32px; --s-10: 40px; --s-11: 48px; --s-12: 64px; --s-13: 80px;
+
+    /* ---------- Radii ---------- */
+    --r-0: 0;  --r-1: 2px;  --r-2: 4px;  --r-3: 6px;  --r-4: 10px;
+    --r-pill: 999px;
+
+    /* ---------- Elevation ---------- */
+    --elev-0: none;
+    --elev-1: 0 1px 0 rgba(14,22,32,0.04), 0 1px 2px rgba(14,22,32,0.04);
+    --elev-2: 0 1px 0 rgba(14,22,32,0.04), 0 4px 12px rgba(14,22,32,0.06);
+    --elev-3: 0 2px 0 rgba(14,22,32,0.04), 0 12px 32px rgba(14,22,32,0.10);
+    --elev-popover: 0 1px 0 rgba(14,22,32,0.04), 0 8px 24px rgba(14,22,32,0.14);
+
+    /* ---------- Density (default = comfortable) ---------- */
+    --row-h: 40px;
+    --row-pad-x: 14px;
+    --field-h: 36px;
+    --btn-h: 36px;
+    --section-pad: 20px;
+    --card-pad: 20px;
+
+    /* ---------- Motion ---------- */
+    --ease-std: cubic-bezier(.2,.8,.2,1);
+    --ease-in:  cubic-bezier(.4,0,1,1);
+    --ease-out: cubic-bezier(0,0,.2,1);
+    --dur-1: 80ms;  --dur-2: 160ms;  --dur-3: 240ms;  --dur-4: 360ms;
+
+    /* ---------- Z-index ---------- */
+    --z-rail: 50;
+    --z-header: 60;
+    --z-popover: 70;
+    --z-modal: 80;
+    --z-toast: 90;
+}
+
+/* ---------- Density modifiers ---------- */
+.density-compact {
+    --row-h: 32px;
+    --row-pad-x: 10px;
+    --field-h: 30px;
+    --btn-h: 30px;
+    --section-pad: 14px;
+    --card-pad: 14px;
+}
+.density-touch {
+    --row-h: 56px;
+    --row-pad-x: 18px;
+    --field-h: 52px;
+    --btn-h: 52px;
+    --section-pad: 24px;
+    --card-pad: 24px;
+}
+
+/* ---------- Dark variant (shop-floor) ----------
+   Tech historically keys this off `.theme-shop`; the
+   density/scheme utilities also expose `[data-scheme="dark"]`.
+   Both selectors are kept here so either channel works. */
+.theme-shop,
+[data-scheme="dark"] {
+    --bg:            #0B1018;
+    --surface:       #131A24;
+    --surface-2:     #182030;
+    --surface-3:     #1F2839;
+    --surface-sunk:  #0A0F18;
+    --line:          #2A3548;
+    --line-soft:     #1F2839;
+    --line-strong:   #4A5670;
+    --line-vivid:    #FFFFFF;
+
+    --ink-1:         #F4F6FA;
+    --ink-2:         #D4DAE4;
+    --ink-3:         #99A4B5;
+    --ink-4:         #6E7A8C;
+    --ink-disabled:  #4A5366;
+
+    --accent:        #6F8FFF;
+    --accent-deep:   #1F4DE5;
+    --accent-soft:   #1A2547;
+    --accent-tint:   #131C36;
+
+    --sig-run-soft:  #0F2A1F;
+    --sig-warn-soft: #2D2210;
+    --sig-fault-soft:#2D1414;
+    --sig-idle-soft: #1F2839;
+    --sig-info-soft: #102236;
+    --sig-queued-soft:#1E1733;
+
+    --elev-1: 0 1px 0 rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.4);
+    --elev-2: 0 1px 0 rgba(0,0,0,0.4), 0 4px 12px rgba(0,0,0,0.4);
+    --elev-3: 0 2px 0 rgba(0,0,0,0.4), 0 12px 32px rgba(0,0,0,0.6);
+    --elev-popover: 0 1px 0 rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.6);
+}
+
+/* =========================================================================
+   Base reset + body + Material Symbols icon class.
+   These are runtime-essential rules used by every plugin SPA — they live
+   alongside the tokens since adopting the token sheet implies adopting
+   the v2 baseline. Plugins can still override after import.
+   ========================================================================= */
+*, *::before, *::after { box-sizing: border-box; }
+html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--ink-2);
+    font-family: var(--font-sans);
+    font-size: var(--t-14);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+body {
+    font-feature-settings: "ss01", "cv11";
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+::selection { background: var(--accent-soft); color: var(--ink-1); }
+
+/* Tabular numerals on data surfaces */
+.num, table, .data { font-variant-numeric: tabular-nums; }
+
+/* Material Symbols (icon font) */
+.mi {
+    font-family: var(--font-icon);
+    font-weight: 400;
+    font-style: normal;
+    display: inline-block;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 20;
+    font-size: 18px;
+    vertical-align: middle;
+    user-select: none;
+    flex-shrink: 0;
+}
+.mi.fill { font-variation-settings: "FILL" 1, "wght" 500, "GRAD" 0, "opsz" 20; }
+.mi.lg  { font-size: 22px; }
+.mi.sm  { font-size: 16px; }
+.mi.xs  { font-size: 14px; }

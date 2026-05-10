@@ -1,6 +1,6 @@
-import React from 'react';
+﻿import React from 'react';
 import { Switch, Route, useRouteMatch } from 'react-router-dom';
-import { SubRootPage } from '../SubRootPage';
+import { SubRootPage } from '@microprojects/edm-components/components';
 import {
     SettingsInputComponent as SettingsInputComponentIcon,
     Description as DescriptionIcon,

@@ -1,0 +1,19 @@
+﻿// HANDOFF · v2 04c.1 · realtime ValueFlash. Wraps a numeric value;
+// when the value changes, briefly flashes the background `--accent-tint`
+// for 600 ms then fades back. Padding 2/6 px so the flash has visible
+// margin around the digits without changing the layout.
+
+.valueFlash {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: var(--r-2);
+    background: transparent;
+    font-variant-numeric: tabular-nums;
+    transition: background 600ms ease-out;
+}
+
+// Severity-tinted variants — caller can override the flash colour.
+.valueFlash.flashing             { background: var(--accent-tint); transition: background 0ms; }
+.valueFlash.flashing.run         { background: var(--sig-run-soft); }
+.valueFlash.flashing.warn        { background: var(--sig-warn-soft); }
+.valueFlash.flashing.fault       { background: var(--sig-fault-soft); }
