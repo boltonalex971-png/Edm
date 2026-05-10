@@ -1,4 +1,4 @@
-﻿import {useEffect, useState} from 'react';
+﻿import {useCallback, useEffect, useState} from 'react';
 import {HubConnection, HubConnectionBuilder, LogLevel} from '@microsoft/signalr';
 import {getCookie} from '../../hooks/getCookie';
 
@@ -17,6 +17,9 @@ export type ConnectionStatus =
 export interface ConnectionState {
     status: ConnectionStatus;
     lastSeen: Date | null;
+    /** Call to mark the connection as active (resets the stale timer, sets lastSeen=now).
+     *  Wire from consumer-side message handlers (SignalR onReceive etc.). */
+    notifyActivity: () => void;
 }
 
 export interface UseConnectionStateOptions {
@@ -85,7 +88,12 @@ export function useConnectionState(hubUrl: string, options?: UseConnectionStateO
         return () => window.clearTimeout(t);
     }, [status, lastSeen, staleAfterMs]);
 
-    return {status, lastSeen};
+    const notifyActivity = useCallback(() => {
+        setLastSeen(new Date());
+        setStatus((prev) => (prev === 'stale' ? 'connected' : prev));
+    }, []);
+
+    return {status, lastSeen, notifyActivity};
 }
 
 /* Maps a status into the v2 .tb-pip slot props (kind class + label). */

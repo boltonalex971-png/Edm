@@ -6,24 +6,34 @@
 
 export type Density = 'compact' | 'comfortable' | 'touch';
 
-const STORAGE_KEY = 'edm.density';
+const STORAGE_KEY_SUFFIX = 'density';
+const DEFAULT_PREFIX = 'edm.';
 const DEFAULT_DENSITY: Density = 'comfortable';
 
-export function readDensity(): Density {
+function getStorage(custom?: Storage | null): Storage | null {
+    if (custom !== undefined) return custom;
+    try { return window.localStorage; } catch { return null; }
+}
+
+export function readDensity(storage?: Storage | null, keyPrefix: string = DEFAULT_PREFIX): Density {
+    const s = getStorage(storage);
+    if (!s) return DEFAULT_DENSITY;
     try {
-        const stored = window.localStorage.getItem(STORAGE_KEY);
+        const stored = s.getItem(`${keyPrefix}${STORAGE_KEY_SUFFIX}`);
         if (stored === 'compact' || stored === 'comfortable' || stored === 'touch') {
             return stored;
         }
     } catch {
-        // localStorage unavailable (private mode, sandbox); fall through to default.
+        // storage unavailable (private mode, sandbox); fall through to default.
     }
     return DEFAULT_DENSITY;
 }
 
-export function writeDensity(value: Density): void {
+export function writeDensity(value: Density, storage?: Storage | null, keyPrefix: string = DEFAULT_PREFIX): void {
+    const s = getStorage(storage);
+    if (!s) return;
     try {
-        window.localStorage.setItem(STORAGE_KEY, value);
+        s.setItem(`${keyPrefix}${STORAGE_KEY_SUFFIX}`, value);
     } catch {
         // Ignore persistence failures; the active class is still applied.
     }

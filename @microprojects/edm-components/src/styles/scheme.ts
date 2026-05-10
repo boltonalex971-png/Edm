@@ -7,24 +7,34 @@
 
 export type Scheme = 'light' | 'dark';
 
-const STORAGE_KEY = 'edm.scheme';
+const STORAGE_KEY_SUFFIX = 'scheme';
+const DEFAULT_PREFIX = 'edm.';
 const DEFAULT_SCHEME: Scheme = 'light';
 
-export function readScheme(): Scheme {
+function getStorage(custom?: Storage | null): Storage | null {
+    if (custom !== undefined) return custom;
+    try { return window.localStorage; } catch { return null; }
+}
+
+export function readScheme(storage?: Storage | null, keyPrefix: string = DEFAULT_PREFIX): Scheme {
+    const s = getStorage(storage);
+    if (!s) return DEFAULT_SCHEME;
     try {
-        const stored = window.localStorage.getItem(STORAGE_KEY);
+        const stored = s.getItem(`${keyPrefix}${STORAGE_KEY_SUFFIX}`);
         if (stored === 'light' || stored === 'dark') {
             return stored;
         }
     } catch {
-        // localStorage unavailable (private mode, sandbox); fall through to default.
+        // storage unavailable (private mode, sandbox); fall through to default.
     }
     return DEFAULT_SCHEME;
 }
 
-export function writeScheme(value: Scheme): void {
+export function writeScheme(value: Scheme, storage?: Storage | null, keyPrefix: string = DEFAULT_PREFIX): void {
+    const s = getStorage(storage);
+    if (!s) return;
     try {
-        window.localStorage.setItem(STORAGE_KEY, value);
+        s.setItem(`${keyPrefix}${STORAGE_KEY_SUFFIX}`, value);
     } catch {
         // Ignore persistence failures; the active attribute is still applied.
     }

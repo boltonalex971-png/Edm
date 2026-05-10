@@ -14,3 +14,21 @@ Phase-1 lift of v2 primitives from `Microprojects.Edm.Ui.Technologies/Ui/src/`. 
 - Add `onActivity()` callback to `useConnectionState` so consumers can refresh `lastSeen` from observed traffic.
 - Make `UiPreferencesProvider` storage injectable (sessionStorage / no-op) and storage-key prefix configurable.
 - Re-evaluate `Toast` API (position, action, persistent, queue) when comparing with Logistics's `InlineAlert`.
+
+## 0.2.0 — Phase 2 audit lifts
+
+Driven by the Phase 2 pre-replacement audit of Logistics components. Adds primitives and knobs Logistics will need when it adopts the package in Phase 3. All changes are additive — Tech keeps working without modification.
+
+- **`hooks/entityRefresh`** (NEW) — `EntityRefreshProvider`, `useEntityToken(tags)`, `useInvalidateEntities()`, `EntityTag`, `listTag(type)`. Tag-based invalidation primitive; lifted verbatim from Logistics. Plugins build their own SignalR-to-tag bridges on top.
+- **`hooks/entityLocks`** (NEW) — `LockProvider`, `useEntityLockState`, `useOrderClaimState`, `useLockSetters`, `useAcquireEntityLock`, `useAcquireOrderClaim`. Edit-lock + order-claim store with publisher-injected broadcast. Plugin passes a `LockPublisher` (publishEntityLock/Unlock, publishOrderClaim/Release, getCurrentConnectionId) on `<LockProvider publisher={...}>`; the package stays free of plugin-specific event factories.
+- **`useConnectionState`** — added `notifyActivity()` to the returned state. Consumers wire from message handlers (e.g. SignalR onReceive) so the stale timer resets and `lastSeen` advances on observed traffic.
+- **`UiPreferencesProvider`** — new optional props `storage` (Storage | null; default `localStorage`, `null` disables persistence) and `storageKeyPrefix` (default `'edm.'`). The standalone `readDensity` / `writeDensity` / `readScheme` / `writeScheme` helpers gained matching positional `(storage?, keyPrefix?)` parameters and now tolerate environments without `window.localStorage` (returns the default).
+- **`ToastProvider`** — new optional `position` prop (`'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right'`, default `'bottom-right'` matches prior behaviour).
+- **`forms/HierarchyPicker`** (NEW) — MUI port of Logistics's Kendo `DropDownTree`-based picker. Preserves canvas-measured auto-sizing (input min-width to widest leaf label; popup pinned to input width on open) and the policy-aware helpers (`findInHierarchy`, `pruneHierarchy`, `dropOutdated`). Built on `TextField` + `Popper` + `SimpleTreeView` (`@mui/x-tree-view`).
+- **tsconfig** — added `target: "ES2022"` (was defaulting to ES3, broke Set/Map iteration in entityRefresh).
+
+### Carry-overs to address in Phase 3
+
+- **`_render`/`_renderFunc`/`_selectedItem` refactor — deliberately deferred.** Tech's four config callers (Workplaces / Devices / Hosts / Processes) all import `reloadMaster` as a free function. The current global pattern works because there's only one MasterDetail per page; converting to a context-based hook is a wider API change that risks Tech regression with no functional payoff. Revisit when Phase 3 wires Logistics through and we have actual multi-instance use cases or a test plan.
+- **RelationTable + MasterDetail entity-refresh wiring** — both should consume `useEntityToken` once Logistics is on the package. Hold until Logistics adopts and validates the API shape.
+- **MasterDetail draggable pane separator** — Logistics-only feature today, lift during Phase 3 when Logistics's UX is being preserved.
