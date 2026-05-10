@@ -1,14 +1,14 @@
-import React from 'react';
+﻿import React from 'react';
 import PropTypes from 'prop-types';
-import { useGet } from '../hooks/hooks';
-import { Detail, Editor } from '../MasterDetail';
+import { useGet } from '@microprojects/edm-components/hooks';
+import { Detail, Editor } from '@microprojects/edm-components/components';
 import { useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Box } from '@mui/material';
 import { Folder as FolderIcon } from '@mui/icons-material';
-import { Properties, Property } from '../forms/Properties';
-import { EditorSection } from '../forms/EditorSection';
-import { Field } from '../forms/Field';
+import { Properties, Property } from '@microprojects/edm-components/components';
+import { EditorSection } from '@microprojects/edm-components/components';
+import { Field } from '@microprojects/edm-components/components';
 
 Folder.propTypes = {
     onChange: PropTypes.func,

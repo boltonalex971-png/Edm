@@ -1,8 +1,8 @@
-import React, { useContext, useState } from 'react';
+﻿import React, { useContext, useState } from 'react';
 import PropTypes from 'prop-types';
-import { useGet } from '../../hooks/hooks';
-import { Detail } from '../../MasterDetail';
-import { LoadingContainer } from '../../utils/Utils';
+import { useGet } from '@microprojects/edm-components/hooks';
+import { Detail } from '@microprojects/edm-components/components';
+import { LoadingContainer } from '@microprojects/edm-components/components';
 import { ApiContext } from '../../../ApiContext';
 import { PluginContainer } from '@microprojects/react-utils';
 import { Tune as TuneIcon } from '@mui/icons-material';

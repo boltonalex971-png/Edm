@@ -1,8 +1,8 @@
-import React from 'react';
+﻿import React from 'react';
 import PropTypes from 'prop-types';
-import { RelationTable } from '../../RelationTable';
-import { useGet } from '../../hooks/hooks';
-import { DropDownCell } from '../../DropDownCell';
+import { RelationTable } from '@microprojects/edm-components/components';
+import { useGet } from '@microprojects/edm-components/hooks';
+import { DropDownCell } from '@microprojects/edm-components/components';
 
 AuditQualifiersTab.propTypes = {
     id: PropTypes.number,

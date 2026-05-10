@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+﻿import React, {useEffect, useState} from 'react';
 import {useSelector} from 'react-redux';
 import {NavLink} from 'react-router-dom';
 import {
@@ -9,7 +9,7 @@ import {
     ArrowForward as ArrowIcon,
 } from '@mui/icons-material';
 import {appRoles} from '../../ApiContext';
-import {displayUserName} from '../utils/userName';
+import {displayUserName} from '@microprojects/edm-components/utils';
 import styles from './Home.module.scss';
 import type {RootState} from '../../store';
 

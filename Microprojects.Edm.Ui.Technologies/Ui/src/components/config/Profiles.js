@@ -1,14 +1,14 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import { useGet } from '../hooks/hooks';
+import { useGet } from '@microprojects/edm-components/hooks';
 import { useParams } from 'react-router-dom';
-import { Detail, Editor } from '../MasterDetail';
+import { Detail, Editor } from '@microprojects/edm-components/components';
 import { ProfileTabs } from './profile/ProfileTabs';
 import { Box, Chip, TextField, Autocomplete } from '@mui/material';
 import { Description as ProfileIcon } from '@mui/icons-material';
-import { Properties, Property } from '../forms/Properties';
-import { EditorSection } from '../forms/EditorSection';
-import { Field } from '../forms/Field';
+import { Properties, Property } from '@microprojects/edm-components/components';
+import { EditorSection } from '@microprojects/edm-components/components';
+import { Field } from '@microprojects/edm-components/components';
 
 
 ProfileDetail.propTypes = {

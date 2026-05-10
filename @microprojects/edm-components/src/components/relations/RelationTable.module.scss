@@ -1,0 +1,176 @@
+﻿// HANDOFF · v2 04c.2 production data table chrome.
+// Most cell/row/header styling lives in the consumer's MuiDataGrid theme override.
+// This module covers the toolbar (search · spacer · add) that sits ABOVE
+// the grid and the per-row hover actions that the theme can't reach.
+
+.tableContainer {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    background: transparent;
+    margin-top: 8px;
+    gap: 8px;
+}
+
+// --- Toolbar (left search · right primary action) -----------------------
+.toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0;
+}
+
+.searchField {
+    flex: 1 1 auto;
+    max-width: 320px;
+
+    :global {
+        .MuiInputBase-root {
+            height: 34px;
+            font-size: 13px;
+            background: var(--surface);
+        }
+        .MuiOutlinedInput-notchedOutline { border-color: var(--line-strong); }
+        .MuiInputBase-root:hover .MuiOutlinedInput-notchedOutline { border-color: var(--ink-3); }
+        .MuiInputBase-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+            border-color: var(--accent);
+            border-width: 1px;
+        }
+    }
+}
+
+.toolbarSpacer {
+    flex: 1 1 auto;
+}
+
+.addBtn {
+    height: 34px !important;
+    padding: 0 14px !important;
+    text-transform: none !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+}
+
+// --- Grid wrapper -------------------------------------------------------
+.gridWrapper {
+    width: 100%;
+    background: var(--surface);
+    border-radius: var(--r-2);
+    overflow: hidden;
+    position: relative;
+    transition: opacity 160ms cubic-bezier(.2, .6, .2, 1);
+
+    &.dimmed {
+        opacity: 0.4;
+        filter: grayscale(0.5);
+        pointer-events: none;
+    }
+
+    :global(.MuiDataGrid-root) {
+        border: 1px solid var(--line);
+    }
+}
+
+// --- Per-row actions cell -----------------------------------------------
+// Lives in a fixed-width "actions" GridColDef appended to the columns
+// list. Hidden by default; revealed on row hover or while editing.
+// The cell itself is always 96 px so the row layout doesn't reflow.
+.actionsCell {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 2px;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 120ms ease;
+}
+
+:global(.MuiDataGrid-row:hover) .actionsCell,
+:global(.MuiDataGrid-row.Mui-selected) .actionsCell,
+.actionsCell.editing {
+    opacity: 1;
+}
+
+.actionBtn {
+    width: 28px !important;
+    height: 28px !important;
+    padding: 0 !important;
+    color: var(--ink-3) !important;
+    border-radius: var(--r-2) !important;
+
+    &:hover {
+        background: var(--accent-tint) !important;
+        color: var(--accent-deep) !important;
+    }
+}
+
+.actionBtn.save:hover {
+    color: var(--sig-run-deep) !important;
+    background: var(--sig-run-soft) !important;
+}
+
+.actionBtn.delete:hover {
+    color: var(--sig-fault-deep) !important;
+    background: var(--sig-fault-soft) !important;
+}
+
+// --- Loading overlay (used during cross-tab data swap) ------------------
+.loadingOverlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    z-index: 100;
+    background: var(--surface-2);
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.stickyIndicator {
+    position: sticky;
+    top: 50%;
+    height: min-content;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: translateY(-50%);
+}
+
+// --- Empty state (v2 04c.3 small-surface variant) -----------------------
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 20px;
+    gap: 10px;
+    text-align: center;
+    color: var(--ink-3);
+}
+
+.emptyIcon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--surface-2);
+    color: var(--ink-4);
+    display: grid;
+    place-items: center;
+}
+
+.emptyIcon :global(.MuiSvgIcon-root) { font-size: 26px; }
+
+.emptyTitle {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink-1);
+    letter-spacing: -0.005em;
+}
+
+.emptyHelp {
+    font-size: 12.5px;
+    color: var(--ink-3);
+    max-width: 320px;
+    line-height: 1.5;
+}

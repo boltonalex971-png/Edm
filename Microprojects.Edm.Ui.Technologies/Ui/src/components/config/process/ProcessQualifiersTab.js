@@ -1,6 +1,6 @@
-import React from 'react';
+﻿import React from 'react';
 import PropTypes from 'prop-types';
-import { RelationTable } from '../../RelationTable';
+import { RelationTable } from '@microprojects/edm-components/components';
 
 ProcessQualifiersTab.propTypes = {
     id: PropTypes.number,

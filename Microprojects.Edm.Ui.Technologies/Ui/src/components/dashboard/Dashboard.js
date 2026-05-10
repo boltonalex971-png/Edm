@@ -1,6 +1,6 @@
-import React from 'react';
+﻿import React from 'react';
 import { Switch, Route, useRouteMatch, Redirect } from 'react-router-dom';
-import { SubRootPage } from '../SubRootPage';
+import { SubRootPage } from '@microprojects/edm-components/components';
 import {
     PlayCircleOutline as PlayCircleOutlineIcon,
     PeopleOutline as PeopleOutlineIcon,

@@ -1,7 +1,7 @@
-import React from 'react';
+﻿import React from 'react';
 import { Alert, Box, CircularProgress, Typography } from '@mui/material';
-import { useGet } from '../hooks/hooks';
-import { RelationTable } from '../RelationTable';
+import { useGet } from '@microprojects/edm-components/hooks';
+import { RelationTable } from '@microprojects/edm-components/components';
 import api from '../api';
 
 export const ProfilePlugins = (props) => {

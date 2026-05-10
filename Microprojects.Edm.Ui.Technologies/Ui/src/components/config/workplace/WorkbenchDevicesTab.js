@@ -1,9 +1,9 @@
-import React from 'react';
+﻿import React from 'react';
 import Api from '../../api';
 import PropTypes from 'prop-types';
-import { RelationTable } from '../../RelationTable';
-import { DropDownCell, LinkTextCell } from '../../DropDownCell';
-import { useGet } from '../../hooks/hooks';
+import { RelationTable } from '@microprojects/edm-components/components';
+import { DropDownCell, LinkTextCell } from '@microprojects/edm-components/components';
+import { useGet } from '@microprojects/edm-components/hooks';
 import { useHistory } from 'react-router-dom';
 import { DeviceDetail } from '../Devices';
 import { DeviceConfigEditor } from './DeviceConfigEditor';

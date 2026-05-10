@@ -1,0 +1,150 @@
+﻿// HANDOFF · v2 04c.3 · canonical empty / error state surfaces. One CSS
+// module covers EmptyState (neutral) and ErrorState (signal-fault).
+// Three sizes — sm (in-card), md (default), lg (full-page hero).
+
+.surface {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 10px;
+}
+
+.surface.sm  { padding: 32px 16px; gap: 8px; }
+.surface.md  { padding: 48px 20px; gap: 10px; }
+.surface.lg  { padding: 72px 24px; gap: 14px; min-height: 420px; }
+
+.icon {
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: var(--surface-2);
+    color: var(--ink-4);
+    margin-bottom: 4px;
+}
+
+.surface.sm .icon  { width: 56px;  height: 56px; }
+.surface.md .icon  { width: 72px;  height: 72px; }
+.surface.lg .icon  { width: 104px; height: 104px; }
+
+.surface.sm .icon :global(.MuiSvgIcon-root) { font-size: 26px; }
+.surface.md .icon :global(.MuiSvgIcon-root) { font-size: 32px; }
+.surface.lg .icon :global(.MuiSvgIcon-root) { font-size: 48px; }
+
+.surface.fault .icon {
+    background: var(--sig-fault-soft);
+    color: var(--sig-fault);
+}
+
+.title {
+    font-weight: 700;
+    color: var(--ink-1);
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+    margin: 0;
+}
+
+.surface.sm .title { font-size: 14px; }
+.surface.md .title { font-size: 16px; }
+.surface.lg .title { font-size: 22px; }
+
+.surface.fault .title { color: var(--sig-fault-deep); }
+
+.help {
+    color: var(--ink-3);
+    line-height: 1.5;
+    margin: 0;
+    max-width: 56ch;
+}
+
+.surface.sm .help { font-size: 12.5px; max-width: 320px; }
+.surface.md .help { font-size: 13px; max-width: 380px; }
+.surface.lg .help { font-size: 14px; max-width: 480px; }
+
+.codeChip {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: var(--r-2);
+    background: var(--surface-2);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--ink-3);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+// --- Loading skeleton recipes -------------------------------------------
+.skelGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+    width: 100%;
+}
+
+.skelCard {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-2);
+    box-shadow: var(--elev-1);
+    min-height: 120px;
+}
+
+.skelDetailHeader {
+    display: grid;
+    grid-template-columns: 44px 1fr auto;
+    gap: 14px;
+    align-items: center;
+    padding: 14px 18px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-2);
+}
+
+.skelDetailBody {
+    margin-top: 14px;
+    padding: 16px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-2);
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px 24px;
+}
+
+.skelTableHead {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr) 96px;
+    gap: 16px;
+    padding: 8px 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-bottom: 0;
+    border-radius: var(--r-2) var(--r-2) 0 0;
+}
+
+.skelTableRow {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr) 96px;
+    gap: 16px;
+    padding: 10px 14px;
+    border-left: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line-soft);
+    background: var(--surface);
+
+    &:last-child {
+        border-bottom: 1px solid var(--line);
+        border-radius: 0 0 var(--r-2) var(--r-2);
+    }
+}

@@ -1,7 +1,7 @@
-import React from 'react';
+﻿import React from 'react';
 import PropTypes from 'prop-types';
-import { RelationTable } from '../../RelationTable';
-import { LinkTextCell } from '../../DropDownCell';
+import { RelationTable } from '@microprojects/edm-components/components';
+import { LinkTextCell } from '@microprojects/edm-components/components';
 import { WorkbenchDetail } from '../Workbenches';
 
 ProcessWorkbenchesTab.propTypes = {

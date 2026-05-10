@@ -1,7 +1,7 @@
-import React, {useCallback, useEffect, useRef, useState} from 'react'
+﻿import React, {useCallback, useEffect, useRef, useState} from 'react'
 import api from "../api.js";
 import {PluginMessageTypes, usePluginMessaging} from "@microprojects/tools";
-import useSignalR from "../hooks/signalRHooks.ts";
+import {useSignalR} from "@microprojects/edm-components/hooks";
 import {OperatorAction} from "./OperatorAction.tsx";
 import './OperatorAction.scss'
 import axios from "axios";

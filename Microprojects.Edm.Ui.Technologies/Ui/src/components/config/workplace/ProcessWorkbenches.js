@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import { useGet } from '../../hooks/hooks';
-import { MasterDetail, reloadMaster, Detail, Info, Editor } from '../../MasterDetail';
+import { useGet } from '@microprojects/edm-components/hooks';
+import { MasterDetail, reloadMaster, Detail, Info, Editor } from '@microprojects/edm-components/components';
 import { ProcessWorkbenchesTab } from './ProcessWorkbenchesTab';
 import { Handyman as WorkbenchIcon } from '@mui/icons-material';
 
