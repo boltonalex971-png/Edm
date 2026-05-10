@@ -49,11 +49,11 @@ export function NewOperationWizard() {
                 const isWorkplace = item.hierarchyType === 2 || 
                                     item.hierarchyType === 'Workplace' || 
                                     item.itemType === 'workplace';
-                const isNode = item.isNode || isWorkplace;
-                
+                const isFolder = item.isFolder || isWorkplace;
+
                 return [
                     ...acc,
-                    { ...item, level, isNode },
+                    { ...item, level, isFolder },
                     ...flatten(item.items, level + 1)
                 ];
             }, []) || [];
@@ -148,16 +148,16 @@ export function NewOperationWizard() {
                                     >
                                         <MenuItem value=""><em>None</em></MenuItem>
                                         {processList?.map((p) => {
-                                            const itemValue = p.isNode ? `node-${p.id}` : `process-${p.id}`;
+                                            const itemValue = p.isFolder ? `folder-${p.id}` : `process-${p.id}`;
                                             return (
                                                 <MenuItem
                                                     key={itemValue}
                                                     value={itemValue}
-                                                    disabled={p.isNode}
+                                                    disabled={p.isFolder}
                                                     sx={{
-                                                        pl: (p.level || 0) * 2 + (p.isNode ? 2 : 4),
-                                                        fontWeight: p.isNode ? 700 : 400,
-                                                        color: p.isNode ? 'text.primary' : 'inherit',
+                                                        pl: (p.level || 0) * 2 + (p.isFolder ? 2 : 4),
+                                                        fontWeight: p.isFolder ? 700 : 400,
+                                                        color: p.isFolder ? 'text.primary' : 'inherit',
                                                         '&.Mui-disabled': {
                                                             opacity: 1,
                                                             backgroundColor: 'rgba(0,0,0,0.02)'

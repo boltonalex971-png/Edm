@@ -18,7 +18,7 @@ export interface TreeNode {
     id: string;
     numericId: string;
     label: string;
-    isNode: boolean;
+    isFolder: boolean;
     parentId: string;
     description?: string;
     children?: TreeNode[];
@@ -28,7 +28,7 @@ export interface RawTreeNode {
     id: number | string;
     name: string;
     description?: string;
-    isNode?: boolean;
+    isFolder?: boolean;
     items?: RawTreeNode[];
 }
 
@@ -36,10 +36,10 @@ export interface RawTreeNode {
 export const transformData = (nodes: RawTreeNode[] | undefined, parentId: number | string = 0): TreeNode[] | undefined => {
     if (!nodes || nodes.length === 0) return undefined;
     return nodes.map((node) => ({
-        id: `${node.isNode ? 'node' : 'item'}-${node.id}`,
+        id: `${node.isFolder ? 'folder' : 'item'}-${node.id}`,
         numericId: node.id.toString(),
         label: node.name,
-        isNode: !!node.isNode,
+        isFolder: !!node.isFolder,
         parentId: parentId.toString(),
         description: node.description,
         children: transformData(node.items, node.id),
@@ -87,7 +87,7 @@ export const findNode = (nodes: TreeNode[] | undefined, id: string, useNumeric =
 export const getAllFolderIds = (nodes: TreeNode[] | undefined, ids: string[] = []): string[] => {
     if (!nodes) return ids;
     for (const node of nodes) {
-        if (node.isNode) {
+        if (node.isFolder) {
             ids.push(node.id);
             if (node.children) {
                 getAllFolderIds(node.children, ids);
@@ -119,12 +119,12 @@ export const checkMoveValidity = (draggedNode: TreeNode | null, targetNode: Tree
     /* Where the move would actually land:
        - target is a folder -> into that folder
        - target is a leaf   -> next to the leaf, i.e. into its parent  */
-    const targetParentNumericId = targetNode.isNode
+    const targetParentNumericId = targetNode.isFolder
         ? targetNode.numericId
         : targetNode.parentId;
-    const targetParentPrefixedId = targetNode.isNode
+    const targetParentPrefixedId = targetNode.isFolder
         ? targetNode.id
-        : `node-${targetNode.parentId}`;
+        : `folder-${targetNode.parentId}`;
 
     /* Folder dropped into itself. */
     if (targetParentNumericId === draggedNode.numericId) return 'invalid';
@@ -184,12 +184,12 @@ export const DEFAULT_ICON_MAP: Record<string, React.ComponentType<any>> = {
 
 export const getIconForType = (
     apiPath: string | undefined,
-    isNode: boolean,
+    isFolder: boolean,
     isExpanded: boolean,
     entityTypeMap: Array<{urlPrefix: string; entityType: string}> = DEFAULT_ENTITY_TYPE_MAP,
     iconMap: Record<string, React.ComponentType<any>> = DEFAULT_ICON_MAP
 ): React.ComponentType<any> => {
-    if (isNode) {
+    if (isFolder) {
         return isExpanded ? FolderOpenIcon : FolderIcon;
     }
     const type = getEntityType(apiPath, entityTypeMap);

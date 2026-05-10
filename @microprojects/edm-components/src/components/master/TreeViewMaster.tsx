@@ -53,7 +53,7 @@ let _renderFunc: ((next: number) => void) | undefined;
 interface IndustrialTreeItemProps {
     itemId: string;
     label: React.ReactNode;
-    isNode?: boolean;
+    isFolder?: boolean;
     apiPath?: string;
     itemsWithChildren?: Set<string>;
     expandedSet?: Set<string>;
@@ -68,7 +68,7 @@ interface IndustrialTreeItemProps {
 // Custom Tree Item with D&D integration
 const IndustrialTreeItem = React.forwardRef<HTMLLIElement, IndustrialTreeItemProps>((props, ref) => {
     const {
-        itemId, label, isNode, apiPath,
+        itemId, label, isFolder, apiPath,
         itemsWithChildren, expandedSet, selectedId,
         activeNode, treeData, entityTypeMap, iconMap,
         descriptionMap,
@@ -87,20 +87,20 @@ const IndustrialTreeItem = React.forwardRef<HTMLLIElement, IndustrialTreeItemPro
         : label;
 
     // Fallback detection if RichTreeView doesn't spread item properties
-    const itemIsNode = isNode ?? itemId?.startsWith('node-');
+    const itemIsFolder = isFolder ?? itemId?.startsWith('folder-');
     const hasChildren = itemsWithChildren?.has(itemId) ?? false;
-    const isEmptyFolder = itemIsNode && !hasChildren;
+    const isEmptyFolder = itemIsFolder && !hasChildren;
     const isExpanded = expandedSet?.has(itemId) ?? false;
     const isSelected = selectedId === itemId;
 
     const {attributes, listeners, setNodeRef, isDragging} = useDraggable({
         id: itemId,
-        data: {id: itemId, label, isNode: itemIsNode},
+        data: {id: itemId, label, isFolder: itemIsFolder},
     });
 
     const {setNodeRef: setDropRef, isOver} = useDroppable({
         id: itemId,
-        data: {id: itemId, label, isNode: itemIsNode},
+        data: {id: itemId, label, isFolder: itemIsFolder},
     });
 
     /* Drop-target visual state per v2 04d.7. */
@@ -124,14 +124,14 @@ const IndustrialTreeItem = React.forwardRef<HTMLLIElement, IndustrialTreeItemPro
     };
 
     // Empty folders always render the closed icon — there is nothing to expand into.
-    const showOpenFolder = itemIsNode && hasChildren && isExpanded;
-    const IconComponent = getIconForType(apiPath || '', itemIsNode, showOpenFolder, entityTypeMap, iconMap);
+    const showOpenFolder = itemIsFolder && hasChildren && isExpanded;
+    const IconComponent = getIconForType(apiPath || '', itemIsFolder, showOpenFolder, entityTypeMap, iconMap);
 
-    const itemClass = itemIsNode
+    const itemClass = itemIsFolder
         ? (isEmptyFolder ? styles.emptyFolderItem : styles.folderItem)
         : styles.fileItem;
 
-    const iconCursor = !itemIsNode
+    const iconCursor = !itemIsFolder
         ? 'pointer'
         : isEmptyFolder
             ? 'default'
@@ -144,7 +144,7 @@ const IndustrialTreeItem = React.forwardRef<HTMLLIElement, IndustrialTreeItemPro
             const {onClick: muiOnClick, style: muiStyle, ...rest} = slotProps;
             const handleClick = (e: React.MouseEvent) => {
                 muiOnClick?.(e);
-                if (itemIsNode) {
+                if (itemIsFolder) {
                     e.stopPropagation();
                 }
             };
@@ -157,7 +157,7 @@ const IndustrialTreeItem = React.forwardRef<HTMLLIElement, IndustrialTreeItemPro
             );
         };
         return Slot;
-    }, [itemIsNode, iconCursor]);
+    }, [itemIsFolder, iconCursor]);
 
     const dropClass = dropValidity === 'valid'
         ? styles.dropInto
@@ -288,7 +288,7 @@ export function TreeViewMaster(props: TreeViewMasterProps) {
 
         onCurrentRootChanged && onCurrentRootChanged(node);
 
-        if (node.isNode) {
+        if (node.isFolder) {
             navigate(`${url}/folder/${node.numericId}`);
         } else {
             navigate(`${url}/${node.numericId}`);
@@ -323,12 +323,12 @@ export function TreeViewMaster(props: TreeViewMasterProps) {
 
         if (checkMoveValidity(draggedNode, targetNode) !== 'valid') return;
 
-        const targetNumericParentId = targetNode.isNode
+        const targetNumericParentId = targetNode.isFolder
             ? targetNode.numericId
             : targetNode.parentId;
 
         try {
-            const link = draggedNode.isNode ? hierarchiesApi : apiPath;
+            const link = draggedNode.isFolder ? hierarchiesApi : apiPath;
             if (!link) {
                 console.warn('TreeViewMaster: cannot move folder without `hierarchiesApi` prop set.');
                 return;
@@ -412,18 +412,18 @@ export function TreeViewMaster(props: TreeViewMasterProps) {
                         <DragOverlay dropAnimation={null}>
                             {activeId ? (() => {
                                 const dragged = findNode(treeData, activeId);
-                                const isNode = dragged?.isNode;
-                                const DragIcon = getIconForType(apiPath, !!isNode, false, entityTypeMap, iconMap);
+                                const isFolder = dragged?.isFolder;
+                                const DragIcon = getIconForType(apiPath, !!isFolder, false, entityTypeMap, iconMap);
                                 return (
                                     <Box className={styles.dragGhost}>
                                         <DragIcon
                                             fontSize="small"
                                             sx={{
                                                 mr: 1,
-                                                color: isNode ? 'var(--accent)' : 'var(--ink-3)',
+                                                color: isFolder ? 'var(--accent)' : 'var(--ink-3)',
                                             }}
                                         />
-                                        <Typography variant="body2" sx={{fontWeight: isNode ? 600 : 400, fontSize: '14px'}}>
+                                        <Typography variant="body2" sx={{fontWeight: isFolder ? 600 : 400, fontSize: '14px'}}>
                                             {dragged?.label}
                                         </Typography>
                                     </Box>

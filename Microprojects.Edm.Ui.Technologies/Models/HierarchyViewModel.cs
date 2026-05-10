@@ -14,7 +14,7 @@ namespace Microprojects.Edm.Ui.Technologies.Models
         public string Description { get; set; }
         public HierarchyType Type { get; set; }
         public bool IsPublic { get; set; } = true;
-        public bool IsNode { get => true; }
+        public bool IsFolder { get => true; }
         public string Owner { get; set; }
         public string Group { get; set; }
         public bool HasChildren { get => false; }
@@ -22,12 +22,12 @@ namespace Microprojects.Edm.Ui.Technologies.Models
 
     public class HierarchyItemViewModel
     {
-        public string ItemType { get => IsNode ? "folder" : HierarchyType.ToString().ToLower(); }
+        public string ItemType { get => IsFolder ? "folder" : HierarchyType.ToString().ToLower(); }
         public int Id { get; set; }
         public int ParentId { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
-        public bool IsNode { get; set; }
+        public bool IsFolder { get; set; }
         public bool IsActive { get; set; }
         public HierarchyType HierarchyType { get; set; }
         public bool HasChildren { get => Items?.Count() > 0; }

@@ -68,10 +68,11 @@ export function pruneHierarchy<T extends HierarchyNode>(
     return out;
 }
 
-/** Drop outdated leaves (an auto-fork has produced a successor) and folders
- *  that become empty as a result. The currently selected `keepId` is
- *  preserved even when outdated so existing references on saved records
- *  still resolve to a readable label in the picker input. */
+/** Drop outdated leaves (an auto-fork has produced a successor). The currently
+ *  selected `keepId` is preserved even when outdated so existing references on
+ *  saved records still resolve to a readable label in the picker input.
+ *  Empty folders are kept — call `pruneEmptyFolders` after this if you also
+ *  want to hide them (the picker does so; the master tree should not). */
 export function dropOutdated<T extends HierarchyNode>(
     nodes: T[] | undefined,
     keepId: string | undefined,
@@ -81,10 +82,30 @@ export function dropOutdated<T extends HierarchyNode>(
     for (const n of nodes) {
         if (n.isFolder) {
             const children = dropOutdated(n.items as T[] | undefined, keepId);
+            out.push({...n, items: children});
+        } else if (!n.outdated || n.id === keepId) {
+            out.push(n);
+        }
+    }
+    return out;
+}
+
+/** Hide folders that contain no leaves (recursively). Composes with
+ *  `dropOutdated` for the picker case where empty branches add no value;
+ *  master-tree consumers should NOT chain this so a freshly created empty
+ *  folder remains visible. */
+export function pruneEmptyFolders<T extends HierarchyNode>(
+    nodes: T[] | undefined,
+): T[] {
+    if (!nodes) return [];
+    const out: T[] = [];
+    for (const n of nodes) {
+        if (n.isFolder) {
+            const children = pruneEmptyFolders(n.items as T[] | undefined);
             if (children.length > 0) {
                 out.push({...n, items: children});
             }
-        } else if (!n.outdated || n.id === keepId) {
+        } else {
             out.push(n);
         }
     }
@@ -198,8 +219,12 @@ export function HierarchyPicker({
     style,
 }: HierarchyPickerProps) {
     // Outdated leaves never appear in the dropdown; the current value is
-    // preserved so existing references still display their label.
-    const visibleData = useMemo(() => dropOutdated(data, value), [data, value]);
+    // preserved so existing references still display their label. Empty
+    // folders also get pruned — there's nothing to pick inside them.
+    const visibleData = useMemo(
+        () => pruneEmptyFolders(dropOutdated(data, value)),
+        [data, value],
+    );
 
     const wrapperRef = useRef<HTMLDivElement>(null);
     const [open, setOpen] = useState(false);

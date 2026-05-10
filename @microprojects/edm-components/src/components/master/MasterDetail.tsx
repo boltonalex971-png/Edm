@@ -34,7 +34,7 @@ import {
 import {SmartScroll, SmartScrollContent} from '@microprojects/tools';
 
 import {TreeViewMaster, refresh, TreeViewMasterProps} from './TreeViewMaster';
-import {TreeNode} from './treeUtils';
+import {TreeNode, getEntityType, DEFAULT_ENTITY_TYPE_MAP} from './treeUtils';
 import {Loading} from '../states/Loading';
 import {DetailStub} from '../states/EmptyState';
 import {ErrorStub} from '../states/ErrorState';
@@ -74,8 +74,10 @@ export interface MasterDetailProps {
     hierarchiesApi?: string;
     /** Detail element rendered for a leaf route. */
     detail?: React.ReactElement;
-    /** Folder editor component rendered for folder routes. Omit to skip the folder route. */
-    folderComponent?: React.ComponentType<{api?: string; path: string; onChange: () => void; onClose: () => void}>;
+    /** Folder editor component rendered for folder routes. Omit to skip the folder route.
+     *  Receives `entityType` derived from the API URL (capitalized — e.g. `"Workplace"`,
+     *  `"Process"`) so the folder POST body can target the right hierarchy bucket. */
+    folderComponent?: React.ComponentType<{api?: string; path: string; entityType?: string; onChange: () => void; onClose: () => void}>;
     /** Help message for the empty / no-selection stub. */
     stubMessage?: string;
     /** Override TreeViewMaster's entity-type detection. */
@@ -94,6 +96,13 @@ export function MasterDetail(props: MasterDetailProps) {
     const {path, resizable = true} = props;
     const [dynamicOffset, setDynamicOffset] = useState(10);
     const FolderComponent = props.folderComponent;
+    // Capitalize the URL-derived entity type so it matches backend HierarchyType enum
+    // values (Workplace/Process/Host/Device). FolderComponent uses this when POSTing
+    // a new folder so the backend knows which typed-hierarchy bucket to put it in.
+    const entityTypeLower = getEntityType(props.api, props.entityTypeMap || DEFAULT_ENTITY_TYPE_MAP);
+    const folderEntityType = entityTypeLower
+        ? entityTypeLower.charAt(0).toUpperCase() + entityTypeLower.slice(1)
+        : undefined;
 
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [masterPx, setMasterPx] = useState<number | null>(null);
@@ -204,6 +213,7 @@ export function MasterDetail(props: MasterDetailProps) {
                                     <FolderComponent
                                         api={props.hierarchiesApi}
                                         path={path}
+                                        entityType={folderEntityType}
                                         onChange={() => reloadMaster()}
                                         onClose={() => navigate(path)}
                                     />
@@ -807,14 +817,20 @@ export function Editor(props: EditorProps) {
                 })
                 .catch(onSaveError);
         } else {
-            const parentId = _selectedItem ? (_selectedItem.isNode ? _selectedItem.id : _selectedItem.parentId) : 0;
+            // _selectedItem.id is the MUI-prefixed tree id (e.g., "folder-1033"); the backend
+            // wants the raw numeric id. numericId is the unprefixed string; parentId on a leaf
+            // is also the parent's numeric id as a string. Coerce both to int.
+            const rawParent = _selectedItem
+                ? (_selectedItem.isFolder ? _selectedItem.numericId : _selectedItem.parentId)
+                : '0';
+            const parentId = parseInt(rawParent, 10) || 0;
             axios.post(`${props.api}`, {...data, type: props.type, parentId, hierarchyId: parentId})
                 .then((response) => {
                     toast.success('Created');
                     props.onUpdate && props.onUpdate(response.data);
                     props.onChange && props.onChange(response.data);
                     props.setData(response.data);
-                    if (props.path) navigate(`${props.path}${response.data.isNode ? '/folder' : ''}/${response.data.id}`);
+                    if (props.path) navigate(`${props.path}${response.data.isFolder ? '/folder' : ''}/${response.data.id}`);
                 })
                 .catch(onSaveError);
         }
