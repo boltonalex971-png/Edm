@@ -3,6 +3,7 @@ export * from './components/realtime/useConnectionState';
 export * from './components/forms/Field';
 export * from './components/forms/Properties';
 export * from './components/forms/EditorSection';
+export * from './components/forms/HierarchyPicker';
 export * from './components/states/Toast';
 export * from './components/states/EmptyState';
 export * from './components/states/ErrorState';

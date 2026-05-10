@@ -6,6 +6,9 @@ import { Snackbar, Alert } from '@mui/material';
 // default; persistent toasts (severity 'error') stay until acknowledged.
 
 export type ToastSeverity = 'success' | 'info' | 'warning' | 'error';
+export type ToastPosition =
+    | 'top-left' | 'top-center' | 'top-right'
+    | 'bottom-left' | 'bottom-center' | 'bottom-right';
 
 export interface ToastInput {
     message: string;
@@ -26,10 +29,22 @@ export interface ToastContextValue {
     error: (message: string) => void;
 }
 
+interface ToastProviderProps {
+    children: React.ReactNode;
+    /** Anchor for the Snackbar. Default 'bottom-right'. */
+    position?: ToastPosition;
+}
+
 const ToastContext = createContext<ToastContextValue | null>(null);
 
-export function ToastProvider({ children }: { children: React.ReactNode }) {
+function positionToAnchor(position: ToastPosition): {vertical: 'top' | 'bottom'; horizontal: 'left' | 'center' | 'right'} {
+    const [v, h] = position.split('-') as ['top' | 'bottom', 'left' | 'center' | 'right'];
+    return {vertical: v, horizontal: h};
+}
+
+export function ToastProvider({ children, position = 'bottom-right' }: ToastProviderProps) {
     const [toast, setToast] = useState<ToastState | null>(null);
+    const anchor = positionToAnchor(position);
 
     const show = useCallback((input: ToastInput) => {
         const severity = input.severity ?? 'info';
@@ -58,7 +73,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                     if (reason === 'clickaway') return;
                     setToast(null);
                 }}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                anchorOrigin={anchor}
             >
                 {toast ? (
                     <Alert

@@ -14,21 +14,29 @@ interface UiPreferences {
     setScheme: (s: Scheme) => void;
 }
 
+interface UiPreferencesProviderProps {
+    children: React.ReactNode;
+    /** Override storage backend (e.g. sessionStorage; null disables persistence). Default: localStorage. */
+    storage?: Storage | null;
+    /** Prefix for storage keys. Default: 'edm.'. Use to scope per-plugin (e.g. 'logistics.'). */
+    storageKeyPrefix?: string;
+}
+
 const UiPreferencesContext = createContext<UiPreferences | null>(null);
 
-export function UiPreferencesProvider({children}: {children: React.ReactNode}) {
-    const [density, setDensityState] = useState<Density>(() => readDensity());
-    const [scheme, setSchemeState] = useState<Scheme>(() => readScheme());
+export function UiPreferencesProvider({children, storage, storageKeyPrefix}: UiPreferencesProviderProps) {
+    const [density, setDensityState] = useState<Density>(() => readDensity(storage, storageKeyPrefix));
+    const [scheme, setSchemeState] = useState<Scheme>(() => readScheme(storage, storageKeyPrefix));
 
     const setDensity = useCallback((d: Density) => {
-        writeDensity(d);
+        writeDensity(d, storage, storageKeyPrefix);
         setDensityState(d);
-    }, []);
+    }, [storage, storageKeyPrefix]);
 
     const setScheme = useCallback((s: Scheme) => {
-        writeScheme(s);
+        writeScheme(s, storage, storageKeyPrefix);
         setSchemeState(s);
-    }, []);
+    }, [storage, storageKeyPrefix]);
 
     const value = useMemo<UiPreferences>(
         () => ({density, scheme, setDensity, setScheme}),
