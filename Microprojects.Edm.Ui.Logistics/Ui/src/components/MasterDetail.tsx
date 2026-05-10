@@ -2,7 +2,7 @@ import {
     type AlertState,
     useAlertSetter,
 } from '@logistics/components/InlineAlert.tsx'
-import {SmartScroll, SmartScrollContent} from '@microprojects/tools'
+import {MasterDetail as PkgMasterDetail} from '@microprojects/edm-components/components/master/MasterDetail'
 import {
     Button,
     ButtonGroup,
@@ -26,11 +26,10 @@ import {
     useCallback,
     useContext,
     useEffect,
-    useRef,
     useState,
 } from 'react'
 import {useSelector} from 'react-redux'
-import {Route, Routes, useLocation, useNavigate} from 'react-router-dom'
+import {useLocation, useNavigate} from 'react-router-dom'
 import {Alert} from 'reactstrap'
 import type {
     DataItem,
@@ -41,7 +40,7 @@ import type {
 } from '../data/types'
 import api from '../features/api/api'
 import type {RootState} from '../store'
-import {DetailStub, Loading} from '../features/utils/Utils'
+import {Loading} from '../features/utils/Utils'
 import {
     listTag,
     useEntityToken,
@@ -51,9 +50,6 @@ import {
     useAcquireEntityLock,
     useEntityLockState,
 } from '../hooks/entityLocks'
-import {useBasePath} from '../hooks/routerHooks'
-import {TreeViewMaster} from './TreeViewMaster'
-import type {TreeItemProps} from './TreeViewMaster'
 import {Folder} from './config/Folder'
 
 export const EMPTY_GUID = '00000000-0000-0000-0000-000000000000'
@@ -70,205 +66,49 @@ const RootItemContext = createContext<TreeDataItem | undefined>(undefined)
 export type MasterDetailProps = {
     api: string
     getHierarchyQuery?: () => Record<string, string | undefined>
-    item?: (props: TreeItemProps) => React.ReactElement
     stubMessage: string
     type: string
     detail: React.ReactElement
     path: string
 }
 
-const SEPARATOR_MIN_PX = 80
-
 export function MasterDetail(props: MasterDetailProps) {
-    const {path} = useBasePath()
-    const navigate = useNavigate()
     const treeToken = useEntityToken([{type: props.type}])
     const [rootItem, setRootItem] = useState<TreeDataItem | undefined>(undefined)
 
-    const containerRef = useRef<HTMLDivElement | null>(null)
-    const [masterPx, setMasterPx] = useState<number | null>(null)
-    const [mode, setMode] = useState<'auto' | 'manual'>('auto')
-
-    // Re-clamp the manual width when the viewport changes so the master
-    // pane never exceeds 1/3 of the new container width.
-    useEffect(() => {
-        const el = containerRef.current
-        if (!el || mode !== 'manual') return
-        const reclamp = () => {
-            const cap = Math.floor(el.getBoundingClientRect().width / 3)
-            setMasterPx((prev) =>
-                prev != null && prev > cap ? Math.max(SEPARATOR_MIN_PX, cap) : prev,
-            )
-        }
-        const ro = new ResizeObserver(reclamp)
-        ro.observe(el)
-        return () => ro.disconnect()
-    }, [mode])
-
-    const onSeparatorDrag = useCallback((clientX: number) => {
-        const el = containerRef.current
-        if (!el) return
-        const rect = el.getBoundingClientRect()
-        const cap = Math.floor(rect.width / 3)
-        const next = Math.max(
-            SEPARATOR_MIN_PX,
-            Math.min(cap, Math.round(clientX - rect.left)),
-        )
-        setMasterPx(next)
-        setMode('manual')
-    }, [])
-
-    const masterStyle: React.CSSProperties =
-        mode === 'manual' && masterPx != null
-            ? {
-                flex: `0 0 ${masterPx}px`,
-                maxWidth: '33.333%',
-                minWidth: 0,
-                overflow: 'hidden',
-            }
-            : {
-                flex: '0 0 auto',
-                maxWidth: '33.333%',
-                minWidth: 0,
-                overflow: 'hidden',
-            }
+    // The package's MasterDetail passes `entityType` (capitalized, derived
+    // from the API URL) into FolderComponent. Logistics's `Folder` uses the
+    // lowercase Logistics-specific `type` for entity-token invalidation and
+    // expects it via prop, so wrap with a closure that injects MasterDetail's
+    // `type` directly. This bypasses the package's URL-prefix detection — fine,
+    // because Logistics's URL prefixes don't always match the entity type.
+    const FolderForType = useCallback(
+        (folderProps: {api?: string; path: string; onChange: () => void; onClose: () => void}) => (
+            <Folder
+                api={folderProps.api ?? api.directories}
+                path={folderProps.path}
+                type={props.type}
+                onClose={folderProps.onClose}
+            />
+        ),
+        [props.type],
+    )
 
     return (
         <RootItemContext.Provider value={rootItem}>
-            <div ref={containerRef} style={{width: '100%'}}>
-                <SmartScroll
-                    offsetTop={10}
-                    style={{
-                        display: 'flex',
-                        flexDirection: 'row',
-                        alignItems: 'flex-start',
-                    }}
-                >
-                    <SmartScrollContent style={masterStyle}>
-                        <TreeViewMaster
-                            api={props.api}
-                            getHierarchyQuery={props.getHierarchyQuery}
-                            onRootLoaded={setRootItem}
-                            item={props.item}
-                            refreshToken={treeToken}
-                            publishType={props.type}
-                        />
-                    </SmartScrollContent>
-                    <PaneSeparator onDrag={onSeparatorDrag}/>
-                    <SmartScrollContent style={{flex: 1, minWidth: 0}}>
-                        <Routes>
-                            <Route
-                                index
-                                element={<DetailStub message={props.stubMessage}/>}
-                            />
-                            <Route
-                                path={'folder/:id'}
-                                element={
-                                    <Folder
-                                        api={api.directories}
-                                        type={props.type}
-                                        path={path}
-                                        onClose={() => navigate(path)}
-                                    />
-                                }
-                            />
-                            <Route
-                                path={':id'}
-                                element={
-                                    <>
-                                        {props.detail}
-                                        <div style={{height: '40vh'}}>
-                                            {/*div to avoid ui jerking when switching cards at bottom*/}
-                                        </div>
-                                    </>
-                                }
-                            />
-                        </Routes>
-                    </SmartScrollContent>
-                </SmartScroll>
-            </div>
+            <PkgMasterDetail
+                api={props.api}
+                hierarchiesApi={api.directories}
+                folderComponent={FolderForType}
+                detail={props.detail}
+                path={props.path}
+                stubMessage={props.stubMessage}
+                refreshToken={treeToken}
+                onRootLoaded={setRootItem}
+                getHierarchyQuery={props.getHierarchyQuery}
+                unwrapSingleRoot
+            />
         </RootItemContext.Provider>
-    )
-}
-
-type PaneSeparatorProps = {
-    onDrag: (clientX: number) => void
-}
-
-const PaneSeparator = ({onDrag}: PaneSeparatorProps) => {
-    // While dragging we render a small vertical guide segment centered on
-    // the cursor. `null` while idle keeps the indicator out of the DOM so
-    // the separator stays invisible at rest.
-    const [guide, setGuide] = useState<{ x: number; y: number } | null>(null)
-
-    const update = (e: React.PointerEvent<HTMLDivElement>) => {
-        const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect()
-        setGuide({x: rect.left + rect.width / 2, y: e.clientY})
-        onDrag(e.clientX)
-    }
-
-    const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-        ;(e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId)
-        document.body.style.userSelect = 'none'
-        document.body.style.cursor = 'col-resize'
-        update(e)
-    }
-
-    const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-        if (!guide) return
-        update(e)
-    }
-
-    const endDrag = (e: React.PointerEvent<HTMLDivElement>) => {
-        if (!guide) return
-        document.body.style.userSelect = ''
-        document.body.style.cursor = ''
-        ;(e.currentTarget as HTMLDivElement).releasePointerCapture?.(e.pointerId)
-        setGuide(null)
-    }
-
-    const GUIDE_HALF = 110 // px above and below the cursor
-
-    return (
-        <div
-            onPointerDown={onPointerDown}
-            onPointerMove={onPointerMove}
-            onPointerUp={endDrag}
-            onPointerCancel={endDrag}
-            role="separator"
-            aria-orientation="vertical"
-            style={{
-                // Generous, invisible hit area — easier to grab without being
-                // visually noisy at rest.
-                flex: '0 0 16px',
-                alignSelf: 'stretch',
-                cursor: 'col-resize',
-                touchAction: 'none',
-                background: 'transparent',
-                minHeight: '60vh',
-            }}
-        >
-            {guide && (
-                <div
-                    style={{
-                        position: 'fixed',
-                        left: guide.x,
-                        top: guide.y - GUIDE_HALF,
-                        width: 2,
-                        height: GUIDE_HALF * 2,
-                        transform: 'translateX(-50%)',
-                        // Vertical gradient fading at both ends — feels like
-                        // a "drag handle" tied to the cursor without painting
-                        // the entire viewport.
-                        background:
-                            'linear-gradient(to bottom, rgba(120, 144, 156, 0) 0%, rgba(120, 144, 156, 0.7) 50%, rgba(120, 144, 156, 0) 100%)',
-                        borderRadius: 1,
-                        pointerEvents: 'none',
-                        zIndex: 1000,
-                    }}
-                />
-            )}
-        </div>
     )
 }
 

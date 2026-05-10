@@ -87,6 +87,14 @@ export interface MasterDetailProps {
     /** Allow the user to drag the divider between master and detail panes.
      *  Default: true. Set to false for layouts that should keep a fixed split. */
     resizable?: boolean;
+    /** Forwarded to TreeViewMaster — external refetch signal (e.g. from `useEntityToken`). */
+    refreshToken?: unknown;
+    /** Forwarded to TreeViewMaster — fires with the first raw API node when loaded. */
+    onRootLoaded?: (rootNode: any) => void;
+    /** Forwarded to TreeViewMaster — extra query-string params on the hierarchy GET. */
+    getHierarchyQuery?: () => Record<string, string | undefined>;
+    /** Forwarded to TreeViewMaster — hidden-root unwrap for Logistics-style trees. */
+    unwrapSingleRoot?: boolean;
 }
 
 const SEPARATOR_MIN_PX = 80;
@@ -191,6 +199,10 @@ export function MasterDetail(props: MasterDetailProps) {
                         onCurrentRootChanged={(root: TreeNode) => { _selectedItem = root; }}
                         entityTypeMap={props.entityTypeMap}
                         iconMap={props.iconMap}
+                        refreshToken={props.refreshToken}
+                        onRootLoaded={props.onRootLoaded}
+                        getHierarchyQuery={props.getHierarchyQuery}
+                        unwrapSingleRoot={props.unwrapSingleRoot}
                     />
                 </SmartScrollContent>
                 {resizable && <PaneSeparator onDrag={onSeparatorDrag} />}

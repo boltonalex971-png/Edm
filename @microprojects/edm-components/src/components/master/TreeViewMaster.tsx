@@ -197,6 +197,28 @@ export interface TreeViewMasterProps {
     entityTypeMap?: Array<{urlPrefix: string; entityType: string}>;
     /** Override entity-type → icon component map (default = Tech's mapping). */
     iconMap?: Record<string, React.ComponentType<any>>;
+    /** External signal that bumps when the tree should refetch (typically a value
+     *  from `useEntityToken`). Included in the GET dep array. */
+    refreshToken?: unknown;
+    /** Fired with the first raw API node after data loads. Lets the parent
+     *  hold "the tree's root" for parent-id resolution on new-item creation. */
+    onRootLoaded?: (rootNode: any) => void;
+    /** Builds query-string params appended to `${api}/hierarchy`. */
+    getHierarchyQuery?: () => Record<string, string | undefined>;
+    /** When true, if the API returns a single root with children, those children
+     *  are rendered at the top level instead of the root itself. Logistics-style
+     *  hidden-root layout. Default: false. */
+    unwrapSingleRoot?: boolean;
+}
+
+function buildHierarchyUrl(base: string, query?: Record<string, string | undefined>): string {
+    if (!query) return base;
+    const params = new URLSearchParams();
+    for (const [k, v] of Object.entries(query)) {
+        if (v != null && v !== '') params.set(k, v);
+    }
+    const qs = params.toString();
+    return qs ? `${base}?${qs}` : base;
 }
 
 export function TreeViewMaster(props: TreeViewMasterProps) {
@@ -204,6 +226,10 @@ export function TreeViewMaster(props: TreeViewMasterProps) {
         api: apiPath,
         hierarchiesApi,
         onCurrentRootChanged,
+        onRootLoaded,
+        getHierarchyQuery,
+        refreshToken,
+        unwrapSingleRoot = false,
         entityTypeMap = DEFAULT_ENTITY_TYPE_MAP,
         iconMap = DEFAULT_ICON_MAP,
     } = props;
@@ -214,13 +240,31 @@ export function TreeViewMaster(props: TreeViewMasterProps) {
     const url = useBasePath();
     const {id: routeId} = useParams<{id?: string}>();
 
-    const [[data], loading, error] = useGet(`${apiPath}/hierarchy`, [render]);
+    const hierarchyUrl = buildHierarchyUrl(`${apiPath}/hierarchy`, getHierarchyQuery?.());
+    const [[data], loading, error] = useGet(hierarchyUrl, [render, refreshToken]);
     const [filter, setFilter] = useState('');
     const [expandedItems, setExpandedItems] = useState<string[]>([]);
     const [activeId, setActiveId] = useState<string | null>(null);
     const [initialized, setInitialized] = useState(false);
 
-    const treeData = useMemo(() => transformData(data) || [], [data]);
+    // Notify the parent of the root node once per data load. The parent uses
+    // this to seed parentId fallbacks when creating new items at the root.
+    useEffect(() => {
+        if (data && Array.isArray(data) && data.length > 0) {
+            onRootLoaded?.(data[0]);
+        }
+    }, [data, onRootLoaded]);
+
+    // Hidden-root unwrap: when the API wraps every child under a single root
+    // folder (Logistics convention), render that root's children at the top
+    // level so the tree starts at the meaningful nodes.
+    const rawData = useMemo(() => {
+        if (!unwrapSingleRoot || !data || !Array.isArray(data) || data.length !== 1) return data;
+        const single = data[0];
+        return single?.items ?? data;
+    }, [data, unwrapSingleRoot]);
+
+    const treeData = useMemo(() => transformData(rawData) || [], [rawData]);
     const itemsWithChildren = useMemo(() => collectItemsWithChildren(treeData), [treeData]);
     const descriptionMap = useMemo(() => collectDescriptions(treeData), [treeData]);
     const expandedSet = useMemo(() => new Set(expandedItems), [expandedItems]);

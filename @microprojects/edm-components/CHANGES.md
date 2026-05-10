@@ -33,6 +33,35 @@ Driven by the Phase 2 pre-replacement audit of Logistics components. Adds primit
 - **RelationTable + MasterDetail entity-refresh wiring** — both should consume `useEntityToken` once Logistics is on the package. Hold until Logistics adopts and validates the API shape.
 - **MasterDetail draggable pane separator** — Logistics-only feature today, lift during Phase 3 when Logistics's UX is being preserved.
 
+## 0.4.0 — Logistics adopts package `MasterDetail` (chrome swap)
+
+The actual MasterDetail/TreeViewMaster swap that was deferred from Phase 3b. Logistics's local 192-line MasterDetail wrapper + 320-line Kendo-based TreeViewMaster are gone; Logistics's `MasterDetail.tsx` is now a ~50-line thin wrapper around `@microprojects/edm-components`'s MasterDetail. Detail/Editor/Info stay Logistics-local for now (they carry lock/outdated/fork-conflict logic the package doesn't have yet — separate iteration).
+
+### Package additions (TreeViewMaster + MasterDetail)
+
+- **`refreshToken?: unknown`** — external refetch signal (typically a value from `useEntityToken`). Included in the GET dep array. Lets consumers re-fetch the tree when an entity invalidation fires elsewhere in the app, not just on the tree's local `setRender` bump.
+- **`onRootLoaded?: (rootNode) => void`** — fires with the first raw API node when data loads. Lets the parent hold "the tree's root" for parent-id resolution on new-item creation (Logistics's `RootItemContext` wires this up).
+- **`getHierarchyQuery?: () => Record<string, string | undefined>`** — builds query-string params appended to `${api}/hierarchy`. Lifted from Logistics for `kind` discriminators on typed-tree endpoints.
+- **`unwrapSingleRoot?: boolean`** (default `false`) — Logistics convention: when the API wraps every child under a single root folder, render that root's children at the top level instead of the root itself. Tech keeps the default (false) so the existing single-root behavior is preserved.
+- All four are forwarded MasterDetail → TreeViewMaster.
+
+### Logistics-side rewrite
+
+- `components/MasterDetail.tsx` — `MasterDetail` function rewritten as a wrapper that mounts the package's MasterDetail with `refreshToken={treeToken}`, `onRootLoaded={setRootItem}`, `getHierarchyQuery={props.getHierarchyQuery}`, `unwrapSingleRoot`, and a `FolderForType` closure that injects Logistics's lowercase `type` (e.g. `'nomenclature'`) into the existing `Folder` component (the package's URL-prefix-derived `entityType` doesn't match Logistics's invalidation discriminators, so the closure overrides it). `RootItemContext.Provider` still wraps the tree so Editor's parent-id fallback keeps working. The Logistics-side `PaneSeparator` is gone (the package's draggable separator handles it).
+- `components/TreeViewMaster.tsx` — **deleted**. ~320 lines, Kendo-based; nothing imports it anymore.
+- `Detail`, `Editor`, `Info`, `EMPTY_GUID`, `DetailEditModeContext`, `RootItemContext` exports unchanged so the 12+ consumers (Order/Item/Tare/Supply/Nomenclature/Process detail screens + Folder + several editor panels) keep working.
+
+### What's still Logistics-local (deferred for next iteration)
+
+`Detail` and `Editor` still carry behavior the package's versions don't have:
+- Cross-user edit-lock UI (`🔒 Locked by {user}` banner, disabled buttons when locked)
+- Outdated banner + edit-disabled when `Meta.Completed != null`
+- 409 fork-required → confirm dialog → retry with `?force=true` in Editor.handleSubmit
+- DetailEditModeContext (Editor flips parent Detail's edit mode after save)
+- Foreign-data flattening (`{nested: {id:5}}` → `{nested: 5}`) before PUT/POST
+
+Lifting these is the next iteration when the time is right (probably alongside the broader Detail UI unification).
+
 ## 0.3.6 — Logistics adopts package `Search` (3 call sites swapped)
 
 First real Phase 3c-style swap: Logistics's three `Search` callers (`Items`, `Orders`, `Supplies`) now consume `@microprojects/edm-components/components/page/Search` instead of the Logistics-local component. Each swap moves from the old hard-coded `(api, type, stubMessage, search, detail)` shape to the new consumer-driven `actions: SearchAction[]` shape with MUI icons. Dead state vars (`panel`/`linkPanel`/`searchClick`/`createClick` no-op handlers, plus an unreferenced `LinkPanel` helper in `Orders.tsx`) deleted along the way. Logistics-local `components/Search.tsx` (with its process-coupled `SearchDetail`) was confirmed unused and deleted; the file is recoverable from git if `SearchDetail` is ever wanted back. Logistics build clean.
