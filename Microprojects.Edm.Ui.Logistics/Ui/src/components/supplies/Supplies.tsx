@@ -1,15 +1,14 @@
 import api from '@features/api/api'
 import { Loading } from '@features/utils/Utils.tsx'
-import { LinkTextCell } from '@logistics/components/DropDownCell'
 import { Detail } from '@logistics/components/MasterDetail'
 import { PageTitle } from '@logistics/components/PageTitle'
 import { DateTimeCell } from '@logistics/components/RelationTable'
-import { Search } from '@logistics/components/Search'
-import { TreeViewLink } from '@logistics/components/TreeViewLink'
 import { SupplyDetail } from '@logistics/components/supplies/SupplyDetail'
 import type { Supply } from '@logistics/data/types'
 import { useGet } from '@logistics/hooks/hooks'
 import { useRouteMatch } from '@logistics/hooks/routerHooks'
+import { Search } from '@microprojects/edm-components/components/page/Search'
+import { Add as AddIcon, Search as SearchIcon } from '@mui/icons-material'
 import { process } from '@progress/kendo-data-query'
 import {
     Grid,
@@ -25,7 +24,7 @@ import {
 import { Error } from '@progress/kendo-react-labels'
 import type React from 'react'
 import { type EffectCallback, useEffect, useMemo, useState } from 'react'
-import { Diagram3, Search as SearchIcon } from 'react-bootstrap-icons'
+import { Diagram3 } from 'react-bootstrap-icons'
 import { NavLink as Link } from 'react-router'
 import { Nav, NavItem, NavLink } from 'reactstrap'
 
@@ -52,18 +51,26 @@ export function Supplies() {
             <hr />
             <div>
                 <Search
-                    api={api.supplies}
-                    stubMessage={'Select an action'}
-                    type={'none'}
-                    path={path}
-                    search={<SupplySearch />}
-                    detail={
-                        <SupplyDetail
-                            title="New Supply"
-                            editMode={true}
-                            api={api.supplies}
-                        />
-                    }
+                    actions={[
+                        {
+                            key: 'search',
+                            label: 'Search',
+                            icon: <SearchIcon fontSize="small" />,
+                            panel: <SupplySearch />,
+                        },
+                        {
+                            key: 'create',
+                            label: 'Create new',
+                            icon: <AddIcon fontSize="small" />,
+                            panel: (
+                                <SupplyDetail
+                                    title="New Supply"
+                                    editMode={true}
+                                    api={api.supplies}
+                                />
+                            ),
+                        },
+                    ]}
                 />
             </div>
         </>
@@ -142,7 +149,7 @@ function SupplySearch() {
                         placeholder={'Search by shipment or barcode'}
                         prefix={() => (
                             <InputPrefix>
-                                <SearchIcon width={30} />
+                                <SearchIcon fontSize="small" />
                             </InputPrefix>
                         )}
                         style={{ marginBottom: '1rem' }}

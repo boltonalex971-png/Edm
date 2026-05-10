@@ -33,6 +33,10 @@ Driven by the Phase 2 pre-replacement audit of Logistics components. Adds primit
 - **RelationTable + MasterDetail entity-refresh wiring** — both should consume `useEntityToken` once Logistics is on the package. Hold until Logistics adopts and validates the API shape.
 - **MasterDetail draggable pane separator** — Logistics-only feature today, lift during Phase 3 when Logistics's UX is being preserved.
 
+## 0.3.6 — Logistics adopts package `Search` (3 call sites swapped)
+
+First real Phase 3c-style swap: Logistics's three `Search` callers (`Items`, `Orders`, `Supplies`) now consume `@microprojects/edm-components/components/page/Search` instead of the Logistics-local component. Each swap moves from the old hard-coded `(api, type, stubMessage, search, detail)` shape to the new consumer-driven `actions: SearchAction[]` shape with MUI icons. Dead state vars (`panel`/`linkPanel`/`searchClick`/`createClick` no-op handlers, plus an unreferenced `LinkPanel` helper in `Orders.tsx`) deleted along the way. Logistics-local `components/Search.tsx` (with its process-coupled `SearchDetail`) was confirmed unused and deleted; the file is recoverable from git if `SearchDetail` is ever wanted back. Logistics build clean.
+
 ## 0.3.5 — `dropOutdated` no longer prunes empty folders
 
 - **`HierarchyPicker` / `dropOutdated`** — split out the empty-folder pruning behavior. Previously `dropOutdated` did two things: drop outdated leaves AND prune folders that became empty as a result. The second behavior leaked into Logistics's `TreeViewMaster` (which calls `dropOutdated(data, undefined)` to hide auto-forked leaves) and made freshly-created empty folders invisible in the master tree even though the backend was returning them. Fix: `dropOutdated` now only handles outdated leaves; new exported `pruneEmptyFolders<T>(nodes)` handles empty-folder pruning. `HierarchyPicker` chains both (`pruneEmptyFolders(dropOutdated(data, value))`) so the picker keeps its prior behavior — there's nothing to pick inside an empty folder. Logistics's TreeViewMaster shim picks up the fix automatically (no shim change needed) and the new empty folder now appears.
