@@ -3,17 +3,22 @@ import { useEntityToken } from '@logistics/hooks/entityRefresh'
 import { useGet } from '@logistics/hooks/hooks'
 import { useBasePath } from '@logistics/hooks/routerHooks'
 import {
+    EditorSection,
+    Field,
+} from '@microprojects/edm-components/components'
+import {
     Properties,
     Property,
 } from '@microprojects/edm-components/components/forms/Properties'
-import { Field } from '@progress/kendo-react-form'
 import {
+    Box,
     Checkbox,
-    Input,
-    NumericTextBox,
-    RadioButton,
-} from '@progress/kendo-react-inputs'
-import { type EffectCallback, useEffect, useState } from 'react'
+    FormControlLabel,
+    Radio,
+    RadioGroup,
+    Typography,
+} from '@mui/material'
+import { type EffectCallback, useEffect, useMemo, useState } from 'react'
 import { CardChecklist } from 'react-bootstrap-icons'
 import { useNavigate, useParams } from 'react-router-dom'
 import type { DetailEventHandler, TareType, UUID } from '../../../data/types'
@@ -21,9 +26,9 @@ import {
     Detail,
     type DetailProps,
     EMPTY_GUID,
-    Editor,
     Info,
     MasterDetail,
+    MuiEditor,
 } from '../../MasterDetail'
 import { TareTypeTabs } from './TareTypeTabs'
 
@@ -31,204 +36,16 @@ function formatSize(data: TareType) {
     const parts = [data.sizeX, data.sizeY, data.sizeZ].filter(
         (v) => v != null && v > 0,
     )
-    return parts.length > 0 ? parts.join(' \u00d7 ') : '\u2014'
+    return parts.length > 0 ? parts.join(' × ') : '—'
 }
 
 type CountableLayoutMode = 'bulk' | 'slots'
 
-function CountableFields({ formRenderProps }: { formRenderProps: any }) {
-    const units = formRenderProps.valueGetter('units') ?? ''
-    const x = formRenderProps.valueGetter('sizeX') ?? 0
-    const y = formRenderProps.valueGetter('sizeY') ?? 0
-    const z = formRenderProps.valueGetter('sizeZ') ?? 0
-
-    const inferredMode: CountableLayoutMode = x > 0 ? 'slots' : 'bulk'
-    const [mode, setMode] = useState<CountableLayoutMode>(inferredMode)
-
-    useEffect(() => {
-        setMode(x > 0 ? 'slots' : 'bulk')
-    }, [x])
-
-    const clearDependents = (from: 'x' | 'y') => {
-        if (from === 'x') {
-            formRenderProps.onChange('sizeY', { value: null })
-            formRenderProps.onChange('sizeZ', { value: null })
-        } else {
-            formRenderProps.onChange('sizeZ', { value: null })
-        }
-    }
-
-    const computedCapacity = Math.max(1, (x || 1) * (y || 1) * (z || 1))
-
-    const switchToBulk = () => {
-        setMode('bulk')
-        formRenderProps.onChange('sizeX', { value: null })
-        formRenderProps.onChange('sizeY', { value: null })
-        formRenderProps.onChange('sizeZ', { value: null })
-        const current = formRenderProps.valueGetter('capacity') ?? 1
-        formRenderProps.onChange('capacity', {
-            value: Math.round(current) || 1,
-        })
-    }
-
-    const switchToSlots = () => {
-        setMode('slots')
-        if (!(formRenderProps.valueGetter('sizeX') > 0)) {
-            formRenderProps.onChange('sizeX', { value: 1 })
-        }
-    }
-
-    return (
-        <>
-            <div className="mb-3">
-                <label className="k-label">Layout</label>
-                <div>
-                    <div
-                        style={{
-                            display: 'flex',
-                            gap: '1rem',
-                            alignItems: 'center',
-                        }}
-                    >
-                        <RadioButton
-                            name="countableLayout"
-                            label="Bulk"
-                            value="bulk"
-                            checked={mode === 'bulk'}
-                            onChange={() => switchToBulk()}
-                        />
-                        <RadioButton
-                            name="countableLayout"
-                            label="Slots (X×Y×Z)"
-                            value="slots"
-                            checked={mode === 'slots'}
-                            onChange={() => switchToSlots()}
-                        />
-                    </div>
-                </div>
-                <small
-                    style={{
-                        color: '#666',
-                        display: 'block',
-                        marginTop: '0.25rem',
-                    }}
-                >
-                    Bulk uses integer piece-count capacity. Slots uses addressed
-                    capacity = X×Y×Z.
-                </small>
-            </div>
-
-            {mode === 'slots' && (
-                <div className="mb-3">
-                    <label className="k-label">Size</label>
-                    <div
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.35rem',
-                        }}
-                    >
-                        <NumericTextBox
-                            value={x || null}
-                            min={1}
-                            format="n0"
-                            width={90}
-                            placeholder="X"
-                            onChange={(e) => {
-                                const v = e.value ?? 0
-                                formRenderProps.onChange('sizeX', {
-                                    value: v > 0 ? v : null,
-                                })
-                                if (v <= 0) clearDependents('x')
-                            }}
-                        />
-                        <span style={{ color: '#888' }}>&times;</span>
-                        <NumericTextBox
-                            value={y || null}
-                            min={1}
-                            format="n0"
-                            width={90}
-                            placeholder="Y"
-                            disabled={x <= 0}
-                            onChange={(e) => {
-                                const v = e.value ?? 0
-                                formRenderProps.onChange('sizeY', {
-                                    value: v > 0 ? v : null,
-                                })
-                                if (v <= 0) clearDependents('y')
-                            }}
-                        />
-                        <span style={{ color: '#888' }}>&times;</span>
-                        <NumericTextBox
-                            value={z || null}
-                            min={1}
-                            format="n0"
-                            width={90}
-                            placeholder="Z"
-                            disabled={y <= 0}
-                            onChange={(e) => {
-                                const v = e.value ?? 0
-                                formRenderProps.onChange('sizeZ', {
-                                    value: v > 0 ? v : null,
-                                })
-                            }}
-                        />
-                    </div>
-                    {x > 0 && (
-                        <small
-                            style={{
-                                color: '#666',
-                                marginTop: '0.25rem',
-                                display: 'block',
-                            }}
-                        >
-                            Capacity (auto): {computedCapacity} slots
-                        </small>
-                    )}
-                </div>
-            )}
-
-            {mode === 'bulk' && (
-                <div className="mb-3">
-                    <label className="k-label">
-                        Capacity{units ? ` (${units})` : ''}
-                    </label>
-                    <NumericTextBox
-                        value={formRenderProps.valueGetter('capacity') || null}
-                        min={1}
-                        step={1}
-                        format="n0"
-                        onChange={(e) =>
-                            formRenderProps.onChange('capacity', {
-                                value: Math.round(e.value ?? 1),
-                            })
-                        }
-                    />
-                </div>
-            )}
-        </>
-    )
-}
-
-function NonCountableFields({ formRenderProps }: { formRenderProps: any }) {
-    const units = formRenderProps.valueGetter('units') ?? ''
-    return (
-        <div className="mb-3">
-            <label className="k-label">
-                Capacity{units ? ` (${units})` : ''}
-            </label>
-            <NumericTextBox
-                value={formRenderProps.valueGetter('capacity') || null}
-                min={0.001}
-                format="n3"
-                onChange={(e) =>
-                    formRenderProps.onChange('capacity', {
-                        value: e.value ?? 1,
-                    })
-                }
-            />
-        </div>
-    )
+// Numeric coercion helper for native <input type="number"> + Field. Empty string → null; otherwise Number().
+function numberOrNull(v: string): number | null {
+    if (v === '' || v == null) return null
+    const n = Number(v)
+    return Number.isFinite(n) ? n : null
 }
 
 export function TareTypes() {
@@ -318,7 +135,7 @@ export function TareTypeDetail({ id, ...props }: TareTypeDetailProps) {
                 />
             }
             editor={
-                <Editor
+                <MuiEditor
                     type={props.type}
                     api={props.api}
                     path={props.path}
@@ -326,53 +143,338 @@ export function TareTypeDetail({ id, ...props }: TareTypeDetailProps) {
                     data={data}
                     setData={setData}
                     onUpdate={props.onUpdate}
-                    content={(formRenderProps: any) => (
-                        <fieldset className={'k-form-fieldset'}>
-                            <legend className={'k-form-legend'}>
-                                Edit {props.type} data
-                            </legend>
-                            <div className="mb-3">
-                                <Field
-                                    name={'name'}
-                                    component={Input}
-                                    label={'Name'}
-                                />
-                            </div>
-                            <div className="mb-3">
-                                <Field
-                                    name={'description'}
-                                    component={Input}
-                                    label={'Description'}
-                                />
-                            </div>
-                            <div className="mb-3">
-                                <Field
-                                    name={'units'}
-                                    component={Input}
-                                    label={'Units'}
-                                />
-                            </div>
-                            <div className="mb-3">
-                                <Field
-                                    name={'countable'}
-                                    component={Checkbox}
-                                    label={'Countable'}
-                                />
-                            </div>
-                            {(formRenderProps.valueGetter('countable') ??
-                            false) ? (
-                                <CountableFields
-                                    formRenderProps={formRenderProps}
-                                />
-                            ) : (
-                                <NonCountableFields
-                                    formRenderProps={formRenderProps}
-                                />
-                            )}
-                        </fieldset>
+                    content={({ values, handleChange, setValues }) => (
+                        <TareTypeEditorBody
+                            values={values}
+                            handleChange={handleChange}
+                            setValues={setValues}
+                        />
                     )}
                 />
             }
         />
+    )
+}
+
+interface EditorBodyProps {
+    values: any
+    handleChange: (e: { target: { name: string; value: unknown } }) => void
+    setValues: (next: any | ((prev: any) => any)) => void
+}
+
+function TareTypeEditorBody({ values, handleChange, setValues }: EditorBodyProps) {
+    const countable = !!values.countable
+    const x = Number(values.sizeX) || 0
+    const y = Number(values.sizeY) || 0
+    const z = Number(values.sizeZ) || 0
+
+    const inferredMode: CountableLayoutMode = x > 0 ? 'slots' : 'bulk'
+    const [mode, setMode] = useState<CountableLayoutMode>(inferredMode)
+
+    useEffect(() => {
+        setMode(x > 0 ? 'slots' : 'bulk')
+    }, [x])
+
+    const nameMissing =
+        !!values.id && (!values.name || !String(values.name).trim())
+    const identityFilled = [values.name, values.description, values.units]
+        .filter((v) => v && String(v).trim().length > 0).length
+
+    const capacityFilled = useMemo(() => {
+        if (!countable) return values.capacity ? 1 : 0
+        if (mode === 'bulk') return values.capacity ? 1 : 0
+        return x > 0 ? 1 : 0
+    }, [countable, mode, x, values.capacity])
+
+    const switchToBulk = () => {
+        setMode('bulk')
+        setValues((prev: any) => ({
+            ...prev,
+            sizeX: null,
+            sizeY: null,
+            sizeZ: null,
+            capacity: Math.round(Number(prev.capacity) || 1) || 1,
+        }))
+    }
+
+    const switchToSlots = () => {
+        setMode('slots')
+        setValues((prev: any) => ({
+            ...prev,
+            sizeX: Number(prev.sizeX) > 0 ? prev.sizeX : 1,
+        }))
+    }
+
+    const computedCapacity = Math.max(1, (x || 1) * (y || 1) * (z || 1))
+
+    return (
+        <Box>
+            <EditorSection
+                number={1}
+                title="Identity"
+                filled={identityFilled}
+                total={3}
+                done={identityFilled === 3 && !nameMissing}
+            >
+                <Field
+                    full
+                    name="name"
+                    label="Name"
+                    required
+                    value={(values.name as string) ?? ''}
+                    onChange={handleChange}
+                    state={nameMissing ? 'invalid' : 'pristine'}
+                    help={
+                        nameMissing
+                            ? 'A tare type must have a name.'
+                            : 'Shown in tree, pickers, and relations.'
+                    }
+                />
+                <Field
+                    full
+                    kind="textarea"
+                    name="description"
+                    label="Description"
+                    rows={2}
+                    value={(values.description as string) ?? ''}
+                    onChange={handleChange}
+                />
+                <Field
+                    name="units"
+                    label="Units"
+                    placeholder="e.g. kg, l, pcs"
+                    value={(values.units as string) ?? ''}
+                    onChange={handleChange}
+                    help="Label shown next to the capacity value."
+                />
+            </EditorSection>
+
+            <EditorSection
+                number={2}
+                title="Capacity"
+                filled={capacityFilled}
+                total={1}
+                done={capacityFilled === 1}
+            >
+                <Box sx={{ gridColumn: '1 / -1' }}>
+                    <FormControlLabel
+                        label="Countable (whole pieces)"
+                        control={
+                            <Checkbox
+                                checked={countable}
+                                onChange={(e) =>
+                                    handleChange({
+                                        target: {
+                                            name: 'countable',
+                                            value: e.target.checked,
+                                        },
+                                    })
+                                }
+                            />
+                        }
+                    />
+                    <Typography
+                        variant="caption"
+                        sx={{ display: 'block', color: 'var(--ink-3)' }}
+                    >
+                        Toggles capacity between integer piece count
+                        (countable) and decimal volume/weight (non-countable).
+                    </Typography>
+                </Box>
+
+                {countable ? (
+                    <>
+                        <Box sx={{ gridColumn: '1 / -1' }}>
+                            <Typography
+                                sx={{
+                                    fontFamily: 'var(--font-mono)',
+                                    fontSize: 11,
+                                    fontWeight: 700,
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.07em',
+                                    color: 'var(--ink-3)',
+                                    mb: 0.5,
+                                }}
+                            >
+                                Layout
+                            </Typography>
+                            <RadioGroup
+                                row
+                                value={mode}
+                                onChange={(e) => {
+                                    if (e.target.value === 'bulk') {
+                                        switchToBulk()
+                                    } else {
+                                        switchToSlots()
+                                    }
+                                }}
+                            >
+                                <FormControlLabel
+                                    value="bulk"
+                                    control={<Radio size="small" />}
+                                    label="Bulk"
+                                />
+                                <FormControlLabel
+                                    value="slots"
+                                    control={<Radio size="small" />}
+                                    label="Slots (X×Y×Z)"
+                                />
+                            </RadioGroup>
+                            <Typography
+                                variant="caption"
+                                sx={{
+                                    display: 'block',
+                                    color: 'var(--ink-3)',
+                                }}
+                            >
+                                Bulk uses integer piece-count capacity. Slots
+                                uses addressed capacity = X×Y×Z.
+                            </Typography>
+                        </Box>
+
+                        {mode === 'slots' ? (
+                            <>
+                                <Box
+                                    sx={{
+                                        gridColumn: '1 / -1',
+                                        display: 'flex',
+                                        gap: 1,
+                                        alignItems: 'flex-end',
+                                    }}
+                                >
+                                    <Box sx={{ width: 120 }}>
+                                        <Field
+                                            type="number"
+                                            name="sizeX"
+                                            label="X"
+                                            placeholder="X"
+                                            value={values.sizeX ?? ''}
+                                            onChange={(e) => {
+                                                const v = numberOrNull(
+                                                    e.target.value,
+                                                )
+                                                setValues((prev: any) => ({
+                                                    ...prev,
+                                                    sizeX: v && v > 0 ? v : null,
+                                                    ...(v && v > 0
+                                                        ? {}
+                                                        : {
+                                                              sizeY: null,
+                                                              sizeZ: null,
+                                                          }),
+                                                }))
+                                            }}
+                                        />
+                                    </Box>
+                                    <Typography sx={{ pb: 1, color: 'var(--ink-4)' }}>
+                                        ×
+                                    </Typography>
+                                    <Box sx={{ width: 120 }}>
+                                        <Field
+                                            type="number"
+                                            name="sizeY"
+                                            label="Y"
+                                            placeholder="Y"
+                                            value={values.sizeY ?? ''}
+                                            disabled={x <= 0}
+                                            onChange={(e) => {
+                                                const v = numberOrNull(
+                                                    e.target.value,
+                                                )
+                                                setValues((prev: any) => ({
+                                                    ...prev,
+                                                    sizeY: v && v > 0 ? v : null,
+                                                    ...(v && v > 0
+                                                        ? {}
+                                                        : { sizeZ: null }),
+                                                }))
+                                            }}
+                                        />
+                                    </Box>
+                                    <Typography sx={{ pb: 1, color: 'var(--ink-4)' }}>
+                                        ×
+                                    </Typography>
+                                    <Box sx={{ width: 120 }}>
+                                        <Field
+                                            type="number"
+                                            name="sizeZ"
+                                            label="Z"
+                                            placeholder="Z"
+                                            value={values.sizeZ ?? ''}
+                                            disabled={y <= 0}
+                                            onChange={(e) =>
+                                                handleChange({
+                                                    target: {
+                                                        name: 'sizeZ',
+                                                        value: numberOrNull(
+                                                            e.target.value,
+                                                        ),
+                                                    },
+                                                })
+                                            }
+                                        />
+                                    </Box>
+                                </Box>
+                                {x > 0 && (
+                                    <Typography
+                                        variant="caption"
+                                        sx={{
+                                            gridColumn: '1 / -1',
+                                            color: 'var(--ink-3)',
+                                        }}
+                                    >
+                                        Capacity (auto): {computedCapacity}{' '}
+                                        slots
+                                    </Typography>
+                                )}
+                            </>
+                        ) : (
+                            <Box sx={{ gridColumn: '1 / -1', maxWidth: 240 }}>
+                                <Field
+                                    type="number"
+                                    name="capacity"
+                                    label={`Capacity${
+                                        values.units ? ` (${values.units})` : ''
+                                    }`}
+                                    value={values.capacity ?? ''}
+                                    onChange={(e) =>
+                                        handleChange({
+                                            target: {
+                                                name: 'capacity',
+                                                value: Math.round(
+                                                    numberOrNull(
+                                                        e.target.value,
+                                                    ) ?? 1,
+                                                ),
+                                            },
+                                        })
+                                    }
+                                />
+                            </Box>
+                        )}
+                    </>
+                ) : (
+                    <Box sx={{ gridColumn: '1 / -1', maxWidth: 240 }}>
+                        <Field
+                            type="number"
+                            name="capacity"
+                            label={`Capacity${
+                                values.units ? ` (${values.units})` : ''
+                            }`}
+                            value={values.capacity ?? ''}
+                            onChange={(e) =>
+                                handleChange({
+                                    target: {
+                                        name: 'capacity',
+                                        value:
+                                            numberOrNull(e.target.value) ?? 1,
+                                    },
+                                })
+                            }
+                        />
+                    </Box>
+                )}
+            </EditorSection>
+        </Box>
     )
 }

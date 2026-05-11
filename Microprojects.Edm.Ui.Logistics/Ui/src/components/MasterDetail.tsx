@@ -16,8 +16,10 @@ import {
     Inventory2Outlined as ItemIcon,
     ListAltOutlined as OrderIcon,
     LocalShippingOutlined as SupplyIcon,
+    SaveOutlined as SaveIcon,
     WidgetsOutlined as TareIcon,
 } from '@mui/icons-material'
+import {Box, Button as MuiButton} from '@mui/material'
 import {Button} from '@progress/kendo-react-buttons'
 import {Form, FormElement} from '@progress/kendo-react-form'
 import axios from 'axios'
@@ -349,5 +351,173 @@ export function Editor(props: EditorProps) {
                 )}
             />
         </>
+    )
+}
+
+// v2 editor: Kendo-free form using useState + content-as-function pattern with `{values, handleChange}`. Same POST/PUT semantics as the Kendo Editor above (UUID parents via RootItemContext, `directoryId` POST field, fork-required PUT handling), so call sites can migrate one at a time.
+interface MuiEditorProps {
+    data: DataItem
+    setData: DetailEventHandler
+    type: string
+    onUpdate?: DetailEventHandler
+    onChange?: DetailEventHandler
+    api: string
+    path?: string
+    content:
+        | React.ReactNode
+        | ((args: {
+              values: Dictionary
+              handleChange: (e: {target: {name: string; value: unknown}}) => void
+              setValues: (next: Dictionary | ((prev: Dictionary) => Dictionary)) => void
+          }) => React.ReactNode)
+}
+
+export function MuiEditor(props: MuiEditorProps) {
+    const navigate = useNavigate()
+    const location = useLocation()
+    const setAlert = useAlertSetter()
+    const setDetailEditMode = useContext(DetailEditModeContext)
+    const rootItem = useContext(RootItemContext)
+    const invalidate = useInvalidateEntities()
+    const [values, setValues] = useState<Dictionary>(props.data as Dictionary)
+    const mode =
+        (props.data.id && props.data.id !== EMPTY_GUID && 'Update') || 'Create'
+
+    const handleChange = (e: {target: {name: string; value: unknown}}) => {
+        setValues((prev) => ({...prev, [e.target.name]: e.target.value}))
+    }
+
+    const submit = (e?: React.FormEvent) => {
+        e?.preventDefault()
+        setAlert(undefined)
+        const data = values
+        const foreignData = Object.keys(data).reduce<Dictionary>(
+            (r, d) => ({
+                ...r,
+                [d]:
+                    data[d] &&
+                    typeof data[d] === 'object' &&
+                    !(data[d] instanceof Date) &&
+                    !Array.isArray(data[d])
+                        ? (data[d] as any).id
+                        : data[d],
+            }),
+            {},
+        )
+        if (data.id && data.id !== EMPTY_GUID) {
+            const sendUpdate = (force: boolean): Promise<unknown> => {
+                const url = force
+                    ? `${props.api}/${props.data.id}?force=true`
+                    : `${props.api}/${props.data.id}`
+                return axios
+                    .put(url, foreignData)
+                    .then((response) => {
+                        props.onUpdate?.(response.data)
+                        props.onChange?.(response.data)
+                        props.setData(response.data)
+                        invalidate([
+                            {type: props.type},
+                            {type: props.type, id: response.data.id},
+                        ])
+                        setAlert({
+                            message: force
+                                ? 'Saved as a new version'
+                                : 'Updated successfully',
+                        })
+                        setDetailEditMode?.(false)
+                        if (force && props.path) {
+                            navigate(`${props.path}/${response.data.id}`)
+                        }
+                    })
+                    .catch((r) => {
+                        if (
+                            !force &&
+                            r.response?.status === 409 &&
+                            r.response?.data?.code === 'fork-required'
+                        ) {
+                            const detail =
+                                r.response?.data?.detail ||
+                                'This change will create a new version.'
+                            if (
+                                window.confirm(
+                                    `${detail}\n\nProceed and create a new version?`,
+                                )
+                            ) {
+                                return sendUpdate(true)
+                            }
+                            return
+                        }
+                        setAlert({
+                            status: 'danger',
+                            message:
+                                r.response?.data?.detail || 'Unknown error',
+                        })
+                    })
+            }
+            sendUpdate(false)
+        } else {
+            const stateParentId = (location.state as any)?.parentId as
+                | UUID
+                | undefined
+            const parentId = stateParentId || rootItem?.id
+            axios
+                .post(`${props.api}`, {...foreignData, directoryId: parentId})
+                .then((response) => {
+                    props.onUpdate?.(response.data)
+                    props.onChange?.(response.data)
+                    props.setData(response.data)
+                    invalidate([
+                        {type: props.type},
+                        {type: props.type, id: response.data.id},
+                        listTag(props.type),
+                    ])
+                    setAlert({message: 'Created successfully'})
+                    setDetailEditMode?.(false)
+                    if (props.path) {
+                        navigate(
+                            `${props.path}${response.data.isFolder ? '/folder' : ''}/${response.data.id}`,
+                        )
+                    }
+                })
+                .catch((r) =>
+                    setAlert({
+                        status: 'danger',
+                        message: r.response?.data?.detail || 'Unknown error',
+                    }),
+                )
+        }
+    }
+
+    const content =
+        typeof props.content === 'function'
+            ? props.content({values, handleChange, setValues})
+            : props.content
+
+    return (
+        <Box component="form" onSubmit={submit} noValidate>
+            <Box>{content}</Box>
+            <Box
+                sx={{
+                    position: 'sticky',
+                    bottom: 10,
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    gap: 1,
+                    py: 1,
+                    background: 'var(--surface)',
+                    borderTop: '1px solid var(--line)',
+                    mt: 2,
+                }}
+            >
+                <MuiButton
+                    type="submit"
+                    variant="contained"
+                    color="primary"
+                    startIcon={<SaveIcon />}
+                >
+                    {mode}
+                </MuiButton>
+            </Box>
+        </Box>
     )
 }
