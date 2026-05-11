@@ -18,6 +18,7 @@ export * from './components/master/TreeViewMaster';
 export * from './components/master/MasterDetail';
 export * from './components/states/Loading';
 export * from './components/relations/RelationTable';
+export * from './components/relations/Column';
 export * from './components/relations/DropDownComp';
 export * from './components/relations/DropDownCell';
 export * from './components/relations/LinkTextCell';

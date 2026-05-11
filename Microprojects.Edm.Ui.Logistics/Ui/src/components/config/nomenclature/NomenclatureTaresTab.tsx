@@ -1,6 +1,6 @@
 import Api from '@features/api/api'
 import { useGet } from '@logistics/hooks/hooks'
-import { GridColumn } from '@progress/kendo-react-grid'
+import { Column as GridColumn } from '@microprojects/edm-components/components'
 import type { TreeDataItem, UUID } from '../../../data/types'
 import { CheckboxCell } from '../../CheckboxCell'
 import { DropDownTreeCell } from '../../DropDownTreeCell'

@@ -1,6 +1,6 @@
 import type { Item, TareInfo, UUID } from '@logistics/data/types'
 import { colorForGradeId } from '@logistics/utils/gradePalette'
-import { Popup } from '@progress/kendo-react-popup'
+import { Popper } from '@mui/material'
 import type React from 'react'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { ItemSlotTooltip } from './ItemSlotTooltip'
@@ -325,13 +325,22 @@ export const TareSchematic = (props: TareSchematicProps) => {
             ) : (
                 <BulkTareView tare={tare} items={items} />
             )}
-            <Popup
-                anchor={tooltip?.anchor}
-                show={!!tooltip}
-                anchorAlign={{ horizontal: 'center', vertical: 'top' }}
-                popupAlign={{ horizontal: 'center', vertical: 'bottom' }}
-                collision={{ horizontal: 'fit', vertical: 'flip' }}
-                animate={false}
+            <Popper
+                open={!!tooltip}
+                anchorEl={tooltip?.anchor ?? null}
+                placement="top"
+                modifiers={[
+                    { name: 'offset', options: { offset: [0, 6] } },
+                    {
+                        name: 'flip',
+                        options: { fallbackPlacements: ['bottom'] },
+                    },
+                    {
+                        name: 'preventOverflow',
+                        options: { boundary: 'viewport', padding: 8 },
+                    },
+                ]}
+                style={{ zIndex: 1500 }}
             >
                 {tooltip && (
                     <ItemSlotTooltip
@@ -339,7 +348,7 @@ export const TareSchematic = (props: TareSchematicProps) => {
                         address={tooltip.address}
                     />
                 )}
-            </Popup>
+            </Popper>
         </div>
     )
 }

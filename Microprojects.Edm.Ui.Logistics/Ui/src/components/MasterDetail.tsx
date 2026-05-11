@@ -1,7 +1,4 @@
-import {
-    type AlertState,
-    useAlertSetter,
-} from '@logistics/components/InlineAlert.tsx'
+import { useAlertSetter } from '@logistics/components/InlineAlert.tsx'
 import {
     DetailEditModeContext,
     EMPTY_GUID,
@@ -19,9 +16,7 @@ import {
     SaveOutlined as SaveIcon,
     WidgetsOutlined as TareIcon,
 } from '@mui/icons-material'
-import {Box, Button as MuiButton} from '@mui/material'
-import {Button} from '@progress/kendo-react-buttons'
-import {Form, FormElement} from '@progress/kendo-react-form'
+import { Box, Button as MuiButton } from '@mui/material'
 import axios from 'axios'
 import type React from 'react'
 import {
@@ -180,7 +175,6 @@ export function Detail({editable = true, copyable = true, deletable = true, read
 
 type InfoProps = {
     content: React.ReactNode | ((formRenderProps: any) => React.ReactNode)
-    //data: TreeNode
 }
 
 export function Info(props: InfoProps) {
@@ -193,168 +187,7 @@ export function Info(props: InfoProps) {
     )
 }
 
-interface EditorProps extends InfoProps {
-    data: DataItem
-    setData: DetailEventHandler
-    type: string
-    onUpdate?: DetailEventHandler
-    onChange?: DetailEventHandler
-    api: string
-    path?: string
-}
-
-export function Editor(props: EditorProps) {
-    const navigate = useNavigate()
-    const location = useLocation()
-    const setAlert = useAlertSetter()
-    const setDetailEditMode = useContext(DetailEditModeContext)
-    const rootItem = useContext(RootItemContext)
-    const invalidate = useInvalidateEntities()
-    const mode =
-        (props.data.id && props.data.id !== EMPTY_GUID && 'Update') || 'Create'
-    const handleSubmit = (data: Dictionary) => {
-        setAlert(undefined)
-        const foreignData = Object.keys(data).reduce(
-            (r, d, i, a) => ({
-                ...r,
-                [d]:
-                    data[d] &&
-                    typeof data[d] === 'object' &&
-                    !(data[d] instanceof Date) &&
-                    !Array.isArray(data[d])
-                        ? data[d]['id']
-                        : data[d],
-            }),
-            {},
-        )
-        if (data.id && data.id !== EMPTY_GUID) {
-            const sendUpdate = (force: boolean) => {
-                const url = force
-                    ? `${props.api}/${props.data.id}?force=true`
-                    : `${props.api}/${props.data.id}`
-                return axios
-                    .put(url, foreignData)
-                    .then((response) => {
-                        props.onUpdate?.(response.data)
-                        props.onChange?.(response.data)
-                        props.setData(response.data)
-                        invalidate([
-                            {type: props.type},
-                            {type: props.type, id: response.data.id},
-                        ])
-                        setAlert({
-                            message: force
-                                ? 'Saved as a new version'
-                                : 'Updated successfully',
-                        })
-                        setDetailEditMode?.(false)
-                        if (force && props.path) {
-                            navigate(`${props.path}/${response.data.id}`)
-                        }
-                    })
-                    .catch((r) => {
-                        if (
-                            !force &&
-                            r.response?.status === 409 &&
-                            r.response?.data?.code === 'fork-required'
-                        ) {
-                            const detail =
-                                r.response?.data?.detail ||
-                                'This change will create a new version.'
-                            if (
-                                window.confirm(
-                                    `${detail}\n\nProceed and create a new version?`,
-                                )
-                            ) {
-                                return sendUpdate(true)
-                            }
-                            return
-                        }
-                        setAlert({
-                            status: 'danger',
-                            message:
-                                r.response?.data?.detail || 'Unknown error',
-                        })
-                    })
-            }
-            sendUpdate(false)
-        } else {
-            const stateParentId = (location.state as any)?.parentId as
-                | UUID
-                | undefined
-            const parentId = stateParentId || rootItem?.id
-            axios
-                .post(`${props.api}`, {...foreignData, directoryId: parentId})
-                .then((response) => {
-                    props.onUpdate?.(response.data)
-                    props.onChange?.(response.data)
-                    props.setData(response.data)
-                    invalidate([
-                        {type: props.type},
-                        {type: props.type, id: response.data.id},
-                        listTag(props.type),
-                    ])
-                    setAlert({message: 'Created successfully'})
-                    setDetailEditMode?.(false)
-                    if (props.path) {
-                        navigate(
-                            `${props.path}${response.data.isFolder ? '/folder' : ''}/${response.data.id}`,
-                        )
-                    }
-                })
-                .catch((r) =>
-                    setAlert({
-                        status: 'danger',
-                        message: r.response?.data?.detail || 'Unknown error',
-                    }),
-                )
-        }
-    }
-
-    return (
-        <>
-            <Form
-                key={props.data.id}
-                initialValues={props.data}
-                onSubmit={handleSubmit}
-                render={(formRenderProps) => (
-                    <FormElement>
-                        {typeof props.content === 'function'
-                            ? props.content(formRenderProps)
-                            : props.content}
-                        <div
-                            className="k-form-buttons"
-                            style={{
-                                position: 'sticky',
-                                bottom: 10,
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                backgroundColor: 'white',
-                            }}
-                        >
-                            <Button
-                                title="Save"
-                                name="save"
-                                themeColor={
-                                    formRenderProps.allowSubmit
-                                        ? 'primary'
-                                        : 'secondary'
-                                }
-                                icon="save"
-                                type={'submit'}
-                                disabled={!formRenderProps.allowSubmit}
-                            >
-                                {mode}
-                            </Button>
-                        </div>
-                    </FormElement>
-                )}
-            />
-        </>
-    )
-}
-
-// v2 editor: Kendo-free form using useState + content-as-function pattern with `{values, handleChange}`. Same POST/PUT semantics as the Kendo Editor above (UUID parents via RootItemContext, `directoryId` POST field, fork-required PUT handling), so call sites can migrate one at a time.
+// v2 editor: useState + content-as-function pattern with `{values, handleChange}`. Logistics-specific POST/PUT (UUID parents via RootItemContext, `directoryId` POST field, fork-required PUT handling).
 interface MuiEditorProps {
     data: DataItem
     setData: DetailEventHandler

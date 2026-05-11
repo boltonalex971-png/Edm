@@ -1,5 +1,5 @@
 import type { UUID } from '@logistics/data/types'
-import { GridColumn } from '@progress/kendo-react-grid'
+import { Column as GridColumn } from '@microprojects/edm-components/components'
 import React from 'react'
 import { RelationTable } from '../../RelationTable'
 
