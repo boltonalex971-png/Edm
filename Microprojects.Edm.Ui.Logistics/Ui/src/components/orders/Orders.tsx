@@ -1,17 +1,22 @@
 import Api from '@features/api/api.ts'
-import { PageTitle } from '@logistics/components/PageTitle'
 import { OrderDetail } from '@logistics/components/orders/OrderDetail'
 import { OrderSearch } from '@logistics/components/orders/OrderSearch.tsx'
 import type { OrderSearchQuery, UUID } from '@logistics/data/types'
 import { useRouteMatch } from '@logistics/hooks/routerHooks'
+import { SubRootPage } from '@microprojects/edm-components/components/chrome/SubRootPage'
+import { useBasePath } from '@microprojects/edm-components/hooks/useBasePath'
 import { Search } from '@microprojects/edm-components/components/page/Search'
-import { Add as AddIcon, Search as SearchIcon } from '@mui/icons-material'
+import {
+    Add as AddIcon,
+    CheckCircleOutlined as CompletedIcon,
+    PendingActionsOutlined as ActiveIcon,
+    Search as SearchIcon,
+} from '@mui/icons-material'
 import { useEffect, useState } from 'react'
-import { NavLink as Link } from 'react-router'
-import { Nav, NavItem, NavLink } from 'reactstrap'
 
 export function Orders() {
-    const { path, name } = useRouteMatch()
+    const { name } = useRouteMatch()
+    const path = useBasePath()
     const [query, setQuery] = useState<OrderSearchQuery>()
     // After a successful Create, flip the Create-panel from the empty
     // "New Order" form to a view-mode detail of the just-created order.
@@ -43,42 +48,29 @@ export function Orders() {
         />
     )
 
+    const menuItems = [
+        { label: 'Active', path: `${path}/ongoing`, icon: <ActiveIcon fontSize="small" /> },
+        { label: 'Completed', path: `${path}/completed`, icon: <CompletedIcon fontSize="small" /> },
+    ]
+
     return (
-        <>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <PageTitle title="Orders" />
-                <Nav pills>
-                    <NavItem>
-                        <NavLink tag={Link} to={`${path}/ongoing`}>
-                            Active
-                        </NavLink>
-                    </NavItem>
-                    <NavItem>
-                        <NavLink tag={Link} to={`${path}/completed`}>
-                            Completed
-                        </NavLink>
-                    </NavItem>
-                </Nav>
-            </div>
-            <hr />
-            <div>
-                <Search
-                    actions={[
-                        {
-                            key: 'search',
-                            label: 'Search',
-                            icon: <SearchIcon fontSize="small" />,
-                            panel: <OrderSearch query={query} />,
-                        },
-                        {
-                            key: 'create',
-                            label: 'Create new',
-                            icon: <AddIcon fontSize="small" />,
-                            panel: detail,
-                        },
-                    ]}
-                />
-            </div>
-        </>
+        <SubRootPage title="Orders" menuItems={menuItems}>
+            <Search
+                actions={[
+                    {
+                        key: 'search',
+                        label: 'Search',
+                        icon: <SearchIcon fontSize="small" />,
+                        panel: <OrderSearch query={query} />,
+                    },
+                    {
+                        key: 'create',
+                        label: 'Create new',
+                        icon: <AddIcon fontSize="small" />,
+                        panel: detail,
+                    },
+                ]}
+            />
+        </SubRootPage>
     )
 }

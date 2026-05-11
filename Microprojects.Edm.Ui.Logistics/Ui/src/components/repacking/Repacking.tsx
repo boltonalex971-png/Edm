@@ -35,7 +35,7 @@ import { getData, postData, useGet } from '@logistics/hooks/hooks'
 import { useTareTransfer } from '@logistics/hooks/useTareTransfer'
 import { formatUnits } from '@logistics/utils/format'
 import { SmartScroll, SmartScrollContent } from '@microprojects/tools'
-import { Button } from '@progress/kendo-react-buttons'
+import { Button } from '@mui/material'
 import type React from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import './Repacking.css'
@@ -552,6 +552,7 @@ export function Repacking() {
                                     style={{ width: 240 }}
                                 />
                                 <Button
+                                    variant="outlined"
                                     onClick={loadTareByBarcode}
                                     disabled={!tareBarcode.trim()}
                                 >
@@ -647,7 +648,7 @@ export function Repacking() {
                                     headerExtra={
                                         <Button
                                             size="small"
-                                            fillMode="flat"
+                                            variant="text"
                                             onClick={() =>
                                                 removeSourceTare(key)
                                             }
@@ -695,7 +696,7 @@ export function Repacking() {
                                     placeholder="Type (for new)..."
                                 />
                                 <Button
-                                    themeColor="primary"
+                                    variant="contained"
                                     onClick={searchAndAddTare}
                                 >
                                     Add tare
@@ -704,7 +705,8 @@ export function Repacking() {
                         </div>
                         <div className="repacking-actions">
                             <Button
-                                themeColor="info"
+                                variant="contained"
+                                color="info"
                                 onClick={autoFill}
                                 disabled={
                                     sourceItems.length === 0 ||
@@ -714,7 +716,8 @@ export function Repacking() {
                                 Auto-fill
                             </Button>
                             <Button
-                                themeColor="success"
+                                variant="contained"
+                                color="success"
                                 onClick={submitRepack}
                                 disabled={
                                     pending.length === 0 || submitting
@@ -725,6 +728,7 @@ export function Repacking() {
                                     : `Apply (${pending.length} moves)`}
                             </Button>
                             <Button
+                                variant="outlined"
                                 onClick={reset}
                                 disabled={pending.length === 0}
                             >

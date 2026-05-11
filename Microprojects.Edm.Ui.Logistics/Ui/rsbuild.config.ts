@@ -2,6 +2,7 @@ import { defineConfig } from '@rsbuild/core'
 import { pluginReact } from '@rsbuild/plugin-react'
 import { pluginSass } from '@rsbuild/plugin-sass'
 import { pluginBasicSsl } from '@rsbuild/plugin-basic-ssl'
+import { edmFontTag } from '@microprojects/edm-components/styles/fonts'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 
@@ -71,6 +72,7 @@ export default defineConfig({
     html: {
         title: 'Edm Logistics',
         favicon: './public/favicon.ico',
+        tags: [edmFontTag],
     },
     server: {
         port: 3000,

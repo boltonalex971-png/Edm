@@ -42,7 +42,7 @@ import {
 import { getData, postData, useGet } from '@logistics/hooks/hooks'
 import { useTareTransfer } from '@logistics/hooks/useTareTransfer'
 import { SmartScroll, SmartScrollContent } from '@microprojects/tools'
-import { Button } from '@progress/kendo-react-buttons'
+import { Button } from '@mui/material'
 import type React from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import '@logistics/components/repacking/Repacking.css'
@@ -448,20 +448,21 @@ export function AllocateProcessOutput({
                         width={200}
                         placeholder="Type (for new)..."
                     />
-                    <Button themeColor="primary" onClick={searchAndAddTare}>
+                    <Button variant="contained" onClick={searchAndAddTare}>
                         Add tare
                     </Button>
                 </div>
             </div>
             <div className="repacking-actions">
                 <Button
-                    themeColor="success"
+                    variant="contained"
+                    color="success"
                     onClick={submit}
                     disabled={pending.length === 0 || submitting}
                 >
                     {submitting ? 'Saving...' : `Apply (${pending.length})`}
                 </Button>
-                <Button onClick={reset} disabled={pending.length === 0}>
+                <Button variant="outlined" onClick={reset} disabled={pending.length === 0}>
                     Reset
                 </Button>
                 {submitResult && submitResult.errors.length > 0 && (
@@ -662,7 +663,7 @@ export function AllocateProcessOutput({
                                             {!hasCommittedFromOrder && (
                                                 <Button
                                                     size="small"
-                                                    fillMode="flat"
+                                                    variant="text"
                                                     onClick={(e) => {
                                                         e.stopPropagation()
                                                         removeTargetTare(t.id)

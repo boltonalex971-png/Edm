@@ -1,14 +1,19 @@
 import api from '@features/api/api'
 import { Loading } from '@features/utils/Utils.tsx'
 import { Detail } from '@logistics/components/MasterDetail'
-import { PageTitle } from '@logistics/components/PageTitle'
 import { DateTimeCell } from '@logistics/components/RelationTable'
 import { SupplyDetail } from '@logistics/components/supplies/SupplyDetail'
 import type { Supply } from '@logistics/data/types'
 import { useGet } from '@logistics/hooks/hooks'
-import { useRouteMatch } from '@logistics/hooks/routerHooks'
+import { SubRootPage } from '@microprojects/edm-components/components/chrome/SubRootPage'
+import { useBasePath } from '@microprojects/edm-components/hooks/useBasePath'
 import { Search } from '@microprojects/edm-components/components/page/Search'
-import { Add as AddIcon, Search as SearchIcon } from '@mui/icons-material'
+import {
+    Add as AddIcon,
+    CheckCircleOutlined as ConsumedIcon,
+    Inventory2Outlined as RemainsIcon,
+    Search as SearchIcon,
+} from '@mui/icons-material'
 import { process } from '@progress/kendo-data-query'
 import {
     Grid,
@@ -25,55 +30,40 @@ import { Error } from '@progress/kendo-react-labels'
 import type React from 'react'
 import { type EffectCallback, useEffect, useMemo, useState } from 'react'
 import { Diagram3 } from 'react-bootstrap-icons'
-import { NavLink as Link } from 'react-router'
-import { Nav, NavItem, NavLink } from 'reactstrap'
 
 export function Supplies() {
-    const { path } = useRouteMatch()
+    const path = useBasePath()
+
+    const menuItems = [
+        { label: 'Remains', path: `${path}/remaining`, icon: <RemainsIcon fontSize="small" /> },
+        { label: 'Consumed', path: `${path}/consumed`, icon: <ConsumedIcon fontSize="small" /> },
+    ]
 
     return (
-        <>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <PageTitle title="Supplies" />
-                <Nav pills>
-                    <NavItem>
-                        <NavLink tag={Link} to={`${path}/remaining`}>
-                            Remains
-                        </NavLink>
-                    </NavItem>
-                    <NavItem>
-                        <NavLink tag={Link} to={`${path}/consumed`}>
-                            Consumed
-                        </NavLink>
-                    </NavItem>
-                </Nav>
-            </div>
-            <hr />
-            <div>
-                <Search
-                    actions={[
-                        {
-                            key: 'search',
-                            label: 'Search',
-                            icon: <SearchIcon fontSize="small" />,
-                            panel: <SupplySearch />,
-                        },
-                        {
-                            key: 'create',
-                            label: 'Create new',
-                            icon: <AddIcon fontSize="small" />,
-                            panel: (
-                                <SupplyDetail
-                                    title="New Supply"
-                                    editMode={true}
-                                    api={api.supplies}
-                                />
-                            ),
-                        },
-                    ]}
-                />
-            </div>
-        </>
+        <SubRootPage title="Supplies" menuItems={menuItems}>
+            <Search
+                actions={[
+                    {
+                        key: 'search',
+                        label: 'Search',
+                        icon: <SearchIcon fontSize="small" />,
+                        panel: <SupplySearch />,
+                    },
+                    {
+                        key: 'create',
+                        label: 'Create new',
+                        icon: <AddIcon fontSize="small" />,
+                        panel: (
+                            <SupplyDetail
+                                title="New Supply"
+                                editMode={true}
+                                api={api.supplies}
+                            />
+                        ),
+                    },
+                ]}
+            />
+        </SubRootPage>
     )
 }
 

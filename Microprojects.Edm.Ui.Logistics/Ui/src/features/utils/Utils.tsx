@@ -1,10 +1,10 @@
-import { Loader } from '@progress/kendo-react-indicators'
+import { CircularProgress } from '@mui/material'
 import type React from 'react'
 
 export function Loading() {
     return (
-        <div style={{ width: '100%', textAlign: 'center' }} className="small">
-            <Loader type="converging-spinner" />
+        <div style={{ width: '100%', textAlign: 'center', padding: 16 }}>
+            <CircularProgress size={24} />
         </div>
     )
 }
@@ -20,17 +20,15 @@ export function LoadingContainer({ loading, children }: LoadingContainerProps) {
             {children}
             {loading && (
                 <div
-                    className="small"
                     style={{
                         width: '100%',
                         textAlign: 'center',
-                        opacity: '100%',
                         position: 'absolute',
                         top: 0,
                         left: 0,
                     }}
                 >
-                    <Loader type="converging-spinner" />
+                    <CircularProgress size={24} />
                 </div>
             )}
         </div>

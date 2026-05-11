@@ -17,9 +17,8 @@ import { ToastProvider } from '@microprojects/edm-components/components/states/T
 import { UiPreferencesProvider } from '@microprojects/edm-components/styles/UiPreferencesContext'
 import { defaultTheme } from '@microprojects/edm-components/styles/theme'
 import store from './store'
-import 'bootstrap/dist/css/bootstrap.css'
-import '@progress/kendo-theme-bootstrap/dist/all.css'
 import '@microprojects/edm-components/styles/tokens.css'
+import '@microprojects/edm-components/styles/chrome.css'
 
 // Bridge Logistics's existing SignalR publisher to the package's lock
 // store. Validates `type` via parseEntityType so a typo never escapes

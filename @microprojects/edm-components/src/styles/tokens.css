@@ -7,10 +7,14 @@
    never define or override tokens.
    ========================================================================= */
 
-@import url("https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..600,0..1,-25..0&display=swap");
+/* NOTE: do NOT add `@import url(...)` for Google Fonts here — rslib/lightningcss
+   silently drops the next rule block (the :root tokens) when an @import-url
+   is present, leaving the SPA with undefined `--surface`/`--bg`/etc. and
+   everything rendering on a flat grey page. Consumers load the font sheet
+   via a <link> tag in their index.html (or rsbuild html.tags) instead. */
 
 /* ---------- Color tokens — Steel (light) ---------- */
-:root {
+html, :root {
     /* Neutrals */
     --bg:            #EEF0F3;
     --surface:       #FFFFFF;
