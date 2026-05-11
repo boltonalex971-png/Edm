@@ -1,6 +1,5 @@
 import api from '@features/api/api.ts'
 import { ComponentLookup } from '@logistics/components/desktop/ComponentLookup'
-import styles from '@logistics/components/desktop/desktop.module.css'
 import type {
     AllocateItemsResult,
     OrderSpecification,
@@ -8,6 +7,18 @@ import type {
 } from '@logistics/data/types'
 import { getData } from '@logistics/hooks/hooks'
 import { formatUnits } from '@logistics/utils/format'
+import {
+    Alert,
+    Box,
+    Button as MuiButton,
+    CircularProgress,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableRow,
+    Typography,
+} from '@mui/material'
 import { useCallback, useEffect, useState } from 'react'
 
 type LaunchStepProps = {
@@ -85,95 +96,179 @@ export const LaunchStep = ({
     const launchDisabled = locked || launching || !allComplete
 
     return (
-        <div>
+        <Box>
             {!locked && specs.length > 0 && (
-                <div className={styles.specHint}>
+                <Typography
+                    variant="caption"
+                    sx={{
+                        color: 'var(--ink-3)',
+                        fontSize: 13,
+                        display: 'block',
+                        mb: 1,
+                    }}
+                >
                     {info ??
                         'Click a row to pick available items for that nomenclature.'}
-                </div>
+                </Typography>
             )}
 
-            {error && <div className={styles.errorMsg}>{error}</div>}
+            {error && (
+                <Alert severity="error" sx={{ mb: 1 }}>
+                    {error}
+                </Alert>
+            )}
 
-            {loading && <div className={styles.sectionEmpty}>Loading…</div>}
+            {loading && (
+                <Box
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        color: 'var(--ink-3)',
+                        py: 1,
+                    }}
+                >
+                    <CircularProgress size={14} />
+                    <Typography variant="caption">Loading…</Typography>
+                </Box>
+            )}
             {!loading && specs.length === 0 && (
-                <div className={styles.sectionEmpty}>
+                <Box
+                    sx={{
+                        py: 2,
+                        color: 'var(--ink-3)',
+                        fontStyle: 'italic',
+                        fontSize: 14,
+                    }}
+                >
                     No input specifications for this process — ready to launch.
-                </div>
+                </Box>
             )}
             {specs.length > 0 && (
-                <table className={styles.specGrid}>
-                    <thead>
-                        <tr>
-                            <th>Nomenclature</th>
-                            <th>Required</th>
-                            <th>Allocated</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+                <Table size="small" sx={{ mb: 1.5 }}>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell
+                                sx={{
+                                    color: 'var(--ink-3)',
+                                    fontWeight: 700,
+                                    borderBottom: '2px solid var(--line-strong)',
+                                }}
+                            >
+                                Nomenclature
+                            </TableCell>
+                            <TableCell
+                                sx={{
+                                    color: 'var(--ink-3)',
+                                    fontWeight: 700,
+                                    borderBottom: '2px solid var(--line-strong)',
+                                }}
+                            >
+                                Required
+                            </TableCell>
+                            <TableCell
+                                sx={{
+                                    color: 'var(--ink-3)',
+                                    fontWeight: 700,
+                                    borderBottom: '2px solid var(--line-strong)',
+                                }}
+                            >
+                                Allocated
+                            </TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
                         {specs.map((spec) => {
                             const ok = spec.total + EPS >= spec.amount
                             const clickable = !locked && !ok
                             return (
-                                <tr
+                                <TableRow
                                     key={spec.id}
-                                    className={`${ok ? styles.specRowOk : ''} ${clickable ? styles.specRowClickable : ''}`}
+                                    hover={clickable}
                                     onClick={
                                         clickable
                                             ? () => setPickFor(spec)
                                             : undefined
                                     }
                                     title={
-                                        clickable
-                                            ? 'Click to pick items'
-                                            : undefined
+                                        clickable ? 'Click to pick items' : undefined
                                     }
+                                    sx={{
+                                        cursor: clickable ? 'pointer' : 'default',
+                                        ...(ok && {
+                                            background: 'var(--sig-run-soft)',
+                                        }),
+                                    }}
                                 >
-                                    <td>
-                                        <div style={{ fontWeight: 500 }}>
+                                    <TableCell>
+                                        <Box sx={{ fontWeight: 500 }}>
                                             {spec.nomenclatureName ?? '—'}
-                                        </div>
+                                        </Box>
                                         {spec.nomenclatureCategory && (
-                                            <div
-                                                style={{
-                                                    fontSize: '0.8rem',
-                                                    color: '#888',
+                                            <Box
+                                                sx={{
+                                                    fontSize: 12,
+                                                    color: 'var(--ink-3)',
                                                 }}
                                             >
                                                 {spec.nomenclatureCategory}
-                                            </div>
+                                            </Box>
                                         )}
-                                    </td>
-                                    <td>{spec.amount}</td>
-                                    <td>
-                                        <span
-                                            className={`${styles.specProgress} ${ok ? styles.specProgressOk : styles.specProgressShort}`}
+                                    </TableCell>
+                                    <TableCell>{spec.amount}</TableCell>
+                                    <TableCell>
+                                        <Box
+                                            component="span"
+                                            sx={{
+                                                display: 'inline-block',
+                                                minWidth: 90,
+                                                fontWeight: 700,
+                                                color: ok
+                                                    ? 'var(--sig-run-deep)'
+                                                    : 'var(--sig-fault-deep)',
+                                            }}
                                         >
                                             {spec.total} / {spec.amount}
-                                        </span>
-                                    </td>
-                                </tr>
+                                        </Box>
+                                    </TableCell>
+                                </TableRow>
                             )
                         })}
-                    </tbody>
-                </table>
+                    </TableBody>
+                </Table>
             )}
 
-            {launchError && <div className={styles.errorMsg}>{launchError}</div>}
+            {launchError && (
+                <Alert severity="error" sx={{ mb: 1 }}>
+                    {launchError}
+                </Alert>
+            )}
 
-            <div className={styles.footer}>
+            <Box
+                sx={{
+                    mt: 2,
+                    pt: 2,
+                    borderTop: '1px solid var(--line)',
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    gap: 1,
+                }}
+            >
                 {reviewOnly && onResume ? (
-                    <button
-                        type="button"
-                        className={styles.primary}
+                    <MuiButton
+                        variant="contained"
+                        color="primary"
+                        size="large"
                         onClick={onResume}
+                        sx={{ minWidth: 180 }}
                     >
                         Resume
-                    </button>
+                    </MuiButton>
                 ) : (
-                    <button
-                        type="button"
-                        className={styles.primary}
+                    <MuiButton
+                        variant="contained"
+                        color="primary"
+                        size="large"
                         onClick={onLaunch}
                         disabled={launchDisabled}
                         title={
@@ -183,15 +278,16 @@ export const LaunchStep = ({
                                   ? 'All inputs must be allocated before launch'
                                   : undefined
                         }
+                        sx={{ minWidth: 180 }}
                     >
                         {readOnly
                             ? 'Read-only'
                             : launching
                               ? 'Launching…'
                               : 'Launch'}
-                    </button>
+                    </MuiButton>
                 )}
-            </div>
+            </Box>
 
             {pickFor && (
                 <ComponentLookup
@@ -201,6 +297,6 @@ export const LaunchStep = ({
                     onAllocated={onAllocated}
                 />
             )}
-        </div>
+        </Box>
     )
 }

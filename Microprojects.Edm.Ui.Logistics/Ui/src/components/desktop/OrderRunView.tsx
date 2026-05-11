@@ -1,6 +1,5 @@
 import api from '@features/api/api.ts'
 import { LaunchStep } from '@logistics/components/desktop/LaunchStep'
-import styles from '@logistics/components/desktop/desktop.module.css'
 import { AllocateProcessOutput } from '@logistics/components/orders/AllocateProcessOutput'
 import type {
     ExecuteResult,
@@ -18,6 +17,7 @@ import {
     useOrderClaimState,
 } from '@logistics/hooks/entityLocks'
 import { useGet } from '@logistics/hooks/hooks'
+import type { RootState } from '@logistics/store'
 import {
     type DateLike,
     formatLocalDate,
@@ -26,11 +26,23 @@ import {
     parseUtcDate,
 } from '@logistics/utils/format'
 import { colorForGradeId } from '@logistics/utils/gradePalette'
+import {
+    ArrowBackOutlined as BackIcon,
+    CheckOutlined as CheckIcon,
+} from '@mui/icons-material'
+import {
+    Alert,
+    Box,
+    Button as MuiButton,
+    Chip,
+    IconButton,
+    Paper,
+    Typography,
+} from '@mui/material'
 import axios from 'axios'
 import { useEffect, useMemo, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { useNavigate, useParams } from 'react-router-dom'
-import type { RootState } from '@logistics/store'
 
 type Step = 'review' | 'launch' | 'distribute' | 'complete'
 
@@ -56,7 +68,10 @@ export const OrderRunView = () => {
     const [completeError, setCompleteError] = useState<string | undefined>()
     const [step, setStep] = useState<Step>('review')
 
-    const [[order], loading] = useGet<Order>(id ? `${api.orders}/${id}` : '', [id, orderToken])
+    const [[order], loading] = useGet<Order>(
+        id ? `${api.orders}/${id}` : '',
+        [id, orderToken],
+    )
     const [[outputs]] = useGet<OrderOutputItems>(
         id ? `${api.orders}/${id}/output-items` : '',
         [id, orderToken],
@@ -64,9 +79,7 @@ export const OrderRunView = () => {
 
     // Claim the order for as long as the operator stays in this view, so
     // other tabs/users see "Executing by {username}" the same way they
-    // see a persisted Executor banner. Nothing happens once the order
-    // already has a persisted executor: that's already the source of
-    // truth and gating happens through the existing isReadOnly path.
+    // see a persisted Executor banner.
     const username = useSelector((s: RootState) => s.user.name)
     const claim = useOrderClaimState(id)
     const claimedByOther = !!claim.lockedBy && !claim.isOwn
@@ -74,20 +87,19 @@ export const OrderRunView = () => {
         !!id && !!order && order.status !== 'Completed' && !order.executor
     useAcquireOrderClaim(id, claimable, username)
 
-    const occupiedBy = order?.executor || (claimedByOther ? claim.lockedBy : null)
+    const occupiedBy =
+        order?.executor || (claimedByOther ? claim.lockedBy : null)
     const isReadOnly =
         (!!order?.executor && order.mine === false) || claimedByOther
     const isAlreadyLaunched = !!order && order.status !== 'Draft'
     const isCompleted = order?.status === 'Completed'
     const unallocatedCount = outputs?.unallocated?.length ?? 0
     const allocatedCount = outputs?.allocated?.length ?? 0
-    // All produced outputs have been placed in tares — Done becomes
-    // reachable even before the operator clicks "Complete order".
     const allAllocated =
-        isAlreadyLaunched && allocatedCount + unallocatedCount > 0 && unallocatedCount === 0
+        isAlreadyLaunched &&
+        allocatedCount + unallocatedCount > 0 &&
+        unallocatedCount === 0
 
-    // The step that reflects the order's *current* execution state on the
-    // server. Stepper navigation is allowed up to and including this step.
     const liveStep: Step = useMemo(() => {
         if (!order) return 'review'
         if (isCompleted || allAllocated) return 'complete'
@@ -95,8 +107,6 @@ export const OrderRunView = () => {
         return 'review'
     }, [order, isAlreadyLaunched, isCompleted, allAllocated])
 
-    // Track the highest step the user has reached this session so they can
-    // step backward and forward freely without losing their place.
     const [maxStep, setMaxStep] = useState<Step>('review')
 
     useEffect(() => {
@@ -135,7 +145,9 @@ export const OrderRunView = () => {
             })
             .catch((e) => {
                 setLaunchError(
-                    e.response?.data?.detail || e.response?.statusText || 'Failed to launch',
+                    e.response?.data?.detail ||
+                        e.response?.statusText ||
+                        'Failed to launch',
                 )
             })
             .finally(() => setLaunching(false))
@@ -171,88 +183,93 @@ export const OrderRunView = () => {
         if (stepIndex(target) <= maxStepIndex) setStep(target)
     }
 
-    const renderReviewBanner = () => {
-        if (!isOnPastStep) return null
-        const liveLabel =
-            liveStep === 'distribute'
-                ? 'Distribute'
-                : liveStep === 'complete'
-                  ? 'Done'
-                  : 'Launch'
-        return (
-            <div className={styles.reviewBanner}>
-                <span>
-                    Reviewing — order is currently at <strong>{liveLabel}</strong>.
-                </span>
-                <button type="button" className={styles.resumeBtn} onClick={() => setStep(liveStep)}>
-                    Resume
-                </button>
-            </div>
-        )
-    }
-
     return (
-        <div className={styles.runRoot}>
-            <div className={styles.runHeader}>
-                <button type="button" className={styles.backBtn} onClick={backToList}>
-                    ← Back
-                </button>
-                <div className={styles.runTitle}>
+        <Paper
+            elevation={0}
+            sx={{
+                background: 'var(--surface)',
+                border: '1px solid var(--line)',
+                borderRadius: 'var(--r-2)',
+                boxShadow: 'var(--elev-1)',
+                p: 1.5,
+                display: 'flex',
+                flexDirection: 'column',
+                minHeight: 'calc(100vh - 170px)',
+            }}
+        >
+            <Box
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    mb: 1,
+                }}
+            >
+                <IconButton
+                    size="small"
+                    onClick={backToList}
+                    sx={{ color: 'var(--accent)' }}
+                >
+                    <BackIcon fontSize="small" />
+                </IconButton>
+                <Typography
+                    sx={{
+                        flex: 1,
+                        fontSize: 18,
+                        fontWeight: 700,
+                        color: 'var(--ink-1)',
+                    }}
+                >
                     {order?.processName || (loading ? 'Loading…' : 'Order')}
-                </div>
+                </Typography>
                 {order?.processNomenclatureName && (
-                    <div className={styles.runHeaderMeta}>
+                    <Typography
+                        variant="caption"
+                        sx={{ color: 'var(--ink-3)' }}
+                    >
                         {order.processNomenclatureName} · {order.amount} pcs
-                    </div>
+                    </Typography>
                 )}
-            </div>
+            </Box>
 
             {isReadOnly && (
-                <div className={styles.readonlyBanner}>
+                <Alert severity="warning" sx={{ mb: 1 }}>
                     {order?.executor ? 'Executed' : 'Executing'} by{' '}
                     <strong>{occupiedBy}</strong> — read-only. You can view
                     progress but cannot change anything.
-                </div>
+                </Alert>
             )}
 
-            <div className={styles.stepper}>
-                {STEPS.map((s, idx) => {
-                    const reachable = idx <= maxStepIndex
-                    const isLive = idx === maxStepIndex
-                    const isDone = idx < maxStepIndex
-                    const isViewing = idx === activeStepIndex
-                    const cls = [
-                        styles.step,
-                        isLive && styles.stepActive,
-                        isDone && styles.stepDone,
-                        isViewing && styles.stepViewing,
-                        reachable ? styles.stepClickable : styles.stepDisabled,
-                    ]
-                        .filter(Boolean)
-                        .join(' ')
-                    return (
-                        <button
-                            key={s.id}
-                            type="button"
-                            className={cls}
-                            disabled={!reachable}
-                            onClick={() => tryGoToStep(s.id)}
-                        >
-                            {idx + 1}. {s.label}
-                        </button>
-                    )
-                })}
-            </div>
+            <Stepper
+                step={step}
+                liveStep={liveStep}
+                maxStep={maxStep}
+                onPick={tryGoToStep}
+            />
 
-            {renderReviewBanner()}
+            {isOnPastStep && (
+                <ReviewBanner
+                    liveStep={liveStep}
+                    onResume={() => setStep(liveStep)}
+                />
+            )}
 
-            <div className={styles.runBody}>
+            <Box
+                sx={{
+                    flex: 1,
+                    minHeight: 0,
+                    display: 'flex',
+                    flexDirection: 'column',
+                }}
+            >
                 {step === 'review' && order && (
                     <ReviewStep
                         order={order}
                         onNext={() => setStep('launch')}
                         nextLabel={isOnPastStep ? 'Continue review' : 'Next'}
-                        onResume={isOnPastStep ? () => setStep(liveStep) : undefined}
+                        onResume={
+                            isOnPastStep ? () => setStep(liveStep) : undefined
+                        }
                     />
                 )}
                 {step === 'launch' && id && (
@@ -263,7 +280,9 @@ export const OrderRunView = () => {
                         launchError={launchError}
                         readOnly={isReadOnly}
                         reviewOnly={isOnPastStep}
-                        onResume={isOnPastStep ? () => setStep(liveStep) : undefined}
+                        onResume={
+                            isOnPastStep ? () => setStep(liveStep) : undefined
+                        }
                     />
                 )}
                 {step === 'distribute' && id && (
@@ -290,8 +309,133 @@ export const OrderRunView = () => {
                         onBackToList={backToList}
                     />
                 )}
-            </div>
-        </div>
+            </Box>
+        </Paper>
+    )
+}
+
+interface StepperProps {
+    step: Step
+    liveStep: Step
+    maxStep: Step
+    onPick: (s: Step) => void
+}
+
+function Stepper({ step, liveStep, maxStep, onPick }: StepperProps) {
+    const activeIdx = stepIndex(step)
+    const liveIdx = stepIndex(liveStep)
+    const maxIdx = stepIndex(maxStep)
+
+    return (
+        <Box
+            sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 0.5,
+                mt: 0.25,
+                mb: 1.25,
+                overflowX: 'auto',
+            }}
+        >
+            {STEPS.map((s, idx) => {
+                const reachable = idx <= maxIdx
+                const isLive = idx === liveIdx
+                const isDone = idx < liveIdx
+                const isViewing = idx === activeIdx
+                const baseBg = isLive
+                    ? 'var(--accent)'
+                    : isDone
+                      ? 'var(--sig-run-soft)'
+                      : 'var(--surface-2)'
+                const baseFg = isLive
+                    ? '#fff'
+                    : isDone
+                      ? 'var(--sig-run-deep)'
+                      : 'var(--ink-3)'
+                const fontWeight = isLive ? 700 : isDone ? 600 : 500
+                return (
+                    <MuiButton
+                        key={s.id}
+                        type="button"
+                        disabled={!reachable}
+                        onClick={() => reachable && onPick(s.id)}
+                        sx={{
+                            flex: 1,
+                            minWidth: 120,
+                            py: 1,
+                            px: 1,
+                            background: baseBg,
+                            color: baseFg,
+                            fontWeight,
+                            fontSize: 14,
+                            textTransform: 'none',
+                            borderRadius: 'var(--r-2)',
+                            border: 'none',
+                            cursor: reachable ? 'pointer' : 'default',
+                            outline: 'none',
+                            boxShadow: isViewing
+                                ? 'inset 0 0 0 2px var(--ink-2)'
+                                : 'none',
+                            '&:hover': reachable
+                                ? {
+                                      background: baseBg,
+                                      filter: 'brightness(0.96)',
+                                  }
+                                : undefined,
+                            '&.Mui-disabled': {
+                                background: baseBg,
+                                color: baseFg,
+                                opacity: 0.6,
+                            },
+                        }}
+                    >
+                        {isDone ? (
+                            <CheckIcon
+                                fontSize="small"
+                                sx={{ mr: 0.5, fontSize: 16 }}
+                            />
+                        ) : (
+                            <Box
+                                component="span"
+                                sx={{
+                                    fontFamily: 'var(--font-mono)',
+                                    mr: 0.5,
+                                    opacity: 0.8,
+                                }}
+                            >
+                                {idx + 1}.
+                            </Box>
+                        )}
+                        {s.label}
+                    </MuiButton>
+                )
+            })}
+        </Box>
+    )
+}
+
+function ReviewBanner({
+    liveStep,
+    onResume,
+}: { liveStep: Step; onResume: () => void }) {
+    const liveLabel =
+        liveStep === 'distribute'
+            ? 'Distribute'
+            : liveStep === 'complete'
+              ? 'Done'
+              : 'Launch'
+    return (
+        <Alert
+            severity="info"
+            sx={{ mb: 1, alignItems: 'center' }}
+            action={
+                <MuiButton size="small" variant="contained" onClick={onResume}>
+                    Resume
+                </MuiButton>
+            }
+        >
+            Reviewing — order is currently at <strong>{liveLabel}</strong>.
+        </Alert>
     )
 }
 
@@ -302,56 +446,105 @@ type ReviewStepProps = {
     onResume?: () => void
 }
 
-const ReviewStep = ({ order, onNext, nextLabel, onResume }: ReviewStepProps) => (
-    <div>
-        <div className={styles.reviewGrid}>
-            <div className={styles.reviewLabel}>Process</div>
-            <div className={styles.reviewValue}>{order.processName}</div>
-            <div className={styles.reviewLabel}>Nomenclature</div>
-            <div className={styles.reviewValue}>{order.processNomenclatureName ?? '—'}</div>
-            <div className={styles.reviewLabel}>Amount</div>
-            <div className={styles.reviewValue}>
+const ReviewStep = ({
+    order,
+    onNext,
+    nextLabel,
+    onResume,
+}: ReviewStepProps) => (
+    <Box>
+        <Box
+            sx={{
+                display: 'grid',
+                gridTemplateColumns: '160px 1fr',
+                gap: '6px 16px',
+                alignItems: 'baseline',
+                fontSize: 16,
+            }}
+        >
+            <ReviewLabel>Process</ReviewLabel>
+            <ReviewValue>{order.processName}</ReviewValue>
+            <ReviewLabel>Nomenclature</ReviewLabel>
+            <ReviewValue>{order.processNomenclatureName ?? '—'}</ReviewValue>
+            <ReviewLabel>Amount</ReviewLabel>
+            <ReviewValue>
                 {formatUnits(
                     order.amount,
                     order.processNomenclatureUnits,
                     order.processNomenclatureCountable,
                 )}
-            </div>
+            </ReviewValue>
             {order.startDate && (
                 <>
-                    <div className={styles.reviewLabel}>Start</div>
-                    <div className={styles.reviewValue}>
+                    <ReviewLabel>Start</ReviewLabel>
+                    <ReviewValue>
                         {formatLocalDate(order.startDate)}
-                    </div>
+                    </ReviewValue>
                 </>
             )}
             {order.dueDate && (
                 <>
-                    <div className={styles.reviewLabel}>Due</div>
-                    <div className={styles.reviewValue}>
-                        {formatLocalDate(order.dueDate)}
-                    </div>
+                    <ReviewLabel>Due</ReviewLabel>
+                    <ReviewValue>{formatLocalDate(order.dueDate)}</ReviewValue>
                 </>
             )}
             {order.description && (
                 <>
-                    <div className={styles.reviewLabel}>Description</div>
-                    <div className={styles.reviewValue}>{order.description}</div>
+                    <ReviewLabel>Description</ReviewLabel>
+                    <ReviewValue>{order.description}</ReviewValue>
                 </>
             )}
-        </div>
+        </Box>
 
-        <div className={styles.footer}>
-            <button
-                type="button"
-                className={styles.primary}
+        <Footer>
+            <MuiButton
+                variant="contained"
+                color="primary"
+                size="large"
                 onClick={onResume ?? onNext}
+                sx={{ minWidth: 180 }}
             >
                 {onResume ? 'Resume' : nextLabel}
-            </button>
-        </div>
-    </div>
+            </MuiButton>
+        </Footer>
+    </Box>
 )
+
+function ReviewLabel({ children }: { children: React.ReactNode }) {
+    return (
+        <Box
+            component="span"
+            sx={{ color: 'var(--ink-3)', fontWeight: 500 }}
+        >
+            {children}
+        </Box>
+    )
+}
+
+function ReviewValue({ children }: { children: React.ReactNode }) {
+    return (
+        <Box component="span" sx={{ color: 'var(--ink-1)' }}>
+            {children}
+        </Box>
+    )
+}
+
+function Footer({ children }: { children: React.ReactNode }) {
+    return (
+        <Box
+            sx={{
+                mt: 2,
+                pt: 2,
+                borderTop: '1px solid var(--line)',
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: 1,
+            }}
+        >
+            {children}
+        </Box>
+    )
+}
 
 type CompleteStepProps = {
     order: Order
@@ -381,7 +574,9 @@ const groupByGrade = (items: Item[]): GradeBucket[] => {
             map.set(key, {
                 gradeId: item.gradeId ?? null,
                 gradeName: item.gradeName ?? 'No grade',
-                color: item.gradeId ? colorForGradeId(item.gradeId) : '#e3f2fd',
+                color: item.gradeId
+                    ? colorForGradeId(item.gradeId)
+                    : '#e3f2fd',
                 quantity: 0,
             })
         }
@@ -399,8 +594,6 @@ type DueStatus =
     | { kind: 'overdue'; label: string }
     | { kind: 'ahead'; label: string }
 
-/** Calendar-day comparison: same day = "In time"; later days = overdue;
- *  earlier days = before plan. Time-of-day is ignored. */
 const computeDueStatus = (
     dueRaw: DateLike,
     completedRaw?: DateLike,
@@ -411,13 +604,33 @@ const computeDueStatus = (
     const dueDay = Date.UTC(due.getFullYear(), due.getMonth(), due.getDate())
     const refDay = Date.UTC(ref.getFullYear(), ref.getMonth(), ref.getDate())
     const diffDays = Math.round((refDay - dueDay) / (1000 * 60 * 60 * 24))
-    if (diffDays === 0) {
-        return { kind: 'on-time', label: 'In time' }
-    }
-    if (diffDays > 0) {
-        return { kind: 'overdue', label: `Overdue ${diffDays} d` }
-    }
+    if (diffDays === 0) return { kind: 'on-time', label: 'In time' }
+    if (diffDays > 0) return { kind: 'overdue', label: `Overdue ${diffDays} d` }
     return { kind: 'ahead', label: `${-diffDays} d before plan` }
+}
+
+const DUE_TONE: Record<DueStatus['kind'], StatusTone> = {
+    'on-time': {
+        bg: 'var(--ent-supply-soft)',
+        fg: 'var(--ent-supply-deep)',
+        border: 'var(--ent-supply-deep)',
+    },
+    overdue: {
+        bg: 'var(--sig-fault-soft)',
+        fg: 'var(--sig-fault-deep)',
+        border: 'var(--sig-fault-deep)',
+    },
+    ahead: {
+        bg: 'var(--sig-run-soft)',
+        fg: 'var(--sig-run-deep)',
+        border: 'var(--sig-run-deep)',
+    },
+}
+
+interface StatusTone {
+    bg: string
+    fg: string
+    border: string
 }
 
 const CompleteStep = ({
@@ -432,7 +645,6 @@ const CompleteStep = ({
     readOnly,
     onBackToList,
 }: CompleteStepProps) => {
-    const totalOutputs = allocatedCount + unallocatedCount
     const distinctTares = useMemo(() => {
         const ids = new Set<string>()
         for (const item of outputs?.allocated ?? []) {
@@ -442,20 +654,31 @@ const CompleteStep = ({
     }, [outputs])
 
     const allocatedQty = useMemo(
-        () => (outputs?.allocated ?? []).reduce((s, i) => s + (i.quantity ?? 0), 0),
+        () =>
+            (outputs?.allocated ?? []).reduce(
+                (s, i) => s + (i.quantity ?? 0),
+                0,
+            ),
         [outputs],
     )
     const totalQty = useMemo(
         () =>
             allocatedQty +
-            (outputs?.unallocated ?? []).reduce((s, i) => s + (i.quantity ?? 0), 0),
+            (outputs?.unallocated ?? []).reduce(
+                (s, i) => s + (i.quantity ?? 0),
+                0,
+            ),
         [allocatedQty, outputs],
     )
     const units = order.processNomenclatureUnits
     const countable = order.processNomenclatureCountable
 
     const gradeBuckets = useMemo(
-        () => groupByGrade([...(outputs?.allocated ?? []), ...(outputs?.unallocated ?? [])]),
+        () =>
+            groupByGrade([
+                ...(outputs?.allocated ?? []),
+                ...(outputs?.unallocated ?? []),
+            ]),
         [outputs],
     )
 
@@ -463,114 +686,214 @@ const CompleteStep = ({
         () => computeDueStatus(order.dueDate, order.completed),
         [order.dueDate, order.completed],
     )
-    const dueBadgeClass = !dueStatus
-        ? ''
-        : dueStatus.kind === 'on-time'
-          ? `${styles.dueBadge} ${styles.dueOnTime}`
-          : dueStatus.kind === 'overdue'
-            ? `${styles.dueBadge} ${styles.dueOverdue}`
-            : `${styles.dueBadge} ${styles.dueAhead}`
 
     return (
-        <div className={styles.doneCard}>
-            <div className={styles.doneHeadline}>
+        <Paper
+            elevation={0}
+            sx={{
+                maxWidth: 640,
+                mx: 'auto',
+                mt: 3,
+                p: '32px 40px 24px',
+                background: 'var(--surface)',
+                border: '1px solid var(--line)',
+                borderRadius: 'var(--r-2)',
+                boxShadow: 'var(--elev-2)',
+                textAlign: 'center',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 1,
+            }}
+        >
+            <Typography
+                sx={{
+                    fontSize: 24,
+                    fontWeight: 700,
+                    color: 'var(--sig-run-deep)',
+                }}
+            >
                 {isCompleted ? 'Order completed' : 'Ready to complete'}
-            </div>
-            <div className={styles.doneSubline}>
+            </Typography>
+            <Typography sx={{ color: 'var(--ink-2)', fontSize: 16, mb: 0.5 }}>
                 {isCompleted
-                    ? `All done.`
-                    : `Every output is allocated. Confirm to close the order.`}
-            </div>
+                    ? 'All done.'
+                    : 'Every output is allocated. Confirm to close the order.'}
+            </Typography>
 
-            <div className={styles.doneStats}>
-                <div className={styles.doneStatLabel}>Nomenclature</div>
-                <div className={styles.doneStatValue}>
-                    {order.processNomenclatureName ?? '—'}
-                </div>
-                <div className={styles.doneStatLabel}>Amount</div>
-                <div className={styles.doneStatValue}>
-                    {formatUnits(order.amount, units, countable)}
-                </div>
-                <div className={styles.doneStatLabel}>Outputs allocated</div>
-                <div className={styles.doneStatValue}>
+            <Box
+                sx={{
+                    display: 'grid',
+                    gridTemplateColumns: 'minmax(140px, max-content) 1fr',
+                    gap: '6px 24px',
+                    textAlign: 'left',
+                    width: 'max-content',
+                    maxWidth: '100%',
+                    mx: 'auto',
+                    mt: 1,
+                    fontSize: 15,
+                }}
+            >
+                <DoneLabel>Nomenclature</DoneLabel>
+                <DoneValue>{order.processNomenclatureName ?? '—'}</DoneValue>
+                <DoneLabel>Amount</DoneLabel>
+                <DoneValue>{formatUnits(order.amount, units, countable)}</DoneValue>
+                <DoneLabel>Outputs allocated</DoneLabel>
+                <DoneValue>
                     {formatUnits(allocatedQty, units, countable)} /{' '}
                     {formatUnits(totalQty, units, countable)}
-                </div>
-                <div className={styles.doneStatLabel}>Tares used</div>
-                <div className={styles.doneStatValue}>{distinctTares}</div>
+                </DoneValue>
+                <DoneLabel>Tares used</DoneLabel>
+                <DoneValue>{distinctTares}</DoneValue>
                 {order.executor && (
                     <>
-                        <div className={styles.doneStatLabel}>Executor</div>
-                        <div className={styles.doneStatValue}>{order.executor}</div>
+                        <DoneLabel>Executor</DoneLabel>
+                        <DoneValue>{order.executor}</DoneValue>
                     </>
                 )}
                 {order.dueDate && (
                     <>
-                        <div className={styles.doneStatLabel}>Due</div>
-                        <div className={styles.doneStatValue}>
-                            <span style={{ marginRight: '0.5rem' }}>
+                        <DoneLabel>Due</DoneLabel>
+                        <DoneValue>
+                            <Box
+                                component="span"
+                                sx={{ mr: 1 }}
+                            >
                                 {formatLocalDate(order.dueDate)}
-                            </span>
+                            </Box>
                             {dueStatus && (
-                                <span className={dueBadgeClass}>
-                                    {dueStatus.label}
-                                </span>
+                                <Chip
+                                    size="small"
+                                    label={dueStatus.label}
+                                    sx={{
+                                        height: 22,
+                                        fontSize: 11,
+                                        fontWeight: 700,
+                                        fontFamily: 'var(--font-mono)',
+                                        background:
+                                            DUE_TONE[dueStatus.kind].bg,
+                                        color:
+                                            DUE_TONE[dueStatus.kind].fg,
+                                        border: `1px solid ${DUE_TONE[dueStatus.kind].border}`,
+                                    }}
+                                />
                             )}
-                        </div>
+                        </DoneValue>
                     </>
                 )}
                 {order.completed && (
                     <>
-                        <div className={styles.doneStatLabel}>Completed</div>
-                        <div className={styles.doneStatValue}>
+                        <DoneLabel>Completed</DoneLabel>
+                        <DoneValue>
                             {formatLocalDateTime(order.completed)}
-                        </div>
+                        </DoneValue>
                     </>
                 )}
-            </div>
+            </Box>
 
             {gradeBuckets.length > 0 && (
-                <div className={styles.doneSection}>
-                    <div className={styles.doneSectionTitle}>By grade</div>
-                    <div className={styles.gradeRows}>
+                <Box
+                    sx={{
+                        textAlign: 'left',
+                        width: '100%',
+                        maxWidth: 460,
+                        mx: 'auto',
+                        mt: 1,
+                    }}
+                >
+                    <Typography
+                        sx={{
+                            fontFamily: 'var(--font-mono)',
+                            fontSize: 11,
+                            fontWeight: 700,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.07em',
+                            color: 'var(--ink-3)',
+                            mb: 0.75,
+                        }}
+                    >
+                        By grade
+                    </Typography>
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 0.5,
+                        }}
+                    >
                         {gradeBuckets.map((g) => (
-                            <div
+                            <Box
                                 key={g.gradeId ?? 'no-grade'}
-                                className={styles.gradeRow}
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1,
+                                    px: 1,
+                                    py: 0.5,
+                                    borderRadius: 'var(--r-2)',
+                                    background: 'var(--surface-2)',
+                                    border: '1px solid var(--line)',
+                                }}
                             >
-                                <span
-                                    className={styles.gradeSwatch}
-                                    style={{ background: g.color ?? '#eee' }}
+                                <Box
+                                    sx={{
+                                        width: 14,
+                                        height: 14,
+                                        borderRadius: '3px',
+                                        background: g.color ?? '#eee',
+                                        border: '1px solid rgba(0,0,0,0.15)',
+                                        flexShrink: 0,
+                                    }}
                                 />
-                                <span className={styles.gradeName}>
+                                <Box sx={{ flex: 1, color: 'var(--ink-1)' }}>
                                     {g.gradeName}
-                                </span>
-                                <span className={styles.gradeCount}>
+                                </Box>
+                                <Box
+                                    sx={{
+                                        color: 'var(--ink-2)',
+                                        fontFamily: 'var(--font-mono)',
+                                        fontWeight: 700,
+                                    }}
+                                >
                                     {formatUnits(g.quantity, units, countable)}
-                                </span>
-                            </div>
+                                </Box>
+                            </Box>
                         ))}
-                    </div>
-                </div>
+                    </Box>
+                </Box>
             )}
 
             {completeError && (
-                <div className={styles.errorMsg} style={{ marginTop: '0.6rem' }}>
+                <Alert severity="error" sx={{ mt: 1 }}>
                     {completeError}
-                </div>
+                </Alert>
             )}
 
-            <div className={styles.doneFooter}>
+            <Box
+                sx={{
+                    mt: 2,
+                    display: 'flex',
+                    justifyContent: 'center',
+                    gap: 1,
+                }}
+            >
                 {isCompleted ? (
-                    <button type="button" className={styles.primary} onClick={onBackToList}>
+                    <MuiButton
+                        variant="contained"
+                        size="large"
+                        onClick={onBackToList}
+                        sx={{ minWidth: 180 }}
+                    >
                         Back to list
-                    </button>
+                    </MuiButton>
                 ) : (
-                    <button
-                        type="button"
-                        className={`${styles.primary} ${styles.success}`}
+                    <MuiButton
+                        variant="contained"
+                        color="success"
+                        size="large"
                         onClick={onComplete}
-                        disabled={readOnly || completing || unallocatedCount > 0}
+                        disabled={
+                            readOnly || completing || unallocatedCount > 0
+                        }
                         title={
                             readOnly
                                 ? 'Read-only'
@@ -578,15 +901,32 @@ const CompleteStep = ({
                                   ? 'All outputs must be allocated before completing'
                                   : undefined
                         }
+                        sx={{ minWidth: 180 }}
                     >
                         {readOnly
                             ? 'Read-only'
                             : completing
                               ? 'Completing…'
                               : 'Complete order'}
-                    </button>
+                    </MuiButton>
                 )}
-            </div>
-        </div>
+            </Box>
+        </Paper>
+    )
+}
+
+function DoneLabel({ children }: { children: React.ReactNode }) {
+    return (
+        <Box component="span" sx={{ color: 'var(--ink-3)', fontWeight: 500 }}>
+            {children}
+        </Box>
+    )
+}
+
+function DoneValue({ children }: { children: React.ReactNode }) {
+    return (
+        <Box component="span" sx={{ color: 'var(--ink-1)', fontWeight: 500 }}>
+            {children}
+        </Box>
     )
 }

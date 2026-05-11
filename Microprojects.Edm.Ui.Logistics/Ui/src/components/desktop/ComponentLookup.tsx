@@ -1,5 +1,4 @@
 import api from '@features/api/api.ts'
-import styles from '@logistics/components/desktop/desktop.module.css'
 import {
     type TareGroup,
     groupByTare,
@@ -18,8 +17,23 @@ import type {
 } from '@logistics/data/types'
 import { postData } from '@logistics/hooks/hooks'
 import { useSlotSelection } from '@logistics/hooks/useSlotSelection'
+import {
+    ExpandLessOutlined as ExpandIcon,
+    ExpandMoreOutlined as CollapseIcon,
+} from '@mui/icons-material'
+import {
+    Alert,
+    Box,
+    Button as MuiButton,
+    CircularProgress,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    IconButton,
+    Typography,
+} from '@mui/material'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ChevronDown, ChevronRight } from 'react-bootstrap-icons'
 
 type ComponentLookupProps = {
     orderId: UUID
@@ -57,14 +71,15 @@ export const ComponentLookup = ({
             setLoading(true)
             setError(undefined)
             try {
-                const found = await postData<Item[]>(`${api.items}/search`, {
-                    nomenclatureId: spec.nomenclatureId,
-                    active: true,
-                })
+                const found = await postData<Item[]>(
+                    `${api.items}/search`,
+                    {
+                        nomenclatureId: spec.nomenclatureId,
+                        active: true,
+                    },
+                )
                 if (!cancelled) {
                     setItems(found ?? [])
-                    // Auto-expand all tares so the operator immediately sees
-                    // schematics — kiosk-friendly default.
                     const groups = groupByTare(found ?? [])
                     setExpanded(
                         new Set(groups.map((g) => g.tare.id || 'no-tare')),
@@ -96,21 +111,20 @@ export const ComponentLookup = ({
         })
     }
 
-    // Per-tare scoped selection: shift-range only kicks in when both clicks
-    // happen in the same tare. The hook (useSlotSelection) does the rest.
-    const onSlotClick = (group: TareGroup, slot: SlotData, e: React.MouseEvent) => {
+    const onSlotClick = (
+        group: TareGroup,
+        slot: SlotData,
+        e: React.MouseEvent,
+    ) => {
         if (!slot.item) return
         const tareKey = group.tare.id || 'no-tare'
         onItemClickInTare(slot.item, e, tareKey)
     }
 
-    // Double-click a tare row → select all its items at once.
     const selectWholeTare = (group: TareGroup) => {
         setSelected((prev) => {
             const next = new Set(prev)
-            for (const item of group.items) {
-                next.add(item.id)
-            }
+            for (const item of group.items) next.add(item.id)
             return next
         })
     }
@@ -141,8 +155,6 @@ export const ComponentLookup = ({
         setSubmitting(true)
         setError(undefined)
         try {
-            // Sort by address so allocation order matches the visual order
-            // (mirrors ItemSearch.allocateSelected).
             const ids = items
                 .filter((i) => selected.has(i.id))
                 .sort((a, b) => (a.address ?? 0) - (b.address ?? 0))
@@ -175,161 +187,228 @@ export const ComponentLookup = ({
     const remaining = spec.amount - spec.total
 
     return (
-        <div
-            className={styles.modalOverlay}
-            role="dialog"
-            aria-modal="true"
-            onClick={onClose}
-            onKeyDown={(e) => {
-                if (e.key === 'Escape') onClose()
+        <Dialog
+            open
+            onClose={onClose}
+            fullWidth
+            maxWidth={false}
+            PaperProps={{
+                sx: {
+                    width: 'min(800px, 92vw)',
+                    maxHeight: '85vh',
+                    background: 'var(--surface)',
+                    border: '1px solid var(--line-strong)',
+                    borderRadius: 'var(--r-2)',
+                    boxShadow: 'var(--elev-3)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    overflow: 'hidden',
+                },
             }}
         >
-            <div
-                className={styles.modal}
-                onClick={(e) => e.stopPropagation()}
-                onKeyDown={(e) => e.stopPropagation()}
-                role="document"
+            <DialogTitle
+                sx={{
+                    display: 'flex',
+                    alignItems: 'baseline',
+                    gap: 1,
+                    py: 1,
+                    px: 1.5,
+                    background: 'var(--surface-2)',
+                    borderBottom: '1px solid var(--line)',
+                }}
             >
-                <div className={styles.modalHeader}>
-                    <div>
-                        <div className={styles.modalTitle}>
-                            Pick items — {spec.nomenclatureName ?? 'Nomenclature'}
-                        </div>
-                        <div className={styles.modalSub}>
-                            Required {spec.amount} · already allocated{' '}
-                            {spec.total} · need {Math.max(remaining, 0)} more
-                        </div>
-                    </div>
-                    {selected.size > 0 && (
-                        <div className={styles.modalSub}>
-                            {selected.size} selected · {totalSelectedQty} qty
-                        </div>
-                    )}
-                </div>
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography
+                        sx={{
+                            fontSize: 16,
+                            fontWeight: 700,
+                            color: 'var(--ink-1)',
+                        }}
+                    >
+                        Pick items — {spec.nomenclatureName ?? 'Nomenclature'}
+                    </Typography>
+                    <Typography
+                        variant="caption"
+                        sx={{ color: 'var(--ink-3)' }}
+                    >
+                        Required {spec.amount} · already allocated{' '}
+                        {spec.total} · need {Math.max(remaining, 0)} more
+                    </Typography>
+                </Box>
+                {selected.size > 0 && (
+                    <Typography
+                        variant="caption"
+                        sx={{
+                            color: 'var(--accent)',
+                            fontWeight: 600,
+                            fontFamily: 'var(--font-mono)',
+                        }}
+                    >
+                        {selected.size} selected · {totalSelectedQty} qty
+                    </Typography>
+                )}
+            </DialogTitle>
 
-                {error && <div className={styles.errorMsg}>{error}</div>}
+            <DialogContent
+                sx={{
+                    flex: 1,
+                    minHeight: 0,
+                    p: 1,
+                    overflow: 'auto',
+                }}
+            >
+                {error && (
+                    <Alert severity="error" sx={{ mb: 1 }}>
+                        {error}
+                    </Alert>
+                )}
 
-                <div className={styles.modalBody}>
-                    {loading && (
-                        <div className={styles.sectionEmpty}>Loading…</div>
-                    )}
-                    {!loading && groups.length === 0 && (
-                        <div className={styles.sectionEmpty}>
-                            No available items for this nomenclature.
-                        </div>
-                    )}
-                    {groups.map((group) => {
-                        const key = group.tare.id || 'no-tare'
-                        const isExpanded = expanded.has(key)
-                        const selectedAddresses = new Set(
-                            group.items
-                                .filter((i) => selected.has(i.id))
-                                .map((i) => i.address)
-                                .filter((a): a is number => a != null),
-                        )
-                        const allSelected = group.items.every((i) =>
-                            selected.has(i.id),
-                        )
-                        return (
-                            <div
-                                key={key}
-                                style={{
-                                    borderBottom: '1px solid #f0f0f0',
+                {loading && (
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1,
+                            color: 'var(--ink-3)',
+                            py: 2,
+                            justifyContent: 'center',
+                        }}
+                    >
+                        <CircularProgress size={14} />
+                        <Typography variant="caption">Loading…</Typography>
+                    </Box>
+                )}
+                {!loading && groups.length === 0 && (
+                    <Box
+                        sx={{
+                            py: 2,
+                            textAlign: 'center',
+                            color: 'var(--ink-3)',
+                            fontStyle: 'italic',
+                        }}
+                    >
+                        No available items for this nomenclature.
+                    </Box>
+                )}
+                {groups.map((group) => {
+                    const key = group.tare.id || 'no-tare'
+                    const isExpanded = expanded.has(key)
+                    const selectedAddresses = new Set(
+                        group.items
+                            .filter((i) => selected.has(i.id))
+                            .map((i) => i.address)
+                            .filter((a): a is number => a != null),
+                    )
+                    const allSelected = group.items.every((i) =>
+                        selected.has(i.id),
+                    )
+                    const Icon = isExpanded ? ExpandIcon : CollapseIcon
+                    return (
+                        <Box
+                            key={key}
+                            sx={{
+                                borderBottom: '1px solid var(--line)',
+                                background: allSelected
+                                    ? 'var(--accent-tint)'
+                                    : 'transparent',
+                            }}
+                        >
+                            <Box
+                                onClick={() => onRowClick(key)}
+                                onDoubleClick={() => onRowDoubleClick(group)}
+                                title="Click to expand · double-click to select all"
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1,
+                                    px: 1,
+                                    py: 0.75,
+                                    cursor: 'pointer',
+                                    userSelect: 'none',
+                                    '&:hover': {
+                                        background: allSelected
+                                            ? 'var(--accent-tint)'
+                                            : 'var(--surface-2)',
+                                    },
                                 }}
                             >
-                                <div
-                                    className={styles.lookupRow}
-                                    style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '0.6rem',
-                                        padding: '0.55rem 0.7rem',
-                                        background: allSelected
-                                            ? '#e3f2fd'
-                                            : undefined,
+                                <IconButton
+                                    size="small"
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        toggleExpand(key)
                                     }}
-                                    onClick={() => onRowClick(key)}
-                                    onDoubleClick={() => onRowDoubleClick(group)}
-                                    title="Click to expand · double-click to select all"
+                                    sx={{ p: 0.25 }}
                                 >
-                                    <button
-                                        type="button"
-                                        onClick={(e) => {
-                                            e.stopPropagation()
-                                            toggleExpand(key)
-                                        }}
-                                        style={{
-                                            background: 'transparent',
-                                            border: 0,
-                                            cursor: 'pointer',
-                                            padding: 0,
-                                            display: 'flex',
-                                        }}
-                                    >
-                                        {isExpanded ? (
-                                            <ChevronDown size={14} />
-                                        ) : (
-                                            <ChevronRight size={14} />
-                                        )}
-                                    </button>
-                                    <strong style={{ minWidth: 120 }}>
-                                        {group.tare.barcode || '(no barcode)'}
-                                    </strong>
-                                    <span
-                                        style={{
-                                            color: '#666',
-                                            fontSize: '0.85rem',
-                                        }}
-                                    >
-                                        {group.tare.tareTypeName}
-                                    </span>
-                                    <span style={{ flex: 1 }} />
-                                    <span
-                                        style={{
-                                            color: '#666',
-                                            fontSize: '0.85rem',
-                                        }}
-                                    >
-                                        {tareSummary(group)}
-                                    </span>
-                                </div>
-                                {isExpanded && (
-                                    <div style={{ padding: '0 0.7rem 0.7rem' }}>
-                                        <TareSchematic
-                                            tare={group.tare}
-                                            items={group.items}
-                                            selectedSlots={selectedAddresses}
-                                            onSlotClick={(slot, e) =>
-                                                onSlotClick(group, slot, e)
-                                            }
-                                        />
-                                    </div>
-                                )}
-                            </div>
-                        )
-                    })}
-                </div>
+                                    <Icon
+                                        fontSize="small"
+                                        sx={{ color: 'var(--ink-3)' }}
+                                    />
+                                </IconButton>
+                                <Typography
+                                    sx={{
+                                        minWidth: 120,
+                                        fontFamily: 'var(--font-mono)',
+                                        fontSize: 13,
+                                        fontWeight: 700,
+                                        color: 'var(--ink-1)',
+                                    }}
+                                >
+                                    {group.tare.barcode || '(no barcode)'}
+                                </Typography>
+                                <Typography
+                                    variant="caption"
+                                    sx={{ color: 'var(--ink-3)' }}
+                                >
+                                    {group.tare.tareTypeName}
+                                </Typography>
+                                <Box sx={{ flex: 1 }} />
+                                <Typography
+                                    variant="caption"
+                                    sx={{ color: 'var(--ink-3)' }}
+                                >
+                                    {tareSummary(group)}
+                                </Typography>
+                            </Box>
+                            {isExpanded && (
+                                <Box sx={{ px: 1, pb: 1 }}>
+                                    <TareSchematic
+                                        tare={group.tare}
+                                        items={group.items}
+                                        selectedSlots={selectedAddresses}
+                                        onSlotClick={(slot, e) =>
+                                            onSlotClick(group, slot, e)
+                                        }
+                                    />
+                                </Box>
+                            )}
+                        </Box>
+                    )
+                })}
+            </DialogContent>
 
-                <div className={styles.modalFooter}>
-                    <button
-                        type="button"
-                        className={styles.btnSecondary}
-                        onClick={onClose}
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        type="button"
-                        className={styles.primary}
-                        onClick={submit}
-                        disabled={selected.size === 0 || submitting}
-                    >
-                        {submitting
-                            ? 'Allocating…'
-                            : `Allocate ${selected.size}`}
-                    </button>
-                </div>
-            </div>
-        </div>
+            <DialogActions
+                sx={{
+                    px: 1.5,
+                    py: 1,
+                    borderTop: '1px solid var(--line)',
+                    background: 'var(--surface-2)',
+                }}
+            >
+                <MuiButton variant="outlined" onClick={onClose}>
+                    Cancel
+                </MuiButton>
+                <MuiButton
+                    variant="contained"
+                    color="primary"
+                    onClick={submit}
+                    disabled={selected.size === 0 || submitting}
+                >
+                    {submitting
+                        ? 'Allocating…'
+                        : `Allocate ${selected.size}`}
+                </MuiButton>
+            </DialogActions>
+        </Dialog>
     )
 }

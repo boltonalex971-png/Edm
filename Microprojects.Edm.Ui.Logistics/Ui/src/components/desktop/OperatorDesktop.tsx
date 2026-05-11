@@ -1,13 +1,23 @@
 import { DesktopOrderList } from '@logistics/components/desktop/DesktopOrderList'
 import { OrderRunView } from '@logistics/components/desktop/OrderRunView'
-import styles from '@logistics/components/desktop/desktop.module.css'
+import { Box } from '@mui/material'
 import { Route, Routes, useNavigate } from 'react-router-dom'
 
 export const OperatorDesktop = () => {
     const navigate = useNavigate()
 
     return (
-        <div className={styles.content}>
+        <Box
+            sx={{
+                flex: 1,
+                width: '100%',
+                maxWidth: 1400,
+                mx: 'auto',
+                px: 0,
+                py: 1.25,
+                fontSize: 16,
+            }}
+        >
             <Routes>
                 <Route
                     index
@@ -19,7 +29,7 @@ export const OperatorDesktop = () => {
                 />
                 <Route path="order/:id" element={<OrderRunView />} />
             </Routes>
-        </div>
+        </Box>
     )
 }
 
