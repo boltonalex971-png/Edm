@@ -26,10 +26,13 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Optosense.Edm.WebApi\Optosense.Edm.WebApi.csproj" />
+    <!-- Service-level access for OutdatedFilteringTests; not needed at runtime by the host. -->
+    <ProjectReference Include="..\Microprojects.Edm.Ui.Logistics\Microprojects.Edm.Ui.Logistics.csproj" />
     <!-- Build-order dep only; plugin is loaded via reflection, not linked. -->
     <ProjectReference Include="..\Optosense.Edm.Drivers.Null\Optosense.Edm.Drivers.Null.csproj"
                       ReferenceOutputAssembly="false"

@@ -152,8 +152,10 @@ public class TareTypeService : ServiceBase<TareType>, ITareTypeService
     {
         return await Db.NomenclatureTareTypes.AsNoTracking()
             .Include(x => x.TareType)
-            .Include(x => x.Nomenclature)
-            .Where(x => x.TareTypeId == tareTypeId)
+            .Include(x => x.Nomenclature).ThenInclude(n => n.Meta)
+            .Where(x => x.TareTypeId == tareTypeId
+                && x.Nomenclature.Meta.Deleted == null
+                && x.Nomenclature.Meta.Completed == null)
             .ToListAsync();
     }
 

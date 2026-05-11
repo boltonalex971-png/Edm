@@ -39,8 +39,10 @@ public class ProcessService : ServiceBase<Process>, IProcessService
     public async Task<IEnumerable<SubProcess>> GetSubProcesses(Guid id)
     {
         var subs = await Set<SubProcess>().AsNoTracking()
-            .Include(s => s.LinkedProcess)
-            .Where(s => s.ProcessId == id)
+            .Include(s => s.LinkedProcess).ThenInclude(p => p.Meta)
+            .Where(s => s.ProcessId == id
+                && s.LinkedProcess.Meta.Deleted == null
+                && s.LinkedProcess.Meta.Completed == null)
             .ToListAsync();
         return subs;
     }
@@ -74,9 +76,15 @@ public class ProcessService : ServiceBase<Process>, IProcessService
     {
         var spec = await Db.Specifications.AsNoTracking()
             .Include(s => s.Rows)
-            .ThenInclude(r => r.Nomenclature)
-            .FirstOrDefaultAsync(s => s.ProcessId == processId && s.Active); 
-                   //?? throw new EdmException("No active specification found");
+                .ThenInclude(r => r.Nomenclature).ThenInclude(n => n.Meta)
+            .FirstOrDefaultAsync(s => s.ProcessId == processId && s.Active);
+        if (spec != null)
+        {
+            spec.Rows = spec.Rows
+                .Where(r => r.Nomenclature.Meta.Deleted == null
+                    && r.Nomenclature.Meta.Completed == null)
+                .ToList();
+        }
         return spec;
     }
 
