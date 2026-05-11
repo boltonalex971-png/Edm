@@ -4,9 +4,9 @@ import { Detail } from '@logistics/components/MasterDetail'
 import { TareSchematic } from '@logistics/components/tare/TareSchematic'
 import type { Item, TareInfo, UUID } from '@logistics/data/types'
 import { useGet } from '@logistics/hooks/hooks'
-import { Button, ButtonGroup } from '@progress/kendo-react-buttons'
-import { Grid, GridColumn } from '@progress/kendo-react-grid'
-import React, { useState } from 'react'
+import { Box, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material'
+import { DataGrid, type GridColDef } from '@mui/x-data-grid'
+import { useMemo, useState } from 'react'
 import { Diagram3 } from 'react-bootstrap-icons'
 
 type TareDetailProps = {
@@ -23,6 +23,14 @@ type TareDetailProps = {
 }
 
 type ViewMode = 'schema' | 'grid'
+
+const COLUMNS: GridColDef<Item>[] = [
+    { field: 'nomenclatureName', headerName: 'Nomenclature', flex: 1, minWidth: 160 },
+    { field: 'serialNo', headerName: 'Serial No', width: 120 },
+    { field: 'address', headerName: 'Address', width: 90, type: 'number' },
+    { field: 'quantity', headerName: 'Quantity', width: 100, type: 'number' },
+    { field: 'tareTareTypeUnits', headerName: 'Units', width: 80 },
+]
 
 export function TareDetail({
     tareId,
@@ -59,8 +67,14 @@ export function TareDetail({
               }
             : undefined)
 
+    const rows = useMemo(
+        () => (items ?? []).map((it) => ({ ...it, id: it.id })),
+        [items],
+    )
+
     return (
         <Detail
+            type="tare"
             onClose={onClose}
             icon={<Diagram3 title="Tare" />}
             loading={loading}
@@ -72,74 +86,59 @@ export function TareDetail({
                 } as any
             }
             card={
-                <>
+                <Box>
                     {loading && <Loading />}
                     {tare && items && (
                         <>
-                            <div
-                                style={{
+                            <Box
+                                sx={{
                                     display: 'flex',
                                     justifyContent: 'flex-end',
-                                    marginBottom: '0.5rem',
+                                    mb: 1,
                                 }}
                             >
-                                <ButtonGroup>
-                                    <Button
-                                        togglable
-                                        selected={view === 'schema'}
-                                        onClick={() => setView('schema')}
-                                        size="small"
-                                    >
+                                <ToggleButtonGroup
+                                    value={view}
+                                    exclusive
+                                    size="small"
+                                    onChange={(_, v) => v && setView(v)}
+                                >
+                                    <ToggleButton value="schema">
                                         Schema
-                                    </Button>
-                                    <Button
-                                        togglable
-                                        selected={view === 'grid'}
-                                        onClick={() => setView('grid')}
-                                        size="small"
-                                    >
+                                    </ToggleButton>
+                                    <ToggleButton value="grid">
                                         Grid
-                                    </Button>
-                                </ButtonGroup>
-                            </div>
+                                    </ToggleButton>
+                                </ToggleButtonGroup>
+                            </Box>
                             {view === 'schema' ? (
                                 <TareSchematic tare={tare} items={items} />
                             ) : (
-                                <Grid data={items} scrollable="none">
-                                    <GridColumn
-                                        field="nomenclatureName"
-                                        title="Nomenclature"
+                                <Box sx={{ width: '100%' }}>
+                                    <DataGrid
+                                        rows={rows}
+                                        columns={COLUMNS}
+                                        autoHeight
+                                        density="compact"
+                                        disableRowSelectionOnClick
+                                        hideFooter={rows.length <= 25}
+                                        pageSizeOptions={[25, 50, 100]}
                                     />
-                                    <GridColumn
-                                        field="serialNo"
-                                        title="Serial No"
-                                        width="120"
-                                    />
-                                    <GridColumn
-                                        field="address"
-                                        title="Address"
-                                        width="80"
-                                    />
-                                    <GridColumn
-                                        field="quantity"
-                                        title="Quantity"
-                                        width="90"
-                                    />
-                                    <GridColumn
-                                        field="tareTareTypeUnits"
-                                        title="Units"
-                                        width="80"
-                                    />
-                                </Grid>
+                                </Box>
                             )}
                         </>
                     )}
                     {!loading && items && items.length === 0 && (
-                        <div style={{ color: '#999', fontStyle: 'italic' }}>
+                        <Typography
+                            sx={{
+                                color: 'var(--ink-3)',
+                                fontStyle: 'italic',
+                            }}
+                        >
                             No items in this tare
-                        </div>
+                        </Typography>
                     )}
-                </>
+                </Box>
             }
         />
     )

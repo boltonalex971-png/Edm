@@ -7,55 +7,54 @@ import {
     pruneHierarchy,
 } from '@logistics/components/HierarchyPicker.tsx'
 import {
-    type AlertState,
-    useAlertSetter,
-} from '@logistics/components/InlineAlert.tsx'
-import {
     Detail,
     type DetailProps,
     EMPTY_GUID,
-    Editor,
     Info,
+    MuiEditor,
 } from '@logistics/components/MasterDetail.tsx'
 import { NomenclatureDetail } from '@logistics/components/config/nomenclature/Nomenclatures.tsx'
 import { ProcessDetail } from '@logistics/components/config/process/Processes.tsx'
 import { ItemGenealogyTree } from '@logistics/components/items/ItemGenealogyTree.tsx'
 import '@logistics/components/items/ItemGenealogyTree.css'
 import { OrderDetail } from '@logistics/components/orders/OrderDetail.tsx'
-import { OrderTabs } from '@logistics/components/orders/OrderTabs.tsx'
 import { SupplyDetail } from '@logistics/components/supplies/SupplyDetail.tsx'
 import {
     type DetailEventHandler,
     type Item,
     type Nomenclature,
     type NomenclatureTareType,
-    Order,
     type TareType,
     type TreeDataItem,
     type UUID,
 } from '@logistics/data/types'
 import { useGet } from '@logistics/hooks/hooks.ts'
 import { formatUnits } from '@logistics/utils/format.ts'
-import { Button } from '@progress/kendo-react-buttons'
-import { DatePicker, DateTimePicker } from '@progress/kendo-react-dateinputs'
-import { ComboBox, ComboBoxProps } from '@progress/kendo-react-dropdowns'
-import { Field } from '@progress/kendo-react-form'
-import { Input, NumericTextBox, TextArea } from '@progress/kendo-react-inputs'
-import axios from 'axios'
+import {
+    EditorSection,
+    Field,
+    Properties,
+    Property,
+} from '@microprojects/edm-components/components'
+import { Box, Chip, Typography } from '@mui/material'
 import type React from 'react'
 import { type EffectCallback, useEffect, useMemo, useState } from 'react'
-import { Diagram3, Link45deg } from 'react-bootstrap-icons'
+import { Diagram3 } from 'react-bootstrap-icons'
 
 export interface ItemDetailProps extends DetailProps {
     onUpdate?: DetailEventHandler
     type: string
 }
 
+function numberOrNull(v: string): number | null {
+    if (v === '' || v == null) return null
+    const n = Number(v)
+    return Number.isFinite(n) ? n : null
+}
+
 export function ItemDetail({ id, title = 'Item', ...props }: ItemDetailProps) {
-    const setAlert = useAlertSetter()
     const [subDetail, setSubDetail] = useState<React.ReactElement>()
     useEffect(setSubDetail as EffectCallback, [id])
-    //const [[processes]] = useGet<any[]>(api.processes, []);
     const [[taretypes]] = useGet<TreeDataItem[]>(
         `${Api.taretypes}/hierarchy`,
         [],
@@ -105,11 +104,58 @@ export function ItemDetail({ id, title = 'Item', ...props }: ItemDetailProps) {
         (selectedTareType?.sizeX ?? 0) > 0 &&
         (selectedNomenclature?.countable ?? false) === true
 
+    const sourceChip = data.isOutput ? (
+        <Chip
+            size="small"
+            label="Output"
+            title="Produced by an order execution."
+            sx={{
+                ml: 1,
+                height: 22,
+                fontFamily: 'var(--font-mono)',
+                fontSize: 11,
+                background: 'var(--ent-operation-soft)',
+                color: 'var(--ent-operation-deep)',
+                border: '1px solid var(--ent-operation-deep)',
+            }}
+        />
+    ) : data.supplyId ? (
+        <Chip
+            size="small"
+            label="Supply"
+            title="Received through a supply."
+            sx={{
+                ml: 1,
+                height: 22,
+                fontFamily: 'var(--font-mono)',
+                fontSize: 11,
+                background: 'var(--ent-supply-soft)',
+                color: 'var(--ent-supply-deep)',
+                border: '1px solid var(--ent-supply-deep)',
+            }}
+        />
+    ) : data.isStore ? (
+        <Chip
+            size="small"
+            label="Store"
+            title="Created directly from store (no recorded origin)."
+            sx={{
+                ml: 1,
+                height: 22,
+                fontFamily: 'var(--font-mono)',
+                fontSize: 11,
+                background: 'var(--surface-2)',
+                color: 'var(--ink-2)',
+                border: '1px solid var(--line-strong)',
+            }}
+        />
+    ) : null
+
     return (
         <Detail
             {...props}
             id={id}
-            icon={<Diagram3 title="Order" />}
+            icon={<Diagram3 title="Item" />}
             title={title}
             subTitle={data.description}
             loading={loading}
@@ -120,305 +166,231 @@ export function ItemDetail({ id, title = 'Item', ...props }: ItemDetailProps) {
                 <Info
                     content={
                         data && (
-                            <>
-                                <dl className="item-info">
-                                    <dt className="item-info-label">
-                                        Nomenclature
-                                    </dt>
-                                    <dd className="item-info-value">
-                                        {data.nomenclatureName ? (
-                                            <DetailLinkText
-                                                id={data.nomenclatureId}
-                                                text={data.nomenclatureName}
-                                                onClick={() =>
-                                                    setSubDetail(
-                                                        <NomenclatureDetail
-                                                            readonly={true}
-                                                            id={
-                                                                data.nomenclatureId
-                                                            }
-                                                            api={
-                                                                Api.nomenclatures
-                                                            }
-                                                            onClose={() =>
-                                                                setSubDetail(
-                                                                    undefined,
-                                                                )
-                                                            }
-                                                        />,
-                                                    )
-                                                }
-                                            />
-                                        ) : (
-                                            <span className="item-info-value--muted">
-                                                —
-                                            </span>
+                            <Properties>
+                                <Property label="Nomenclature" full>
+                                    {data.nomenclatureName ? (
+                                        <DetailLinkText
+                                            id={data.nomenclatureId}
+                                            text={data.nomenclatureName}
+                                            onClick={() =>
+                                                setSubDetail(
+                                                    <NomenclatureDetail
+                                                        readonly={true}
+                                                        id={
+                                                            data.nomenclatureId
+                                                        }
+                                                        api={Api.nomenclatures}
+                                                        onClose={() =>
+                                                            setSubDetail(
+                                                                undefined,
+                                                            )
+                                                        }
+                                                    />,
+                                                )
+                                            }
+                                        />
+                                    ) : (
+                                        <Typography
+                                            component="span"
+                                            sx={{ color: 'var(--ink-3)' }}
+                                        >
+                                            —
+                                        </Typography>
+                                    )}
+                                    {selectedNomenclature?.category && (
+                                        <Typography
+                                            component="span"
+                                            sx={{
+                                                ml: 1,
+                                                color: 'var(--ink-3)',
+                                            }}
+                                        >
+                                            · {selectedNomenclature.category}
+                                        </Typography>
+                                    )}
+                                    {sourceChip}
+                                </Property>
+
+                                <Property
+                                    label="Quantity"
+                                    value={formatUnits(
+                                        data.quantity,
+                                        data.tareTareTypeUnits ??
+                                            selectedTareType?.units,
+                                        selectedNomenclature?.countable,
+                                    )}
+                                    mono
+                                />
+
+                                {data.serialNo && (
+                                    <Property
+                                        label="Serial No"
+                                        value={data.serialNo}
+                                        mono
+                                    />
+                                )}
+
+                                {(data.tareBarcode || data.tareTareTypeName) && (
+                                    <Property label="Tare">
+                                        {data.tareTareTypeName && (
+                                            <span>{data.tareTareTypeName}</span>
                                         )}
-                                        {selectedNomenclature?.category && (
-                                            <span
-                                                className="item-info-value--muted"
-                                                style={{ marginLeft: 8 }}
+                                        {data.tareBarcode && (
+                                            <Typography
+                                                component="span"
+                                                sx={{
+                                                    fontFamily:
+                                                        'var(--font-mono)',
+                                                }}
                                             >
-                                                ·{' '}
-                                                {selectedNomenclature.category}
-                                            </span>
+                                                {data.tareTareTypeName
+                                                    ? ' · '
+                                                    : ''}
+                                                {data.tareBarcode}
+                                            </Typography>
                                         )}
-                                        {data.isOutput ? (
-                                            <span
-                                                className="item-source-badge item-source-badge--output"
-                                                style={{ marginLeft: 8 }}
-                                                title="Produced by an order execution."
-                                            >
-                                                Output
-                                            </span>
-                                        ) : data.supplyId ? (
-                                            <span
-                                                className="item-source-badge item-source-badge--supply"
-                                                style={{ marginLeft: 8 }}
-                                                title="Received through a supply."
-                                            >
-                                                Supply
-                                            </span>
-                                        ) : data.isStore ? (
-                                            <span
-                                                className="item-source-badge item-source-badge--store"
-                                                style={{ marginLeft: 8 }}
-                                                title="Created directly from store (no recorded origin)."
-                                            >
-                                                Store
-                                            </span>
-                                        ) : null}
-                                    </dd>
+                                    </Property>
+                                )}
 
-                                    <dt className="item-info-label">
-                                        Quantity
-                                    </dt>
-                                    <dd className="item-info-value item-info-mono">
-                                        {formatUnits(
-                                            data.quantity,
-                                            data.tareTareTypeUnits ??
-                                                selectedTareType?.units,
-                                            selectedNomenclature?.countable,
-                                        )}
-                                    </dd>
+                                {showAddress && data.address != null && (
+                                    <Property
+                                        label="Address"
+                                        value={`#${data.address}`}
+                                        mono
+                                    />
+                                )}
 
-                                    {data.serialNo && (
-                                        <>
-                                            <dt className="item-info-label">
-                                                Serial No
-                                            </dt>
-                                            <dd className="item-info-value item-info-mono">
-                                                {data.serialNo}
-                                            </dd>
-                                        </>
-                                    )}
+                                {data.supplyId && (
+                                    <Property label="Supply">
+                                        <DetailLinkText
+                                            id={data.supplyId}
+                                            text={
+                                                data.supplyName ||
+                                                `${String(data.supplyId).slice(0, 8)}…`
+                                            }
+                                            onClick={() =>
+                                                setSubDetail(
+                                                    <SupplyDetail
+                                                        readonly={true}
+                                                        id={data.supplyId}
+                                                        api={Api.supplies}
+                                                        onClose={() =>
+                                                            setSubDetail(
+                                                                undefined,
+                                                            )
+                                                        }
+                                                    />,
+                                                )
+                                            }
+                                        />
+                                    </Property>
+                                )}
 
-                                    {(data.tareBarcode ||
-                                        data.tareTareTypeName) && (
-                                        <>
-                                            <dt className="item-info-label">
-                                                Tare
-                                            </dt>
-                                            <dd className="item-info-value">
-                                                {data.tareTareTypeName && (
-                                                    <span>
-                                                        {data.tareTareTypeName}
-                                                    </span>
-                                                )}
-                                                {data.tareBarcode && (
-                                                    <span className="item-info-mono">
-                                                        {data.tareTareTypeName
-                                                            ? ' · '
-                                                            : ''}
-                                                        {data.tareBarcode}
-                                                    </span>
-                                                )}
-                                            </dd>
-                                        </>
-                                    )}
-
-                                    {showAddress && data.address != null && (
-                                        <>
-                                            <dt className="item-info-label">
-                                                Address
-                                            </dt>
-                                            <dd className="item-info-value item-info-mono">
-                                                #{data.address}
-                                            </dd>
-                                        </>
-                                    )}
-
-                                    {data.supplyId && (
-                                        <>
-                                            <dt className="item-info-label">
-                                                Supply
-                                            </dt>
-                                            <dd className="item-info-value">
-                                                <DetailLinkText
-                                                    id={data.supplyId}
-                                                    text={
-                                                        data.supplyName ||
-                                                        `${String(
-                                                            data.supplyId,
-                                                        ).slice(0, 8)}…`
-                                                    }
-                                                    onClick={() =>
-                                                        setSubDetail(
-                                                            <SupplyDetail
-                                                                readonly={true}
-                                                                id={
-                                                                    data.supplyId
-                                                                }
-                                                                api={
-                                                                    Api.supplies
-                                                                }
-                                                                onClose={() =>
-                                                                    setSubDetail(
-                                                                        undefined,
-                                                                    )
-                                                                }
-                                                            />,
-                                                        )
-                                                    }
-                                                />
-                                            </dd>
-                                        </>
-                                    )}
-
-                                    {(() => {
-                                        const orderBlock = data.orderId && (
-                                            <>
-                                                <dt className="item-info-label">
-                                                    Order
-                                                </dt>
-                                                <dd className="item-info-value">
-                                                    <DetailLinkText
+                                {data.orderId && (
+                                    <Property label="Order">
+                                        <DetailLinkText
+                                            id={data.orderId}
+                                            text={
+                                                data.orderNumber
+                                                    ? `#${data.orderNumber}`
+                                                    : data.orderName ||
+                                                      `${String(data.orderId).slice(0, 8)}…`
+                                            }
+                                            onClick={() =>
+                                                setSubDetail(
+                                                    <OrderDetail
+                                                        readonly={true}
                                                         id={data.orderId}
-                                                        text={
-                                                            data.orderNumber
-                                                                ? `#${data.orderNumber}`
-                                                                : data.orderName ||
-                                                                  `${String(
-                                                                      data.orderId,
-                                                                  ).slice(0, 8)}…`
-                                                        }
-                                                        onClick={() =>
+                                                        api={Api.orders}
+                                                        path={props.path}
+                                                        type="order"
+                                                        onClose={() =>
                                                             setSubDetail(
-                                                                <OrderDetail
-                                                                    readonly={
-                                                                        true
-                                                                    }
-                                                                    id={
-                                                                        data.orderId
-                                                                    }
-                                                                    api={
-                                                                        Api.orders
-                                                                    }
-                                                                    path={
-                                                                        props.path
-                                                                    }
-                                                                    type="order"
-                                                                    onClose={() =>
-                                                                        setSubDetail(
-                                                                            undefined,
-                                                                        )
-                                                                    }
-                                                                />,
+                                                                undefined,
                                                             )
                                                         }
-                                                    />
-                                                    {data.orderNumber &&
-                                                        data.orderName && (
-                                                            <span
-                                                                className="item-info-value--muted"
-                                                                style={{
-                                                                    marginLeft: 8,
-                                                                }}
-                                                            >
-                                                                · {data.orderName}
-                                                            </span>
-                                                        )}
-                                                </dd>
-                                            </>
-                                        )
-                                        const processBlock = data.processId && (
-                                            <>
-                                                <dt className="item-info-label">
-                                                    {data.isOutput
-                                                        ? 'Produced by'
-                                                        : 'Process'}
-                                                </dt>
-                                                <dd className="item-info-value">
-                                                    <DetailLinkText
-                                                        id={data.processId}
-                                                        text={
-                                                            data.processName ||
-                                                            `${String(
-                                                                data.processId,
-                                                            ).slice(0, 8)}…`
+                                                    />,
+                                                )
+                                            }
+                                        />
+                                        {data.orderNumber &&
+                                            data.orderName && (
+                                                <Typography
+                                                    component="span"
+                                                    sx={{
+                                                        ml: 1,
+                                                        color: 'var(--ink-3)',
+                                                    }}
+                                                >
+                                                    · {data.orderName}
+                                                </Typography>
+                                            )}
+                                    </Property>
+                                )}
+
+                                {data.processId && (
+                                    <Property
+                                        label={
+                                            data.isOutput
+                                                ? 'Produced by'
+                                                : 'Process'
+                                        }
+                                    >
+                                        <DetailLinkText
+                                            id={data.processId}
+                                            text={
+                                                data.processName ||
+                                                `${String(data.processId).slice(0, 8)}…`
+                                            }
+                                            onClick={() =>
+                                                setSubDetail(
+                                                    <ProcessDetail
+                                                        readonly={true}
+                                                        processId={
+                                                            data.processId
                                                         }
-                                                        onClick={() =>
+                                                        api={Api.processes}
+                                                        onClose={() =>
                                                             setSubDetail(
-                                                                <ProcessDetail
-                                                                    readonly={
-                                                                        true
-                                                                    }
-                                                                    processId={
-                                                                        data.processId
-                                                                    }
-                                                                    api={
-                                                                        Api.processes
-                                                                    }
-                                                                    onClose={() =>
-                                                                        setSubDetail(
-                                                                            undefined,
-                                                                        )
-                                                                    }
-                                                                />,
+                                                                undefined,
                                                             )
                                                         }
-                                                    />
-                                                </dd>
-                                            </>
-                                        )
-                                        return data.isOutput ? (
-                                            <>
-                                                {processBlock}
-                                                {orderBlock}
-                                            </>
-                                        ) : (
-                                            <>
-                                                {orderBlock}
-                                                {processBlock}
-                                            </>
-                                        )
-                                    })()}
+                                                    />,
+                                                )
+                                            }
+                                        />
+                                    </Property>
+                                )}
 
-                                    <dt className="item-info-label">Id</dt>
-                                    <dd className="item-info-value item-info-mono item-info-value--muted">
-                                        {String(data.id)}
-                                    </dd>
+                                <Property
+                                    label="Id"
+                                    value={String(data.id)}
+                                    mono
+                                    muted
+                                />
 
-                                    {data.isActive === false && (
-                                        <>
-                                            <dt className="item-info-label">
-                                                Status
-                                            </dt>
-                                            <dd className="item-info-value">
-                                                <span className="item-info-badge">
-                                                    Inactive
-                                                </span>
-                                            </dd>
-                                        </>
-                                    )}
-                                </dl>
-                            </>
+                                {data.isActive === false && (
+                                    <Property label="Status">
+                                        <Chip
+                                            size="small"
+                                            label="Inactive"
+                                            sx={{
+                                                height: 22,
+                                                fontSize: 11,
+                                                background: 'var(--surface-2)',
+                                                color: 'var(--ink-3)',
+                                                border: '1px solid var(--line-strong)',
+                                            }}
+                                        />
+                                    </Property>
+                                )}
+                            </Properties>
                         )
                     }
                 />
             }
             editor={
-                <Editor
+                <MuiEditor
                     type={props.type}
                     api={props.api}
                     path={props.path}
@@ -426,93 +398,127 @@ export function ItemDetail({ id, title = 'Item', ...props }: ItemDetailProps) {
                     data={data}
                     setData={setData}
                     onUpdate={props.onUpdate}
-                    content={
-                        <fieldset className={'k-form-fieldset'}>
-                            <legend className={'k-form-legend'}>
-                                Enter supply data
-                            </legend>
-                            <div
-                                className="mb-2"
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'baseline',
-                                }}
+                    content={({ values, handleChange }) => (
+                        <Box>
+                            <EditorSection
+                                number={1}
+                                title="What"
+                                done={false}
                             >
-                                <Field
-                                    name={'nomenclatureId'}
-                                    component={(p) => (
-                                        <HierarchyPicker
-                                            data={nomenclatures}
-                                            value={p.value}
-                                            onChange={(v) =>
-                                                p.onChange({ value: v })
-                                            }
-                                        />
-                                    )}
-                                    label={'Nomenclature'}
-                                />
-                                {/*<button onClick={() => props.onLink(api.nomenclatures)}*/}
-                                {/*        style={{backgroundColor: 'transparent', border: 'transparent'}}>*/}
-                                {/*    <Link45deg size={'1.4em'}/>*/}
-                                {/*</button>*/}
-                            </div>
-                            <div
-                                className="mb-2"
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'baseline',
-                                }}
-                            >
-                                <Field
-                                    name={'tareTareTypeId'}
-                                    component={(p) => (
-                                        <HierarchyPicker
-                                            data={tareTypeOptions}
-                                            value={p.value}
-                                            onChange={(v) =>
-                                                p.onChange({ value: v })
-                                            }
-                                        />
-                                    )}
-                                    label={'Tare Type'}
-                                />
-                                {/*<button onClick={() => props.onLink(api.taretypes)}*/}
-                                {/*        style={{backgroundColor: 'transparent', border: 'transparent'}}>*/}
-                                {/*    <Link45deg size={'1.4em'}/>*/}
-                                {/*</button>*/}
-                            </div>
-                            <div className="mb-2">
-                                <Field
-                                    name={'tareBarcode'}
-                                    component={Input}
-                                    label={'Tare Barcode'}
-                                />
-                            </div>
-                            {showAddress && (
-                                <div className="mb-2">
-                                    <Field
-                                        name={'address'}
-                                        component={NumericTextBox}
-                                        label={'Address'}
+                                <Box sx={{ gridColumn: '1 / -1' }}>
+                                    <Typography
+                                        sx={{
+                                            fontFamily: 'var(--font-mono)',
+                                            fontSize: 11,
+                                            fontWeight: 700,
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '0.07em',
+                                            color: 'var(--ink-3)',
+                                            mb: 0.5,
+                                        }}
+                                    >
+                                        Nomenclature
+                                    </Typography>
+                                    <HierarchyPicker
+                                        data={nomenclatures}
+                                        value={values.nomenclatureId}
+                                        onChange={(v) =>
+                                            handleChange({
+                                                target: {
+                                                    name: 'nomenclatureId',
+                                                    value: v,
+                                                },
+                                            })
+                                        }
                                     />
-                                </div>
-                            )}
-                            <div className="mb-2">
+                                </Box>
                                 <Field
-                                    name={'serialNo'}
-                                    component={Input}
-                                    label={'Serial No'}
+                                    name="serialNo"
+                                    label="Serial No"
+                                    value={(values.serialNo as string) ?? ''}
+                                    onChange={handleChange}
                                 />
-                            </div>
-                            <div className="mb-2">
                                 <Field
-                                    name={'quantity'}
-                                    component={NumericTextBox}
-                                    label={'Quantity'}
+                                    type="number"
+                                    name="quantity"
+                                    label="Quantity"
+                                    value={(values.quantity as number) ?? ''}
+                                    onChange={(e) =>
+                                        handleChange({
+                                            target: {
+                                                name: 'quantity',
+                                                value: numberOrNull(
+                                                    e.target.value,
+                                                ),
+                                            },
+                                        })
+                                    }
                                 />
-                            </div>
-                        </fieldset>
-                    }
+                            </EditorSection>
+
+                            <EditorSection
+                                number={2}
+                                title="Where"
+                                done={false}
+                            >
+                                <Box sx={{ gridColumn: '1 / -1' }}>
+                                    <Typography
+                                        sx={{
+                                            fontFamily: 'var(--font-mono)',
+                                            fontSize: 11,
+                                            fontWeight: 700,
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '0.07em',
+                                            color: 'var(--ink-3)',
+                                            mb: 0.5,
+                                        }}
+                                    >
+                                        Tare Type
+                                    </Typography>
+                                    <HierarchyPicker
+                                        data={tareTypeOptions}
+                                        value={values.tareTareTypeId}
+                                        onChange={(v) =>
+                                            handleChange({
+                                                target: {
+                                                    name: 'tareTareTypeId',
+                                                    value: v,
+                                                },
+                                            })
+                                        }
+                                    />
+                                </Box>
+                                <Field
+                                    name="tareBarcode"
+                                    label="Tare Barcode"
+                                    value={
+                                        (values.tareBarcode as string) ?? ''
+                                    }
+                                    onChange={handleChange}
+                                />
+                                {showAddress && (
+                                    <Field
+                                        type="number"
+                                        name="address"
+                                        label="Address"
+                                        value={
+                                            (values.address as number) ?? ''
+                                        }
+                                        onChange={(e) =>
+                                            handleChange({
+                                                target: {
+                                                    name: 'address',
+                                                    value: numberOrNull(
+                                                        e.target.value,
+                                                    ),
+                                                },
+                                            })
+                                        }
+                                    />
+                                )}
+                            </EditorSection>
+                        </Box>
+                    )}
                 />
             }
             relations={

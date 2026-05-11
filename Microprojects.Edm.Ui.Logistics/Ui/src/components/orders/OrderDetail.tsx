@@ -2,16 +2,13 @@ import api from '@features/api/api.ts'
 import Api from '@features/api/api.ts'
 import { DetailLinkText } from '@logistics/components/DropDownCell.tsx'
 import { HierarchyPicker } from '@logistics/components/HierarchyPicker.tsx'
-import {
-    type AlertState,
-    useAlertSetter,
-} from '@logistics/components/InlineAlert.tsx'
+import { useAlertSetter } from '@logistics/components/InlineAlert.tsx'
 import {
     Detail,
     type DetailProps,
     EMPTY_GUID,
-    Editor,
     Info,
+    MuiEditor,
 } from '@logistics/components/MasterDetail.tsx'
 import { NomenclatureDetail } from '@logistics/components/config/nomenclature/Nomenclatures.tsx'
 import { ProcessDetail } from '@logistics/components/config/process/Processes.tsx'
@@ -33,10 +30,19 @@ import {
 } from '@logistics/hooks/entityRefresh'
 import { useGet } from '@logistics/hooks/hooks.ts'
 import { parseUtcDate } from '@logistics/utils/format'
-import { Button } from '@progress/kendo-react-buttons'
-import { DatePicker, DateTimePicker } from '@progress/kendo-react-dateinputs'
-import { Field } from '@progress/kendo-react-form'
-import { Input, NumericTextBox, TextArea } from '@progress/kendo-react-inputs'
+import {
+    EditorSection,
+    Field,
+    Properties,
+    Property,
+} from '@microprojects/edm-components/components'
+import {
+    CheckOutlined as CheckIcon,
+    GridOnOutlined as GridIcon,
+    PlayArrowOutlined as PlayIcon,
+    VisibilityOutlined as PreviewIcon,
+} from '@mui/icons-material'
+import { Box, Button as MuiButton, Chip, Typography } from '@mui/material'
 import axios from 'axios'
 import type React from 'react'
 import { type EffectCallback, useEffect, useState } from 'react'
@@ -46,6 +52,32 @@ import { useNavigate } from 'react-router-dom'
 export interface OrderDetailProps extends DetailProps {
     onUpdate?: DetailEventHandler
     type: string
+}
+
+function numberOrNull(v: string): number | null {
+    if (v === '' || v == null) return null
+    const n = Number(v)
+    return Number.isFinite(n) ? n : null
+}
+
+// Date <-> input[type=date] string conversion. The form keeps a Date object so
+// the existing axios payload (which serialises Dates) keeps working untouched;
+// the native date picker only reads/writes ISO YYYY-MM-DD strings.
+function toDateInputValue(d: unknown): string {
+    if (!d) return ''
+    const date = d instanceof Date ? d : new Date(d as string)
+    if (Number.isNaN(date.getTime())) return ''
+    const y = date.getFullYear().toString().padStart(4, '0')
+    const m = (date.getMonth() + 1).toString().padStart(2, '0')
+    const day = date.getDate().toString().padStart(2, '0')
+    return `${y}-${m}-${day}`
+}
+
+function fromDateInputValue(s: string): Date | null {
+    if (!s) return null
+    const [y, m, d] = s.split('-').map(Number)
+    if (!y || !m || !d) return null
+    return new Date(y, m - 1, d)
 }
 
 export function OrderDetail({
@@ -170,6 +202,27 @@ export function OrderDetail({
                 })
             })
     }
+
+    const statusChip = data?.status ? (
+        <Chip
+            size="small"
+            label={
+                data.status === 'OutputsPending'
+                    ? 'Outputs pending'
+                    : data.status
+            }
+            sx={{
+                height: 22,
+                fontFamily: 'var(--font-mono)',
+                fontSize: 11,
+                fontWeight: 700,
+                background: 'var(--surface-2)',
+                color: 'var(--ink-1)',
+                border: '1px solid var(--line-strong)',
+            }}
+        />
+    ) : null
+
     return (
         <>
             {allocateOpen && effectiveId && (
@@ -195,195 +248,173 @@ export function OrderDetail({
                     <Info
                         content={
                             data && (
-                                <>
+                                <Box>
                                     {data?.number && (
-                                        <h3
-                                            style={{
-                                                margin: 0,
-                                                marginBottom: '0.5rem',
+                                        <Typography
+                                            variant="h6"
+                                            sx={{
+                                                m: 0,
+                                                mb: 0.75,
+                                                fontFamily: 'var(--font-mono)',
+                                                fontWeight: 700,
                                             }}
                                         >
                                             #{data.number}
-                                        </h3>
+                                        </Typography>
                                     )}
-                                    {data?.status && (
-                                        <div
-                                            style={{
+                                    {(statusChip || data?.executor) && (
+                                        <Box
+                                            sx={{
                                                 display: 'flex',
-                                                gap: '0.6rem',
                                                 alignItems: 'center',
-                                                padding: '0.3rem 0.6rem',
-                                                marginBottom: '0.5rem',
-                                                borderRadius: 4,
-                                                background: '#f5f5f5',
-                                                fontSize: '0.9rem',
+                                                gap: 1,
+                                                mb: 1.25,
                                             }}
                                         >
-                                            <strong>
-                                                {data.status ===
-                                                'OutputsPending'
-                                                    ? 'Outputs pending'
-                                                    : data.status}
-                                            </strong>
-                                            {data.executor && (
-                                                <span style={{ color: '#555' }}>
-                                                    · Executed by{' '}
-                                                    <strong>
-                                                        {data.executor}
-                                                    </strong>
-                                                </span>
+                                            {statusChip}
+                                            {data?.executor && (
+                                                <Typography
+                                                    variant="caption"
+                                                    sx={{ color: 'var(--ink-3)' }}
+                                                >
+                                                    Executed by{' '}
+                                                    <b>{data.executor}</b>
+                                                </Typography>
                                             )}
-                                        </div>
+                                        </Box>
                                     )}
-                                    <div
-                                        style={{
+                                    <Properties>
+                                        <Property label="Nomenclature" full>
+                                            <DetailLinkText
+                                                id={data.processNomenclatureId}
+                                                text={
+                                                    data.processNomenclatureName
+                                                }
+                                                onClick={() =>
+                                                    setSubDetail(
+                                                        <NomenclatureDetail
+                                                            readonly={true}
+                                                            id={
+                                                                data.processNomenclatureId
+                                                            }
+                                                            api={
+                                                                Api.nomenclatures
+                                                            }
+                                                            onClose={() =>
+                                                                setSubDetail(
+                                                                    undefined,
+                                                                )
+                                                            }
+                                                        />,
+                                                    )
+                                                }
+                                            />
+                                        </Property>
+                                        <Property
+                                            label="Amount"
+                                            value={`${data.amount} pcs`}
+                                            mono
+                                        />
+                                        <Property label="Process" full>
+                                            <DetailLinkText
+                                                id={data.processId}
+                                                text={data.processName}
+                                                onClick={(procId) =>
+                                                    setSubDetail(
+                                                        <ProcessDetail
+                                                            readonly={true}
+                                                            processId={procId}
+                                                            api={Api.processes}
+                                                            onClose={() =>
+                                                                setSubDetail(
+                                                                    undefined,
+                                                                )
+                                                            }
+                                                        />,
+                                                    )
+                                                }
+                                            />
+                                        </Property>
+                                    </Properties>
+                                    <Box
+                                        sx={{
+                                            mt: 1.5,
                                             display: 'flex',
-                                            justifyContent: 'space-between',
-                                            alignContent: 'baseline',
+                                            justifyContent: 'flex-end',
+                                            gap: 1,
                                         }}
                                     >
-                                        <div>
-                                            <p>
-                                                Nomenclature{' '}
-                                                <DetailLinkText
-                                                    id={
-                                                        data.processNomenclatureId
-                                                    }
-                                                    text={
-                                                        data.processNomenclatureName
-                                                    }
-                                                    onClick={() =>
-                                                        setSubDetail(
-                                                            <NomenclatureDetail
-                                                                readonly={true}
-                                                                id={
-                                                                    data.processNomenclatureId
-                                                                }
-                                                                api={
-                                                                    Api.nomenclatures
-                                                                }
-                                                                onClose={() =>
-                                                                    setSubDetail(
-                                                                        undefined,
-                                                                    )
-                                                                }
-                                                                //onUpdate={itemUpdate}
-                                                            />,
-                                                        )
-                                                    }
-                                                />{' '}
-                                                {data.amount} pcs
-                                            </p>
-                                            <p>
-                                                using{' '}
-                                                <DetailLinkText
-                                                    id={data.processId}
-                                                    text={data.processName}
-                                                    onClick={(
-                                                        procId,
-                                                        onUpdate,
-                                                    ) =>
-                                                        setSubDetail(
-                                                            <ProcessDetail
-                                                                readonly={true}
-                                                                processId={
-                                                                    procId
-                                                                }
-                                                                api={
-                                                                    Api.processes
-                                                                }
-                                                                onClose={() =>
-                                                                    setSubDetail(
-                                                                        undefined,
-                                                                    )
-                                                                }
-                                                                //onUpdate={onUpdate}
-                                                            />,
-                                                        )
-                                                    }
-                                                />{' '}
-                                                process
-                                            </p>
-                                            {/*{data.startDate && <p>Start {data.startDate?.toLocaleDateString()}</p> }*/}
-                                            {/*{data.dueDate && <p>must be done until {data.dueDate?.toLocaleDateString()}</p> }*/}
-                                        </div>
-                                        <div>
-                                            {!processCompleted && (
-                                                <Button
-                                                    type="button"
-                                                    themeColor="primary"
-                                                    icon="play"
-                                                    className="mb-2"
-                                                    onClick={startOrder}
-                                                    disabled={startDisabled}
-                                                    title={startDisabledReason}
-                                                >
-                                                    Start operation
-                                                </Button>
-                                            )}
-                                            {processCompleted &&
-                                                !isCompleted &&
-                                                !allAllocated && (
-                                                    <Button
-                                                        type="button"
-                                                        themeColor="primary"
-                                                        icon="grid-layout"
-                                                        className="mb-2"
-                                                        onClick={() =>
-                                                            setAllocateOpen(
-                                                                true,
-                                                            )
-                                                        }
-                                                        disabled={isDeleted}
-                                                        title={
-                                                            isDeleted
-                                                                ? 'Order is deleted'
-                                                                : undefined
-                                                        }
-                                                    >
-                                                        Allocate output
-                                                    </Button>
-                                                )}
-                                            {processCompleted &&
-                                                !isCompleted &&
-                                                allAllocated && (
-                                                    <Button
-                                                        type="button"
-                                                        themeColor="success"
-                                                        icon="check"
-                                                        className="mb-2"
-                                                        onClick={completeOrder}
-                                                        disabled={isDeleted}
-                                                        title={
-                                                            isDeleted
-                                                                ? 'Order is deleted'
-                                                                : undefined
-                                                        }
-                                                    >
-                                                        Complete order
-                                                    </Button>
-                                                )}
-                                            {isCompleted && (
-                                                <Button
-                                                    type="button"
-                                                    icon="preview"
-                                                    className="mb-2"
+                                        {!processCompleted && (
+                                            <MuiButton
+                                                variant="contained"
+                                                size="small"
+                                                startIcon={<PlayIcon />}
+                                                onClick={startOrder}
+                                                disabled={startDisabled}
+                                                title={startDisabledReason}
+                                            >
+                                                Start operation
+                                            </MuiButton>
+                                        )}
+                                        {processCompleted &&
+                                            !isCompleted &&
+                                            !allAllocated && (
+                                                <MuiButton
+                                                    variant="contained"
+                                                    size="small"
+                                                    startIcon={<GridIcon />}
                                                     onClick={() =>
                                                         setAllocateOpen(true)
                                                     }
+                                                    disabled={isDeleted}
+                                                    title={
+                                                        isDeleted
+                                                            ? 'Order is deleted'
+                                                            : undefined
+                                                    }
                                                 >
-                                                    View allocation
-                                                </Button>
+                                                    Allocate output
+                                                </MuiButton>
                                             )}
-                                        </div>
-                                    </div>
-                                </>
+                                        {processCompleted &&
+                                            !isCompleted &&
+                                            allAllocated && (
+                                                <MuiButton
+                                                    variant="contained"
+                                                    color="success"
+                                                    size="small"
+                                                    startIcon={<CheckIcon />}
+                                                    onClick={completeOrder}
+                                                    disabled={isDeleted}
+                                                    title={
+                                                        isDeleted
+                                                            ? 'Order is deleted'
+                                                            : undefined
+                                                    }
+                                                >
+                                                    Complete order
+                                                </MuiButton>
+                                            )}
+                                        {isCompleted && (
+                                            <MuiButton
+                                                variant="outlined"
+                                                size="small"
+                                                startIcon={<PreviewIcon />}
+                                                onClick={() =>
+                                                    setAllocateOpen(true)
+                                                }
+                                            >
+                                                View allocation
+                                            </MuiButton>
+                                        )}
+                                    </Box>
+                                </Box>
                             )
                         }
                     />
                 }
                 editor={
-                    <Editor
+                    <MuiEditor
                         type={props.type}
                         api={props.api}
                         path={props.path}
@@ -391,105 +422,155 @@ export function OrderDetail({
                         data={data}
                         setData={setData}
                         onUpdate={props.onUpdate}
-                        content={
-                            <fieldset className={'k-form-fieldset'}>
-                                <legend className={'k-form-legend'}>
-                                    Enter order data
-                                </legend>
-                                <div
-                                    className="mb-2"
-                                    style={{ width: '400px' }}
-                                >
-                                    <Field
-                                        name={'number'}
-                                        component={Input}
-                                        label={'Order #'}
-                                    />
-                                </div>
-                                <div
-                                    className="mb-2"
-                                    style={{
-                                        display: 'flex',
-                                        alignItems: 'baseline',
-                                    }}
-                                >
-                                    <Field
-                                        name={'processId'}
-                                        component={(p) => (
+                        content={({ values, handleChange }) => {
+                            const amountInvalid =
+                                values.amount != null &&
+                                Number(values.amount) <= 0
+                            return (
+                                <Box>
+                                    <EditorSection
+                                        number={1}
+                                        title="Identity"
+                                        done={false}
+                                    >
+                                        <Field
+                                            name="number"
+                                            label="Order #"
+                                            value={
+                                                (values.number as string) ?? ''
+                                            }
+                                            onChange={handleChange}
+                                        />
+                                        <Field
+                                            type="number"
+                                            name="amount"
+                                            label="Amount"
+                                            required
+                                            value={
+                                                (values.amount as number) ??
+                                                ''
+                                            }
+                                            onChange={(e) =>
+                                                handleChange({
+                                                    target: {
+                                                        name: 'amount',
+                                                        value: numberOrNull(
+                                                            e.target.value,
+                                                        ),
+                                                    },
+                                                })
+                                            }
+                                            state={
+                                                amountInvalid
+                                                    ? 'invalid'
+                                                    : 'pristine'
+                                            }
+                                            help={
+                                                amountInvalid
+                                                    ? 'Amount must be greater than 0.'
+                                                    : undefined
+                                            }
+                                        />
+                                        <Field
+                                            full
+                                            kind="textarea"
+                                            name="description"
+                                            label="Description"
+                                            rows={2}
+                                            value={
+                                                (values.description as string) ??
+                                                ''
+                                            }
+                                            onChange={handleChange}
+                                        />
+                                    </EditorSection>
+
+                                    <EditorSection
+                                        number={2}
+                                        title="Process"
+                                        done={false}
+                                    >
+                                        <Box sx={{ gridColumn: '1 / -1' }}>
+                                            <Typography
+                                                sx={{
+                                                    fontFamily:
+                                                        'var(--font-mono)',
+                                                    fontSize: 11,
+                                                    fontWeight: 700,
+                                                    textTransform: 'uppercase',
+                                                    letterSpacing: '0.07em',
+                                                    color: 'var(--ink-3)',
+                                                    mb: 0.5,
+                                                }}
+                                            >
+                                                Technology process
+                                            </Typography>
                                             <HierarchyPicker
                                                 data={hierarchy}
-                                                value={p.value}
+                                                value={values.processId}
                                                 onChange={(v) =>
-                                                    p.onChange({ value: v })
+                                                    handleChange({
+                                                        target: {
+                                                            name: 'processId',
+                                                            value: v,
+                                                        },
+                                                    })
                                                 }
                                             />
-                                        )}
-                                        label="Process"
-                                    />
-                                </div>
-                                <div className="mb-2">
-                                    <label className="k-label">
-                                        Description
-                                    </label>
-                                    <Field
-                                        name={'description'}
-                                        component={TextArea}
-                                        label={'Description'}
-                                    />
-                                </div>
-                                <div
-                                    className="mb-2"
-                                    style={{ width: '400px' }}
-                                >
-                                    <Field
-                                        name={'amount'}
-                                        component={NumericTextBox}
-                                        label={'Amount'}
-                                        validator={(value: number) =>
-                                            value > 0
-                                                ? ''
-                                                : 'Amount must be greater than 0'
-                                        }
-                                    />
-                                </div>
-                                <div
-                                    className="mb-2"
-                                    style={{ width: '400px' }}
-                                >
-                                    <Field
-                                        name={'startDate'}
-                                        component={(o) => (
-                                            <DatePicker
-                                                {...o}
-                                                placeholder={''}
-                                                value={parseUtcDate(
-                                                    data?.startDate,
-                                                )}
-                                            />
-                                        )}
-                                        label={'Start Date'}
-                                    />
-                                </div>
-                                <div
-                                    className="mb-2"
-                                    style={{ width: '400px' }}
-                                >
-                                    <Field
-                                        name={'dueDate'}
-                                        component={(o) => (
-                                            <DatePicker
-                                                {...o}
-                                                placeholder={''}
-                                                value={parseUtcDate(
-                                                    data?.dueDate,
-                                                )}
-                                            />
-                                        )}
-                                        label={'Due Date'}
-                                    />
-                                </div>
-                            </fieldset>
-                        }
+                                        </Box>
+                                    </EditorSection>
+
+                                    <EditorSection
+                                        number={3}
+                                        title="Schedule"
+                                        done={false}
+                                    >
+                                        <Field
+                                            type="date"
+                                            name="startDate"
+                                            label="Start Date"
+                                            value={toDateInputValue(
+                                                values.startDate ??
+                                                    parseUtcDate(
+                                                        data?.startDate,
+                                                    ),
+                                            )}
+                                            onChange={(e) =>
+                                                handleChange({
+                                                    target: {
+                                                        name: 'startDate',
+                                                        value: fromDateInputValue(
+                                                            e.target.value,
+                                                        ),
+                                                    },
+                                                })
+                                            }
+                                        />
+                                        <Field
+                                            type="date"
+                                            name="dueDate"
+                                            label="Due Date"
+                                            value={toDateInputValue(
+                                                values.dueDate ??
+                                                    parseUtcDate(
+                                                        data?.dueDate,
+                                                    ),
+                                            )}
+                                            onChange={(e) =>
+                                                handleChange({
+                                                    target: {
+                                                        name: 'dueDate',
+                                                        value: fromDateInputValue(
+                                                            e.target.value,
+                                                        ),
+                                                    },
+                                                })
+                                            }
+                                        />
+                                    </EditorSection>
+                                </Box>
+                            )
+                        }}
                     />
                 }
                 relations={

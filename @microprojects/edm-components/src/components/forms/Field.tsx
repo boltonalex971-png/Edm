@@ -26,7 +26,7 @@ interface CommonProps {
 
 interface InputFieldProps extends CommonProps {
     kind?: 'input';
-    type?: 'text' | 'number' | 'email' | 'url';
+    type?: 'text' | 'number' | 'email' | 'url' | 'date' | 'datetime-local' | 'time';
     value?: string | number;
     placeholder?: string;
     onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
