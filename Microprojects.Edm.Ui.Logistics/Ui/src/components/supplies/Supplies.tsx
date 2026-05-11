@@ -1,10 +1,10 @@
 import api from '@features/api/api'
 import { Loading } from '@features/utils/Utils.tsx'
 import { Detail } from '@logistics/components/MasterDetail'
-import { DateTimeCell } from '@logistics/components/RelationTable'
 import { SupplyDetail } from '@logistics/components/supplies/SupplyDetail'
 import type { Supply } from '@logistics/data/types'
 import { useGet } from '@logistics/hooks/hooks'
+import { formatLocalDateTime } from '@logistics/utils/format'
 import { SubRootPage } from '@microprojects/edm-components/components/chrome/SubRootPage'
 import { useBasePath } from '@microprojects/edm-components/hooks/useBasePath'
 import { Search } from '@microprojects/edm-components/components/page/Search'
@@ -14,19 +14,17 @@ import {
     Inventory2Outlined as RemainsIcon,
     Search as SearchIcon,
 } from '@mui/icons-material'
-import { process } from '@progress/kendo-data-query'
 import {
-    Grid,
-    GridColumn,
-    type GridPageChangeEvent,
-    type GridRowClickEvent,
-} from '@progress/kendo-react-grid'
+    Alert,
+    Box,
+    InputAdornment,
+    TextField,
+} from '@mui/material'
 import {
-    InputPrefix,
-    TextBox,
-    type TextBoxChangeEvent,
-} from '@progress/kendo-react-inputs'
-import { Error } from '@progress/kendo-react-labels'
+    DataGrid,
+    type GridColDef,
+    type GridRowParams,
+} from '@mui/x-data-grid'
 import type React from 'react'
 import { type EffectCallback, useEffect, useMemo, useState } from 'react'
 import { Diagram3 } from 'react-bootstrap-icons'
@@ -67,9 +65,21 @@ export function Supplies() {
     )
 }
 
+const COLUMNS: GridColDef<Supply>[] = [
+    { field: 'barcode', headerName: 'Barcode', flex: 1, minWidth: 140 },
+    { field: 'shipment', headerName: 'Shipment', flex: 1, minWidth: 140 },
+    { field: 'shipmentExternalId', headerName: 'Shipment Id', flex: 1, minWidth: 140 },
+    {
+        field: 'metaCreated',
+        headerName: 'Created',
+        flex: 1,
+        minWidth: 160,
+        renderCell: (p) => formatLocalDateTime(p.value as any),
+    },
+]
+
 function SupplySearch() {
     const [[data], loading, error] = useGet<Supply[]>(`${api.supplies}`, [api])
-    const [page, setPage] = useState({ skip: 0, take: 10 })
     const [filter, setFilter] = useState<string>('')
     const [subDetail, setSubDetail] = useState<React.ReactElement>()
 
@@ -77,10 +87,7 @@ function SupplySearch() {
 
     const filteredData = useMemo(() => {
         const lower = filter.toLowerCase()
-        if (!lower) {
-            return data || []
-        }
-
+        if (!lower) return data || []
         return (data || []).filter(
             (s) =>
                 s.barcode?.toLowerCase().includes(lower) ||
@@ -89,38 +96,9 @@ function SupplySearch() {
         )
     }, [data, filter])
 
-    const gridData = process(filteredData, { skip: page.skip, take: page.take })
-
-    const pageChange = (event: GridPageChangeEvent) => {
-        const take = 10
-        setPage({
-            ...event.page,
-            take,
-        })
-    }
-
-    const filterChange = (event: TextBoxChangeEvent) => {
-        setPage({ skip: 0, take: 10 })
-        setFilter(event.value?.toString() || '')
-    }
-
-    const rowClicked = (event: GridRowClickEvent) => {
-        const id = event.dataItem?.id
-        if (!id) {
-            return
-        }
-        setSubDetail(
-            <SupplyDetail
-                readonly={true}
-                id={id}
-                api={api.supplies}
-                onClose={() => setSubDetail(undefined)}
-            />,
-        )
-    }
-
     return (
         <Detail
+            type="supply"
             onClose={() => {}}
             icon={<Diagram3 title="Supplies" />}
             loading={loading}
@@ -133,46 +111,56 @@ function SupplySearch() {
             }
             subDetail={subDetail}
             card={
-                <>
-                    <TextBox
-                        inputMode={'text'}
-                        placeholder={'Search by shipment or barcode'}
-                        prefix={() => (
-                            <InputPrefix>
-                                <SearchIcon fontSize="small" />
-                            </InputPrefix>
-                        )}
-                        style={{ marginBottom: '1rem' }}
-                        onChange={filterChange}
+                <Box>
+                    <TextField
+                        fullWidth
+                        size="small"
+                        placeholder="Search by shipment or barcode"
+                        value={filter}
+                        onChange={(e) => setFilter(e.target.value)}
+                        sx={{ mb: 1.5 }}
+                        InputProps={{
+                            startAdornment: (
+                                <InputAdornment position="start">
+                                    <SearchIcon fontSize="small" />
+                                </InputAdornment>
+                            ),
+                        }}
                     />
                     {loading && <Loading />}
-                    {error && <Error>{error}</Error>}
-                    {data && (
-                        <Grid
-                            data={gridData}
-                            scrollable="none"
-                            pageable={true}
-                            pageSize={10}
-                            skip={page.skip}
-                            take={page.take}
-                            total={gridData.total}
-                            onPageChange={pageChange}
-                            onRowClick={rowClicked}
-                        >
-                            <GridColumn field="barcode" title="Barcode" />
-                            <GridColumn field="shipment" title="Shipment" />
-                            <GridColumn
-                                field="shipmentExternalId"
-                                title="Shipment Id"
-                            />
-                            <GridColumn
-                                field="metaCreated"
-                                title="Created"
-                                cell={DateTimeCell}
-                            />
-                        </Grid>
+                    {error && (
+                        <Alert severity="error" sx={{ mb: 1 }}>
+                            {error as any}
+                        </Alert>
                     )}
-                </>
+                    {data && (
+                        <DataGrid
+                            rows={filteredData}
+                            columns={COLUMNS}
+                            autoHeight
+                            density="compact"
+                            disableRowSelectionOnClick
+                            initialState={{
+                                pagination: {
+                                    paginationModel: { pageSize: 10, page: 0 },
+                                },
+                            }}
+                            pageSizeOptions={[10, 25, 50]}
+                            onRowClick={(p: GridRowParams<Supply>) => {
+                                if (!p.row.id) return
+                                setSubDetail(
+                                    <SupplyDetail
+                                        readonly={true}
+                                        id={p.row.id as any}
+                                        api={api.supplies}
+                                        onClose={() => setSubDetail(undefined)}
+                                    />,
+                                )
+                            }}
+                            sx={{ '& .MuiDataGrid-row': { cursor: 'pointer' } }}
+                        />
+                    )}
+                </Box>
             }
         />
     )
