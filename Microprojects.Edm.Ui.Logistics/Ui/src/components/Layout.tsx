@@ -58,9 +58,7 @@ export const Layout = ({ children, hideMenu }: LayoutProps) => {
                 headers: { 'Content-Type': 'application/json' },
             })
             .then(() => {
-                // Land on plugin root so the new role's shell starts fresh
-                // (URLs may not exist under the other role). Hard-navigate so
-                // the auth cookie set server-side is picked up.
+                // Hard-navigate to plugin root so the new role's auth cookie is picked up.
                 const base = import.meta.env.ASSET_PREFIX || '/'
                 const target = base.endsWith('/') ? base : `${base}/`
                 window.location.assign(target)

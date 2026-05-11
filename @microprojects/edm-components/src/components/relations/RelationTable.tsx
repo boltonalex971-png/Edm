@@ -19,7 +19,7 @@ import {
     Close as CloseIcon,
     InboxOutlined as EmptyIcon,
 } from '@mui/icons-material';
-import {DataGrid, GridRowModes} from '@mui/x-data-grid';
+import {DataGrid, GridRowModes, useGridApiRef} from '@mui/x-data-grid';
 
 import {useGet} from '../../hooks/useGet';
 import {ParentContext} from '../master/ParentContext';
@@ -75,8 +75,7 @@ export function DefaultEditCell({id, field, value, api}: any) {
 }
 
 // Utility to parse <GridColumn>-style children into MUI GridColDef
-export const parseChildrenToColumns = (children: React.ReactNode, options: {editable?: boolean; onRowSelected?: (row: any) => void} = {}): any[] => {
-    const {editable} = options;
+export const parseChildrenToColumns = (children: React.ReactNode, options: {onRowSelected?: (row: any) => void} = {}): any[] => {
     const columns: any[] = [];
 
     React.Children.forEach(children, (child: any) => {
@@ -85,12 +84,21 @@ export const parseChildrenToColumns = (children: React.ReactNode, options: {edit
         const {field, title, width, cell, editable: colEditable, ...childProps} = child.props;
         if (!field && !title && !cell) return;
 
+        // Kendo's GridColumn width can be a numeric string or "auto" — map non-numeric to flex:1.
+        const widthNum =
+            typeof width === 'number'
+                ? width
+                : typeof width === 'string' && /^\d+$/.test(width)
+                  ? parseInt(width, 10)
+                  : NaN;
+        // Custom-cell columns force editable=true so the cell's own inEdit branch can render; plain columns respect their editable prop.
         const colDef: any = {
             field: field || `custom_${Math.random().toString(36).substr(2, 9)}`,
             headerName: title || '',
-            width: width || 150,
-            flex: width ? 0 : 1,
-            editable: colEditable !== false && editable !== false,
+            ...(Number.isFinite(widthNum)
+                ? {width: widthNum}
+                : {flex: 1, minWidth: 120}),
+            editable: cell ? true : colEditable !== false,
             sortable: true,
         };
 
@@ -131,6 +139,8 @@ export interface RelationTableProps {
     data?: any[];
     editable?: boolean;
     removable?: boolean;
+    /** Show the "Add record" button. Defaults to `editable !== false`. */
+    creatable?: boolean;
     selectable?: boolean;
     onRowSelected?: (row: any) => void;
 }
@@ -142,9 +152,13 @@ export function RelationTable({
     data: propData,
     editable = true,
     removable = true,
+    creatable,
     selectable = false,
     onRowSelected,
 }: RelationTableProps) {
+    const showAdd = creatable ?? (editable !== false);
+    const apiRef = useGridApiRef();
+    const discardingIds = React.useRef<Set<any>>(new Set());
     const [reload, setReload] = useState(false);
     const [rowModesModel, setRowModesModel] = useState<Record<string, any>>({});
     const [searchQuery, setSearchQuery] = useState('');
@@ -221,12 +235,13 @@ export function RelationTable({
         }
     }, [api, setFetchedData]);
 
+    // apiRef avoids the rowModesModel-prop race where ignoreModifications isn't honored before processRowUpdate fires.
     const handleEditClick = (id: any) => () => {
-        setRowModesModel({...rowModesModel, [id]: {mode: GridRowModes.Edit}});
+        apiRef.current?.startRowEditMode({id});
     };
 
     const handleSaveClick = (id: any) => () => {
-        setRowModesModel({...rowModesModel, [id]: {mode: GridRowModes.View}});
+        apiRef.current?.stopRowEditMode({id});
     };
 
     const handleDeleteClick = (id: any, name?: string) => () => {
@@ -249,18 +264,23 @@ export function RelationTable({
     };
 
     const handleCancelClick = (id: any) => () => {
-        setRowModesModel({
-            ...rowModesModel,
-            [id]: {mode: GridRowModes.View, ignoreModifications: true},
-        });
-
+        // Guard processRowUpdate against any commit MUI might fire while we tear the row down.
+        discardingIds.current.add(id);
         const editedRow = data.find((row) => row.id === id);
         if (editedRow?.isNew) {
             setData(data.filter((row) => row.id !== id));
+            setRowModesModel((m) => {
+                const {[id]: _, ...rest} = m;
+                return rest;
+            });
+        } else {
+            apiRef.current?.stopRowEditMode({id, ignoreModifications: true});
         }
+        setTimeout(() => discardingIds.current.delete(id), 0);
     };
 
-    const processRowUpdate = async (newRow: any) => {
+    const processRowUpdate = async (newRow: any, oldRow: any) => {
+        if (discardingIds.current.has(newRow.id)) return oldRow;
         const isNew = newRow.isNew;
         const dataToSave: any = {...newRow};
         delete dataToSave.isNew;
@@ -327,7 +347,6 @@ export function RelationTable({
                                     size="small"
                                     className={styles.actionBtn}
                                     onClick={handleEditClick(id)}
-                                    disabled={editable === false}
                                 >
                                     <EditIcon fontSize="small"/>
                                 </IconButton>
@@ -353,23 +372,19 @@ export function RelationTable({
 
     const columns: any[] = useMemo(() => {
         const baseColumns = (propColumns || parseChildrenToColumns(children, {
-            editable,
             onRowSelected,
         })).map((col: any) => {
-            if (editable !== false) {
-                const updatedCol = {...col, editable: col.editable !== false};
-                if (updatedCol.renderCell && !updatedCol.renderEditCell) {
-                    updatedCol.renderEditCell = updatedCol.renderCell;
-                }
-                /* No custom edit renderer? Fall back to the v2 TextField
-                   default so plain string columns (description, name, …)
-                   render with the same outlined input as the rest. */
-                if (updatedCol.editable && !updatedCol.renderEditCell) {
-                    updatedCol.renderEditCell = (params: any) => <DefaultEditCell {...params} />;
-                }
-                return updatedCol;
+            const updatedCol = {...col, editable: col.editable !== false};
+            if (updatedCol.renderCell && !updatedCol.renderEditCell) {
+                updatedCol.renderEditCell = updatedCol.renderCell;
             }
-            return col;
+            /* No custom edit renderer? Fall back to the v2 TextField default
+               so plain string columns (description, name, …) render with the
+               same outlined input as the rest. */
+            if (updatedCol.editable && !updatedCol.renderEditCell) {
+                updatedCol.renderEditCell = (params: any) => <DefaultEditCell {...params} />;
+            }
+            return updatedCol;
         });
 
         if (baseColumns.length === 0) return baseColumns;
@@ -432,7 +447,7 @@ export function RelationTable({
                         }}
                     />
                     <span className={styles.toolbarSpacer}/>
-                    {editable !== false && (
+                    {showAdd && (
                         <MuiButton
                             variant="contained"
                             size="small"
@@ -462,9 +477,9 @@ export function RelationTable({
                         <div className={styles.emptyHelp}>
                             {searchQuery
                                 ? `Nothing matches "${searchQuery}". Try a different search term.`
-                                : editable === false
-                                    ? 'This list is read-only and currently has no entries.'
-                                    : 'Use Add record to create the first one.'}
+                                : showAdd
+                                    ? 'Use Add record to create the first one.'
+                                    : 'This list is read-only and currently has no entries.'}
                         </div>
                     </div>
                 )}
@@ -489,6 +504,7 @@ export function RelationTable({
                         <Fade in={!isFading} timeout={200}>
                             <Box sx={{height: '100%'}}>
                                 <DataGrid
+                                    apiRef={apiRef}
                                     rows={filteredRows}
                                     columns={columns}
                                     editMode="row"

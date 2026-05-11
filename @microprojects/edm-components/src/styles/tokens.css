@@ -7,11 +7,7 @@
    never define or override tokens.
    ========================================================================= */
 
-/* NOTE: do NOT add `@import url(...)` for Google Fonts here — rslib/lightningcss
-   silently drops the next rule block (the :root tokens) when an @import-url
-   is present, leaving the SPA with undefined `--surface`/`--bg`/etc. and
-   everything rendering on a flat grey page. Consumers load the font sheet
-   via a <link> tag in their index.html (or rsbuild html.tags) instead. */
+/* No @import here — rslib drops the next rule block. Consumers load fonts via rsbuild html.tags (edmFontTag from styles/fonts). */
 
 /* ---------- Color tokens — Steel (light) ---------- */
 html, :root {

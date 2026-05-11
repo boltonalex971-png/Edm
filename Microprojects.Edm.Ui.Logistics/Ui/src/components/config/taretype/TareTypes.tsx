@@ -2,6 +2,10 @@ import Api from '@features/api/api'
 import { useEntityToken } from '@logistics/hooks/entityRefresh'
 import { useGet } from '@logistics/hooks/hooks'
 import { useBasePath } from '@logistics/hooks/routerHooks'
+import {
+    Properties,
+    Property,
+} from '@microprojects/edm-components/components/forms/Properties'
 import { Field } from '@progress/kendo-react-form'
 import {
     Checkbox,
@@ -303,29 +307,12 @@ export function TareTypeDetail({ id, ...props }: TareTypeDetailProps) {
                 <Info
                     content={
                         data && (
-                            <>
-                                <div>
-                                    <p>
-                                        <span>
-                                            {data.countable && 'Countable'}
-                                        </span>
-                                    </p>
-                                    <p>
-                                        <span>Measured in: </span>
-                                        <strong>{data.units}</strong>
-                                    </p>
-                                    {data.countable && (
-                                        <p>
-                                            <span>Size: </span>
-                                            <strong>{formatSize(data)}</strong>
-                                        </p>
-                                    )}
-                                    <p>
-                                        <span>Capacity: </span>
-                                        <strong>{data.capacity}</strong>
-                                    </p>
-                                </div>
-                            </>
+                            <Properties>
+                                <Property label="Countable" value={data.countable ? 'Yes' : 'No'} />
+                                <Property label="Measured in" value={data.units} mono />
+                                {data.countable && <Property label="Size" value={formatSize(data)} mono />}
+                                <Property label="Capacity" value={data.capacity} mono />
+                            </Properties>
                         )
                     }
                 />

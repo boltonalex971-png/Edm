@@ -1,18 +1,4 @@
-// EDM v2 type system — Archivo (sans), JetBrains Mono (mono), Material
-// Symbols Outlined (icon font). The package's tokens.css references these
-// families via `var(--font-sans|--font-mono|--font-icon)` but cannot itself
-// `@import url(...)` them: rslib/lightningcss silently drops the rule block
-// following an @import, leaving the SPA without the light-theme tokens.
-//
-// Consumers spread `edmFontTag` into rsbuild's `html.tags` so the link
-// lands in the generated index.html alongside the favicon:
-//
-//   import { defineConfig } from '@rsbuild/core'
-//   import { edmFontTag } from '@microprojects/edm-components/styles/fonts'
-//
-//   export default defineConfig({
-//       html: { tags: [edmFontTag] },
-//   })
+// v2 font sheet for rsbuild's html.tags; tokens.css can't @import because rslib drops the next rule block.
 
 export const EDM_FONT_HREF =
     'https://fonts.googleapis.com/css2' +

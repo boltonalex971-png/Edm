@@ -1,26 +1,8 @@
 import { createTheme } from '@mui/material/styles'
-// Module augmentation: registers MuiDataGrid in MUI's `components` type so
-// the styleOverrides below type-check. Type-only import — no runtime cost.
+// Type-only: registers MuiDataGrid in MUI's components type.
 import type {} from '@mui/x-data-grid/themeAugmentation'
 
-// Default EDM MUI theme — maps tokens.css ("Steel" direction) onto MUI's
-// component slots so MUI primitives (DataGrid, Button, OutlinedInput, …)
-// render in the v2 visual language out of the box. Wrap your app in a
-// ThemeProvider with this theme; tokens.css must be loaded as well so the
-// CSS-variable references (var(--surface), var(--accent), …) resolve.
-//
-//   import { ThemeProvider, CssBaseline } from '@mui/material'
-//   import { defaultTheme } from '@microprojects/edm-components/styles/theme'
-//   import '@microprojects/edm-components/styles/tokens.css'
-//
-//   <ThemeProvider theme={defaultTheme}>
-//     <CssBaseline />
-//     ...
-//   </ThemeProvider>
-//
-// Consumers that need to extend can pass it through createTheme:
-//   import { createTheme } from '@mui/material/styles'
-//   const myTheme = createTheme(defaultTheme, { /* overrides */ })
+// Default EDM MUI theme — pair with tokens.css under a ThemeProvider.
 export const defaultTheme = createTheme({
     palette: {
         mode: 'light',
