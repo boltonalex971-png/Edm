@@ -37,6 +37,7 @@ import {
     Chip,
     IconButton,
     Paper,
+    Tooltip,
     Typography,
 } from '@mui/material'
 import axios from 'axios'
@@ -54,6 +55,63 @@ const STEPS: { id: Step; label: string }[] = [
 ]
 
 const stepIndex = (s: Step) => STEPS.findIndex((x) => x.id === s)
+
+interface Tone {
+    bg: string
+    fg: string
+    border: string
+}
+
+const STATUS_TONE: Record<string, Tone> = {
+    Running: {
+        bg: 'var(--sig-run-soft)',
+        fg: 'var(--sig-run-deep)',
+        border: 'var(--sig-run-deep)',
+    },
+    OutputsPending: {
+        bg: 'var(--sig-warn-soft)',
+        fg: 'var(--sig-warn-deep)',
+        border: 'var(--sig-warn-deep)',
+    },
+    Completed: {
+        bg: 'var(--surface-2)',
+        fg: 'var(--ink-3)',
+        border: 'var(--line-strong)',
+    },
+}
+
+const DRAFT_TONE: Tone = {
+    bg: 'var(--surface-2)',
+    fg: 'var(--ink-2)',
+    border: 'var(--line-strong)',
+}
+
+const DUE_TONE: Record<'on-time' | 'overdue' | 'ahead', Tone> = {
+    'on-time': {
+        bg: 'var(--ent-supply-soft)',
+        fg: 'var(--ent-supply-deep)',
+        border: 'var(--ent-supply-deep)',
+    },
+    overdue: {
+        bg: 'var(--sig-fault-soft)',
+        fg: 'var(--sig-fault-deep)',
+        border: 'var(--sig-fault-deep)',
+    },
+    ahead: {
+        bg: 'var(--sig-run-soft)',
+        fg: 'var(--sig-run-deep)',
+        border: 'var(--sig-run-deep)',
+    },
+}
+
+const monoEyebrowSx = {
+    fontFamily: 'var(--font-mono)',
+    fontSize: 11,
+    fontWeight: 700,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.08em',
+    color: 'var(--ink-3)',
+}
 
 export const OrderRunView = () => {
     const { id: idParam } = useParams<{ id: string }>()
@@ -77,9 +135,6 @@ export const OrderRunView = () => {
         [id, orderToken],
     )
 
-    // Claim the order for as long as the operator stays in this view, so
-    // other tabs/users see "Executing by {username}" the same way they
-    // see a persisted Executor banner.
     const username = useSelector((s: RootState) => s.user.name)
     const claim = useOrderClaimState(id)
     const claimedByOther = !!claim.lockedBy && !claim.isOwn
@@ -183,6 +238,13 @@ export const OrderRunView = () => {
         if (stepIndex(target) <= maxStepIndex) setStep(target)
     }
 
+    const statusTone =
+        (order?.status && STATUS_TONE[order.status]) || DRAFT_TONE
+    const statusLabel =
+        order?.status === 'OutputsPending'
+            ? 'Outputs pending'
+            : order?.status || 'Draft'
+
     return (
         <Paper
             elevation={0}
@@ -191,52 +253,34 @@ export const OrderRunView = () => {
                 border: '1px solid var(--line)',
                 borderRadius: 'var(--r-2)',
                 boxShadow: 'var(--elev-1)',
-                p: 1.5,
                 display: 'flex',
                 flexDirection: 'column',
                 minHeight: 'calc(100vh - 170px)',
+                overflow: 'hidden',
             }}
         >
-            <Box
-                sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1,
-                    mb: 1,
-                }}
-            >
-                <IconButton
-                    size="small"
-                    onClick={backToList}
-                    sx={{ color: 'var(--accent)' }}
-                >
-                    <BackIcon fontSize="small" />
-                </IconButton>
-                <Typography
-                    sx={{
-                        flex: 1,
-                        fontSize: 18,
-                        fontWeight: 700,
-                        color: 'var(--ink-1)',
-                    }}
-                >
-                    {order?.processName || (loading ? 'Loading…' : 'Order')}
-                </Typography>
-                {order?.processNomenclatureName && (
-                    <Typography
-                        variant="caption"
-                        sx={{ color: 'var(--ink-3)' }}
-                    >
-                        {order.processNomenclatureName} · {order.amount} pcs
-                    </Typography>
-                )}
-            </Box>
+            <RunHeader
+                order={order}
+                loading={loading}
+                statusTone={statusTone}
+                statusLabel={statusLabel}
+                onBack={backToList}
+            />
 
             {isReadOnly && (
-                <Alert severity="warning" sx={{ mb: 1 }}>
+                <Alert
+                    severity="warning"
+                    sx={{ mx: 1.5, mb: 1, borderRadius: 'var(--r-2)' }}
+                >
                     {order?.executor ? 'Executed' : 'Executing'} by{' '}
-                    <strong>{occupiedBy}</strong> — read-only. You can view
-                    progress but cannot change anything.
+                    <Box
+                        component="strong"
+                        sx={{ fontFamily: 'var(--font-mono)' }}
+                    >
+                        {occupiedBy}
+                    </Box>{' '}
+                    — read-only. You can view progress but cannot change
+                    anything.
                 </Alert>
             )}
 
@@ -248,10 +292,28 @@ export const OrderRunView = () => {
             />
 
             {isOnPastStep && (
-                <ReviewBanner
-                    liveStep={liveStep}
-                    onResume={() => setStep(liveStep)}
-                />
+                <Alert
+                    severity="info"
+                    sx={{ mx: 1.5, mb: 1.5, borderRadius: 'var(--r-2)' }}
+                    action={
+                        <MuiButton
+                            size="small"
+                            variant="contained"
+                            onClick={() => setStep(liveStep)}
+                        >
+                            Resume
+                        </MuiButton>
+                    }
+                >
+                    Reviewing earlier step — order is currently at{' '}
+                    <Box
+                        component="strong"
+                        sx={{ fontFamily: 'var(--font-mono)' }}
+                    >
+                        {STEPS[liveStepIndex].label}
+                    </Box>
+                    .
+                </Alert>
             )}
 
             <Box
@@ -260,6 +322,8 @@ export const OrderRunView = () => {
                     minHeight: 0,
                     display: 'flex',
                     flexDirection: 'column',
+                    px: 1.5,
+                    pb: 1.5,
                 }}
             >
                 {step === 'review' && order && (
@@ -314,6 +378,126 @@ export const OrderRunView = () => {
     )
 }
 
+interface RunHeaderProps {
+    order: Order | undefined
+    loading: boolean
+    statusTone: Tone
+    statusLabel: string
+    onBack: () => void
+}
+
+function RunHeader({
+    order,
+    loading,
+    statusTone,
+    statusLabel,
+    onBack,
+}: RunHeaderProps) {
+    return (
+        <Box
+            sx={{
+                px: 1.5,
+                py: 1.25,
+                background: 'var(--surface-2)',
+                borderBottom: '1px solid var(--line)',
+            }}
+        >
+            <Box
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    mb: 0.75,
+                }}
+            >
+                <Tooltip title="Back to orders">
+                    <IconButton
+                        size="small"
+                        onClick={onBack}
+                        sx={{
+                            color: 'var(--ink-2)',
+                            '&:hover': { color: 'var(--accent)' },
+                        }}
+                    >
+                        <BackIcon fontSize="small" />
+                    </IconButton>
+                </Tooltip>
+                <Typography sx={monoEyebrowSx}>
+                    Order
+                    {order?.number && (
+                        <Box
+                            component="span"
+                            sx={{
+                                ml: 1,
+                                color: 'var(--ink-1)',
+                                fontWeight: 700,
+                                letterSpacing: '0.02em',
+                            }}
+                        >
+                            #{order.number}
+                        </Box>
+                    )}
+                </Typography>
+                <Box sx={{ flex: 1 }} />
+                {order && (
+                    <Chip
+                        size="small"
+                        label={statusLabel}
+                        sx={{
+                            height: 22,
+                            fontFamily: 'var(--font-mono)',
+                            fontSize: 11,
+                            fontWeight: 700,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em',
+                            background: statusTone.bg,
+                            color: statusTone.fg,
+                            border: `1px solid ${statusTone.border}`,
+                        }}
+                    />
+                )}
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1.5 }}>
+                <Typography
+                    sx={{
+                        fontSize: 22,
+                        fontWeight: 700,
+                        lineHeight: 1.2,
+                        color: 'var(--ink-1)',
+                        wordBreak: 'break-word',
+                    }}
+                >
+                    {order?.processName ||
+                        (loading ? 'Loading…' : 'Order')}
+                </Typography>
+            </Box>
+            {order?.processNomenclatureName && (
+                <Typography
+                    sx={{ mt: 0.25, color: 'var(--ink-2)', fontSize: 14 }}
+                >
+                    {order.processNomenclatureName}
+                    <Box
+                        component="span"
+                        sx={{ color: 'var(--ink-3)', mx: 1 }}
+                    >
+                        ·
+                    </Box>
+                    <Box
+                        component="span"
+                        sx={{
+                            fontFamily: 'var(--font-mono)',
+                            color: 'var(--ink-1)',
+                            fontWeight: 700,
+                        }}
+                    >
+                        {order.amount} pcs
+                    </Box>
+                </Typography>
+            )}
+        </Box>
+    )
+}
+
 interface StepperProps {
     step: Step
     liveStep: Step
@@ -329,113 +513,189 @@ function Stepper({ step, liveStep, maxStep, onPick }: StepperProps) {
     return (
         <Box
             sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 0.5,
-                mt: 0.25,
-                mb: 1.25,
-                overflowX: 'auto',
+                px: 1.5,
+                py: 1.5,
+                borderBottom: '1px solid var(--line)',
             }}
         >
-            {STEPS.map((s, idx) => {
-                const reachable = idx <= maxIdx
-                const isLive = idx === liveIdx
-                const isDone = idx < liveIdx
-                const isViewing = idx === activeIdx
-                const baseBg = isLive
-                    ? 'var(--accent)'
-                    : isDone
-                      ? 'var(--sig-run-soft)'
-                      : 'var(--surface-2)'
-                const baseFg = isLive
-                    ? '#fff'
-                    : isDone
-                      ? 'var(--sig-run-deep)'
-                      : 'var(--ink-3)'
-                const fontWeight = isLive ? 700 : isDone ? 600 : 500
-                return (
-                    <MuiButton
-                        key={s.id}
-                        type="button"
-                        disabled={!reachable}
-                        onClick={() => reachable && onPick(s.id)}
-                        sx={{
-                            flex: 1,
-                            minWidth: 120,
-                            py: 1,
-                            px: 1,
-                            background: baseBg,
-                            color: baseFg,
-                            fontWeight,
-                            fontSize: 14,
-                            textTransform: 'none',
-                            borderRadius: 'var(--r-2)',
-                            border: 'none',
-                            cursor: reachable ? 'pointer' : 'default',
-                            outline: 'none',
-                            boxShadow: isViewing
-                                ? 'inset 0 0 0 2px var(--ink-2)'
-                                : 'none',
-                            '&:hover': reachable
-                                ? {
-                                      background: baseBg,
-                                      filter: 'brightness(0.96)',
-                                  }
-                                : undefined,
-                            '&.Mui-disabled': {
-                                background: baseBg,
-                                color: baseFg,
-                                opacity: 0.6,
-                            },
-                        }}
-                    >
-                        {isDone ? (
-                            <CheckIcon
-                                fontSize="small"
-                                sx={{ mr: 0.5, fontSize: 16 }}
-                            />
-                        ) : (
-                            <Box
-                                component="span"
-                                sx={{
-                                    fontFamily: 'var(--font-mono)',
-                                    mr: 0.5,
-                                    opacity: 0.8,
-                                }}
-                            >
-                                {idx + 1}.
-                            </Box>
-                        )}
-                        {s.label}
-                    </MuiButton>
-                )
-            })}
+            <Box
+                sx={{
+                    display: 'flex',
+                    alignItems: 'stretch',
+                    gap: 0,
+                    overflowX: 'auto',
+                }}
+            >
+                {STEPS.map((s, idx) => {
+                    const reachable = idx <= maxIdx
+                    const isLive = idx === liveIdx
+                    const isDone = idx < liveIdx
+                    const isViewing = idx === activeIdx
+                    const isFirst = idx === 0
+                    return (
+                        <StepNode
+                            key={s.id}
+                            label={s.label}
+                            number={idx + 1}
+                            reachable={reachable}
+                            isLive={isLive}
+                            isDone={isDone}
+                            isViewing={isViewing}
+                            connectorActive={idx <= liveIdx}
+                            showConnector={!isFirst}
+                            onClick={() => reachable && onPick(s.id)}
+                        />
+                    )
+                })}
+            </Box>
         </Box>
     )
 }
 
-function ReviewBanner({
-    liveStep,
-    onResume,
-}: { liveStep: Step; onResume: () => void }) {
-    const liveLabel =
-        liveStep === 'distribute'
-            ? 'Distribute'
-            : liveStep === 'complete'
-              ? 'Done'
-              : 'Launch'
+interface StepNodeProps {
+    label: string
+    number: number
+    reachable: boolean
+    isLive: boolean
+    isDone: boolean
+    isViewing: boolean
+    showConnector: boolean
+    connectorActive: boolean
+    onClick: () => void
+}
+
+function StepNode({
+    label,
+    number,
+    reachable,
+    isLive,
+    isDone,
+    isViewing,
+    showConnector,
+    connectorActive,
+    onClick,
+}: StepNodeProps) {
+    let circleBg = 'var(--surface)'
+    let circleFg = 'var(--ink-3)'
+    let circleBorder = 'var(--line-strong)'
+    if (isDone) {
+        circleBg = 'var(--sig-run-deep)'
+        circleFg = '#fff'
+        circleBorder = 'var(--sig-run-deep)'
+    } else if (isLive) {
+        circleBg = 'var(--accent)'
+        circleFg = '#fff'
+        circleBorder = 'var(--accent)'
+    } else if (!reachable) {
+        circleBg = 'var(--surface-2)'
+        circleFg = 'var(--ink-4)'
+        circleBorder = 'var(--line)'
+    }
+
+    const labelColor = isLive
+        ? 'var(--accent)'
+        : isDone
+          ? 'var(--sig-run-deep)'
+          : reachable
+            ? 'var(--ink-2)'
+            : 'var(--ink-4)'
+
     return (
-        <Alert
-            severity="info"
-            sx={{ mb: 1, alignItems: 'center' }}
-            action={
-                <MuiButton size="small" variant="contained" onClick={onResume}>
-                    Resume
-                </MuiButton>
-            }
+        <Box
+            sx={{
+                flex: 1,
+                minWidth: 0,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+            }}
         >
-            Reviewing — order is currently at <strong>{liveLabel}</strong>.
-        </Alert>
+            {showConnector && (
+                <Box
+                    sx={{
+                        flex: 1,
+                        height: 2,
+                        background: connectorActive
+                            ? 'var(--sig-run-deep)'
+                            : 'var(--line-strong)',
+                        borderRadius: 1,
+                    }}
+                />
+            )}
+            <Box
+                role="button"
+                aria-current={isViewing ? 'step' : undefined}
+                aria-disabled={!reachable}
+                tabIndex={reachable ? 0 : -1}
+                onClick={onClick}
+                onKeyDown={(e) => {
+                    if (
+                        reachable &&
+                        (e.key === 'Enter' || e.key === ' ')
+                    ) {
+                        e.preventDefault()
+                        onClick()
+                    }
+                }}
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    px: 0.5,
+                    py: 0.5,
+                    borderRadius: 'var(--r-2)',
+                    cursor: reachable ? 'pointer' : 'default',
+                    outline: isViewing
+                        ? '2px solid var(--accent)'
+                        : 'none',
+                    outlineOffset: 2,
+                    '&:hover': reachable
+                        ? { background: 'var(--surface-2)' }
+                        : undefined,
+                    '&:focus-visible': {
+                        outline: '2px solid var(--accent)',
+                        outlineOffset: 2,
+                    },
+                }}
+            >
+                <Box
+                    sx={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: '50%',
+                        background: circleBg,
+                        color: circleFg,
+                        border: `2px solid ${circleBorder}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: 14,
+                        fontWeight: 700,
+                        flexShrink: 0,
+                    }}
+                >
+                    {isDone ? (
+                        <CheckIcon sx={{ fontSize: 18 }} />
+                    ) : (
+                        number
+                    )}
+                </Box>
+                <Typography
+                    sx={{
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: 12,
+                        fontWeight: 700,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.07em',
+                        color: labelColor,
+                        whiteSpace: 'nowrap',
+                    }}
+                >
+                    {label}
+                </Typography>
+            </Box>
+        </Box>
     )
 }
 
@@ -451,79 +711,130 @@ const ReviewStep = ({
     onNext,
     nextLabel,
     onResume,
-}: ReviewStepProps) => (
-    <Box>
-        <Box
-            sx={{
-                display: 'grid',
-                gridTemplateColumns: '160px 1fr',
-                gap: '6px 16px',
-                alignItems: 'baseline',
-                fontSize: 16,
-            }}
-        >
-            <ReviewLabel>Process</ReviewLabel>
-            <ReviewValue>{order.processName}</ReviewValue>
-            <ReviewLabel>Nomenclature</ReviewLabel>
-            <ReviewValue>{order.processNomenclatureName ?? '—'}</ReviewValue>
-            <ReviewLabel>Amount</ReviewLabel>
-            <ReviewValue>
-                {formatUnits(
-                    order.amount,
-                    order.processNomenclatureUnits,
-                    order.processNomenclatureCountable,
-                )}
-            </ReviewValue>
-            {order.startDate && (
-                <>
-                    <ReviewLabel>Start</ReviewLabel>
-                    <ReviewValue>
-                        {formatLocalDate(order.startDate)}
-                    </ReviewValue>
-                </>
-            )}
-            {order.dueDate && (
-                <>
-                    <ReviewLabel>Due</ReviewLabel>
-                    <ReviewValue>{formatLocalDate(order.dueDate)}</ReviewValue>
-                </>
-            )}
-            {order.description && (
-                <>
-                    <ReviewLabel>Description</ReviewLabel>
-                    <ReviewValue>{order.description}</ReviewValue>
-                </>
-            )}
-        </Box>
-
-        <Footer>
-            <MuiButton
-                variant="contained"
-                color="primary"
-                size="large"
-                onClick={onResume ?? onNext}
-                sx={{ minWidth: 180 }}
+}: ReviewStepProps) => {
+    const dueStatus = useMemo(
+        () => computeDueStatus(order.dueDate),
+        [order.dueDate],
+    )
+    return (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1 }}>
+            <Typography sx={monoEyebrowSx}>Order details</Typography>
+            <Box
+                sx={{
+                    display: 'grid',
+                    gridTemplateColumns: 'minmax(160px, max-content) 1fr',
+                    gap: '8px 24px',
+                    alignItems: 'baseline',
+                    background: 'var(--surface-2)',
+                    border: '1px solid var(--line)',
+                    borderRadius: 'var(--r-2)',
+                    p: 1.5,
+                }}
             >
-                {onResume ? 'Resume' : nextLabel}
-            </MuiButton>
-        </Footer>
-    </Box>
-)
+                <ReviewLabel>Process</ReviewLabel>
+                <ReviewValue>{order.processName}</ReviewValue>
+                <ReviewLabel>Nomenclature</ReviewLabel>
+                <ReviewValue>
+                    {order.processNomenclatureName ?? '—'}
+                </ReviewValue>
+                <ReviewLabel>Amount</ReviewLabel>
+                <ReviewValue mono>
+                    {formatUnits(
+                        order.amount,
+                        order.processNomenclatureUnits,
+                        order.processNomenclatureCountable,
+                    )}
+                </ReviewValue>
+                {order.startDate && (
+                    <>
+                        <ReviewLabel>Start</ReviewLabel>
+                        <ReviewValue>
+                            {formatLocalDate(order.startDate)}
+                        </ReviewValue>
+                    </>
+                )}
+                {order.dueDate && (
+                    <>
+                        <ReviewLabel>Due</ReviewLabel>
+                        <ReviewValue>
+                            <Box
+                                component="span"
+                                sx={{ mr: 1 }}
+                            >
+                                {formatLocalDate(order.dueDate)}
+                            </Box>
+                            {dueStatus && (
+                                <Chip
+                                    size="small"
+                                    label={dueStatus.label}
+                                    sx={{
+                                        height: 22,
+                                        fontSize: 11,
+                                        fontWeight: 700,
+                                        fontFamily: 'var(--font-mono)',
+                                        background:
+                                            DUE_TONE[dueStatus.kind].bg,
+                                        color:
+                                            DUE_TONE[dueStatus.kind].fg,
+                                        border: `1px solid ${DUE_TONE[dueStatus.kind].border}`,
+                                    }}
+                                />
+                            )}
+                        </ReviewValue>
+                    </>
+                )}
+                {order.description && (
+                    <>
+                        <ReviewLabel>Description</ReviewLabel>
+                        <ReviewValue>{order.description}</ReviewValue>
+                    </>
+                )}
+            </Box>
+
+            <Footer>
+                <MuiButton
+                    variant="contained"
+                    color="primary"
+                    size="large"
+                    onClick={onResume ?? onNext}
+                    sx={{ minWidth: 200, fontWeight: 700 }}
+                >
+                    {onResume ? 'Resume' : nextLabel}
+                </MuiButton>
+            </Footer>
+        </Box>
+    )
+}
 
 function ReviewLabel({ children }: { children: React.ReactNode }) {
     return (
         <Box
             component="span"
-            sx={{ color: 'var(--ink-3)', fontWeight: 500 }}
+            sx={{
+                ...monoEyebrowSx,
+                fontSize: 11,
+                color: 'var(--ink-3)',
+            }}
         >
             {children}
         </Box>
     )
 }
 
-function ReviewValue({ children }: { children: React.ReactNode }) {
+function ReviewValue({
+    children,
+    mono,
+}: { children: React.ReactNode; mono?: boolean }) {
     return (
-        <Box component="span" sx={{ color: 'var(--ink-1)' }}>
+        <Box
+            component="span"
+            sx={{
+                color: 'var(--ink-1)',
+                fontWeight: mono ? 700 : 500,
+                fontFamily: mono ? 'var(--font-mono)' : 'inherit',
+                fontSize: 14,
+            }}
+        >
             {children}
         </Box>
     )
@@ -533,8 +844,8 @@ function Footer({ children }: { children: React.ReactNode }) {
     return (
         <Box
             sx={{
-                mt: 2,
-                pt: 2,
+                mt: 'auto',
+                pt: 1.5,
                 borderTop: '1px solid var(--line)',
                 display: 'flex',
                 justifyContent: 'flex-end',
@@ -605,32 +916,9 @@ const computeDueStatus = (
     const refDay = Date.UTC(ref.getFullYear(), ref.getMonth(), ref.getDate())
     const diffDays = Math.round((refDay - dueDay) / (1000 * 60 * 60 * 24))
     if (diffDays === 0) return { kind: 'on-time', label: 'In time' }
-    if (diffDays > 0) return { kind: 'overdue', label: `Overdue ${diffDays} d` }
+    if (diffDays > 0)
+        return { kind: 'overdue', label: `Overdue ${diffDays} d` }
     return { kind: 'ahead', label: `${-diffDays} d before plan` }
-}
-
-const DUE_TONE: Record<DueStatus['kind'], StatusTone> = {
-    'on-time': {
-        bg: 'var(--ent-supply-soft)',
-        fg: 'var(--ent-supply-deep)',
-        border: 'var(--ent-supply-deep)',
-    },
-    overdue: {
-        bg: 'var(--sig-fault-soft)',
-        fg: 'var(--sig-fault-deep)',
-        border: 'var(--sig-fault-deep)',
-    },
-    ahead: {
-        bg: 'var(--sig-run-soft)',
-        fg: 'var(--sig-run-deep)',
-        border: 'var(--sig-run-deep)',
-    },
-}
-
-interface StatusTone {
-    bg: string
-    fg: string
-    border: string
 }
 
 const CompleteStep = ({
@@ -691,12 +979,12 @@ const CompleteStep = ({
         <Paper
             elevation={0}
             sx={{
-                maxWidth: 640,
+                maxWidth: 720,
                 mx: 'auto',
                 mt: 3,
                 p: '32px 40px 24px',
                 background: 'var(--surface)',
-                border: '1px solid var(--line)',
+                border: `1px solid ${isCompleted ? 'var(--sig-run-deep)' : 'var(--line)'}`,
                 borderRadius: 'var(--r-2)',
                 boxShadow: 'var(--elev-2)',
                 textAlign: 'center',
@@ -705,16 +993,34 @@ const CompleteStep = ({
                 gap: 1,
             }}
         >
+            <Box
+                sx={{
+                    width: 56,
+                    height: 56,
+                    borderRadius: '50%',
+                    background: isCompleted
+                        ? 'var(--sig-run-deep)'
+                        : 'var(--sig-run-soft)',
+                    color: isCompleted ? '#fff' : 'var(--sig-run-deep)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    mx: 'auto',
+                    mb: 0.5,
+                }}
+            >
+                <CheckIcon sx={{ fontSize: 32 }} />
+            </Box>
             <Typography
                 sx={{
-                    fontSize: 24,
+                    fontSize: 22,
                     fontWeight: 700,
                     color: 'var(--sig-run-deep)',
                 }}
             >
                 {isCompleted ? 'Order completed' : 'Ready to complete'}
             </Typography>
-            <Typography sx={{ color: 'var(--ink-2)', fontSize: 16, mb: 0.5 }}>
+            <Typography sx={{ color: 'var(--ink-2)', fontSize: 14, mb: 1 }}>
                 {isCompleted
                     ? 'All done.'
                     : 'Every output is allocated. Confirm to close the order.'}
@@ -723,41 +1029,46 @@ const CompleteStep = ({
             <Box
                 sx={{
                     display: 'grid',
-                    gridTemplateColumns: 'minmax(140px, max-content) 1fr',
-                    gap: '6px 24px',
+                    gridTemplateColumns:
+                        'minmax(160px, max-content) 1fr',
+                    gap: '8px 24px',
                     textAlign: 'left',
                     width: 'max-content',
                     maxWidth: '100%',
                     mx: 'auto',
                     mt: 1,
-                    fontSize: 15,
+                    p: 1.5,
+                    background: 'var(--surface-2)',
+                    border: '1px solid var(--line)',
+                    borderRadius: 'var(--r-2)',
                 }}
             >
-                <DoneLabel>Nomenclature</DoneLabel>
-                <DoneValue>{order.processNomenclatureName ?? '—'}</DoneValue>
-                <DoneLabel>Amount</DoneLabel>
-                <DoneValue>{formatUnits(order.amount, units, countable)}</DoneValue>
-                <DoneLabel>Outputs allocated</DoneLabel>
-                <DoneValue>
+                <ReviewLabel>Nomenclature</ReviewLabel>
+                <ReviewValue>
+                    {order.processNomenclatureName ?? '—'}
+                </ReviewValue>
+                <ReviewLabel>Amount</ReviewLabel>
+                <ReviewValue mono>
+                    {formatUnits(order.amount, units, countable)}
+                </ReviewValue>
+                <ReviewLabel>Outputs allocated</ReviewLabel>
+                <ReviewValue mono>
                     {formatUnits(allocatedQty, units, countable)} /{' '}
                     {formatUnits(totalQty, units, countable)}
-                </DoneValue>
-                <DoneLabel>Tares used</DoneLabel>
-                <DoneValue>{distinctTares}</DoneValue>
+                </ReviewValue>
+                <ReviewLabel>Tares used</ReviewLabel>
+                <ReviewValue mono>{distinctTares}</ReviewValue>
                 {order.executor && (
                     <>
-                        <DoneLabel>Executor</DoneLabel>
-                        <DoneValue>{order.executor}</DoneValue>
+                        <ReviewLabel>Executor</ReviewLabel>
+                        <ReviewValue>{order.executor}</ReviewValue>
                     </>
                 )}
                 {order.dueDate && (
                     <>
-                        <DoneLabel>Due</DoneLabel>
-                        <DoneValue>
-                            <Box
-                                component="span"
-                                sx={{ mr: 1 }}
-                            >
+                        <ReviewLabel>Due</ReviewLabel>
+                        <ReviewValue>
+                            <Box component="span" sx={{ mr: 1 }}>
                                 {formatLocalDate(order.dueDate)}
                             </Box>
                             {dueStatus && (
@@ -777,15 +1088,15 @@ const CompleteStep = ({
                                     }}
                                 />
                             )}
-                        </DoneValue>
+                        </ReviewValue>
                     </>
                 )}
                 {order.completed && (
                     <>
-                        <DoneLabel>Completed</DoneLabel>
-                        <DoneValue>
+                        <ReviewLabel>Completed</ReviewLabel>
+                        <ReviewValue>
                             {formatLocalDateTime(order.completed)}
-                        </DoneValue>
+                        </ReviewValue>
                     </>
                 )}
             </Box>
@@ -797,20 +1108,10 @@ const CompleteStep = ({
                         width: '100%',
                         maxWidth: 460,
                         mx: 'auto',
-                        mt: 1,
+                        mt: 1.5,
                     }}
                 >
-                    <Typography
-                        sx={{
-                            fontFamily: 'var(--font-mono)',
-                            fontSize: 11,
-                            fontWeight: 700,
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.07em',
-                            color: 'var(--ink-3)',
-                            mb: 0.75,
-                        }}
-                    >
+                    <Typography sx={{ ...monoEyebrowSx, mb: 0.75 }}>
                         By grade
                     </Typography>
                     <Box
@@ -830,7 +1131,7 @@ const CompleteStep = ({
                                     px: 1,
                                     py: 0.5,
                                     borderRadius: 'var(--r-2)',
-                                    background: 'var(--surface-2)',
+                                    background: 'var(--surface)',
                                     border: '1px solid var(--line)',
                                 }}
                             >
@@ -881,7 +1182,7 @@ const CompleteStep = ({
                         variant="contained"
                         size="large"
                         onClick={onBackToList}
-                        sx={{ minWidth: 180 }}
+                        sx={{ minWidth: 200, fontWeight: 700 }}
                     >
                         Back to list
                     </MuiButton>
@@ -901,7 +1202,7 @@ const CompleteStep = ({
                                   ? 'All outputs must be allocated before completing'
                                   : undefined
                         }
-                        sx={{ minWidth: 180 }}
+                        sx={{ minWidth: 200, fontWeight: 700 }}
                     >
                         {readOnly
                             ? 'Read-only'
@@ -912,21 +1213,5 @@ const CompleteStep = ({
                 )}
             </Box>
         </Paper>
-    )
-}
-
-function DoneLabel({ children }: { children: React.ReactNode }) {
-    return (
-        <Box component="span" sx={{ color: 'var(--ink-3)', fontWeight: 500 }}>
-            {children}
-        </Box>
-    )
-}
-
-function DoneValue({ children }: { children: React.ReactNode }) {
-    return (
-        <Box component="span" sx={{ color: 'var(--ink-1)', fontWeight: 500 }}>
-            {children}
-        </Box>
     )
 }
