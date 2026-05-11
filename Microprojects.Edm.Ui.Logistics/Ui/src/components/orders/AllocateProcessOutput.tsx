@@ -42,10 +42,19 @@ import {
 import { getData, postData, useGet } from '@logistics/hooks/hooks'
 import { useTareTransfer } from '@logistics/hooks/useTareTransfer'
 import { SmartScroll, SmartScrollContent } from '@microprojects/tools'
-import { Button } from '@mui/material'
-import type React from 'react'
+import {
+    ExpandLessOutlined as ExpandIcon,
+    ExpandMoreOutlined as CollapseIcon,
+} from '@mui/icons-material'
+import {
+    Alert,
+    Box,
+    Button as MuiButton,
+    CircularProgress,
+    Paper,
+    Typography,
+} from '@mui/material'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import '@logistics/components/repacking/Repacking.css'
 
 type AllocateProcessOutputProps = {
     orderId: UUID
@@ -53,9 +62,27 @@ type AllocateProcessOutputProps = {
     onChanged?: () => void
 }
 
+const monoLabelSx = {
+    fontFamily: 'var(--font-mono)',
+    fontSize: 11,
+    fontWeight: 700,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.07em',
+    color: 'var(--ink-3)',
+    mb: 0.5,
+}
+
+const panelHeadingSx = {
+    fontSize: 14,
+    fontWeight: 700,
+    color: 'var(--ink-1)',
+    m: 0,
+    mb: 0.75,
+}
+
 export function AllocateProcessOutput({
     orderId,
-    onClose,
+    onClose: _onClose,
     onChanged,
 }: AllocateProcessOutputProps) {
     const [[tareTypes]] = useGet<TreeDataItem[]>(
@@ -140,7 +167,6 @@ export function AllocateProcessOutput({
 
     const [submitting, setSubmitting] = useState(false)
     const [submitResult, setSubmitResult] = useState<AllocateOutputsResult>()
-    const [completing, setCompleting] = useState(false)
     const [error, setError] = useState<string>()
 
     // Wipe selection + pending only when the order itself changes.
@@ -382,22 +408,6 @@ export function AllocateProcessOutput({
         }
     }
 
-    const completeOrder = async () => {
-        setError(undefined)
-        setCompleting(true)
-        try {
-            await postData(`${api.orders}/${orderId}/complete`, {})
-            onChanged?.()
-            onClose?.()
-        } catch (e: any) {
-            setError(e?.message || 'Failed to complete the order')
-        }
-        setCompleting(false)
-    }
-
-    const canComplete =
-        unallocated.length === 0 && pending.length === 0 && !loading
-
     const onCtxAutofill = () => {
         distribute(ctxEligibleIds)
         closeContextMenu()
@@ -429,111 +439,148 @@ export function AllocateProcessOutput({
         selectByPredicate((i) => i.nomenclatureId === nomenclatureId)
 
     const targetToolbar = (
-        <div className="column-toolbar">
-            <div className="field-group">
-                <label>Add target tare</label>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <TareBarcodePicker
-                        tareTypeId={newTareTypeId}
-                        nomenclatureId={orderNomenclatureId}
-                        value={newTarePicked}
-                        onChange={(tare) => setNewTarePicked(tare)}
-                        placeholder="Tare barcode…"
-                        style={{ width: 220 }}
-                    />
-                    <HierarchyPicker
-                        data={tareTypeOptions}
-                        value={newTareTypeId}
-                        onChange={setNewTareTypeId}
-                        width={200}
-                        placeholder="Type (for new)..."
-                    />
-                    <Button variant="contained" onClick={searchAndAddTare}>
-                        Add tare
-                    </Button>
-                </div>
-            </div>
-            <div className="repacking-actions">
-                <Button
+        <Box>
+            <Typography sx={monoLabelSx}>Add target tare</Typography>
+            <Box
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    flexWrap: 'nowrap',
+                }}
+            >
+                <TareBarcodePicker
+                    tareTypeId={newTareTypeId}
+                    nomenclatureId={orderNomenclatureId}
+                    value={newTarePicked}
+                    onChange={(tare) => setNewTarePicked(tare)}
+                    placeholder="Tare barcode…"
+                    style={{ width: 220 }}
+                />
+                <HierarchyPicker
+                    data={tareTypeOptions}
+                    value={newTareTypeId}
+                    onChange={setNewTareTypeId}
+                    width={180}
+                    placeholder="Type (for new)…"
+                />
+                <MuiButton variant="contained" onClick={searchAndAddTare}>
+                    Add tare
+                </MuiButton>
+                <Box
+                    sx={{
+                        width: '1px',
+                        alignSelf: 'stretch',
+                        background: 'var(--line)',
+                        mx: 0.5,
+                    }}
+                />
+                {submitResult && submitResult.errors.length > 0 && (
+                    <Typography
+                        variant="caption"
+                        sx={{
+                            color: 'var(--sig-fault-deep)',
+                            whiteSpace: 'nowrap',
+                        }}
+                    >
+                        {submitResult.errors[0]}
+                    </Typography>
+                )}
+                <MuiButton
                     variant="contained"
                     color="success"
                     onClick={submit}
                     disabled={pending.length === 0 || submitting}
                 >
-                    {submitting ? 'Saving...' : `Apply (${pending.length})`}
-                </Button>
-                <Button variant="outlined" onClick={reset} disabled={pending.length === 0}>
+                    {submitting ? 'Saving…' : `Apply (${pending.length})`}
+                </MuiButton>
+                <MuiButton
+                    variant="outlined"
+                    onClick={reset}
+                    disabled={pending.length === 0}
+                >
                     Reset
-                </Button>
-                {submitResult && submitResult.errors.length > 0 && (
-                    <span
-                        style={{
-                            color: '#d32f2f',
-                            fontSize: '0.85rem',
-                        }}
-                    >
-                        {submitResult.errors[0]}
-                    </span>
-                )}
-            </div>
-        </div>
+                </MuiButton>
+            </Box>
+        </Box>
     )
 
     return (
-        <div className="repacking-page">
+        <Box
+            sx={{
+                flex: 1,
+                minHeight: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 1,
+            }}
+        >
             {error && (
-                <div style={{ color: '#d32f2f', marginBottom: '0.5rem' }}>
+                <Alert severity="error" sx={{ mb: 0.5 }}>
                     {error}
-                </div>
+                </Alert>
             )}
 
-            <div
-                style={{
+            <Box
+                sx={{
                     display: 'flex',
                     flexDirection: 'row',
-                    gap: 20,
-                    marginBottom: 0,
-                    background: '#fff',
+                    gap: 2.5,
                     alignItems: 'center',
+                    px: 1,
+                    py: 0.75,
+                    borderRadius: 'var(--r-2)',
+                    background: 'var(--surface-2)',
+                    border: '1px solid var(--line)',
                     flexShrink: 0,
                 }}
             >
-                <div
-                    style={{
+                <Box
+                    sx={{
                         flex: 1,
-                        fontSize: '1rem',
-                        fontWeight: 500,
+                        minWidth: 0,
                         display: 'flex',
                         alignItems: 'baseline',
-                        gap: '0.4rem',
+                        gap: 0.75,
                     }}
                 >
                     {order && (
                         <>
-                            <span>{order.processName}</span>
+                            <Typography
+                                sx={{
+                                    fontSize: 14,
+                                    fontWeight: 700,
+                                    color: 'var(--ink-1)',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap',
+                                }}
+                            >
+                                {order.processName}
+                            </Typography>
                             {order.processNomenclatureName && (
-                                <small style={{ color: '#777' }}>
-                                    &middot; {order.processNomenclatureName}
-                                </small>
+                                <Typography
+                                    variant="caption"
+                                    sx={{ color: 'var(--ink-3)' }}
+                                >
+                                    · {order.processNomenclatureName}
+                                </Typography>
                             )}
                             {order.completed && (
-                                <small style={{ color: '#2e7d32' }}>
-                                    &middot; Completed
-                                </small>
+                                <Typography
+                                    variant="caption"
+                                    sx={{ color: 'var(--sig-run-deep)' }}
+                                >
+                                    · Completed
+                                </Typography>
                             )}
                         </>
                     )}
-                </div>
-                <div style={{ flex: 1 }}>{targetToolbar}</div>
-            </div>
+                </Box>
+                <Box sx={{ flex: '0 0 auto' }}>{targetToolbar}</Box>
+            </Box>
 
-            <div
-                style={{
-                    flex: 1,
-                    minHeight: 0,
-                    overflow: 'auto',
-                }}
-            >
+            <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
                 <SmartScroll
                     offsetTop={0}
                     style={{
@@ -544,16 +591,27 @@ export function AllocateProcessOutput({
                     }}
                 >
                     <SmartScrollContent style={{ flex: 1 }}>
-                        <div className="repacking-panel source">
-                            <h3>Unallocated outputs</h3>
-                            <div
-                                style={{
+                        <Paper
+                            elevation={0}
+                            sx={{
+                                p: 1.25,
+                                border: '1px solid var(--line)',
+                                borderRadius: 'var(--r-2)',
+                                background: 'var(--surface)',
+                            }}
+                        >
+                            <Typography component="h3" sx={panelHeadingSx}>
+                                Unallocated outputs
+                            </Typography>
+                            <Box
+                                sx={{
                                     display: 'flex',
                                     flexWrap: 'wrap',
                                     alignItems: 'center',
-                                    columnGap: '1rem',
-                                    rowGap: '0.25rem',
-                                    margin: '0.25rem 0 0.5rem',
+                                    columnGap: 2,
+                                    rowGap: 0.5,
+                                    mt: 0.5,
+                                    mb: 1,
                                 }}
                             >
                                 {grades && grades.length > 0 && (
@@ -569,23 +627,36 @@ export function AllocateProcessOutput({
                                     onPick={selectByNomenclature}
                                 />
                                 {selectionLabel && (
-                                    <span
+                                    <Typography
+                                        variant="caption"
                                         title="Click an empty target slot to place, or right-click for more."
-                                        style={{
-                                            fontSize: '0.85rem',
-                                            color: '#1976d2',
-                                            marginLeft: 'auto',
+                                        sx={{
+                                            color: 'var(--accent)',
+                                            fontWeight: 600,
+                                            ml: 'auto',
                                         }}
                                     >
                                         {selectionLabel}
-                                    </span>
+                                    </Typography>
                                 )}
-                            </div>
-                            {loading && <span>Loading...</span>}
+                            </Box>
+                            {loading && (
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 1,
+                                        color: 'var(--ink-3)',
+                                    }}
+                                >
+                                    <CircularProgress size={14} />
+                                    <Typography variant="caption">
+                                        Loading…
+                                    </Typography>
+                                </Box>
+                            )}
                             {!loading && unallocated.length === 0 && (
-                                <div className="no-items-message">
-                                    No unallocated outputs
-                                </div>
+                                <EmptyMsg text="No unallocated outputs" />
                             )}
                             {unallocated.length > 0 && (
                                 <OutputItemsPanel
@@ -596,17 +667,24 @@ export function AllocateProcessOutput({
                                     onItemContextMenu={openContextMenu}
                                 />
                             )}
-                        </div>
+                        </Paper>
                     </SmartScrollContent>
 
                     <SmartScrollContent style={{ flex: 1 }}>
-                        <div className="repacking-panel target">
-                            <h3>Target tares</h3>
+                        <Paper
+                            elevation={0}
+                            sx={{
+                                p: 1.25,
+                                border: '1px solid var(--line)',
+                                borderRadius: 'var(--r-2)',
+                                background: 'var(--surface)',
+                            }}
+                        >
+                            <Typography component="h3" sx={panelHeadingSx}>
+                                Target tares
+                            </Typography>
                             {targetTares.length === 0 && (
-                                <div className="no-items-message">
-                                    Add target tares by barcode search or create
-                                    new ones
-                                </div>
+                                <EmptyMsg text="Add target tares by barcode search or create new ones" />
                             )}
                             {targetTares.map((t) => {
                                 const isExpanded = expandedTareIds.has(t.id)
@@ -616,52 +694,60 @@ export function AllocateProcessOutput({
                                         i.orderId === orderId &&
                                         !pendingItemIds.has(i.id),
                                 )
+                                const Icon = isExpanded ? ExpandIcon : CollapseIcon
                                 return (
-                                    <div
+                                    <Box
                                         key={t.id}
-                                        style={{
-                                            border: '1px solid #e0e0e0',
-                                            borderRadius: 6,
-                                            marginBottom: 8,
-                                            background: '#fafafa',
+                                        sx={{
+                                            border: '1px solid var(--line)',
+                                            borderRadius: 'var(--r-2)',
+                                            mb: 1,
+                                            background: 'var(--surface-2)',
+                                            overflow: 'hidden',
                                         }}
                                     >
-                                        <div
+                                        <Box
                                             onClick={() =>
                                                 toggleTareExpanded(t.id)
                                             }
-                                            style={{
+                                            sx={{
                                                 display: 'flex',
                                                 alignItems: 'center',
-                                                gap: '0.5rem',
-                                                padding: '0.4rem 0.6rem',
+                                                gap: 1,
+                                                px: 1,
+                                                py: 0.75,
                                                 cursor: 'pointer',
                                                 userSelect: 'none',
+                                                '&:hover': {
+                                                    background: 'var(--surface-3)',
+                                                },
                                             }}
                                         >
-                                            <span
-                                                style={{
-                                                    width: 14,
-                                                    color: '#666',
+                                            <Icon
+                                                fontSize="small"
+                                                sx={{ color: 'var(--ink-3)' }}
+                                            />
+                                            <Typography
+                                                sx={{
+                                                    fontFamily:
+                                                        'var(--font-mono)',
+                                                    fontSize: 13,
+                                                    fontWeight: 700,
+                                                    color: 'var(--ink-1)',
                                                 }}
                                             >
-                                                {isExpanded
-                                                    ? '\u25be'
-                                                    : '\u25b8'}
-                                            </span>
-                                            <strong
-                                                style={{ fontSize: '0.9rem' }}
-                                            >
                                                 {t.barcode || 'Tare'}
-                                            </strong>
-                                            <small style={{ color: '#777' }}>
-                                                {t.tareTypeName}
-                                                {' \u00b7 '}
+                                            </Typography>
+                                            <Typography
+                                                variant="caption"
+                                                sx={{ color: 'var(--ink-3)' }}
+                                            >
+                                                {t.tareTypeName} ·{' '}
                                                 {t.items.length}/{cap}
-                                            </small>
-                                            <span style={{ flex: 1 }} />
+                                            </Typography>
+                                            <Box sx={{ flex: 1 }} />
                                             {!hasCommittedFromOrder && (
-                                                <Button
+                                                <MuiButton
                                                     size="small"
                                                     variant="text"
                                                     onClick={(e) => {
@@ -670,13 +756,15 @@ export function AllocateProcessOutput({
                                                     }}
                                                 >
                                                     Remove
-                                                </Button>
+                                                </MuiButton>
                                             )}
-                                        </div>
+                                        </Box>
                                         {isExpanded && (
-                                            <div
-                                                style={{
-                                                    padding: '0 0.6rem 0.6rem',
+                                            <Box
+                                                sx={{
+                                                    px: 1,
+                                                    pb: 1,
+                                                    background: 'var(--surface)',
                                                 }}
                                             >
                                                 <TareSchematic
@@ -698,15 +786,15 @@ export function AllocateProcessOutput({
                                                         )
                                                     }
                                                 />
-                                            </div>
+                                            </Box>
                                         )}
-                                    </div>
+                                    </Box>
                                 )
                             })}
-                        </div>
+                        </Paper>
                     </SmartScrollContent>
                 </SmartScroll>
-            </div>
+            </Box>
 
             {ctxMenu && (
                 <TransferContextMenu
@@ -724,6 +812,22 @@ export function AllocateProcessOutput({
                     onClose={closeContextMenu}
                 />
             )}
-        </div>
+        </Box>
+    )
+}
+
+function EmptyMsg({ text }: { text: string }) {
+    return (
+        <Box
+            sx={{
+                py: 1.5,
+                textAlign: 'center',
+                color: 'var(--ink-3)',
+                fontStyle: 'italic',
+                fontSize: 13,
+            }}
+        >
+            {text}
+        </Box>
     )
 }
