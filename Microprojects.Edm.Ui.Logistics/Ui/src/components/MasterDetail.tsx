@@ -9,6 +9,15 @@ import {
     type DetailProps as PkgDetailProps,
     MasterDetail as PkgMasterDetail,
 } from '@microprojects/edm-components/components/master/MasterDetail'
+import {
+    AccountTreeOutlined as ProcessIcon,
+    AllInboxOutlined as TareTypeIcon,
+    CategoryOutlined as NomenclatureIcon,
+    Inventory2Outlined as ItemIcon,
+    ListAltOutlined as OrderIcon,
+    LocalShippingOutlined as SupplyIcon,
+    WidgetsOutlined as TareIcon,
+} from '@mui/icons-material'
 import {Button} from '@progress/kendo-react-buttons'
 import {Form, FormElement} from '@progress/kendo-react-form'
 import axios from 'axios'
@@ -45,6 +54,27 @@ export {DetailEditModeContext, EMPTY_GUID}
 // Per-instance so it resets across kind navigations; module-level would drop new items into the previous view's folder when the new list is empty.
 const RootItemContext = createContext<TreeDataItem | undefined>(undefined)
 
+// URL prefix → entity type for Logistics. The entity type name must match a corresponding `--ent-{name}-deep` token in logistics-entities.css.
+const LOGISTICS_ENTITY_TYPE_MAP = [
+    {urlPrefix: '/nomenclatures', entityType: 'nomenclature'},
+    {urlPrefix: '/taretypes',     entityType: 'taretype'},
+    {urlPrefix: '/processes',     entityType: 'process'},
+    {urlPrefix: '/orders',        entityType: 'order'},
+    {urlPrefix: '/items',         entityType: 'item'},
+    {urlPrefix: '/supplies',      entityType: 'supply'},
+    {urlPrefix: '/tares',         entityType: 'tare'},
+]
+
+const LOGISTICS_ICON_MAP = {
+    nomenclature: NomenclatureIcon,
+    taretype:     TareTypeIcon,
+    process:      ProcessIcon,
+    order:        OrderIcon,
+    item:         ItemIcon,
+    supply:       SupplyIcon,
+    tare:         TareIcon,
+}
+
 export type MasterDetailProps = {
     api: string
     getHierarchyQuery?: () => Record<string, string | undefined>
@@ -52,6 +82,7 @@ export type MasterDetailProps = {
     type: string
     detail: React.ReactElement
     path: string
+    entityType?: string
 }
 
 export function MasterDetail(props: MasterDetailProps) {
@@ -88,6 +119,9 @@ export function MasterDetail(props: MasterDetailProps) {
                 refreshToken={treeToken}
                 onRootLoaded={setRootItem}
                 getHierarchyQuery={props.getHierarchyQuery}
+                entityTypeMap={LOGISTICS_ENTITY_TYPE_MAP}
+                iconMap={LOGISTICS_ICON_MAP}
+                entityType={props.entityType}
                 unwrapSingleRoot
             />
         </RootItemContext.Provider>
@@ -125,6 +159,7 @@ export type DetailProps = {
     readonly?: boolean
     title?: string
     subTitle?: string
+    entityType?: string
 }
 
 export function Detail({editable = true, copyable = true, deletable = true, readonly = false, ...props}: DetailProps) {

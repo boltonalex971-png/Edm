@@ -1,0 +1,26 @@
+/* Logistics entity-color tokens. Values chosen for vivid-yet-industrial chroma so each entity reads as a distinct hue at a glance (the package's --hue-*-deep tokens are intentionally muted for Tech and were perceived as grey here). Pairs are also spread across distinct colour families so no two entities collide. */
+
+:root {
+    /* Nomenclature — deep blue */
+    --ent-nomenclature-soft: #DBE5FF;   --ent-nomenclature-deep: #1E40AF;
+    /* TareType — vivid green */
+    --ent-taretype-soft:     #D1FAE1;   --ent-taretype-deep:     #16A34A;
+    /* Process (generic / kind unset) — indigo */
+    --ent-process-soft:      #E0E1FB;   --ent-process-deep:      #3730A3;
+    /* Manufacturing process — warm crimson ("hot") */
+    --ent-manufacturing-soft: #FBDCE1;  --ent-manufacturing-deep: #BE123C;
+    /* Technology process — violet (blueprint / recipe) */
+    --ent-technology-soft:   #EDE9FE;   --ent-technology-deep:   #7C3AED;
+    /* Operation process — gold ("active / live work") */
+    --ent-operation-soft:    #FEF3C7;   --ent-operation-deep:    #CA8A04;
+    /* Order — plum-magenta */
+    --ent-order-soft:        #F4D9F0;   --ent-order-deep:        #86198F;
+    /* Item — burnt orange */
+    --ent-item-soft:         #FCE3CB;   --ent-item-deep:         #B45309;
+    /* Supply — sky/azure */
+    --ent-supply-soft:       #CDE6F4;   --ent-supply-deep:       #075985;
+    /* Tare — deep brown (physical instance, pairs with TareType green) */
+    --ent-tare-soft:         #EADDD2;   --ent-tare-deep:         #78350F;
+    /* Folder — warm amber, shared across all entities */
+    --ent-folder-soft:       #FCE6B7;   --ent-folder-deep:       #D97706;
+}

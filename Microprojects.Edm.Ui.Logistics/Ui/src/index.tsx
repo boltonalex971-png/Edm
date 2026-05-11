@@ -19,6 +19,7 @@ import { defaultTheme } from '@microprojects/edm-components/styles/theme'
 import store from './store'
 import '@microprojects/edm-components/styles/tokens.css'
 import '@microprojects/edm-components/styles/chrome.css'
+import './logistics-entities.css'
 
 // Bridge Logistics's existing SignalR publisher to the package's lock
 // store. Validates `type` via parseEntityType so a typo never escapes

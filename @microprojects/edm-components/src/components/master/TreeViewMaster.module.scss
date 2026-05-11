@@ -8,21 +8,10 @@
     box-shadow: var(--elev-1);
     overflow: hidden;
 
-    // Item-icon colour pulls from the entity-deep token of whatever entity
-    // the master list represents. Background stays transparent — the colour
-    // alone carries entity identity in the rail. !important wins over MUI's
-    // own action.active default on the tree-item icon container. Folder
-    // rows override below to use the universal folder-deep tone instead.
-    &.process   :global(.MuiTreeItem-iconContainer)  { color: var(--ent-process-deep) !important; }
-    &.device    :global(.MuiTreeItem-iconContainer)  { color: var(--ent-device-deep) !important; }
-    &.host      :global(.MuiTreeItem-iconContainer)  { color: var(--ent-host-deep) !important; }
-    &.workplace :global(.MuiTreeItem-iconContainer)  { color: var(--ent-workplace-deep) !important; }
-    &.workbench :global(.MuiTreeItem-iconContainer)  { color: var(--ent-workbench-deep) !important; }
-    &.operation :global(.MuiTreeItem-iconContainer)  { color: var(--ent-operation-deep) !important; }
-    &.audit     :global(.MuiTreeItem-iconContainer)  { color: var(--ent-audit-deep) !important; }
-    &.profile   :global(.MuiTreeItem-iconContainer)  { color: var(--ent-profile-deep) !important; }
-    &.driver    :global(.MuiTreeItem-iconContainer)  { color: var(--ent-driver-deep) !important; }
-    &.plugin    :global(.MuiTreeItem-iconContainer)  { color: var(--ent-plugin-deep) !important; }
+    // Class-based fallback: TreeViewMaster also applies icon colour inline; this rule wins specificity vs `.treeBody .MuiTreeItem-root .MuiTreeItem-iconContainer` when inline doesn't reach the DOM (e.g. SSR or theme-provider swallowing style).
+    &.masterContainer :global(.MuiTreeItem-iconContainer) {
+        color: var(--entity-color, var(--ent-folder-deep, var(--ink-3))) !important;
+    }
 }
 
 .header {

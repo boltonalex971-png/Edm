@@ -60,10 +60,12 @@ export function Processes({ kind }: { kind?: ProcessKind }) {
     const { path } = useBasePath()
     const navigate = useNavigate()
     const api = Api.processes
+    const entityType = kind ? kind.toLowerCase() : 'process'
     return (
         <MasterDetail
             type={type}
             api={api}
+            entityType={entityType}
             getHierarchyQuery={kind ? () => ({ kind }) : undefined}
             path={path || ''}
             stubMessage="Please select a process"
@@ -120,10 +122,12 @@ export function ProcessDetail({
     }
 
     const missedInputs = JSON.parse(data.message || '[]')
+    const kindForColor = (kind ?? (data.kind as ProcessKind | undefined))?.toLowerCase()
     return (
         <Detail
             {...props}
             id={id}
+            entityType={kindForColor}
             icon={<Diagram3 title="Process" />}
             loading={loading}
             error={error as string}

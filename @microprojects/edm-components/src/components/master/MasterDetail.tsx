@@ -108,6 +108,10 @@ export interface MasterDetailProps {
     getHierarchyQuery?: () => Record<string, string | undefined>;
     /** Forwarded to TreeViewMaster — hidden-root unwrap for Logistics-style trees. */
     unwrapSingleRoot?: boolean;
+    /** Explicit entity type override — bypasses URL-prefix detection. Use when one
+     *  URL hosts multiple kinds (e.g. Logistics's `/processes` for manufacturing /
+     *  technology / operation). Forwarded to TreeViewMaster. */
+    entityType?: string;
 }
 
 const SEPARATOR_MIN_PX = 80;
@@ -216,6 +220,7 @@ export function MasterDetail(props: MasterDetailProps) {
                         onRootLoaded={props.onRootLoaded}
                         getHierarchyQuery={props.getHierarchyQuery}
                         unwrapSingleRoot={props.unwrapSingleRoot}
+                        entityType={props.entityType}
                     />
                 </SmartScrollContent>
                 {resizable && <PaneSeparator onDrag={onSeparatorDrag} />}
@@ -402,6 +407,11 @@ export interface DetailProps {
     title?: string;
     /** Override the description shown in the header (default: `data.description`). */
     subTitle?: string;
+    /** Visual entity-color override for the header icon — bypasses the `type`-derived
+     *  CSS variable lookup. Use when one `type` hosts multiple visual kinds (e.g.
+     *  Logistics's three process kinds keep `type='process'` for locks/refresh but
+     *  need distinct icon hues). Lock and refresh still use `type`. */
+    entityType?: string;
 }
 
 export function Detail(props: DetailProps) {
@@ -561,9 +571,20 @@ export function Detail(props: DetailProps) {
                                 data-card-header="true"
                                 className={styles.stickyHeader}
                             >
-                                <Box className={`${styles.iconWrapper} ${displayProps.type ? (styles as any)[displayProps.type] || '' : ''}`}>
-                                    {displayProps.icon || (displayProps.type === 'folder' ? <FolderIcon /> : <FileIcon />)}
-                                </Box>
+                                {(() => {
+                                    const colorKey = displayProps.entityType ?? displayProps.type;
+                                    return (
+                                        <Box
+                                            className={`${styles.iconWrapper} ${colorKey ? (styles as any)[colorKey] || '' : ''}`}
+                                            style={colorKey ? {
+                                                background: `var(--ent-${colorKey}-soft, var(--surface-2))`,
+                                                color: `var(--ent-${colorKey}-deep, var(--ink-2))`,
+                                            } : undefined}
+                                        >
+                                            {displayProps.icon || (displayProps.type === 'folder' ? <FolderIcon /> : <FileIcon />)}
+                                        </Box>
+                                    );
+                                })()}
 
                                 <Breadcrumbs
                                     separator={<NavigateNextIcon fontSize="inherit" />}

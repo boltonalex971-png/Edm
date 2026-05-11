@@ -63,6 +63,7 @@ interface IndustrialTreeItemProps {
     entityTypeMap?: Array<{urlPrefix: string; entityType: string}>;
     iconMap?: Record<string, React.ComponentType<any>>;
     descriptionMap?: Map<string, string>;
+    entityType?: string;
 }
 
 // Custom Tree Item with D&D integration
@@ -71,7 +72,7 @@ const IndustrialTreeItem = React.forwardRef<HTMLLIElement, IndustrialTreeItemPro
         itemId, label, isFolder, apiPath,
         itemsWithChildren, expandedSet, selectedId,
         activeNode, treeData, entityTypeMap, iconMap,
-        descriptionMap,
+        descriptionMap, entityType: entityTypeOverride,
         ...treeItemProps
     } = props;
 
@@ -131,6 +132,14 @@ const IndustrialTreeItem = React.forwardRef<HTMLLIElement, IndustrialTreeItemPro
         ? (isEmptyFolder ? styles.emptyFolderItem : styles.folderItem)
         : styles.fileItem;
 
+    // Resolve icon colour against the consumer's entity-color tokens; folders take the universal folder hue, empty folders stay muted, leaves take their entity hue. Explicit `entityType` prop wins over URL-prefix detection so per-instance overrides (e.g. process kinds sharing the same URL) work.
+    const entityType = entityTypeOverride ?? getEntityType(apiPath, entityTypeMap);
+    const iconColor = itemIsFolder
+        ? (isEmptyFolder ? 'var(--ink-4)' : 'var(--ent-folder-deep)')
+        : entityType
+            ? `var(--ent-${entityType}-deep)`
+            : 'var(--ink-3)';
+
     const iconCursor = !itemIsFolder
         ? 'pointer'
         : isEmptyFolder
@@ -152,12 +161,12 @@ const IndustrialTreeItem = React.forwardRef<HTMLLIElement, IndustrialTreeItemPro
                 <div
                     {...rest}
                     onClick={handleClick}
-                    style={{...muiStyle, cursor: iconCursor}}
+                    style={{...muiStyle, cursor: iconCursor, color: iconColor}}
                 />
             );
         };
         return Slot;
-    }, [itemIsFolder, iconCursor]);
+    }, [itemIsFolder, iconCursor, iconColor]);
 
     const dropClass = dropValidity === 'valid'
         ? styles.dropInto
@@ -209,6 +218,10 @@ export interface TreeViewMasterProps {
      *  are rendered at the top level instead of the root itself. Logistics-style
      *  hidden-root layout. Default: false. */
     unwrapSingleRoot?: boolean;
+    /** Explicit entity type override — used when multiple kinds share one API URL
+     *  (e.g. Logistics's three process kinds) and URL-prefix detection isn't enough.
+     *  Takes precedence over `entityTypeMap` lookup. */
+    entityType?: string;
 }
 
 function buildHierarchyUrl(base: string, query?: Record<string, string | undefined>): string {
@@ -232,6 +245,7 @@ export function TreeViewMaster(props: TreeViewMasterProps) {
         unwrapSingleRoot = false,
         entityTypeMap = DEFAULT_ENTITY_TYPE_MAP,
         iconMap = DEFAULT_ICON_MAP,
+        entityType: entityTypeOverride,
     } = props;
     const [render, setRender] = useState(0);
     _render = render;
@@ -390,10 +404,16 @@ export function TreeViewMaster(props: TreeViewMasterProps) {
         [activeId, treeData]
     );
 
-    const entityType = useMemo(() => getEntityType(apiPath, entityTypeMap), [apiPath, entityTypeMap]);
+    const masterEntityType = useMemo(
+        () => entityTypeOverride ?? getEntityType(apiPath, entityTypeMap),
+        [entityTypeOverride, apiPath, entityTypeMap],
+    );
+    const masterColorStyle = masterEntityType
+        ? ({'--entity-color': `var(--ent-${masterEntityType}-deep)`} as React.CSSProperties)
+        : undefined;
 
     return (
-        <Box className={`${styles.masterContainer} ${entityType ? (styles as any)[entityType] || '' : ''}`}>
+        <Box className={styles.masterContainer} style={masterColorStyle}>
             <Box className={styles.header}>
                 <TextField
                     className={styles.searchField}
@@ -450,6 +470,7 @@ export function TreeViewMaster(props: TreeViewMasterProps) {
                                     entityTypeMap,
                                     iconMap,
                                     descriptionMap,
+                                    entityType: entityTypeOverride,
                                 } as any,
                             }}
                         />
