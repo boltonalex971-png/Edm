@@ -222,6 +222,11 @@ export interface TreeViewMasterProps {
      *  (e.g. Logistics's three process kinds) and URL-prefix detection isn't enough.
      *  Takes precedence over `entityTypeMap` lookup. */
     entityType?: string;
+    /** URL segment used as the "new (unsaved) item" sentinel by the Add Folder /
+     *  Add Item buttons. Default `'0'` matches Tech's int-keyed entities;
+     *  Logistics passes the empty Guid so the new-item route hits a valid Guid
+     *  the backend recognises as a fresh record. */
+    newId?: string;
 }
 
 function buildHierarchyUrl(base: string, query?: Record<string, string | undefined>): string {
@@ -246,6 +251,7 @@ export function TreeViewMaster(props: TreeViewMasterProps) {
         entityTypeMap = DEFAULT_ENTITY_TYPE_MAP,
         iconMap = DEFAULT_ICON_MAP,
         entityType: entityTypeOverride,
+        newId = '0',
     } = props;
     const [render, setRender] = useState(0);
     _render = render;
@@ -427,12 +433,12 @@ export function TreeViewMaster(props: TreeViewMasterProps) {
                     }}
                 />
                 <Tooltip title="Add Folder">
-                    <IconButton className={styles.actionBtn} onClick={() => navigate(`${url}/folder/0`)}>
+                    <IconButton className={styles.actionBtn} onClick={() => navigate(`${url}/folder/${newId}`)}>
                         <CreateFolderIcon fontSize="small" />
                     </IconButton>
                 </Tooltip>
                 <Tooltip title="Add Item">
-                    <IconButton className={styles.actionBtn} onClick={() => navigate(`${url}/0`)}>
+                    <IconButton className={styles.actionBtn} onClick={() => navigate(`${url}/${newId}`)}>
                         <AddIcon fontSize="small" />
                     </IconButton>
                 </Tooltip>

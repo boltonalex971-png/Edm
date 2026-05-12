@@ -2,6 +2,12 @@
 
 The Logistics app (`/logistics`) covers nomenclature, tare, supplies, items, orders, repacking, allocation, the operator desktop, and the manufacturing process tree. It was added in v1.13.0 and has been the focus of most recent work.
 
+## v2.0.0
+
+- **v2 visual refresh built on the shared component package** (PR #58). The Logistics shell, master/detail layout, hierarchy pickers, search and tabbed relation tables now use the `@microprojects/edm-components` primitives, so tokens, fonts, density and colour scheme stay in step with Technologies, Console and the new Hub. Homepages, the operator desktop, the configuration trees (Nomenclature, Tare types, Processes) and the item / order / allocation flows pick up the refreshed look, and inputs use the unified `Field` / `HierarchyPicker` / `RelationTable` building blocks instead of plugin-local copies.
+- **Add Item / Add Folder no longer fail with "Failed to load data"**. The master-tree Add buttons (and the empty-state "Add" action) used to navigate to `/0`, which the Logistics backend rejected because its ids are Guids; the new-item route now uses the empty Guid sentinel so the editor opens cleanly on Nomenclatures, Tare types and Processes.
+- **Relation tabs — adding a new row works again**. The "Add record" button on the relation tables (Nomenclature ↔ Tare-types, Process Grades / Specification / Sub-processes, Order Specification) used to POST a new row with `id: 0`, which Logistics rejected because the id column is a Guid; new rows are now POSTed with the empty Guid sentinel and the backend creates them as fresh records.
+
 ## v1.13.28
 
 - **Repacking — Reset and source-tare visibility** (`550d3bb`). Reset now correctly returns pending-moved items to their original slots — the move clones items into the target tare and leaves the source rows in place, hidden from the source pool until Apply. A source tare row stays visible while all of its items have been moved out, so you can see what you've removed and clear the tare manually when you're finished.

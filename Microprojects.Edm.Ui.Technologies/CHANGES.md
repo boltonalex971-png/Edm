@@ -2,6 +2,12 @@
 
 The Main UI is the EDM home screen: dashboard, new-operation wizard, the configuration trees (workbenches, devices, profiles, processes, audits) and the operation card with sensor reports. It is mounted at the site root.
 
+## v2.0.0
+
+- **v2 visual redesign** (PR #55). The home page, master / detail layout, configuration trees (devices, profiles, processes, audits, hosts, workplaces, workbenches), the operation card and the dashboard adopt the new design tokens, density toggle and theme / scheme controls shared with Console and Logistics. Editor sections, properties grid and inline forms switch to the `Field`-based primitives; empty/error/loading states get a consistent presentation. See `docs/design-handoff-notes-v2.md` and the bundled `Edm design-handoff v2.zip` for the source material.
+- **Master tree-view UX fixes** (PR #45). The detail panel and tree-view styling on the configuration trees are corrected so selections and panel layout behave as designed.
+- **Operation start fix** (PR #42). Starting an operation from the Operation menu goes through reliably again — the menu wiring no longer drops the launch action.
+
 ## v1.13.28
 
 - **Process picker fix in the New Operation wizard** (PR #41). Selecting a process is reliable again when a folder and a process happen to share the same numeric id — the picker now uses prefixed values (`process-…` / `node-…`) so the controlled state can't latch onto a disabled folder row.

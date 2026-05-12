@@ -1,5 +1,10 @@
 ﻿# @microprojects/edm-components — Changes
 
+## 0.4.3 — `MasterDetail` / `TreeViewMaster` / `RelationTable` configurable new-item id
+
+- **`newId?: string`** (NEW prop, default `'0'`). Added to both `TreeViewMaster` and `MasterDetail`. Drives the URL segment used by the Add Folder / Add Item header buttons and the empty-state DetailStub Add action — previously hard-coded to `'0'`. Tech (int-keyed entities) keeps the default; Logistics passes `EMPTY_GUID` so the new-item route hits a valid Guid the backend recognises as a fresh record. Fixes the "Failed to load data" Logistics users saw when pressing Add Item / Add Folder, where the Detail then GETted `${api}/0` and got 404 because Logistics ids are Guids. `MasterDetail` forwards `newId` to its inner `TreeViewMaster`.
+- **`RelationTable` — `newId?: string | number`** (NEW prop, default `0`). `processRowUpdate` now stamps `dataToSave.id = newId` on a new row before POST, instead of the hard-coded `0`. Logistics's local `RelationTable` shim defaults `newId={EMPTY_GUID}` so creating a new row in Nomenclature ↔ Tare-types, Process Grades / Specification / Sub-processes and Order Specification tabs no longer fails with a model-binding error on the Guid id column.
+
 ## 0.1.0 — initial scaffold (Phase 1)
 
 Phase-1 lift of v2 primitives from `Microprojects.Edm.Ui.Technologies/Ui/src/`. Lifts are TypeScript-converted (no logic refactor) per the extraction plan.

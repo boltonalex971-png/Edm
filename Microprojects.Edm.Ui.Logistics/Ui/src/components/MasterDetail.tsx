@@ -119,6 +119,7 @@ export function MasterDetail(props: MasterDetailProps) {
                 entityTypeMap={LOGISTICS_ENTITY_TYPE_MAP}
                 iconMap={LOGISTICS_ICON_MAP}
                 entityType={props.entityType}
+                newId={EMPTY_GUID}
                 unwrapSingleRoot
             />
         </RootItemContext.Provider>
