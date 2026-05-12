@@ -75,7 +75,7 @@ export function DefaultEditCell({id, field, value, api}: any) {
 }
 
 // Utility to parse <GridColumn>-style children into MUI GridColDef
-export const parseChildrenToColumns = (children: React.ReactNode, options: {onRowSelected?: (row: any) => void} = {}): any[] => {
+export const parseChildrenToColumns = (children: React.ReactNode, options: {onRowSelected?: (row: any, update: () => void) => void} = {}): any[] => {
     const columns: any[] = [];
 
     React.Children.forEach(children, (child: any) => {
@@ -142,7 +142,12 @@ export interface RelationTableProps {
     /** Show the "Add record" button. Defaults to `editable !== false`. */
     creatable?: boolean;
     selectable?: boolean;
-    onRowSelected?: (row: any) => void;
+    /** Fires when the user activates a row — by row click in the default mode,
+     *  or via the checkbox selection model when `selectable` is on. The second
+     *  arg is a reload callback so the handler can refresh the table after a
+     *  side-effecting save (Logistics's "open the link pane and allocate" flow
+     *  uses this to re-pull rows after a successful POST). */
+    onRowSelected?: (row: any, update: () => void) => void;
     /** Sentinel id stamped onto a new row's POST body so the backend recognises
      *  it as a fresh record. Default `0` matches Tech's int-keyed entities;
      *  Logistics passes the empty Guid because its ids are Guid-typed and `0`
@@ -521,10 +526,17 @@ export function RelationTable({
                                     onRowEditStop={(_params: any, event: any) => { event.defaultMuiPrevented = true; }}
                                     processRowUpdate={processRowUpdate}
                                     onProcessRowUpdateError={(err: any) => console.error('Error processing row update:', err)}
+                                    onRowClick={(params: any) => {
+                                        // Selection mode owns the click — let the checkbox/selection model
+                                        // drive onRowSelected so the two paths don't compete.
+                                        if (selectable || !onRowSelected) return;
+                                        if (rowModesModel[params.id]?.mode === GridRowModes.Edit) return;
+                                        onRowSelected(params.row, () => setReload((r) => !r));
+                                    }}
                                     onRowSelectionModelChange={(newSelectionModel: any) => {
                                         if (onRowSelected && newSelectionModel.length > 0) {
                                             const selectedRow = currentData.find((r: any) => r.id === newSelectionModel[0]);
-                                            if (selectedRow) onRowSelected(selectedRow);
+                                            if (selectedRow) onRowSelected(selectedRow, () => setReload((r) => !r));
                                         }
                                     }}
                                     checkboxSelection={!!selectable}
@@ -533,6 +545,7 @@ export function RelationTable({
                                     autoHeight={filteredRows.length < 15}
                                     pageSizeOptions={[10, 25, 50]}
                                     initialState={{pagination: {paginationModel: {pageSize: 25}}}}
+                                    sx={onRowSelected && !selectable ? {'& .MuiDataGrid-row': {cursor: 'pointer'}} : undefined}
                                 />
                             </Box>
                         </Fade>
