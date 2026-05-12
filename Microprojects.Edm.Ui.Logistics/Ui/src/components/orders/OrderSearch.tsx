@@ -235,6 +235,7 @@ export const OrderSearch = (props: OrderSearchProps) => {
                                 setSubDetail(
                                     <OrderDetail
                                         id={p.row.id as any}
+                                        type="order"
                                         api={Api.orders}
                                         onClose={() => setSubDetail(undefined)}
                                     />,
