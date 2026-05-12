@@ -1,4 +1,5 @@
 import api from '@logistics/features/api/api'
+import { Hero, useClock } from '@logistics/components/homepages/Hero'
 import { usePost } from '@logistics/hooks/hooks'
 import type { Order, OrderStatus } from '@logistics/data/types'
 import type { RootState } from '@logistics/store'
@@ -7,7 +8,6 @@ import { displayUserName } from '@microprojects/edm-components/utils'
 import {
     ArrowForward as ArrowIcon,
     AutorenewOutlined as RepackingIcon,
-    DesktopWindowsOutlined as DesktopIcon,
     Inventory2Outlined as ItemsIcon,
     LocalShippingOutlined as SuppliesIcon,
     PlayCircleOutline as RunningIcon,
@@ -17,30 +17,9 @@ import {
     HourglassEmptyOutlined as PendingIcon,
 } from '@mui/icons-material'
 import { Box, Chip, Paper, Typography } from '@mui/material'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { useSelector } from 'react-redux'
 import { Link as RouterLink, useNavigate } from 'react-router-dom'
-
-const ROLE_LABEL: Record<string, string> = {
-    Admin: 'Administrator',
-    Technologist: 'Technologist',
-    Operator: 'Operator',
-}
-
-function useClock(): string {
-    const [now, setNow] = useState(() => new Date())
-    useEffect(() => {
-        const t = setInterval(() => setNow(new Date()), 30000)
-        return () => clearInterval(t)
-    }, [])
-    return now.toLocaleString('en-GB', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-    })
-}
 
 const eyebrowSx = {
     fontFamily: 'var(--font-mono)',
@@ -133,7 +112,6 @@ export const Home = () => {
         return list.slice(0, 6)
     }, [orders])
 
-    const isOperatorRole = user.roles?.includes('Operator')
     const userShort = displayUserName(user.name)
     const clock = useClock()
 
@@ -152,6 +130,13 @@ export const Home = () => {
                 userFull={user.name}
                 role={user.role}
                 clock={clock}
+                lead={
+                    <>
+                        Inventory and shop-floor tracking for production
+                        orders, supplies and tare. Pick where you want to
+                        start.
+                    </>
+                }
             />
 
             <Box
@@ -307,108 +292,6 @@ export const Home = () => {
                         onClick={() => navigate('/config')}
                     />
                 </Box>
-            </Box>
-        </Box>
-    )
-}
-
-interface HeroProps {
-    userName: string
-    userFull: string
-    role: string
-    clock: string
-}
-
-function Hero({ userName, userFull, role, clock }: HeroProps) {
-    const roleLabel = ROLE_LABEL[role] || role
-    return (
-        <Box
-            component="header"
-            sx={{
-                display: 'grid',
-                gridTemplateColumns: { xs: '1fr', sm: 'minmax(0, 1fr) auto' },
-                alignItems: 'end',
-                gap: { xs: 2, sm: 4 },
-                borderBottom: '1px solid var(--line)',
-                pb: 3,
-                mb: 4.5,
-            }}
-        >
-            <Box sx={{ minWidth: 0 }}>
-                <Box
-                    sx={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 1.25,
-                        mb: 1.25,
-                        fontFamily: 'var(--font-mono)',
-                        fontSize: 11,
-                        fontWeight: 700,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.08em',
-                        color: 'var(--accent)',
-                        '&::after': {
-                            content: '""',
-                            height: '1px',
-                            width: 60,
-                            background: 'var(--accent)',
-                            opacity: 0.35,
-                        },
-                    }}
-                >
-                    Welcome
-                </Box>
-                <Typography
-                    component="h1"
-                    title={userFull || undefined}
-                    sx={{
-                        fontSize: { xs: 28, md: 36 },
-                        fontWeight: 800,
-                        letterSpacing: '-0.018em',
-                        color: 'var(--ink-1)',
-                        m: 0,
-                        mb: 1.25,
-                        lineHeight: 1.05,
-                    }}
-                >
-                    {userName ? `Hello, ${userName}` : 'Welcome to EDM Logistics'}
-                </Typography>
-                <Typography
-                    component="p"
-                    sx={{
-                        fontSize: 15,
-                        lineHeight: 1.55,
-                        color: 'var(--ink-3)',
-                        maxWidth: '56ch',
-                        m: 0,
-                    }}
-                >
-                    Inventory and shop-floor tracking for production orders,
-                    supplies and tare. Pick where you want to start.
-                </Typography>
-            </Box>
-            <Box
-                sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 0.5,
-                    alignItems: { xs: 'flex-start', sm: 'flex-end' },
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: 11,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.06em',
-                    color: 'var(--ink-4)',
-                    textAlign: { xs: 'left', sm: 'right' },
-                    whiteSpace: 'nowrap',
-                    '& b': { color: 'var(--ink-2)', fontWeight: 700 },
-                }}
-            >
-                {role && (
-                    <span>
-                        <b>Role</b> · {roleLabel}
-                    </span>
-                )}
-                <span>{clock}</span>
             </Box>
         </Box>
     )

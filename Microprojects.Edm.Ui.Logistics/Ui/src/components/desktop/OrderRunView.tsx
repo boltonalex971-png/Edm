@@ -232,7 +232,7 @@ export const OrderRunView = () => {
             { type: 'tare' },
         ])
 
-    const backToList = () => navigate('/desktop')
+    const backToList = () => navigate('/')
 
     const tryGoToStep = (target: Step) => {
         if (stepIndex(target) <= maxStepIndex) setStep(target)
