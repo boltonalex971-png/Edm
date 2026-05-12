@@ -1,4 +1,4 @@
-import api from '@features/api/api'
+﻿import api from '@features/api/api'
 import {
     HierarchyPicker,
     findInHierarchy,
@@ -142,9 +142,6 @@ export function Repacking() {
     )
     const [newTareTypeId, setNewTareTypeId] = useState<UUID>()
 
-    const tareBarcode = tarePicked?.barcode ?? ''
-    const newTareBarcode = newTarePicked?.barcode ?? ''
-
     const sourceSuggestionTareTypeId = useMemo(
         () =>
             (
@@ -200,35 +197,49 @@ export function Repacking() {
         if (!selectedNomenclatureId || !allowedRows) return
         if (seededForRef.current === selectedNomenclatureId) return
         seededForRef.current = selectedNomenclatureId
-        const def = allowedRows.find((r) => r.isDefault)
+        const def = allowedRows.find((r) => r.isDefault) ?? allowedRows[0]
         if (def) setNewTareTypeId(def.tareTypeId)
     }, [selectedNomenclatureId, allowedRows])
 
-    const loadTareByBarcode = useCallback(async () => {
-        if (!tareBarcode.trim()) return
+    const loadSourceByTareId = useCallback(async (tareId: UUID) => {
         try {
-            const tares = await getData<TareInfo[]>(
-                `${api.tares}/search?barcode=${encodeURIComponent(tareBarcode.trim())}`,
-            )
-            if (tares && tares.length > 0) {
-                const tare = tares[0]
-                const items = await getData<Item[]>(
-                    `${api.items}/tare/${tare.id}`,
+            const items = await getData<Item[]>(`${api.items}/tare/${tareId}`)
+            setSourceItems((prev) => {
+                const existing = new Set(prev.map((i) => i.id))
+                const additions = (items || []).filter(
+                    (i) => !existing.has(i.id),
                 )
-                setSourceItems((prev) => {
-                    const existing = new Set(prev.map((i) => i.id))
-                    const additions = (items || []).filter(
-                        (i) => !existing.has(i.id),
-                    )
-                    return [...prev, ...additions]
-                })
-                const key = tare.id || tare.barcode || 'no-tare'
-                setExpandedSource((prev) => new Set(prev).add(key))
-            }
+                return [...additions, ...prev]
+            })
+            setExpandedSource((prev) => new Set(prev).add(tareId))
         } catch {
             /* ignore */
         }
-    }, [tareBarcode])
+    }, [])
+
+    const handleAddSourceTare = useCallback(
+        async (tare: AvailableTare | null) => {
+            if (tare?.id) {
+                await loadSourceByTareId(tare.id)
+                setTarePicked(null)
+                return
+            }
+            const text = tare?.barcode?.trim()
+            if (!text) return
+            try {
+                const found = await getData<TareInfo[]>(
+                    `${api.tares}/search?barcode=${encodeURIComponent(text)}`,
+                )
+                if (found && found.length > 0) {
+                    await loadSourceByTareId(found[0].id)
+                    setTarePicked(null)
+                }
+            } catch {
+                /* ignore */
+            }
+        },
+        [loadSourceByTareId],
+    )
 
     const pendingItemIds = useMemo(
         () => new Set(pending.map((p) => p.itemId)),
@@ -318,19 +329,44 @@ export function Repacking() {
         closeContextMenu()
     }
 
-    const addTargetTare = async (existing?: TareInfo) => {
-        if (existing) {
-            if (targetTares.some((t) => t.id === existing.id)) return
-            const items = await getData<Item[]>(
-                `${api.items}/tare/${existing.id}`,
-            )
-            addTargetTareToWorkspace(existing, items || [])
+    const handleAddTargetTare = async (tare: AvailableTare | null) => {
+        if (tare?.id) {
+            if (targetTares.some((t) => t.id === tare.id)) {
+                setNewTarePicked(null)
+                return
+            }
+            try {
+                const items = await getData<Item[]>(
+                    `${api.items}/tare/${tare.id}`,
+                )
+                addTargetTareToWorkspace(tare, items || [])
+                setNewTarePicked(null)
+            } catch (e: any) {
+                alert(e.message || 'Failed to load tare')
+            }
             return
         }
-
-        const text = newTareBarcode.trim()
-        if (!newTareTypeId || !text) return
+        const text = tare?.barcode?.trim()
+        if (!text) return
         try {
+            const found = await getData<TareInfo[]>(
+                `${api.tares}/search?barcode=${encodeURIComponent(text)}`,
+            )
+            if (found && found.length > 0) {
+                const existing = found[0]
+                if (!targetTares.some((t) => t.id === existing.id)) {
+                    const items = await getData<Item[]>(
+                        `${api.items}/tare/${existing.id}`,
+                    )
+                    addTargetTareToWorkspace(existing, items || [])
+                }
+                setNewTarePicked(null)
+                return
+            }
+            if (!newTareTypeId) {
+                alert('Tare not found. Select a tare type to create a new one.')
+                return
+            }
             const created = await postData<TareInfo>(`${api.tares}`, {
                 barcode: text,
                 tareTypeId: newTareTypeId,
@@ -340,32 +376,7 @@ export function Repacking() {
                 setNewTarePicked(null)
             }
         } catch (e: any) {
-            alert(e.message || 'Failed to create tare')
-        }
-    }
-
-    const searchAndAddTare = async () => {
-        if (newTarePicked?.id) {
-            await addTargetTare(newTarePicked)
-            setNewTarePicked(null)
-            return
-        }
-        const text = newTareBarcode.trim()
-        if (!text) return
-        try {
-            const tares = await getData<TareInfo[]>(
-                `${api.tares}/search?barcode=${encodeURIComponent(text)}`,
-            )
-            if (tares && tares.length > 0) {
-                await addTargetTare(tares[0])
-                setNewTarePicked(null)
-            } else if (newTareTypeId) {
-                await addTargetTare()
-            } else {
-                alert('Tare not found. Select a tare type to create a new one.')
-            }
-        } catch {
-            alert('Failed to search tare')
+            alert(e.message || 'Failed to add tare')
         }
     }
 
@@ -486,48 +497,18 @@ export function Repacking() {
                 <Typography sx={monoLabelSx}>
                     Search source tare by barcode
                 </Typography>
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                    <TareBarcodePicker
-                        tareTypeId={sourceSuggestionTareTypeId}
-                        nomenclatureId={selectedNomenclatureId}
-                        includeFull
-                        value={tarePicked}
-                        onChange={async (tare) => {
-                            setTarePicked(tare)
-                            if (!tare?.id) return
-                            try {
-                                const items = await getData<Item[]>(
-                                    `${api.items}/tare/${tare.id}`,
-                                )
-                                setSourceItems((prev) => {
-                                    const existing = new Set(
-                                        prev.map((i) => i.id),
-                                    )
-                                    const additions = (items || []).filter(
-                                        (i) => !existing.has(i.id),
-                                    )
-                                    return [...additions, ...prev]
-                                })
-                                const key =
-                                    tare.id || tare.barcode || 'no-tare'
-                                setExpandedSource((prev) =>
-                                    new Set(prev).add(key),
-                                )
-                            } catch {
-                                /* ignore */
-                            }
-                        }}
-                        placeholder="Scan or type barcode…"
-                        style={{ width: 240 }}
-                    />
-                    <MuiButton
-                        variant="outlined"
-                        onClick={loadTareByBarcode}
-                        disabled={!tareBarcode.trim()}
-                    >
-                        Find
-                    </MuiButton>
-                </Box>
+                <TareBarcodePicker
+                    tareTypeId={sourceSuggestionTareTypeId}
+                    nomenclatureId={selectedNomenclatureId}
+                    includeFull
+                    value={tarePicked}
+                    onChange={async (tare) => {
+                        setTarePicked(tare)
+                        await handleAddSourceTare(tare)
+                    }}
+                    placeholder="Scan or type barcode…"
+                    style={{ width: 240 }}
+                />
             </Box>
             <Box>
                 <Typography sx={monoLabelSx}>Nomenclature</Typography>
@@ -559,11 +540,7 @@ export function Repacking() {
                     value={newTarePicked}
                     onChange={async (tare) => {
                         setNewTarePicked(tare)
-                        // Existing dropdown pick (has `.id`) auto-adds — no need
-                        // to also press "Add tare". Custom-typed values still
-                        // go through the button so the operator confirms.
-                        if (!tare?.id) return
-                        await addTargetTare(tare)
+                        await handleAddTargetTare(tare)
                     }}
                     placeholder="Tare barcode…"
                     style={{ width: 220 }}
@@ -575,9 +552,6 @@ export function Repacking() {
                     width={180}
                     placeholder="Type (for new)…"
                 />
-                <MuiButton variant="contained" onClick={searchAndAddTare}>
-                    Add tare
-                </MuiButton>
                 <Box
                     sx={{
                         width: '1px',

@@ -1,4 +1,4 @@
-import api from '@features/api/api'
+﻿import api from '@features/api/api'
 import {
     HierarchyPicker,
     pruneHierarchy,
@@ -196,7 +196,7 @@ export function AllocateProcessOutput({
         if (!orderNomenclatureId || !allowedRows) return
         if (seededForRef.current === orderNomenclatureId) return
         seededForRef.current = orderNomenclatureId
-        const def = allowedRows.find((r) => r.isDefault)
+        const def = allowedRows.find((r) => r.isDefault) ?? allowedRows[0]
         if (def) setNewTareTypeId(def.tareTypeId)
     }, [orderNomenclatureId, allowedRows])
 
@@ -262,25 +262,52 @@ export function AllocateProcessOutput({
         }
     }, [output])
 
-    const newTareBarcodeText = newTarePicked?.barcode?.trim() ?? ''
-
-    const addTargetTare = async (existing?: TareInfo) => {
-        if (existing) {
-            if (targetTares.some((t) => t.id === existing.id)) {
-                expandTare(existing.id)
+    const handleAddTargetTare = async (tare: AvailableTare | null) => {
+        setError(undefined)
+        if (tare?.id) {
+            if (targetTares.some((t) => t.id === tare.id)) {
+                expandTare(tare.id)
+                setNewTarePicked(null)
                 return
             }
-            const items = await getData<Item[]>(
-                `${api.items}/tare/${existing.id}`,
-            )
-            addTargetTareToWorkspace(existing, items || [])
+            try {
+                const items = await getData<Item[]>(
+                    `${api.items}/tare/${tare.id}`,
+                )
+                addTargetTareToWorkspace(tare, items || [])
+                setNewTarePicked(null)
+            } catch (e: any) {
+                setError(e.message || 'Failed to load tare')
+            }
             return
         }
-
-        if (!newTareTypeId || !newTareBarcodeText) return
+        const text = tare?.barcode?.trim()
+        if (!text) return
         try {
+            const found = await getData<TareInfo[]>(
+                `${api.tares}/search?barcode=${encodeURIComponent(text)}`,
+            )
+            if (found && found.length > 0) {
+                const existing = found[0]
+                if (targetTares.some((t) => t.id === existing.id)) {
+                    expandTare(existing.id)
+                } else {
+                    const items = await getData<Item[]>(
+                        `${api.items}/tare/${existing.id}`,
+                    )
+                    addTargetTareToWorkspace(existing, items || [])
+                }
+                setNewTarePicked(null)
+                return
+            }
+            if (!newTareTypeId) {
+                setError(
+                    'Tare not found. Select a tare type to create a new one.',
+                )
+                return
+            }
             const created = await postData<TareInfo>(`${api.tares}`, {
-                barcode: newTareBarcodeText,
+                barcode: text,
                 tareTypeId: newTareTypeId,
             })
             if (created) {
@@ -288,35 +315,7 @@ export function AllocateProcessOutput({
                 setNewTarePicked(null)
             }
         } catch (e: any) {
-            setError(e.message || 'Failed to create tare')
-        }
-    }
-
-    const searchAndAddTare = async () => {
-        setError(undefined)
-        // Picker already resolved an existing tare for us — short-circuit.
-        if (newTarePicked?.id) {
-            await addTargetTare(newTarePicked)
-            setNewTarePicked(null)
-            return
-        }
-        if (!newTareBarcodeText) return
-        try {
-            const tares = await getData<TareInfo[]>(
-                `${api.tares}/search?barcode=${encodeURIComponent(newTareBarcodeText)}`,
-            )
-            if (tares && tares.length > 0) {
-                await addTargetTare(tares[0])
-                setNewTarePicked(null)
-            } else if (newTareTypeId) {
-                await addTargetTare()
-            } else {
-                setError(
-                    'Tare not found. Select a tare type to create a new one.',
-                )
-            }
-        } catch {
-            setError('Failed to search tare')
+            setError(e.message || 'Failed to add tare')
         }
     }
 
@@ -453,7 +452,10 @@ export function AllocateProcessOutput({
                     tareTypeId={newTareTypeId}
                     nomenclatureId={orderNomenclatureId}
                     value={newTarePicked}
-                    onChange={(tare) => setNewTarePicked(tare)}
+                    onChange={async (tare) => {
+                        setNewTarePicked(tare)
+                        await handleAddTargetTare(tare)
+                    }}
                     placeholder="Tare barcode…"
                     style={{ width: 220 }}
                 />
@@ -464,9 +466,6 @@ export function AllocateProcessOutput({
                     width={180}
                     placeholder="Type (for new)…"
                 />
-                <MuiButton variant="contained" onClick={searchAndAddTare}>
-                    Add tare
-                </MuiButton>
                 <Box
                     sx={{
                         width: '1px',
