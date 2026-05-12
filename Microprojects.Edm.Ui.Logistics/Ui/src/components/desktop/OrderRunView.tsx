@@ -41,7 +41,7 @@ import {
     Typography,
 } from '@mui/material'
 import axios from 'axios'
-import { useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { useNavigate, useParams } from 'react-router-dom'
 
@@ -513,17 +513,22 @@ function Stepper({ step, liveStep, maxStep, onPick }: StepperProps) {
     return (
         <Box
             sx={{
-                px: 1.5,
+                px: { xs: 2, md: 3 },
                 py: 1.5,
                 borderBottom: '1px solid var(--line)',
             }}
         >
+            {/* Auto-sized step buttons separated by flex:1 connectors so all
+                connector lines render at equal length. Wrapper has maxWidth +
+                mx:auto so the whole stepper sits centered with breathing room
+                on either side instead of stretching edge-to-edge. */}
             <Box
                 sx={{
                     display: 'flex',
-                    alignItems: 'stretch',
-                    gap: 0,
-                    overflowX: 'auto',
+                    alignItems: 'center',
+                    gap: 1.5,
+                    maxWidth: 1080,
+                    mx: 'auto',
                 }}
             >
                 {STEPS.map((s, idx) => {
@@ -531,24 +536,40 @@ function Stepper({ step, liveStep, maxStep, onPick }: StepperProps) {
                     const isLive = idx === liveIdx
                     const isDone = idx < liveIdx
                     const isViewing = idx === activeIdx
-                    const isFirst = idx === 0
                     return (
-                        <StepNode
-                            key={s.id}
-                            label={s.label}
-                            number={idx + 1}
-                            reachable={reachable}
-                            isLive={isLive}
-                            isDone={isDone}
-                            isViewing={isViewing}
-                            connectorActive={idx <= liveIdx}
-                            showConnector={!isFirst}
-                            onClick={() => reachable && onPick(s.id)}
-                        />
+                        <Fragment key={s.id}>
+                            {idx > 0 && (
+                                <Connector active={idx <= liveIdx} />
+                            )}
+                            <StepNode
+                                label={s.label}
+                                number={idx + 1}
+                                reachable={reachable}
+                                isLive={isLive}
+                                isDone={isDone}
+                                isViewing={isViewing}
+                                onClick={() => reachable && onPick(s.id)}
+                            />
+                        </Fragment>
                     )
                 })}
             </Box>
         </Box>
+    )
+}
+
+function Connector({ active }: { active: boolean }) {
+    return (
+        <Box
+            sx={{
+                flex: 1,
+                height: 2,
+                background: active
+                    ? 'var(--sig-run-deep)'
+                    : 'var(--line-strong)',
+                borderRadius: 1,
+            }}
+        />
     )
 }
 
@@ -559,8 +580,6 @@ interface StepNodeProps {
     isLive: boolean
     isDone: boolean
     isViewing: boolean
-    showConnector: boolean
-    connectorActive: boolean
     onClick: () => void
 }
 
@@ -571,8 +590,6 @@ function StepNode({
     isLive,
     isDone,
     isViewing,
-    showConnector,
-    connectorActive,
     onClick,
 }: StepNodeProps) {
     let circleBg = 'var(--surface)'
@@ -602,99 +619,71 @@ function StepNode({
 
     return (
         <Box
+            role="button"
+            aria-current={isViewing ? 'step' : undefined}
+            aria-disabled={!reachable}
+            tabIndex={reachable ? 0 : -1}
+            onClick={onClick}
+            onKeyDown={(e) => {
+                if (reachable && (e.key === 'Enter' || e.key === ' ')) {
+                    e.preventDefault()
+                    onClick()
+                }
+            }}
             sx={{
-                flex: 1,
-                minWidth: 0,
-                display: 'flex',
+                display: 'inline-flex',
                 alignItems: 'center',
                 gap: 1,
+                px: 0.5,
+                py: 0.5,
+                borderRadius: 'var(--r-2)',
+                cursor: reachable ? 'pointer' : 'default',
+                flexShrink: 0,
+                // Outline tracks the step's own state colour so the focus
+                // brackets read amber for live, green for done, grey for unreached.
+                outline: isViewing ? `2px solid ${circleBorder}` : 'none',
+                outlineOffset: 2,
+                '&:hover': reachable
+                    ? { background: 'var(--surface-2)' }
+                    : undefined,
+                '&:focus-visible': {
+                    outline: `2px solid ${circleBorder}`,
+                    outlineOffset: 2,
+                },
             }}
         >
-            {showConnector && (
-                <Box
-                    sx={{
-                        flex: 1,
-                        height: 2,
-                        background: connectorActive
-                            ? 'var(--sig-run-deep)'
-                            : 'var(--line-strong)',
-                        borderRadius: 1,
-                    }}
-                />
-            )}
             <Box
-                role="button"
-                aria-current={isViewing ? 'step' : undefined}
-                aria-disabled={!reachable}
-                tabIndex={reachable ? 0 : -1}
-                onClick={onClick}
-                onKeyDown={(e) => {
-                    if (
-                        reachable &&
-                        (e.key === 'Enter' || e.key === ' ')
-                    ) {
-                        e.preventDefault()
-                        onClick()
-                    }
-                }}
                 sx={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: '50%',
+                    background: circleBg,
+                    color: circleFg,
+                    border: `2px solid ${circleBorder}`,
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 1,
-                    px: 0.5,
-                    py: 0.5,
-                    borderRadius: 'var(--r-2)',
-                    cursor: reachable ? 'pointer' : 'default',
-                    outline: isViewing
-                        ? '2px solid var(--accent)'
-                        : 'none',
-                    outlineOffset: 2,
-                    '&:hover': reachable
-                        ? { background: 'var(--surface-2)' }
-                        : undefined,
-                    '&:focus-visible': {
-                        outline: '2px solid var(--accent)',
-                        outlineOffset: 2,
-                    },
+                    justifyContent: 'center',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 14,
+                    fontWeight: 700,
+                    flexShrink: 0,
                 }}
             >
-                <Box
-                    sx={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: '50%',
-                        background: circleBg,
-                        color: circleFg,
-                        border: `2px solid ${circleBorder}`,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontFamily: 'var(--font-mono)',
-                        fontSize: 14,
-                        fontWeight: 700,
-                        flexShrink: 0,
-                    }}
-                >
-                    {isDone ? (
-                        <CheckIcon sx={{ fontSize: 18 }} />
-                    ) : (
-                        number
-                    )}
-                </Box>
-                <Typography
-                    sx={{
-                        fontFamily: 'var(--font-mono)',
-                        fontSize: 12,
-                        fontWeight: 700,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.07em',
-                        color: labelColor,
-                        whiteSpace: 'nowrap',
-                    }}
-                >
-                    {label}
-                </Typography>
+                {isDone ? <CheckIcon sx={{ fontSize: 18 }} /> : number}
             </Box>
+            <Typography
+                sx={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 12,
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.07em',
+                    color: labelColor,
+                    whiteSpace: 'nowrap',
+                }}
+            >
+                {label}
+            </Typography>
         </Box>
     )
 }
