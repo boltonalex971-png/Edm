@@ -34,6 +34,7 @@ import {
     NotesOutlined as NotesIcon,
     PlayArrowOutlined as PlayIcon,
     TodayOutlined as StartIcon,
+    WidgetsOutlined as TaresIcon,
 } from '@mui/icons-material'
 import {
     Alert,
@@ -367,7 +368,6 @@ export const OrderRunView = () => {
                 {step === 'complete' && order && (
                     <CompleteStep
                         order={order}
-                        allocatedCount={allocatedCount}
                         unallocatedCount={unallocatedCount}
                         outputs={outputs}
                         onComplete={completeOrder}
@@ -932,40 +932,6 @@ function SummaryTile({
     )
 }
 
-function ReviewLabel({ children }: { children: React.ReactNode }) {
-    return (
-        <Box
-            component="span"
-            sx={{
-                ...monoEyebrowSx,
-                fontSize: 11,
-                color: 'var(--ink-3)',
-            }}
-        >
-            {children}
-        </Box>
-    )
-}
-
-function ReviewValue({
-    children,
-    mono,
-}: { children: React.ReactNode; mono?: boolean }) {
-    return (
-        <Box
-            component="span"
-            sx={{
-                color: 'var(--ink-1)',
-                fontWeight: mono ? 700 : 500,
-                fontFamily: mono ? 'var(--font-mono)' : 'inherit',
-                fontSize: 14,
-            }}
-        >
-            {children}
-        </Box>
-    )
-}
-
 function Footer({ children }: { children: React.ReactNode }) {
     return (
         <Box
@@ -985,7 +951,6 @@ function Footer({ children }: { children: React.ReactNode }) {
 
 type CompleteStepProps = {
     order: Order
-    allocatedCount: number
     unallocatedCount: number
     outputs?: OrderOutputItems
     onComplete: () => void
@@ -1049,7 +1014,6 @@ const computeDueStatus = (
 
 const CompleteStep = ({
     order,
-    allocatedCount,
     unallocatedCount,
     outputs,
     onComplete,
@@ -1101,188 +1065,212 @@ const CompleteStep = ({
         [order.dueDate, order.completed],
     )
 
+    const dueTone = dueStatus ? DUE_TONE[dueStatus.kind] : undefined
+    const tareSub =
+        distinctTares > 0 && allocatedQty > 0
+            ? `≈ ${formatUnits(Math.round(allocatedQty / distinctTares), units, countable)} per tare`
+            : undefined
+    const outputsValue = isCompleted
+        ? formatUnits(allocatedQty, units, countable)
+        : `${formatUnits(allocatedQty, units, countable)} / ${formatUnits(totalQty, units, countable)}`
+
     return (
-        <Paper
-            elevation={0}
+        <Box
             sx={{
-                maxWidth: 720,
-                mx: 'auto',
-                mt: 3,
-                p: '32px 40px 24px',
-                background: 'var(--surface)',
-                border: `1px solid ${isCompleted ? 'var(--sig-run-deep)' : 'var(--line)'}`,
-                borderRadius: 'var(--r-2)',
-                boxShadow: 'var(--elev-2)',
-                textAlign: 'center',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: 1,
+                gap: 2,
+                mt: 1,
+                maxWidth: 980,
+                width: '100%',
+                mx: 'auto',
             }}
         >
             <Box
                 sx={{
-                    width: 56,
-                    height: 56,
-                    borderRadius: '50%',
-                    background: isCompleted
-                        ? 'var(--sig-run-deep)'
-                        : 'var(--sig-run-soft)',
-                    color: isCompleted ? '#fff' : 'var(--sig-run-deep)',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    mx: 'auto',
-                    mb: 0.5,
+                    gap: 2,
+                    background: isCompleted
+                        ? 'var(--sig-run-soft)'
+                        : 'var(--surface)',
+                    border: `1px solid ${isCompleted ? 'var(--sig-run-deep)' : 'var(--line)'}`,
+                    borderLeft: '3px solid var(--sig-run-deep)',
+                    borderRadius: 'var(--r-2)',
+                    boxShadow: 'var(--elev-1)',
+                    p: 2,
                 }}
             >
-                <CheckIcon sx={{ fontSize: 32 }} />
+                <Box
+                    sx={{
+                        width: 44,
+                        height: 44,
+                        borderRadius: '50%',
+                        background: isCompleted
+                            ? 'var(--sig-run-deep)'
+                            : 'var(--sig-run-soft)',
+                        color: isCompleted ? '#fff' : 'var(--sig-run-deep)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                    }}
+                >
+                    <CheckIcon sx={{ fontSize: 26 }} />
+                </Box>
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography
+                        sx={{
+                            fontSize: 20,
+                            fontWeight: 700,
+                            lineHeight: 1.2,
+                            color: 'var(--sig-run-deep)',
+                        }}
+                    >
+                        {isCompleted ? 'Order completed' : 'Ready to complete'}
+                    </Typography>
+                    <Typography
+                        sx={{
+                            mt: 0.25,
+                            color: 'var(--ink-2)',
+                            fontSize: 13.5,
+                        }}
+                    >
+                        {isCompleted
+                            ? `All outputs allocated to ${distinctTares} tare${distinctTares === 1 ? '' : 's'}.`
+                            : 'Every output is allocated. Confirm to close the order.'}
+                    </Typography>
+                </Box>
+                {isCompleted && order.completed && (
+                    <Box sx={{ flexShrink: 0, textAlign: 'right' }}>
+                        <Typography
+                            sx={{
+                                ...monoEyebrowSx,
+                                color: 'var(--ink-3)',
+                            }}
+                        >
+                            Completed at
+                        </Typography>
+                        <Typography
+                            sx={{
+                                mt: 0.25,
+                                fontFamily: 'var(--font-mono)',
+                                fontSize: 14,
+                                fontWeight: 700,
+                                color: 'var(--ink-1)',
+                            }}
+                        >
+                            {formatLocalDateTime(order.completed)}
+                        </Typography>
+                    </Box>
+                )}
             </Box>
-            <Typography
-                sx={{
-                    fontSize: 22,
-                    fontWeight: 700,
-                    color: 'var(--sig-run-deep)',
-                }}
-            >
-                {isCompleted ? 'Order completed' : 'Ready to complete'}
-            </Typography>
-            <Typography sx={{ color: 'var(--ink-2)', fontSize: 14, mb: 1 }}>
-                {isCompleted
-                    ? 'All done.'
-                    : 'Every output is allocated. Confirm to close the order.'}
-            </Typography>
 
+            <Typography sx={monoEyebrowSx}>Outcome</Typography>
             <Box
                 sx={{
                     display: 'grid',
-                    gridTemplateColumns:
-                        'minmax(160px, max-content) 1fr',
-                    gap: '8px 24px',
-                    textAlign: 'left',
-                    width: 'max-content',
-                    maxWidth: '100%',
-                    mx: 'auto',
-                    mt: 1,
-                    p: 1.5,
-                    background: 'var(--surface-2)',
-                    border: '1px solid var(--line)',
-                    borderRadius: 'var(--r-2)',
+                    gridTemplateColumns: {
+                        xs: '1fr',
+                        sm: 'repeat(3, 1fr)',
+                    },
+                    gap: 1.5,
                 }}
             >
-                <ReviewLabel>Nomenclature</ReviewLabel>
-                <ReviewValue>
-                    {order.processNomenclatureName ?? '—'}
-                </ReviewValue>
-                <ReviewLabel>Amount</ReviewLabel>
-                <ReviewValue mono>
-                    {formatUnits(order.amount, units, countable)}
-                </ReviewValue>
-                <ReviewLabel>Outputs allocated</ReviewLabel>
-                <ReviewValue mono>
-                    {formatUnits(allocatedQty, units, countable)} /{' '}
-                    {formatUnits(totalQty, units, countable)}
-                </ReviewValue>
-                <ReviewLabel>Tares used</ReviewLabel>
-                <ReviewValue mono>{distinctTares}</ReviewValue>
-                {order.executor && (
-                    <>
-                        <ReviewLabel>Executor</ReviewLabel>
-                        <ReviewValue>{order.executor}</ReviewValue>
-                    </>
-                )}
-                {order.dueDate && (
-                    <>
-                        <ReviewLabel>Due</ReviewLabel>
-                        <ReviewValue>
-                            <Box component="span" sx={{ mr: 1 }}>
-                                {formatLocalDate(order.dueDate)}
-                            </Box>
-                            {dueStatus && (
-                                <Chip
-                                    size="small"
-                                    label={dueStatus.label}
-                                    sx={{
-                                        height: 22,
-                                        fontSize: 11,
-                                        fontWeight: 700,
-                                        fontFamily: 'var(--font-mono)',
-                                        background:
-                                            DUE_TONE[dueStatus.kind].bg,
-                                        color:
-                                            DUE_TONE[dueStatus.kind].fg,
-                                        border: `1px solid ${DUE_TONE[dueStatus.kind].border}`,
-                                    }}
-                                />
-                            )}
-                        </ReviewValue>
-                    </>
-                )}
-                {order.completed && (
-                    <>
-                        <ReviewLabel>Completed</ReviewLabel>
-                        <ReviewValue>
-                            {formatLocalDateTime(order.completed)}
-                        </ReviewValue>
-                    </>
-                )}
+                <SummaryTile
+                    eyebrow="Outputs"
+                    icon={<QuantityIcon fontSize="small" />}
+                    accent="var(--sig-run-deep)"
+                    value={outputsValue}
+                    sub={order.processNomenclatureName ?? undefined}
+                />
+                <SummaryTile
+                    eyebrow="Tares used"
+                    icon={<TaresIcon fontSize="small" />}
+                    accent="var(--ent-tare-deep)"
+                    value={distinctTares}
+                    sub={tareSub}
+                />
+                <SummaryTile
+                    eyebrow={isCompleted ? 'Due' : 'Due by'}
+                    icon={<DueIcon fontSize="small" />}
+                    accent={dueTone?.border ?? 'var(--line-strong)'}
+                    value={
+                        order.dueDate ? formatLocalDate(order.dueDate) : '—'
+                    }
+                    valueTone={dueTone?.fg}
+                    chip={
+                        dueStatus && dueTone
+                            ? { label: dueStatus.label, tone: dueTone }
+                            : undefined
+                    }
+                />
             </Box>
 
             {gradeBuckets.length > 0 && (
-                <Box
-                    sx={{
-                        textAlign: 'left',
-                        width: '100%',
-                        maxWidth: 460,
-                        mx: 'auto',
-                        mt: 1.5,
-                    }}
-                >
+                <Box>
                     <Typography sx={{ ...monoEyebrowSx, mb: 0.75 }}>
                         By grade
                     </Typography>
                     <Box
                         sx={{
                             display: 'flex',
-                            flexDirection: 'column',
-                            gap: 0.5,
+                            flexWrap: 'wrap',
+                            gap: 1,
                         }}
                     >
                         {gradeBuckets.map((g) => (
                             <Box
                                 key={g.gradeId ?? 'no-grade'}
                                 sx={{
-                                    display: 'flex',
+                                    display: 'inline-flex',
                                     alignItems: 'center',
-                                    gap: 1,
-                                    px: 1,
+                                    gap: 0.75,
+                                    px: 1.25,
                                     py: 0.5,
-                                    borderRadius: 'var(--r-2)',
                                     background: 'var(--surface)',
                                     border: '1px solid var(--line)',
+                                    borderRadius: 'var(--r-pill)',
+                                    boxShadow: 'var(--elev-1)',
                                 }}
                             >
                                 <Box
                                     sx={{
-                                        width: 14,
-                                        height: 14,
+                                        width: 12,
+                                        height: 12,
                                         borderRadius: '3px',
-                                        background: g.color ?? '#eee',
+                                        background:
+                                            g.color ?? 'var(--surface-3)',
                                         border: '1px solid rgba(0,0,0,0.15)',
                                         flexShrink: 0,
                                     }}
                                 />
-                                <Box sx={{ flex: 1, color: 'var(--ink-1)' }}>
+                                <Typography
+                                    sx={{
+                                        fontSize: 13,
+                                        fontWeight: 600,
+                                        color: 'var(--ink-1)',
+                                    }}
+                                >
                                     {g.gradeName}
-                                </Box>
+                                </Typography>
                                 <Box
                                     sx={{
-                                        color: 'var(--ink-2)',
+                                        width: '1px',
+                                        height: 12,
+                                        background: 'var(--line)',
+                                    }}
+                                />
+                                <Typography
+                                    sx={{
                                         fontFamily: 'var(--font-mono)',
+                                        fontSize: 12.5,
                                         fontWeight: 700,
+                                        color: 'var(--ink-2)',
                                     }}
                                 >
                                     {formatUnits(g.quantity, units, countable)}
-                                </Box>
+                                </Typography>
                             </Box>
                         ))}
                     </Box>
@@ -1290,25 +1278,23 @@ const CompleteStep = ({
             )}
 
             {completeError && (
-                <Alert severity="error" sx={{ mt: 1 }}>
-                    {completeError}
-                </Alert>
+                <Alert severity="error">{completeError}</Alert>
             )}
 
-            <Box
-                sx={{
-                    mt: 2,
-                    display: 'flex',
-                    justifyContent: 'center',
-                    gap: 1,
-                }}
-            >
+            <Footer>
                 {isCompleted ? (
                     <MuiButton
                         variant="contained"
+                        color="primary"
                         size="large"
                         onClick={onBackToList}
-                        sx={{ minWidth: 200, fontWeight: 700 }}
+                        sx={{
+                            minWidth: 220,
+                            fontWeight: 700,
+                            py: 1.25,
+                            textTransform: 'none',
+                            fontSize: 15,
+                        }}
                     >
                         Back to list
                     </MuiButton>
@@ -1321,6 +1307,7 @@ const CompleteStep = ({
                         disabled={
                             readOnly || completing || unallocatedCount > 0
                         }
+                        startIcon={<CheckIcon />}
                         title={
                             readOnly
                                 ? 'Read-only'
@@ -1328,7 +1315,13 @@ const CompleteStep = ({
                                   ? 'All outputs must be allocated before completing'
                                   : undefined
                         }
-                        sx={{ minWidth: 200, fontWeight: 700 }}
+                        sx={{
+                            minWidth: 220,
+                            fontWeight: 700,
+                            py: 1.25,
+                            textTransform: 'none',
+                            fontSize: 15,
+                        }}
                     >
                         {readOnly
                             ? 'Read-only'
@@ -1337,7 +1330,7 @@ const CompleteStep = ({
                               : 'Complete order'}
                     </MuiButton>
                 )}
-            </Box>
-        </Paper>
+            </Footer>
+        </Box>
     )
 }
