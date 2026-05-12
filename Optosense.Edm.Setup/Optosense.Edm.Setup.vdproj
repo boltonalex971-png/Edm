@@ -321,7 +321,7 @@
         "DisplayName" = "8:Debug"
         "IsDebugOnly" = "11:TRUE"
         "IsReleaseOnly" = "11:FALSE"
-        "OutputFilename" = "8:Debug\\Optosense.Edm.Setup-1.13.28.msi"
+        "OutputFilename" = "8:Debug\\Optosense.Edm.Setup-2.0.0.msi"
         "PackageFilesAs" = "3:2"
         "PackageFileSize" = "3:-2147483648"
         "CabType" = "3:1"
@@ -348,7 +348,7 @@
         "DisplayName" = "8:Release"
         "IsDebugOnly" = "11:FALSE"
         "IsReleaseOnly" = "11:TRUE"
-        "OutputFilename" = "8:Release\\Optosense.Edm.Setup-1.13.28.msi"
+        "OutputFilename" = "8:Release\\Optosense.Edm.Setup-2.0.0.msi"
         "PackageFilesAs" = "3:2"
         "PackageFileSize" = "3:-2147483648"
         "CabType" = "3:1"
@@ -566,7 +566,7 @@
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:..\\Microprojects.Edm.Ui.Technologies\bin\\Debug\\net10.0\\Microprojects.Edm.Ui.Technologies.dll"
+            "SourcePath" = "8:..\\Microprojects.Edm.Ui.Technologies\\bin\\Debug\\net10.0\\Microprojects.Edm.Ui.Technologies.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_AEE31518259E4CFDABF559E3A191152E"
@@ -708,7 +708,7 @@
             }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_E0F1A2B3C4D5E6F708192A3B4C5D6E7F"
             {
-            "SourcePath" = "8:..\\Microprojects.Edm.Ui.Technologies\bin\\Debug\\net10.0\\Microprojects.Edm.Ui.Technologies.efbundle.exe"
+            "SourcePath" = "8:..\\Microprojects.Edm.Ui.Technologies\\bin\\Debug\\net10.0\\Microprojects.Edm.Ui.Technologies.efbundle.exe"
             "TargetName" = "8:Microprojects.Edm.Ui.Technologies.efbundle.exe"
             "Tag" = "8:"
             "Folder" = "8:_AE4052A7CE5F48FF84E7825B278F4895"
@@ -1174,7 +1174,7 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:Edm"
-        "ProductCode" = "8:{1DCDD650-42B0-4377-97DD-61363589A40B}"
+        "ProductCode" = "8:{5E78270E-2E26-4DFF-AFEF-F17D7AF6EF98}"
         "PackageCode" = "8:{512475EB-96E8-4DD4-88FE-51D63F9E25DF}"
         "UpgradeCode" = "8:{0B59587D-B902-4F08-AFAE-4BB253F5EFE8}"
         "AspNetVersion" = "8:4.0.30319.0"
@@ -1182,7 +1182,7 @@
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:TRUE"
-        "ProductVersion" = "8:1.13.28"
+        "ProductVersion" = "8:2.0.0"
         "Manufacturer" = "8:Microprojects"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"

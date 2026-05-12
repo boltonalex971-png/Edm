@@ -112,13 +112,19 @@ export interface MasterDetailProps {
      *  URL hosts multiple kinds (e.g. Logistics's `/processes` for manufacturing /
      *  technology / operation). Forwarded to TreeViewMaster. */
     entityType?: string;
+    /** URL segment used as the "new (unsaved) item" sentinel by the Add Folder /
+     *  Add Item buttons and the empty-state Add action. Default `'0'` matches
+     *  Tech's int-keyed entities; Logistics passes the empty Guid so the
+     *  new-item route hits a valid Guid the backend recognises. Forwarded to
+     *  TreeViewMaster. */
+    newId?: string;
 }
 
 const SEPARATOR_MIN_PX = 80;
 
 export function MasterDetail(props: MasterDetailProps) {
     const navigate = useNavigate();
-    const {path, resizable = true} = props;
+    const {path, resizable = true, newId = '0'} = props;
     const [dynamicOffset, setDynamicOffset] = useState(10);
     const FolderComponent = props.folderComponent;
     // Capitalize the URL-derived entity type so it matches backend HierarchyType enum
@@ -221,6 +227,7 @@ export function MasterDetail(props: MasterDetailProps) {
                         getHierarchyQuery={props.getHierarchyQuery}
                         unwrapSingleRoot={props.unwrapSingleRoot}
                         entityType={props.entityType}
+                        newId={newId}
                     />
                 </SmartScrollContent>
                 {resizable && <PaneSeparator onDrag={onSeparatorDrag} />}
@@ -231,7 +238,7 @@ export function MasterDetail(props: MasterDetailProps) {
                             element={
                                 <DetailStub
                                     message={props.stubMessage}
-                                    onAdd={() => navigate(`${path}/0`)}
+                                    onAdd={() => navigate(`${path}/${newId}`)}
                                 />
                             }
                         />

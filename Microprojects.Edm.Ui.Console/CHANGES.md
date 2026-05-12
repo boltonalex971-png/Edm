@@ -2,7 +2,9 @@
 
 The Host Console (`/console`) shows what is happening on a single EDM host: attached devices, drivers, available and running jobs, and the live log.
 
-There are no console-specific user changes after v1.0.0 — subsequent commits only follow platform-wide migrations.
+## v2.0.0
+
+- **Console redesign — standalone or Hub-embedded** (PR #54). The Console SPA is rebuilt on Rsbuild with a sidebar / header / footer shell, refreshed design tokens, an embedded-tabs mode that the Hub host can drive via `postMessage`, and a status badge that reflects the host connection. The three sections (Drivers, Jobs, Log) live on their own pages with a unified data-table layout; the same build serves both the standalone Console URL and the Hub-embedded panel.
 
 ## v1.0.0
 
