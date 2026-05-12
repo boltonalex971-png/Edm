@@ -1,6 +1,6 @@
 namespace Microprojects.Edm.Ui.Logistics.ViewModels;
 
-public class OrderSpecificationViewModel
+public class OrderSpecificationNomenclatureViewModel
 {
     public Guid Id { get; set; }
     public Guid NomenclatureId { get; set; }

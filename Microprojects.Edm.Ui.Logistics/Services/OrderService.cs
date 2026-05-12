@@ -118,6 +118,31 @@ public class OrderService : ServiceBase<Order>, IOrderService
                 ProcessId = order.ProcessId,
                 Ordering = 10,
             });
+
+            // Snapshot the chosen process's active spec into the order so the
+            // order's specification view is independent of subsequent edits or
+            // auto-fork versioning of the process or its nomenclatures. The
+            // (NomenclatureId, Quantity) pairs are frozen at this moment;
+            // mirrors NomenclatureService/TareTypeService's "copy junction
+            // rows on fork" pattern. Items continue to match snapshot rows by
+            // NomenclatureId, which stays stable per order regardless of
+            // future nomenclature forks.
+            var snapshotRows = await Set<SpecificationNomenclature>().AsNoTracking()
+                .Where(sn => sn.Specification.ProcessId == order.ProcessId
+                    && sn.Specification.Active)
+                .Select(sn => new { sn.NomenclatureId, sn.Quantity })
+                .ToListAsync();
+            foreach (var row in snapshotRows)
+            {
+                Db.Add(new OrderSpecificationNomenclature
+                {
+                    OrderId = order.Id,
+                    NomenclatureId = row.NomenclatureId,
+                    ProcessId = order.ProcessId,
+                    Quantity = row.Quantity,
+                }.SetId());
+            }
+
             await Db.SaveChangesAsync();
         }
 
@@ -199,27 +224,20 @@ public class OrderService : ServiceBase<Order>, IOrderService
         return pendingOutputs > 0 ? OrderStatus.OutputsPending : OrderStatus.Running;
     }
 
-    public async Task<IEnumerable<OrderSpecificationNomenclature>> GetSpecifications(Guid orderId,
-        Guid? processId = null)
+    public async Task<IEnumerable<OrderSpecificationNomenclature>> GetSpecifications(Guid orderId)
     {
         var order = await Get(orderId);
 
-        List<Specification> specifications;
-        if (processId == null)
-        {
-            specifications = await Set<Specification>().AsNoTracking()
-                .Where(s => s.ProcessId == order.ProcessId && s.Active)
-                .ToListAsync();
-        }
-        else
-        {
-            specifications = await Set<OrderProcess>().AsNoTracking()
-                .Include(p => p.Process.Specifications
-                    .Where(s => s.Active))
-                .Where(p => p.OrderId == orderId && p.ProcessId == processId)
-                .SelectMany(p => p.Process.Specifications)
-                .ToListAsync();
-        }
+        // Read the order's frozen spec snapshot. Each row was copied from the
+        // chosen process's active spec at order-create time (see Save above),
+        // so subsequent edits or auto-fork versioning of the process spec or
+        // its nomenclatures have no effect here.
+        var snapshot = await Set<OrderSpecificationNomenclature>().AsNoTracking()
+            .Include(s => s.Nomenclature)
+            .Include(s => s.Process)
+            .Where(s => s.OrderId == orderId)
+            .ToListAsync();
+
         // Inputs only (ProcessId == null) and NotDeleted so consumed inputs
         // (Meta.Completed != null after Execute) stay visible for the
         // historical view.
@@ -245,29 +263,18 @@ public class OrderService : ServiceBase<Order>, IOrderService
                 .ToDictionary(x => x.Id, x => x.Sum);
         var availableByItem = await ItemHistory.GetAvailableQuantities(Db, items);
 
-        var rows = await Set<SpecificationNomenclature>().AsNoTracking()
-            .Include(sn => sn.Nomenclature)
-            .Include(sn => sn.Specification.Process)
-            .Where(sn => specifications.Select(s => s.Id).Contains(sn.SpecificationId))
-            .ToListAsync();
-        var result = rows
-            .GroupBy(r => r.NomenclatureId, (key, list) =>
-            {
-                var matched = items.Where(i => i.NomenclatureId == key).ToList();
-                return new OrderSpecificationNomenclature
-                {
-                    Order = order,
-                    Nomenclature = list.First().Nomenclature,
-                    Quantity = list.Sum(s => s.Quantity),
-                    Items = matched,
-                    Total = matched.Sum(i =>
-                        i.Meta.Completed != null
-                            ? consumedByItem.GetValueOrDefault(i.Id, 0)
-                            : availableByItem.GetValueOrDefault(i.Id, i.Quantity)),
-                };
-            });
+        foreach (var row in snapshot)
+        {
+            row.Order = order;
+            var matched = items.Where(i => i.NomenclatureId == row.NomenclatureId).ToList();
+            row.Items = matched;
+            row.Total = matched.Sum(i =>
+                i.Meta.Completed != null
+                    ? consumedByItem.GetValueOrDefault(i.Id, 0)
+                    : availableByItem.GetValueOrDefault(i.Id, i.Quantity));
+        }
 
-        return result;
+        return snapshot;
     }
 
     public async Task<IEnumerable<Item>> GetItems(Guid id)
