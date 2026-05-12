@@ -8,3 +8,4 @@ export * from './hooks/useSignalR';
 export * from './hooks/entityRefresh';
 export * from './hooks/entityLocks';
 export * from './hooks/useBasePath';
+export * from './hooks/useStickyHeaderOffset';

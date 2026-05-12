@@ -1,6 +1,7 @@
-import React, {useState} from 'react';
-import {Box, Button} from '@mui/material';
+﻿import React, {useState} from 'react';
+import {Button} from '@mui/material';
 import {SmartScroll, SmartScrollContent} from '@microprojects/tools';
+import {useStickyHeaderOffset} from '../../hooks/useStickyHeaderOffset';
 
 export interface SearchAction {
     /** Stable identifier — used to track which action is active. */
@@ -37,10 +38,11 @@ export function Search({actions, defaultKey}: SearchProps) {
     const initialKey = defaultKey ?? actions[0]?.key;
     const [activeKey, setActiveKey] = useState<string | undefined>(initialKey);
     const active = actions.find((a) => a.key === activeKey);
+    const stickyOffset = useStickyHeaderOffset();
 
     return (
         <SmartScroll
-            offsetTop={10}
+            offsetTop={stickyOffset}
             style={{
                 display: 'flex',
                 flexDirection: 'row',
@@ -81,9 +83,6 @@ export function Search({actions, defaultKey}: SearchProps) {
             </SmartScrollContent>
             <SmartScrollContent style={{flex: 5, minWidth: 0, marginLeft: '1rem'}}>
                 {active?.panel}
-                {/* Reserve scroll headroom so the active panel doesn't jerk
-                    when collapsing tall sub-cards near the viewport bottom. */}
-                <Box sx={{height: '40vh'}} />
             </SmartScrollContent>
         </SmartScroll>
     );
