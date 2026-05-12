@@ -49,7 +49,7 @@ a {
 }
 
 code {
-    color: #e01a76;
+    color: var(--accent-deep);
 }
 
 .changelog {
@@ -67,7 +67,7 @@ code {
 .changelog h2 {
     font-size: 1.25rem;
     margin: 1.5rem 0 0.5rem;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--line-soft);
     padding-bottom: 0.25rem;
 }
 
@@ -82,7 +82,7 @@ code {
 
 .changelog code {
     color: inherit;
-    background: #f6f8fa;
+    background: var(--surface-2);
     padding: 0.1em 0.3em;
     border-radius: 3px;
     font-size: 0.92em;
@@ -100,6 +100,6 @@ code {
 
 .changelog th,
 .changelog td {
-    border: 1px solid #ddd;
+    border: 1px solid var(--line);
     padding: 0.25rem 0.5rem;
 }

@@ -978,7 +978,7 @@ const groupByGrade = (items: Item[]): GradeBucket[] => {
                 gradeName: item.gradeName ?? 'No grade',
                 color: item.gradeId
                     ? colorForGradeId(item.gradeId)
-                    : '#e3f2fd',
+                    : 'var(--surface-3)',
                 quantity: 0,
             })
         }
