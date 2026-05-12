@@ -1,10 +1,12 @@
 ﻿import React, {useState, useEffect} from 'react';
 import {NavLink, useLocation} from 'react-router-dom';
 
-// HANDOFF · v2 04f.9 · page-head squeeze. Body scroll past 12 px collapses
-// the title from 28 → 16 px (height 72 → 48 px), 180 ms cubic-bezier easing.
-// Hysteresis at 4 px on the way back up to avoid flicker at the threshold.
-const SQUEEZE_ON = 12;
+// HANDOFF · v2 04f.9 · page-head squeeze. Body scroll past SQUEEZE_ON
+// collapses the chrome (.doc-crumbs 28→0 and .page-head 72→36, 180 ms ease).
+// Hysteresis gap (SQUEEZE_ON − SQUEEZE_OFF) must exceed the combined height
+// delta (28 + 36 = 64 px) — otherwise browser scroll-anchoring bumps scrollY
+// across the threshold after each transition and the header oscillates.
+const SQUEEZE_ON = 80;
 const SQUEEZE_OFF = 4;
 
 export interface SubRootPageMenuItem {
@@ -24,17 +26,26 @@ export const SubRootPage = ({title, menuItems, children}: SubRootPageProps) => {
     const location = useLocation();
 
     useEffect(() => {
+        let frameId = 0;
+
         const handleScroll = () => {
-            const scrollY = window.scrollY;
-            setIsSqueezed(prev => {
-                if (!prev && scrollY > SQUEEZE_ON) return true;
-                if (prev && scrollY < SQUEEZE_OFF) return false;
-                return prev;
+            if (frameId) return;
+            frameId = requestAnimationFrame(() => {
+                frameId = 0;
+                const scrollY = window.scrollY;
+                setIsSqueezed(prev => {
+                    if (!prev && scrollY > SQUEEZE_ON) return true;
+                    if (prev && scrollY < SQUEEZE_OFF) return false;
+                    return prev;
+                });
             });
         };
 
         window.addEventListener('scroll', handleScroll, {passive: true});
-        return () => window.removeEventListener('scroll', handleScroll);
+        return () => {
+            if (frameId) cancelAnimationFrame(frameId);
+            window.removeEventListener('scroll', handleScroll);
+        };
     }, []);
 
     const isPathActive = (path: string) => location.pathname.startsWith(path);
