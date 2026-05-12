@@ -29,6 +29,11 @@ import { colorForGradeId } from '@logistics/utils/gradePalette'
 import {
     ArrowBackOutlined as BackIcon,
     CheckOutlined as CheckIcon,
+    EventOutlined as DueIcon,
+    Inventory2Outlined as QuantityIcon,
+    NotesOutlined as NotesIcon,
+    PlayArrowOutlined as PlayIcon,
+    TodayOutlined as StartIcon,
 } from '@mui/icons-material'
 import {
     Alert,
@@ -705,92 +710,224 @@ const ReviewStep = ({
         () => computeDueStatus(order.dueDate),
         [order.dueDate],
     )
+    const amountLabel = formatUnits(
+        order.amount,
+        order.processNomenclatureUnits,
+        order.processNomenclatureCountable,
+    )
+    const dueTone = dueStatus ? DUE_TONE[dueStatus.kind] : undefined
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1 }}>
-            <Typography sx={monoEyebrowSx}>Order details</Typography>
+        <Box
+            sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 2,
+                mt: 1,
+                maxWidth: 980,
+                width: '100%',
+                mx: 'auto',
+            }}
+        >
+            <Typography sx={monoEyebrowSx}>Order summary</Typography>
             <Box
                 sx={{
                     display: 'grid',
-                    gridTemplateColumns: 'minmax(160px, max-content) 1fr',
-                    gap: '8px 24px',
-                    alignItems: 'baseline',
-                    background: 'var(--surface-2)',
-                    border: '1px solid var(--line)',
-                    borderRadius: 'var(--r-2)',
-                    p: 1.5,
+                    gridTemplateColumns: {
+                        xs: '1fr',
+                        sm: 'repeat(3, 1fr)',
+                    },
+                    gap: 1.5,
                 }}
             >
-                <ReviewLabel>Process</ReviewLabel>
-                <ReviewValue>{order.processName}</ReviewValue>
-                <ReviewLabel>Nomenclature</ReviewLabel>
-                <ReviewValue>
-                    {order.processNomenclatureName ?? '—'}
-                </ReviewValue>
-                <ReviewLabel>Amount</ReviewLabel>
-                <ReviewValue mono>
-                    {formatUnits(
-                        order.amount,
-                        order.processNomenclatureUnits,
-                        order.processNomenclatureCountable,
-                    )}
-                </ReviewValue>
-                {order.startDate && (
-                    <>
-                        <ReviewLabel>Start</ReviewLabel>
-                        <ReviewValue>
-                            {formatLocalDate(order.startDate)}
-                        </ReviewValue>
-                    </>
-                )}
-                {order.dueDate && (
-                    <>
-                        <ReviewLabel>Due</ReviewLabel>
-                        <ReviewValue>
-                            <Box
-                                component="span"
-                                sx={{ mr: 1 }}
-                            >
-                                {formatLocalDate(order.dueDate)}
-                            </Box>
-                            {dueStatus && (
-                                <Chip
-                                    size="small"
-                                    label={dueStatus.label}
-                                    sx={{
-                                        height: 22,
-                                        fontSize: 11,
-                                        fontWeight: 700,
-                                        fontFamily: 'var(--font-mono)',
-                                        background:
-                                            DUE_TONE[dueStatus.kind].bg,
-                                        color:
-                                            DUE_TONE[dueStatus.kind].fg,
-                                        border: `1px solid ${DUE_TONE[dueStatus.kind].border}`,
-                                    }}
-                                />
-                            )}
-                        </ReviewValue>
-                    </>
-                )}
-                {order.description && (
-                    <>
-                        <ReviewLabel>Description</ReviewLabel>
-                        <ReviewValue>{order.description}</ReviewValue>
-                    </>
-                )}
+                <SummaryTile
+                    eyebrow="Quantity"
+                    icon={<QuantityIcon fontSize="small" />}
+                    accent="var(--accent)"
+                    value={amountLabel}
+                    sub={order.processNomenclatureName ?? '—'}
+                />
+                <SummaryTile
+                    eyebrow="Due"
+                    icon={<DueIcon fontSize="small" />}
+                    accent={dueTone?.border ?? 'var(--line-strong)'}
+                    value={
+                        order.dueDate ? formatLocalDate(order.dueDate) : '—'
+                    }
+                    valueTone={dueTone?.fg}
+                    chip={
+                        dueStatus && dueTone
+                            ? { label: dueStatus.label, tone: dueTone }
+                            : undefined
+                    }
+                />
+                <SummaryTile
+                    eyebrow="Planned start"
+                    icon={<StartIcon fontSize="small" />}
+                    accent="var(--line-strong)"
+                    value={
+                        order.startDate
+                            ? formatLocalDate(order.startDate)
+                            : '—'
+                    }
+                    sub={order.executor ? `Operator · ${order.executor}` : 'Unclaimed'}
+                />
             </Box>
+
+            {order.description && (
+                <Box>
+                    <Typography sx={{ ...monoEyebrowSx, mb: 0.75 }}>
+                        Notes
+                    </Typography>
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: 1.5,
+                            background: 'var(--surface)',
+                            border: '1px solid var(--line)',
+                            borderLeft: '3px solid var(--accent)',
+                            borderRadius: 'var(--r-2)',
+                            boxShadow: 'var(--elev-1)',
+                            p: 1.75,
+                        }}
+                    >
+                        <NotesIcon
+                            sx={{
+                                color: 'var(--accent)',
+                                fontSize: 20,
+                                flexShrink: 0,
+                                mt: '2px',
+                            }}
+                        />
+                        <Typography
+                            sx={{
+                                whiteSpace: 'pre-wrap',
+                                color: 'var(--ink-1)',
+                                fontSize: 14,
+                                lineHeight: 1.55,
+                            }}
+                        >
+                            {order.description}
+                        </Typography>
+                    </Box>
+                </Box>
+            )}
 
             <Footer>
                 <MuiButton
                     variant="contained"
-                    color="primary"
+                    color={onResume ? 'primary' : 'success'}
                     size="large"
                     onClick={onResume ?? onNext}
-                    sx={{ minWidth: 200, fontWeight: 700 }}
+                    startIcon={onResume ? undefined : <PlayIcon />}
+                    sx={{
+                        minWidth: 220,
+                        fontWeight: 700,
+                        py: 1.25,
+                        textTransform: 'none',
+                        fontSize: 15,
+                    }}
                 >
-                    {onResume ? 'Resume' : nextLabel}
+                    {onResume ? 'Resume' : 'Start running'}
                 </MuiButton>
             </Footer>
+        </Box>
+    )
+}
+
+interface SummaryTileProps {
+    eyebrow: string
+    icon: React.ReactNode
+    accent: string
+    value: React.ReactNode
+    valueTone?: string
+    sub?: React.ReactNode
+    chip?: { label: string; tone: Tone }
+}
+
+function SummaryTile({
+    eyebrow,
+    icon,
+    accent,
+    value,
+    valueTone,
+    sub,
+    chip,
+}: SummaryTileProps) {
+    return (
+        <Box
+            sx={{
+                background: 'var(--surface)',
+                border: '1px solid var(--line)',
+                borderLeft: `3px solid ${accent}`,
+                borderRadius: 'var(--r-2)',
+                boxShadow: 'var(--elev-1)',
+                p: 1.75,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 0.5,
+                minWidth: 0,
+            }}
+        >
+            <Box
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.75,
+                    color: accent,
+                }}
+            >
+                {icon}
+                <Typography sx={{ ...monoEyebrowSx, color: 'var(--ink-3)' }}>
+                    {eyebrow}
+                </Typography>
+            </Box>
+            <Typography
+                className="num"
+                sx={{
+                    fontSize: 22,
+                    fontWeight: 700,
+                    lineHeight: 1.15,
+                    letterSpacing: '-0.01em',
+                    color: valueTone ?? 'var(--ink-1)',
+                    wordBreak: 'break-word',
+                }}
+            >
+                {value}
+            </Typography>
+            {chip && (
+                <Chip
+                    size="small"
+                    label={chip.label}
+                    sx={{
+                        alignSelf: 'flex-start',
+                        height: 22,
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: 11,
+                        fontWeight: 700,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                        background: chip.tone.bg,
+                        color: chip.tone.fg,
+                        border: `1px solid ${chip.tone.border}`,
+                        mt: 0.5,
+                    }}
+                />
+            )}
+            {sub && (
+                <Typography
+                    sx={{
+                        fontSize: 12.5,
+                        color: 'var(--ink-3)',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        mt: 0.25,
+                    }}
+                >
+                    {sub}
+                </Typography>
+            )}
         </Box>
     )
 }
