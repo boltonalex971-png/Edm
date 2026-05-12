@@ -3,6 +3,7 @@ import { usePost } from '@logistics/hooks/hooks'
 import type { Order, OrderStatus } from '@logistics/data/types'
 import type { RootState } from '@logistics/store'
 import { formatLocalDate, parseUtcDate } from '@logistics/utils/format'
+import { displayUserName } from '@microprojects/edm-components/utils'
 import {
     ArrowForward as ArrowIcon,
     AutorenewOutlined as RepackingIcon,
@@ -15,10 +16,31 @@ import {
     WarningAmberOutlined as OverdueIcon,
     HourglassEmptyOutlined as PendingIcon,
 } from '@mui/icons-material'
-import { Box, Button as MuiButton, Chip, Paper, Typography } from '@mui/material'
-import { useMemo } from 'react'
+import { Box, Chip, Paper, Typography } from '@mui/material'
+import { useEffect, useMemo, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { Link as RouterLink, useNavigate } from 'react-router-dom'
+
+const ROLE_LABEL: Record<string, string> = {
+    Admin: 'Administrator',
+    Technologist: 'Technologist',
+    Operator: 'Operator',
+}
+
+function useClock(): string {
+    const [now, setNow] = useState(() => new Date())
+    useEffect(() => {
+        const t = setInterval(() => setNow(new Date()), 30000)
+        return () => clearInterval(t)
+    }, [])
+    return now.toLocaleString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    })
+}
 
 const eyebrowSx = {
     fontFamily: 'var(--font-mono)',
@@ -112,32 +134,24 @@ export const Home = () => {
     }, [orders])
 
     const isOperatorRole = user.roles?.includes('Operator')
-    const today = new Date()
-    const todayLabel = today
-        .toLocaleDateString(undefined, {
-            weekday: 'short',
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-        })
-        .toUpperCase()
+    const userShort = displayUserName(user.name)
+    const clock = useClock()
 
     return (
         <Box
             sx={{
                 px: { xs: 2, md: 3 },
-                py: { xs: 2, md: 3 },
-                maxWidth: 1400,
+                py: { xs: 3, md: 4 },
+                maxWidth: 1180,
                 mx: 'auto',
                 width: '100%',
             }}
         >
-            <HeroBand
-                userName={user.name}
+            <Hero
+                userName={userShort}
+                userFull={user.name}
                 role={user.role}
-                todayLabel={todayLabel}
-                showOperatorCta={!!isOperatorRole}
-                onOpenDesktop={() => navigate('/desktop')}
+                clock={clock}
             />
 
             <Box
@@ -298,140 +312,105 @@ export const Home = () => {
     )
 }
 
-interface HeroBandProps {
+interface HeroProps {
     userName: string
+    userFull: string
     role: string
-    todayLabel: string
-    showOperatorCta: boolean
-    onOpenDesktop: () => void
+    clock: string
 }
 
-function HeroBand({
-    userName,
-    role,
-    todayLabel,
-    showOperatorCta,
-    onOpenDesktop,
-}: HeroBandProps) {
+function Hero({ userName, userFull, role, clock }: HeroProps) {
+    const roleLabel = ROLE_LABEL[role] || role
     return (
-        <Paper
-            elevation={0}
+        <Box
+            component="header"
             sx={{
-                position: 'relative',
-                overflow: 'hidden',
-                background: 'var(--surface)',
-                border: '1px solid var(--line)',
-                borderRadius: 'var(--r-2)',
-                boxShadow: 'var(--elev-1)',
-                p: { xs: 2, md: 3 },
-                display: 'flex',
-                flexDirection: { xs: 'column', md: 'row' },
-                alignItems: { xs: 'flex-start', md: 'center' },
-                gap: 2,
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', sm: 'minmax(0, 1fr) auto' },
+                alignItems: 'end',
+                gap: { xs: 2, sm: 4 },
+                borderBottom: '1px solid var(--line)',
+                pb: 3,
+                mb: 4.5,
             }}
         >
-            <Box
-                aria-hidden
-                sx={{
-                    position: 'absolute',
-                    inset: 0,
-                    background:
-                        'linear-gradient(110deg, var(--ent-order-soft) 0%, transparent 38%, var(--ent-supply-soft) 100%)',
-                    opacity: 0.55,
-                    pointerEvents: 'none',
-                }}
-            />
-            <Box sx={{ position: 'relative', flex: 1, minWidth: 0 }}>
+            <Box sx={{ minWidth: 0 }}>
                 <Box
                     sx={{
-                        display: 'flex',
-                        alignItems: 'baseline',
-                        gap: 1.5,
-                        flexWrap: 'wrap',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 1.25,
+                        mb: 1.25,
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: 11,
+                        fontWeight: 700,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.08em',
+                        color: 'var(--accent)',
+                        '&::after': {
+                            content: '""',
+                            height: '1px',
+                            width: 60,
+                            background: 'var(--accent)',
+                            opacity: 0.35,
+                        },
                     }}
                 >
-                    <Typography sx={eyebrowSx}>Logistics</Typography>
-                    <Typography
-                        sx={{
-                            ...eyebrowSx,
-                            color: 'var(--ink-4)',
-                            fontWeight: 600,
-                        }}
-                    >
-                        {todayLabel}
-                    </Typography>
+                    Welcome
                 </Box>
                 <Typography
                     component="h1"
+                    title={userFull || undefined}
                     sx={{
-                        mt: 0.5,
-                        fontSize: { xs: 26, md: 32 },
-                        fontWeight: 700,
-                        lineHeight: 1.15,
+                        fontSize: { xs: 28, md: 36 },
+                        fontWeight: 800,
+                        letterSpacing: '-0.018em',
                         color: 'var(--ink-1)',
-                        letterSpacing: '-0.01em',
+                        m: 0,
+                        mb: 1.25,
+                        lineHeight: 1.05,
                     }}
                 >
-                    Welcome back, {userName}
+                    {userName ? `Hello, ${userName}` : 'Welcome to EDM Logistics'}
                 </Typography>
-                <Box
+                <Typography
+                    component="p"
                     sx={{
-                        mt: 1,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 1,
-                        flexWrap: 'wrap',
+                        fontSize: 15,
+                        lineHeight: 1.55,
+                        color: 'var(--ink-3)',
+                        maxWidth: '56ch',
+                        m: 0,
                     }}
                 >
-                    <Typography sx={{ fontSize: 14, color: 'var(--ink-2)' }}>
-                        Inventory & shop-floor tracking
-                    </Typography>
-                    <Box
-                        sx={{
-                            width: 4,
-                            height: 4,
-                            borderRadius: '50%',
-                            background: 'var(--ink-4)',
-                        }}
-                    />
-                    <Chip
-                        size="small"
-                        label={role}
-                        sx={{
-                            height: 22,
-                            fontFamily: 'var(--font-mono)',
-                            fontSize: 11,
-                            fontWeight: 700,
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.05em',
-                            background: 'var(--accent-soft)',
-                            color: 'var(--accent-deep)',
-                            border: '1px solid var(--accent)',
-                        }}
-                    />
-                </Box>
+                    Inventory and shop-floor tracking for production orders,
+                    supplies and tare. Pick where you want to start.
+                </Typography>
             </Box>
-
-            {showOperatorCta && (
-                <Box sx={{ position: 'relative', flexShrink: 0 }}>
-                    <MuiButton
-                        variant="contained"
-                        size="large"
-                        startIcon={<DesktopIcon />}
-                        endIcon={<ArrowIcon />}
-                        onClick={onOpenDesktop}
-                        sx={{
-                            fontWeight: 700,
-                            textTransform: 'none',
-                            px: 2.5,
-                            py: 1.25,
-                        }}
-                    >
-                        Open operator desktop
-                    </MuiButton>
-                </Box>
-            )}
-        </Paper>
+            <Box
+                sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 0.5,
+                    alignItems: { xs: 'flex-start', sm: 'flex-end' },
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 11,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.06em',
+                    color: 'var(--ink-4)',
+                    textAlign: { xs: 'left', sm: 'right' },
+                    whiteSpace: 'nowrap',
+                    '& b': { color: 'var(--ink-2)', fontWeight: 700 },
+                }}
+            >
+                {role && (
+                    <span>
+                        <b>Role</b> · {roleLabel}
+                    </span>
+                )}
+                <span>{clock}</span>
+            </Box>
+        </Box>
     )
 }
 

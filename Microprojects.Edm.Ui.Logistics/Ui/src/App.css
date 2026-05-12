@@ -3,6 +3,47 @@
     --anchor-color: #0366d6;
 }
 
+/* =========================================================================
+   Logistics — warm "Kraft" theme. Overrides the package's cool Steel tokens
+   for the Logistics SPA only (scoped to [data-plugin="logistics"]). Pairs
+   honey-amber accents with cream neutrals so the chrome reads warehouse-warm
+   and is visibly distinct from the cobalt-on-steel of Technologies.
+   Header gets the same accent-tint wash + 2px brand stripe recipe as Tech.
+   ========================================================================= */
+[data-plugin="logistics"] {
+    /* Warm cream neutrals */
+    --bg:            #F2EDE2;
+    --surface-2:     #FAF5EB;
+    --surface-3:     #F1EAD9;
+    --surface-sunk:  #E5DAC2;
+
+    /* Warm slate lines */
+    --line:          #DED6C5;
+    --line-soft:     #ECE5D5;
+    --line-strong:   #C5BBA4;
+
+    /* Honey-amber brand accent */
+    --accent:        #A8651D;
+    --accent-deep:   #7A4711;
+    --accent-soft:   #F0E0C2;
+    --accent-tint:   #FAF1DC;
+    --accent-fg:     #FFFFFF;
+}
+
+/* Backstop for the html/body bg — token vars defined on .page-root don't
+   reach <body>, so a hard-set warm bg keeps scroll bounce / overscroll from
+   exposing the cool default. */
+body {
+    background: #F2EDE2;
+}
+
+/* Brand-tinted top bar: pale amber wash + 2px amber stripe at the bottom.
+   Same recipe Tech uses on .doc-top, just swapped to the Logistics accent. */
+[data-plugin="logistics"] .doc-top {
+    background: var(--accent-tint);
+    box-shadow: inset 0 -2px 0 var(--accent);
+}
+
 a {
     color: var(--anchor-color);
 }
