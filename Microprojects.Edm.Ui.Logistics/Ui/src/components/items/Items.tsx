@@ -12,11 +12,23 @@ import {
     Search as SearchIcon,
 } from '@mui/icons-material'
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 export function Items() {
     const { name } = useRouteMatch()
     const path = useBasePath()
+    const navigate = useNavigate()
     const [query, setQuery] = useState<ItemSearchQuery>()
+
+    // Header "Items" link points at bare /items. Land there → bounce to
+    // /items/remaining so Available is the default and the tab strip
+    // highlights it. `replace` so back doesn't ping-pong.
+    useEffect(() => {
+        if (name === '' || name === '/') {
+            navigate(`${path}/remaining`, { replace: true })
+        }
+    }, [name, path, navigate])
+
     useEffect(() => {
         setQuery({ active: name.includes('remaining') })
     }, [name])

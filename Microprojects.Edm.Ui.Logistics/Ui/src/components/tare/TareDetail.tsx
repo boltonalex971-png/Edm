@@ -1,11 +1,13 @@
 import Api from '@features/api/api'
 import { Loading } from '@features/utils/Utils'
+import { ItemDetail } from '@logistics/components/items/ItemDetail'
 import { Detail } from '@logistics/components/MasterDetail'
 import { TareSchematic } from '@logistics/components/tare/TareSchematic'
 import type { Item, TareInfo, UUID } from '@logistics/data/types'
 import { useGet } from '@logistics/hooks/hooks'
 import { Box, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material'
 import { DataGrid, type GridColDef } from '@mui/x-data-grid'
+import type React from 'react'
 import { useMemo, useState } from 'react'
 import { Diagram3 } from 'react-bootstrap-icons'
 
@@ -45,6 +47,18 @@ export function TareDetail({
         [tareId, skipFetch],
     )
     const [view, setView] = useState<ViewMode>('schema')
+    const [subDetail, setSubDetail] = useState<React.ReactElement>()
+
+    const openItem = (itemId: UUID) =>
+        setSubDetail(
+            <ItemDetail
+                readonly={true}
+                id={itemId}
+                api={Api.items}
+                type="item"
+                onClose={() => setSubDetail(undefined)}
+            />,
+        )
 
     const items = scopedItems ?? fetched
     const loading = skipFetch ? false : fetchLoading
@@ -85,6 +99,7 @@ export function TareDetail({
                     description: tare?.tareTypeName || '',
                 } as any
             }
+            subDetail={subDetail}
             card={
                 <Box>
                     {loading && <Loading />}
@@ -112,7 +127,13 @@ export function TareDetail({
                                 </ToggleButtonGroup>
                             </Box>
                             {view === 'schema' ? (
-                                <TareSchematic tare={tare} items={items} />
+                                <TareSchematic
+                                    tare={tare}
+                                    items={items}
+                                    onSlotClick={(slot) =>
+                                        slot.item && openItem(slot.item.id)
+                                    }
+                                />
                             ) : (
                                 <Box sx={{ width: '100%' }}>
                                     <DataGrid
@@ -123,6 +144,14 @@ export function TareDetail({
                                         disableRowSelectionOnClick
                                         hideFooter={rows.length <= 25}
                                         pageSizeOptions={[25, 50, 100]}
+                                        onRowClick={(params) =>
+                                            openItem(params.row.id)
+                                        }
+                                        sx={{
+                                            '& .MuiDataGrid-row': {
+                                                cursor: 'pointer',
+                                            },
+                                        }}
                                     />
                                 </Box>
                             )}
