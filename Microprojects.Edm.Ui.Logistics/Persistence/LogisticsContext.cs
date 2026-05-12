@@ -18,12 +18,13 @@ public class LogisticsContext : DbContext
     public DbSet<SubProcess> SubProcesses { get; set; }
     public DbSet<Specification> Specifications { get; set; }
     public DbSet<SpecificationNomenclature> SpecificationNomenclatures { get; set; }
+    public DbSet<OrderSpecificationNomenclature> OrderSpecificationNomenclatures { get; set; }
     public DbSet<Tare> Tares { get; set; }
     public DbSet<TareType> TareTypes { get; set; }
     public DbSet<NomenclatureTareType> NomenclatureTareTypes { get; set; }
     public DbSet<Assignment> Tasks { get; set; }
     public DbSet<ItemLink> ItemLinks { get; set; }
-    
+
     public LogisticsContext(DbContextOptions<LogisticsContext> options) : base(options)
     {
     }
@@ -36,7 +37,7 @@ public class LogisticsContext : DbContext
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
-        
+
         //builder.Entity<Meta>().OwnsOne(m => m.Groups).ToJson();
         // builder.Entity<Meta>()
         //     .Property(e => e.Groups)
@@ -98,6 +99,24 @@ public class LogisticsContext : DbContext
             .WithMany()
             .HasForeignKey(op => op.OrderId)
             .OnDelete(DeleteBehavior.NoAction);
+
+        builder.Entity<OrderSpecificationNomenclature>()
+            .HasOne(s => s.Order)
+            .WithMany()
+            .HasForeignKey(s => s.OrderId)
+            .OnDelete(DeleteBehavior.NoAction);
+        builder.Entity<OrderSpecificationNomenclature>()
+            .HasOne(s => s.Nomenclature)
+            .WithMany()
+            .HasForeignKey(s => s.NomenclatureId)
+            .OnDelete(DeleteBehavior.NoAction);
+        builder.Entity<OrderSpecificationNomenclature>()
+            .HasOne(s => s.Process)
+            .WithMany()
+            .HasForeignKey(s => s.ProcessId)
+            .OnDelete(DeleteBehavior.NoAction);
+        builder.Entity<OrderSpecificationNomenclature>()
+            .HasIndex(s => new { s.OrderId, s.NomenclatureId });
 
         builder.Entity<Item>()
             .HasOne(i => i.Grade)

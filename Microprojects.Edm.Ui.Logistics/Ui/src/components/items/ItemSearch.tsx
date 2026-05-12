@@ -25,21 +25,22 @@ import {
     useInvalidateEntities,
 } from '@logistics/hooks/entityRefresh'
 import { usePost } from '@logistics/hooks/hooks'
-import { Search as SearchIcon } from '@mui/icons-material'
+import {
+    ExpandLessOutlined as ChevDown,
+    ExpandMoreOutlined as ChevRight,
+    InboxOutlined as EmptyIcon,
+    Search as SearchIcon,
+} from '@mui/icons-material'
 import {
     Alert,
     Box,
     Button as MuiButton,
     Chip,
+    IconButton,
     InputAdornment,
     TextField,
+    Typography,
 } from '@mui/material'
-import {
-    DataGrid,
-    type GridColDef,
-    type GridRowParams,
-    GRID_DETAIL_PANEL_TOGGLE_FIELD,
-} from '@mui/x-data-grid'
 import type React from 'react'
 import {
     type ReactElement,
@@ -126,6 +127,43 @@ function sourceChip(items: Item[]) {
     )
 }
 
+// Column geometry — shared by header and rows so they line up. The chevron
+// column is fixed-width on the left; the rest are flex-sized with min-widths
+// matching the previous DataGrid layout.
+const COL_SX = {
+    chev: { width: 32, flexShrink: 0 } as const,
+    barcode: { flex: '1 1 140px', minWidth: 0 } as const,
+    type: { flex: '1 1 140px', minWidth: 0 } as const,
+    nomenclatures: { flex: '1.4 1 180px', minWidth: 0 } as const,
+    fill: { width: 110, flexShrink: 0 } as const,
+    source: { width: 100, flexShrink: 0 } as const,
+    units: { width: 80, flexShrink: 0 } as const,
+}
+
+const ROW_SX = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 1.5,
+    px: 1,
+    py: 0.75,
+    borderBottom: '1px solid var(--line)',
+} as const
+
+const HEADER_LABEL_SX = {
+    fontFamily: 'var(--font-mono)',
+    fontSize: 11,
+    fontWeight: 700,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.07em',
+    color: 'var(--ink-3)',
+}
+
+const TRUNCATE_SX = {
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap' as const,
+}
+
 export const ItemSearch = (props: ItemSearchProps) => {
     const token = useEntityToken([{ type: 'item' }, { type: 'tare' }])
     const invalidate = useInvalidateEntities()
@@ -143,6 +181,9 @@ export const ItemSearch = (props: ItemSearchProps) => {
     const lastClickedRef = useRef<{ tareId: string; itemId: string } | null>(
         null,
     )
+    // Tare-row expansion. Rows start collapsed — the user expands what they
+    // need. Click the chevron (or the row in lookup mode) to toggle.
+    const [expanded, setExpanded] = useState<Set<string>>(new Set())
 
     useEffect(() => {
         setAlert(undefined)
@@ -164,6 +205,15 @@ export const ItemSearch = (props: ItemSearchProps) => {
             id: g.tare.id || 'no-tare',
         }))
     }, [filter, items])
+
+    const toggleExpand = useCallback((key: string) => {
+        setExpanded((prev) => {
+            const next = new Set(prev)
+            if (next.has(key)) next.delete(key)
+            else next.add(key)
+            return next
+        })
+    }, [])
 
     const handleSlotSelect = useCallback(
         (item: Item, tareId: string, shiftKey: boolean) => {
@@ -224,118 +274,44 @@ export const ItemSearch = (props: ItemSearchProps) => {
 
     const lookupActive = !!props.lookup
 
-    const getDetailPanelContent = useCallback(
-        ({ row }: { row: TareRow }) => {
-            const selectedAddresses = new Set(
-                row.items
-                    .filter((i) => selectedItemIds.has(i.id))
-                    .map((i) => i.address)
-                    .filter((a): a is number => a != null),
-            )
-            return (
-                <Box sx={{ p: 1 }}>
-                    <TareSchematic
-                        tare={row.tare}
-                        items={row.items}
-                        selectedSlots={
-                            lookupActive ? selectedAddresses : undefined
-                        }
-                        onSlotClick={(slot, event) => {
-                            if (slot.item && lookupActive) {
-                                handleSlotSelect(
-                                    slot.item,
-                                    row.id,
-                                    event.shiftKey,
-                                )
-                            } else if (slot.item && !lookupActive) {
-                                setSubDetail(
-                                    <ItemDetail
-                                        readonly={true}
-                                        id={slot.item.id}
-                                        api={Api.items}
-                                        onClose={() => setSubDetail(undefined)}
-                                    />,
-                                )
-                            }
-                        }}
-                    />
-                </Box>
-            )
-        },
-        [handleSlotSelect, lookupActive, selectedItemIds],
+    // Click-vs-double-click coordinator: in lookup mode the row click toggles
+    // expansion, double-click allocates the whole tare. We delay the toggle by
+    // 220 ms so a double-click can cancel it (mirrors ComponentLookup).
+    const pendingRowClickRef = useRef<ReturnType<typeof setTimeout> | null>(
+        null,
     )
-
-    const getDetailPanelHeight = useCallback(() => 'auto' as const, [])
-
-    const columns: GridColDef<TareRow>[] = useMemo(
-        () => [
-            {
-                ...({} as any),
-                field: GRID_DETAIL_PANEL_TOGGLE_FIELD,
-                width: 40,
-            },
-            {
-                field: 'barcode',
-                headerName: 'Barcode',
-                flex: 1,
-                minWidth: 140,
-                valueGetter: (_v, r) => r.tare.barcode || '(none)',
-            },
-            {
-                field: 'tareTypeName',
-                headerName: 'Tare Type',
-                flex: 1,
-                minWidth: 140,
-                valueGetter: (_v, r) => r.tare.tareTypeName,
-            },
-            {
-                field: 'nomenclatures',
-                headerName: 'Nomenclatures',
-                flex: 1.4,
-                minWidth: 180,
-                valueGetter: (_v, r) =>
-                    [...new Set(r.items.map((i) => i.nomenclatureName))].join(
-                        ', ',
-                    ),
-            },
-            {
-                field: 'fill',
-                headerName: 'Fill',
-                width: 110,
-                valueGetter: (_v, r) => tareSummary(r),
-            },
-            {
-                field: 'source',
-                headerName: 'Source',
-                width: 100,
-                renderCell: (p) => sourceChip(p.row.items),
-                sortable: false,
-                filterable: false,
-            },
-            {
-                field: 'units',
-                headerName: 'Units',
-                width: 80,
-                valueGetter: (_v, r) => r.tare.tareTypeUnits,
-            },
-        ],
-        [],
-    )
-
-    const onRowClick = (p: GridRowParams<TareRow>) => {
-        if (lookupActive) return
-        setSubDetail(
-            <TareDetail
-                tareId={p.row.tare.id}
-                label={p.row.tare.barcode}
-                onClose={() => setSubDetail(undefined)}
-            />,
-        )
+    const cancelPendingRowClick = () => {
+        if (pendingRowClickRef.current) {
+            clearTimeout(pendingRowClickRef.current)
+            pendingRowClickRef.current = null
+        }
     }
-
-    const onRowDoubleClick = (p: GridRowParams<TareRow>) => {
-        if (typeof props.lookup === 'boolean' && props.lookup && props.selected) {
-            const sorted = [...p.row.items].sort(
+    const onRowClick = (row: TareRow) => {
+        if (!lookupActive) {
+            setSubDetail(
+                <TareDetail
+                    tareId={row.tare.id}
+                    label={row.tare.barcode}
+                    onClose={() => setSubDetail(undefined)}
+                />,
+            )
+            return
+        }
+        cancelPendingRowClick()
+        const timer = setTimeout(() => {
+            toggleExpand(row.id)
+            pendingRowClickRef.current = null
+        }, 220)
+        pendingRowClickRef.current = timer
+    }
+    const onRowDoubleClick = (row: TareRow) => {
+        cancelPendingRowClick()
+        if (
+            typeof props.lookup === 'boolean' &&
+            props.lookup &&
+            props.selected
+        ) {
+            const sorted = [...row.items].sort(
                 (a, b) => (a.address ?? 0) - (b.address ?? 0),
             )
             props.selected(sorted, setAlert, doRefresh)
@@ -406,27 +382,253 @@ export const ItemSearch = (props: ItemSearchProps) => {
                             {error as string}
                         </Alert>
                     )}
-                    {tareRows && (
-                        <DataGrid
-                            rows={tareRows}
-                            columns={columns}
-                            autoHeight
-                            density="compact"
-                            disableRowSelectionOnClick
-                            getDetailPanelContent={getDetailPanelContent}
-                            getDetailPanelHeight={getDetailPanelHeight}
-                            initialState={{
-                                pagination: {
-                                    paginationModel: { pageSize: 10, page: 0 },
-                                },
-                            }}
-                            pageSizeOptions={[10, 25, 50]}
-                            onRowClick={onRowClick}
-                            onRowDoubleClick={onRowDoubleClick}
+                    {!loading && tareRows.length === 0 && (
+                        <Box
                             sx={{
-                                '& .MuiDataGrid-row': { cursor: 'pointer' },
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                gap: 1,
+                                py: 3,
+                                color: 'var(--ink-3)',
+                                fontStyle: 'italic',
                             }}
-                        />
+                        >
+                            <EmptyIcon
+                                sx={{ fontSize: 32, color: 'var(--ink-4)' }}
+                            />
+                            <Typography variant="caption">
+                                {filter
+                                    ? `Nothing matches "${filter}".`
+                                    : 'No items match the current query.'}
+                            </Typography>
+                        </Box>
+                    )}
+                    {!loading && tareRows.length > 0 && (
+                        <Box
+                            sx={{
+                                border: '1px solid var(--line)',
+                                borderRadius: 'var(--r-2)',
+                                overflow: 'hidden',
+                                background: 'var(--surface)',
+                            }}
+                        >
+                            <Box
+                                sx={{
+                                    ...ROW_SX,
+                                    background: 'var(--surface-2)',
+                                    py: 0.5,
+                                }}
+                            >
+                                <Box sx={COL_SX.chev} />
+                                <Box sx={{ ...COL_SX.barcode, ...HEADER_LABEL_SX }}>
+                                    Barcode
+                                </Box>
+                                <Box sx={{ ...COL_SX.type, ...HEADER_LABEL_SX }}>
+                                    Tare type
+                                </Box>
+                                <Box
+                                    sx={{
+                                        ...COL_SX.nomenclatures,
+                                        ...HEADER_LABEL_SX,
+                                    }}
+                                >
+                                    Nomenclatures
+                                </Box>
+                                <Box sx={{ ...COL_SX.fill, ...HEADER_LABEL_SX }}>
+                                    Fill
+                                </Box>
+                                <Box sx={{ ...COL_SX.source, ...HEADER_LABEL_SX }}>
+                                    Source
+                                </Box>
+                                <Box sx={{ ...COL_SX.units, ...HEADER_LABEL_SX }}>
+                                    Units
+                                </Box>
+                            </Box>
+                            {tareRows.map((row) => {
+                                const isExpanded = expanded.has(row.id)
+                                const ChevIcon = isExpanded ? ChevDown : ChevRight
+                                const selectedAddresses = new Set(
+                                    row.items
+                                        .filter((i) => selectedItemIds.has(i.id))
+                                        .map((i) => i.address)
+                                        .filter((a): a is number => a != null),
+                                )
+                                const allSelected =
+                                    lookupActive &&
+                                    row.items.length > 0 &&
+                                    row.items.every((i) =>
+                                        selectedItemIds.has(i.id),
+                                    )
+                                const nomenclatures = [
+                                    ...new Set(
+                                        row.items.map((i) => i.nomenclatureName),
+                                    ),
+                                ].join(', ')
+                                return (
+                                    <Box
+                                        key={row.id}
+                                        sx={{
+                                            background: allSelected
+                                                ? 'var(--accent-tint)'
+                                                : 'transparent',
+                                            '&:last-of-type > .row-head': {
+                                                borderBottom: 'none',
+                                            },
+                                        }}
+                                    >
+                                        <Box
+                                            className="row-head"
+                                            onClick={() => onRowClick(row)}
+                                            onDoubleClick={() =>
+                                                onRowDoubleClick(row)
+                                            }
+                                            title={
+                                                lookupActive
+                                                    ? 'Click to expand · double-click to allocate the whole tare'
+                                                    : 'Click to open the tare'
+                                            }
+                                            sx={{
+                                                ...ROW_SX,
+                                                cursor: 'pointer',
+                                                userSelect: 'none',
+                                                '&:hover': {
+                                                    background: allSelected
+                                                        ? 'var(--accent-tint)'
+                                                        : 'var(--surface-2)',
+                                                },
+                                            }}
+                                        >
+                                            <Box sx={COL_SX.chev}>
+                                                <IconButton
+                                                    size="small"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        toggleExpand(row.id)
+                                                    }}
+                                                    sx={{ p: 0.25 }}
+                                                >
+                                                    <ChevIcon
+                                                        fontSize="small"
+                                                        sx={{ color: 'var(--ink-3)' }}
+                                                    />
+                                                </IconButton>
+                                            </Box>
+                                            <Typography
+                                                sx={{
+                                                    ...COL_SX.barcode,
+                                                    ...TRUNCATE_SX,
+                                                    fontFamily:
+                                                        'var(--font-mono)',
+                                                    fontSize: 13,
+                                                    fontWeight: 700,
+                                                    color: 'var(--ink-1)',
+                                                }}
+                                                title={row.tare.barcode || ''}
+                                            >
+                                                {row.tare.barcode || '(none)'}
+                                            </Typography>
+                                            <Typography
+                                                sx={{
+                                                    ...COL_SX.type,
+                                                    ...TRUNCATE_SX,
+                                                    fontSize: 13,
+                                                    color: 'var(--ink-2)',
+                                                }}
+                                                title={row.tare.tareTypeName ?? ''}
+                                            >
+                                                {row.tare.tareTypeName}
+                                            </Typography>
+                                            <Typography
+                                                sx={{
+                                                    ...COL_SX.nomenclatures,
+                                                    ...TRUNCATE_SX,
+                                                    fontSize: 13,
+                                                    color: 'var(--ink-2)',
+                                                }}
+                                                title={nomenclatures}
+                                            >
+                                                {nomenclatures}
+                                            </Typography>
+                                            <Typography
+                                                sx={{
+                                                    ...COL_SX.fill,
+                                                    fontSize: 12,
+                                                    fontFamily:
+                                                        'var(--font-mono)',
+                                                    color: 'var(--ink-2)',
+                                                }}
+                                            >
+                                                {tareSummary(row)}
+                                            </Typography>
+                                            <Box sx={COL_SX.source}>
+                                                {sourceChip(row.items)}
+                                            </Box>
+                                            <Typography
+                                                sx={{
+                                                    ...COL_SX.units,
+                                                    fontSize: 12,
+                                                    color: 'var(--ink-3)',
+                                                }}
+                                            >
+                                                {row.tare.tareTypeUnits}
+                                            </Typography>
+                                        </Box>
+                                        {isExpanded && (
+                                            <Box
+                                                sx={{
+                                                    px: 1.5,
+                                                    py: 1,
+                                                    borderBottom:
+                                                        '1px solid var(--line)',
+                                                    background: 'var(--surface-2)',
+                                                }}
+                                            >
+                                                <TareSchematic
+                                                    tare={row.tare}
+                                                    items={row.items}
+                                                    selectedSlots={
+                                                        lookupActive
+                                                            ? selectedAddresses
+                                                            : undefined
+                                                    }
+                                                    onSlotClick={(slot, event) => {
+                                                        if (
+                                                            slot.item &&
+                                                            lookupActive
+                                                        ) {
+                                                            handleSlotSelect(
+                                                                slot.item,
+                                                                row.id,
+                                                                event.shiftKey,
+                                                            )
+                                                        } else if (
+                                                            slot.item &&
+                                                            !lookupActive
+                                                        ) {
+                                                            setSubDetail(
+                                                                <ItemDetail
+                                                                    readonly={
+                                                                        true
+                                                                    }
+                                                                    id={slot.item.id}
+                                                                    api={Api.items}
+                                                                    onClose={() =>
+                                                                        setSubDetail(
+                                                                            undefined,
+                                                                        )
+                                                                    }
+                                                                />,
+                                                            )
+                                                        }
+                                                    }}
+                                                />
+                                            </Box>
+                                        )}
+                                    </Box>
+                                )
+                            })}
+                        </Box>
                     )}
                 </Box>
             }

@@ -1,9 +1,9 @@
-import type { AlertState } from '@logistics/components/InlineAlert'
+import { type AlertState, useAlertSetter } from '@logistics/components/InlineAlert'
 import { RelationTable } from '@logistics/components/RelationTable.tsx'
 import { ItemSearch } from '@logistics/components/items/ItemSearch.tsx'
 import type { AllocateItemsRequest, Item, UUID } from '@logistics/data/types'
 import { formatUnits } from '@logistics/utils/format'
-import { Box, FormControlLabel, Switch } from '@mui/material'
+import { FormControlLabel, Switch } from '@mui/material'
 import { Column as GridColumn } from '@microprojects/edm-components/components'
 import axios from 'axios'
 
@@ -18,6 +18,7 @@ export function OrderSpecificationTab({
     api,
     onDetailSelected,
 }: OrderSpecificationTabProps) {
+    const setAlert = useAlertSetter()
     const addComponents = (
         items: Item[],
         itemUpdate: (item: any) => void,
@@ -48,7 +49,16 @@ export function OrderSpecificationTab({
                 onDone()
             })
     }
-    const rowSelected = (item: Item, update: (item: any) => void) => {
+    const rowSelected = (item: any, update: (item: any) => void) => {
+        const amount = Number(item?.amount ?? 0)
+        const total = Number(item?.total ?? 0)
+        if (amount > 0 && total >= amount) {
+            setAlert({
+                message: `${item?.nomenclatureName ?? 'Component'} is already fully allocated`,
+                status: 'warning',
+            })
+            return
+        }
         onDetailSelected &&
             onDetailSelected(
                 <ItemSearch
@@ -62,40 +72,40 @@ export function OrderSpecificationTab({
             )
     }
     return (
-        <>
-            <Box
-                sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}
-            >
+        <RelationTable
+            api={`${api}/${id}/specification`}
+            onRowSelected={rowSelected}
+            readonly
+            toolbarEnd={
                 <FormControlLabel
                     control={<Switch size="small" disabled />}
                     label="Hide totally allocated components"
-                    sx={{ '& .MuiFormControlLabel-label': { fontSize: 13 } }}
+                    sx={{
+                        m: 0,
+                        '& .MuiFormControlLabel-label': { fontSize: 13 },
+                    }}
                 />
-            </Box>
-            <RelationTable
-                api={`${api}/${id}/specification`}
-                onRowSelected={rowSelected}
-            >
-                <GridColumn
-                    field="nomenclatureCategory"
-                    title="Category"
-                    width="100"
-                    editable={false}
-                />
-                <GridColumn
-                    field="nomenclatureName"
-                    title="Name"
-                    width="auto"
-                />
-                <GridColumn
-                    field="nomenclatureDescription"
-                    title="Description"
-                    width="auto"
-                    editable={false}
-                />
-                <GridColumn field="amount" title="Required" width="100" />
-                <GridColumn field="total" title="Allocated" width="100" />
-            </RelationTable>
-        </>
+            }
+        >
+            <GridColumn
+                field="nomenclatureCategory"
+                title="Category"
+                width="100"
+                editable={false}
+            />
+            <GridColumn
+                field="nomenclatureName"
+                title="Name"
+                width="auto"
+            />
+            <GridColumn
+                field="nomenclatureDescription"
+                title="Description"
+                width="auto"
+                editable={false}
+            />
+            <GridColumn field="amount" title="Required" width="100" />
+            <GridColumn field="total" title="Allocated" width="100" />
+        </RelationTable>
     )
 }

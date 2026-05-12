@@ -346,13 +346,16 @@ public static class WebModelMappings
             ShipmentExternalId = s.ShipmentExternalId,
         };
 
-    public static OrderSpecificationViewModel ToViewModel(this OrderSpecificationNomenclature s) =>
+    public static OrderSpecificationNomenclatureViewModel ToViewModel(this OrderSpecificationNomenclature s) =>
         new()
         {
+            Id = s.Id,
             NomenclatureId = s.NomenclatureId,
             NomenclatureName = s.Nomenclature?.Name,
             NomenclatureDescription = s.Nomenclature?.Description,
             NomenclatureCategory = s.Nomenclature?.Category.ToString(),
+            ProcessId = s.ProcessId,
+            ProcessName = s.Process?.Name,
             Amount = s.Amount,
             Total = s.Total,
         };

@@ -49,7 +49,7 @@ public class OrdersController : CrudControllerBase<Order, OrderViewModel, IOrder
 
     [HttpGet("{id:Guid}/specification")]
     [RequireRoles("Operator", "Technologist", "Admin")]
-    public async Task<IEnumerable<OrderSpecificationViewModel>> GetSpecification(Guid id)
+    public async Task<IEnumerable<OrderSpecificationNomenclatureViewModel>> GetSpecification(Guid id)
     {
         var items = await Service.GetSpecifications(id);
         return items.Select(i => i.ToViewModel()).ToList();
@@ -65,7 +65,7 @@ public class OrdersController : CrudControllerBase<Order, OrderViewModel, IOrder
 
     [HttpPost("{id:Guid}/items")]
     [RequireRoles("Operator", "Technologist", "Admin")]
-    public async Task<ItemViewModel> AddItem(Guid id, [FromBody]  ItemViewModel itemModel)
+    public async Task<ItemViewModel> AddItem(Guid id, [FromBody] ItemViewModel itemModel)
     {
         var item = itemModel.ToEntity();
         var orderItem = await Service.AddItem(id, item);

@@ -6,6 +6,7 @@ import {
     type DetailProps as PkgDetailProps,
     MasterDetail as PkgMasterDetail,
 } from '@microprojects/edm-components/components/master/MasterDetail'
+import { useDialog } from '@microprojects/edm-components/hooks/useDialog'
 import {
     AccountTreeOutlined as ProcessIcon,
     AllInboxOutlined as TareTypeIcon,
@@ -24,6 +25,8 @@ import {
     createContext,
     useCallback,
     useContext,
+    useEffect,
+    useRef,
     useState,
 } from 'react'
 import {useSelector} from 'react-redux'
@@ -210,10 +213,27 @@ export function MuiEditor(props: MuiEditorProps) {
     const navigate = useNavigate()
     const location = useLocation()
     const setAlert = useAlertSetter()
+    const { dialog, confirm } = useDialog()
     const setDetailEditMode = useContext(DetailEditModeContext)
     const rootItem = useContext(RootItemContext)
     const invalidate = useInvalidateEntities()
     const [values, setValues] = useState<Dictionary>(props.data as Dictionary)
+
+    // Sync the form values from props.data once it actually loads — `useState`
+    // captures props.data on first render, which for new items happens before
+    // the GET on `/{empty-guid}` returns the backend-supplied defaults
+    // (notably the auto-incremented Order #). Re-sync whenever the record id
+    // changes so navigating between list rows refills the form too. Edits are
+    // safe: the user's record id is unchanged while they type, so this never
+    // overwrites their input.
+    const lastSyncedIdRef = useRef<unknown>(undefined)
+    useEffect(() => {
+        if (!props.data || props.data.id === undefined) return
+        if (lastSyncedIdRef.current === props.data.id) return
+        lastSyncedIdRef.current = props.data.id
+        setValues(props.data as Dictionary)
+    }, [props.data])
+
     const mode =
         (props.data.id && props.data.id !== EMPTY_GUID && 'Update') || 'Create'
 
@@ -272,13 +292,14 @@ export function MuiEditor(props: MuiEditorProps) {
                             const detail =
                                 r.response?.data?.detail ||
                                 'This change will create a new version.'
-                            if (
-                                window.confirm(
-                                    `${detail}\n\nProceed and create a new version?`,
-                                )
-                            ) {
-                                return sendUpdate(true)
-                            }
+                            confirm({
+                                title: 'Create new version?',
+                                message: detail,
+                                actionLabel: 'Create version',
+                                onConfirm: () => {
+                                    sendUpdate(true)
+                                },
+                            })
                             return
                         }
                         setAlert({
@@ -329,6 +350,7 @@ export function MuiEditor(props: MuiEditorProps) {
 
     return (
         <Box component="form" onSubmit={submit} noValidate>
+            {dialog}
             <Box>{content}</Box>
             <Box
                 sx={{

@@ -12,7 +12,7 @@ type OrderOperationTabProps = {
 
 export function OrderOperationTab({ id, api }: OrderOperationTabProps) {
     return (
-        <RelationTable api={`${api}/${id}/operations`}>
+        <RelationTable api={`${api}/${id}/operations`} readonly>
             <GridColumn field="processName" title="Process" editable={false} />
             <GridColumn field="processNomenclatureName" title="Name" />
             <GridColumn field="startTime" title="Started" cell={DateTimeCell} />

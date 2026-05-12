@@ -29,7 +29,7 @@ import {
     useInvalidateEntities,
 } from '@logistics/hooks/entityRefresh'
 import { useGet } from '@logistics/hooks/hooks.ts'
-import { parseUtcDate } from '@logistics/utils/format'
+import { formatLocalDate, parseUtcDate } from '@logistics/utils/format'
 import {
     EditorSection,
     Field,
@@ -249,101 +249,39 @@ export function OrderDetail({
                         content={
                             data && (
                                 <Box>
-                                    {data?.number && (
-                                        <Typography
-                                            variant="h6"
-                                            sx={{
-                                                m: 0,
-                                                mb: 0.75,
-                                                fontFamily: 'var(--font-mono)',
-                                                fontWeight: 700,
-                                            }}
-                                        >
-                                            #{data.number}
-                                        </Typography>
-                                    )}
-                                    {(statusChip || data?.executor) && (
-                                        <Box
-                                            sx={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: 1,
-                                                mb: 1.25,
-                                            }}
-                                        >
-                                            {statusChip}
-                                            {data?.executor && (
-                                                <Typography
-                                                    variant="caption"
-                                                    sx={{ color: 'var(--ink-3)' }}
-                                                >
-                                                    Executed by{' '}
-                                                    <b>{data.executor}</b>
-                                                </Typography>
-                                            )}
-                                        </Box>
-                                    )}
-                                    <Properties>
-                                        <Property label="Nomenclature" full>
-                                            <DetailLinkText
-                                                id={data.processNomenclatureId}
-                                                text={
-                                                    data.processNomenclatureName
-                                                }
-                                                onClick={() =>
-                                                    setSubDetail(
-                                                        <NomenclatureDetail
-                                                            readonly={true}
-                                                            id={
-                                                                data.processNomenclatureId
-                                                            }
-                                                            api={
-                                                                Api.nomenclatures
-                                                            }
-                                                            onClose={() =>
-                                                                setSubDetail(
-                                                                    undefined,
-                                                                )
-                                                            }
-                                                        />,
-                                                    )
-                                                }
-                                            />
-                                        </Property>
-                                        <Property
-                                            label="Amount"
-                                            value={`${data.amount} pcs`}
-                                            mono
-                                        />
-                                        <Property label="Process" full>
-                                            <DetailLinkText
-                                                id={data.processId}
-                                                text={data.processName}
-                                                onClick={(procId) =>
-                                                    setSubDetail(
-                                                        <ProcessDetail
-                                                            readonly={true}
-                                                            processId={procId}
-                                                            api={Api.processes}
-                                                            onClose={() =>
-                                                                setSubDetail(
-                                                                    undefined,
-                                                                )
-                                                            }
-                                                        />,
-                                                    )
-                                                }
-                                            />
-                                        </Property>
-                                    </Properties>
                                     <Box
                                         sx={{
-                                            mt: 1.5,
                                             display: 'flex',
-                                            justifyContent: 'flex-end',
+                                            alignItems: 'center',
+                                            flexWrap: 'wrap',
                                             gap: 1,
+                                            mb: 1.25,
                                         }}
                                     >
+                                        {data?.number && (
+                                            <Typography
+                                                variant="h6"
+                                                sx={{
+                                                    m: 0,
+                                                    fontFamily:
+                                                        'var(--font-mono)',
+                                                    fontWeight: 700,
+                                                }}
+                                            >
+                                                #{data.number}
+                                            </Typography>
+                                        )}
+                                        {statusChip}
+                                        {data?.executor && (
+                                            <Typography
+                                                variant="caption"
+                                                sx={{ color: 'var(--ink-3)' }}
+                                            >
+                                                Executed by{' '}
+                                                <b>{data.executor}</b>
+                                            </Typography>
+                                        )}
+                                        <Box sx={{ flex: 1 }} />
                                         {!processCompleted && (
                                             <MuiButton
                                                 variant="contained"
@@ -353,7 +291,7 @@ export function OrderDetail({
                                                 disabled={startDisabled}
                                                 title={startDisabledReason}
                                             >
-                                                Start operation
+                                                Execute order
                                             </MuiButton>
                                         )}
                                         {processCompleted &&
@@ -408,6 +346,77 @@ export function OrderDetail({
                                             </MuiButton>
                                         )}
                                     </Box>
+                                    <Properties>
+                                        <Property label="Nomenclature">
+                                            <DetailLinkText
+                                                id={data.processNomenclatureId}
+                                                text={
+                                                    data.processNomenclatureName
+                                                }
+                                                onClick={() =>
+                                                    setSubDetail(
+                                                        <NomenclatureDetail
+                                                            readonly={true}
+                                                            id={
+                                                                data.processNomenclatureId
+                                                            }
+                                                            api={
+                                                                Api.nomenclatures
+                                                            }
+                                                            onClose={() =>
+                                                                setSubDetail(
+                                                                    undefined,
+                                                                )
+                                                            }
+                                                        />,
+                                                    )
+                                                }
+                                            />
+                                        </Property>
+                                        <Property
+                                            label="Amount"
+                                            value={`${data.amount} pcs`}
+                                            mono
+                                        />
+                                        <Property label="Process" full>
+                                            <DetailLinkText
+                                                id={data.processId}
+                                                text={data.processName}
+                                                onClick={(procId) =>
+                                                    setSubDetail(
+                                                        <ProcessDetail
+                                                            readonly={true}
+                                                            processId={procId}
+                                                            api={Api.processes}
+                                                            onClose={() =>
+                                                                setSubDetail(
+                                                                    undefined,
+                                                                )
+                                                            }
+                                                        />,
+                                                    )
+                                                }
+                                            />
+                                        </Property>
+                                        <Property
+                                            label="Start"
+                                            value={formatLocalDate(data.startDate)}
+                                            mono
+                                        />
+                                        <Property
+                                            label="Due"
+                                            value={formatLocalDate(data.dueDate)}
+                                            mono
+                                        />
+                                        {data.description && (
+                                            <Property
+                                                label="Description"
+                                                value={data.description}
+                                                multiline
+                                                full
+                                            />
+                                        )}
+                                    </Properties>
                                 </Box>
                             )
                         }
@@ -442,6 +451,53 @@ export function OrderDetail({
                                             onChange={handleChange}
                                         />
                                         <Field
+                                            full
+                                            kind="textarea"
+                                            name="description"
+                                            label="Description"
+                                            rows={2}
+                                            value={
+                                                (values.description as string) ??
+                                                ''
+                                            }
+                                            onChange={handleChange}
+                                        />
+                                    </EditorSection>
+
+                                    <EditorSection
+                                        number={2}
+                                        title="Process"
+                                        done={false}
+                                    >
+                                        <Box>
+                                            <Typography
+                                                sx={{
+                                                    fontFamily:
+                                                        'var(--font-mono)',
+                                                    fontSize: 11,
+                                                    fontWeight: 700,
+                                                    textTransform: 'uppercase',
+                                                    letterSpacing: '0.07em',
+                                                    color: 'var(--ink-3)',
+                                                    mb: 0.5,
+                                                }}
+                                            >
+                                                Technology process
+                                            </Typography>
+                                            <HierarchyPicker
+                                                data={hierarchy}
+                                                value={values.processId}
+                                                onChange={(v) =>
+                                                    handleChange({
+                                                        target: {
+                                                            name: 'processId',
+                                                            value: v,
+                                                        },
+                                                    })
+                                                }
+                                            />
+                                        </Box>
+                                        <Field
                                             type="number"
                                             name="amount"
                                             label="Amount"
@@ -471,53 +527,6 @@ export function OrderDetail({
                                                     : undefined
                                             }
                                         />
-                                        <Field
-                                            full
-                                            kind="textarea"
-                                            name="description"
-                                            label="Description"
-                                            rows={2}
-                                            value={
-                                                (values.description as string) ??
-                                                ''
-                                            }
-                                            onChange={handleChange}
-                                        />
-                                    </EditorSection>
-
-                                    <EditorSection
-                                        number={2}
-                                        title="Process"
-                                        done={false}
-                                    >
-                                        <Box sx={{ gridColumn: '1 / -1' }}>
-                                            <Typography
-                                                sx={{
-                                                    fontFamily:
-                                                        'var(--font-mono)',
-                                                    fontSize: 11,
-                                                    fontWeight: 700,
-                                                    textTransform: 'uppercase',
-                                                    letterSpacing: '0.07em',
-                                                    color: 'var(--ink-3)',
-                                                    mb: 0.5,
-                                                }}
-                                            >
-                                                Technology process
-                                            </Typography>
-                                            <HierarchyPicker
-                                                data={hierarchy}
-                                                value={values.processId}
-                                                onChange={(v) =>
-                                                    handleChange({
-                                                        target: {
-                                                            name: 'processId',
-                                                            value: v,
-                                                        },
-                                                    })
-                                                }
-                                            />
-                                        </Box>
                                     </EditorSection>
 
                                     <EditorSection
