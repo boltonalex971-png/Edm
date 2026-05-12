@@ -114,8 +114,8 @@ export function OutputItemsPanel({
                     const selectedStyle: React.CSSProperties = selected
                         ? {
                               boxShadow:
-                                  '0 0 0 2px #1976d2, inset 0 0 0 2px rgba(255,255,255,0.85)',
-                              borderColor: '#1976d2',
+                                  '0 0 0 2px var(--accent), inset 0 0 0 2px rgba(255,255,255,0.85)',
+                              borderColor: 'var(--accent)',
                           }
                         : {}
                     return (
