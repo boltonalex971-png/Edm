@@ -11,7 +11,7 @@
 }
 
 .tare-info {
-    color: #777;
+    color: var(--ink-3);
     font-size: 0.8rem;
 }
 
@@ -31,8 +31,8 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    border: 1px solid var(--line);
+    border-radius: var(--r-2);
     min-width: 52px;
     min-height: 44px;
     padding: 2px 4px;
@@ -42,52 +42,59 @@
     font-size: 0.78rem;
 }
 
+/* Default occupied tint — only visible when no per-grade colour is set
+   inline (SlotCell pushes the grade tint via style). Uses the tare-entity
+   soft/strong tokens so an unrecognised slot still reads as "filled". */
 .tare-slot.occupied {
-    background: #e3f2fd;
-    border-color: #90caf9;
+    background: var(--ent-tare-soft);
+    border-color: var(--line-strong);
 }
 
 .tare-slot.occupied .slot-address {
-    color: #424242;
+    color: var(--ink-1);
     font-weight: 600;
 }
 
 .tare-slot.occupied .slot-serial {
-    color: #111;
+    color: var(--ink-1);
     font-weight: 700;
+    /* White halo keeps text legible against any per-grade background tint. */
     text-shadow: 0 0 1px rgba(255, 255, 255, 0.5);
 }
 
 .tare-slot.empty {
-    background: #fff;
-    border-color: #e0e0e0;
+    background: var(--surface);
+    border-color: var(--line-soft);
 }
 
+/* Brand-accent ring; matches inline selectedEmphasis on TareSchematic.tsx
+   and OutputItemsPanel.tsx (kept in sync with --accent for warm theme). */
 .tare-slot.selected {
-    border-color: #1976d2;
-    box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.3);
-    background: #bbdefb;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(168, 101, 29, 0.3);
+    background: var(--accent-soft);
 }
 
+/* "Drop here" tone — green run-signal feels right for an OK target. */
 .tare-slot.highlight-empty {
-    border-color: #66bb6a;
-    background: #e8f5e9;
+    border-color: var(--sig-run);
+    background: var(--sig-run-soft);
 }
 
 .tare-slot:hover {
-    border-color: #64b5f6;
-    background: #e1f5fe;
+    border-color: var(--accent);
+    background: var(--accent-tint);
 }
 
 .slot-address {
     font-size: 0.65rem;
-    color: #999;
+    color: var(--ink-3);
 }
 
 .slot-serial {
     font-weight: 600;
     font-size: 0.75rem;
-    color: #333;
+    color: var(--ink-1);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -116,13 +123,13 @@
 .tare-layer-btn {
     width: 28px;
     height: 28px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    background: #f5f5f5;
+    border: 1px solid var(--line);
+    border-radius: var(--r-2);
+    background: var(--surface-2);
     font-size: 0.75rem;
     font-weight: 600;
     cursor: pointer;
-    color: #555;
+    color: var(--ink-2);
     transition: background 0.15s, border-color 0.15s;
     padding: 0;
     line-height: 28px;
@@ -130,21 +137,21 @@
 }
 
 .tare-layer-btn:hover {
-    background: #e1f5fe;
-    border-color: #64b5f6;
+    background: var(--accent-tint);
+    border-color: var(--accent);
 }
 
 .tare-layer-btn.active {
-    background: #1976d2;
-    color: #fff;
-    border-color: #1565c0;
+    background: var(--accent);
+    color: var(--accent-fg);
+    border-color: var(--accent-deep);
 }
 
 .slot-tooltip {
-    background: #fff;
-    border: 1px solid #bbb;
-    border-radius: 6px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-3);
+    box-shadow: var(--elev-popover);
     padding: 0.5rem 0.75rem;
     pointer-events: none;
     white-space: nowrap;
@@ -160,17 +167,17 @@
 }
 
 .slot-tooltip-label {
-    color: #888;
+    color: var(--ink-3);
     font-size: 0.78rem;
 }
 
 .tare-bulk-bar {
     position: relative;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    border: 1px solid var(--line);
+    border-radius: var(--r-2);
     overflow: hidden;
     min-height: 36px;
-    background: #fff;
+    background: var(--surface);
 }
 
 .tare-bulk-fill {

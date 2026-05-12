@@ -5,7 +5,7 @@ import {
     TECHNOLOGY,
 } from '@logistics/data/processKinds'
 import type { ProcessKind, TreeDataItem, UUID } from '@logistics/data/types'
-import { GridColumn } from '@progress/kendo-react-grid'
+import { Column as GridColumn } from '@microprojects/edm-components/components'
 import Api from '../../../features/api/api'
 import { useGet } from '../../../hooks/hooks'
 import { DropDownTreeCell } from '../../DropDownTreeCell'

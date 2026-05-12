@@ -7,10 +7,10 @@
    never define or override tokens.
    ========================================================================= */
 
-@import url("https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..600,0..1,-25..0&display=swap");
+/* No @import here — rslib drops the next rule block. Consumers load fonts via rsbuild html.tags (edmFontTag from styles/fonts). */
 
 /* ---------- Color tokens — Steel (light) ---------- */
-:root {
+html, :root {
     /* Neutrals */
     --bg:            #EEF0F3;
     --surface:       #FFFFFF;

@@ -14,8 +14,8 @@ const CHIP_STYLE = (interactive: boolean): React.CSSProperties => ({
     cursor: interactive ? 'pointer' : 'default',
     padding: '2px 6px',
     borderRadius: 4,
-    border: '1px solid #d8d8d8',
-    background: '#fafafa',
+    border: '1px solid var(--line)',
+    background: 'var(--surface-2)',
 })
 
 /** Chip row of nomenclatures present in the visible items. Hides itself
@@ -34,7 +34,7 @@ export function NomenclatureLegend({
                 gap: '0.25rem',
                 alignItems: 'center',
                 fontSize: '0.8rem',
-                color: '#555',
+                color: 'var(--ink-2)',
             }}
         >
             <span style={{ fontWeight: 600, marginRight: 4 }}>

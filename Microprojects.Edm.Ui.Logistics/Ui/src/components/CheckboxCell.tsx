@@ -1,7 +1,7 @@
-import { Checkbox } from '@progress/kendo-react-inputs'
+import { Box, Checkbox } from '@mui/material'
 
 interface CheckboxCellProps {
-    onChange: Function
+    onChange: (e: { dataItem: any; field: string; value: boolean }) => void
     dataItem: any
     field: string
     inEdit?: boolean
@@ -12,24 +12,26 @@ export const CheckboxCell = ({
     editable = true,
     ...props
 }: CheckboxCellProps) => {
-    const { dataItem, field } = props
+    const { dataItem, field, inEdit } = props
     const value = !!dataItem[field]
-    if (dataItem.inEdit && editable) {
+    if (inEdit && editable) {
         return (
-            <td>
-                <Checkbox
-                    value={value}
-                    onChange={(e) =>
-                        props.onChange({
-                            dataItem,
-                            field,
-                            syntheticEvent: e.syntheticEvent,
-                            value: e.value,
-                        })
-                    }
-                />
-            </td>
+            <Checkbox
+                size="small"
+                checked={value}
+                onChange={(e) =>
+                    props.onChange({
+                        dataItem,
+                        field,
+                        value: e.target.checked,
+                    })
+                }
+            />
         )
     }
-    return <td style={{ textAlign: 'center' }}>{value ? '✓' : ''}</td>
+    return (
+        <Box sx={{ width: '100%', textAlign: 'center', color: 'var(--ink-2)' }}>
+            {value ? '✓' : ''}
+        </Box>
+    )
 }

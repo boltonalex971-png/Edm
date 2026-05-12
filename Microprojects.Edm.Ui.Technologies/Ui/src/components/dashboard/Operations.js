@@ -8,7 +8,7 @@ import {
     PlaceOutlined as LocationIcon,
     AutorenewOutlined as RefreshIcon,
 } from '@mui/icons-material';
-import {useParams, useLocation, useHistory} from "react-router-dom";
+import {useParams, useLocation, useNavigate} from "react-router-dom";
 import Axios from "axios";
 import api, {spaUrl} from '../api';
 import {useGet} from '@microprojects/edm-components/hooks';
@@ -56,7 +56,7 @@ const EMPTY_BY_PERIOD = {
 
 const Operations = () => {
     const location = useLocation();
-    const history = useHistory();
+    const navigate = useNavigate();
     const {when} = useParams();
     const period = when ?? 'running';
     /* When `when` is in the URL, strip it; otherwise the pathname is
@@ -76,7 +76,7 @@ const Operations = () => {
                             key={p.value}
                             type="button"
                             className={`${styles.periodTab} ${period === p.value ? styles.active : ''}`}
-                            onClick={() => history.push(`${basePath}/${p.value}`)}
+                            onClick={() => navigate(`${basePath}/${p.value}`)}
                         >
                             {p.label}
                         </button>

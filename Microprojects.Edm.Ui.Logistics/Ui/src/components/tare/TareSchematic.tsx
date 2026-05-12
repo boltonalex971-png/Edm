@@ -1,6 +1,6 @@
 import type { Item, TareInfo, UUID } from '@logistics/data/types'
 import { colorForGradeId } from '@logistics/utils/gradePalette'
-import { Popup } from '@progress/kendo-react-popup'
+import { Popper } from '@mui/material'
 import type React from 'react'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { ItemSlotTooltip } from './ItemSlotTooltip'
@@ -41,7 +41,7 @@ type TooltipState = {
 function BulkTareView({ tare, items }: { tare: TareInfo; items: Item[] }) {
     const totalQty = items.reduce((s, i) => s + i.quantity, 0)
     const pct = tare.capacity > 0 ? Math.min(totalQty / tare.capacity, 1) : 0
-    const fillColor = '#90caf9'
+    const fillColor = 'var(--accent)'
     const names = [...new Set(items.map((i) => i.nomenclatureName))].join(', ')
 
     return (
@@ -60,7 +60,7 @@ function BulkTareView({ tare, items }: { tare: TareInfo; items: Item[] }) {
                         </span>
                     </>
                 ) : (
-                    <span style={{ color: '#999' }}>Empty</span>
+                    <span style={{ color: 'var(--ink-3)' }}>Empty</span>
                 )}
             </div>
         </div>
@@ -109,8 +109,8 @@ function SlotCell({
     const selectedEmphasis: React.CSSProperties = selected
         ? {
               boxShadow:
-                  '0 0 0 2px #1976d2, inset 0 0 0 2px rgba(255,255,255,0.85)',
-              borderColor: '#1976d2',
+                  '0 0 0 2px var(--accent), inset 0 0 0 2px rgba(255,255,255,0.85)',
+              borderColor: 'var(--accent)',
           }
         : {}
     const style: React.CSSProperties | undefined = dimmed
@@ -236,7 +236,7 @@ export const TareSchematic = (props: TareSchematicProps) => {
                         gap: '0.5rem',
                         marginBottom: '0.4rem',
                         fontSize: '0.78rem',
-                        color: '#555',
+                        color: 'var(--ink-2)',
                     }}
                 >
                     {presentGrades.map(([id, name]) => (
@@ -253,7 +253,8 @@ export const TareSchematic = (props: TareSchematicProps) => {
                                     width: 10,
                                     height: 10,
                                     borderRadius: 2,
-                                    background: colorForGradeId(id) ?? '#eee',
+                                    background:
+                                        colorForGradeId(id) ?? 'var(--surface-3)',
                                     border: '1px solid rgba(0,0,0,0.15)',
                                 }}
                             />
@@ -325,13 +326,22 @@ export const TareSchematic = (props: TareSchematicProps) => {
             ) : (
                 <BulkTareView tare={tare} items={items} />
             )}
-            <Popup
-                anchor={tooltip?.anchor}
-                show={!!tooltip}
-                anchorAlign={{ horizontal: 'center', vertical: 'top' }}
-                popupAlign={{ horizontal: 'center', vertical: 'bottom' }}
-                collision={{ horizontal: 'fit', vertical: 'flip' }}
-                animate={false}
+            <Popper
+                open={!!tooltip}
+                anchorEl={tooltip?.anchor ?? null}
+                placement="top"
+                modifiers={[
+                    { name: 'offset', options: { offset: [0, 6] } },
+                    {
+                        name: 'flip',
+                        options: { fallbackPlacements: ['bottom'] },
+                    },
+                    {
+                        name: 'preventOverflow',
+                        options: { boundary: 'viewport', padding: 8 },
+                    },
+                ]}
+                style={{ zIndex: 1500 }}
             >
                 {tooltip && (
                     <ItemSlotTooltip
@@ -339,7 +349,7 @@ export const TareSchematic = (props: TareSchematicProps) => {
                         address={tooltip.address}
                     />
                 )}
-            </Popup>
+            </Popper>
         </div>
     )
 }

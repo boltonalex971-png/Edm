@@ -3,10 +3,9 @@ import { RelationTable } from '@logistics/components/RelationTable.tsx'
 import { ItemSearch } from '@logistics/components/items/ItemSearch.tsx'
 import type { AllocateItemsRequest, Item, UUID } from '@logistics/data/types'
 import { formatUnits } from '@logistics/utils/format'
-import { GridColumn } from '@progress/kendo-react-grid'
-import { Switch } from '@progress/kendo-react-inputs'
+import { Box, FormControlLabel, Switch } from '@mui/material'
+import { Column as GridColumn } from '@microprojects/edm-components/components'
 import axios from 'axios'
-import React from 'react'
 
 type OrderSpecificationTabProps = {
     id: UUID
@@ -64,15 +63,15 @@ export function OrderSpecificationTab({
     }
     return (
         <>
-            <div
-                className={'mb-2'}
-                style={{ display: 'flex', justifyContent: 'end' }}
+            <Box
+                sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}
             >
-                <span>
-                    <Switch defaultChecked={false} size="small" disabled /> Hide
-                    totally allocated components{' '}
-                </span>
-            </div>
+                <FormControlLabel
+                    control={<Switch size="small" disabled />}
+                    label="Hide totally allocated components"
+                    sx={{ '& .MuiFormControlLabel-label': { fontSize: 13 } }}
+                />
+            </Box>
             <RelationTable
                 api={`${api}/${id}/specification`}
                 onRowSelected={rowSelected}

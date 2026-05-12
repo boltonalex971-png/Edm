@@ -1,7 +1,6 @@
 import type React from 'react'
 import type { CSSProperties } from 'react'
 import { useEffect } from 'react'
-import './SmartScroll.css'
 
 export type SmartScrollProps = {
     children: React.ReactNode

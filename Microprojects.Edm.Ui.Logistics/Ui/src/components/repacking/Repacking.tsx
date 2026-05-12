@@ -4,7 +4,6 @@ import {
     findInHierarchy,
     pruneHierarchy,
 } from '@logistics/components/HierarchyPicker'
-import { PageTitle } from '@logistics/components/PageTitle'
 import { TareBarcodePicker } from '@logistics/components/tare/TareBarcodePicker'
 import { TareGroupRow } from '@logistics/components/tare/TareGroupRow'
 import type { SlotData } from '@logistics/components/tare/TareSchematic'
@@ -34,11 +33,43 @@ import type {
 import { getData, postData, useGet } from '@logistics/hooks/hooks'
 import { useTareTransfer } from '@logistics/hooks/useTareTransfer'
 import { formatUnits } from '@logistics/utils/format'
+import { SubRootPage } from '@microprojects/edm-components/components/chrome/SubRootPage'
 import { SmartScroll, SmartScrollContent } from '@microprojects/tools'
-import { Button } from '@progress/kendo-react-buttons'
+import {
+    Alert,
+    Box,
+    Button as MuiButton,
+    Paper,
+    Typography,
+} from '@mui/material'
 import type React from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import './Repacking.css'
+
+const monoLabelSx = {
+    fontFamily: 'var(--font-mono)',
+    fontSize: 11,
+    fontWeight: 700,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.07em',
+    color: 'var(--ink-3)',
+    mb: 0.5,
+}
+
+const panelHeadingSx = {
+    fontSize: 14,
+    fontWeight: 700,
+    color: 'var(--ink-1)',
+    m: 0,
+    mb: 0.75,
+    pb: 0.5,
+}
+
+const panelPaperSx = {
+    p: 1.25,
+    border: '1px solid var(--line)',
+    borderRadius: 'var(--r-2)',
+    background: 'var(--surface)',
+}
 
 export function Repacking() {
     const [[nomenclatures]] = useGet<TreeDataItem[]>(
@@ -78,14 +109,10 @@ export function Repacking() {
     // Multi-select source items: plain click → single, Ctrl/Cmd+click →
     // toggle, Shift+click within the same tare → range. Click on an empty
     // target slot then places the selected items starting at that address.
-    // The shared workspace hook owns selection, target-tare bookkeeping,
-    // pending-moves, and context-menu state so Repacking and Allocate can't
-    // drift; `onItemConsumed` drops the item from this screen's local pool
-    // (Repacking's source isn't server-managed).
     const {
         selected: selectedSourceItemIds,
         handleSlotClick: onSourceItemClick,
-        clear: clearSourceSelection,
+        clear: _clearSourceSelection,
         selectByPredicate,
         targetTares,
         addTargetTare: addTargetTareToWorkspace,
@@ -107,16 +134,8 @@ export function Repacking() {
     } = useTareTransfer<Item>({
         sourceItems,
         itemScopeKey: (i) => i.tareId || i.tareBarcode || 'no-tare',
-        // Don't drop items from sourceItems on move. The hook clones them
-        // into the target tare with the new address and leaves the original
-        // item (with its original address) in place. Source-side rendering
-        // hides items that are in `pending`, so a Reset just needs to clear
-        // pending — items reappear at their real slots automatically.
     })
 
-    // Single state for each picker — the picker emits an AvailableTare-like
-    // object (with `.id` for an existing pick, only `.barcode` for a typed
-    // custom value). Derive the barcode string from that.
     const [tarePicked, setTarePicked] = useState<AvailableTare | null>(null)
     const [newTarePicked, setNewTarePicked] = useState<AvailableTare | null>(
         null,
@@ -126,10 +145,6 @@ export function Repacking() {
     const tareBarcode = tarePicked?.barcode ?? ''
     const newTareBarcode = newTarePicked?.barcode ?? ''
 
-    // Selected nomenclature's default tare type narrows the source picker's
-    // dropdown to tares of that type — purely a search hint. The operator
-    // is still free to type or pick any other barcode; whatever they pick
-    // is added to the source pool unfiltered.
     const sourceSuggestionTareTypeId = useMemo(
         () =>
             (
@@ -144,8 +159,6 @@ export function Repacking() {
     const [submitResult, setSubmitResult] = useState<RepackResult>()
     const [submitting, setSubmitting] = useState(false)
 
-    // Source-side expansion is screen-local (the hook only tracks target
-    // tares — source tares are derived from sourceItems on every render).
     const [expandedSource, setExpandedSource] = useState<Set<string>>(new Set())
 
     const toggleExpandedSource = (key: string) =>
@@ -156,20 +169,14 @@ export function Repacking() {
             return next
         })
 
-    // Drop a source tare from the visible pool — only the items that are
-    // still un-moved are removed; pending-moved items stay in `sourceItems`
-    // so they can flow back here on Reset (and their target-tare clones
-    // stay visible meanwhile).
     const removeSourceTare = (tareKey: string) => {
         setSourceItems((prev) =>
             prev.filter((i) => {
-                const itemTareKey =
-                    i.tareId || i.tareBarcode || 'no-tare'
+                const itemTareKey = i.tareId || i.tareBarcode || 'no-tare'
                 if (itemTareKey !== tareKey) return true
                 return pendingItemIds.has(i.id)
             }),
         )
-        // Selection auto-prunes — useSlotSelection drops ids no longer in `items`.
         setExpandedSource((prev) => {
             if (!prev.has(tareKey)) return prev
             const next = new Set(prev)
@@ -188,10 +195,6 @@ export function Repacking() {
         }
     }, [allowedTareTypeIds, newTareTypeId])
 
-    // Seed the type picker with the nomenclature's default tare type once
-    // its allowed-list has loaded. Tracked per-nomenclature so an explicit
-    // user choice (or clear) afterwards isn't reverted on re-renders, but a
-    // switch to a different nomenclature re-seeds. Mirrors Allocate.
     const seededForRef = useRef<UUID | null>(null)
     useEffect(() => {
         if (!selectedNomenclatureId || !allowedRows) return
@@ -212,8 +215,6 @@ export function Repacking() {
                 const items = await getData<Item[]>(
                     `${api.items}/tare/${tare.id}`,
                 )
-                // Add every item from the picked tare — nomenclature is
-                // only a search hint, not a filter on the contents.
                 setSourceItems((prev) => {
                     const existing = new Set(prev.map((i) => i.id))
                     const additions = (items || []).filter(
@@ -221,7 +222,6 @@ export function Repacking() {
                     )
                     return [...prev, ...additions]
                 })
-                // Open the new tare row by default.
                 const key = tare.id || tare.barcode || 'no-tare'
                 setExpandedSource((prev) => new Set(prev).add(key))
             }
@@ -235,11 +235,6 @@ export function Repacking() {
         [pending],
     )
 
-    /** Items currently visible in the source pool — pending-moved items
-     *  stay in `sourceItems` (with their original address) but are hidden
-     *  from the source rendering until Apply or Reset. The owning source
-     *  tare row stays visible even when all of its items are pending, so
-     *  the operator can see what they moved out of. */
     const visibleSourceItems = useMemo(
         () => sourceItems.filter((i) => !pendingItemIds.has(i.id)),
         [sourceItems, pendingItemIds],
@@ -247,9 +242,6 @@ export function Repacking() {
 
     const sourceTares = useMemo(() => {
         const map = new Map<string, { tare: TareInfo; items: Item[] }>()
-        // Walk every source item (incl. pending) so a tare keeps its row
-        // even when all of its items have been moved out. Only visible
-        // (non-pending) items are pushed into the row's `items` list.
         for (const item of sourceItems) {
             if (!item.tareBarcode) continue
             const tareKey = item.tareBarcode
@@ -353,7 +345,6 @@ export function Repacking() {
     }
 
     const searchAndAddTare = async () => {
-        // Existing pick from the dropdown — short-circuit.
         if (newTarePicked?.id) {
             await addTargetTare(newTarePicked)
             setNewTarePicked(null)
@@ -378,10 +369,6 @@ export function Repacking() {
         }
     }
 
-    /** Wrap the hook's removeTargetTare so any pending-moved items in this
-     *  tare flow back into the local source pool — Repacking moves remove
-     *  items from `sourceItems` (unlike Allocate where they stay in the
-     *  server-managed unallocated list). */
     const removeTargetTare = (tareId: UUID) => {
         const tare = targetTares.find((t) => t.id === tareId)
         const movedBackItems =
@@ -398,15 +385,11 @@ export function Repacking() {
         if (!selectedNomenclatureId || pending.length === 0) return
         setSubmitting(true)
         try {
-            // Build RepackMove[] from the hook's generic pending records.
-            // Each pending entry's item now lives under its target tare —
-            // pull `quantity` from there since moved items have already
-            // left `sourceItems`.
             const tareById = new Map(targetTares.map((t) => [t.id, t]))
             const moves: RepackMove[] = pending.map((m) => {
-                const item = tareById.get(m.targetTareId)?.items.find(
-                    (i) => i.id === m.itemId,
-                )
+                const item = tareById
+                    .get(m.targetTareId)
+                    ?.items.find((i) => i.id === m.itemId)
                 return {
                     sourceItemId: m.itemId,
                     targetTareId: m.targetTareId,
@@ -425,8 +408,6 @@ export function Repacking() {
             setSubmitResult(result)
             if (result.errors.length === 0) {
                 clearPending()
-                // Source pool is operator-driven — clear it and let the
-                // user re-pick tares for the next round.
                 setSourceItems([])
                 const refreshed = await Promise.all(
                     targetTares.map(async (t) => {
@@ -451,10 +432,6 @@ export function Repacking() {
 
     const reset = () => {
         setSubmitResult(undefined)
-        // sourceItems is untouched by moves now (option-A model), so
-        // resetTransfer() alone is enough: it clears pending + selection
-        // and rolls the pending items out of target tares' visible items.
-        // The original source items reappear at their original addresses.
         resetTransfer()
     }
 
@@ -495,11 +472,181 @@ export function Repacking() {
         return segments.join(' · ')
     }, [selectedSourceItems, selectedSourceTotals, selectedNomenclature])
 
-    return (
-        <div className="repacking-page">
-            <PageTitle title="Repacking" />
-            <hr />
+    const sourceToolbar = (
+        <Box
+            sx={{
+                display: 'flex',
+                alignItems: 'flex-end',
+                gap: 2,
+                flexWrap: 'nowrap',
+                mb: 1.5,
+            }}
+        >
+            <Box>
+                <Typography sx={monoLabelSx}>
+                    Search source tare by barcode
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                    <TareBarcodePicker
+                        tareTypeId={sourceSuggestionTareTypeId}
+                        nomenclatureId={selectedNomenclatureId}
+                        includeFull
+                        value={tarePicked}
+                        onChange={async (tare) => {
+                            setTarePicked(tare)
+                            if (!tare?.id) return
+                            try {
+                                const items = await getData<Item[]>(
+                                    `${api.items}/tare/${tare.id}`,
+                                )
+                                setSourceItems((prev) => {
+                                    const existing = new Set(
+                                        prev.map((i) => i.id),
+                                    )
+                                    const additions = (items || []).filter(
+                                        (i) => !existing.has(i.id),
+                                    )
+                                    return [...additions, ...prev]
+                                })
+                                const key =
+                                    tare.id || tare.barcode || 'no-tare'
+                                setExpandedSource((prev) =>
+                                    new Set(prev).add(key),
+                                )
+                            } catch {
+                                /* ignore */
+                            }
+                        }}
+                        placeholder="Scan or type barcode…"
+                        style={{ width: 240 }}
+                    />
+                    <MuiButton
+                        variant="outlined"
+                        onClick={loadTareByBarcode}
+                        disabled={!tareBarcode.trim()}
+                    >
+                        Find
+                    </MuiButton>
+                </Box>
+            </Box>
+            <Box>
+                <Typography sx={monoLabelSx}>Nomenclature</Typography>
+                <HierarchyPicker
+                    data={nomenclatures}
+                    value={selectedNomenclatureId}
+                    onChange={setSelectedNomenclatureId}
+                    width={300}
+                    placeholder="Select nomenclature…"
+                />
+            </Box>
+        </Box>
+    )
 
+    const targetToolbar = (
+        <Box sx={{ mb: 1.5 }}>
+            <Typography sx={monoLabelSx}>Add target tare</Typography>
+            <Box
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    flexWrap: 'nowrap',
+                }}
+            >
+                <TareBarcodePicker
+                    tareTypeId={newTareTypeId}
+                    nomenclatureId={selectedNomenclatureId}
+                    value={newTarePicked}
+                    onChange={async (tare) => {
+                        setNewTarePicked(tare)
+                        // Existing dropdown pick (has `.id`) auto-adds — no need
+                        // to also press "Add tare". Custom-typed values still
+                        // go through the button so the operator confirms.
+                        if (!tare?.id) return
+                        await addTargetTare(tare)
+                    }}
+                    placeholder="Tare barcode…"
+                    style={{ width: 220 }}
+                />
+                <HierarchyPicker
+                    data={tareTypeOptions}
+                    value={newTareTypeId}
+                    onChange={setNewTareTypeId}
+                    width={180}
+                    placeholder="Type (for new)…"
+                />
+                <MuiButton variant="contained" onClick={searchAndAddTare}>
+                    Add tare
+                </MuiButton>
+                <Box
+                    sx={{
+                        width: '1px',
+                        alignSelf: 'stretch',
+                        background: 'var(--line)',
+                        mx: 0.5,
+                    }}
+                />
+                <MuiButton
+                    variant="contained"
+                    color="info"
+                    onClick={autoFill}
+                    disabled={
+                        sourceItems.length === 0 || targetTares.length === 0
+                    }
+                >
+                    Auto-fill
+                </MuiButton>
+                <MuiButton
+                    variant="contained"
+                    color="success"
+                    onClick={submitRepack}
+                    disabled={pending.length === 0 || submitting}
+                >
+                    {submitting
+                        ? 'Saving…'
+                        : `Apply (${pending.length} moves)`}
+                </MuiButton>
+                <MuiButton
+                    variant="outlined"
+                    onClick={reset}
+                    disabled={pending.length === 0}
+                >
+                    Reset
+                </MuiButton>
+                {submitResult &&
+                    (submitResult.errors.length === 0 ? (
+                        <Typography
+                            variant="caption"
+                            sx={{
+                                color: 'var(--sig-run-deep)',
+                                whiteSpace: 'nowrap',
+                            }}
+                        >
+                            Moved{' '}
+                            {formatUnits(
+                                submitResult.movedQuantity,
+                                submitResult.units,
+                                submitResult.countable,
+                            )}
+                            .
+                        </Typography>
+                    ) : (
+                        <Typography
+                            variant="caption"
+                            sx={{
+                                color: 'var(--sig-fault-deep)',
+                                whiteSpace: 'nowrap',
+                            }}
+                        >
+                            {submitResult.errors[0]}
+                        </Typography>
+                    ))}
+            </Box>
+        </Box>
+    )
+
+    return (
+        <SubRootPage title="Repacking" menuItems={[]}>
             <SmartScroll
                 offsetTop={10}
                 style={{
@@ -510,76 +657,20 @@ export function Repacking() {
                 }}
             >
                 <SmartScrollContent style={{ flex: 1 }}>
-                    <div className="column-toolbar">
-                        <div className="field-group">
-                            <label>Search source tare by barcode</label>
-                            <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                <TareBarcodePicker
-                                    tareTypeId={sourceSuggestionTareTypeId}
-                                    nomenclatureId={selectedNomenclatureId}
-                                    includeFull
-                                    value={tarePicked}
-                                    onChange={async (tare) => {
-                                        setTarePicked(tare)
-                                        if (!tare?.id) return
-                                        try {
-                                            const items = await getData<
-                                                Item[]
-                                            >(`${api.items}/tare/${tare.id}`)
-                                            setSourceItems((prev) => {
-                                                const existing = new Set(
-                                                    prev.map((i) => i.id),
-                                                )
-                                                const additions = (
-                                                    items || []
-                                                ).filter(
-                                                    (i) => !existing.has(i.id),
-                                                )
-                                                return [...additions, ...prev]
-                                            })
-                                            const key =
-                                                tare.id ||
-                                                tare.barcode ||
-                                                'no-tare'
-                                            setExpandedSource((prev) =>
-                                                new Set(prev).add(key),
-                                            )
-                                        } catch {
-                                            /* ignore */
-                                        }
-                                    }}
-                                    placeholder="Scan or type barcode…"
-                                    style={{ width: 240 }}
-                                />
-                                <Button
-                                    onClick={loadTareByBarcode}
-                                    disabled={!tareBarcode.trim()}
-                                >
-                                    Find
-                                </Button>
-                            </div>
-                        </div>
-                        <div className="field-group">
-                            <label>Nomenclature</label>
-                            <HierarchyPicker
-                                data={nomenclatures}
-                                value={selectedNomenclatureId}
-                                onChange={setSelectedNomenclatureId}
-                                width={300}
-                                placeholder="Select nomenclature..."
-                            />
-                        </div>
-                    </div>
-                    <div className="repacking-panel source">
-                        <h3>Source tares</h3>
-                        <div
-                            style={{
+                    {sourceToolbar}
+                    <Paper elevation={0} sx={panelPaperSx}>
+                        <Typography component="h3" sx={panelHeadingSx}>
+                            Source tares
+                        </Typography>
+                        <Box
+                            sx={{
                                 display: 'flex',
                                 flexWrap: 'wrap',
                                 alignItems: 'center',
-                                columnGap: '1rem',
-                                rowGap: '0.25rem',
-                                margin: '0.25rem 0 0.5rem',
+                                columnGap: 2,
+                                rowGap: 0.5,
+                                mt: 0.5,
+                                mb: 1,
                             }}
                         >
                             <GradeLegend
@@ -587,28 +678,33 @@ export function Repacking() {
                                 onPick={selectByGrade}
                             />
                             <NomenclatureLegend
-                                nomenclatures={visibleNomenclatures(sourceItems)}
+                                nomenclatures={visibleNomenclatures(
+                                    sourceItems,
+                                )}
                                 onPick={selectByNomenclature}
                             />
                             {selectionLabel && (
-                                <span
+                                <Typography
+                                    variant="caption"
                                     title="Click an empty target slot to place. Shift+click for range, Ctrl/Cmd+click to toggle. Right-click for more."
-                                    style={{
-                                        fontSize: '0.85rem',
-                                        color: '#1976d2',
-                                        marginLeft: 'auto',
+                                    sx={{
+                                        color: 'var(--accent)',
+                                        fontWeight: 600,
+                                        ml: 'auto',
                                     }}
                                 >
                                     {selectionLabel}
-                                </span>
+                                </Typography>
                             )}
-                        </div>
+                        </Box>
                         {sourceTares.length === 0 && (
-                            <div className="no-items-message">
-                                {selectedNomenclatureId
-                                    ? 'Pick or scan a tare to add its matching items here.'
-                                    : 'Select a nomenclature, then pick a tare to load its items.'}
-                            </div>
+                            <EmptyMsg
+                                text={
+                                    selectedNomenclatureId
+                                        ? 'Pick or scan a tare to add its matching items here.'
+                                        : 'Select a nomenclature, then pick a tare to load its items.'
+                                }
+                            />
                         )}
                         {sourceTares.map(({ tare, items }) => {
                             const key = tare.id || tare.barcode || 'no-tare'
@@ -619,9 +715,7 @@ export function Repacking() {
                                         selectedSourceItemIds.has(i.id),
                                     )
                                     .map((i) => i.address)
-                                    .filter(
-                                        (a): a is number => a != null,
-                                    ),
+                                    .filter((a): a is number => a != null),
                             )
                             return (
                                 <TareGroupRow
@@ -645,126 +739,30 @@ export function Repacking() {
                                         }
                                     }}
                                     headerExtra={
-                                        <Button
+                                        <MuiButton
                                             size="small"
-                                            fillMode="flat"
+                                            variant="text"
                                             onClick={() =>
                                                 removeSourceTare(key)
                                             }
                                         >
                                             Remove
-                                        </Button>
+                                        </MuiButton>
                                     }
                                 />
                             )
                         })}
-                    </div>
+                    </Paper>
                 </SmartScrollContent>
 
                 <SmartScrollContent style={{ flex: 1 }}>
-                    <div className="column-toolbar">
-                        <div className="field-group">
-                            <label>Add target tare</label>
-                            <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                <TareBarcodePicker
-                                    tareTypeId={newTareTypeId}
-                                    nomenclatureId={selectedNomenclatureId}
-                                    value={newTarePicked}
-                                    onChange={async (tare) => {
-                                        setNewTarePicked(tare)
-                                        // When the user picks an existing
-                                        // tare (has `.id`), auto-add it as
-                                        // a target — no need to also press
-                                        // "Add tare". Custom-typed values
-                                        // still go through the Add tare
-                                        // button so the operator confirms
-                                        // creation. Keep the picker showing
-                                        // the just-picked barcode so the
-                                        // operator sees what was added.
-                                        if (!tare?.id) return
-                                        await addTargetTare(tare)
-                                    }}
-                                    placeholder="Tare barcode…"
-                                    style={{ width: 220 }}
-                                />
-                                <HierarchyPicker
-                                    data={tareTypeOptions}
-                                    value={newTareTypeId}
-                                    onChange={setNewTareTypeId}
-                                    width={200}
-                                    placeholder="Type (for new)..."
-                                />
-                                <Button
-                                    themeColor="primary"
-                                    onClick={searchAndAddTare}
-                                >
-                                    Add tare
-                                </Button>
-                            </div>
-                        </div>
-                        <div className="repacking-actions">
-                            <Button
-                                themeColor="info"
-                                onClick={autoFill}
-                                disabled={
-                                    sourceItems.length === 0 ||
-                                    targetTares.length === 0
-                                }
-                            >
-                                Auto-fill
-                            </Button>
-                            <Button
-                                themeColor="success"
-                                onClick={submitRepack}
-                                disabled={
-                                    pending.length === 0 || submitting
-                                }
-                            >
-                                {submitting
-                                    ? 'Saving...'
-                                    : `Apply (${pending.length} moves)`}
-                            </Button>
-                            <Button
-                                onClick={reset}
-                                disabled={pending.length === 0}
-                            >
-                                Reset
-                            </Button>
-                            {submitResult &&
-                                (submitResult.errors.length === 0 ? (
-                                    <span
-                                        style={{
-                                            color: '#388e3c',
-                                            fontSize: '0.85rem',
-                                        }}
-                                    >
-                                        Moved{' '}
-                                        {formatUnits(
-                                            submitResult.movedQuantity,
-                                            submitResult.units,
-                                            submitResult.countable,
-                                        )}
-                                        .
-                                    </span>
-                                ) : (
-                                    <span
-                                        style={{
-                                            color: '#d32f2f',
-                                            fontSize: '0.85rem',
-                                        }}
-                                    >
-                                        {submitResult.errors[0]}
-                                    </span>
-                                ))}
-                        </div>
-                    </div>
-                    <div className="repacking-panel target">
-                        <h3>Target tares</h3>
+                    {targetToolbar}
+                    <Paper elevation={0} sx={panelPaperSx}>
+                        <Typography component="h3" sx={panelHeadingSx}>
+                            Target tares
+                        </Typography>
                         {targetTares.length === 0 && (
-                            <div className="no-items-message">
-                                Add target tares by barcode search or create new
-                                ones
-                            </div>
+                            <EmptyMsg text="Add target tares by barcode search or create new ones" />
                         )}
                         {targetTares.map((t) => {
                             const key = t.id
@@ -790,20 +788,20 @@ export function Repacking() {
                                         pendingItemIds.has(item.id)
                                     }
                                     headerExtra={
-                                        <Button
+                                        <MuiButton
                                             size="small"
-                                            fillMode="flat"
+                                            variant="text"
                                             onClick={() =>
                                                 removeTargetTare(t.id)
                                             }
                                         >
                                             Remove
-                                        </Button>
+                                        </MuiButton>
                                     }
                                 />
                             )
                         })}
-                    </div>
+                    </Paper>
                 </SmartScrollContent>
             </SmartScroll>
             {ctxMenu && (
@@ -820,6 +818,22 @@ export function Repacking() {
                     onClose={closeContextMenu}
                 />
             )}
-        </div>
+        </SubRootPage>
+    )
+}
+
+function EmptyMsg({ text }: { text: string }) {
+    return (
+        <Box
+            sx={{
+                py: 1.5,
+                textAlign: 'center',
+                color: 'var(--ink-3)',
+                fontStyle: 'italic',
+                fontSize: 13,
+            }}
+        >
+            {text}
+        </Box>
     )
 }

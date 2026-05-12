@@ -1,7 +1,8 @@
 ﻿import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useGet } from '@microprojects/edm-components/hooks';
-import { useHistory, useParams, useRouteMatch } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useBasePath } from '@microprojects/edm-components/hooks';
 import { MasterDetail, reloadMaster, Detail, Editor } from '@microprojects/edm-components/components';
 import { DeviceTabs } from './device/DeviceTabs';
 import { Folder } from './Folder';
@@ -13,21 +14,22 @@ import { EditorSection } from '@microprojects/edm-components/components';
 import { Field } from '@microprojects/edm-components/components';
 
 export function Devices() {
-    const history = useHistory();
-    const { path } = useRouteMatch();
+    const navigate = useNavigate();
+    const path = useBasePath();
     const api = Api.devices;
     return (
         <MasterDetail
             api={api}
             hierarchiesApi={Api.hierarchies}
             folderComponent={Folder}
+            path={path}
             stubMessage='Please select a device'
             detail={(
                 <DeviceDetail
                     api={api}
                     path={path}
                     onChange={() => reloadMaster()}
-                    onClose={() => history.push(path)}
+                    onClose={() => navigate(path)}
                 />
             )}
         />

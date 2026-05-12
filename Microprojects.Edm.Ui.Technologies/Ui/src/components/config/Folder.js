@@ -13,11 +13,17 @@ import { Field } from '@microprojects/edm-components/components';
 Folder.propTypes = {
     onChange: PropTypes.func,
     path: PropTypes.string,
-    api: PropTypes.string
+    api: PropTypes.string,
+    entityType: PropTypes.string
 }
 
 export function Folder(props) {
     const type = 'folder';
+    // entityType is the capitalized HierarchyType (Workplace/Process/Host/Device) supplied
+    // by MasterDetail from its api URL. Sent as the POST body's `type` so the backend's
+    // HierarchyType enum binder accepts it; falling back to 'folder' (binder rejects)
+    // makes the failure loud rather than silently dropping rows into the wrong bucket.
+    const editorType = props.entityType || type;
     const user = useSelector(s => s.user)
     let { id } = useParams();
     id = parseInt(id);
@@ -41,7 +47,7 @@ export function Folder(props) {
             ) : null}
             editor={
                 <Editor {...props}
-                    type={type}
+                    type={editorType}
                     data={data}
                     setData={setData}
                     content={({ values, handleChange }) => {

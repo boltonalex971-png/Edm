@@ -9,7 +9,7 @@ namespace Microprojects.Edm.Ui.Technologies.Utils
     {
         public static IEnumerable<HierarchyItemViewModel> ToTree(this IEnumerable<HierarchyItemViewModel> items)
         {
-            var ids = items.Where(i => i.IsNode).Select(i => i.Id);
+            var ids = items.Where(i => i.IsFolder).Select(i => i.Id);
             var upper = items.Where(i => !ids.Contains(i.ParentId));
             foreach (var item in upper)
             {
@@ -20,7 +20,7 @@ namespace Microprojects.Edm.Ui.Technologies.Utils
         //public static IEnumerable<HierarchyItemViewModel> ToTree(this IEnumerable<WorkplaceProcess> workplaceProcesses)
         //{
         //}
-        
+
         public static IEnumerable<HierarchyItemViewModel> ToDeepTree(this IEnumerable<HierarchyItemViewModel> items, int? rootId = null)
         {
             var children = items.Where(c => c.ParentId == rootId || rootId == null && !items.Any(i => i.Id == c.ParentId));
@@ -33,7 +33,7 @@ namespace Microprojects.Edm.Ui.Technologies.Utils
                     Description = c.Description,
                     HierarchyType = c.HierarchyType,
                     IsActive = c.IsActive,
-                    IsNode = c.IsNode,
+                    IsFolder = c.IsFolder,
                     Name = c.Name,
                     expanded = true,
                     Items = c.Items ?? items.ToDeepTree(c.Id)
@@ -44,11 +44,12 @@ namespace Microprojects.Edm.Ui.Technologies.Utils
         public static HierarchyItemViewModel FillFrom(this HierarchyItemViewModel item, IEnumerable<HierarchyItemViewModel> items)
         {
             var result = item;
-            if (item.IsNode) {
+            if (item.IsFolder)
+            {
                 var childNodes = items
-                    .Where(i => i.IsNode && i.ParentId == item.Id)
+                    .Where(i => i.IsFolder && i.ParentId == item.Id)
                     .Select(i => i.FillFrom(items));
-                var childLeaves = items.Where(i => !i.IsNode && i.ParentId == item.Id); 
+                var childLeaves = items.Where(i => !i.IsFolder && i.ParentId == item.Id);
                 if (childNodes.Count() + childLeaves.Count() > 0)
                 {
                     //result = _mapper.Map(item, new HierarchyItemViewModel());
@@ -62,7 +63,7 @@ namespace Microprojects.Edm.Ui.Technologies.Utils
         public static string GetTreeExpansionStatusKey(this Controller controller, HierarchyType type)
         {
             var root = $"UI:{nameof(Hierarchy)}:{type}";
-            var id = controller.User.Identity.IsAuthenticated? controller.User.Identity.Name : controller.HttpContext.Session.Id;
+            var id = controller.User.Identity.IsAuthenticated ? controller.User.Identity.Name : controller.HttpContext.Session.Id;
             return $"{root}:{id}:{type}";
         }
     }

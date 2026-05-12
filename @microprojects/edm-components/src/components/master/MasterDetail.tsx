@@ -1,6 +1,8 @@
-﻿import React, {useState} from 'react';
-import {useRouteMatch, useHistory, Switch, Route} from 'react-router-dom';
+﻿import React, {createContext, useCallback, useContext, useEffect, useRef, useState} from 'react';
+import {useNavigate, Routes, Route, useLocation} from 'react-router-dom';
 import axios from 'axios';
+import {useAcquireEntityLock, useEntityLockState} from '../../hooks/entityLocks';
+import {listTag, useOptionalInvalidateEntities} from '../../hooks/entityRefresh';
 import {
     Box,
     Typography,
@@ -34,7 +36,7 @@ import {
 import {SmartScroll, SmartScrollContent} from '@microprojects/tools';
 
 import {TreeViewMaster, refresh, TreeViewMasterProps} from './TreeViewMaster';
-import {TreeNode} from './treeUtils';
+import {TreeNode, getEntityType, DEFAULT_ENTITY_TYPE_MAP} from './treeUtils';
 import {Loading} from '../states/Loading';
 import {DetailStub} from '../states/EmptyState';
 import {ErrorStub} from '../states/ErrorState';
@@ -57,6 +59,17 @@ let _selectedItem: TreeNode | null = null;
 let _render = 0;
 let _renderFunc: ((next: number) => void) | undefined;
 
+/** Lets a nested Editor flip its parent Detail out of edit mode after a
+ *  successful save. Detail provides the setter; Editor consumes it. Lifted
+ *  from Logistics — opt-in: if no Detail is mounted above the Editor, the
+ *  consumer just gets `undefined` and skips the flip. */
+export const DetailEditModeContext = createContext<((editMode: boolean) => void) | undefined>(undefined);
+
+/** "Empty" id sentinel for new (not-yet-persisted) entities. Tech uses 0,
+ *  Logistics uses this UUID. Both are recognised as "new" when computing
+ *  initial edit mode and skipping the cross-user lock acquire. */
+export const EMPTY_GUID = '00000000-0000-0000-0000-000000000000';
+
 export function reloadMaster() {
     refresh();
     if (_renderFunc) _renderFunc(++_render);
@@ -65,25 +78,60 @@ export function reloadMaster() {
 export interface MasterDetailProps {
     /** Data API root passed to TreeViewMaster (e.g. `/api/processes`). */
     api: string;
+    /** Mount path of this MasterDetail (e.g. `/config/workplaces`). The
+     *  consumer's parent Route should be declared with `path="<this>/*"`
+     *  so nested folder/leaf routes resolve. Used to generate "back to root"
+     *  navigation and the folder-route base in `folderComponent`. */
+    path: string;
     /** Hierarchies API root for folder moves + folder edits (e.g. `/api/hierarchies`). */
     hierarchiesApi?: string;
     /** Detail element rendered for a leaf route. */
     detail?: React.ReactElement;
-    /** Folder editor component rendered for folder routes. Omit to skip the folder route. */
-    folderComponent?: React.ComponentType<{api?: string; path: string; onChange: () => void; onClose: () => void}>;
+    /** Folder editor component rendered for folder routes. Omit to skip the folder route.
+     *  Receives `entityType` derived from the API URL (capitalized — e.g. `"Workplace"`,
+     *  `"Process"`) so the folder POST body can target the right hierarchy bucket. */
+    folderComponent?: React.ComponentType<{api?: string; path: string; entityType?: string; onChange: () => void; onClose: () => void}>;
     /** Help message for the empty / no-selection stub. */
     stubMessage?: string;
     /** Override TreeViewMaster's entity-type detection. */
     entityTypeMap?: TreeViewMasterProps['entityTypeMap'];
     /** Override TreeViewMaster's icon map. */
     iconMap?: TreeViewMasterProps['iconMap'];
+    /** Allow the user to drag the divider between master and detail panes.
+     *  Default: true. Set to false for layouts that should keep a fixed split. */
+    resizable?: boolean;
+    /** Forwarded to TreeViewMaster — external refetch signal (e.g. from `useEntityToken`). */
+    refreshToken?: unknown;
+    /** Forwarded to TreeViewMaster — fires with the first raw API node when loaded. */
+    onRootLoaded?: (rootNode: any) => void;
+    /** Forwarded to TreeViewMaster — extra query-string params on the hierarchy GET. */
+    getHierarchyQuery?: () => Record<string, string | undefined>;
+    /** Forwarded to TreeViewMaster — hidden-root unwrap for Logistics-style trees. */
+    unwrapSingleRoot?: boolean;
+    /** Explicit entity type override — bypasses URL-prefix detection. Use when one
+     *  URL hosts multiple kinds (e.g. Logistics's `/processes` for manufacturing /
+     *  technology / operation). Forwarded to TreeViewMaster. */
+    entityType?: string;
 }
 
+const SEPARATOR_MIN_PX = 80;
+
 export function MasterDetail(props: MasterDetailProps) {
-    const history = useHistory();
-    const {path} = useRouteMatch();
+    const navigate = useNavigate();
+    const {path, resizable = true} = props;
     const [dynamicOffset, setDynamicOffset] = useState(10);
     const FolderComponent = props.folderComponent;
+    // Capitalize the URL-derived entity type so it matches backend HierarchyType enum
+    // values (Workplace/Process/Host/Device). FolderComponent uses this when POSTing
+    // a new folder so the backend knows which typed-hierarchy bucket to put it in.
+    const entityTypeLower = getEntityType(props.api, props.entityTypeMap || DEFAULT_ENTITY_TYPE_MAP);
+    const folderEntityType = entityTypeLower
+        ? entityTypeLower.charAt(0).toUpperCase() + entityTypeLower.slice(1)
+        : undefined;
+
+    const containerRef = useRef<HTMLDivElement | null>(null);
+    const [masterPx, setMasterPx] = useState<number | null>(null);
+    const [mode, setMode] = useState<'auto' | 'manual'>('auto');
 
     React.useEffect(() => {
         const updateOffset = () => {
@@ -109,44 +157,181 @@ export function MasterDetail(props: MasterDetailProps) {
         };
     }, []);
 
-    return (
-        <SmartScroll offsetTop={dynamicOffset} style={{display: 'flex', flexDirection: 'row', alignItems: 'flex-start', gap: 12, width: '100%', minWidth: 0}}>
-            <SmartScrollContent style={{flex: 1, minWidth: '280px'}}>
-                <TreeViewMaster
-                    api={props.api}
-                    hierarchiesApi={props.hierarchiesApi}
-                    onCurrentRootChanged={(root: TreeNode) => { _selectedItem = root; }}
-                    entityTypeMap={props.entityTypeMap}
-                    iconMap={props.iconMap}
-                />
-            </SmartScrollContent>
-            <SmartScrollContent style={{flex: '5 1 0%', minWidth: 0, width: 0, overflow: 'hidden'}}>
-                <Switch>
-                    <Route exact path={path}>
-                        <DetailStub
-                            message={props.stubMessage}
-                            onAdd={() => history.push(`${path}/0`)}
-                        />
-                    </Route>
+    // Re-clamp the manual master width on viewport changes so the master
+    // pane never exceeds 1/3 of the new container width.
+    useEffect(() => {
+        const el = containerRef.current;
+        if (!el || mode !== 'manual') return;
+        const reclamp = () => {
+            const cap = Math.floor(el.getBoundingClientRect().width / 3);
+            setMasterPx((prev) =>
+                prev != null && prev > cap ? Math.max(SEPARATOR_MIN_PX, cap) : prev,
+            );
+        };
+        const ro = new ResizeObserver(reclamp);
+        ro.observe(el);
+        return () => ro.disconnect();
+    }, [mode]);
 
-                    {FolderComponent && (
-                        <Route path={`${path}/folder/:id`}>
-                            <FolderComponent
-                                api={props.hierarchiesApi}
-                                path={path}
-                                onChange={() => reloadMaster()}
-                                onClose={() => history.push(path)}
+    const onSeparatorDrag = useCallback((clientX: number) => {
+        const el = containerRef.current;
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        const cap = Math.floor(rect.width / 3);
+        const next = Math.max(
+            SEPARATOR_MIN_PX,
+            Math.min(cap, Math.round(clientX - rect.left)),
+        );
+        setMasterPx(next);
+        setMode('manual');
+    }, []);
+
+    const masterStyle: React.CSSProperties = resizable
+        ? mode === 'manual' && masterPx != null
+            ? {flex: `0 0 ${masterPx}px`, maxWidth: '33.333%', minWidth: 0, overflow: 'hidden'}
+            : {flex: '0 0 auto', maxWidth: '33.333%', minWidth: '280px', overflow: 'hidden'}
+        : {flex: 1, minWidth: '280px'};
+
+    const detailStyle: React.CSSProperties = resizable
+        ? {flex: 1, minWidth: 0, overflow: 'hidden'}
+        : {flex: '5 1 0%', minWidth: 0, width: 0, overflow: 'hidden'};
+
+    return (
+        <Box ref={containerRef as any} sx={{width: '100%', minWidth: 0}}>
+            <SmartScroll
+                offsetTop={dynamicOffset}
+                style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'flex-start',
+                    gap: resizable ? 0 : 12,
+                    width: '100%',
+                    minWidth: 0,
+                }}
+            >
+                <SmartScrollContent style={masterStyle}>
+                    <TreeViewMaster
+                        api={props.api}
+                        hierarchiesApi={props.hierarchiesApi}
+                        onCurrentRootChanged={(root: TreeNode) => { _selectedItem = root; }}
+                        entityTypeMap={props.entityTypeMap}
+                        iconMap={props.iconMap}
+                        refreshToken={props.refreshToken}
+                        onRootLoaded={props.onRootLoaded}
+                        getHierarchyQuery={props.getHierarchyQuery}
+                        unwrapSingleRoot={props.unwrapSingleRoot}
+                        entityType={props.entityType}
+                    />
+                </SmartScrollContent>
+                {resizable && <PaneSeparator onDrag={onSeparatorDrag} />}
+                <SmartScrollContent style={detailStyle}>
+                    <Routes>
+                        <Route
+                            index
+                            element={
+                                <DetailStub
+                                    message={props.stubMessage}
+                                    onAdd={() => navigate(`${path}/0`)}
+                                />
+                            }
+                        />
+
+                        {FolderComponent && (
+                            <Route
+                                path="folder/:id"
+                                element={
+                                    <FolderComponent
+                                        api={props.hierarchiesApi}
+                                        path={path}
+                                        entityType={folderEntityType}
+                                        onChange={() => reloadMaster()}
+                                        onClose={() => navigate(path)}
+                                    />
+                                }
                             />
-                        </Route>
-                    )}
-                    <Route path={`${path}/:id`}>
-                        {props.detail}
-                    </Route>
-                </Switch>
-            </SmartScrollContent>
-        </SmartScroll>
+                        )}
+                        <Route path=":id" element={props.detail} />
+                    </Routes>
+                </SmartScrollContent>
+            </SmartScroll>
+        </Box>
     );
 }
+
+type PaneSeparatorProps = {
+    onDrag: (clientX: number) => void;
+};
+
+const PaneSeparator = ({onDrag}: PaneSeparatorProps) => {
+    // While dragging we render a small vertical guide segment centered on the cursor.
+    // `null` while idle keeps the indicator out of the DOM so the separator stays invisible at rest.
+    const [guide, setGuide] = useState<{x: number; y: number} | null>(null);
+
+    const update = (e: React.PointerEvent<HTMLDivElement>) => {
+        const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+        setGuide({x: rect.left + rect.width / 2, y: e.clientY});
+        onDrag(e.clientX);
+    };
+
+    const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+        (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
+        document.body.style.userSelect = 'none';
+        document.body.style.cursor = 'col-resize';
+        update(e);
+    };
+
+    const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+        if (!guide) return;
+        update(e);
+    };
+
+    const endDrag = (e: React.PointerEvent<HTMLDivElement>) => {
+        if (!guide) return;
+        document.body.style.userSelect = '';
+        document.body.style.cursor = '';
+        (e.currentTarget as HTMLDivElement).releasePointerCapture?.(e.pointerId);
+        setGuide(null);
+    };
+
+    const GUIDE_HALF = 110;
+
+    return (
+        <div
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={endDrag}
+            onPointerCancel={endDrag}
+            role="separator"
+            aria-orientation="vertical"
+            style={{
+                flex: '0 0 16px',
+                alignSelf: 'stretch',
+                cursor: 'col-resize',
+                touchAction: 'none',
+                background: 'transparent',
+                minHeight: '60vh',
+            }}
+        >
+            {guide && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        left: guide.x,
+                        top: guide.y - GUIDE_HALF,
+                        width: 2,
+                        height: GUIDE_HALF * 2,
+                        transform: 'translateX(-50%)',
+                        background:
+                            'linear-gradient(to bottom, rgba(120, 144, 156, 0) 0%, rgba(120, 144, 156, 0.7) 50%, rgba(120, 144, 156, 0) 100%)',
+                        borderRadius: 1,
+                        pointerEvents: 'none',
+                        zIndex: 1000,
+                    }}
+                />
+            )}
+        </div>
+    );
+};
 
 const pluralize = (type?: string): string => {
     if (!type) return 'Items';
@@ -190,8 +375,8 @@ export interface DetailProps {
     loading?: any;
     error?: any;
     validation?: string;
-    data: any;
-    onChange?: () => void;
+    data?: any;
+    onChange?: (data?: any) => void;
     onClose?: () => void;
     onUp?: () => void;
     path?: string;
@@ -203,11 +388,36 @@ export interface DetailProps {
     parents?: DetailParent[];
     /** Optional top-right slot in the Detail header grid. */
     status?: React.ReactNode;
+    /** Current user — required to acquire a cross-user edit lock. When omitted
+     *  the lock is not acquired (Tech consumers can leave it blank). */
+    username?: string;
+    /** Treat this record as outdated (auto-forked / superseded). Disables the
+     *  edit + copy actions and shows an "outdated" badge next to the title.
+     *  When omitted, falls back to `data.outdated`. */
+    outdated?: boolean;
+    /** Initial edit mode. Falls back to true when `id === 0` or `id === EMPTY_GUID`
+     *  (a fresh, unsaved record). */
+    editMode?: boolean;
+    /** Hide the edit / copy / delete actions entirely. Use for screens that
+     *  embed Detail in a read-only context (e.g. Logistics's SupplyDetail when
+     *  shown as a sub-detail). */
+    readonly?: boolean;
+    /** Override the title shown in the header (default: `data.name`). Used
+     *  for placeholder titles like "New Order" before the record exists. */
+    title?: string;
+    /** Override the description shown in the header (default: `data.description`). */
+    subTitle?: string;
+    /** Visual entity-color override for the header icon — bypasses the `type`-derived
+     *  CSS variable lookup. Use when one `type` hosts multiple visual kinds (e.g.
+     *  Logistics's three process kinds keep `type='process'` for locks/refresh but
+     *  need distinct icon hues). Lock and refresh still use `type`. */
+    entityType?: string;
 }
 
 export function Detail(props: DetailProps) {
-    const history = useHistory();
+    const navigate = useNavigate();
     const toast = useToast();
+    const invalidate = useOptionalInvalidateEntities();
     const subDetailRef = React.useRef<HTMLDivElement | null>(null);
     const detailContainerRef = React.useRef<HTMLDivElement | null>(null);
     const [bufferedSubDetail, setBufferedSubDetail] = useState<React.ReactElement | undefined>(props.subDetail);
@@ -220,10 +430,30 @@ export function Detail(props: DetailProps) {
     const [lockHeight, setLockHeight] = useState(0);
     const [, setRefresh] = useState(0);
     _renderFunc = setRefresh;
-    let [editMode, setEditMode] = useState(false);
+    let [editMode, setEditMode] = useState(props.editMode ?? false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-    editMode = editMode || props.id === 0;
+    const isNewItem = props.id === 0 || props.id === EMPTY_GUID;
+    editMode = editMode || isNewItem;
+
+    // Cross-user edit lock — opt-in. Only effective when LockProvider is
+    // mounted (Logistics) AND props.type / props.id / props.username are
+    // present; otherwise the hooks return NO_LOCK and the acquire effect
+    // skips. Tech doesn't mount LockProvider so all of this is inert there.
+    const lockableId = props.id && !isNewItem ? String(props.id) : undefined;
+    useAcquireEntityLock(props.type, lockableId, editMode, props.username || '');
+    const remoteLock = useEntityLockState(props.type, lockableId);
+    const lockedByOther = !!remoteLock.lockedBy && !remoteLock.isOwn;
+    const outdated = props.outdated ?? !!props.data?.outdated;
+
+    // Force out of edit mode if another client took the lock first (race when
+    // both users press Edit nearly simultaneously and the remote message
+    // arrives after our own local flip).
+    React.useEffect(() => {
+        if (lockedByOther && editMode && props.id && !isNewItem) {
+            setEditMode(false);
+        }
+    }, [lockedByOther, editMode, props.id, isNewItem]);
 
     // Handle main detail transitions
     React.useLayoutEffect(() => {
@@ -288,11 +518,18 @@ export function Detail(props: DetailProps) {
 
     const handleDelete = () => {
         setDeleteDialogOpen(false);
-        axios.delete(`${props.api}/${props.data.id}`)
+        axios.delete(`${props.api}/${props.data?.id}`)
             .then(() => {
-                toast.success(`${props.data.name || 'Item'} deleted`);
+                toast.success(`${props.data?.name || 'Item'} deleted`);
                 props.onChange && props.onChange();
-                if (props.path) history.push(props.path);
+                if (props.type) {
+                    invalidate([
+                        {type: props.type},
+                        {type: props.type, id: props.data?.id},
+                        listTag(props.type),
+                    ]);
+                }
+                if (props.path) navigate(props.path);
             })
             .catch((err: any) => toast.error(err.response?.data?.detail || err.message || 'Delete failed'));
     };
@@ -302,13 +539,14 @@ export function Detail(props: DetailProps) {
             <Box className={styles.detailContainer}>
                 <ErrorStub
                     error={props.error}
-                    onBack={() => props.path && history.push(props.path)}
+                    onBack={() => props.path && navigate(props.path)}
                 />
             </Box>
         );
     }
 
     return (
+        <DetailEditModeContext.Provider value={setEditMode}>
         <Stack spacing={2} ref={detailContainerRef as any} sx={{minHeight: lockHeight > 0 ? `${lockHeight}px` : 'auto', width: '100%', minWidth: 0, position: 'relative'}}>
             <Box className={styles.detailContainer} sx={{width: '100%', minWidth: 0, position: 'relative'}}>
                 {isMainFading && (
@@ -333,9 +571,20 @@ export function Detail(props: DetailProps) {
                                 data-card-header="true"
                                 className={styles.stickyHeader}
                             >
-                                <Box className={`${styles.iconWrapper} ${displayProps.type ? (styles as any)[displayProps.type] || '' : ''}`}>
-                                    {displayProps.icon || (displayProps.type === 'folder' ? <FolderIcon /> : <FileIcon />)}
-                                </Box>
+                                {(() => {
+                                    const colorKey = displayProps.entityType ?? displayProps.type;
+                                    return (
+                                        <Box
+                                            className={`${styles.iconWrapper} ${colorKey ? (styles as any)[colorKey] || '' : ''}`}
+                                            style={colorKey ? {
+                                                background: `var(--ent-${colorKey}-soft, var(--surface-2))`,
+                                                color: `var(--ent-${colorKey}-deep, var(--ink-2))`,
+                                            } : undefined}
+                                        >
+                                            {displayProps.icon || (displayProps.type === 'folder' ? <FolderIcon /> : <FileIcon />)}
+                                        </Box>
+                                    );
+                                })()}
 
                                 <Breadcrumbs
                                     separator={<NavigateNextIcon fontSize="inherit" />}
@@ -370,7 +619,24 @@ export function Detail(props: DetailProps) {
 
                                 <Box className={styles.dpName}>
                                     <Typography variant="h6" className={styles.title}>
-                                        {displayProps.data?.name || 'New Item'}
+                                        {displayProps.title || displayProps.data?.name || 'New Item'}
+                                        {lockedByOther && (
+                                            <Box
+                                                component="span"
+                                                sx={{ml: '0.6rem', fontSize: '0.75em', fontWeight: 'normal', color: '#b58900'}}
+                                            >
+                                                🔒 Locked by {remoteLock.lockedBy}
+                                            </Box>
+                                        )}
+                                        {outdated && (
+                                            <Box
+                                                component="span"
+                                                title="A newer version exists. This record is preserved for historical references and cannot be edited."
+                                                sx={{ml: '0.6rem', fontSize: '0.75em', fontWeight: 'normal', color: 'var(--ink-3)', fontStyle: 'italic'}}
+                                            >
+                                                outdated
+                                            </Box>
+                                        )}
                                     </Typography>
                                 </Box>
 
@@ -378,52 +644,83 @@ export function Detail(props: DetailProps) {
                                     <Box className={styles.dpStatus}>{displayProps.status}</Box>
                                 )}
 
-                                {displayProps.data?.description && (
+                                {(displayProps.subTitle || displayProps.data?.description) && (
                                     <Typography variant="body2" className={styles.description}>
-                                        {displayProps.data.description}
+                                        {displayProps.subTitle || displayProps.data?.description}
                                     </Typography>
                                 )}
 
                                 <Box className={styles.actions}>
-                                    {displayProps.editor && (
+                                    {displayProps.editor && !displayProps.readonly && (
                                         <>
-                                            <Tooltip title={editMode ? 'View mode' : 'Edit mode'}>
-                                                <IconButton
-                                                    className={styles.actionBtn}
-                                                    onClick={() => setEditMode(!editMode)}
-                                                    size="small"
-                                                >
-                                                    {editMode ? <ViewIcon fontSize="small" /> : <EditIcon fontSize="small" />}
-                                                </IconButton>
+                                            {displayProps.editable !== false && (
+                                            <Tooltip
+                                                title={
+                                                    outdated
+                                                        ? 'Outdated — open the current version to edit'
+                                                        : lockedByOther
+                                                            ? `Locked by ${remoteLock.lockedBy}`
+                                                            : editMode ? 'View mode' : 'Edit mode'
+                                                }
+                                            >
+                                                <span>
+                                                    <IconButton
+                                                        className={styles.actionBtn}
+                                                        onClick={() => setEditMode(!editMode)}
+                                                        size="small"
+                                                        disabled={lockedByOther || outdated}
+                                                    >
+                                                        {editMode ? <ViewIcon fontSize="small" /> : <EditIcon fontSize="small" />}
+                                                    </IconButton>
+                                                </span>
                                             </Tooltip>
-                                            <Tooltip title='Copy'>
-                                                <IconButton
-                                                    className={styles.actionBtn}
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        const data = {...displayProps.data, id: 0, name: `${displayProps.data?.name} (Copy)`};
-                                                        axios.post(`${displayProps.api}`, data)
-                                                            .then((response) => {
-                                                                toast.success('Copied');
-                                                                displayProps.onChange && displayProps.onChange();
-                                                                if (displayProps.path) history.push(`${displayProps.path}/${response.data.id}`);
-                                                            })
-                                                            .catch((err: any) => toast.error(err.response?.data?.detail || err.message || 'Copy failed'));
-                                                    }}
-                                                    size="small"
-                                                >
-                                                    <CopyIcon fontSize="small" />
-                                                </IconButton>
+                                            )}
+                                            {displayProps.copyable !== false && (
+                                            <Tooltip title={lockedByOther ? `Locked by ${remoteLock.lockedBy}` : 'Copy'}>
+                                                <span>
+                                                    <IconButton
+                                                        className={styles.actionBtn}
+                                                        disabled={lockedByOther || outdated}
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            const newId = (displayProps.id === 0 || typeof displayProps.id === 'number') ? 0 : EMPTY_GUID;
+                                                            const data = {...displayProps.data, id: newId, name: `${displayProps.data?.name} (Copy)`};
+                                                            axios.post(`${displayProps.api}`, data)
+                                                                .then((response) => {
+                                                                    toast.success('Copied');
+                                                                    displayProps.onChange && displayProps.onChange(response.data);
+                                                                    if (displayProps.type) {
+                                                                        invalidate([
+                                                                            {type: displayProps.type},
+                                                                            {type: displayProps.type, id: response.data.id},
+                                                                            listTag(displayProps.type),
+                                                                        ]);
+                                                                    }
+                                                                    if (displayProps.path) navigate(`${displayProps.path}/${response.data.id}`);
+                                                                })
+                                                                .catch((err: any) => toast.error(err.response?.data?.detail || err.message || 'Copy failed'));
+                                                        }}
+                                                        size="small"
+                                                    >
+                                                        <CopyIcon fontSize="small" />
+                                                    </IconButton>
+                                                </span>
                                             </Tooltip>
-                                            <Tooltip title='Delete'>
-                                                <IconButton
-                                                    className={`${styles.actionBtn} ${styles.delete}`}
-                                                    onClick={() => setDeleteDialogOpen(true)}
-                                                    size="small"
-                                                >
-                                                    <DeleteIcon fontSize="small" />
-                                                </IconButton>
+                                            )}
+                                            {displayProps.deletable !== false && (
+                                            <Tooltip title={lockedByOther ? `Locked by ${remoteLock.lockedBy}` : 'Delete'}>
+                                                <span>
+                                                    <IconButton
+                                                        className={`${styles.actionBtn} ${styles.delete}`}
+                                                        onClick={() => setDeleteDialogOpen(true)}
+                                                        size="small"
+                                                        disabled={lockedByOther}
+                                                    >
+                                                        <DeleteIcon fontSize="small" />
+                                                    </IconButton>
+                                                </span>
                                             </Tooltip>
+                                            )}
                                         </>
                                     )}
                                     {displayProps.onClose && (
@@ -525,6 +822,7 @@ export function Detail(props: DetailProps) {
                 </Box>
             </Collapse>
         </Stack>
+        </DetailEditModeContext.Provider>
     );
 }
 
@@ -635,9 +933,29 @@ export interface EditorProps {
     data: any;
 }
 
+/** Flattens foreign-key-shaped values to their `.id` before sending. So
+ *  `{nomenclature: {id: 5, name: 'Foo'}}` becomes `{nomenclature: 5}` —
+ *  the wire format the EDM controllers expect. Dates and arrays are passed
+ *  through untouched. Lifted from Logistics's Editor. */
+function flattenForeignData(data: Record<string, any>): Record<string, any> {
+    const out: Record<string, any> = {};
+    for (const k of Object.keys(data)) {
+        const v = data[k];
+        if (v && typeof v === 'object' && !(v instanceof Date) && !Array.isArray(v)) {
+            out[k] = (v as any).id;
+        } else {
+            out[k] = v;
+        }
+    }
+    return out;
+}
+
 export function Editor(props: EditorProps) {
-    const history = useHistory();
+    const navigate = useNavigate();
+    const location = useLocation();
     const toast = useToast();
+    const setDetailEditMode = useContext(DetailEditModeContext);
+    const invalidate = useOptionalInvalidateEntities();
     const [values, setValues] = useState<any>(props.data);
 
     const handleChange = (e: any) => {
@@ -648,28 +966,86 @@ export function Editor(props: EditorProps) {
     const handleSubmit = (e?: React.FormEvent) => {
         if (e) e.preventDefault();
         const data = values;
+        const foreignData = flattenForeignData(data);
 
         const onSaveError = (err: any) =>
             toast.error(err.response?.data?.detail || err.message || 'Save failed');
 
         if (data.id) {
-            axios.put(`${props.api}/${props.data.id}`, data)
-                .then((response) => {
-                    toast.success('Saved');
-                    props.onUpdate && props.onUpdate(response.data);
-                    props.onChange && props.onChange(response.data);
-                    props.setData(response.data);
-                })
-                .catch(onSaveError);
+            // PUT path with fork-required handling: backends signal "this change
+            // creates a new version" via 409 + `code: 'fork-required'`. The
+            // user is asked to confirm; on yes we resend with `?force=true`.
+            const sendUpdate = (force: boolean): Promise<any> => {
+                const url = force
+                    ? `${props.api}/${props.data.id}?force=true`
+                    : `${props.api}/${props.data.id}`;
+                return axios.put(url, foreignData)
+                    .then((response) => {
+                        toast.success(force ? 'Saved as a new version' : 'Saved');
+                        props.onUpdate && props.onUpdate(response.data);
+                        props.onChange && props.onChange(response.data);
+                        props.setData(response.data);
+                        if (props.type) {
+                            invalidate([
+                                {type: props.type},
+                                {type: props.type, id: response.data.id},
+                            ]);
+                        }
+                        setDetailEditMode?.(false);
+                        if (force && props.path) {
+                            navigate(`${props.path}/${response.data.id}`);
+                        }
+                    })
+                    .catch((r) => {
+                        if (
+                            !force
+                            && r.response?.status === 409
+                            && r.response?.data?.code === 'fork-required'
+                        ) {
+                            const detail = r.response?.data?.detail
+                                || 'This change will create a new version.';
+                            if (window.confirm(`${detail}\n\nProceed and create a new version?`)) {
+                                return sendUpdate(true);
+                            }
+                            return;
+                        }
+                        onSaveError(r);
+                    });
+            };
+            sendUpdate(false);
         } else {
-            const parentId = _selectedItem ? (_selectedItem.isNode ? _selectedItem.id : _selectedItem.parentId) : 0;
-            axios.post(`${props.api}`, {...data, type: props.type, parentId, hierarchyId: parentId})
+            // _selectedItem.id is the MUI-prefixed tree id (e.g., "folder-1033"); the backend
+            // wants the raw numeric id. numericId is the unprefixed string; parentId on a leaf
+            // is also the parent's numeric id as a string. Coerce both to int.
+            const rawParent = _selectedItem
+                ? (_selectedItem.isFolder ? _selectedItem.numericId : _selectedItem.parentId)
+                : '0';
+            const parentId = parseInt(rawParent, 10) || 0;
+            // Honor a route-state-supplied parentId (e.g. "Add child" navigations
+            // that attach `state: {parentId}` so the new item lands in the right
+            // folder regardless of which tree node is currently selected).
+            const stateParent = (location.state as any)?.parentId;
+            const effectiveParentId = stateParent ?? parentId;
+            axios.post(`${props.api}`, {
+                ...foreignData,
+                type: props.type,
+                parentId: effectiveParentId,
+                hierarchyId: effectiveParentId,
+            })
                 .then((response) => {
                     toast.success('Created');
                     props.onUpdate && props.onUpdate(response.data);
                     props.onChange && props.onChange(response.data);
                     props.setData(response.data);
-                    if (props.path) history.push(`${props.path}${response.data.isNode ? '/folder' : ''}/${response.data.id}`);
+                    if (props.type) {
+                        invalidate([
+                            {type: props.type},
+                            {type: props.type, id: response.data.id},
+                            listTag(props.type),
+                        ]);
+                    }
+                    setDetailEditMode?.(false);
+                    if (props.path) navigate(`${props.path}${response.data.isFolder ? '/folder' : ''}/${response.data.id}`);
                 })
                 .catch(onSaveError);
         }

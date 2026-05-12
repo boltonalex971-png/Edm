@@ -11,6 +11,9 @@
         "./hooks":        { "types": "./dist/hooks.d.ts",      "import": "./dist/hooks.js" },
         "./styles":       { "types": "./dist/styles.d.ts",     "import": "./dist/styles.js" },
         "./utils":        { "types": "./dist/utils.d.ts",      "import": "./dist/utils.js" },
+        "./components/*": { "types": "./dist/components/*.d.ts", "import": "./dist/components/*.js" },
+        "./hooks/*":      { "types": "./dist/hooks/*.d.ts",      "import": "./dist/hooks/*.js" },
+        "./styles/*":     { "types": "./dist/styles/*.d.ts",     "import": "./dist/styles/*.js" },
         "./styles/chrome.css": "./dist/styles/chrome.css",
         "./styles/tokens.css": "./dist/styles/tokens.css"
     },
@@ -25,7 +28,7 @@
     "peerDependencies": {
         "react":               ">=18",
         "react-dom":           ">=18",
-        "react-router-dom":    ">=5",
+        "react-router-dom":    ">=7",
         "@mui/material":       "^7",
         "@mui/icons-material": "^7",
         "@mui/x-data-grid":    "^7 || ^8",
@@ -75,8 +78,7 @@
         "react":                 "^18.3.1",
         "react-dom":             "^18.3.1",
         "react-markdown":        "^9.0.1",
-        "react-router-dom":      "^5.2.0",
-        "@types/react-router-dom": "^5.3.3",
+        "react-router-dom":      "^7.5.0",
         "remark-gfm":            "^4.0.0",
         "sass":                  "^1.77.0",
         "typescript":            "^5.9.3"

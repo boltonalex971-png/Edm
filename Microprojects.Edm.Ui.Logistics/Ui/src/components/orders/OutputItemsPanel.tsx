@@ -3,7 +3,7 @@ import '@logistics/components/tare/TareSchematic.css'
 import type { Item, UUID } from '@logistics/data/types'
 import { formatQuantity } from '@logistics/utils/format'
 import { colorForGradeId } from '@logistics/utils/gradePalette'
-import { Popup } from '@progress/kendo-react-popup'
+import { Popper } from '@mui/material'
 import type React from 'react'
 import { useCallback, useMemo, useRef, useState } from 'react'
 
@@ -114,8 +114,8 @@ export function OutputItemsPanel({
                     const selectedStyle: React.CSSProperties = selected
                         ? {
                               boxShadow:
-                                  '0 0 0 2px #1976d2, inset 0 0 0 2px rgba(255,255,255,0.85)',
-                              borderColor: '#1976d2',
+                                  '0 0 0 2px var(--accent), inset 0 0 0 2px rgba(255,255,255,0.85)',
+                              borderColor: 'var(--accent)',
                           }
                         : {}
                     return (
@@ -151,16 +151,25 @@ export function OutputItemsPanel({
                     )
                 })}
             </div>
-            <Popup
-                anchor={tooltip?.anchor}
-                show={!!tooltip}
-                anchorAlign={{ horizontal: 'center', vertical: 'top' }}
-                popupAlign={{ horizontal: 'center', vertical: 'bottom' }}
-                collision={{ horizontal: 'fit', vertical: 'flip' }}
-                animate={false}
+            <Popper
+                open={!!tooltip}
+                anchorEl={tooltip?.anchor ?? null}
+                placement="top"
+                modifiers={[
+                    { name: 'offset', options: { offset: [0, 6] } },
+                    {
+                        name: 'flip',
+                        options: { fallbackPlacements: ['bottom'] },
+                    },
+                    {
+                        name: 'preventOverflow',
+                        options: { boundary: 'viewport', padding: 8 },
+                    },
+                ]}
+                style={{ zIndex: 1500 }}
             >
                 {tooltip && <ItemSlotTooltip item={tooltip.item} />}
-            </Popup>
+            </Popper>
         </div>
     )
 }

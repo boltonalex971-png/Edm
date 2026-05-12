@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import { RelationTable } from '@microprojects/edm-components/components';
 import { DropDownCell, LinkTextCell } from '@microprojects/edm-components/components';
 import { useGet } from '@microprojects/edm-components/hooks';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { DeviceDetail } from '../Devices';
 import { DeviceConfigEditor } from './DeviceConfigEditor';
 import { ProfileDetail } from '../Profiles';
@@ -17,7 +17,7 @@ WorkbenchDevicesTab.propTypes = {
 }
 
 export function WorkbenchDevicesTab({ id, api, processId, onDetailSelected }) {
-    const history = useHistory();
+    const navigate = useNavigate();
     const [[devices]] = useGet(`${Api.workplaces}/processes/workbenches/${id}/requireddevices`, [id]);
     const [[profiles]] = useGet(`${Api.processes}/${processId}/profiles`, [processId]);
     const devicesPath = '/config/devices';
@@ -85,7 +85,7 @@ export function WorkbenchDevicesTab({ id, api, processId, onDetailSelected }) {
                                 api={Api.devices}
                                 path={devicesPath}
                                 onClose={() => onDetailSelected()}
-                                onUp={() => history.push(`${devicesPath}/${deviceId}`)}
+                                onUp={() => navigate(`${devicesPath}/${deviceId}`)}
                                 onUpdate={itemUpdate}
                             />)
                     }

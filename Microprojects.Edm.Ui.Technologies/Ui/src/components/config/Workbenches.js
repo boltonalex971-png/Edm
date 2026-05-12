@@ -1,7 +1,7 @@
 ﻿import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useGet } from '@microprojects/edm-components/hooks';
-import { useHistory, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Detail, Editor } from '@microprojects/edm-components/components';
 import { WorkbenchDevicesTab } from './workplace/WorkbenchDevicesTab';
 import { Box, Button as MuiButton, Typography } from '@mui/material';
@@ -25,7 +25,7 @@ WorkbenchDetail.propTypes = {
 
 export function WorkbenchDetail({ workbenchId, parents, ...props }) {
     const type = 'workbench';
-    const history = useHistory()
+    const navigate = useNavigate()
     const dispatch = useDispatch()
     let { id } = useParams();
     id = workbenchId || id;
@@ -38,7 +38,7 @@ export function WorkbenchDetail({ workbenchId, parents, ...props }) {
     const onOperationStart = () => {
         dispatch(setWorkbench(data))
         dispatch(setProcess(proc))
-        history.push('/operation')
+        navigate('/operation')
     };
     useEffect(setSub, [id]);
     if (!data || data.id === 0) {

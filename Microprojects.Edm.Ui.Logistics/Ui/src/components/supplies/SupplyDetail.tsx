@@ -4,8 +4,8 @@ import {
     Detail,
     type DetailProps,
     EMPTY_GUID,
-    Editor,
     Info,
+    MuiEditor,
 } from '@logistics/components/MasterDetail'
 import { BatchItemCreate } from '@logistics/components/items/BatchItemCreate'
 import { ItemDetail } from '@logistics/components/items/ItemDetail'
@@ -14,9 +14,14 @@ import { TareItemsPanel } from '@logistics/components/tare/TareItemsPanel'
 import type { DetailEventHandler, Supply, UUID } from '@logistics/data/types'
 import { useGet } from '@logistics/hooks/hooks'
 import { formatLocalDateTime } from '@logistics/utils/format'
-import { Button } from '@progress/kendo-react-buttons'
-import { Field } from '@progress/kendo-react-form'
-import { Input } from '@progress/kendo-react-inputs'
+import {
+    EditorSection,
+    Field,
+    Properties,
+    Property,
+} from '@microprojects/edm-components/components'
+import { AddOutlined as AddIcon } from '@mui/icons-material'
+import { Box, Button as MuiButton } from '@mui/material'
 import type React from 'react'
 import { type EffectCallback, useEffect, useState } from 'react'
 import { Diagram3 } from 'react-bootstrap-icons'
@@ -58,26 +63,35 @@ export function SupplyDetail({
             card={
                 <Info
                     content={
-                        <>
-                            {data.barcode && <p>Barcode: {data.barcode}</p>}
-                            {data.shipment && <p>Shipment: {data.shipment}</p>}
-                            {data.shipmentExternalId && (
-                                <p>Shipment Id: {data.shipmentExternalId}</p>
-                            )}
+                        <Properties>
+                            <Property
+                                label="Barcode"
+                                value={data.barcode}
+                                mono
+                            />
+                            <Property
+                                label="Shipment"
+                                value={data.shipment}
+                            />
+                            <Property
+                                label="Shipment Id"
+                                value={data.shipmentExternalId}
+                                mono
+                            />
                             {(data as any).metaCreated && (
-                                <p>
-                                    Created:{' '}
-                                    {formatLocalDateTime(
+                                <Property
+                                    label="Created"
+                                    value={formatLocalDateTime(
                                         (data as any).metaCreated,
                                     )}
-                                </p>
+                                />
                             )}
-                        </>
+                        </Properties>
                     }
                 />
             }
             editor={
-                <Editor
+                <MuiEditor
                     type={props.type || 'none'}
                     api={props.api}
                     path={props.path}
@@ -85,34 +99,38 @@ export function SupplyDetail({
                     data={data as any}
                     setData={setData}
                     onUpdate={props.onUpdate}
-                    content={
-                        <fieldset className={'k-form-fieldset'}>
-                            <legend className={'k-form-legend'}>
-                                Enter supply data
-                            </legend>
-                            <div className="mb-2">
+                    content={({ values, handleChange }) => (
+                        <Box>
+                            <EditorSection
+                                number={1}
+                                title="Supply"
+                                done={false}
+                            >
                                 <Field
-                                    name={'barcode'}
-                                    component={Input}
-                                    label={'Barcode'}
+                                    full
+                                    name="barcode"
+                                    label="Barcode"
+                                    value={(values.barcode as string) ?? ''}
+                                    onChange={handleChange}
                                 />
-                            </div>
-                            <div className="mb-2">
                                 <Field
-                                    name={'shipment'}
-                                    component={Input}
-                                    label={'Shipment'}
+                                    name="shipment"
+                                    label="Shipment"
+                                    value={(values.shipment as string) ?? ''}
+                                    onChange={handleChange}
                                 />
-                            </div>
-                            <div className="mb-2">
                                 <Field
-                                    name={'shipmentExternalId'}
-                                    component={Input}
-                                    label={'Shipment Id'}
+                                    name="shipmentExternalId"
+                                    label="Shipment Id"
+                                    value={
+                                        (values.shipmentExternalId as string) ??
+                                        ''
+                                    }
+                                    onChange={handleChange}
                                 />
-                            </div>
-                        </fieldset>
-                    }
+                            </EditorSection>
+                        </Box>
+                    )}
                 />
             }
             relations={
@@ -140,10 +158,11 @@ export function SupplyDetail({
                             )
                         }
                         toolbar={
-                            <div className="mb-2">
-                                <Button
-                                    themeColor="primary"
+                            <Box sx={{ mb: 1 }}>
+                                <MuiButton
+                                    variant="contained"
                                     size="small"
+                                    startIcon={<AddIcon />}
                                     onClick={() =>
                                         setSubDetail(
                                             <BatchItemCreate
@@ -155,10 +174,9 @@ export function SupplyDetail({
                                         )
                                     }
                                 >
-                                    <span className="k-icon k-i-add" /> Add
-                                    items
-                                </Button>
-                            </div>
+                                    Add items
+                                </MuiButton>
+                            </Box>
                         }
                     />
                 ) : null

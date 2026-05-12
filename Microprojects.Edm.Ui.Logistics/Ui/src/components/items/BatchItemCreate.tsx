@@ -4,17 +4,13 @@ import {
     findInHierarchy,
     pruneHierarchy,
 } from '@logistics/components/HierarchyPicker'
-import {
-    type AlertState,
-    InlineAlert,
-} from '@logistics/components/InlineAlert.tsx'
+import { useAlertSetter } from '@logistics/components/InlineAlert.tsx'
 import { Detail, EMPTY_GUID } from '@logistics/components/MasterDetail'
 import { TareBarcodePicker } from '@logistics/components/tare/TareBarcodePicker'
 import type {
     AvailableTare,
     BatchCreateItemRequest,
     BatchCreateItemResult,
-    Dictionary,
     Nomenclature,
     NomenclatureTareType,
     TareType,
@@ -24,9 +20,12 @@ import type {
 import { useInvalidateEntities } from '@logistics/hooks/entityRefresh'
 import { getData, useGet } from '@logistics/hooks/hooks'
 import { formatUnits } from '@logistics/utils/format'
-import { Button } from '@progress/kendo-react-buttons'
-import { Form, FormElement } from '@progress/kendo-react-form'
-import { NumericTextBox } from '@progress/kendo-react-inputs'
+import {
+    EditorSection,
+    Field,
+} from '@microprojects/edm-components/components'
+import { SaveOutlined as SaveIcon } from '@mui/icons-material'
+import { Box, Button as MuiButton, Typography } from '@mui/material'
 import axios from 'axios'
 import { useEffect, useMemo, useState } from 'react'
 import { Box2 } from 'react-bootstrap-icons'
@@ -44,6 +43,12 @@ type BatchFormValues = {
     quantity?: number | null
 }
 
+function numberOrNull(v: string): number | null {
+    if (v === '' || v == null) return null
+    const n = Number(v)
+    return Number.isFinite(n) ? n : null
+}
+
 export function BatchItemCreate({
     supplyId,
     onCreated,
@@ -57,67 +62,10 @@ export function BatchItemCreate({
         `${Api.taretypes}/hierarchy`,
         [],
     )
-    const [alert, setAlert] = useState<AlertState>()
-    const invalidate = useInvalidateEntities()
-
-    const handleSubmit = async (raw: Dictionary) => {
-        const data = raw as BatchFormValues
-        if (
-            !data.nomenclatureId ||
-            !data.tareTypeId ||
-            data.quantity == null ||
-            data.quantity <= 0
-        ) {
-            return
-        }
-        setAlert(undefined)
-        const body: BatchCreateItemRequest = {
-            nomenclatureId: data.nomenclatureId,
-            tareTypeId: data.tareTypeId,
-            tareId: data.tare?.id || undefined,
-            barcode: data.tare?.barcode ?? '',
-            quantity: data.quantity,
-            supplyId,
-        }
-        try {
-            const response = await axios.post<BatchCreateItemResult>(
-                `${Api.items}/batch`,
-                body,
-            )
-            const result = response.data
-            const qtyTxt = formatUnits(
-                result.quantity,
-                result.units,
-                result.countable,
-            )
-            const remainingTxt =
-                result.remaining > 0
-                    ? ` Remaining capacity: ${formatUnits(result.remaining, result.units, result.countable)}.`
-                    : ''
-            setAlert({
-                message:
-                    `Created ${qtyTxt} in tare ` +
-                    `${result.tareBarcode || '(no barcode)'}` +
-                    `${result.tareTypeName ? ` (${result.tareTypeName})` : ''}.` +
-                    remainingTxt,
-            })
-            invalidate([
-                { type: 'item' },
-                { type: 'tare' },
-                { type: 'tare', id: result.tareId },
-                ...(supplyId ? [{ type: 'supply', id: supplyId }] : []),
-            ])
-            onCreated?.(result)
-        } catch (e: any) {
-            setAlert({
-                status: 'danger',
-                message: e.response?.data?.detail || e.message || 'Error',
-            })
-        }
-    }
 
     return (
         <Detail
+            type="item"
             api={Api.items}
             id={EMPTY_GUID}
             editMode={true}
@@ -127,47 +75,37 @@ export function BatchItemCreate({
             subTitle={supplyId ? 'Add to supply' : undefined}
             onClose={onClose ?? (() => {})}
             editor={
-                <>
-                    <InlineAlert
-                        state={alert}
-                        onClose={() => setAlert(undefined)}
-                    />
-                    <Form
-                        onSubmit={handleSubmit}
-                        render={(form) => (
-                            <BatchFormBody
-                                form={form}
-                                nomenclatures={nomenclatures}
-                                tareTypes={tareTypes}
-                                onCancel={onClose}
-                            />
-                        )}
-                    />
-                </>
+                <BatchForm
+                    nomenclatures={nomenclatures}
+                    tareTypes={tareTypes}
+                    supplyId={supplyId}
+                    onCreated={onCreated}
+                    onClose={onClose}
+                />
             }
         />
     )
 }
 
-type BatchFormBodyProps = {
-    form: any
+type BatchFormProps = {
     nomenclatures: TreeDataItem[] | undefined
     tareTypes: TreeDataItem[] | undefined
-    onCancel?: () => void
+    supplyId?: UUID
+    onCreated?: (result: BatchCreateItemResult) => void
+    onClose?: () => void
 }
 
-function BatchFormBody({
-    form,
+function BatchForm({
     nomenclatures,
     tareTypes,
-    onCancel,
-}: BatchFormBodyProps) {
-    const nomenclatureId = form.valueGetter('nomenclatureId') as
-        | UUID
-        | undefined
-    const tareTypeId = form.valueGetter('tareTypeId') as UUID | undefined
-    const tare = form.valueGetter('tare') as AvailableTare | null | undefined
-    const quantity = form.valueGetter('quantity') as number | null | undefined
+    supplyId,
+    onCreated,
+    onClose,
+}: BatchFormProps) {
+    const setAlert = useAlertSetter()
+    const invalidate = useInvalidateEntities()
+    const [values, setValues] = useState<BatchFormValues>({})
+    const { nomenclatureId, tareTypeId, tare, quantity } = values
 
     const [[allowedRows]] = useGet<NomenclatureTareType[]>(
         nomenclatureId
@@ -213,9 +151,10 @@ function BatchFormBody({
     // nomenclature manually, it's expected to retarget the tare type.
     useEffect(() => {
         if (!selectedNomenclature?.defaultTareTypeId) return
-        form.onChange('tareTypeId', {
-            value: selectedNomenclature.defaultTareTypeId,
-        })
+        setValues((prev) => ({
+            ...prev,
+            tareTypeId: selectedNomenclature.defaultTareTypeId,
+        }))
     }, [selectedNomenclature?.defaultTareTypeId])
 
     // Cascade: existing-tare pick → fill in nomenclature/tare-type when not
@@ -227,32 +166,25 @@ function BatchFormBody({
         const tareIdSnapshot = tare.id
         const tareTypeIdSnapshot = tare.tareTypeId
         if (!tareTypeIdSnapshot) return
-        const currentTareTypeId = form.valueGetter('tareTypeId') as
-            | UUID
-            | undefined
-        if (!currentTareTypeId) {
-            form.onChange('tareTypeId', { value: tareTypeIdSnapshot })
-        }
-        const currentNomenclatureId = form.valueGetter('nomenclatureId') as
-            | UUID
-            | undefined
-        if (currentNomenclatureId) return
+        setValues((prev) =>
+            prev.tareTypeId
+                ? prev
+                : { ...prev, tareTypeId: tareTypeIdSnapshot },
+        )
         ;(async () => {
             const rows = await getData<NomenclatureTareType[]>(
                 `${Api.taretypes}/${tareTypeIdSnapshot}/nomenclatures`,
             ).catch(() => undefined)
-            // Bail out if the user has changed tare or already filled
-            // nomenclature while the lookup was in flight.
-            const stillTare = form.valueGetter('tare') as
-                | AvailableTare
-                | null
-                | undefined
-            if (stillTare?.id !== tareIdSnapshot) return
-            if (form.valueGetter('nomenclatureId')) return
-            const def = rows?.find((r) => r.isDefault)
-            if (def?.nomenclatureId) {
-                form.onChange('nomenclatureId', { value: def.nomenclatureId })
-            }
+            setValues((prev) => {
+                // Bail if the user has changed tare or already filled
+                // nomenclature while the lookup was in flight.
+                if (prev.tare?.id !== tareIdSnapshot) return prev
+                if (prev.nomenclatureId) return prev
+                const def = rows?.find((r) => r.isDefault)
+                return def?.nomenclatureId
+                    ? { ...prev, nomenclatureId: def.nomenclatureId }
+                    : prev
+            })
         })()
     }, [tare?.id])
 
@@ -262,24 +194,22 @@ function BatchFormBody({
     useEffect(() => {
         if (!tare?.id) return
         if (tare.tareTypeId === tareTypeId) return
-        form.onChange('tare', { value: null })
+        setValues((prev) => ({ ...prev, tare: null }))
     }, [tareTypeId])
 
     // Cascade: default the quantity to the current max (rounded for countable
-    // nomenclatures, mirroring TareType's CountableFields/NonCountableFields
-    // rules) — but only when the user hasn't typed anything yet. Reading the
-    // current value via valueGetter rather than depending on `quantity`
-    // avoids re-firing on every quantity change.
+    // nomenclatures) — but only when the user hasn't typed anything yet.
     useEffect(() => {
         if (!tareTypeId) return
         if (maxQuantity <= 0) return
-        const current = form.valueGetter('quantity') as
-            | number
-            | null
-            | undefined
-        if (current != null) return
-        form.onChange('quantity', {
-            value: isCountable ? Math.floor(maxQuantity) : maxQuantity,
+        setValues((prev) => {
+            if (prev.quantity != null) return prev
+            return {
+                ...prev,
+                quantity: isCountable
+                    ? Math.floor(maxQuantity)
+                    : maxQuantity,
+            }
         })
     }, [tareTypeId, isExistingTare, maxQuantity, isCountable])
 
@@ -307,128 +237,202 @@ function BatchFormBody({
         !tareValidation
     )
 
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!canSubmit) return
+        setAlert(undefined)
+        const body: BatchCreateItemRequest = {
+            nomenclatureId: nomenclatureId!,
+            tareTypeId: tareTypeId!,
+            tareId: tare?.id || undefined,
+            barcode: tare?.barcode ?? '',
+            quantity: quantity!,
+            supplyId,
+        }
+        try {
+            const response = await axios.post<BatchCreateItemResult>(
+                `${Api.items}/batch`,
+                body,
+            )
+            const result = response.data
+            const qtyTxt = formatUnits(
+                result.quantity,
+                result.units,
+                result.countable,
+            )
+            const remainingTxt =
+                result.remaining > 0
+                    ? ` Remaining capacity: ${formatUnits(result.remaining, result.units, result.countable)}.`
+                    : ''
+            setAlert({
+                message:
+                    `Created ${qtyTxt} in tare ` +
+                    `${result.tareBarcode || '(no barcode)'}` +
+                    `${result.tareTypeName ? ` (${result.tareTypeName})` : ''}.` +
+                    remainingTxt,
+            })
+            invalidate([
+                { type: 'item' },
+                { type: 'tare' },
+                { type: 'tare', id: result.tareId },
+                ...(supplyId ? [{ type: 'supply', id: supplyId }] : []),
+            ])
+            onCreated?.(result)
+        } catch (err: any) {
+            setAlert({
+                status: 'danger',
+                message: err.response?.data?.detail || err.message || 'Error',
+            })
+        }
+    }
+
+    const monoLabelSx = {
+        fontFamily: 'var(--font-mono)',
+        fontSize: 11,
+        fontWeight: 700,
+        textTransform: 'uppercase' as const,
+        letterSpacing: '0.07em',
+        color: 'var(--ink-3)',
+        mb: 0.5,
+    }
+
     return (
-        <FormElement>
-            <fieldset className="k-form-fieldset">
-                <legend className="k-form-legend">Batch create items</legend>
-                <div className="mb-3">
-                    <label className="k-label">Nomenclature</label>
+        <Box component="form" onSubmit={handleSubmit} noValidate>
+            <EditorSection number={1} title="Batch create items" done={false}>
+                <Box sx={{ gridColumn: '1 / -1' }}>
+                    <Typography sx={monoLabelSx}>Nomenclature</Typography>
                     <HierarchyPicker
                         data={nomenclatures}
                         value={nomenclatureId}
                         onChange={(v) =>
-                            form.onChange('nomenclatureId', { value: v })
+                            setValues((prev) => ({
+                                ...prev,
+                                nomenclatureId: v as UUID,
+                            }))
                         }
                     />
-                </div>
-                <div className="mb-3">
-                    <label className="k-label">Tare Type</label>
+                </Box>
+                <Box sx={{ gridColumn: '1 / -1' }}>
+                    <Typography sx={monoLabelSx}>Tare Type</Typography>
                     <HierarchyPicker
                         data={tareTypeOptions}
                         value={tareTypeId}
                         onChange={(v) =>
-                            form.onChange('tareTypeId', { value: v })
+                            setValues((prev) => ({
+                                ...prev,
+                                tareTypeId: v as UUID,
+                            }))
                         }
                     />
-                </div>
-                <div className="mb-3">
-                    <label className="k-label">Tare Barcode</label>
+                </Box>
+                <Box sx={{ gridColumn: '1 / -1' }}>
+                    <Typography sx={monoLabelSx}>Tare Barcode</Typography>
                     <TareBarcodePicker
                         tareTypeId={tareTypeId}
                         nomenclatureId={nomenclatureId}
                         value={tare ?? null}
-                        onChange={(t) => form.onChange('tare', { value: t })}
+                        onChange={(t) =>
+                            setValues((prev) => ({ ...prev, tare: t }))
+                        }
                         placeholder="Select existing, type new, or leave empty"
                     />
                     {tareValidation && (
-                        <small className="text-danger">{tareValidation}</small>
+                        <Typography
+                            variant="caption"
+                            sx={{
+                                display: 'block',
+                                mt: 0.5,
+                                color: 'var(--sig-fault-deep)',
+                            }}
+                        >
+                            {tareValidation}
+                        </Typography>
                     )}
                     {!tareValidation && isExistingTare && (
-                        <small className="text-muted">
-                            Existing tare &mdash; remaining: {tare?.remaining}
-                        </small>
+                        <Typography
+                            variant="caption"
+                            sx={{
+                                display: 'block',
+                                mt: 0.5,
+                                color: 'var(--ink-3)',
+                            }}
+                        >
+                            Existing tare — remaining: {tare?.remaining}
+                        </Typography>
                     )}
                     {!tareValidation && !isExistingTare && (
-                        <small className="text-muted">
+                        <Typography
+                            variant="caption"
+                            sx={{
+                                display: 'block',
+                                mt: 0.5,
+                                color: 'var(--ink-3)',
+                            }}
+                        >
                             New tare will be created
                             {tare?.barcode
                                 ? ` with barcode “${tare.barcode}”`
                                 : ' without barcode'}
                             .
-                        </small>
+                        </Typography>
                     )}
-                </div>
-                {isCountable ? (
-                    <div className="mb-3">
-                        <label className="k-label">Number of items</label>
-                        <NumericTextBox
-                            value={quantity ?? null}
-                            min={1}
-                            max={maxQuantity > 0 ? maxQuantity : undefined}
-                            step={1}
-                            format="n0"
-                            onChange={(e) => {
-                                const v = e.value
-                                form.onChange('quantity', {
-                                    value: v == null ? null : Math.round(v),
-                                })
-                            }}
-                        />
-                        {maxQuantity > 0 && (
-                            <small className="text-muted">
-                                Max: {maxQuantity}
-                            </small>
-                        )}
-                    </div>
-                ) : (
-                    <div className="mb-3">
-                        <label className="k-label">Quantity</label>
-                        <NumericTextBox
-                            value={quantity ?? null}
-                            min={0.001}
-                            max={maxQuantity > 0 ? maxQuantity : undefined}
-                            step={0.1}
-                            format="n3"
-                            onChange={(e) => {
-                                form.onChange('quantity', {
-                                    value: e.value ?? null,
-                                })
-                            }}
-                        />
-                        {maxQuantity > 0 && (
-                            <small className="text-muted">
-                                Max: {maxQuantity}
-                            </small>
-                        )}
-                    </div>
-                )}
-            </fieldset>
-            <div
-                className="k-form-buttons"
-                style={{
+                </Box>
+                <Box sx={{ gridColumn: '1 / -1', maxWidth: 240 }}>
+                    <Field
+                        type="number"
+                        name="quantity"
+                        label={
+                            isCountable ? 'Number of items' : 'Quantity'
+                        }
+                        value={quantity ?? ''}
+                        onChange={(e) => {
+                            const v = numberOrNull(e.target.value)
+                            setValues((prev) => ({
+                                ...prev,
+                                quantity:
+                                    v == null
+                                        ? null
+                                        : isCountable
+                                          ? Math.round(v)
+                                          : v,
+                            }))
+                        }}
+                        help={
+                            maxQuantity > 0
+                                ? `Max: ${maxQuantity}`
+                                : undefined
+                        }
+                    />
+                </Box>
+            </EditorSection>
+            <Box
+                sx={{
                     position: 'sticky',
                     bottom: 10,
                     display: 'flex',
                     justifyContent: 'space-between',
-                    gap: '0.5rem',
-                    backgroundColor: 'white',
+                    gap: 1,
+                    py: 1,
+                    background: 'var(--surface)',
+                    borderTop: '1px solid var(--line)',
+                    mt: 2,
                 }}
             >
-                <Button
-                    name="save"
-                    themeColor={canSubmit ? 'primary' : 'secondary'}
-                    icon="save"
+                <MuiButton
                     type="submit"
+                    variant="contained"
+                    color="primary"
+                    startIcon={<SaveIcon />}
                     disabled={!canSubmit}
                 >
                     Create
-                </Button>
-                {onCancel && (
-                    <Button onClick={onCancel} type="button">
+                </MuiButton>
+                {onClose && (
+                    <MuiButton onClick={onClose} type="button">
                         Cancel
-                    </Button>
+                    </MuiButton>
                 )}
-            </div>
-        </FormElement>
+            </Box>
+        </Box>
     )
 }

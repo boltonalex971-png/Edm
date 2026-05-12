@@ -34,7 +34,7 @@ const ROW_STYLE: React.CSSProperties = {
 
 const ROW_DISABLED_STYLE: React.CSSProperties = {
     ...ROW_STYLE,
-    color: '#aaa',
+    color: 'var(--ink-disabled)',
     cursor: 'default',
 }
 
@@ -43,12 +43,12 @@ const HEADER_STYLE: React.CSSProperties = {
     fontSize: '0.72rem',
     letterSpacing: '0.04em',
     textTransform: 'uppercase',
-    color: '#888',
+    color: 'var(--ink-3)',
 }
 
 const DIVIDER: React.CSSProperties = {
     height: 1,
-    background: '#eee',
+    background: 'var(--line-soft)',
     margin: '4px 0',
 }
 
@@ -89,10 +89,10 @@ export function TransferContextMenu({
                     top: y,
                     left: x,
                     zIndex: 1000,
-                    background: '#fff',
-                    border: '1px solid #ccc',
-                    borderRadius: 6,
-                    boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
+                    background: 'var(--surface)',
+                    border: '1px solid var(--line-strong)',
+                    borderRadius: 'var(--r-3)',
+                    boxShadow: 'var(--elev-popover)',
                     minWidth: 220,
                     paddingTop: 4,
                     paddingBottom: 4,
@@ -127,7 +127,7 @@ export function TransferContextMenu({
                                     <span style={{ flex: 1 }}>
                                         {t.barcode || t.tareTypeName || 'Tare'}
                                     </span>
-                                    <small style={{ color: '#888' }}>
+                                    <small style={{ color: 'var(--ink-3)' }}>
                                         {t.occupied}/{t.capacity}
                                     </small>
                                 </div>
@@ -151,7 +151,8 @@ export function TransferContextMenu({
                                         height: 12,
                                         borderRadius: 3,
                                         background:
-                                            colorForGradeId(g.id) ?? '#eee',
+                                            colorForGradeId(g.id) ??
+                                            'var(--surface-3)',
                                         border: '1px solid rgba(0,0,0,0.15)',
                                     }}
                                 />
@@ -167,8 +168,8 @@ export function TransferContextMenu({
                                     width: 12,
                                     height: 12,
                                     borderRadius: 3,
-                                    background: '#e3f2fd',
-                                    border: '1px solid #90caf9',
+                                    background: 'var(--surface-3)',
+                                    border: '1px solid var(--line-strong)',
                                 }}
                             />
                             (No grade)

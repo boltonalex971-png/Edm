@@ -1,6 +1,7 @@
 ﻿import React from 'react';
-import { Switch, Route, useRouteMatch } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { SubRootPage } from '@microprojects/edm-components/components';
+import { useBasePath } from '@microprojects/edm-components/hooks';
 import {
     SettingsInputComponent as SettingsInputComponentIcon,
     Description as DescriptionIcon,
@@ -11,7 +12,7 @@ import { OperationPlugins } from './OperationPlugins';
 import { DriverPlugins } from './DriverPlugins';
 
 export function Plugins() {
-    let { path } = useRouteMatch();
+    const path = useBasePath();
 
     const menuItems = [
         { label: 'Drivers', path: `${path}/drivers`, icon: <SettingsInputComponentIcon fontSize="small" /> },
@@ -21,20 +22,12 @@ export function Plugins() {
 
     return (
         <SubRootPage title="Plugins" menuItems={menuItems}>
-            <Switch>
-                <Route exact path={path}>
-                    <p>Select one of the options above</p>
-                </Route>
-                <Route path={`${path}/drivers`}>
-                    <DriverPlugins />
-                </Route>
-                <Route path={`${path}/profiles`}>
-                    <ProfilePlugins />
-                </Route>
-                <Route path={`${path}/operations`}>
-                    <OperationPlugins />
-                </Route>
-            </Switch>
+            <Routes>
+                <Route index element={<p>Select one of the options above</p>} />
+                <Route path="drivers" element={<DriverPlugins />} />
+                <Route path="profiles" element={<ProfilePlugins />} />
+                <Route path="operations" element={<OperationPlugins />} />
+            </Routes>
         </SubRootPage>
     );
 }

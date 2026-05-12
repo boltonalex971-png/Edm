@@ -1,60 +1,49 @@
-import Api from '@features/api/api.ts'
-import { PageTitle } from '@logistics/components/PageTitle'
-import { Search } from '@logistics/components/Search'
 import { BatchItemCreate } from '@logistics/components/items/BatchItemCreate.tsx'
 import { ItemSearch } from '@logistics/components/items/ItemSearch.tsx'
 import type { ItemSearchQuery } from '@logistics/data/types'
 import { useRouteMatch } from '@logistics/hooks/routerHooks'
-import React, { useEffect, useState } from 'react'
-import { NavLink as Link } from 'react-router'
-import { useParams } from 'react-router-dom'
-import { Nav, NavItem, NavLink } from 'reactstrap'
+import { SubRootPage } from '@microprojects/edm-components/components/chrome/SubRootPage'
+import { useBasePath } from '@microprojects/edm-components/hooks/useBasePath'
+import { Search } from '@microprojects/edm-components/components/page/Search'
+import {
+    Add as AddIcon,
+    CheckCircleOutlined as ConsumedIcon,
+    Inventory2Outlined as AvailableIcon,
+    Search as SearchIcon,
+} from '@mui/icons-material'
+import { useEffect, useState } from 'react'
 
 export function Items() {
-    const { path, name } = useRouteMatch()
-    const param = useParams()
-    const [panel, setPanel] = useState<'search' | 'create'>('search')
-    const [linkPanel, setLinkPanel] = useState<string>()
+    const { name } = useRouteMatch()
+    const path = useBasePath()
     const [query, setQuery] = useState<ItemSearchQuery>()
     useEffect(() => {
         setQuery({ active: name.includes('remaining') })
     }, [name])
-    const searchClick = (e) => {
-        setPanel('search')
-        setLinkPanel(undefined)
-    }
-    const createClick = (e) => {
-        setPanel('create')
-        setLinkPanel(undefined)
-    }
+
+    const menuItems = [
+        { label: 'Available', path: `${path}/remaining`, icon: <AvailableIcon fontSize="small" /> },
+        { label: 'Consumed', path: `${path}/consumed`, icon: <ConsumedIcon fontSize="small" /> },
+    ]
 
     return (
-        <>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <PageTitle title="Items" />
-                <Nav pills>
-                    <NavItem>
-                        <NavLink tag={Link} to={`${path}/remaining`}>
-                            Available
-                        </NavLink>
-                    </NavItem>
-                    <NavItem>
-                        <NavLink tag={Link} to={`${path}/consumed`}>
-                            Consumed
-                        </NavLink>
-                    </NavItem>
-                </Nav>
-            </div>
-            <hr />
-            <div>
-                <Search
-                    api={Api.items}
-                    stubMessage={'Select an action'}
-                    type={'none'}
-                    search={<ItemSearch query={query} />}
-                    detail={<BatchItemCreate />}
-                />
-            </div>
-        </>
+        <SubRootPage title="Items" menuItems={menuItems}>
+            <Search
+                actions={[
+                    {
+                        key: 'search',
+                        label: 'Search',
+                        icon: <SearchIcon fontSize="small" />,
+                        panel: <ItemSearch query={query} />,
+                    },
+                    {
+                        key: 'create',
+                        label: 'Create new',
+                        icon: <AddIcon fontSize="small" />,
+                        panel: <BatchItemCreate />,
+                    },
+                ]}
+            />
+        </SubRootPage>
     )
 }

@@ -2,8 +2,17 @@ import Api from '@features/api/api'
 import { useEntityToken } from '@logistics/hooks/entityRefresh'
 import { useGet } from '@logistics/hooks/hooks'
 import { useBasePath } from '@logistics/hooks/routerHooks'
-import { Field } from '@progress/kendo-react-form'
-import { Checkbox, Input } from '@progress/kendo-react-inputs'
+import {
+    EditorSection,
+    Field,
+    Properties,
+    Property,
+} from '@microprojects/edm-components/components'
+import {
+    Box,
+    Checkbox,
+    FormControlLabel,
+} from '@mui/material'
 import { type EffectCallback, useEffect, useState } from 'react'
 import { CardChecklist } from 'react-bootstrap-icons'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -12,14 +21,13 @@ import type {
     Nomenclature,
     UUID,
 } from '../../../data/types'
-import { DropDownComp } from '../../DropDownCell'
 import {
     Detail,
     type DetailProps,
     EMPTY_GUID,
-    Editor,
     Info,
     MasterDetail,
+    MuiEditor,
 } from '../../MasterDetail'
 import { NomenclatureTabs } from './NomenclatureTabs'
 
@@ -84,20 +92,22 @@ export function NomenclatureDetail({ id, ...props }: NomenclatureDetailProps) {
                 <Info
                     content={
                         data && (
-                            <>
-                                <div>
-                                    <p>
-                                        <span>Category: </span>
-                                        <span>{data.category}</span>
-                                    </p>
-                                </div>
-                            </>
+                            <Properties>
+                                <Property
+                                    label="Category"
+                                    value={data.category}
+                                />
+                                <Property
+                                    label="Countable"
+                                    value={data.countable ? 'Yes' : 'No'}
+                                />
+                            </Properties>
                         )
                     }
                 />
             }
             editor={
-                <Editor
+                <MuiEditor
                     type={props.type}
                     api={props.api}
                     path={props.path}
@@ -105,54 +115,99 @@ export function NomenclatureDetail({ id, ...props }: NomenclatureDetailProps) {
                     data={data}
                     setData={setData}
                     onUpdate={props.onUpdate}
-                    content={
-                        <fieldset className={'k-form-fieldset'}>
-                            <legend className={'k-form-legend'}>
-                                Edit {props.type} data
-                            </legend>
-                            <div className="mb-3">
-                                <Field
-                                    name={'name'}
-                                    component={Input}
-                                    label={'Name'}
-                                />
-                            </div>
-                            <div className="mb-3">
-                                <Field
-                                    name={'description'}
-                                    component={Input}
-                                    label={'Description'}
-                                />
-                            </div>
-                            <div className="mb-3" style={{ width: '400px' }}>
-                                <Field
-                                    name={'category'}
-                                    label={'Category'}
-                                    component={(compProps) => (
-                                        <DropDownComp
-                                            {...compProps}
-                                            loading={!categories}
-                                            data={[
-                                                { name: '' },
-                                                ...categories?.map((c) => ({
-                                                    name: c,
-                                                })),
-                                            ]}
-                                            textField="name"
-                                            dataItemKey="name"
-                                        />
-                                    )}
-                                />
-                            </div>
-                            <div className="mb-3">
-                                <Field
-                                    name={'countable'}
-                                    component={Checkbox}
-                                    label={'Countable'}
-                                />
-                            </div>
-                        </fieldset>
-                    }
+                    content={({ values, handleChange }) => {
+                        const nameMissing =
+                            !!values.id &&
+                            (!values.name || !String(values.name).trim())
+                        const identityFilled = [values.name, values.description]
+                            .filter(
+                                (v) => v && String(v).trim().length > 0,
+                            ).length
+                        const classFilled = [
+                            !!values.category,
+                            values.countable !== undefined,
+                        ].filter(Boolean).length
+                        return (
+                            <Box>
+                                <EditorSection
+                                    number={1}
+                                    title="Identity"
+                                    filled={identityFilled}
+                                    total={2}
+                                    done={identityFilled === 2 && !nameMissing}
+                                >
+                                    <Field
+                                        full
+                                        name="name"
+                                        label="Name"
+                                        required
+                                        value={(values.name as string) ?? ''}
+                                        onChange={handleChange}
+                                        state={
+                                            nameMissing ? 'invalid' : 'pristine'
+                                        }
+                                        help={
+                                            nameMissing
+                                                ? 'A nomenclature must have a name.'
+                                                : 'Shown across the tree, breadcrumbs, and pickers.'
+                                        }
+                                    />
+                                    <Field
+                                        full
+                                        kind="textarea"
+                                        name="description"
+                                        label="Description"
+                                        rows={2}
+                                        value={
+                                            (values.description as string) ??
+                                            ''
+                                        }
+                                        onChange={handleChange}
+                                    />
+                                </EditorSection>
+                                <EditorSection
+                                    number={2}
+                                    title="Classification"
+                                    filled={classFilled}
+                                    total={2}
+                                    done={classFilled === 2}
+                                >
+                                    <Field
+                                        full
+                                        kind="select"
+                                        name="category"
+                                        label="Category"
+                                        placeholder="—"
+                                        value={
+                                            (values.category as string) ?? ''
+                                        }
+                                        onChange={handleChange}
+                                        options={(categories || []).map(
+                                            (c) => ({ value: c, label: c }),
+                                        )}
+                                    />
+                                    <FormControlLabel
+                                        sx={{ mt: 1 }}
+                                        label="Countable"
+                                        control={
+                                            <Checkbox
+                                                checked={!!values.countable}
+                                                onChange={(e) =>
+                                                    handleChange({
+                                                        target: {
+                                                            name: 'countable',
+                                                            value: e.target
+                                                                .checked,
+                                                        },
+                                                    })
+                                                }
+                                            />
+                                        }
+                                    />
+                                </EditorSection>
+                            </Box>
+                        )
+                    }}
                 />
             }
             relations={

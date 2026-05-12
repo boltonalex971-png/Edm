@@ -11,7 +11,7 @@ import type { RootState } from '@logistics/store.ts'
 import axios from 'axios'
 import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import api from './features/api/api'
 import { getUserFromToken } from './features/auth/authUtils'
@@ -57,17 +57,13 @@ export function App() {
 
     if (isOperator) {
         // Operators get the standard Logistics shell with header + footer but
-        // without the navigation menu (the desktop is the only surface they
-        // can act on).
+        // without the navigation menu — the desktop IS their home page, so it
+        // is mounted directly at the plugin root rather than under /desktop.
         return (
             <Layout hideMenu>
                 <Routes>
-                    <Route path="/desktop/*" element={<OperatorDesktop />} />
                     <Route path="/changes" element={<Changelog />} />
-                    <Route
-                        path="*"
-                        element={<Navigate to="/desktop" replace />}
-                    />
+                    <Route path="/*" element={<OperatorDesktop />} />
                 </Routes>
             </Layout>
         )

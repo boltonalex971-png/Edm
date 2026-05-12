@@ -112,6 +112,14 @@ function useStore(): LockStoreValue {
     return ctx;
 }
 
+/** Optional variant — returns null when LockProvider is absent instead of
+ *  throwing. Used by the state/acquire hooks so consumers without a provider
+ *  (e.g. Tech, which doesn't wire SignalR locks) can still call them safely
+ *  and just see "no lock" everywhere. */
+function useOptionalStore(): LockStoreValue | null {
+    return useContext(LockStoreContext);
+}
+
 /** Bridge-facing setters. Used by a plugin-side SignalR bridge to apply
  *  incoming lock / claim messages observed from other clients. */
 export function useLockSetters(): Pick<LockStoreValue, 'setEntityLock' | 'setOrderClaim'> {
@@ -139,11 +147,15 @@ export function useEntityLockState(
     type: string | undefined,
     id: string | undefined,
 ): LockState {
-    const s = useStore();
-    const subscribe = useMemo(() => subscribeFactory(s.listeners), [s]);
-    const getCurrentConnectionId = s.publisher.getCurrentConnectionId;
+    const s = useOptionalStore();
+    const noopSubscribe = useCallback(() => () => {}, []);
+    const subscribe = useMemo(
+        () => (s ? subscribeFactory(s.listeners) : noopSubscribe),
+        [s, noopSubscribe],
+    );
+    const getCurrentConnectionId = s?.publisher.getCurrentConnectionId;
     const getSnapshot = useCallback((): LockState => {
-        if (!type || !id) return NO_LOCK;
+        if (!s || !type || !id) return NO_LOCK;
         const holder = s.entityLocks.current.get(entityKey(type, id));
         if (!holder) return NO_LOCK;
         const ownConn = getCurrentConnectionId?.() ?? null;
@@ -167,11 +179,15 @@ export function useEntityLockState(
 }
 
 export function useOrderClaimState(orderId: string | undefined): LockState {
-    const s = useStore();
-    const subscribe = useMemo(() => subscribeFactory(s.listeners), [s]);
-    const getCurrentConnectionId = s.publisher.getCurrentConnectionId;
+    const s = useOptionalStore();
+    const noopSubscribe = useCallback(() => () => {}, []);
+    const subscribe = useMemo(
+        () => (s ? subscribeFactory(s.listeners) : noopSubscribe),
+        [s, noopSubscribe],
+    );
+    const getCurrentConnectionId = s?.publisher.getCurrentConnectionId;
     const getSnapshot = useCallback((): LockState => {
-        if (!orderId) return NO_LOCK;
+        if (!s || !orderId) return NO_LOCK;
         const holder = s.orderClaims.current.get(orderId);
         if (!holder) return NO_LOCK;
         const ownConn = getCurrentConnectionId?.() ?? null;
@@ -201,10 +217,10 @@ export function useAcquireEntityLock(
     active: boolean,
     username: string,
 ) {
-    const s = useStore();
+    const s = useOptionalStore();
 
     useEffect(() => {
-        if (!active || !type || !id || !username) return;
+        if (!s || !active || !type || !id || !username) return;
 
         // Apply locally so the same-tab UI flips immediately even before
         // the hub round-trips the broadcast back.
@@ -236,10 +252,10 @@ export function useAcquireOrderClaim(
     active: boolean,
     username: string,
 ) {
-    const s = useStore();
+    const s = useOptionalStore();
 
     useEffect(() => {
-        if (!active || !orderId || !username) return;
+        if (!s || !active || !orderId || !username) return;
 
         const holder: LockHolder = {
             username,

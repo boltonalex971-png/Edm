@@ -3,29 +3,53 @@
     --anchor-color: #0366d6;
 }
 
+/* =========================================================================
+   Logistics — warm "Kraft" theme. Overrides the package's cool Steel tokens
+   for the Logistics SPA only (scoped to [data-plugin="logistics"]). Pairs
+   honey-amber accents with cream neutrals so the chrome reads warehouse-warm
+   and is visibly distinct from the cobalt-on-steel of Technologies.
+   Header gets the same accent-tint wash + 2px brand stripe recipe as Tech.
+   ========================================================================= */
+[data-plugin="logistics"] {
+    /* Warm cream neutrals */
+    --bg:            #F2EDE2;
+    --surface-2:     #FAF5EB;
+    --surface-3:     #F1EAD9;
+    --surface-sunk:  #E5DAC2;
+
+    /* Warm slate lines */
+    --line:          #DED6C5;
+    --line-soft:     #ECE5D5;
+    --line-strong:   #C5BBA4;
+
+    /* Honey-amber brand accent */
+    --accent:        #A8651D;
+    --accent-deep:   #7A4711;
+    --accent-soft:   #F0E0C2;
+    --accent-tint:   #FAF1DC;
+    --accent-fg:     #FFFFFF;
+}
+
+/* Backstop for the html/body bg — token vars defined on .page-root don't
+   reach <body>, so a hard-set warm bg keeps scroll bounce / overscroll from
+   exposing the cool default. */
+body {
+    background: #F2EDE2;
+}
+
+/* Brand-tinted top bar: pale amber wash + 2px amber stripe at the bottom.
+   Same recipe Tech uses on .doc-top, just swapped to the Logistics accent. */
+[data-plugin="logistics"] .doc-top {
+    background: var(--accent-tint);
+    box-shadow: inset 0 -2px 0 var(--accent);
+}
+
 a {
     color: var(--anchor-color);
 }
 
 code {
-    color: #e01a76;
-}
-
-.footer-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    align-items: center;
-    font-size: 0.85rem;
-    color: #666;
-}
-
-.footer-meta a {
-    color: var(--anchor-color);
-}
-
-.footer-meta .footer-sep {
-    color: #bbb;
+    color: var(--accent-deep);
 }
 
 .changelog {
@@ -43,7 +67,7 @@ code {
 .changelog h2 {
     font-size: 1.25rem;
     margin: 1.5rem 0 0.5rem;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--line-soft);
     padding-bottom: 0.25rem;
 }
 
@@ -58,7 +82,7 @@ code {
 
 .changelog code {
     color: inherit;
-    background: #f6f8fa;
+    background: var(--surface-2);
     padding: 0.1em 0.3em;
     border-radius: 3px;
     font-size: 0.92em;
@@ -76,118 +100,6 @@ code {
 
 .changelog th,
 .changelog td {
-    border: 1px solid #ddd;
+    border: 1px solid var(--line);
     padding: 0.25rem 0.5rem;
-}
-
-.btn-primary {
-    color: #fff;
-    background-color: #1b6ec2;
-    border-color: #1861ac;
-}
-
-.disable-select {
-    user-select: none;
-    /* supported by Chrome and Opera */
-    -webkit-user-select: none;
-    /* Safari */
-    -moz-user-select: none;
-    /* Firefox */
-    -ms-user-select: none;
-    /* Internet Explorer/Edge */
-}
-
-.k-label {
-    font-size: 0.9rem !important;
-    font-weight: lighter;
-}
-
-.nav-link {
-    margin: 0.1em;
-    display: flex;
-    align-items: center;
-}
-
-.nav-link:hover {
-    background-color: #d2e6fd;
-    border-radius: 0.5em;
-}
-
-/* Detail editors: non-text Kendo inputs size to their content rather than
-   spanning 100% of the form column. Text Inputs (.k-input on its own) keep
-   the default full-width behaviour so labels with longer text still read.
-   `min-width` keeps empty pickers (no value, no placeholder rendering) at a
-   usable size — without it DropDownTree collapses to just the chevron. */
-.k-card-body .k-form-fieldset .k-numerictextbox,
-.k-card-body .k-form-fieldset .k-dropdown,
-.k-card-body .k-form-fieldset .k-dropdownlist,
-.k-card-body .k-form-fieldset .k-dropdowntree,
-.k-card-body .k-form-fieldset .k-combobox,
-.k-card-body .k-form-fieldset .k-datepicker,
-.k-card-body .k-form-fieldset .k-datetimepicker,
-.k-card-body .k-form-fieldset .k-timepicker,
-.k-card-body .k-form-fieldset .k-multiselect {
-    width: fit-content;
-    /* Floor keeps an empty picker visible (chevron + a few chars). The
-       picker component sets `style.minWidth` to the widest leaf label so
-       the input grows to fit the longest selection in Detail editors;
-       toolbar callers (Repacking, Allocation, …) override that by passing
-       an explicit `width` prop, which becomes inline `style.width` and
-       wins over this `fit-content`. The dropdown POPUP is sized
-       independently by the component (popupSettings.width). */
-    min-width: 7em;
-    max-width: 100%;
-}
-
-/* Let the inner value display drive the picker's outer width. Kendo's
-   default white-space:nowrap + text-overflow:ellipsis makes the outer
-   `fit-content` measurement see only the truncated text, so the picker
-   stays at its min-width even when a long item is selected. Removing the
-   ellipsis lets fit-content grow naturally; max-width: 100% above still
-   caps it at the form column width. */
-.k-card-body .k-form-fieldset .k-dropdown .k-input-inner,
-.k-card-body .k-form-fieldset .k-dropdownlist .k-input-inner,
-.k-card-body .k-form-fieldset .k-dropdowntree .k-input-inner,
-.k-card-body .k-form-fieldset .k-combobox .k-input-inner {
-    text-overflow: clip;
-    overflow: visible;
-    min-width: 0;
-}
-
-/* Field descriptions / hints (small.text-muted, small.text-danger) render
-   on their own line directly beneath the field. Without this they flow
-   inline next to the now-narrower non-text pickers and end up to the right
-   of the input rather than under it. */
-.k-card-body .k-form-fieldset small {
-    display: block;
-    margin-top: 0.25rem;
-}
-
-/* HierarchyPicker popup width — Kendo's internal `useDropdownWidth` hook
-   resets popupSettings.width to the picker's offsetWidth on mount, so the
-   popup defaults to picker-width and clips wide tree rows. We tag the
-   popup with `hierarchy-popup-auto-width` (via popupSettings.className)
-   and override the inline width here so the popup grows to its content.
-   The selector is unscoped on purpose — the popup is portal-rendered to
-   document.body, not inside the form column. */
-.k-animation-container.hierarchy-popup-auto-width {
-    width: max-content !important;
-    max-width: 90vw;
-    /* Vertical bound — keeps the popup from extending past the viewport
-       and forcing the page to scroll. The picker's onOpen handler
-       overrides this inline with the exact distance from the popup top
-       to the viewport bottom. */
-    max-height: 70vh;
-}
-.k-animation-container.hierarchy-popup-auto-width .k-popup,
-.k-animation-container.hierarchy-popup-auto-width .k-list-container,
-.k-animation-container.hierarchy-popup-auto-width .k-treeview {
-    width: auto;
-    min-width: 0;
-}
-/* Let the inner scroll once the popup hits its max-height. */
-.k-animation-container.hierarchy-popup-auto-width .k-popup,
-.k-animation-container.hierarchy-popup-auto-width .k-list-container {
-    max-height: inherit;
-    overflow-y: auto;
 }

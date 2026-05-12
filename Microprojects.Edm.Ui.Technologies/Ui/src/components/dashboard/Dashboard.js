@@ -1,6 +1,7 @@
 ﻿import React from 'react';
-import { Switch, Route, useRouteMatch, Redirect } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { SubRootPage } from '@microprojects/edm-components/components';
+import { useBasePath } from '@microprojects/edm-components/hooks';
 import {
     PlayCircleOutline as PlayCircleOutlineIcon,
     PeopleOutline as PeopleOutlineIcon,
@@ -11,7 +12,7 @@ import Users from './Users';
 import Operations from './Operations';
 
 export function Dashboard() {
-    let { path } = useRouteMatch();
+    const path = useBasePath();
 
     const menuItems = [
         { label: 'Operations', path: `${path}/operations`, icon: <PlayCircleOutlineIcon fontSize="small" /> },
@@ -21,20 +22,12 @@ export function Dashboard() {
 
     return (
         <SubRootPage title="Dashboard" menuItems={menuItems}>
-            <Switch>
-                <Route exact path={path}>
-                    <Redirect to={`${path}/operations`} />
-                </Route>
-                <Route path={`${path}/operations/:when?`}>
-                    <Operations />
-                </Route>
-                <Route path={`${path}/users`}>
-                    <Users />
-                </Route>
-                <Route path={`${path}/schedule`}>
-                    <Schedule />
-                </Route>
-            </Switch>
+            <Routes>
+                <Route index element={<Navigate to="operations" replace />} />
+                <Route path="operations/:when?" element={<Operations />} />
+                <Route path="users" element={<Users />} />
+                <Route path="schedule" element={<Schedule />} />
+            </Routes>
         </SubRootPage>
     );
 }

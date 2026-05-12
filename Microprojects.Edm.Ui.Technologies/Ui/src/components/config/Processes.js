@@ -2,8 +2,8 @@
 import PropTypes from 'prop-types';
 import Api from '../api';
 import { useGet } from '@microprojects/edm-components/hooks';
-import { useHistory, useParams } from 'react-router-dom';
-import { useRouteMatch } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useBasePath } from '@microprojects/edm-components/hooks';
 import { MasterDetail, reloadMaster, Detail, Editor } from '@microprojects/edm-components/components';
 import { ProcessTabs } from './process/ProcessTabs';
 import { Folder } from './Folder';
@@ -16,8 +16,8 @@ import { EditorSection } from '@microprojects/edm-components/components';
 import { Field } from '@microprojects/edm-components/components';
 
 export function Processes() {
-    let { path } = useRouteMatch();
-    const history = useHistory();
+    const path = useBasePath();
+    const navigate = useNavigate();
     const api = Api.processes;
     return (
         <MasterDetail
@@ -31,7 +31,7 @@ export function Processes() {
                     api={api}
                     path={path}
                     onChange={() => reloadMaster()}
-                    onClose={() => history.push(path)}
+                    onClose={() => navigate(path)}
                 />
             }
         />

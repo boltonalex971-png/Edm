@@ -130,7 +130,7 @@ public class NomenclatureService : ServiceBase<Nomenclature>, INomenclatureServi
         var query = Set().AsNoTracking()
             .Include(i => i.DefaultTareType)
             .Include(e => e.Meta)
-            .Where(e => e.Meta.Deleted == null);
+            .Where(e => e.Meta.Deleted == null && e.Meta.Completed == null);
 
         if (predicate != null)
         {
@@ -143,9 +143,11 @@ public class NomenclatureService : ServiceBase<Nomenclature>, INomenclatureServi
     public async Task<IEnumerable<NomenclatureTareType>> GetAllowedTareTypes(Guid nomenclatureId)
     {
         return await Db.NomenclatureTareTypes.AsNoTracking()
-            .Include(x => x.TareType)
+            .Include(x => x.TareType).ThenInclude(t => t.Meta)
             .Include(x => x.Nomenclature)
-            .Where(x => x.NomenclatureId == nomenclatureId)
+            .Where(x => x.NomenclatureId == nomenclatureId
+                && x.TareType.Meta.Deleted == null
+                && x.TareType.Meta.Completed == null)
             .ToListAsync();
     }
 

@@ -5,7 +5,7 @@ import { DropDownCell } from '@microprojects/edm-components/components';
 import { useGet } from '@microprojects/edm-components/hooks';
 import { HostDetail } from '../Hosts';
 import Api from '../../api';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 DeviceHostsTab.propTypes = {
     id: PropTypes.number,
@@ -14,7 +14,7 @@ DeviceHostsTab.propTypes = {
 }
 
 export function DeviceHostsTab({ id, api, onDetailSelected, parents }) {
-    const history = useHistory();
+    const navigate = useNavigate();
     const [[data]] = useGet(`${api}/hosts`);
 
     const columns = [
@@ -39,7 +39,7 @@ export function DeviceHostsTab({ id, api, onDetailSelected, parents }) {
                                 api={Api.hosts}
                                 path={path}
                                 onClose={() => onDetailSelected()}
-                                onUp={() => history.push(`${path}/${hostId}`)}
+                                onUp={() => navigate(`${path}/${hostId}`)}
                                 onUpdate={itemUpdate}
                                 parents={parents}
                             />

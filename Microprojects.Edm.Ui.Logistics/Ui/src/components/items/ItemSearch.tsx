@@ -1,7 +1,10 @@
 import api from '@features/api/api'
 import Api from '@features/api/api'
 import { Loading } from '@features/utils/Utils'
-import { type AlertState, InlineAlert } from '@logistics/components/InlineAlert'
+import {
+    type AlertState,
+    useAlertSetter,
+} from '@logistics/components/InlineAlert'
 import { Detail } from '@logistics/components/MasterDetail'
 import { ItemDetail } from '@logistics/components/items/ItemDetail'
 import '@logistics/components/items/ItemGenealogyTree.css'
@@ -16,32 +19,37 @@ import type {
     DataItem,
     Item,
     ItemSearchQuery,
-    UUID,
 } from '@logistics/data/types'
 import {
     useEntityToken,
     useInvalidateEntities,
 } from '@logistics/hooks/entityRefresh'
 import { usePost } from '@logistics/hooks/hooks'
-import { process } from '@progress/kendo-data-query'
-import { Button } from '@progress/kendo-react-buttons'
+import { Search as SearchIcon } from '@mui/icons-material'
 import {
-    Grid,
-    GridColumn,
-    type GridDetailRowProps,
-    type GridExpandChangeEvent,
-    type GridPageChangeEvent,
-    type GridRowClickEvent,
-} from '@progress/kendo-react-grid'
+    Alert,
+    Box,
+    Button as MuiButton,
+    Chip,
+    InputAdornment,
+    TextField,
+} from '@mui/material'
 import {
-    InputPrefix,
-    TextBox,
-    type TextBoxChangeEvent,
-} from '@progress/kendo-react-inputs'
-import { Error } from '@progress/kendo-react-labels'
+    DataGrid,
+    type GridColDef,
+    type GridRowParams,
+    GRID_DETAIL_PANEL_TOGGLE_FIELD,
+} from '@mui/x-data-grid'
 import type React from 'react'
-import { type ReactElement, useEffect, useMemo, useRef, useState } from 'react'
-import { Diagram3, Search } from 'react-bootstrap-icons'
+import {
+    type ReactElement,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react'
+import { Diagram3 } from 'react-bootstrap-icons'
 
 type ItemSearchProps = {
     onClose: () => void
@@ -54,7 +62,69 @@ type ItemSearchProps = {
     ) => void
 }
 
-type TareRow = TareGroup & { expanded?: boolean }
+type TareRow = TareGroup & { id: string }
+
+function sourceChip(items: Item[]) {
+    const hasOutput = items.some((i) => i.isOutput)
+    const hasSupply = items.some((i) => i.supplyId && !i.isOutput)
+    const hasStore = items.some((i) => i.isStore)
+    if (hasOutput) {
+        return (
+            <Chip
+                size="small"
+                label="Output"
+                title="This tare contains items produced by an order execution."
+                sx={{
+                    height: 22,
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 11,
+                    background: 'var(--ent-operation-soft)',
+                    color: 'var(--ent-operation-deep)',
+                    border: '1px solid var(--ent-operation-deep)',
+                }}
+            />
+        )
+    }
+    if (hasSupply) {
+        return (
+            <Chip
+                size="small"
+                label="Supply"
+                title="This tare contains items received through a supply."
+                sx={{
+                    height: 22,
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 11,
+                    background: 'var(--ent-supply-soft)',
+                    color: 'var(--ent-supply-deep)',
+                    border: '1px solid var(--ent-supply-deep)',
+                }}
+            />
+        )
+    }
+    if (hasStore) {
+        return (
+            <Chip
+                size="small"
+                label="Store"
+                title="This tare contains items created directly from store."
+                sx={{
+                    height: 22,
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 11,
+                    background: 'var(--surface-2)',
+                    color: 'var(--ink-2)',
+                    border: '1px solid var(--line-strong)',
+                }}
+            />
+        )
+    }
+    return (
+        <Box component="span" sx={{ color: 'var(--ink-3)' }} title="No supply or process recorded.">
+            —
+        </Box>
+    )
+}
 
 export const ItemSearch = (props: ItemSearchProps) => {
     const token = useEntityToken([{ type: 'item' }, { type: 'tare' }])
@@ -66,9 +136,7 @@ export const ItemSearch = (props: ItemSearchProps) => {
     )
     const [subDetail, setSubDetail] = useState<ReactElement | undefined>()
     const [filter, setFilter] = useState<string>('')
-    const [alert, setAlert] = useState<AlertState>()
-    const [expandedTares, setExpandedTares] = useState<Set<string>>(new Set())
-    const [page, setPage] = useState({ skip: 0, take: 10 })
+    const setAlert = useAlertSetter()
     const [selectedItemIds, setSelectedItemIds] = useState<Set<string>>(
         new Set(),
     )
@@ -93,161 +161,190 @@ export const ItemSearch = (props: ItemSearchProps) => {
             : items
         return groupByTare(filtered).map((g) => ({
             ...g,
-            expanded: expandedTares.has(g.tare.id || 'no-tare'),
+            id: g.tare.id || 'no-tare',
         }))
-    }, [filter, items, expandedTares])
+    }, [filter, items])
 
-    const pagedData = useMemo(
-        () => process(tareRows, { skip: page.skip, take: page.take }),
-        [tareRows, page.skip, page.take],
-    )
-
-    const filterChange = (event: TextBoxChangeEvent) => {
-        setFilter(event.value?.toString() || '')
-        setPage({ skip: 0, take: 10 })
-    }
-
-    const pageChange = (event: GridPageChangeEvent) => {
-        setPage({ ...event.page, take: 10 })
-    }
-
-    const onExpandChange = (event: GridExpandChangeEvent) => {
-        const tareId = event.dataItem.tare.id || 'no-tare'
-        setExpandedTares((prev) => {
-            const next = new Set(prev)
-            if (next.has(tareId)) {
-                next.delete(tareId)
-            } else {
-                next.add(tareId)
-            }
-            return next
-        })
-    }
-
-    const rowClick = (event: GridRowClickEvent) => {
-        const row = event.dataItem as TareRow
-        if (props.lookup) {
-            return
-        }
-        setSubDetail(
-            <TareDetail
-                tareId={row.tare.id}
-                label={row.tare.barcode}
-                onClose={() => setSubDetail(undefined)}
-            />,
-        )
-    }
-
-    const handleSlotSelect = (
-        item: Item,
-        tareId: string,
-        shiftKey: boolean,
-    ) => {
-        if (
-            shiftKey &&
-            lastClickedRef.current &&
-            lastClickedRef.current.tareId === tareId
-        ) {
-            const group = tareRows.find(
-                (r) => (r.tare.id || 'no-tare') === tareId,
-            )
-            if (group) {
-                const sorted = [...group.items]
-                    .filter((i) => i.address != null)
-                    .sort((a, b) => a.address! - b.address!)
-                const lastIdx = sorted.findIndex(
-                    (i) => i.id === lastClickedRef.current!.itemId,
-                )
-                const curIdx = sorted.findIndex((i) => i.id === item.id)
-                if (lastIdx >= 0 && curIdx >= 0) {
-                    const lo = Math.min(lastIdx, curIdx)
-                    const hi = Math.max(lastIdx, curIdx)
-                    setSelectedItemIds((prev) => {
-                        const next = new Set(prev)
-                        for (let i = lo; i <= hi; i++) {
-                            next.add(sorted[i].id)
-                        }
-                        return next
-                    })
-                    return
+    const handleSlotSelect = useCallback(
+        (item: Item, tareId: string, shiftKey: boolean) => {
+            if (
+                shiftKey &&
+                lastClickedRef.current &&
+                lastClickedRef.current.tareId === tareId
+            ) {
+                const group = tareRows.find((r) => r.id === tareId)
+                if (group) {
+                    const sorted = [...group.items]
+                        .filter((i) => i.address != null)
+                        .sort((a, b) => a.address! - b.address!)
+                    const lastIdx = sorted.findIndex(
+                        (i) => i.id === lastClickedRef.current!.itemId,
+                    )
+                    const curIdx = sorted.findIndex((i) => i.id === item.id)
+                    if (lastIdx >= 0 && curIdx >= 0) {
+                        const lo = Math.min(lastIdx, curIdx)
+                        const hi = Math.max(lastIdx, curIdx)
+                        setSelectedItemIds((prev) => {
+                            const next = new Set(prev)
+                            for (let i = lo; i <= hi; i++) {
+                                next.add(sorted[i].id)
+                            }
+                            return next
+                        })
+                        return
+                    }
                 }
             }
-        }
-        setSelectedItemIds((prev) => {
-            const next = new Set(prev)
-            if (next.has(item.id)) {
-                next.delete(item.id)
-            } else {
-                next.add(item.id)
-            }
-            return next
-        })
-        lastClickedRef.current = { tareId, itemId: item.id }
-    }
+            setSelectedItemIds((prev) => {
+                const next = new Set(prev)
+                if (next.has(item.id)) {
+                    next.delete(item.id)
+                } else {
+                    next.add(item.id)
+                }
+                return next
+            })
+            lastClickedRef.current = { tareId, itemId: item.id }
+        },
+        [tareRows],
+    )
 
-    const doRefresh = () => {
+    const doRefresh = useCallback(() => {
         invalidate([{ type: 'item' }, { type: 'tare' }])
         setSelectedItemIds(new Set())
-    }
+    }, [invalidate])
 
     const allocateSelected = () => {
-        if (!props.selected || selectedItemIds.size === 0 || !items) {
-            return
-        }
+        if (!props.selected || selectedItemIds.size === 0 || !items) return
         const selected = items
             .filter((i) => selectedItemIds.has(i.id))
             .sort((a, b) => (a.address ?? 0) - (b.address ?? 0))
         props.selected(selected, setAlert, doRefresh)
     }
 
-    const rowDoubleClick = (event: GridRowClickEvent) => {
-        if (
-            typeof props.lookup === 'boolean' &&
-            props.lookup &&
-            props.selected
-        ) {
-            const row = event.dataItem as TareRow
-            const sorted = [...row.items].sort(
+    const lookupActive = !!props.lookup
+
+    const getDetailPanelContent = useCallback(
+        ({ row }: { row: TareRow }) => {
+            const selectedAddresses = new Set(
+                row.items
+                    .filter((i) => selectedItemIds.has(i.id))
+                    .map((i) => i.address)
+                    .filter((a): a is number => a != null),
+            )
+            return (
+                <Box sx={{ p: 1 }}>
+                    <TareSchematic
+                        tare={row.tare}
+                        items={row.items}
+                        selectedSlots={
+                            lookupActive ? selectedAddresses : undefined
+                        }
+                        onSlotClick={(slot, event) => {
+                            if (slot.item && lookupActive) {
+                                handleSlotSelect(
+                                    slot.item,
+                                    row.id,
+                                    event.shiftKey,
+                                )
+                            } else if (slot.item && !lookupActive) {
+                                setSubDetail(
+                                    <ItemDetail
+                                        readonly={true}
+                                        id={slot.item.id}
+                                        api={Api.items}
+                                        onClose={() => setSubDetail(undefined)}
+                                    />,
+                                )
+                            }
+                        }}
+                    />
+                </Box>
+            )
+        },
+        [handleSlotSelect, lookupActive, selectedItemIds],
+    )
+
+    const getDetailPanelHeight = useCallback(() => 'auto' as const, [])
+
+    const columns: GridColDef<TareRow>[] = useMemo(
+        () => [
+            {
+                ...({} as any),
+                field: GRID_DETAIL_PANEL_TOGGLE_FIELD,
+                width: 40,
+            },
+            {
+                field: 'barcode',
+                headerName: 'Barcode',
+                flex: 1,
+                minWidth: 140,
+                valueGetter: (_v, r) => r.tare.barcode || '(none)',
+            },
+            {
+                field: 'tareTypeName',
+                headerName: 'Tare Type',
+                flex: 1,
+                minWidth: 140,
+                valueGetter: (_v, r) => r.tare.tareTypeName,
+            },
+            {
+                field: 'nomenclatures',
+                headerName: 'Nomenclatures',
+                flex: 1.4,
+                minWidth: 180,
+                valueGetter: (_v, r) =>
+                    [...new Set(r.items.map((i) => i.nomenclatureName))].join(
+                        ', ',
+                    ),
+            },
+            {
+                field: 'fill',
+                headerName: 'Fill',
+                width: 110,
+                valueGetter: (_v, r) => tareSummary(r),
+            },
+            {
+                field: 'source',
+                headerName: 'Source',
+                width: 100,
+                renderCell: (p) => sourceChip(p.row.items),
+                sortable: false,
+                filterable: false,
+            },
+            {
+                field: 'units',
+                headerName: 'Units',
+                width: 80,
+                valueGetter: (_v, r) => r.tare.tareTypeUnits,
+            },
+        ],
+        [],
+    )
+
+    const onRowClick = (p: GridRowParams<TareRow>) => {
+        if (lookupActive) return
+        setSubDetail(
+            <TareDetail
+                tareId={p.row.tare.id}
+                label={p.row.tare.barcode}
+                onClose={() => setSubDetail(undefined)}
+            />,
+        )
+    }
+
+    const onRowDoubleClick = (p: GridRowParams<TareRow>) => {
+        if (typeof props.lookup === 'boolean' && props.lookup && props.selected) {
+            const sorted = [...p.row.items].sort(
                 (a, b) => (a.address ?? 0) - (b.address ?? 0),
             )
             props.selected(sorted, setAlert, doRefresh)
         }
     }
 
-    const DetailRow = (detailProps: GridDetailRowProps) => {
-        const row = detailProps.dataItem as TareRow
-        const tareKey = row.tare.id || 'no-tare'
-        const selectedAddresses = new Set(
-            row.items
-                .filter((i) => selectedItemIds.has(i.id))
-                .map((i) => i.address)
-                .filter((a): a is number => a != null),
-        )
-        return (
-            <TareSchematic
-                tare={row.tare}
-                items={row.items}
-                selectedSlots={props.lookup ? selectedAddresses : undefined}
-                onSlotClick={(slot, event) => {
-                    if (slot.item && props.lookup) {
-                        handleSlotSelect(slot.item, tareKey, event.shiftKey)
-                    } else if (slot.item && !props.lookup) {
-                        setSubDetail(
-                            <ItemDetail
-                                readonly={true}
-                                id={slot.item.id}
-                                api={Api.items}
-                                onClose={() => setSubDetail(undefined)}
-                            />,
-                        )
-                    }
-                }}
-            />
-        )
-    }
-
     return (
         <Detail
+            type="item"
             onClose={props.onClose}
             icon={<Diagram3 title="Components" />}
             loading={loading}
@@ -262,165 +359,76 @@ export const ItemSearch = (props: ItemSearchProps) => {
             }
             subDetail={subDetail}
             card={
-                <>
-                    <TextBox
-                        inputMode="text"
+                <Box>
+                    <TextField
+                        fullWidth
+                        size="small"
                         placeholder="Search by nomenclature, tare or barcode"
-                        prefix={() => (
-                            <InputPrefix>
-                                <Search width={30} />
-                            </InputPrefix>
-                        )}
-                        style={{ marginBottom: '1rem' }}
-                        onChange={filterChange}
+                        value={filter}
+                        onChange={(e) => setFilter(e.target.value)}
+                        sx={{ mb: 1.5 }}
+                        InputProps={{
+                            startAdornment: (
+                                <InputAdornment position="start">
+                                    <SearchIcon fontSize="small" />
+                                </InputAdornment>
+                            ),
+                        }}
                     />
                     {props.lookup && selectedItemIds.size > 0 && (
-                        <div
-                            style={{
+                        <Box
+                            sx={{
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'flex-end',
-                                gap: '0.5rem',
-                                marginBottom: '0.5rem',
+                                gap: 1,
+                                mb: 1,
                             }}
                         >
-                            <Button
-                                themeColor="primary"
+                            <MuiButton
+                                variant="contained"
                                 size="small"
                                 onClick={allocateSelected}
                             >
                                 Allocate {selectedItemIds.size} selected
-                            </Button>
-                            <Button
+                            </MuiButton>
+                            <MuiButton
                                 size="small"
                                 onClick={() => setSelectedItemIds(new Set())}
                             >
                                 Clear selection
-                            </Button>
-                        </div>
+                            </MuiButton>
+                        </Box>
                     )}
                     {loading && <Loading />}
-                    {error && <Error>{error}</Error>}
-                    {tareRows && (
-                        <>
-                            <InlineAlert
-                                state={alert}
-                                onClose={() => setAlert(undefined)}
-                            />
-                            <Grid
-                                data={pagedData}
-                                scrollable="none"
-                                pageable={true}
-                                pageSize={10}
-                                skip={page.skip}
-                                take={page.take}
-                                total={tareRows.length}
-                                onPageChange={pageChange}
-                                detail={DetailRow}
-                                expandField="expanded"
-                                onExpandChange={onExpandChange}
-                                onRowClick={rowClick}
-                                onRowDoubleClick={rowDoubleClick}
-                            >
-                                <GridColumn
-                                    field="tare.barcode"
-                                    title="Barcode"
-                                    cell={(p) => (
-                                        <td>
-                                            {p.dataItem.tare.barcode ||
-                                                '(none)'}
-                                        </td>
-                                    )}
-                                />
-                                <GridColumn
-                                    field="tare.tareTypeName"
-                                    title="Tare Type"
-                                    cell={(p) => (
-                                        <td>{p.dataItem.tare.tareTypeName}</td>
-                                    )}
-                                />
-                                <GridColumn
-                                    title="Nomenclatures"
-                                    cell={(p) => {
-                                        const row = p.dataItem as TareRow
-                                        const names = [
-                                            ...new Set(
-                                                row.items.map(
-                                                    (i) => i.nomenclatureName,
-                                                ),
-                                            ),
-                                        ]
-                                        return <td>{names.join(', ')}</td>
-                                    }}
-                                />
-                                <GridColumn
-                                    title="Fill"
-                                    cell={(p) => (
-                                        <td>{tareSummary(p.dataItem)}</td>
-                                    )}
-                                />
-                                <GridColumn
-                                    title="Source"
-                                    cell={(p) => {
-                                        const row = p.dataItem as TareRow
-                                        const hasOutput = row.items.some(
-                                            (i) => i.isOutput,
-                                        )
-                                        const hasSupply = row.items.some(
-                                            (i) => i.supplyId && !i.isOutput,
-                                        )
-                                        const hasStore = row.items.some(
-                                            (i) => i.isStore,
-                                        )
-                                        if (hasOutput) {
-                                            return (
-                                                <td title="This tare contains items produced by an order execution.">
-                                                    <span className="item-source-badge item-source-badge--output">
-                                                        Output
-                                                    </span>
-                                                </td>
-                                            )
-                                        }
-                                        if (hasSupply) {
-                                            return (
-                                                <td title="This tare contains items received through a supply.">
-                                                    <span className="item-source-badge item-source-badge--supply">
-                                                        Supply
-                                                    </span>
-                                                </td>
-                                            )
-                                        }
-                                        if (hasStore) {
-                                            return (
-                                                <td title="This tare contains items created directly from store.">
-                                                    <span className="item-source-badge item-source-badge--store">
-                                                        Store
-                                                    </span>
-                                                </td>
-                                            )
-                                        }
-                                        return (
-                                            <td
-                                                className="item-source-badge--muted"
-                                                title="No supply or process recorded."
-                                            >
-                                                —
-                                            </td>
-                                        )
-                                    }}
-                                />
-                                <GridColumn
-                                    field="tare.tareTypeUnits"
-                                    title="Units"
-                                    cell={(p) => (
-                                        <td>{p.dataItem.tare.tareTypeUnits}</td>
-                                    )}
-                                />
-                            </Grid>
-                        </>
+                    {error && (
+                        <Alert severity="error" sx={{ mb: 1 }}>
+                            {error as string}
+                        </Alert>
                     )}
-                    <div className="mt-2" />
-                </>
+                    {tareRows && (
+                        <DataGrid
+                            rows={tareRows}
+                            columns={columns}
+                            autoHeight
+                            density="compact"
+                            disableRowSelectionOnClick
+                            getDetailPanelContent={getDetailPanelContent}
+                            getDetailPanelHeight={getDetailPanelHeight}
+                            initialState={{
+                                pagination: {
+                                    paginationModel: { pageSize: 10, page: 0 },
+                                },
+                            }}
+                            pageSizeOptions={[10, 25, 50]}
+                            onRowClick={onRowClick}
+                            onRowDoubleClick={onRowDoubleClick}
+                            sx={{
+                                '& .MuiDataGrid-row': { cursor: 'pointer' },
+                            }}
+                        />
+                    )}
+                </Box>
             }
         />
     )

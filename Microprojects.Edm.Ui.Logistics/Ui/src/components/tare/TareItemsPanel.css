@@ -1,12 +1,3 @@
-/* Kendo TabStrip wraps each tab's content in a `.k-animation-container-relative`
-   that defaults to shrink-wrap width. Force it to fill the tab so tab contents
-   aren't collapsed to the width of their leftmost child. Scoped to the tabstrip
-   so Kendo popups/tooltips/datepickers (which use the same animation class
-   inline) are not stretched to full viewport width. */
-.k-tabstrip .k-animation-container-relative {
-    width: 100%;
-}
-
 .tare-items-panel {
     display: flex;
     flex-direction: column;
@@ -15,14 +6,14 @@
 }
 
 .tare-items-empty {
-    color: #999;
+    color: var(--ink-3);
     font-style: italic;
     padding: 1rem 0;
 }
 
 .tare-row-group {
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
+    border: 1px solid var(--line);
+    border-radius: var(--r-2);
     overflow: hidden;
 }
 
@@ -35,14 +26,14 @@
     align-items: center;
     gap: 0.75rem;
     padding: 0.5rem 0.75rem;
-    background: #fafafa;
+    background: var(--surface-2);
     cursor: pointer;
     user-select: none;
     transition: background 0.12s;
 }
 
 .tare-row:hover {
-    background: #f0f4ff;
+    background: var(--accent-tint);
 }
 
 .tare-expand-btn {
@@ -50,14 +41,14 @@
     border: none;
     padding: 2px;
     cursor: pointer;
-    color: #666;
+    color: var(--ink-3);
     display: inline-flex;
     align-items: center;
     flex-shrink: 0;
 }
 
 .tare-expand-btn:hover {
-    color: #1976d2;
+    color: var(--accent);
 }
 
 .tare-row-barcode {
@@ -67,14 +58,14 @@
 }
 
 .tare-row-type {
-    color: #666;
+    color: var(--ink-3);
     font-size: 0.82rem;
     min-width: 100px;
 }
 
 .tare-row-nomenclatures {
     font-size: 0.82rem;
-    color: #555;
+    color: var(--ink-2);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -84,17 +75,17 @@
 
 .tare-row-summary {
     font-size: 0.82rem;
-    color: #333;
+    color: var(--ink-1);
     flex-shrink: 0;
 }
 
 .tare-row-units {
     font-size: 0.78rem;
-    color: #999;
+    color: var(--ink-3);
 }
 
 .tare-row-detail {
     padding: 0.5rem 0.75rem 0.75rem 2.25rem;
-    border-top: 1px solid #eee;
-    background: #fff;
+    border-top: 1px solid var(--line-soft);
+    background: var(--surface);
 }

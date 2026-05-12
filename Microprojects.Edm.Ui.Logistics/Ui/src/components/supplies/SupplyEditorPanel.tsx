@@ -1,11 +1,14 @@
 import {
     type DetailProps,
     EMPTY_GUID,
-    Editor,
+    MuiEditor,
 } from '@logistics/components/MasterDetail.tsx'
 import type { DetailEventHandler } from '@logistics/data/types'
-import { Field } from '@progress/kendo-react-form'
-import { Input } from '@progress/kendo-react-inputs'
+import {
+    EditorSection,
+    Field,
+} from '@microprojects/edm-components/components'
+import { Box } from '@mui/material'
 import { useState } from 'react'
 
 export interface SupplyEditorPanelProps extends DetailProps {
@@ -19,45 +22,41 @@ export interface SupplyEditorPanelProps extends DetailProps {
 export const SupplyEditorPanel = (props: SupplyEditorPanelProps) => {
     const [data, setData] = useState({ id: EMPTY_GUID })
     return (
-        <Editor
+        <MuiEditor
             type={props.type}
             api={props.api}
             path={props.path}
             onChange={props.onChange}
-            data={data}
-            setData={setData}
+            data={data as any}
+            setData={setData as any}
             onUpdate={props.onUpdate}
-            content={
-                <fieldset className={'k-form-fieldset'}>
-                    <legend className={'k-form-legend'}>
-                        Enter supply data
-                    </legend>
-                    <div
-                        className="mb-2"
-                        style={{ display: 'flex', alignItems: 'baseline' }}
-                    >
+            content={({ values, handleChange }) => (
+                <Box>
+                    <EditorSection number={1} title="Supply" done={false}>
                         <Field
-                            name={'barcode'}
-                            component={Input}
-                            label={'Barcode'}
+                            full
+                            name="barcode"
+                            label="Barcode"
+                            value={(values.barcode as string) ?? ''}
+                            onChange={handleChange}
                         />
-                    </div>
-                    <div className="mb-2">
                         <Field
-                            name={'shipment'}
-                            component={Input}
-                            label={'Shipment'}
+                            name="shipment"
+                            label="Shipment"
+                            value={(values.shipment as string) ?? ''}
+                            onChange={handleChange}
                         />
-                    </div>
-                    <div className="mb-2">
                         <Field
-                            name={'shipmentExternalId'}
-                            component={Input}
-                            label={'Shipment Id'}
+                            name="shipmentExternalId"
+                            label="Shipment Id"
+                            value={
+                                (values.shipmentExternalId as string) ?? ''
+                            }
+                            onChange={handleChange}
                         />
-                    </div>
-                </fieldset>
-            }
+                    </EditorSection>
+                </Box>
+            )}
         />
     )
 }

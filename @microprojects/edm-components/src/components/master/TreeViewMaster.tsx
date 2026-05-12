@@ -1,5 +1,6 @@
 ﻿import React, {useState, useEffect, useMemo} from 'react';
-import {useHistory, useRouteMatch, useParams} from 'react-router-dom';
+import {useNavigate, useParams} from 'react-router-dom';
+import {useBasePath} from '../../hooks/useBasePath';
 import {
     Box,
     Typography,
@@ -33,6 +34,7 @@ import {
     findNodePath,
     getAllFolderIds,
     collectItemsWithChildren,
+    collectDescriptions,
     checkMoveValidity,
     getEntityType,
     getIconForType,
@@ -51,7 +53,7 @@ let _renderFunc: ((next: number) => void) | undefined;
 interface IndustrialTreeItemProps {
     itemId: string;
     label: React.ReactNode;
-    isNode?: boolean;
+    isFolder?: boolean;
     apiPath?: string;
     itemsWithChildren?: Set<string>;
     expandedSet?: Set<string>;
@@ -60,32 +62,46 @@ interface IndustrialTreeItemProps {
     treeData?: TreeNode[];
     entityTypeMap?: Array<{urlPrefix: string; entityType: string}>;
     iconMap?: Record<string, React.ComponentType<any>>;
+    descriptionMap?: Map<string, string>;
+    entityType?: string;
 }
 
 // Custom Tree Item with D&D integration
 const IndustrialTreeItem = React.forwardRef<HTMLLIElement, IndustrialTreeItemProps>((props, ref) => {
     const {
-        itemId, label, isNode, apiPath,
+        itemId, label, isFolder, apiPath,
         itemsWithChildren, expandedSet, selectedId,
         activeNode, treeData, entityTypeMap, iconMap,
+        descriptionMap, entityType: entityTypeOverride,
         ...treeItemProps
     } = props;
 
+    // Native browser tooltip — exposes the full name when the row gets clipped
+    // (resizable master pane), and surfaces the description when present.
+    const labelText = typeof label === 'string' ? label : '';
+    const description = descriptionMap?.get(itemId);
+    const tooltip = description && description !== labelText
+        ? `${labelText} — ${description}`
+        : labelText;
+    const labelNode = typeof label === 'string'
+        ? <span title={tooltip} className={styles.labelText}>{label}</span>
+        : label;
+
     // Fallback detection if RichTreeView doesn't spread item properties
-    const itemIsNode = isNode ?? itemId?.startsWith('node-');
+    const itemIsFolder = isFolder ?? itemId?.startsWith('folder-');
     const hasChildren = itemsWithChildren?.has(itemId) ?? false;
-    const isEmptyFolder = itemIsNode && !hasChildren;
+    const isEmptyFolder = itemIsFolder && !hasChildren;
     const isExpanded = expandedSet?.has(itemId) ?? false;
     const isSelected = selectedId === itemId;
 
     const {attributes, listeners, setNodeRef, isDragging} = useDraggable({
         id: itemId,
-        data: {id: itemId, label, isNode: itemIsNode},
+        data: {id: itemId, label, isFolder: itemIsFolder},
     });
 
     const {setNodeRef: setDropRef, isOver} = useDroppable({
         id: itemId,
-        data: {id: itemId, label, isNode: itemIsNode},
+        data: {id: itemId, label, isFolder: itemIsFolder},
     });
 
     /* Drop-target visual state per v2 04d.7. */
@@ -109,14 +125,22 @@ const IndustrialTreeItem = React.forwardRef<HTMLLIElement, IndustrialTreeItemPro
     };
 
     // Empty folders always render the closed icon — there is nothing to expand into.
-    const showOpenFolder = itemIsNode && hasChildren && isExpanded;
-    const IconComponent = getIconForType(apiPath || '', itemIsNode, showOpenFolder, entityTypeMap, iconMap);
+    const showOpenFolder = itemIsFolder && hasChildren && isExpanded;
+    const IconComponent = getIconForType(apiPath || '', itemIsFolder, showOpenFolder, entityTypeMap, iconMap);
 
-    const itemClass = itemIsNode
+    const itemClass = itemIsFolder
         ? (isEmptyFolder ? styles.emptyFolderItem : styles.folderItem)
         : styles.fileItem;
 
-    const iconCursor = !itemIsNode
+    // Resolve icon colour against the consumer's entity-color tokens; folders take the universal folder hue, empty folders stay muted, leaves take their entity hue. Explicit `entityType` prop wins over URL-prefix detection so per-instance overrides (e.g. process kinds sharing the same URL) work.
+    const entityType = entityTypeOverride ?? getEntityType(apiPath, entityTypeMap);
+    const iconColor = itemIsFolder
+        ? (isEmptyFolder ? 'var(--ink-4)' : 'var(--ent-folder-deep)')
+        : entityType
+            ? `var(--ent-${entityType}-deep)`
+            : 'var(--ink-3)';
+
+    const iconCursor = !itemIsFolder
         ? 'pointer'
         : isEmptyFolder
             ? 'default'
@@ -129,7 +153,7 @@ const IndustrialTreeItem = React.forwardRef<HTMLLIElement, IndustrialTreeItemPro
             const {onClick: muiOnClick, style: muiStyle, ...rest} = slotProps;
             const handleClick = (e: React.MouseEvent) => {
                 muiOnClick?.(e);
-                if (itemIsNode) {
+                if (itemIsFolder) {
                     e.stopPropagation();
                 }
             };
@@ -137,12 +161,12 @@ const IndustrialTreeItem = React.forwardRef<HTMLLIElement, IndustrialTreeItemPro
                 <div
                     {...rest}
                     onClick={handleClick}
-                    style={{...muiStyle, cursor: iconCursor}}
+                    style={{...muiStyle, cursor: iconCursor, color: iconColor}}
                 />
             );
         };
         return Slot;
-    }, [itemIsNode, iconCursor]);
+    }, [itemIsFolder, iconCursor, iconColor]);
 
     const dropClass = dropValidity === 'valid'
         ? styles.dropInto
@@ -154,7 +178,7 @@ const IndustrialTreeItem = React.forwardRef<HTMLLIElement, IndustrialTreeItemPro
         <TreeItem
             {...(treeItemProps as any)}
             itemId={itemId}
-            label={label}
+            label={labelNode}
             ref={handleRef as any}
             style={style}
             {...attributes}
@@ -182,6 +206,32 @@ export interface TreeViewMasterProps {
     entityTypeMap?: Array<{urlPrefix: string; entityType: string}>;
     /** Override entity-type → icon component map (default = Tech's mapping). */
     iconMap?: Record<string, React.ComponentType<any>>;
+    /** External signal that bumps when the tree should refetch (typically a value
+     *  from `useEntityToken`). Included in the GET dep array. */
+    refreshToken?: unknown;
+    /** Fired with the first raw API node after data loads. Lets the parent
+     *  hold "the tree's root" for parent-id resolution on new-item creation. */
+    onRootLoaded?: (rootNode: any) => void;
+    /** Builds query-string params appended to `${api}/hierarchy`. */
+    getHierarchyQuery?: () => Record<string, string | undefined>;
+    /** When true, if the API returns a single root with children, those children
+     *  are rendered at the top level instead of the root itself. Logistics-style
+     *  hidden-root layout. Default: false. */
+    unwrapSingleRoot?: boolean;
+    /** Explicit entity type override — used when multiple kinds share one API URL
+     *  (e.g. Logistics's three process kinds) and URL-prefix detection isn't enough.
+     *  Takes precedence over `entityTypeMap` lookup. */
+    entityType?: string;
+}
+
+function buildHierarchyUrl(base: string, query?: Record<string, string | undefined>): string {
+    if (!query) return base;
+    const params = new URLSearchParams();
+    for (const [k, v] of Object.entries(query)) {
+        if (v != null && v !== '') params.set(k, v);
+    }
+    const qs = params.toString();
+    return qs ? `${base}?${qs}` : base;
 }
 
 export function TreeViewMaster(props: TreeViewMasterProps) {
@@ -189,24 +239,48 @@ export function TreeViewMaster(props: TreeViewMasterProps) {
         api: apiPath,
         hierarchiesApi,
         onCurrentRootChanged,
+        onRootLoaded,
+        getHierarchyQuery,
+        refreshToken,
+        unwrapSingleRoot = false,
         entityTypeMap = DEFAULT_ENTITY_TYPE_MAP,
         iconMap = DEFAULT_ICON_MAP,
+        entityType: entityTypeOverride,
     } = props;
     const [render, setRender] = useState(0);
     _render = render;
     _renderFunc = setRender;
-    const history = useHistory();
-    const {url} = useRouteMatch();
+    const navigate = useNavigate();
+    const url = useBasePath();
     const {id: routeId} = useParams<{id?: string}>();
 
-    const [[data], loading, error] = useGet(`${apiPath}/hierarchy`, [render]);
+    const hierarchyUrl = buildHierarchyUrl(`${apiPath}/hierarchy`, getHierarchyQuery?.());
+    const [[data], loading, error] = useGet(hierarchyUrl, [render, refreshToken]);
     const [filter, setFilter] = useState('');
     const [expandedItems, setExpandedItems] = useState<string[]>([]);
     const [activeId, setActiveId] = useState<string | null>(null);
     const [initialized, setInitialized] = useState(false);
 
-    const treeData = useMemo(() => transformData(data) || [], [data]);
+    // Notify the parent of the root node once per data load. The parent uses
+    // this to seed parentId fallbacks when creating new items at the root.
+    useEffect(() => {
+        if (data && Array.isArray(data) && data.length > 0) {
+            onRootLoaded?.(data[0]);
+        }
+    }, [data, onRootLoaded]);
+
+    // Hidden-root unwrap: when the API wraps every child under a single root
+    // folder (Logistics convention), render that root's children at the top
+    // level so the tree starts at the meaningful nodes.
+    const rawData = useMemo(() => {
+        if (!unwrapSingleRoot || !data || !Array.isArray(data) || data.length !== 1) return data;
+        const single = data[0];
+        return single?.items ?? data;
+    }, [data, unwrapSingleRoot]);
+
+    const treeData = useMemo(() => transformData(rawData) || [], [rawData]);
     const itemsWithChildren = useMemo(() => collectItemsWithChildren(treeData), [treeData]);
+    const descriptionMap = useMemo(() => collectDescriptions(treeData), [treeData]);
     const expandedSet = useMemo(() => new Set(expandedItems), [expandedItems]);
 
     // Handle initial expand all and auto-expansion when route changes
@@ -272,10 +346,10 @@ export function TreeViewMaster(props: TreeViewMasterProps) {
 
         onCurrentRootChanged && onCurrentRootChanged(node);
 
-        if (node.isNode) {
-            history.push(`${url}/folder/${node.numericId}`);
+        if (node.isFolder) {
+            navigate(`${url}/folder/${node.numericId}`);
         } else {
-            history.push(`${url}/${node.numericId}`);
+            navigate(`${url}/${node.numericId}`);
         }
     };
 
@@ -307,12 +381,12 @@ export function TreeViewMaster(props: TreeViewMasterProps) {
 
         if (checkMoveValidity(draggedNode, targetNode) !== 'valid') return;
 
-        const targetNumericParentId = targetNode.isNode
+        const targetNumericParentId = targetNode.isFolder
             ? targetNode.numericId
             : targetNode.parentId;
 
         try {
-            const link = draggedNode.isNode ? hierarchiesApi : apiPath;
+            const link = draggedNode.isFolder ? hierarchiesApi : apiPath;
             if (!link) {
                 console.warn('TreeViewMaster: cannot move folder without `hierarchiesApi` prop set.');
                 return;
@@ -330,10 +404,16 @@ export function TreeViewMaster(props: TreeViewMasterProps) {
         [activeId, treeData]
     );
 
-    const entityType = useMemo(() => getEntityType(apiPath, entityTypeMap), [apiPath, entityTypeMap]);
+    const masterEntityType = useMemo(
+        () => entityTypeOverride ?? getEntityType(apiPath, entityTypeMap),
+        [entityTypeOverride, apiPath, entityTypeMap],
+    );
+    const masterColorStyle = masterEntityType
+        ? ({'--entity-color': `var(--ent-${masterEntityType}-deep)`} as React.CSSProperties)
+        : undefined;
 
     return (
-        <Box className={`${styles.masterContainer} ${entityType ? (styles as any)[entityType] || '' : ''}`}>
+        <Box className={styles.masterContainer} style={masterColorStyle}>
             <Box className={styles.header}>
                 <TextField
                     className={styles.searchField}
@@ -347,12 +427,12 @@ export function TreeViewMaster(props: TreeViewMasterProps) {
                     }}
                 />
                 <Tooltip title="Add Folder">
-                    <IconButton className={styles.actionBtn} onClick={() => history.push(`${url}/folder/0`)}>
+                    <IconButton className={styles.actionBtn} onClick={() => navigate(`${url}/folder/0`)}>
                         <CreateFolderIcon fontSize="small" />
                     </IconButton>
                 </Tooltip>
                 <Tooltip title="Add Item">
-                    <IconButton className={styles.actionBtn} onClick={() => history.push(`${url}/0`)}>
+                    <IconButton className={styles.actionBtn} onClick={() => navigate(`${url}/0`)}>
                         <AddIcon fontSize="small" />
                     </IconButton>
                 </Tooltip>
@@ -389,24 +469,26 @@ export function TreeViewMaster(props: TreeViewMasterProps) {
                                     treeData,
                                     entityTypeMap,
                                     iconMap,
+                                    descriptionMap,
+                                    entityType: entityTypeOverride,
                                 } as any,
                             }}
                         />
                         <DragOverlay dropAnimation={null}>
                             {activeId ? (() => {
                                 const dragged = findNode(treeData, activeId);
-                                const isNode = dragged?.isNode;
-                                const DragIcon = getIconForType(apiPath, !!isNode, false, entityTypeMap, iconMap);
+                                const isFolder = dragged?.isFolder;
+                                const DragIcon = getIconForType(apiPath, !!isFolder, false, entityTypeMap, iconMap);
                                 return (
                                     <Box className={styles.dragGhost}>
                                         <DragIcon
                                             fontSize="small"
                                             sx={{
                                                 mr: 1,
-                                                color: isNode ? 'var(--accent)' : 'var(--ink-3)',
+                                                color: isFolder ? 'var(--accent)' : 'var(--ink-3)',
                                             }}
                                         />
-                                        <Typography variant="body2" sx={{fontWeight: isNode ? 600 : 400, fontSize: '14px'}}>
+                                        <Typography variant="body2" sx={{fontWeight: isFolder ? 600 : 400, fontSize: '14px'}}>
                                             {dragged?.label}
                                         </Typography>
                                     </Box>

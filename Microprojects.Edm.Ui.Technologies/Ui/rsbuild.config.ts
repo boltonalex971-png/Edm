@@ -31,8 +31,8 @@ const muiXVirtualizerDir= path.resolve(__dirname, 'node_modules/@mui/x-virtualiz
 const emotionReactDir   = path.resolve(__dirname, 'node_modules/@emotion/react')
 const emotionStyledDir  = path.resolve(__dirname, 'node_modules/@emotion/styled')
 const reactRouterDomDir = path.resolve(__dirname, 'node_modules/react-router-dom')
-const reactRouterDir    = path.resolve(__dirname, 'node_modules/react-router')
-const historyDir        = path.resolve(__dirname, 'node_modules/history')
+// RR7 bundles `react-router` and `history` internally — no separate packages.
+// Aliases for those would resolve to non-existent paths and break the build.
 
 export default defineConfig({
   plugins: [
@@ -58,10 +58,8 @@ export default defineConfig({
         '@emotion/react':      emotionReactDir,
         '@emotion/styled':     emotionStyledDir,
         // Router is context-based too — a duplicate copy sees no <Router> ancestor
-        // and `useLocation`/`useHistory` return undefined.
+        // and `useLocation`/`useNavigate` return undefined.
         'react-router-dom':    reactRouterDomDir,
-        'react-router':        reactRouterDir,
-        history:               historyDir,
     },
   },
   html: {

@@ -1,5 +1,5 @@
 ﻿import React, {useCallback, useMemo} from "react";
-import {Route, Switch} from "react-router";
+import {Outlet, Route, Routes} from "react-router-dom";
 import axios from "axios";
 import {
     Business as BusinessIcon,
@@ -105,34 +105,36 @@ function AppShell() {
             data-scheme={scheme}
             data-plugin="technologies"
         >
-            <Switch>
-                <Route path='/operations/:id' component={OperationLayout}/>
-                <Layout
-                    navMenu={navMenu}
-                    versionsApiUrl={`${api.meta}/version`}
-                    copyrightOwner="Microprojects"
-                    copyrightStartYear={2020}
-                >
-                    <Route path="/changes" render={() => <Changelog changelogUrl={`${api.meta}/changelog`}/>}/>
-                    {user && userRole &&
-                        <>
-                            <Route exact path="/" component={Home}/>
-                            {userRole === appRoles.operator &&
-                                <Route path="/dashboard/operations" component={Operations}/>}
-                            {userRole !== appRoles.operator && <Route path="/dashboard" component={Dashboard}/>}
-                            {userRole !== appRoles.operator && <Route path="/config" component={Config}/>}
-                            {userRole !== appRoles.operator && <Route path="/plugins" component={Plugins}/>}
-                            <Route path="/operation" component={NewOperationWizard}/>
-                        </>
-                    }
+            <Routes>
+                <Route path="/operations/:id/*" element={<OperationLayout/>}/>
+                <Route element={
+                    <Layout
+                        navMenu={navMenu}
+                        versionsApiUrl={`${api.meta}/version`}
+                        copyrightOwner="Microprojects"
+                        copyrightStartYear={2020}
+                    >
+                        <Outlet/>
+                    </Layout>
+                }>
+                    <Route path="changes" element={<Changelog changelogUrl={`${api.meta}/changelog`}/>}/>
+                    {user && userRole && <>
+                        <Route index element={<Home/>}/>
+                        {userRole === appRoles.operator &&
+                            <Route path="dashboard/operations/*" element={<Operations/>}/>}
+                        {userRole !== appRoles.operator && <Route path="dashboard/*" element={<Dashboard/>}/>}
+                        {userRole !== appRoles.operator && <Route path="config/*" element={<Config/>}/>}
+                        {userRole !== appRoles.operator && <Route path="plugins/*" element={<Plugins/>}/>}
+                        <Route path="operation/*" element={<NewOperationWizard/>}/>
+                    </>}
                     {user && !userRole &&
-                        <AuthInterstitial kind="no-role" user={displayUserName(user)}/>
+                        <Route path="*" element={<AuthInterstitial kind="no-role" user={displayUserName(user)}/>}/>
                     }
                     {!user &&
-                        <AuthInterstitial kind="signin"/>
+                        <Route path="*" element={<AuthInterstitial kind="signin"/>}/>
                     }
-                </Layout>
-            </Switch>
+                </Route>
+            </Routes>
         </div>
     );
 }

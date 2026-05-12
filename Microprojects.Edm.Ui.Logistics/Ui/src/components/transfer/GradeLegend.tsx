@@ -28,7 +28,7 @@ export function GradeLegend({ grades, onPick }: GradeLegendProps) {
                 gap: '0.25rem',
                 alignItems: 'center',
                 fontSize: '0.8rem',
-                color: '#555',
+                color: 'var(--ink-2)',
             }}
         >
             <span style={{ fontWeight: 600, marginRight: 4 }}>Grades:</span>
@@ -46,7 +46,8 @@ export function GradeLegend({ grades, onPick }: GradeLegendProps) {
                             width: 12,
                             height: 12,
                             borderRadius: 3,
-                            background: colorForGradeId(g.id) ?? '#eee',
+                            background:
+                                colorForGradeId(g.id) ?? 'var(--surface-3)',
                             border: '1px solid rgba(0,0,0,0.15)',
                         }}
                     />
@@ -54,7 +55,7 @@ export function GradeLegend({ grades, onPick }: GradeLegendProps) {
                 </span>
             ))}
             <span
-                style={{ ...CHIP_STYLE(interactive), color: '#888' }}
+                style={{ ...CHIP_STYLE(interactive), color: 'var(--ink-3)' }}
                 onClick={onPick ? () => onPick(null) : undefined}
                 title={interactive ? 'Select items without a grade' : undefined}
             >
@@ -63,8 +64,8 @@ export function GradeLegend({ grades, onPick }: GradeLegendProps) {
                         width: 12,
                         height: 12,
                         borderRadius: 3,
-                        background: '#e3f2fd',
-                        border: '1px solid #90caf9',
+                        background: 'var(--surface-3)',
+                        border: '1px solid var(--line-strong)',
                     }}
                 />
                 No grade
