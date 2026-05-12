@@ -6,6 +6,7 @@ import {
     type DetailProps as PkgDetailProps,
     MasterDetail as PkgMasterDetail,
 } from '@microprojects/edm-components/components/master/MasterDetail'
+import { useDialog } from '@microprojects/edm-components/hooks/useDialog'
 import {
     AccountTreeOutlined as ProcessIcon,
     AllInboxOutlined as TareTypeIcon,
@@ -212,6 +213,7 @@ export function MuiEditor(props: MuiEditorProps) {
     const navigate = useNavigate()
     const location = useLocation()
     const setAlert = useAlertSetter()
+    const { dialog, confirm } = useDialog()
     const setDetailEditMode = useContext(DetailEditModeContext)
     const rootItem = useContext(RootItemContext)
     const invalidate = useInvalidateEntities()
@@ -290,13 +292,14 @@ export function MuiEditor(props: MuiEditorProps) {
                             const detail =
                                 r.response?.data?.detail ||
                                 'This change will create a new version.'
-                            if (
-                                window.confirm(
-                                    `${detail}\n\nProceed and create a new version?`,
-                                )
-                            ) {
-                                return sendUpdate(true)
-                            }
+                            confirm({
+                                title: 'Create new version?',
+                                message: detail,
+                                actionLabel: 'Create version',
+                                onConfirm: () => {
+                                    sendUpdate(true)
+                                },
+                            })
                             return
                         }
                         setAlert({
@@ -347,6 +350,7 @@ export function MuiEditor(props: MuiEditorProps) {
 
     return (
         <Box component="form" onSubmit={submit} noValidate>
+            {dialog}
             <Box>{content}</Box>
             <Box
                 sx={{

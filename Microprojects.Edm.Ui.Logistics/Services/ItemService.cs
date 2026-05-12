@@ -194,6 +194,9 @@ public class ItemService : ServiceBase<Item>, IItemService
         var items = await lifecycleScoped
             .Where(i =>
                         (query.NomenclatureId == null || query.NomenclatureId == i.NomenclatureId)
+                        // Must be physically allocated — items without a tare aren't
+                        // yet placed into storage and so are invisible to search.
+                        && i.TareId != null
                         // Available stock: no current OrderId, or it's an output still
                         // sitting in its producing order (OrderId == producing order). Once
                         // an output is allocated as input to a downstream order, AddItem

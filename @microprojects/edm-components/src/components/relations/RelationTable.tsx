@@ -137,10 +137,19 @@ export interface RelationTableProps {
     children?: React.ReactNode;
     columns?: any[];
     data?: any[];
+    /** Show the per-row Edit button. Default `true`. When false the action
+     *  is hidden — row-edit mode is unreachable. */
     editable?: boolean;
+    /** Show the per-row Delete button. Default `true`. When false the action
+     *  is hidden (was previously only disabled). */
     removable?: boolean;
-    /** Show the "Add record" button. Defaults to `editable !== false`. */
+    /** Show the "Add record" toolbar button. Default `true`. */
     creatable?: boolean;
+    /** Convenience disabler for view-only tables: when `true`, overrides
+     *  `creatable`/`editable`/`removable` to `false`. Same name and intent as
+     *  Detail's `readonly` prop. The actions column drops out entirely when
+     *  no row-level affordances remain. */
+    readonly?: boolean;
     selectable?: boolean;
     /** Fires when the user activates a row — by row click in the default mode,
      *  or via the checkbox selection model when `selectable` is on. The second
@@ -153,6 +162,16 @@ export interface RelationTableProps {
      *  Logistics passes the empty Guid because its ids are Guid-typed and `0`
      *  fails model binding. */
     newId?: string | number;
+    /** Optional content rendered in the toolbar before the search field — the
+     *  left side of the toolbar row that holds Search and "Add record". Use
+     *  for inline controls that belong with the table (filters, mode toggles)
+     *  instead of stacking a separate row above the grid. */
+    toolbarStart?: React.ReactNode;
+    /** Optional content rendered in the toolbar after the spacer, before the
+     *  "Add record" button — so it sits right-anchored with any primary
+     *  action. Use for filter switches, mode toggles, or auxiliary actions
+     *  that belong on the right of the toolbar. */
+    toolbarEnd?: React.ReactNode;
 }
 
 export function RelationTable({
@@ -162,12 +181,19 @@ export function RelationTable({
     data: propData,
     editable = true,
     removable = true,
-    creatable,
+    creatable = true,
+    readonly = false,
     selectable = false,
     onRowSelected,
     newId = 0,
+    toolbarStart,
+    toolbarEnd,
 }: RelationTableProps) {
-    const showAdd = creatable ?? (editable !== false);
+    // `readonly` is a one-shot view-only switch — it forces every row-level
+    // affordance off regardless of the explicit per-flag values.
+    const canCreate = !readonly && creatable;
+    const canEdit = !readonly && editable;
+    const canRemove = !readonly && removable;
     const apiRef = useGridApiRef();
     const discardingIds = React.useRef<Set<any>>(new Set());
     const [reload, setReload] = useState(false);
@@ -352,34 +378,37 @@ export function RelationTable({
                     </>
                 ) : (
                     <>
-                        <Tooltip title="Edit">
-                            <span>
-                                <IconButton
-                                    size="small"
-                                    className={styles.actionBtn}
-                                    onClick={handleEditClick(id)}
-                                >
-                                    <EditIcon fontSize="small"/>
-                                </IconButton>
-                            </span>
-                        </Tooltip>
-                        <Tooltip title="Delete">
-                            <span>
-                                <IconButton
-                                    size="small"
-                                    className={`${styles.actionBtn} ${styles.delete}`}
-                                    onClick={handleDeleteClick(id, rowName)}
-                                    disabled={removable === false}
-                                >
-                                    <DeleteIcon fontSize="small"/>
-                                </IconButton>
-                            </span>
-                        </Tooltip>
+                        {canEdit && (
+                            <Tooltip title="Edit">
+                                <span>
+                                    <IconButton
+                                        size="small"
+                                        className={styles.actionBtn}
+                                        onClick={handleEditClick(id)}
+                                    >
+                                        <EditIcon fontSize="small"/>
+                                    </IconButton>
+                                </span>
+                            </Tooltip>
+                        )}
+                        {canRemove && (
+                            <Tooltip title="Delete">
+                                <span>
+                                    <IconButton
+                                        size="small"
+                                        className={`${styles.actionBtn} ${styles.delete}`}
+                                        onClick={handleDeleteClick(id, rowName)}
+                                    >
+                                        <DeleteIcon fontSize="small"/>
+                                    </IconButton>
+                                </span>
+                            </Tooltip>
+                        )}
                     </>
                 )}
             </Box>
         );
-    }, [rowModesModel, editable, removable]);
+    }, [rowModesModel, canEdit, canRemove]);
 
     const columns: any[] = useMemo(() => {
         const baseColumns = (propColumns || parseChildrenToColumns(children, {
@@ -400,6 +429,10 @@ export function RelationTable({
 
         if (baseColumns.length === 0) return baseColumns;
 
+        // No row-level affordances → drop the actions column entirely so the
+        // table reads as pure data and doesn't reserve 96 px of empty space.
+        if (!canEdit && !canRemove) return baseColumns;
+
         // Append a dedicated, fixed-width actions column. v2 04c.2: hover
         // reveals row actions; no overlay-on-last-cell hacks.
         const actionsCol = {
@@ -418,7 +451,7 @@ export function RelationTable({
         };
 
         return [...baseColumns, actionsCol];
-    }, [children, propColumns, editable, onRowSelected, renderActionsCell]);
+    }, [children, propColumns, canEdit, canRemove, onRowSelected, renderActionsCell]);
 
     const currentData = useMemo(() => {
         if (isFading || (api !== currentApi && displayData.length > 0)) return displayData;
@@ -445,8 +478,13 @@ export function RelationTable({
                 {dialog}
                 {error && <Alert severity="error">{error}</Alert>}
 
-                {/* HANDOFF · v2 04c.2 toolbar — search left, primary add right. */}
+                {/* HANDOFF · v2 04c.2 toolbar — search left, primary add right.
+                    `toolbarStart` / `toolbarEnd` inject extra content on either
+                    side of the spacer so call sites can park inline controls
+                    (filter switches, mode toggles) without stacking a separate
+                    row above. */}
                 <Box className={styles.toolbar}>
+                    {toolbarStart}
                     <TextField
                         className={styles.searchField}
                         placeholder="Search…"
@@ -458,7 +496,8 @@ export function RelationTable({
                         }}
                     />
                     <span className={styles.toolbarSpacer}/>
-                    {showAdd && (
+                    {toolbarEnd}
+                    {canCreate && (
                         <MuiButton
                             variant="contained"
                             size="small"
@@ -488,7 +527,7 @@ export function RelationTable({
                         <div className={styles.emptyHelp}>
                             {searchQuery
                                 ? `Nothing matches "${searchQuery}". Try a different search term.`
-                                : showAdd
+                                : canCreate
                                     ? 'Use Add record to create the first one.'
                                     : 'This list is read-only and currently has no entries.'}
                         </div>

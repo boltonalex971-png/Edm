@@ -13,15 +13,28 @@ import {
     Search as SearchIcon,
 } from '@mui/icons-material'
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 export function Orders() {
     const { name } = useRouteMatch()
     const path = useBasePath()
+    const navigate = useNavigate()
     const [query, setQuery] = useState<OrderSearchQuery>()
     // After a successful Create, flip the Create-panel from the empty
     // "New Order" form to a view-mode detail of the just-created order.
     // Cleared via the detail's Close button so the user can create another.
     const [createdOrderId, setCreatedOrderId] = useState<UUID>()
+
+    // The header "Orders" link points at the bare /orders path. Land there
+    // → bounce to /orders/ongoing so the Active sub-tab is the default and
+    // the SubRootPage tab strip highlights it. `replace` so back doesn't
+    // ping-pong between /orders and /orders/ongoing.
+    useEffect(() => {
+        if (name === '' || name === '/') {
+            navigate(`${path}/ongoing`, { replace: true })
+        }
+    }, [name, path, navigate])
+
     useEffect(() => {
         setQuery({ active: name.includes('ongoing') })
     }, [name])
