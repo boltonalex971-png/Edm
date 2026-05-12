@@ -3,6 +3,7 @@ import {useNavigate, Routes, Route, useLocation} from 'react-router-dom';
 import axios from 'axios';
 import {useAcquireEntityLock, useEntityLockState} from '../../hooks/entityLocks';
 import {listTag, useOptionalInvalidateEntities} from '../../hooks/entityRefresh';
+import {useStickyHeaderOffset} from '../../hooks/useStickyHeaderOffset';
 import {
     Box,
     Typography,
@@ -125,7 +126,7 @@ const SEPARATOR_MIN_PX = 80;
 export function MasterDetail(props: MasterDetailProps) {
     const navigate = useNavigate();
     const {path, resizable = true, newId = '0'} = props;
-    const [dynamicOffset, setDynamicOffset] = useState(10);
+    const dynamicOffset = useStickyHeaderOffset();
     const FolderComponent = props.folderComponent;
     // Capitalize the URL-derived entity type so it matches backend HierarchyType enum
     // values (Workplace/Process/Host/Device). FolderComponent uses this when POSTing
@@ -138,30 +139,6 @@ export function MasterDetail(props: MasterDetailProps) {
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [masterPx, setMasterPx] = useState<number | null>(null);
     const [mode, setMode] = useState<'auto' | 'manual'>('auto');
-
-    React.useEffect(() => {
-        const updateOffset = () => {
-            const stickyHeaders = document.querySelectorAll('[data-sticky-header="true"]');
-            let maxBottom = 0;
-            stickyHeaders.forEach((header) => {
-                const rect = header.getBoundingClientRect();
-                maxBottom = Math.max(maxBottom, rect.bottom);
-            });
-            setDynamicOffset(maxBottom + 10);
-        };
-
-        const observer = new ResizeObserver(updateOffset);
-        const headers = document.querySelectorAll('[data-sticky-header="true"]');
-        headers.forEach((h) => observer.observe(h));
-
-        updateOffset();
-        window.addEventListener('scroll', updateOffset, {passive: true});
-
-        return () => {
-            observer.disconnect();
-            window.removeEventListener('scroll', updateOffset);
-        };
-    }, []);
 
     // Re-clamp the manual master width on viewport changes so the master
     // pane never exceeds 1/3 of the new container width.
