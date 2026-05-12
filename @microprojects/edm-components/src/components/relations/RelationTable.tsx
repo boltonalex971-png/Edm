@@ -143,6 +143,11 @@ export interface RelationTableProps {
     creatable?: boolean;
     selectable?: boolean;
     onRowSelected?: (row: any) => void;
+    /** Sentinel id stamped onto a new row's POST body so the backend recognises
+     *  it as a fresh record. Default `0` matches Tech's int-keyed entities;
+     *  Logistics passes the empty Guid because its ids are Guid-typed and `0`
+     *  fails model binding. */
+    newId?: string | number;
 }
 
 export function RelationTable({
@@ -155,6 +160,7 @@ export function RelationTable({
     creatable,
     selectable = false,
     onRowSelected,
+    newId = 0,
 }: RelationTableProps) {
     const showAdd = creatable ?? (editable !== false);
     const apiRef = useGridApiRef();
@@ -286,7 +292,7 @@ export function RelationTable({
         delete dataToSave.isNew;
 
         if (isNew) {
-            dataToSave.id = 0;
+            dataToSave.id = newId;
         }
 
         try {
