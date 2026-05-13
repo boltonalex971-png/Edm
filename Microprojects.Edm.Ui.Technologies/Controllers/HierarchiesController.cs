@@ -57,7 +57,7 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
         }
 
         [HttpPut("{id:int}/parent")]
-        public async Task<Hierarchy> ChangeParent(int id, [FromBody] HierarchyItemViewModel parent)
+        public async Task<Hierarchy> ChangeParent(int id, [FromBody] DomainObjectViewModel parent)
         {
             var result = await _hierarchyService.ChangeParent(id, parent.Id);
             return result;

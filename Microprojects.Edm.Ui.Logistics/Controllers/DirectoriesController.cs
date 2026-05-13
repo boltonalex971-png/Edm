@@ -44,7 +44,7 @@ public class DirectoriesController : AuthControllerBase
     }
 
     [HttpPut("{id:guid}/parent")]
-    public async Task<Directory> ChangeParent(Guid id, [FromBody] DirectoryEntryViewModel parent)
+    public async Task<Directory> ChangeParent(Guid id, [FromBody] DomainObjectViewModel parent)
     {
         var result = await _directoryService.ChangeParent(id, parent.Id);
         return result;

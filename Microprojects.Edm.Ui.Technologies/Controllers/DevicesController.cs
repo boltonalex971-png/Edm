@@ -46,7 +46,8 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
             }
             else
             {
-                return new Device {
+                return new Device
+                {
                     Name = string.Empty,
                     Description = string.Empty,
                     IsActive = true
@@ -83,7 +84,7 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
         }
 
         [HttpPut("{id:int}/parent")]
-        public async Task<Device> ChangeParent(int id, [FromBody] HierarchyItemViewModel parent)
+        public async Task<Device> ChangeParent(int id, [FromBody] DomainObjectViewModel parent)
         {
             var result = await _deviceService.ChangeParent(id, parent.Id);
             return result;

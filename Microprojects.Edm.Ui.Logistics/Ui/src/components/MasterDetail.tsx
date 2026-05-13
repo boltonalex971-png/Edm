@@ -101,6 +101,7 @@ export function MasterDetail(props: MasterDetailProps) {
                 api={folderProps.api ?? api.directories}
                 path={folderProps.path}
                 type={props.type}
+                onChange={folderProps.onChange}
                 onClose={folderProps.onClose}
             />
         ),

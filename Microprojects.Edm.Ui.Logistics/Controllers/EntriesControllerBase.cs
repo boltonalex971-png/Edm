@@ -101,7 +101,7 @@ public abstract class EntriesControllerBase<TEntry, TEntryViewModel, TService> :
     }
 
     [HttpPut("{id:guid}/parent")]
-    public async Task<TEntryViewModel> ChangeEntryParent(Guid id, [FromBody] DirectoryViewModel parent)
+    public async Task<TEntryViewModel> ChangeEntryParent(Guid id, [FromBody] DomainObjectViewModel parent)
     {
         var existing = await Service.Get(id)
             ?? throw new EdmException($"{typeof(TEntry).Name} with Id {id} not found.");

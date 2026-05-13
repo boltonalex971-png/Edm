@@ -379,11 +379,27 @@ export function TreeViewMaster(props: TreeViewMasterProps) {
         const {active, over} = event;
         setActiveId(null);
 
-        if (!over || active.id === over.id) return;
-
         const draggedNode = findNode(treeData, active.id);
-        const targetNode = findNode(treeData, over.id);
-        if (!draggedNode || !targetNode) return;
+        if (!draggedNode) return;
+
+        // Resolve drop target. Dropping on empty space (over === null) falls
+        // back to the API root — which may be hidden when `unwrapSingleRoot`
+        // is enabled (Logistics) — so the item still lands somewhere sensible.
+        const rootRaw = Array.isArray(data) ? data[0] : undefined;
+        let targetNode: TreeNode | null = null;
+        if (over) {
+            if (active.id === over.id) return;
+            targetNode = findNode(treeData, over.id);
+        } else if (rootRaw) {
+            targetNode = {
+                id: `folder-${rootRaw.id}`,
+                numericId: rootRaw.id.toString(),
+                label: rootRaw.name,
+                isFolder: true,
+                parentId: '0',
+            };
+        }
+        if (!targetNode) return;
 
         if (checkMoveValidity(draggedNode, targetNode) !== 'valid') return;
 
