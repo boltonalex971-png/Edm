@@ -514,6 +514,7 @@ export function Detail(props: DetailProps) {
                     ]);
                 }
                 if (props.path) navigate(props.path);
+                props.onClose && props.onClose();
             })
             .catch((err: any) => toast.error(err.response?.data?.detail || err.message || 'Delete failed'));
     };
