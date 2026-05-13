@@ -1,20 +1,22 @@
-/* EDM Console — Direction A · Steel.
-   Standalone shell (header + sidebar + footer) when loaded at /console;
-   embedded tabs-only mode when iframe-mounted inside Technologies' HostConsole.
-   Tokens come from tokens.css; no hex literals here. */
+﻿/* EDM Console — Direction A · Steel.
+   Page shell + header + footer come from @microprojects/edm-components
+   (chrome.css). This file owns Console-specific content layout: the
+   sidebar/body row, the cards, the data table, the status badge family,
+   the log feed, and the embedded (iframe) mode. */
 
-/* --- Page shell: lock to viewport so the page itself never scrolls;
-   page-main is the scroll container for non-fill pages, and fill pages
-   (e.g. log) hand scrolling off to a card body inside it. --- */
+/* --- Sidebar + body row inside the package's <main className="page-main"> ---
+   `page-main` from chrome.css is `flex: 1 1 auto; display: flex; flex-direction: column;
+   min-width: 0;` — we make it grow the console-shell to fill remaining height
+   and give the body its own scroll context (so the log feed scrolls inside the
+   card while the page itself never scrolls). */
 .page-root {
-    /* `zoom` from the density class scales this element's own layout box,
-       so 100vh has to be pre-divided by the zoom factor to keep the shell
-       exactly viewport-sized (no extra scrollbar at comfortable / touch). */
+    /* Lock height so .page-main / .console-body never push the page taller
+       than the viewport — overflow handled inside the body. */
     height: calc(100vh / var(--density-zoom, 1));
-    display: flex;
-    flex-direction: column;
-    background: var(--bg);
     overflow: hidden;
+}
+.page-root .page-main {
+    min-height: 0;
 }
 .console-shell {
     flex: 1 1 auto;
@@ -23,7 +25,7 @@
     align-items: stretch;
     min-height: 0;
 }
-.page-main {
+.console-body {
     flex: 1 1 auto;
     min-width: 0;
     min-height: 0;
@@ -32,111 +34,13 @@
     display: flex;
     flex-direction: column;
 }
-.page-footer {
-    flex: 0 0 auto;
-    border-top: 1px solid var(--line);
-    background: var(--surface-2);
-    padding: 14px 40px;
-    font-family: var(--font-mono);
-    font-size: 11.5px;
-    letter-spacing: 0.04em;
-    color: var(--ink-3);
-}
-.version-chip {
-    font-family: var(--font-mono) !important;
-    font-size: 10.5px !important;
-    letter-spacing: 0.06em !important;
-    text-transform: uppercase;
-    color: var(--ink-2) !important;
-    border-color: var(--line-strong) !important;
-    background: var(--surface) !important;
-}
 
-/* --- Top bar (mirrors Hub's doc-top, with admin plugin tint) --- */
-.doc-top {
-    height: 56px;
-    background: var(--surface);
-    border-bottom: 1px solid var(--line);
-    display: flex;
-    align-items: stretch;
-    position: sticky;
-    top: 0;
-    z-index: var(--z-header);
-}
-[data-plugin="admin"] .doc-top {
+/* Plugin tint — soft cobalt wash + 2px accent stripe under the chrome
+   header. Scoped to data-plugin="console" so it never leaks to other
+   plugins. */
+[data-plugin="console"] .doc-top {
     background: var(--accent-tint);
     box-shadow: inset 0 -2px 0 var(--accent);
-}
-.doc-brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 0 18px 0 20px;
-    border-right: 1px solid var(--line);
-    height: 100%;
-    text-decoration: none;
-    color: inherit;
-}
-.doc-brand:hover {
-    text-decoration: none;
-}
-.doc-brand .brand-block {
-    display: inline-flex;
-    align-items: baseline;
-    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
-    font-size: 22px;
-    line-height: 1;
-    color: var(--ink-1);
-}
-.doc-brand .brand-block .ed {
-    font-weight: 500;
-    letter-spacing: -0.005em;
-    color: var(--accent);
-}
-.doc-brand .brand-block .mu {
-    font-style: normal;
-    font-weight: 500;
-    color: #009900;
-    font-size: 1.36em;
-    line-height: 0.72;
-    margin-left: -1px;
-    transform: translateY(-0.5px);
-    display: inline-block;
-}
-.doc-brand .brand-name {
-    font-weight: 700;
-    font-size: 18px;
-    color: var(--ink-1);
-    letter-spacing: -0.005em;
-}
-
-/* --- Header user block --- */
-.header-user {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 0 18px;
-    border-left: 1px solid var(--line);
-    height: 100%;
-}
-.header-user .user-name {
-    font-size: 13.5px;
-    font-weight: 600;
-    color: var(--ink-1);
-    letter-spacing: -0.005em;
-    cursor: default;
-}
-.header-user .user-role {
-    font-family: var(--font-mono);
-    font-size: 10.5px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--accent-deep);
-    background: var(--accent-tint);
-    border: 1px solid var(--accent-soft);
-    padding: 4px 8px;
-    border-radius: var(--r-pill);
-    font-weight: 600;
 }
 
 /* --- Sidebar (master-list rail) --- */
@@ -260,9 +164,9 @@
     gap: 20px;
     max-width: 1400px;
 }
-/* Fill the available space in page-main / embedded-body. Used by pages whose
-   primary card needs to grow to the viewport with internal scrolling — the
-   log feed is the canonical case. */
+/* Fill the available space in console-body / embedded-body. Used by pages
+   whose primary card needs to grow to the viewport with internal scrolling
+   — the log feed is the canonical case. */
 .page-stack--fill {
     flex: 1 1 auto;
     min-height: 0;
@@ -537,10 +441,7 @@
     .console-sidebar .sidebar-row .count {
         display: none;
     }
-    .page-main {
+    .console-body {
         padding: 20px 20px 32px;
-    }
-    .page-footer {
-        padding: 14px 20px;
     }
 }

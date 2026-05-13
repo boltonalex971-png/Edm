@@ -397,7 +397,7 @@ export function TreeViewMaster(props: TreeViewMasterProps) {
                 console.warn('TreeViewMaster: cannot move folder without `hierarchiesApi` prop set.');
                 return;
             }
-            await axios.put(`${link}/${draggedNode.numericId}/parent`, {id: parseInt(targetNumericParentId, 10)});
+            await axios.put(`${link}/${draggedNode.numericId}/parent`, {id: targetNumericParentId});
             setRender((r) => r + 1);
         } catch (err: any) {
             console.error('Failed to move item', err);

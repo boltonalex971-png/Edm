@@ -101,6 +101,7 @@
    HANDOFF · v2 04f.1 · seven-slot grid: brand → nav → flex spacer → search
    → role pill → connection pip → profile.                                  */
 .doc-top {
+    flex: 0 0 auto;
     height: 56px;
     background: var(--surface);
     border-bottom: 1px solid var(--line);

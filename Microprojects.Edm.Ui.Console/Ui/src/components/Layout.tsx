@@ -1,4 +1,4 @@
-﻿import { Layout as PkgLayout } from '@microprojects/edm-components/components/chrome/Layout'
+import { Layout as PkgLayout } from '@microprojects/edm-components/components/chrome/Layout'
 import {
     NavMenu,
     type NavMenuUser,
@@ -9,20 +9,21 @@ import {
 } from '@microprojects/edm-components/styles/UiPreferencesContext'
 import logo from '../../public/applogo.svg'
 
-interface HubLayoutProps {
-    user: NavMenuUser
+interface ConsoleLayoutProps {
+    user: NavMenuUser | null
     children: React.ReactNode
 }
 
-export function HubLayout({ user, children }: HubLayoutProps) {
+export function ConsoleLayout({ user, children }: ConsoleLayoutProps) {
     const { density, scheme } = useUiPreferences()
 
     const navMenu = (
         <NavMenu
             hubUrl="/hub"
-            pluginName="Hub"
+            pluginName="Console"
             logoSrc={logo}
-            user={user}
+            homeHref="/"
+            user={user ?? undefined}
             navItems={[]}
             showSearch={false}
         />
@@ -32,11 +33,11 @@ export function HubLayout({ user, children }: HubLayoutProps) {
         <div
             className={`page-root ${densityClass(density)}`}
             data-scheme={scheme}
-            data-plugin="hub"
+            data-plugin="console"
         >
             <PkgLayout
                 navMenu={navMenu}
-                versionsApiUrl="/api/hub/meta/version"
+                versionsApiUrl="/api/console/meta/version"
                 changelogPath="/changes"
                 copyrightOwner="Microprojects"
                 copyrightStartYear={2020}
