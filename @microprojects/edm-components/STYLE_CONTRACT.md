@@ -58,16 +58,28 @@ Pairs of `--hue-{name}-soft` and `--hue-{name}-deep` for: `azure`, `cobalt`, `in
 | `--line-vivid`     | high-contrast borders            |
 
 ### Layout / sizing
-| Variable           | Default (comfortable) | Compact | Touch  |
-| ------------------ | --------------------- | ------- | ------ |
-| `--row-h`          | 40px                  | 32px    | 56px   |
-| `--row-pad-x`      | 14px                  | 10px    | 18px   |
-| `--field-h`        | 36px                  | 30px    | 52px   |
-| `--btn-h`          | 36px                  | 30px    | 52px   |
-| `--section-pad`    | 20px                  | 14px    | 24px   |
-| `--card-pad`       | 20px                  | 14px    | 24px   |
+The layout tokens hold the **compact baseline** — every other density is
+produced by scaling, not by per-token overrides.
 
-Density is selected by adding the class `density-compact` / `density-comfortable` / `density-touch` to the page root. The package CSS reads the active values via the cascade.
+| Variable           | Value (compact base) |
+| ------------------ | -------------------- |
+| `--row-h`          | 32px                 |
+| `--row-pad-x`      | 10px                 |
+| `--field-h`        | 30px                 |
+| `--btn-h`          | 30px                 |
+| `--section-pad`    | 14px                 |
+| `--card-pad`       | 14px                 |
+| `--density-zoom`   | 1 (mirrors current density) |
+
+Density is selected by adding the class `density-compact` / `density-comfortable` / `density-touch` to the page root. Each class sets a `zoom` factor (and the matching `--density-zoom` variable) on the page-root subtree, so **every element on the page** — text, padding, borders, icons, the tokens above, and any hard-coded pixel values inside component CSS — scales together:
+
+| Density        | `zoom`   | Step over compact |
+| -------------- | -------- | ----------------- |
+| compact        | 1        | base              |
+| comfortable    | 1.15     | +15%              |
+| touch          | 1.3225   | +15% (1.15²)      |
+
+Because `zoom` scales the element's own layout box, viewport-relative shell dimensions (e.g. `.page-root { min-height: 100vh }`) must be pre-divided by `var(--density-zoom, 1)` to keep the chrome viewport-sized at every density.
 
 ### Radii / typography / motion / elevation / z-index
 - `--r-1`, `--r-2`, `--r-3`, `--r-4`, `--r-pill`

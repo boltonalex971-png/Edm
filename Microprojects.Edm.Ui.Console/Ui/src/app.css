@@ -7,7 +7,10 @@
    page-main is the scroll container for non-fill pages, and fill pages
    (e.g. log) hand scrolling off to a card body inside it. --- */
 .page-root {
-    height: 100vh;
+    /* `zoom` from the density class scales this element's own layout box,
+       so 100vh has to be pre-divided by the zoom factor to keep the shell
+       exactly viewport-sized (no extra scrollbar at comfortable / touch). */
+    height: calc(100vh / var(--density-zoom, 1));
     display: flex;
     flex-direction: column;
     background: var(--bg);
