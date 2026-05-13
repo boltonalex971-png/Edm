@@ -104,13 +104,19 @@ html, :root {
     --elev-3: 0 2px 0 rgba(14,22,32,0.04), 0 12px 32px rgba(14,22,32,0.10);
     --elev-popover: 0 1px 0 rgba(14,22,32,0.04), 0 8px 24px rgba(14,22,32,0.14);
 
-    /* ---------- Density (default = comfortable) ---------- */
-    --row-h: 40px;
-    --row-pad-x: 14px;
-    --field-h: 36px;
-    --btn-h: 36px;
-    --section-pad: 20px;
-    --card-pad: 20px;
+    /* ---------- Density (base = compact) ----------
+       Compact is the dimensional baseline. The .density-* class on the page
+       root applies a `zoom` factor that scales every element on the page —
+       text, padding, borders, icons, and the tokens below — by ~15% per
+       step (compact → comfortable → touch). The tokens here therefore stay
+       at the compact baseline; zoom does the rest. */
+    --row-h: 32px;
+    --row-pad-x: 10px;
+    --field-h: 30px;
+    --btn-h: 30px;
+    --section-pad: 14px;
+    --card-pad: 14px;
+    --density-zoom: 1;
 
     /* ---------- Motion ---------- */
     --ease-std: cubic-bezier(.2,.8,.2,1);
@@ -126,22 +132,22 @@ html, :root {
     --z-toast: 90;
 }
 
-/* ---------- Density modifiers ---------- */
+/* ---------- Density modifiers ----------
+   One mechanism for all three densities: each step zooms the entire page-root
+   subtree by ~15%, so every element scales together — not just the row/field/
+   button tokens. The matching --density-zoom variable feeds calc()s like
+   .page-root's min-height so the shell still tracks the viewport exactly. */
 .density-compact {
-    --row-h: 32px;
-    --row-pad-x: 10px;
-    --field-h: 30px;
-    --btn-h: 30px;
-    --section-pad: 14px;
-    --card-pad: 14px;
+    --density-zoom: 1;
+    zoom: 1;
+}
+.density-comfortable {
+    --density-zoom: 1.15;
+    zoom: 1.15;
 }
 .density-touch {
-    --row-h: 56px;
-    --row-pad-x: 18px;
-    --field-h: 52px;
-    --btn-h: 52px;
-    --section-pad: 24px;
-    --card-pad: 24px;
+    --density-zoom: 1.3225;
+    zoom: 1.3225;
 }
 
 /* ---------- Dark variant (shop-floor) ----------

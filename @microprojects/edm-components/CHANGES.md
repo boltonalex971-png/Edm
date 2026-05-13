@@ -1,5 +1,11 @@
 ﻿# @microprojects/edm-components — Changes
 
+## 0.4.4 — Density modes scale the entire page, not just a handful of tokens
+
+- **`tokens.css` density rework.** The `.density-{mode}` classes now apply a `zoom` factor to the page-root subtree instead of overriding individual tokens. Compact is the dimensional baseline (zoom 1); comfortable is `zoom: 1.15` (+15%); touch is `zoom: 1.3225` (+15% over comfortable). Because `zoom` scales everything that's rendered inside the page-root — text, padding, borders, icons, the `--row-h` / `--field-h` / `--btn-h` / `--section-pad` / `--card-pad` tokens, and any hard-coded pixel values inside component CSS — flipping density now visibly resizes the whole UI, not only the few elements that previously read the density tokens. Root token values are rebased to the compact baseline.
+- **`--density-zoom` CSS variable.** Each density class also publishes its zoom factor as `--density-zoom`. Layout containers whose dimensions are viewport-relative (the package's own `.page-root { min-height: 100vh }`, and each plugin's mirror) must pre-divide by `var(--density-zoom, 1)` so the shell stays exactly viewport-sized instead of overflowing at higher zooms. `chrome.scss`'s `.page-root` does this already; the same pattern is mirrored in each plugin's `app.css` `.page-root`.
+- **`STYLE_CONTRACT.md` Layout / sizing section** rewritten to document the new mechanism (single baseline + zoom-driven steps) instead of the old per-density token table.
+
 ## 0.4.3 — `MasterDetail` / `TreeViewMaster` / `RelationTable` configurable new-item id
 
 - **`newId?: string`** (NEW prop, default `'0'`). Added to both `TreeViewMaster` and `MasterDetail`. Drives the URL segment used by the Add Folder / Add Item header buttons and the empty-state DetailStub Add action — previously hard-coded to `'0'`. Tech (int-keyed entities) keeps the default; Logistics passes `EMPTY_GUID` so the new-item route hits a valid Guid the backend recognises as a fresh record. Fixes the "Failed to load data" Logistics users saw when pressing Add Item / Add Folder, where the Detail then GETted `${api}/0` and got 404 because Logistics ids are Guids. `MasterDetail` forwards `newId` to its inner `TreeViewMaster`.

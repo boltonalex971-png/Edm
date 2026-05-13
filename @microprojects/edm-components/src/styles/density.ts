@@ -1,8 +1,14 @@
 ﻿// HANDOFF · v2 platform.html 04e.6 · density modes are surfaced as a
-// `density-{mode}` class on the page root. tokens.css defines the
-// `--row-h`/`--btn-h`/`--field-h`/`--section-pad`/`--card-pad` overrides
-// for `.density-compact` and `.density-touch`; the default root maps to
-// "comfortable". Persistence is per-device under `localStorage.edm.density`.
+// `density-{mode}` class on the page root. tokens.css now drives density
+// through `zoom` on the page root rather than per-token overrides:
+// compact = base (zoom 1), comfortable = 1.15, touch = 1.3225 — ~15% per
+// step. Because zoom scales the entire rendered subtree, every element on
+// the page (text, padding, borders, icons, hard-coded pixel values in
+// component CSS) grows together, not just the row/field/button tokens.
+// The matching `--density-zoom` CSS variable is published so layout
+// containers can pre-divide viewport-relative sizes (see `.page-root`
+// `min-height: calc(100vh / var(--density-zoom, 1))`).
+// Persistence is per-device under `localStorage.edm.density`.
 
 export type Density = 'compact' | 'comfortable' | 'touch';
 

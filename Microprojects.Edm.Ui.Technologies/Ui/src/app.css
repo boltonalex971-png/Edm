@@ -4,7 +4,10 @@
 
 /* --- Page shell --------------------------------------------------------- */
 .page-root {
-    min-height: 100vh;
+    /* `zoom` from the density class scales this element's own layout box,
+       so 100vh has to be pre-divided by the zoom factor to keep the shell
+       exactly viewport-sized (no extra scrollbar at comfortable / touch). */
+    min-height: calc(100vh / var(--density-zoom, 1));
     display: flex;
     flex-direction: column;
     background: var(--bg);
