@@ -18,8 +18,8 @@ import {
     RadioGroup,
     Typography,
 } from '@mui/material'
+import { AllInboxOutlined as TareTypeIcon } from '@mui/icons-material'
 import { type EffectCallback, useEffect, useMemo, useState } from 'react'
-import { CardChecklist } from 'react-bootstrap-icons'
 import { useNavigate, useParams } from 'react-router-dom'
 import type { DetailEventHandler, TareType, UUID } from '../../../data/types'
 import {
@@ -99,13 +99,9 @@ export function TareTypeDetail({ id, ...props }: TareTypeDetailProps) {
 
     return (
         <Detail
-            api={props.api}
-            path={props.path}
-            type={props.type}
-            onChange={props.onChange}
-            onClose={props.onClose}
+            {...props}
             id={effectiveId}
-            icon={<CardChecklist title="TareType" />}
+            icon={<TareTypeIcon />}
             loading={loading}
             error={error as string}
             data={data}

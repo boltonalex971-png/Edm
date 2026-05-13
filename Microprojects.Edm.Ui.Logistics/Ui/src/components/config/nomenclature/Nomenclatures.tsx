@@ -8,13 +8,13 @@ import {
     Properties,
     Property,
 } from '@microprojects/edm-components/components'
+import { CategoryOutlined as NomenclatureIcon } from '@mui/icons-material'
 import {
     Box,
     Checkbox,
     FormControlLabel,
 } from '@mui/material'
 import { type EffectCallback, useEffect, useState } from 'react'
-import { CardChecklist } from 'react-bootstrap-icons'
 import { useNavigate, useParams } from 'react-router-dom'
 import type {
     DetailEventHandler,
@@ -83,7 +83,7 @@ export function NomenclatureDetail({ id, ...props }: NomenclatureDetailProps) {
         <Detail
             {...props}
             id={effectiveId}
-            icon={<CardChecklist title="Nomenclature" />}
+            icon={<NomenclatureIcon />}
             loading={loading}
             error={error as string}
             data={data}

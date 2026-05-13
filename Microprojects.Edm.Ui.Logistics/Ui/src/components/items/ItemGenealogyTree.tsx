@@ -21,12 +21,12 @@ import {
 import { SimpleTreeView } from '@mui/x-tree-view/SimpleTreeView'
 import { TreeItem } from '@mui/x-tree-view/TreeItem'
 import type React from 'react'
-import { useEffect, useMemo, useState } from 'react'
 import {
-    ChevronLeft,
-    ChevronRight,
-    Diagram3,
-} from 'react-bootstrap-icons'
+    AccountTreeOutlined as GenealogyIcon,
+    ChevronLeftOutlined as ChevronLeft,
+    ChevronRightOutlined as ChevronRight,
+} from '@mui/icons-material'
+import { useEffect, useMemo, useState } from 'react'
 import './ItemGenealogyTree.css'
 
 export interface ItemGenealogyTreeProps {
@@ -552,7 +552,7 @@ export function ItemGenealogyTree({
                         m: 0,
                     }}
                 >
-                    <Diagram3 /> Genealogy
+                    <GenealogyIcon /> Genealogy
                 </Typography>
                 <Box
                     sx={{

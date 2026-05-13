@@ -37,7 +37,6 @@ import {
     useRef,
     useState,
 } from 'react'
-import { Diagram3 } from 'react-bootstrap-icons'
 
 type OrderSearchProps = {
     query?: ItemSearchQuery
@@ -185,7 +184,7 @@ export const OrderSearch = (props: OrderSearchProps) => {
     return (
         <Detail
             type="order"
-            icon={<Diagram3 title="Orders" />}
+            icon={<SearchIcon />}
             loading={loading}
             error={error as string}
             data={

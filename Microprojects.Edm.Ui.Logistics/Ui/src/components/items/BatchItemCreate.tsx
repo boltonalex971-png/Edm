@@ -24,11 +24,13 @@ import {
     EditorSection,
     Field,
 } from '@microprojects/edm-components/components'
-import { SaveOutlined as SaveIcon } from '@mui/icons-material'
+import {
+    Inventory2Outlined as ItemIcon,
+    SaveOutlined as SaveIcon,
+} from '@mui/icons-material'
 import { Box, Button as MuiButton, Typography } from '@mui/material'
 import axios from 'axios'
 import { useEffect, useMemo, useState } from 'react'
-import { Box2 } from 'react-bootstrap-icons'
 
 type BatchItemCreateProps = {
     supplyId?: UUID
@@ -70,7 +72,7 @@ export function BatchItemCreate({
             id={EMPTY_GUID}
             editMode={true}
             readonly={true}
-            icon={<Box2 title="Batch create items" />}
+            icon={<ItemIcon />}
             title="New items"
             subTitle={supplyId ? 'Add to supply' : undefined}
             onClose={onClose ?? (() => {})}

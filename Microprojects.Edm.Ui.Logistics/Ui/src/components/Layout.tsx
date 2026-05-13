@@ -5,6 +5,7 @@ import {
     HomeOutlined as HomeIcon,
     Inventory2Outlined as ItemsIcon,
     ListAltOutlined as OrdersIcon,
+    LocalShippingOutlined as SuppliesIcon,
     SettingsOutlined as SettingsIcon,
     AdminPanelSettingsOutlined as AdminIcon,
     EngineeringOutlined as TechnologistIcon,
@@ -45,7 +46,7 @@ export const Layout = ({ children, hideMenu }: LayoutProps) => {
         return [
             { id: 'home', label: 'Home', path: '/', icon: <HomeIcon fontSize="small" />, exact: true },
             { id: 'orders', label: 'Orders', path: '/orders', icon: <OrdersIcon fontSize="small" /> },
-            { id: 'supplies', label: 'Supplies', path: '/supplies', icon: <ItemsIcon fontSize="small" /> },
+            { id: 'supplies', label: 'Supplies', path: '/supplies', icon: <SuppliesIcon fontSize="small" /> },
             { id: 'items', label: 'Items', path: '/items', icon: <ItemsIcon fontSize="small" /> },
             { id: 'repacking', label: 'Repacking', path: '/repacking', icon: <RepackingIcon fontSize="small" /> },
             { id: 'config', label: 'Settings', path: '/config', icon: <SettingsIcon fontSize="small" /> },

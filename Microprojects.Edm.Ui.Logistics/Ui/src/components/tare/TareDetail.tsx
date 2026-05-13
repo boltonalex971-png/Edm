@@ -5,11 +5,11 @@ import { Detail } from '@logistics/components/MasterDetail'
 import { TareSchematic } from '@logistics/components/tare/TareSchematic'
 import type { Item, TareInfo, UUID } from '@logistics/data/types'
 import { useGet } from '@logistics/hooks/hooks'
+import { WidgetsOutlined as TareIcon } from '@mui/icons-material'
 import { Box, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material'
 import { DataGrid, type GridColDef } from '@mui/x-data-grid'
 import type React from 'react'
 import { useMemo, useState } from 'react'
-import { Diagram3 } from 'react-bootstrap-icons'
 
 type TareDetailProps = {
     tareId: UUID
@@ -22,6 +22,9 @@ type TareDetailProps = {
      * parent of an allocation split). */
     items?: Item[]
     tare?: TareInfo
+    /** Auto-injected by the shared Detail when this component is rendered in
+     * the `subDetail` slot — drives the breadcrumb parent chain. */
+    parents?: any
 }
 
 type ViewMode = 'schema' | 'grid'
@@ -40,6 +43,7 @@ export function TareDetail({
     onClose,
     items: scopedItems,
     tare: scopedTare,
+    parents,
 }: TareDetailProps) {
     const skipFetch = scopedItems != null && scopedTare != null
     const [[fetched], fetchLoading, fetchError] = useGet<Item[]>(
@@ -89,8 +93,9 @@ export function TareDetail({
     return (
         <Detail
             type="tare"
+            parents={parents}
             onClose={onClose}
-            icon={<Diagram3 title="Tare" />}
+            icon={<TareIcon />}
             loading={loading}
             error={error as string}
             data={

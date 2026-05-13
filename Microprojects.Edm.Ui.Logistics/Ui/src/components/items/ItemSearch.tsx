@@ -50,7 +50,6 @@ import {
     useRef,
     useState,
 } from 'react'
-import { Diagram3 } from 'react-bootstrap-icons'
 
 type ItemSearchProps = {
     onClose: () => void
@@ -322,7 +321,7 @@ export const ItemSearch = (props: ItemSearchProps) => {
         <Detail
             type="item"
             onClose={props.onClose}
-            icon={<Diagram3 title="Components" />}
+            icon={<SearchIcon />}
             loading={loading}
             error={error as string}
             data={

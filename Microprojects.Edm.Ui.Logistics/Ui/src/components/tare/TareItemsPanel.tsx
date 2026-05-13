@@ -3,9 +3,9 @@ import { TareGroupRow } from '@logistics/components/tare/TareGroupRow'
 import type { Item, TareInfo, UUID } from '@logistics/data/types'
 import { useEntityToken } from '@logistics/hooks/entityRefresh'
 import { useGet } from '@logistics/hooks/hooks'
+import { Alert } from '@mui/material'
 import type React from 'react'
 import { useMemo, useState } from 'react'
-import { Alert } from 'reactstrap'
 import './TareItemsPanel.css'
 
 export type TareGroup = {
@@ -94,7 +94,7 @@ export function TareItemsPanel({
     return (
         <div className="tare-items-panel">
             {toolbar}
-            {error && <Alert color="danger">{error}</Alert>}
+            {error && <Alert severity="error">{error}</Alert>}
             {loading && <Loading />}
             {!loading && groups.length === 0 && (
                 <div className="tare-items-empty">No items</div>
