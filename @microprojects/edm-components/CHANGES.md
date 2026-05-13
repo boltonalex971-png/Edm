@@ -1,5 +1,9 @@
 ﻿# @microprojects/edm-components — Changes
 
+## 0.4.5 — `Detail` calls `onClose` after a successful delete
+
+- **`Detail.handleDelete`** now invokes `props.onClose` once the DELETE round-trip succeeds, in addition to the existing `props.onChange` / cache invalidation / `props.path` navigation. Previously, when `Detail` was mounted as a sub-detail (`onClose` set, `path` unset — Logistics's TareDetail, ItemDetail sub-views, RelationTable inline detail panes), confirming the destructive dialog deleted the record but left the now-stale Detail visible until the user manually closed it.
+
 ## 0.4.4 — Density modes scale the entire page, not just a handful of tokens
 
 - **`tokens.css` density rework.** The `.density-{mode}` classes now apply a `zoom` factor to the page-root subtree instead of overriding individual tokens. Compact is the dimensional baseline (zoom 1); comfortable is `zoom: 1.15` (+15%); touch is `zoom: 1.3225` (+15% over comfortable). Because `zoom` scales everything that's rendered inside the page-root — text, padding, borders, icons, the `--row-h` / `--field-h` / `--btn-h` / `--section-pad` / `--card-pad` tokens, and any hard-coded pixel values inside component CSS — flipping density now visibly resizes the whole UI, not only the few elements that previously read the density tokens. Root token values are rebased to the compact baseline.
