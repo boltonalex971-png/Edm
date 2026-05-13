@@ -1,4 +1,4 @@
-using Microprojects.Edm.Ui.Logistics.Models;
+﻿using Microprojects.Edm.Ui.Logistics.Models;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Directory = Microprojects.Edm.Ui.Logistics.Models.Directory;
@@ -96,7 +96,7 @@ public class LogisticsContext : DbContext
             .OnDelete(DeleteBehavior.NoAction);
         builder.Entity<OrderProcess>()
             .HasOne(o => o.Order)
-            .WithMany()
+            .WithMany(o => o.Processes)
             .HasForeignKey(op => op.OrderId)
             .OnDelete(DeleteBehavior.NoAction);
 
