@@ -13,9 +13,12 @@ import {
 } from '@logistics/components/tare/TareSchematic'
 import type { Item, Order, OrderOutputItems, UUID } from '@logistics/data/types'
 import { useGet } from '@logistics/hooks/hooks'
+import {
+    ExpandMoreOutlined as ChevronDown,
+    ChevronRightOutlined as ChevronRight,
+} from '@mui/icons-material'
+import { Alert } from '@mui/material'
 import React, { useMemo, useState } from 'react'
-import { ChevronDown, ChevronRight } from 'react-bootstrap-icons'
-import { Alert } from 'reactstrap'
 import '@logistics/components/tare/TareItemsPanel.css'
 
 type OrderOutputTabProps = {
@@ -67,7 +70,7 @@ export function OrderOutputTab({
 
     return (
         <div>
-            {error && <Alert color="danger">{error}</Alert>}
+            {error && <Alert severity="error">{error}</Alert>}
             {loading && <Loading />}
 
             {!loading &&
@@ -130,11 +133,11 @@ export function OrderOutputTab({
                                                 >
                                                     {isOpen ? (
                                                         <ChevronDown
-                                                            size={14}
+                                                            fontSize="small"
                                                         />
                                                     ) : (
                                                         <ChevronRight
-                                                            size={14}
+                                                            fontSize="small"
                                                         />
                                                     )}
                                                 </button>

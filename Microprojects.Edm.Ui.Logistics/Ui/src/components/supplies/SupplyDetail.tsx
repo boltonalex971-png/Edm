@@ -20,11 +20,13 @@ import {
     Properties,
     Property,
 } from '@microprojects/edm-components/components'
-import { AddOutlined as AddIcon } from '@mui/icons-material'
+import {
+    AddOutlined as AddIcon,
+    LocalShippingOutlined as SupplyIcon,
+} from '@mui/icons-material'
 import { Box, Button as MuiButton } from '@mui/material'
 import type React from 'react'
 import { type EffectCallback, useEffect, useState } from 'react'
-import { Diagram3 } from 'react-bootstrap-icons'
 
 export interface SupplyDetailProps extends DetailProps {
     onUpdate?: DetailEventHandler
@@ -53,7 +55,7 @@ export function SupplyDetail({
         <Detail
             {...props}
             id={id}
-            icon={<Diagram3 title="Supply" />}
+            icon={<SupplyIcon />}
             title={title}
             subTitle={data.shipment || data.barcode}
             loading={loading}

@@ -126,7 +126,7 @@ const IndustrialTreeItem = React.forwardRef<HTMLLIElement, IndustrialTreeItemPro
 
     // Empty folders always render the closed icon — there is nothing to expand into.
     const showOpenFolder = itemIsFolder && hasChildren && isExpanded;
-    const IconComponent = getIconForType(apiPath || '', itemIsFolder, showOpenFolder, entityTypeMap, iconMap);
+    const IconComponent = getIconForType(apiPath || '', itemIsFolder, showOpenFolder, entityTypeMap, iconMap, entityTypeOverride);
 
     const itemClass = itemIsFolder
         ? (isEmptyFolder ? styles.emptyFolderItem : styles.folderItem)
@@ -500,7 +500,7 @@ export function TreeViewMaster(props: TreeViewMasterProps) {
                             {activeId ? (() => {
                                 const dragged = findNode(treeData, activeId);
                                 const isFolder = dragged?.isFolder;
-                                const DragIcon = getIconForType(apiPath, !!isFolder, false, entityTypeMap, iconMap);
+                                const DragIcon = getIconForType(apiPath, !!isFolder, false, entityTypeMap, iconMap, entityTypeOverride);
                                 return (
                                     <Box className={styles.dragGhost}>
                                         <DragIcon

@@ -8,11 +8,11 @@ import {
 import { SubRootPage } from '@microprojects/edm-components/components/chrome/SubRootPage'
 import { useBasePath } from '@microprojects/edm-components/hooks/useBasePath'
 import {
-    AccountTreeOutlined as TechnologyIcon,
-    CategoryOutlined as NomenclaturesIcon,
-    PrecisionManufacturingOutlined as ManufacturingIcon,
+    AccountTreeOutlined as ManufacturingIcon,
     AllInboxOutlined as TareTypesIcon,
+    CategoryOutlined as NomenclaturesIcon,
     PlayArrowOutlined as OperationsIcon,
+    PrecisionManufacturingOutlined as TechnologyIcon,
 } from '@mui/icons-material'
 import { Route, Routes } from 'react-router-dom'
 import { Processes } from './process/Processes'

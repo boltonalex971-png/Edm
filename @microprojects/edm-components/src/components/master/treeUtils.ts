@@ -187,11 +187,12 @@ export const getIconForType = (
     isFolder: boolean,
     isExpanded: boolean,
     entityTypeMap: Array<{urlPrefix: string; entityType: string}> = DEFAULT_ENTITY_TYPE_MAP,
-    iconMap: Record<string, React.ComponentType<any>> = DEFAULT_ICON_MAP
+    iconMap: Record<string, React.ComponentType<any>> = DEFAULT_ICON_MAP,
+    entityTypeOverride?: string,
 ): React.ComponentType<any> => {
     if (isFolder) {
         return isExpanded ? FolderOpenIcon : FolderIcon;
     }
-    const type = getEntityType(apiPath, entityTypeMap);
+    const type = entityTypeOverride ?? getEntityType(apiPath, entityTypeMap);
     return iconMap[type] || FileIcon;
 };

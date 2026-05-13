@@ -39,6 +39,7 @@ import {
 import {
     CheckOutlined as CheckIcon,
     GridOnOutlined as GridIcon,
+    ListAltOutlined as OrderIcon,
     PlayArrowOutlined as PlayIcon,
     VisibilityOutlined as PreviewIcon,
 } from '@mui/icons-material'
@@ -46,7 +47,6 @@ import { Box, Button as MuiButton, Chip, Typography } from '@mui/material'
 import axios from 'axios'
 import type React from 'react'
 import { type EffectCallback, useEffect, useState } from 'react'
-import { Diagram3 } from 'react-bootstrap-icons'
 import { useNavigate } from 'react-router-dom'
 
 export interface OrderDetailProps extends DetailProps {
@@ -237,8 +237,8 @@ export function OrderDetail({
             <Detail
                 {...props}
                 id={id}
-                icon={<Diagram3 title="Order" />}
-                title={title}
+                icon={<OrderIcon />}
+                title={data?.number ? `#${data.number}` : title}
                 subTitle={data.description}
                 loading={loading}
                 error={error as string}

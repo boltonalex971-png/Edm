@@ -27,7 +27,6 @@ import {
 } from '@mui/x-data-grid'
 import type React from 'react'
 import { type EffectCallback, useEffect, useMemo, useState } from 'react'
-import { Diagram3 } from 'react-bootstrap-icons'
 
 export function Supplies() {
     const path = useBasePath()
@@ -100,7 +99,7 @@ function SupplySearch() {
         <Detail
             type="supply"
             onClose={() => {}}
-            icon={<Diagram3 title="Supplies" />}
+            icon={<SearchIcon />}
             loading={loading}
             error={error as any}
             data={

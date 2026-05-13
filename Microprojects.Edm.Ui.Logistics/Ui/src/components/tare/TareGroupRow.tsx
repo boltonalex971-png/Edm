@@ -7,8 +7,11 @@ import {
     tareSummary,
 } from '@logistics/components/tare/TareItemsPanel'
 import type { Item, UUID } from '@logistics/data/types'
+import {
+    ExpandMoreOutlined as ChevronDown,
+    ChevronRightOutlined as ChevronRight,
+} from '@mui/icons-material'
 import type React from 'react'
-import { ChevronDown, ChevronRight } from 'react-bootstrap-icons'
 import './TareItemsPanel.css'
 
 type TareGroupRowProps = {
@@ -75,9 +78,9 @@ export const TareGroupRow = ({
                     }}
                 >
                     {expanded ? (
-                        <ChevronDown size={14} />
+                        <ChevronDown fontSize="small" />
                     ) : (
-                        <ChevronRight size={14} />
+                        <ChevronRight fontSize="small" />
                     )}
                 </button>
                 <span className="tare-row-barcode">

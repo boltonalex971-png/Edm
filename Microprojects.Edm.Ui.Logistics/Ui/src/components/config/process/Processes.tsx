@@ -9,9 +9,13 @@ import {
     Properties,
     Property,
 } from '@microprojects/edm-components/components'
+import {
+    AccountTreeOutlined as ManufacturingIcon,
+    PlayArrowOutlined as OperationIcon,
+    PrecisionManufacturingOutlined as TechnologyIcon,
+} from '@mui/icons-material'
 import { Box, Typography } from '@mui/material'
 import { type EffectCallback, useEffect, useState } from 'react'
-import { Diagram3 } from 'react-bootstrap-icons'
 import { useNavigate, useParams } from 'react-router-dom'
 import type {
     DetailEventHandler,
@@ -97,15 +101,21 @@ export function ProcessDetail({
     }
 
     const missedInputs = JSON.parse(data.message || '[]')
-    const kindForColor = (
-        kind ?? (data.kind as ProcessKind | undefined)
-    )?.toLowerCase()
+    const effectiveKind = kind ?? (data.kind as ProcessKind | undefined)
+    const kindForColor = effectiveKind?.toLowerCase()
+    const ProcessKindIcon =
+        effectiveKind === 'Technology'
+            ? TechnologyIcon
+            : effectiveKind === 'Operation'
+              ? OperationIcon
+              : ManufacturingIcon
     return (
         <Detail
             {...props}
             id={id}
+            type={props.type ?? 'process'}
             entityType={kindForColor}
-            icon={<Diagram3 title="Process" />}
+            icon={<ProcessKindIcon />}
             loading={loading}
             error={error as string}
             validation={

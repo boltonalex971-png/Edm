@@ -320,7 +320,13 @@ const PaneSeparator = ({onDrag}: PaneSeparatorProps) => {
 const pluralize = (type?: string): string => {
     if (!type) return 'Items';
     const name = type.charAt(0).toUpperCase() + type.slice(1);
-    return name.endsWith('s') ? name + 'es' : name + 's';
+    if (name.endsWith('s') || name.endsWith('x') || name.endsWith('ch') || name.endsWith('sh')) {
+        return name + 'es';
+    }
+    if (/[^aeiou]y$/i.test(name)) {
+        return name.slice(0, -1) + 'ies';
+    }
+    return name + 's';
 };
 
 const scrollToRef = (ref: React.RefObject<HTMLElement> | null | undefined) => {
@@ -598,7 +604,7 @@ export function Detail(props: DetailProps) {
                                         sx={{display: 'flex', alignItems: 'center', gap: 0.5}}
                                     >
                                         {displayProps.icon && React.cloneElement(displayProps.icon, {sx: {fontSize: '12px !important'}} as any)}
-                                        {pluralize(displayProps.type)}
+                                        {pluralize(displayProps.entityType || displayProps.type)}
                                     </Typography>
                                 </Breadcrumbs>
 
@@ -802,7 +808,18 @@ export function Detail(props: DetailProps) {
                         filter: isFading ? 'grayscale(0.5)' : 'none',
                         transition: 'all 0.2s',
                     }}>
-                        {bufferedSubDetail}
+                        {React.isValidElement(bufferedSubDetail)
+                            ? React.cloneElement(bufferedSubDetail as React.ReactElement<any>, {
+                                parents: [
+                                    ...(displayProps.parents || []),
+                                    {
+                                        name: displayProps.title || displayProps.data?.name || 'New Item',
+                                        icon: displayProps.icon,
+                                        ref: detailContainerRef,
+                                    },
+                                ],
+                            })
+                            : bufferedSubDetail}
                     </Box>
                 </Box>
             </Collapse>

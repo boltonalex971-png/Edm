@@ -36,10 +36,10 @@ import {
     Properties,
     Property,
 } from '@microprojects/edm-components/components'
+import { Inventory2Outlined as ItemIcon } from '@mui/icons-material'
 import { Box, Chip, Typography } from '@mui/material'
 import type React from 'react'
 import { type EffectCallback, useEffect, useMemo, useState } from 'react'
-import { Diagram3 } from 'react-bootstrap-icons'
 
 export interface ItemDetailProps extends DetailProps {
     onUpdate?: DetailEventHandler
@@ -155,7 +155,7 @@ export function ItemDetail({ id, title = 'Item', ...props }: ItemDetailProps) {
         <Detail
             {...props}
             id={id}
-            icon={<Diagram3 title="Item" />}
+            icon={<ItemIcon />}
             title={title}
             subTitle={data.description}
             loading={loading}
