@@ -126,10 +126,14 @@ public class OrderService : ServiceBase<Order>, IOrderService
             // mirrors NomenclatureService/TareTypeService's "copy junction
             // rows on fork" pattern. Items continue to match snapshot rows by
             // NomenclatureId, which stays stable per order regardless of
-            // future nomenclature forks.
+            // future nomenclature forks. Rows referencing a deleted/completed
+            // nomenclature are skipped so the snapshot only carries live
+            // components forward.
             var snapshotRows = await Set<SpecificationNomenclature>().AsNoTracking()
                 .Where(sn => sn.Specification.ProcessId == order.ProcessId
-                    && sn.Specification.Active)
+                    && sn.Specification.Active
+                    && sn.Nomenclature.Meta.Deleted == null
+                    && sn.Nomenclature.Meta.Completed == null)
                 .Select(sn => new { sn.NomenclatureId, sn.Quantity })
                 .ToListAsync();
             foreach (var row in snapshotRows)
