@@ -30,10 +30,6 @@ export interface UserInfo {
     divisions: string[]
 }
 
-export interface VersionInfo {
-    product: string
-}
-
 export async function fetchAvailableTasks(): Promise<AvailableTask[]> {
     const r = await axios.get<AvailableTask[]>('/api/tasks/available')
     return r.data ?? []
@@ -68,19 +64,4 @@ export async function fetchLogLevels(): Promise<string[]> {
 export async function fetchUser(): Promise<UserInfo> {
     const r = await axios.get<UserInfo>('/api/auth/user/name')
     return r.data
-}
-
-export async function fetchVersion(): Promise<VersionInfo> {
-    const r = await axios.get<VersionInfo>('/api/hub/meta/version')
-    return r.data
-}
-
-// Strips DOMAIN\ or @suffix from a Windows / email-style name.
-export function cleanName(name: string): string {
-    if (!name) return ''
-    const slash = name.lastIndexOf('\\')
-    if (slash >= 0) return name.slice(slash + 1)
-    const at = name.indexOf('@')
-    if (at > 0) return name.slice(0, at)
-    return name
 }

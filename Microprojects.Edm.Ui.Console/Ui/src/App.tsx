@@ -1,9 +1,10 @@
-import { Box } from '@mui/material'
+﻿import { Box } from '@mui/material'
+import { Changelog } from '@microprojects/edm-components/components/chrome/Changelog'
 import { useCallback, useEffect, useState } from 'react'
-import { fetchUser, fetchVersion, type UserInfo } from './api'
+import { Route, Routes } from 'react-router-dom'
+import { fetchUser, type UserInfo } from './api'
 import { EmbeddedTabs } from './components/EmbeddedTabs'
-import { Footer } from './components/Footer'
-import { Header } from './components/Header'
+import { ConsoleLayout } from './components/Layout'
 import { type ConsoleSection, Sidebar } from './components/Sidebar'
 import { usePluginEmbed } from './lib/usePluginEmbed'
 import { DriversPage } from './pages/DriversPage'
@@ -34,7 +35,6 @@ export default function App() {
     const { embedded } = usePluginEmbed()
     const [section, setSection] = useState<ConsoleSection>('jobs')
     const [user, setUser] = useState<UserInfo | null>(null)
-    const [productVersion, setProductVersion] = useState('')
     const [counts, setCounts] = useState<SectionCounts>({})
 
     useEffect(() => {
@@ -44,11 +44,6 @@ export default function App() {
             .then((u) => !cancelled && setUser(u))
             .catch(() => {
                 /* unauthenticated or endpoint missing — header just hides the user block */
-            })
-        fetchVersion()
-            .then((v) => !cancelled && setProductVersion(v.product))
-            .catch(() => {
-                /* version chip falls back to em-dash */
             })
         return () => {
             cancelled = true
@@ -82,16 +77,22 @@ export default function App() {
         )
     }
 
-    return (
-        <Box className="page-root" data-plugin="admin">
-            <Header user={user} />
-            <Box className="console-shell">
-                <Sidebar value={section} onChange={setSection} counts={counts} />
-                <Box component="main" className="page-main">
-                    {body}
-                </Box>
-            </Box>
-            <Footer productVersion={productVersion} />
+    const sectionView = (
+        <Box className="console-shell">
+            <Sidebar value={section} onChange={setSection} counts={counts} />
+            <Box className="console-body">{body}</Box>
         </Box>
+    )
+
+    return (
+        <ConsoleLayout user={user}>
+            <Routes>
+                <Route
+                    path="/changes"
+                    element={<Changelog changelogUrl="/api/console/meta/changelog" />}
+                />
+                <Route path="*" element={sectionView} />
+            </Routes>
+        </ConsoleLayout>
     )
 }
