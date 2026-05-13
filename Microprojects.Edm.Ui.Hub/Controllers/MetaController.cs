@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Reflection;
 using Microprojects.Edm.Plugins;
 using Microsoft.AspNetCore.Authorization;
@@ -16,6 +17,8 @@ namespace Microprojects.Edm.Ui.Hub.Controllers
     public class MetaController : ControllerBase
     {
         private static readonly Guid HubGuid = Guid.Parse(HubUiPlugin.PluginGuid);
+        private static readonly Assembly PluginAssembly = typeof(HubUiPlugin).Assembly;
+        private const string ChangelogResourceName = "Microprojects.Edm.Ui.Hub.CHANGES.md";
 
         private readonly IPluginContainer _container;
 
@@ -27,7 +30,24 @@ namespace Microprojects.Edm.Ui.Hub.Controllers
         [HttpGet("version")]
         public IActionResult GetVersion()
         {
-            return Ok(new { product = BuildInfo.ProductVersion });
+            var fileVersion = FileVersionInfo.GetVersionInfo(PluginAssembly.Location).FileVersion ?? "0.0.0.0";
+            return Ok(new
+            {
+                main = fileVersion,
+                product = BuildInfo.ProductVersion,
+            });
+        }
+
+        [HttpGet("changelog")]
+        public IActionResult GetChangelog()
+        {
+            using var stream = PluginAssembly.GetManifestResourceStream(ChangelogResourceName);
+            if (stream is null)
+            {
+                return NotFound();
+            }
+            using var reader = new StreamReader(stream);
+            return Content(reader.ReadToEnd(), "text/markdown; charset=utf-8");
         }
 
         /// <summary>The Hub's own ABOUT — the default landing promo.</summary>
