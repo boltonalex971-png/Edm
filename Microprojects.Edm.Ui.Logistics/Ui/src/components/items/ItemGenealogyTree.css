@@ -35,6 +35,14 @@
     min-height: 72px;
 }
 
+/* MUI X TreeItem indents via padding-left only; dir="rtl" alone doesn't flip
+   it. Mirror the formula onto padding-right so deeper ancestors slide further
+   left in the Inputs pane. */
+.geneal-card[dir='rtl'] .MuiTreeItem-content {
+    padding-left: 8px;
+    padding-right: calc(8px + var(--TreeView-itemChildrenIndentation) * var(--TreeView-itemDepth));
+}
+
 .geneal-card-header {
     display: flex;
     align-items: center;

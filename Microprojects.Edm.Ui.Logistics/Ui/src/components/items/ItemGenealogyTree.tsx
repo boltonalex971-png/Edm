@@ -625,12 +625,13 @@ export function ItemGenealogyTree({
                 <Box className="geneal-grid">
                     <GenealogyPane
                         ariaLabel="Input items"
-                        headerLeft="◀ Inputs"
+                        headerLeft="Inputs ◀"
                         count={ancestorCount}
                         tree={ancestorTree}
                         expandedIds={ancestorExpanded}
                         onSelect={onSelect}
                         emptyMessage="No input items recorded."
+                        rtl
                     />
                     <GenealogyPane
                         ariaLabel="Output items"
@@ -655,6 +656,10 @@ interface GenealogyPaneProps {
     expandedIds: string[]
     emptyMessage: string
     onSelect?: (itemId: UUID) => void
+    /** Mirror layout: the root (current item) renders on the right and the
+     * tree extends to the left. Used by the Inputs pane so ancestry reads
+     * right-to-left without changing the underlying tree data. */
+    rtl?: boolean
 }
 
 function GenealogyPane({
@@ -665,6 +670,7 @@ function GenealogyPane({
     expandedIds,
     emptyMessage,
     onSelect,
+    rtl,
 }: GenealogyPaneProps) {
     const [expanded, setExpanded] = useState<string[]>(expandedIds)
     // Re-seed when the data behind the tree changes (depth toggle, refetch).
@@ -677,6 +683,7 @@ function GenealogyPane({
             elevation={0}
             className="geneal-card"
             aria-label={ariaLabel}
+            dir={rtl ? 'rtl' : undefined}
             sx={{
                 p: 1.25,
                 borderRadius: 'var(--r-2)',
