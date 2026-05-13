@@ -1,13 +1,14 @@
-import {Box, Chip, Stack, Tooltip, Typography} from '@mui/material'
+import {Box} from '@mui/material'
 import {SmartScroll, SmartScrollContent} from '@microprojects/tools'
+import {Changelog} from '@microprojects/edm-components/components/chrome/Changelog'
 import {useEffect, useMemo, useState} from 'react'
+import {Route, Routes} from 'react-router-dom'
 import {
     cleanName,
     fetchHubAbout,
     fetchPluginAbout,
     fetchPlugins,
     fetchUser,
-    fetchVersion,
     pluginColor,
     pluginGlyph,
     type PluginSummary,
@@ -15,6 +16,7 @@ import {
 } from './api'
 import {AboutPanel} from './components/AboutPanel'
 import {Greeting} from './components/Greeting'
+import {HubLayout} from './components/Layout'
 import {PluginList} from './components/PluginList'
 import './app.css'
 
@@ -28,13 +30,13 @@ const HUB_IDENTITY = {
     name: 'Hub',
 }
 
-// Top of the SmartScroll-stuck region: top of #main, which sits below the 56px header.
+// Top of the SmartScroll-stuck region: top of the landing wrapper, which
+// sits below the 56px header.
 const SMART_SCROLL_OFFSET = 64
 
 export default function App() {
     const [plugins, setPlugins] = useState<PluginSummary[]>([])
     const [user, setUser] = useState<UserInfo>(EMPTY_USER)
-    const [productVersion, setProductVersion] = useState<string>('')
     const [hubAbout, setHubAbout] = useState<string>('')
     const [aboutCache, setAboutCache] = useState<Record<string, string>>({})
     const [activeGuid, setActiveGuid] = useState<string | null>(null)
@@ -43,12 +45,11 @@ export default function App() {
 
     useEffect(() => {
         let cancelled = false
-        Promise.all([fetchPlugins(), fetchUser(), fetchVersion(), fetchHubAbout()])
-            .then(([pl, u, v, hub]) => {
+        Promise.all([fetchPlugins(), fetchUser(), fetchHubAbout()])
+            .then(([pl, u, hub]) => {
                 if (cancelled) return
                 setPlugins(pl)
                 setUser(u)
-                setProductVersion(v.product)
                 setHubAbout(hub)
             })
             .catch((e: Error) => {
@@ -83,7 +84,6 @@ export default function App() {
     }, [activeGuid, aboutCache])
 
     const displayName = cleanName(user.name)
-    const currentYear = new Date().getFullYear()
 
     const activeAbout = useMemo(() => {
         if (!activeGuid) return hubAbout
@@ -103,78 +103,48 @@ export default function App() {
         return p ?? HUB_IDENTITY
     }, [activeGuid, aboutCache, plugins])
 
-    return (
-        <Box className="page-root">
-            <Box component="header" className="doc-top">
-                <a className="doc-brand" href="/">
-                    <div className="doc-brand-mark">EDM</div>
-                    <div className="doc-brand-text">
-                        <span className="row1">EDM Hub</span>
-                    </div>
-                </a>
-
-                {displayName && (
-                    <Box className="header-user" sx={{ml: 'auto'}}>
-                        <Tooltip title={user.name} arrow placement="bottom-end">
-                            <span className="user-name">{displayName}</span>
-                        </Tooltip>
-                        {user.role && <span className="user-role">{user.role}</span>}
-                    </Box>
-                )}
-            </Box>
-
-            <Box component="main" className="page-main">
-                <div className="landing-grid">
-                    <div></div>
-                    <Greeting userName={displayName}/>
-                </div>
-                <SmartScroll
-                    offsetTop={SMART_SCROLL_OFFSET}
-                    className="landing-grid"
-                >
-                    <SmartScrollContent className="landing-left">
-                        <PluginList
-                            plugins={plugins}
-                            loading={loading}
-                            error={error}
-                            activeGuid={activeGuid}
-                            onActivate={setActiveGuid}
-                        />
-                    </SmartScrollContent>
-                    <SmartScrollContent className="landing-right">
-                        <AboutPanel
-                            key={activeGuid ?? 'hub'}
-                            markdown={activeAbout}
-                            loading={loading}
-                            glyphColor={pluginColor(activeIdentity.guid)}
-                            glyphLabel={pluginGlyph(activeIdentity.name)}
-                        />
-                    </SmartScrollContent>
-                </SmartScroll>
-            </Box>
-
-            <Box component="footer" className="page-footer">
-                <Stack
-                    direction="row"
-                    spacing={2}
-                    alignItems="center"
-                    justifyContent="space-between"
-                    sx={{width: '100%'}}
-                >
-                    <Typography
-                        variant="caption"
-                        sx={{color: 'var(--ink-3)', fontWeight: 500}}
-                    >
-                        &copy; Microprojects 2020 &ndash; {currentYear}
-                    </Typography>
-                    <Chip
-                        label={`EDM ${productVersion || '—'}`}
-                        size="small"
-                        variant="outlined"
-                        className="version-chip"
+    const landing = (
+        <Box className="hub-landing">
+            <div className="landing-grid">
+                <div></div>
+                <Greeting userName={displayName}/>
+            </div>
+            <SmartScroll
+                offsetTop={SMART_SCROLL_OFFSET}
+                className="landing-grid"
+            >
+                <SmartScrollContent className="landing-left">
+                    <PluginList
+                        plugins={plugins}
+                        loading={loading}
+                        error={error}
+                        activeGuid={activeGuid}
+                        onActivate={setActiveGuid}
                     />
-                </Stack>
-            </Box>
+                </SmartScrollContent>
+                <SmartScrollContent className="landing-right">
+                    <AboutPanel
+                        key={activeGuid ?? 'hub'}
+                        markdown={activeAbout}
+                        loading={loading}
+                        glyphColor={pluginColor(activeIdentity.guid)}
+                        glyphLabel={pluginGlyph(activeIdentity.name)}
+                    />
+                </SmartScrollContent>
+            </SmartScroll>
         </Box>
+    )
+
+    return (
+        <HubLayout user={user}>
+            <Routes>
+                <Route index element={landing}/>
+                <Route
+                    path="/changes"
+                    element={<Changelog changelogUrl="/api/hub/meta/changelog"/>}
+                />
+                <Route path="*" element={landing}/>
+            </Routes>
+        </HubLayout>
     )
 }

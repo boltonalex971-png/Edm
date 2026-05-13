@@ -15,6 +15,10 @@ interface LayoutProps {
     copyrightOwner?: string;
     /** Footer copyright start year; defaults to 2020. */
     copyrightStartYear?: number;
+    /** Render the per-plugin "Main" version chip. Defaults to true. Set to
+     *  false for shells that don't have a meaningful plugin version separate
+     *  from the platform's product version (e.g. the Hub). */
+    showMainVersion?: boolean;
 }
 
 interface VersionInfo {
@@ -30,6 +34,7 @@ export const Layout = ({
     seenStorageKey = 'edm.changelog.seen',
     copyrightOwner = 'Microprojects',
     copyrightStartYear = 2020,
+    showMainVersion = true,
 }: LayoutProps) => {
     const currYear = new Date().getFullYear();
     const [versions, setVersions] = useState<VersionInfo | null>(null);
@@ -73,7 +78,9 @@ export const Layout = ({
                     <span>&copy; {copyrightOwner} {copyrightStartYear} &ndash; {currYear}</span>
                 </div>
                 <div className="footer-right">
-                    <span className="version-chip">Main {versions?.main ?? '—'}</span>
+                    {showMainVersion && (
+                        <span className="version-chip">Main {versions?.main ?? '—'}</span>
+                    )}
                     <span className="version-chip">EDM {versions?.product ?? '—'}</span>
                     <RouterLink
                         to={changelogPath}

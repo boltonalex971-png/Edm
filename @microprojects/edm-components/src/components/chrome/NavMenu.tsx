@@ -67,6 +67,9 @@ interface NavMenuProps {
     setRole?: (role: string) => void;
     /** Top-level nav items shown in the doc-nav bar. */
     navItems: NavMenuItem[];
+    /** Render the ⌘K search button. Defaults to true. Set to false for shells
+     *  that don't host a global search (e.g. the platform Hub). */
+    showSearch?: boolean;
     /** Extra menu sections to inject after the standard preferences (Profile / Logout etc). */
     extraUserMenuItems?: React.ReactNode;
     /** Override the default Logout MenuItem behaviour. Omitting hides the row. */
@@ -94,6 +97,7 @@ export const NavMenu = ({
     roles,
     setRole,
     navItems,
+    showSearch = true,
     extraUserMenuItems,
     onLogout,
 }: NavMenuProps) => {
@@ -137,11 +141,13 @@ export const NavMenu = ({
             <div className="tb-spacer" aria-hidden="true" />
 
             {/* IMPROVISED · v2 04f.3 search slot — visual only; ⌘K wiring lands when search is built. */}
-            <button type="button" className="tb-search" tabIndex={-1}>
-                <SearchIcon fontSize="small" className="tb-search-icon" />
-                <span className="tb-search-text">Search…</span>
-                <span className="kbd">⌘K</span>
-            </button>
+            {showSearch && (
+                <button type="button" className="tb-search" tabIndex={-1}>
+                    <SearchIcon fontSize="small" className="tb-search-icon" />
+                    <span className="tb-search-text">Search…</span>
+                    <span className="kbd">⌘K</span>
+                </button>
+            )}
 
             {user && user.roles && activeRole && setRole && (
                 <button
