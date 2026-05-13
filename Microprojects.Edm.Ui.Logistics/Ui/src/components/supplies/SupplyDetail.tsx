@@ -1,5 +1,4 @@
 import api from '@features/api/api'
-import Api from '@features/api/api'
 import {
     Detail,
     type DetailProps,
@@ -7,10 +6,7 @@ import {
     Info,
     MuiEditor,
 } from '@logistics/components/MasterDetail'
-import { BatchItemCreate } from '@logistics/components/items/BatchItemCreate'
-import { ItemDetail } from '@logistics/components/items/ItemDetail'
-import { TareDetail } from '@logistics/components/tare/TareDetail'
-import { TareItemsPanel } from '@logistics/components/tare/TareItemsPanel'
+import { SupplyTabs } from '@logistics/components/supplies/SupplyTabs'
 import type { DetailEventHandler, Supply, UUID } from '@logistics/data/types'
 import { useGet } from '@logistics/hooks/hooks'
 import { formatLocalDateTime } from '@logistics/utils/format'
@@ -20,11 +16,8 @@ import {
     Properties,
     Property,
 } from '@microprojects/edm-components/components'
-import {
-    AddOutlined as AddIcon,
-    LocalShippingOutlined as SupplyIcon,
-} from '@mui/icons-material'
-import { Box, Button as MuiButton } from '@mui/material'
+import { LocalShippingOutlined as SupplyIcon } from '@mui/icons-material'
+import { Box } from '@mui/material'
 import type React from 'react'
 import { type EffectCallback, useEffect, useState } from 'react'
 
@@ -137,49 +130,10 @@ export function SupplyDetail({
             }
             relations={
                 supplyId && supplyId !== EMPTY_GUID ? (
-                    <TareItemsPanel
-                        api={`${api.supplies}/${supplyId}/items`}
-                        supplyId={supplyId as UUID}
-                        onTareClick={(group) =>
-                            setSubDetail(
-                                <TareDetail
-                                    tareId={group.tare.id}
-                                    label={group.tare.barcode}
-                                    onClose={() => setSubDetail(undefined)}
-                                />,
-                            )
-                        }
-                        onItemClick={(item) =>
-                            setSubDetail(
-                                <ItemDetail
-                                    readonly={true}
-                                    id={item.id}
-                                    api={Api.items}
-                                    onClose={() => setSubDetail(undefined)}
-                                />,
-                            )
-                        }
-                        toolbar={
-                            <Box sx={{ mb: 1 }}>
-                                <MuiButton
-                                    variant="contained"
-                                    size="small"
-                                    startIcon={<AddIcon />}
-                                    onClick={() =>
-                                        setSubDetail(
-                                            <BatchItemCreate
-                                                supplyId={supplyId as UUID}
-                                                onClose={() =>
-                                                    setSubDetail(undefined)
-                                                }
-                                            />,
-                                        )
-                                    }
-                                >
-                                    Add items
-                                </MuiButton>
-                            </Box>
-                        }
+                    <SupplyTabs
+                        id={supplyId as UUID}
+                        api={api.supplies}
+                        onDetailSelected={setSubDetail}
                     />
                 ) : null
             }
