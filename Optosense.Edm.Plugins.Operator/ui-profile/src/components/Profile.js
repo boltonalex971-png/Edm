@@ -14,9 +14,9 @@ export const Profile = (props) => {
     const { id } = useParams();
     const [actions] = useState([{ name: 'Get' }, { name: 'Set' }]);
     const api = useContext(ApiContext);
-    const [profile, , loading, error] = useGet(`${api}/profiles/${id}`, []);
+    const [profile, , loading, error] = useGet(`${api}/technologies/profiles/${id}`, []);
     const saveData = (data) => {
-        axios.put(`${api}/profiles/${id}`, { ...profile, textJson: JSON.stringify(data) });
+        axios.put(`${api}/technologies/profiles/${id}`, { ...profile, textJson: JSON.stringify(data) });
     };
 
     return (

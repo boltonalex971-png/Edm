@@ -14,10 +14,10 @@ import { Editor } from '../MasterDetail';
 export const Profile = (props) => {
     const match = useRouteMatch();
     const api = useContext(ApiContext);
-    const [profile, , loading, error] = useGet(`${api}/profiles/${match.params.id}`, []);
-    const [instructions] = useGet(`${api}/plugins/${process.env.REACT_APP_GUID}/instructions`, []);
+    const [profile, , loading, error] = useGet(`${api}/technologies/profiles/${match.params.id}`, []);
+    const [instructions] = useGet(`${api}/technologies/plugins/${process.env.REACT_APP_GUID}/instructions`, []);
     const saveData = (data) => {
-        axios.put(`${api}/profiles/${match.params.id}`, { ...profile, textJson: JSON.stringify(data) });
+        axios.put(`${api}/technologies/profiles/${match.params.id}`, { ...profile, textJson: JSON.stringify(data) });
     };
     const Details = (props) => {
         const dataChange = (data) => {
