@@ -13,7 +13,7 @@ import { useHistory, Link } from "react-router-dom";
 export function Instructions({ guid }) {
     const history = useHistory();
     const api = useContext(ApiContext);
-    const [data, setData, loading, error] = useGet(`${api}/plugins/${process.env.REACT_APP_GUID}/instructions`);
+    const [data, setData, loading, error] = useGet(`${api}/technologies/plugins/${process.env.REACT_APP_GUID}/instructions`);
     const [instruction, setInstruction] = useState();
     const saveInstruction = (inst) => {
         let changedData = [...((data || []).filter(item => item.name !== inst.name))];
@@ -25,7 +25,7 @@ export function Instructions({ guid }) {
 
         setInstruction(newInst);
         setData(changedData);
-        axios.put(`${api}/plugins/${process.env.REACT_APP_GUID}/instructions`, changedData);
+        axios.put(`${api}/technologies/plugins/${process.env.REACT_APP_GUID}/instructions`, changedData);
     };
     return (
         <div style={{ margin: 10 }}>
