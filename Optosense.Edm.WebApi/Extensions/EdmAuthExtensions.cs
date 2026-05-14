@@ -96,6 +96,7 @@ public static class EdmAuthExtensions
             {
                 var jwtService = context.RequestServices.GetRequiredService<IJwtService>();
                 var selectedRole = context.Session.GetString("SelectedRole");
+                var claims = jwtService.BuildClaims(context.User, selectedRole);
                 var token = jwtService.GenerateToken(context.User, selectedRole);
                 context.Response.Cookies.Append("X-Auth-Token", token, new CookieOptions
                 {
@@ -104,6 +105,17 @@ public static class EdmAuthExtensions
                     SameSite = SameSiteMode.Strict,
                     Expires = DateTimeOffset.UtcNow.AddMinutes(60)
                 });
+
+                // When the request authenticated via Negotiate (cookie expired or absent),
+                // context.User is a raw WindowsIdentity with no `role`/`Roles` claims —
+                // RequireRolesAttribute would 403 the current request even though the
+                // response just got a fresh JWT cookie. Promote the current user to the
+                // same claims set so authorization filters in this request see the role.
+                if (context.User.Identity is WindowsIdentity)
+                {
+                    var identity = new ClaimsIdentity(claims, JwtBearerDefaults.AuthenticationScheme, "name", "role");
+                    context.User = new ClaimsPrincipal(identity);
+                }
             }
             await next();
         });
