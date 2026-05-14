@@ -1,4 +1,4 @@
-﻿import React, {useCallback, useMemo} from "react";
+﻿import React, {Suspense, lazy, useCallback, useMemo} from "react";
 import {Outlet, Route, Routes} from "react-router-dom";
 import axios from "axios";
 import {
@@ -10,12 +10,8 @@ import {
     SettingsApplications as ConfigIcon,
     Extension as PluginsIcon,
 } from "@mui/icons-material";
-import {Changelog, Layout, NavMenu} from "@microprojects/edm-components/components";
+import {Changelog, Layout, NavMenu, Loading} from "@microprojects/edm-components/components";
 import {Home} from "./components/home/Home";
-import {Dashboard} from "./components/dashboard/Dashboard";
-import {Config} from "./components/config/Config";
-import {NewOperationWizard} from "./components/operation/NewOperationWizard";
-import {Plugins} from "./components/plugins/Plugins";
 import {ApiContext} from './ApiContext';
 import {roleAttr} from './styles/role';
 import api from "./components/api";
@@ -26,12 +22,20 @@ import {displayUserName} from "@microprojects/edm-components/utils";
 import {UiPreferencesProvider, useUiPreferences, densityClass} from "@microprojects/edm-components/styles";
 
 import {getUserFromToken} from "@microprojects/edm-components/hooks";
-import Operations from "./components/dashboard/Operations";
-import {OperationLayout} from "./components/operation/OperationLayout";
 import {useDispatch, useSelector} from "react-redux";
 import {setUser} from "./slices/userSlice";
 import type {RootState} from "@edm/store.ts";
 import {appRoles} from './ApiContext';
+
+// Route-level code splitting — shell + Home eager; everything else fetched
+// on demand so first paint isn't dragged down by the MUI X DataGrid chunk
+// pulled in by Config/Dashboard.
+const Dashboard = lazy(() => import("./components/dashboard/Dashboard").then(m => ({default: m.Dashboard})));
+const Config = lazy(() => import("./components/config/Config").then(m => ({default: m.Config})));
+const NewOperationWizard = lazy(() => import("./components/operation/NewOperationWizard").then(m => ({default: m.NewOperationWizard})));
+const Plugins = lazy(() => import("./components/plugins/Plugins").then(m => ({default: m.Plugins})));
+const Operations = lazy(() => import("./components/dashboard/Operations"));
+const OperationLayout = lazy(() => import("./components/operation/OperationLayout").then(m => ({default: m.OperationLayout})));
 
 const ROLE_DESCRIPTORS = {
     [appRoles.admin]:        { label: 'Administrator', icon: <BusinessIcon fontSize="small" /> },
@@ -105,38 +109,40 @@ function AppShell() {
             data-scheme={scheme}
             data-plugin="technologies"
         >
-            <Routes>
-                <Route path="/operations/:id/*" element={<OperationLayout/>}/>
-                <Route element={
-                    <Layout
-                        navMenu={navMenu}
-                        versionsApiUrl={`${api.meta}/version`}
-                        versionChipName="Technologies"
-                        versionChipVersionKey="main"
-                        copyrightOwner="Microprojects"
-                        copyrightStartYear={2020}
-                    >
-                        <Outlet/>
-                    </Layout>
-                }>
-                    <Route path="changes" element={<Changelog changelogUrl={`${api.meta}/changelog`}/>}/>
-                    {user && userRole && <>
-                        <Route index element={<Home/>}/>
-                        {userRole === appRoles.operator &&
-                            <Route path="dashboard/operations/*" element={<Operations/>}/>}
-                        {userRole !== appRoles.operator && <Route path="dashboard/*" element={<Dashboard/>}/>}
-                        {userRole !== appRoles.operator && <Route path="config/*" element={<Config/>}/>}
-                        {userRole !== appRoles.operator && <Route path="plugins/*" element={<Plugins/>}/>}
-                        <Route path="operation/*" element={<NewOperationWizard/>}/>
-                    </>}
-                    {user && !userRole &&
-                        <Route path="*" element={<AuthInterstitial kind="no-role" user={displayUserName(user)}/>}/>
-                    }
-                    {!user &&
-                        <Route path="*" element={<AuthInterstitial kind="signin"/>}/>
-                    }
-                </Route>
-            </Routes>
+            <Suspense fallback={<Loading/>}>
+                <Routes>
+                    <Route path="/operations/:id/*" element={<OperationLayout/>}/>
+                    <Route element={
+                        <Layout
+                            navMenu={navMenu}
+                            versionsApiUrl={`${api.meta}/version`}
+                            versionChipName="Technologies"
+                            versionChipVersionKey="main"
+                            copyrightOwner="Microprojects"
+                            copyrightStartYear={2020}
+                        >
+                            <Outlet/>
+                        </Layout>
+                    }>
+                        <Route path="changes" element={<Changelog changelogUrl={`${api.meta}/changelog`}/>}/>
+                        {user && userRole && <>
+                            <Route index element={<Home/>}/>
+                            {userRole === appRoles.operator &&
+                                <Route path="dashboard/operations/*" element={<Operations/>}/>}
+                            {userRole !== appRoles.operator && <Route path="dashboard/*" element={<Dashboard/>}/>}
+                            {userRole !== appRoles.operator && <Route path="config/*" element={<Config/>}/>}
+                            {userRole !== appRoles.operator && <Route path="plugins/*" element={<Plugins/>}/>}
+                            <Route path="operation/*" element={<NewOperationWizard/>}/>
+                        </>}
+                        {user && !userRole &&
+                            <Route path="*" element={<AuthInterstitial kind="no-role" user={displayUserName(user)}/>}/>
+                        }
+                        {!user &&
+                            <Route path="*" element={<AuthInterstitial kind="signin"/>}/>
+                        }
+                    </Route>
+                </Routes>
+            </Suspense>
         </div>
     );
 }

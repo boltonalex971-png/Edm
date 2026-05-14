@@ -1,21 +1,42 @@
 import './App.css'
-import { Changelog } from '@logistics/components/Changelog.tsx'
-import { Config } from '@logistics/components/config/Config.tsx'
-import { OperatorDesktop } from '@logistics/components/desktop/OperatorDesktop'
 import { Home } from '@logistics/components/homepages/Home.tsx'
-import { Items } from '@logistics/components/items/Items.tsx'
-import { Orders } from '@logistics/components/orders/Orders.tsx'
-import { Repacking } from '@logistics/components/repacking/Repacking.tsx'
-import { Supplies } from '@logistics/components/supplies/Supplies.tsx'
 import type { RootState } from '@logistics/store.ts'
+import { Loading } from '@microprojects/edm-components/components'
 import axios from 'axios'
-import React, { useEffect } from 'react'
+import React, { Suspense, lazy, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import api from './features/api/api'
 import { getUserFromToken } from './features/auth/authUtils'
 import { setUser } from './features/auth/userSlice'
+
+// Route-level code splitting — first paint loads only the shell + Home;
+// each feature area is fetched on demand. Home stays eager because it
+// IS the first paint after sign-in.
+const Changelog = lazy(() =>
+    import('@logistics/components/Changelog.tsx').then((m) => ({ default: m.Changelog })),
+)
+const Config = lazy(() =>
+    import('@logistics/components/config/Config.tsx').then((m) => ({ default: m.Config })),
+)
+const OperatorDesktop = lazy(() =>
+    import('@logistics/components/desktop/OperatorDesktop').then((m) => ({
+        default: m.OperatorDesktop,
+    })),
+)
+const Items = lazy(() =>
+    import('@logistics/components/items/Items.tsx').then((m) => ({ default: m.Items })),
+)
+const Orders = lazy(() =>
+    import('@logistics/components/orders/Orders.tsx').then((m) => ({ default: m.Orders })),
+)
+const Repacking = lazy(() =>
+    import('@logistics/components/repacking/Repacking.tsx').then((m) => ({ default: m.Repacking })),
+)
+const Supplies = lazy(() =>
+    import('@logistics/components/supplies/Supplies.tsx').then((m) => ({ default: m.Supplies })),
+)
 
 export function App() {
     const user = useSelector((state: RootState) => state.user)
@@ -61,10 +82,12 @@ export function App() {
         // is mounted directly at the plugin root rather than under /desktop.
         return (
             <Layout hideMenu>
-                <Routes>
-                    <Route path="/changes" element={<Changelog />} />
-                    <Route path="/*" element={<OperatorDesktop />} />
-                </Routes>
+                <Suspense fallback={<Loading />}>
+                    <Routes>
+                        <Route path="/changes" element={<Changelog />} />
+                        <Route path="/*" element={<OperatorDesktop />} />
+                    </Routes>
+                </Suspense>
             </Layout>
         )
     }
@@ -72,16 +95,18 @@ export function App() {
     return (
         <Layout>
             {hasRole && (
-                <Routes>
-                    <Route index element={<Home />} />
-                    <Route path="/config/*" element={<Config />} />
-                    <Route path="/orders/*" element={<Orders />} />
-                    <Route path="/supplies/*" element={<Supplies />} />
-                    <Route path="/items/*" element={<Items />} />
-                    <Route path="/repacking" element={<Repacking />} />
-                    <Route path="/changes" element={<Changelog />} />
-                    <Route path="*" element={<span>Page not exist</span>} />
-                </Routes>
+                <Suspense fallback={<Loading />}>
+                    <Routes>
+                        <Route index element={<Home />} />
+                        <Route path="/config/*" element={<Config />} />
+                        <Route path="/orders/*" element={<Orders />} />
+                        <Route path="/supplies/*" element={<Supplies />} />
+                        <Route path="/items/*" element={<Items />} />
+                        <Route path="/repacking" element={<Repacking />} />
+                        <Route path="/changes" element={<Changelog />} />
+                        <Route path="*" element={<span>Page not exist</span>} />
+                    </Routes>
+                </Suspense>
             )}
             {isAuthenticated && !hasRole && (
                 <span>

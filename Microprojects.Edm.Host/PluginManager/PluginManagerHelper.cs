@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -128,6 +129,13 @@ public static class PluginManagerHelper
         }
     }
 
+    // Matches Rsbuild-style content-hashed filenames (e.g. `index.569f58a8.js`,
+    // `lib-mui-x.abcd1234ef.css.br`). The trailing `(?:\.(?:br|gz))?` lets the same
+    // immutable cache policy apply to the pre-compressed siblings.
+    private static readonly Regex HashedAssetRegex = new(
+        @"\.[0-9a-fA-F]{8,}\.(?:js|css|svg|woff2?|ttf|eot|json|png|jpe?g|gif|ico|map)(?:\.(?:br|gz))?$",
+        RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
     private static void MapSpa(this IApplicationBuilder builder, Type plugin)
     {
         var attr = plugin.GetCustomAttribute<PluginAttribute>();
@@ -135,7 +143,7 @@ public static class PluginManagerHelper
         var packageName = name[(name.LastIndexOf('.') + 1)..];
         var pluginPath = attr.UiRoot != null ? new PathString($"/{attr.UiRoot}") : new PathString();
         var fileProvider = new ManifestEmbeddedFileProvider(plugin.Assembly, attr.SpaPath);
-        
+
         builder.Use(async (context, next) =>
         {
             if (context.Request.Path.StartsWithSegments(pluginPath, out var remain))
@@ -168,10 +176,83 @@ public static class PluginManagerHelper
             await next(context);
         });
 
+        // Pre-compressed sibling negotiation — probe for `.br` first, then
+        // `.gz`, and rewrite the request path to the sibling so the StaticFile
+        // middleware below serves the raw bytes. Headers (Content-Encoding,
+        // Content-Type, Vary) are intentionally set in OnPrepareResponse, NOT
+        // here: if StaticFiles falls through, no middleware further down knows
+        // about our rewrite, so a stale Content-Encoding header would cause
+        // ERR_CONTENT_DECODING_FAILED on the client.
+        builder.Use(async (context, next) =>
+        {
+            if ((HttpMethods.IsGet(context.Request.Method) || HttpMethods.IsHead(context.Request.Method))
+                && context.Request.Path.StartsWithSegments(pluginPath, out var remain)
+                && !string.IsNullOrEmpty(remain))
+            {
+                var accept = context.Request.Headers.AcceptEncoding.ToString();
+                if (accept.Contains("br", StringComparison.OrdinalIgnoreCase)
+                    && fileProvider.GetFileInfo(remain + ".br").Exists)
+                {
+                    context.Request.Path = new PathString(context.Request.Path + ".br");
+                }
+                else if (accept.Contains("gzip", StringComparison.OrdinalIgnoreCase)
+                    && fileProvider.GetFileInfo(remain + ".gz").Exists)
+                {
+                    context.Request.Path = new PathString(context.Request.Path + ".gz");
+                }
+            }
+
+            await next(context);
+        });
+
         builder.UseStaticFiles(new StaticFileOptions
         {
             FileProvider = fileProvider,
-            RequestPath = new PathString(pluginPath)
+            RequestPath = new PathString(pluginPath),
+            // Default ContentTypeProvider has no mapping for `.br`/`.gz` and
+            // would silently skip them, falling through to the next middleware
+            // with our rewritten path and a wrong Content-Encoding header.
+            ServeUnknownFileTypes = true,
+            OnPrepareResponse = ctx =>
+            {
+                var fileName = ctx.File.Name;
+
+                if (HashedAssetRegex.IsMatch(fileName))
+                {
+                    ctx.Context.Response.Headers.CacheControl = "public, max-age=31536000, immutable";
+                }
+                else
+                {
+                    ctx.Context.Response.Headers.CacheControl = "no-cache";
+                }
+
+                var encoding = fileName.EndsWith(".br", StringComparison.OrdinalIgnoreCase) ? "br"
+                             : fileName.EndsWith(".gz", StringComparison.OrdinalIgnoreCase) ? "gzip"
+                             : null;
+                if (encoding != null)
+                {
+                    ctx.Context.Response.Headers.ContentEncoding = encoding;
+                    ctx.Context.Response.Headers.Append("Vary", "Accept-Encoding");
+
+                    var inner = fileName[..fileName.LastIndexOf('.')];
+                    var ext = Path.GetExtension(inner).ToLowerInvariant();
+                    var contentType = ext switch
+                    {
+                        ".js"   => "application/javascript",
+                        ".mjs"  => "application/javascript",
+                        ".css"  => "text/css",
+                        ".html" => "text/html; charset=utf-8",
+                        ".svg"  => "image/svg+xml",
+                        ".json" => "application/json",
+                        ".map"  => "application/json",
+                        _       => null
+                    };
+                    if (contentType != null)
+                    {
+                        ctx.Context.Response.ContentType = contentType;
+                    }
+                }
+            }
         });
     }
 
