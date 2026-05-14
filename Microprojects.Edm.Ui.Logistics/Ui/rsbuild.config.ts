@@ -3,8 +3,11 @@ import { pluginReact } from '@rsbuild/plugin-react'
 import { pluginSass } from '@rsbuild/plugin-sass'
 import { pluginBasicSsl } from '@rsbuild/plugin-basic-ssl'
 import { edmFontTag } from '@microprojects/edm-components/styles/fonts'
+import CompressionPlugin from 'compression-webpack-plugin'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
+
+const COMPRESSIBLE = /\.(?:js|css|html|svg|json)$/
 
 const certPath = path.resolve(__dirname, '../../.dev-certs/localhost.pem')
 const keyPath  = path.resolve(__dirname, '../../.dev-certs/localhost-key.pem')
@@ -68,6 +71,66 @@ export default defineConfig({
     },
     output: {
         assetPrefix: '/logistics',
+    },
+    performance: {
+        chunkSplit: {
+            strategy: 'custom',
+            splitChunks: {
+                cacheGroups: {
+                    react: {
+                        test: /[\\/]node_modules[\\/](react|react-dom|scheduler|react-router|react-router-dom)[\\/]/,
+                        name: 'lib-react',
+                        chunks: 'all',
+                        priority: 30,
+                    },
+                    muiX: {
+                        test: /[\\/]node_modules[\\/]@mui[\\/](x-data-grid|x-tree-view|x-virtualizer|x-internals)[\\/]/,
+                        name: 'lib-mui-x',
+                        chunks: 'all',
+                        priority: 25,
+                    },
+                    muiCore: {
+                        test: /[\\/]node_modules[\\/](@mui[\\/](material|system|utils|private-theming|styled-engine)|@emotion[\\/](react|styled|cache|serialize|utils|sheet|hash|memoize|use-insertion-effect-with-fallbacks|is-prop-valid|unitless|weak-memoize))[\\/]/,
+                        name: 'lib-mui-core',
+                        chunks: 'all',
+                        priority: 20,
+                    },
+                    signalr: {
+                        test: /[\\/]node_modules[\\/]@microsoft[\\/]signalr[\\/]/,
+                        name: 'lib-signalr',
+                        chunks: 'all',
+                        priority: 15,
+                    },
+                    edmShared: {
+                        test: /[\\/]@microprojects[\\/](edm-components|tools|react-utils)[\\/]/,
+                        name: 'lib-edm-shared',
+                        chunks: 'all',
+                        priority: 10,
+                    },
+                },
+            },
+        },
+    },
+    tools: {
+        rspack: (_config, { isProd, appendPlugins }) => {
+            if (!isProd) return
+            appendPlugins([
+                new CompressionPlugin({
+                    algorithm: 'brotliCompress',
+                    filename: '[path][base].br',
+                    test: COMPRESSIBLE,
+                    threshold: 1024,
+                    minRatio: 0.8,
+                }),
+                new CompressionPlugin({
+                    algorithm: 'gzip',
+                    filename: '[path][base].gz',
+                    test: COMPRESSIBLE,
+                    threshold: 1024,
+                    minRatio: 0.8,
+                }),
+            ])
+        },
     },
     html: {
         title: 'Edm Logistics',
