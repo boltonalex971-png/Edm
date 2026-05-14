@@ -221,7 +221,6 @@ export function Repacking() {
         async (tare: AvailableTare | null) => {
             if (tare?.id) {
                 await loadSourceByTareId(tare.id)
-                setTarePicked(null)
                 return
             }
             const text = tare?.barcode?.trim()
@@ -232,7 +231,6 @@ export function Repacking() {
                 )
                 if (found && found.length > 0) {
                     await loadSourceByTareId(found[0].id)
-                    setTarePicked(null)
                 }
             } catch {
                 /* ignore */
@@ -332,7 +330,6 @@ export function Repacking() {
     const handleAddTargetTare = async (tare: AvailableTare | null) => {
         if (tare?.id) {
             if (targetTares.some((t) => t.id === tare.id)) {
-                setNewTarePicked(null)
                 return
             }
             try {
@@ -340,7 +337,6 @@ export function Repacking() {
                     `${api.items}/tare/${tare.id}`,
                 )
                 addTargetTareToWorkspace(tare, items || [])
-                setNewTarePicked(null)
             } catch (e: any) {
                 alert(e.message || 'Failed to load tare')
             }
@@ -360,7 +356,6 @@ export function Repacking() {
                     )
                     addTargetTareToWorkspace(existing, items || [])
                 }
-                setNewTarePicked(null)
                 return
             }
             if (!newTareTypeId) {
@@ -373,7 +368,6 @@ export function Repacking() {
             })
             if (created) {
                 addTargetTareToWorkspace(created, [])
-                setNewTarePicked(null)
             }
         } catch (e: any) {
             alert(e.message || 'Failed to add tare')
