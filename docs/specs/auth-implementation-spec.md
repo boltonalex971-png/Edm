@@ -172,6 +172,8 @@ There is also a `LocalJobExecutor.Execute(this IJobContainer, IJob, …)` extens
 3. Per-request middleware (`EdmAuthExtensions.UseEdmJwtCookieRefresh`) refreshes the cookie when:
    - Identity is `WindowsIdentity` (kerb pass-through is always fresh), or
    - JWT `exp` is within `Edm:Auth:Jwt:RefreshThresholdMinutes` (default 15) of expiry. The new token is set as a 60-min cookie.
+
+   When the source is `WindowsIdentity` (cookie expired or absent on this request, Negotiate just authenticated), the middleware **also rebuilds `context.User`** from the same claim set (`IJwtService.BuildClaims`) for the current request. Otherwise authorization filters running later in the pipeline — notably `RequireRolesAttribute` — would still see the raw `WindowsIdentity` with no `role`/`Roles` claims and return 403 even though the response just got a fresh cookie. Claim derivation lives in `JwtService.BuildClaims` so both the JWT and the in-process principal stay byte-for-byte identical.
 4. Role switching: `PUT /api/auth/user/role` validates the requested role is in `UserInfo.Roles`, regenerates the JWT with `role = override`, writes both `Session["SelectedRole"]` and a fresh cookie. From this point `RequireRolesAttribute.ResolveActiveRole` returns the new role on every request.
 
 ---

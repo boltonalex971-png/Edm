@@ -13,6 +13,13 @@ namespace Microprojects.Edm.Host.Auth
     public interface IJwtService
     {
         string GenerateToken(ClaimsPrincipal principal, string overrideRole = null);
+
+        /// <summary>
+        /// Produces the same claim set that <see cref="GenerateToken"/> embeds in the JWT.
+        /// Exposed so the cookie-refresh middleware can upgrade a raw <c>WindowsIdentity</c>
+        /// on the *current* request, not only the response cookie.
+        /// </summary>
+        List<Claim> BuildClaims(ClaimsPrincipal principal, string overrideRole = null);
     }
 
     public class JwtService : IJwtService
@@ -30,9 +37,26 @@ namespace Microprojects.Edm.Host.Auth
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
+            var claims = BuildClaims(principal, overrideRole);
+
+            var descriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Issuer = jwtSettings["Issuer"],
+                Audience = jwtSettings["Audience"],
+                Expires = DateTime.UtcNow.AddMinutes(double.Parse(jwtSettings["ExpiryMinutes"] ?? "60")),
+                SigningCredentials = creds
+            };
+
+            var handler = new JsonWebTokenHandler();
+            return handler.CreateToken(descriptor);
+        }
+
+        public List<Claim> BuildClaims(ClaimsPrincipal principal, string overrideRole = null)
+        {
             var claims = new List<Claim>();
             var groupNames = new List<string>();
-            
+
             if (principal.Identity is WindowsIdentity windowsIdentity)
             {
                 claims.Add(new Claim(JwtRegisteredClaimNames.Sub, windowsIdentity.Name));
@@ -115,22 +139,10 @@ namespace Microprojects.Edm.Host.Auth
             }
 
             // Dedup so any upstream-introduced duplicate doesn't compound across refreshes.
-            claims = claims
+            return claims
                 .GroupBy(c => (c.Type, c.Value), c => c)
                 .Select(g => g.First())
                 .ToList();
-
-            var descriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(claims),
-                Issuer = jwtSettings["Issuer"],
-                Audience = jwtSettings["Audience"],
-                Expires = DateTime.UtcNow.AddMinutes(double.Parse(jwtSettings["ExpiryMinutes"] ?? "60")),
-                SigningCredentials = creds
-            };
-
-            var handler = new JsonWebTokenHandler();
-            return handler.CreateToken(descriptor);
         }
     }
 }
