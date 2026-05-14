@@ -5,6 +5,7 @@
 	  <OutputType>Library</OutputType>
 	  <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
 	  <LangVersion>14</LangVersion>
+	  <FileVersion>1.0.0.3</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>

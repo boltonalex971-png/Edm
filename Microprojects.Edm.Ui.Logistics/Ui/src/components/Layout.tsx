@@ -88,6 +88,8 @@ export const Layout = ({ children, hideMenu }: LayoutProps) => {
             <PkgLayout
                 navMenu={navMenu}
                 versionsApiUrl={`${api.meta}/version`}
+                versionChipName="Logistics"
+                versionChipVersionKey="main"
                 copyrightOwner="Microprojects"
                 copyrightStartYear={2020}
             >

@@ -111,6 +111,8 @@ function AppShell() {
                     <Layout
                         navMenu={navMenu}
                         versionsApiUrl={`${api.meta}/version`}
+                        versionChipName="Technologies"
+                        versionChipVersionKey="main"
                         copyrightOwner="Microprojects"
                         copyrightStartYear={2020}
                     >

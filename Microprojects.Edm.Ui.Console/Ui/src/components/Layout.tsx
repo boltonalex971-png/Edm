@@ -38,6 +38,8 @@ export function ConsoleLayout({ user, children }: ConsoleLayoutProps) {
             <PkgLayout
                 navMenu={navMenu}
                 versionsApiUrl="/api/console/meta/version"
+                versionChipName="Console"
+                versionChipVersionKey="main"
                 changelogPath="/changes"
                 copyrightOwner="Microprojects"
                 copyrightStartYear={2020}

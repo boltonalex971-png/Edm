@@ -20,7 +20,7 @@ public class MetaController : ControllerBase
         var fileVersion = FileVersionInfo.GetVersionInfo(PluginAssembly.Location).FileVersion ?? "0.0.0.0";
         return Ok(new
         {
-            logistics = fileVersion,
+            main = fileVersion,
             product = BuildInfo.ProductVersion,
         });
     }
