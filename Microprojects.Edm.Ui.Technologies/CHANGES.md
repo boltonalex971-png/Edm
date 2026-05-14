@@ -2,8 +2,10 @@
 
 The Main UI is the EDM home screen: dashboard, new-operation wizard, the configuration trees (workbenches, devices, profiles, processes, audits) and the operation card with sensor reports. It is mounted at the site root.
 
-## v2.0.0
+## v2.0.0.0
 
+- **Master tree — drop-on-empty-space and folder-delete refresh** (PR #70). Dragging a node onto whitespace outside any drop target used to silently do nothing on the Devices, Workplaces, Hosts and Process configuration trees; the drop now falls back to the visible local root so the move always lands somewhere sensible. Deleting a folder also refetches the tree, so the folder vanishes immediately instead of lingering until the next manual reload.
+- **Density toggle now resizes the entire UI** (PR #65). Compact, Comfortable and Touch densities used to nudge a handful of row and field tokens; they now apply a `zoom` factor to the page root (Compact = baseline, Comfortable +15%, Touch +32%) so text, padding, icons and any hard-coded pixel sizes scale together. The viewport height is pre-divided by the active zoom so the shell stays exactly viewport-sized.
 - **v2 visual redesign** (PR #55). The home page, master / detail layout, configuration trees (devices, profiles, processes, audits, hosts, workplaces, workbenches), the operation card and the dashboard adopt the new design tokens, density toggle and theme / scheme controls shared with Console and Logistics. Editor sections, properties grid and inline forms switch to the `Field`-based primitives; empty/error/loading states get a consistent presentation. See `docs/design-handoff-notes-v2.md` and the bundled `Edm design-handoff v2.zip` for the source material.
 - **Master tree-view UX fixes** (PR #45). The detail panel and tree-view styling on the configuration trees are corrected so selections and panel layout behave as designed.
 - **Operation start fix** (PR #42). Starting an operation from the Operation menu goes through reliably again — the menu wiring no longer drops the launch action.

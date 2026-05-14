@@ -15,6 +15,10 @@ interface LayoutProps {
     copyrightOwner?: string;
     /** Footer copyright start year; defaults to 2020. */
     copyrightStartYear?: number;
+    /** Label before the version in the footer chip. Defaults to `EDM` (Hub default). */
+    versionChipName?: string;
+    /** Which field of the versions response to display in the chip. Plugins use `main` to show their own FileVersion; Hub keeps `product` to show the EDM product version. Defaults to `product`. */
+    versionChipVersionKey?: 'main' | 'product';
 }
 
 interface VersionInfo {
@@ -30,6 +34,8 @@ export const Layout = ({
     seenStorageKey = 'edm.changelog.seen',
     copyrightOwner = 'Microprojects',
     copyrightStartYear = 2020,
+    versionChipName = 'EDM',
+    versionChipVersionKey = 'product',
 }: LayoutProps) => {
     const currYear = new Date().getFullYear();
     const [versions, setVersions] = useState<VersionInfo | null>(null);
@@ -73,7 +79,7 @@ export const Layout = ({
                     <span>&copy; {copyrightOwner} {copyrightStartYear} &ndash; {currYear}</span>
                 </div>
                 <div className="footer-right">
-                    <span className="version-chip">EDM {versions?.product ?? '—'}</span>
+                    <span className="version-chip">{versionChipName} {versions?.[versionChipVersionKey] ?? '—'}</span>
                     <RouterLink
                         to={changelogPath}
                         className={`footer-link ${hasNudge ? 'has-nudge' : ''}`}

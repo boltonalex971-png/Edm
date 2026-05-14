@@ -2,24 +2,17 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-// General Information about an assembly is controlled through the following 
-// set of attributes. Change these attribute values to modify the information
-// associated with an assembly.
 [assembly: AssemblyCompany("Microprojects")]
 [assembly: AssemblyProduct("Edm")]
 [assembly: AssemblyCopyright("Copyright 2020-2025")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
-// Version information for an assembly consists of the following four values:
-//
-//      Major Version
-//      Minor Version 
-//      Build Number
-//      Revision
-//
-// You can specify all the values or you can default the Build and Revision Numbers 
-// by using the '*' as shown below:
-// [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.13.2")]
-[assembly: AssemblyFileVersion("1.13.2.*")]
+// AssemblyVersion: bump only on breaking changes to the public surface
+// of these shared libraries. Plugins bind by FullName (incl. Version), so
+// a bump forces a recompile of every plugin against the new contract --
+// loud FileNotFoundException at load time beats silent MissingMethodException
+// at runtime. AssemblyFileVersion carries the per-build counter and may
+// bump every release; it does not affect binding.
+[assembly: AssemblyVersion("2.0.0.0")]
+[assembly: AssemblyFileVersion("2.0.0.0")]
