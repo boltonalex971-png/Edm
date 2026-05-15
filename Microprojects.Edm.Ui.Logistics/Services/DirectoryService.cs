@@ -162,19 +162,23 @@ namespace Microprojects.Edm.Ui.Logistics.Services
 
         private async Task<List<Directory>> GetUserVisibleFolders()
         {
-            var groups = UserService.GetUserGroups();
-            var userName = UserService.GetUserName();
-            return await Db.Directories.AsNoTracking()
+            var query = Db.Directories.AsNoTracking()
                 .Include(d => d.Meta)
-                .Where(d =>
-                    d.Meta.Deleted == null &&
-                    (
-                        d.Meta.Groups == null ||
-                        d.Meta.Groups.Length == 0 ||
-                        (groups != null && groups.Length > 0 && d.Meta.Groups.Any(g => groups.Contains(g))) ||
-                        (userName != null && d.Meta.Owner == userName)
-                    )
-                ).ToListAsync();
+                .Where(d => d.Meta.Deleted == null);
+
+            if (!UserService.IsAdmin())
+            {
+                var groups = UserService.GetUserGroups();
+                var userName = UserService.GetUserName();
+                query = query.Where(d =>
+                    d.Meta.Groups == null ||
+                    d.Meta.Groups.Length == 0 ||
+                    (groups != null && groups.Length > 0 && d.Meta.Groups.Any(g => groups.Contains(g))) ||
+                    (userName != null && d.Meta.Owner == userName)
+                );
+            }
+
+            return await query.ToListAsync();
         }
     }
 }

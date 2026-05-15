@@ -30,6 +30,8 @@ public class UserService : IUserService
 
     public string[] GetUserGroups() => _userInfo.Divisions.ToArray() ?? [];
 
+    public bool IsAdmin() => GetUserRole() == "Admin";
+
     /// <summary>
     /// Returns the user's active role, honoring a session-selected role if the
     /// user has one (matches <c>AuthControllerBase.UserInfo</c>). Falls back to
@@ -69,16 +71,14 @@ public class UserService : IUserService
         var userInfo = new UserInfo();
         if (context.User.Identity is ClaimsIdentity claimsIdentity)
         {
-            var root = _configuration.GetSection("Edm:Auth").GetValue<string>("DivisionsRoot");
-            var groups = claimsIdentity.FindAll("Groups")
-                .Select(g => g.Value)
+            // JwtService emits already-stripped division names as "Divisions"
+            // claims; mirror AuthControllerBase rather than re-deriving them
+            // from a "Groups" claim that no longer exists (PR 819 / 2a250b8).
+            var divisions = claimsIdentity.FindAll("Divisions")
+                .Select(c => c.Value)
                 .ToList();
             var roles = claimsIdentity.FindAll("Roles")
                 .Select(c => c.Value)
-                .ToList();
-            var divisions = groups
-                .Where(g => g.Contains(root))
-                .Select(g => g.Replace(root, string.Empty))
                 .ToList();
 
             userInfo = new UserInfo
