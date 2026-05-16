@@ -1,9 +1,8 @@
-﻿using Microsoft.AspNetCore.SignalR;
-using System.Linq;
-using System.Net;
-using Microprojects.Edm.Auth;
+﻿using System.Net;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Microprojects.Edm.Auth;
+using Microsoft.AspNetCore.SignalR;
 
 namespace Microprojects.Edm.Host.SignalR
 {
@@ -31,7 +30,7 @@ namespace Microprojects.Edm.Host.SignalR
 
         private bool IsInternalConnection()
         {
-            if (Context.User.HasClaim(ClaimTypes.Role, AuthDefaults.RemoteService))
+            if (Context.User.HasClaim(ClaimTypes.Role, EdmRoles.RemoteService))
             {
                 return true;
             }

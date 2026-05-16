@@ -27,7 +27,7 @@ public class TaresController : AuthControllerBase
     }
 
     [HttpGet("search")]
-    [RequireRoles("Operator", "Technologist", "Admin")]
+    [RequireAnyUserRole]
     public async Task<IEnumerable<TareViewModel>> Search([FromQuery] string? barcode)
     {
         var query = _db.Tares.AsNoTracking()
@@ -78,7 +78,7 @@ public class TaresController : AuthControllerBase
     /// expected starting point).
     /// </summary>
     [HttpGet("available")]
-    [RequireRoles("Operator", "Technologist", "Admin")]
+    [RequireAnyUserRole]
     public async Task<IEnumerable<AvailableTareViewModel>> GetAvailable(
         [FromQuery] Guid? tareTypeId = null,
         [FromQuery] string? barcode = null,
@@ -167,7 +167,7 @@ public class TaresController : AuthControllerBase
     }
 
     [HttpPost]
-    [RequireRoles("Operator", "Technologist", "Admin")]
+    [RequireAnyUserRole]
     public async Task<TareViewModel> Create([FromBody] CreateTareRequest model)
     {
         var tareType = await _db.TareTypes.AsNoTracking()

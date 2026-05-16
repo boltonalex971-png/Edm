@@ -1,9 +1,9 @@
 using System.Runtime.Versioning;
 using System.Security.Claims;
 using System.Security.Principal;
-using Microprojects.Edm.Ui.Logistics.Contracts;
 using Microprojects.Edm.Auth;
 using Microprojects.Edm.Controllers;
+using Microprojects.Edm.Ui.Logistics.Contracts;
 
 namespace Microprojects.Edm.Ui.Logistics.Services;
 
@@ -30,7 +30,7 @@ public class UserService : IUserService
 
     public string[] GetUserGroups() => _userInfo.Divisions.ToArray() ?? [];
 
-    public bool IsAdmin() => GetUserRole() == "Admin";
+    public bool IsAdmin() => GetUserRole() == EdmRoles.Admin;
 
     /// <summary>
     /// Returns the user's active role, honoring a session-selected role if the

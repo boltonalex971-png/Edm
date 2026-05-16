@@ -24,6 +24,8 @@ public static class EdmAuthExtensions
 {
     public static void AddEdmAuth(this IHostApplicationBuilder builder)
     {
+        ValidateConfiguredRoles(builder.Configuration);
+
         builder.Services.AddDistributedMemoryCache();
         builder.Services.AddSession(session =>
         {
@@ -133,6 +135,20 @@ public static class EdmAuthExtensions
         return remaining < threshold;
     }
 
+    private static void ValidateConfiguredRoles(IConfiguration configuration)
+    {
+        var configured = configuration.GetSection("Edm:Auth:Roles").GetChildren()
+            .Select(c => c.Key)
+            .ToList();
+        var unknown = configured.Except(EdmRoles.AllUserRoles, StringComparer.Ordinal).ToList();
+        if (unknown.Count > 0)
+        {
+            throw new InvalidOperationException(
+                $"Edm:Auth:Roles contains unknown role keys: {string.Join(", ", unknown)}. " +
+                $"Allowed: {string.Join(", ", EdmRoles.AllUserRoles)}.");
+        }
+    }
+
     private static void ConfigureJwtBearer(JwtBearerOptions options, IConfiguration configuration)
     {
         var jwtSettings = configuration.GetSection("Edm:Auth:Jwt");
@@ -194,7 +210,7 @@ public static class EdmAuthExtensions
                     {
                         new Claim(ClaimTypes.NameIdentifier, commonName ?? subject, ClaimValueTypes.String, context.Options.ClaimsIssuer),
                         new Claim(ClaimTypes.Name, commonName ?? subject, ClaimValueTypes.String, context.Options.ClaimsIssuer),
-                        new Claim(ClaimTypes.Role, AuthDefaults.RemoteService, ClaimValueTypes.String, context.Options.ClaimsIssuer)
+                        new Claim(ClaimTypes.Role, EdmRoles.RemoteService, ClaimValueTypes.String, context.Options.ClaimsIssuer)
                     };
 
                     context.Principal = new ClaimsPrincipal(new ClaimsIdentity(claims, context.Scheme.Name));
