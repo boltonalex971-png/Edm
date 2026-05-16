@@ -35,11 +35,14 @@ public class TaresController : AuthControllerBase
                 .ThenInclude(tt => tt.Meta)
             .AsQueryable();
 
-        var userGroups = _userService.GetUserGroups();
-        if (userGroups is { Length: > 0 })
+        if (!_userService.IsAdmin())
         {
-            query = query.Where(t => t.TareType.Meta.Groups.Length == 0 ||
-                                     t.TareType.Meta.Groups.Any(g => userGroups.Contains(g)));
+            var userGroups = _userService.GetUserGroups();
+            if (userGroups is { Length: > 0 })
+            {
+                query = query.Where(t => t.TareType.Meta.Groups.Length == 0 ||
+                                         t.TareType.Meta.Groups.Any(g => userGroups.Contains(g)));
+            }
         }
 
         if (!string.IsNullOrWhiteSpace(barcode))
@@ -99,12 +102,15 @@ public class TaresController : AuthControllerBase
 
         // Restrict to tares whose TareType lives in a directory the current
         // user is permitted to see. Mirrors ServiceBase.GetAll() — empty
-        // group set on the entry means public.
-        var userGroups = _userService.GetUserGroups();
-        if (userGroups is { Length: > 0 })
+        // group set on the entry means public; admins bypass.
+        if (!_userService.IsAdmin())
         {
-            query = query.Where(t => t.TareType.Meta.Groups.Length == 0 ||
-                                     t.TareType.Meta.Groups.Any(g => userGroups.Contains(g)));
+            var userGroups = _userService.GetUserGroups();
+            if (userGroups is { Length: > 0 })
+            {
+                query = query.Where(t => t.TareType.Meta.Groups.Length == 0 ||
+                                         t.TareType.Meta.Groups.Any(g => userGroups.Contains(g)));
+            }
         }
 
         if (hasNomenclature && !hasType)

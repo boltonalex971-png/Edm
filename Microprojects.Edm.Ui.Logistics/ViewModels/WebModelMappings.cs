@@ -14,6 +14,7 @@ public static class WebModelMappings
             Description = s.Description,
             IsFolder = true,
             Expanded = true,
+            Groups = s.Meta?.Groups,
             Items = s.Children?.Select(c => c.ToEntryViewModel()).ToArray(),
         };
 

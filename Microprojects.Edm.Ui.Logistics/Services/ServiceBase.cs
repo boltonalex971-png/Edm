@@ -151,20 +151,20 @@ public class ServiceBase<TEntity> : IGenericService<TEntity> where TEntity : cla
 
         if (typeof(TEntity).IsAssignableTo(typeof(IWithMeta)))
         {
-            var userGroups = UserService.GetUserGroups();
             query = query
                 .Include(e => ((IWithMeta)e).Meta)
                 .Where(e => ((IWithMeta)e).Meta.Deleted == null && ((IWithMeta)e).Meta.Completed == null);
 
-            // Filter by user groups: Meta.Groups is empty OR contains any of user's groups
-            if (userGroups is { Length: > 0 })
+            // Filter by user groups: Meta.Groups is empty OR contains any of user's groups.
+            // Admins bypass the filter so they always see what they configured.
+            if (!UserService.IsAdmin())
             {
-                // Note: EF Core translation for array intersection might depend on provider.
-                // Assuming PostgreSQL (npgsql) or similar that supports array contains/overlaps.
-                // If it's standard SQL, we might need a different approach.
-                // Given the context (ASP.NET Core with PostgreSQL), this is common.
-                query = query.Where(e => ((IWithMeta)e).Meta.Groups.Length == 0 ||
-                                         ((IWithMeta)e).Meta.Groups.Any(g => userGroups.Contains(g)));
+                var userGroups = UserService.GetUserGroups();
+                if (userGroups is { Length: > 0 })
+                {
+                    query = query.Where(e => ((IWithMeta)e).Meta.Groups.Length == 0 ||
+                                             ((IWithMeta)e).Meta.Groups.Any(g => userGroups.Contains(g)));
+                }
             }
         }
 

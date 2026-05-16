@@ -9,6 +9,7 @@ import {
     Tooltip,
     CircularProgress,
     Alert,
+    Chip,
 } from '@mui/material';
 import {
     Search as SearchIcon,
@@ -35,6 +36,8 @@ import {
     getAllFolderIds,
     collectItemsWithChildren,
     collectDescriptions,
+    collectGroups,
+    groupAcronym,
     checkMoveValidity,
     getEntityType,
     getIconForType,
@@ -63,6 +66,7 @@ interface IndustrialTreeItemProps {
     entityTypeMap?: Array<{urlPrefix: string; entityType: string}>;
     iconMap?: Record<string, React.ComponentType<any>>;
     descriptionMap?: Map<string, string>;
+    groupsMap?: Map<string, string[]>;
     entityType?: string;
 }
 
@@ -72,7 +76,7 @@ const IndustrialTreeItem = React.forwardRef<HTMLLIElement, IndustrialTreeItemPro
         itemId, label, isFolder, apiPath,
         itemsWithChildren, expandedSet, selectedId,
         activeNode, treeData, entityTypeMap, iconMap,
-        descriptionMap, entityType: entityTypeOverride,
+        descriptionMap, groupsMap, entityType: entityTypeOverride,
         ...treeItemProps
     } = props;
 
@@ -83,9 +87,36 @@ const IndustrialTreeItem = React.forwardRef<HTMLLIElement, IndustrialTreeItemPro
     const tooltip = description && description !== labelText
         ? `${labelText} — ${description}`
         : labelText;
-    const labelNode = typeof label === 'string'
+    const groups = groupsMap?.get(itemId);
+    const labelTextNode = typeof label === 'string'
         ? <span title={tooltip} className={styles.labelText}>{label}</span>
         : label;
+    const labelNode = groups && groups.length > 0
+        ? (
+            <Box sx={{display: 'flex', alignItems: 'center', gap: 0.5, minWidth: 0}}>
+                {groups.map((g) => (
+                    <Tooltip key={g} title={g} arrow placement="top">
+                        <Chip
+                            label={groupAcronym(g)}
+                            size="small"
+                            sx={{
+                                height: 16,
+                                fontFamily: 'var(--font-mono)',
+                                fontSize: 10,
+                                fontWeight: 700,
+                                lineHeight: 1,
+                                background: 'var(--sig-warn-soft)',
+                                border: '1px solid var(--sig-warn)',
+                                color: 'var(--sig-warn-deep)',
+                                '& .MuiChip-label': {px: 0.5},
+                            }}
+                        />
+                    </Tooltip>
+                ))}
+                {labelTextNode}
+            </Box>
+        )
+        : labelTextNode;
 
     // Fallback detection if RichTreeView doesn't spread item properties
     const itemIsFolder = isFolder ?? itemId?.startsWith('folder-');
@@ -287,6 +318,7 @@ export function TreeViewMaster(props: TreeViewMasterProps) {
     const treeData = useMemo(() => transformData(rawData) || [], [rawData]);
     const itemsWithChildren = useMemo(() => collectItemsWithChildren(treeData), [treeData]);
     const descriptionMap = useMemo(() => collectDescriptions(treeData), [treeData]);
+    const groupsMap = useMemo(() => collectGroups(treeData), [treeData]);
     const expandedSet = useMemo(() => new Set(expandedItems), [expandedItems]);
 
     // Handle initial expand all and auto-expansion when route changes
@@ -492,6 +524,7 @@ export function TreeViewMaster(props: TreeViewMasterProps) {
                                     entityTypeMap,
                                     iconMap,
                                     descriptionMap,
+                                    groupsMap,
                                     entityType: entityTypeOverride,
                                 } as any,
                             }}
