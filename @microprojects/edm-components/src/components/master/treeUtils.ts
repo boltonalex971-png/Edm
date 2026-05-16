@@ -21,6 +21,7 @@ export interface TreeNode {
     isFolder: boolean;
     parentId: string;
     description?: string;
+    groups?: string[] | null;
     children?: TreeNode[];
 }
 
@@ -29,6 +30,7 @@ export interface RawTreeNode {
     name: string;
     description?: string;
     isFolder?: boolean;
+    groups?: string[] | null;
     items?: RawTreeNode[];
 }
 
@@ -42,8 +44,30 @@ export const transformData = (nodes: RawTreeNode[] | undefined, parentId: number
         isFolder: !!node.isFolder,
         parentId: parentId.toString(),
         description: node.description,
+        groups: node.groups,
         children: transformData(node.items, node.id),
     })).sort((a, b) => a.label.localeCompare(b.label));
+};
+
+/* Acronym for a group/division name — first letter of up to the first three
+   words, uppercased. Single-word names yield a single-letter chip. Handles
+   non-Latin scripts (Cyrillic etc.) since it only inspects code points. */
+export const groupAcronym = (name: string): string => {
+    const trimmed = (name ?? '').trim();
+    if (!trimmed) return '?';
+    return trimmed.split(/\s+/).slice(0, 3).map((w) => w[0]).join('').toUpperCase();
+};
+
+// Flatten the tree into an itemId → groups map. Used by the tree-item slot
+// to render restricted-access chips before the row label. Empty/missing
+// groups are skipped so the slot can short-circuit cheaply.
+export const collectGroups = (nodes: TreeNode[] | undefined, map: Map<string, string[]> = new Map()): Map<string, string[]> => {
+    if (!nodes) return map;
+    for (const node of nodes) {
+        if (node.groups && node.groups.length > 0) map.set(node.id, node.groups);
+        if (node.children) collectGroups(node.children, map);
+    }
+    return map;
 };
 
 // Flatten the tree into an itemId → description map. Used by the tree-item
