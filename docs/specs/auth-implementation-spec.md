@@ -81,7 +81,7 @@ Registration is gated by `Edm:Auth:Negotiate:Enabled` (default `OperatingSystem.
   1. Reads `Edm:Auth:RemoteServices` (list of allowed CNs / Subject DNs).
   2. **Implicitly** appends both `principalUri.Host` and `CN=principalUri.Host` derived from `Edm:Intercom:Principal`. This is the convention shortcut: each EDM host's cert CN equals its DNS name, and the principal URL is built from that name. So the operator only configures `Principal` once; the principal-host's CN is auto-trusted by every peer (covers the principal's self-subscription too).
   3. Compares the incoming cert's full Subject **and** simple CN against the merged allow-list.
-  4. On match: builds a `ClaimsPrincipal` with `ClaimTypes.Role = AuthDefaults.RemoteService` ("RemoteService"). On miss: `context.Fail("Certificate not allowed")`.
+  4. On match: builds a `ClaimsPrincipal` with `ClaimTypes.Role = EdmRoles.RemoteService` ("RemoteService"). On miss: `context.Fail("Certificate not allowed")`.
 
 ### 3.4 Fallback policy
 ```csharp
@@ -114,7 +114,7 @@ For service-to-service traffic (Certificate handler): only `Role = "RemoteServic
 
 - Stock `[Authorize(Roles = …)]` matches *any* role claim on the identity. EDM models a user as acting in *one* role at a time (an admin who switches to "Operator" should be denied admin endpoints until they switch back).
 - `RequireRolesAttribute` resolves the active role by reading `Session["SelectedRole"]` first, then falling back to `role` / `ClaimTypes.Role` / `Roles` claims.
-- Default usage in plugins: `[RequireRoles("Operator", "Technologist", "Admin")]` (see Logistics controllers).
+- Default usage in plugins: `[RequireAnyUserRole]` (alias of `[RequireRoles(EdmRoles.AllUserRoles)]` — see Logistics controllers). Role names are constants in `Microprojects.Edm.Shared/Auth/EdmRoles.cs`; never hard-code role strings at call sites. `AddEdmAuth` validates the `Edm:Auth:Roles` config keys against `EdmRoles.AllUserRoles` on startup and throws on unknown keys.
 
 `AuthControllerBase.UserInfo` exposes the same resolution to controllers that need to render UI conditionally; it also enforces an Origin-vs-Host CSRF check before returning identity data.
 
@@ -201,7 +201,7 @@ There is also a `LocalJobExecutor.Execute(this IJobContainer, IJob, …)` extens
 | Task                                               | Touch this first                                       |
 |----------------------------------------------------|--------------------------------------------------------|
 | Add a peer host to the trust list                  | `appsettings.json` → `Edm:Auth:RemoteServices`         |
-| New role-gated controller                          | `[RequireRoles("…")]` (not `[Authorize(Roles=…)]`)     |
+| New role-gated controller                          | `[RequireAnyUserRole]` or `[RequireRoles(EdmRoles.X, …)]` (not `[Authorize(Roles=…)]`) |
 | New peer-only gRPC endpoint                        | Map under existing pipeline; no extra config needed     |
 | New browser endpoint that should bypass auth       | Add `[AllowAnonymous]` and justify in the PR           |
 | Issue a JWT outside the SPA-bootstrap path         | `IJwtService.GenerateToken` (don't hand-roll)          |

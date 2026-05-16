@@ -22,7 +22,7 @@ public class OrdersController : CrudControllerBase<Order, OrderViewModel, IOrder
     protected override OrderViewModel ToViewModel(Order entry) => entry.ToViewModel();
     protected override Order ToEntity(OrderViewModel model) => model.ToEntity();
 
-    [RequireRoles("Operator", "Technologist", "Admin")]
+    [RequireAnyUserRole]
     public override async Task<OrderViewModel> GetObjectById(Guid id)
     {
         if (id == Guid.Empty)
@@ -48,7 +48,7 @@ public class OrdersController : CrudControllerBase<Order, OrderViewModel, IOrder
     }
 
     [HttpGet("{id:Guid}/specification")]
-    [RequireRoles("Operator", "Technologist", "Admin")]
+    [RequireAnyUserRole]
     public async Task<IEnumerable<OrderSpecificationNomenclatureViewModel>> GetSpecification(Guid id)
     {
         var items = await Service.GetSpecifications(id);
@@ -56,7 +56,7 @@ public class OrdersController : CrudControllerBase<Order, OrderViewModel, IOrder
     }
 
     [HttpGet("{id:Guid}/items")]
-    [RequireRoles("Operator", "Technologist", "Admin")]
+    [RequireAnyUserRole]
     public async Task<IEnumerable<ItemViewModel>> GetItems(Guid id)
     {
         var items = await Service.GetItems(id);
@@ -64,7 +64,7 @@ public class OrdersController : CrudControllerBase<Order, OrderViewModel, IOrder
     }
 
     [HttpPost("{id:Guid}/items")]
-    [RequireRoles("Operator", "Technologist", "Admin")]
+    [RequireAnyUserRole]
     public async Task<ItemViewModel> AddItem(Guid id, [FromBody] ItemViewModel itemModel)
     {
         var item = itemModel.ToEntity();
@@ -73,14 +73,14 @@ public class OrdersController : CrudControllerBase<Order, OrderViewModel, IOrder
     }
 
     [HttpPost("{id:Guid}/items/batch")]
-    [RequireRoles("Operator", "Technologist", "Admin")]
+    [RequireAnyUserRole]
     public async Task<AllocateItemsResult> AddItems(Guid id, [FromBody] AllocateItemsRequest request)
     {
         return await Service.AddItems(id, request.ItemIds);
     }
 
     [HttpGet("{id:Guid}/operations")]
-    [RequireRoles("Operator", "Technologist", "Admin")]
+    [RequireAnyUserRole]
     public async Task<IEnumerable<OrderProcessViewModel>> GetOrderProcesses(Guid id)
     {
         var items = await Service.GetOrderProcesses(id);
@@ -92,7 +92,7 @@ public class OrdersController : CrudControllerBase<Order, OrderViewModel, IOrder
     /// number of outputs awaiting tare allocation.
     /// </summary>
     [HttpPost("{id:Guid}/execute")]
-    [RequireRoles("Operator", "Technologist", "Admin")]
+    [RequireAnyUserRole]
     public async Task<ExecuteResult> Execute(Guid id)
     {
         return await Service.Execute(id);
@@ -103,7 +103,7 @@ public class OrdersController : CrudControllerBase<Order, OrderViewModel, IOrder
     /// <c>allocated</c> (already placed into a tare) and <c>unallocated</c>.
     /// </summary>
     [HttpGet("{id:Guid}/output-items")]
-    [RequireRoles("Operator", "Technologist", "Admin")]
+    [RequireAnyUserRole]
     public async Task<OrderOutputItems> GetOutputItems(Guid id)
     {
         return await Service.GetOutputItems(id);
@@ -113,7 +113,7 @@ public class OrdersController : CrudControllerBase<Order, OrderViewModel, IOrder
     /// Batch-assign outputs of the order to selected tares.
     /// </summary>
     [HttpPost("{id:Guid}/allocate-outputs")]
-    [RequireRoles("Operator", "Technologist", "Admin")]
+    [RequireAnyUserRole]
     public async Task<AllocateOutputsResult> AllocateOutputs(Guid id, [FromBody] AllocateOutputsRequest request)
     {
         return await Service.AllocateOutputs(id, request.Allocations);
@@ -124,7 +124,7 @@ public class OrdersController : CrudControllerBase<Order, OrderViewModel, IOrder
     /// Items already placed in a tare are rejected — grade is locked after allocation.
     /// </summary>
     [HttpPost("{id:Guid}/assign-grades")]
-    [RequireRoles("Operator", "Technologist", "Admin")]
+    [RequireAnyUserRole]
     public async Task<AssignGradesResult> AssignGrades(Guid id, [FromBody] AssignGradesRequest request)
     {
         return await Service.AssignGrades(id, request);
@@ -134,7 +134,7 @@ public class OrdersController : CrudControllerBase<Order, OrderViewModel, IOrder
     /// Marks the order as completed. Fails if any output is still unallocated.
     /// </summary>
     [HttpPost("{id:Guid}/complete")]
-    [RequireRoles("Operator", "Technologist", "Admin")]
+    [RequireAnyUserRole]
     public async Task<IActionResult> Complete(Guid id)
     {
         await Service.CompleteOrder(id);
@@ -142,14 +142,14 @@ public class OrdersController : CrudControllerBase<Order, OrderViewModel, IOrder
     }
 
     [HttpGet("next-number")]
-    [RequireRoles("Operator", "Technologist", "Admin")]
+    [RequireAnyUserRole]
     public async Task<string> GetNextNumber()
     {
         return await Service.GetNextNumber();
     }
 
     [HttpPost("search")]
-    [RequireRoles("Operator", "Technologist", "Admin")]
+    [RequireAnyUserRole]
     public async Task<IEnumerable<OrderViewModel>> Search([FromBody] OrderSearchQuery query)
     {
         var result = (await Service.Search(query)).ToList();
