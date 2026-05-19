@@ -355,6 +355,7 @@ public static class WebModelMappings
             NomenclatureName = s.Nomenclature?.Name,
             NomenclatureDescription = s.Nomenclature?.Description,
             NomenclatureCategory = s.Nomenclature?.Category.ToString(),
+            NomenclatureCountable = s.Nomenclature?.Countable ?? false,
             ProcessId = s.ProcessId,
             ProcessName = s.Process?.Name,
             Amount = s.Amount,

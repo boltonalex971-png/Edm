@@ -2,7 +2,7 @@ import { type AlertState, useAlertSetter } from '@logistics/components/InlineAle
 import { RelationTable } from '@logistics/components/RelationTable.tsx'
 import { ItemSearch } from '@logistics/components/items/ItemSearch.tsx'
 import type { AllocateItemsRequest, Item, UUID } from '@logistics/data/types'
-import { formatUnits } from '@logistics/utils/format'
+import { formatQuantity, formatUnits } from '@logistics/utils/format'
 import { FormControlLabel, Switch } from '@mui/material'
 import { Column as GridColumn } from '@microprojects/edm-components/components'
 import axios from 'axios'
@@ -104,8 +104,28 @@ export function OrderSpecificationTab({
                 width="auto"
                 editable={false}
             />
-            <GridColumn field="amount" title="Required" width="100" />
-            <GridColumn field="total" title="Allocated" width="100" />
+            <GridColumn
+                field="amount"
+                title="Required"
+                width="100"
+                cell={(p) =>
+                    formatQuantity(
+                        p.dataItem.amount,
+                        p.dataItem.nomenclatureCountable,
+                    )
+                }
+            />
+            <GridColumn
+                field="total"
+                title="Allocated"
+                width="100"
+                cell={(p) =>
+                    formatQuantity(
+                        p.dataItem.total,
+                        p.dataItem.nomenclatureCountable,
+                    )
+                }
+            />
         </RelationTable>
     )
 }

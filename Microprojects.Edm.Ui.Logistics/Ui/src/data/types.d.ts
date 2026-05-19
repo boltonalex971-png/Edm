@@ -299,6 +299,7 @@ export interface OrderSpecification {
     nomenclatureCategory?: string
     nomenclatureName?: string
     nomenclatureDescription?: string
+    nomenclatureCountable?: boolean
     processName?: string
     processId: UUID
     amount: number
