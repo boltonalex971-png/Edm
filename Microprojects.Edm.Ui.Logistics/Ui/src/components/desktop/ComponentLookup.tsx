@@ -17,6 +17,7 @@ import type {
     UUID,
 } from '@logistics/data/types'
 import { postData } from '@logistics/hooks/hooks'
+import { resolveError } from '@logistics/i18n/resolveError'
 import { useSlotSelection } from '@logistics/hooks/useSlotSelection'
 import {
     ExpandLessOutlined as ExpandIcon,
@@ -90,11 +91,7 @@ export const ComponentLookup = ({
                     )
                 }
             } catch (e) {
-                if (!cancelled)
-                    setError(
-                        (e as { message?: string })?.message ||
-                            t('lookup.failedToLoad'),
-                    )
+                if (!cancelled) setError(resolveError(e, t('lookup.failedToLoad')))
             } finally {
                 if (!cancelled) setLoading(false)
             }
@@ -171,10 +168,7 @@ export const ComponentLookup = ({
             onAllocated(result)
             onClose()
         } catch (e) {
-            setError(
-                (e as { message?: string })?.message ||
-                    t('lookup.failedToAllocate'),
-            )
+            setError(resolveError(e, t('lookup.failedToAllocate')))
         } finally {
             setSubmitting(false)
         }

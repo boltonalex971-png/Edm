@@ -18,6 +18,7 @@ import {
     useOrderClaimState,
 } from '@logistics/hooks/entityLocks'
 import { useGet } from '@logistics/hooks/hooks'
+import { resolveError } from '@logistics/i18n/resolveError'
 import type { RootState } from '@logistics/store'
 import {
     type DateLike,
@@ -209,11 +210,7 @@ export const OrderRunView = () => {
                 else setStep('distribute')
             })
             .catch((e) => {
-                setLaunchError(
-                    e.response?.data?.detail ||
-                        e.response?.statusText ||
-                        t('run.failedToLaunch'),
-                )
+                setLaunchError(resolveError(e, t('run.failedToLaunch')))
             })
             .finally(() => setLaunching(false))
     }
@@ -226,11 +223,7 @@ export const OrderRunView = () => {
             .post(`${api.orders}/${id}/complete`, {})
             .then(() => invalidate([{ type: 'order', id }]))
             .catch((e) => {
-                setCompleteError(
-                    e.response?.data?.detail ||
-                        e.response?.statusText ||
-                        t('run.failedToComplete'),
-                )
+                setCompleteError(resolveError(e, t('run.failedToComplete')))
             })
             .finally(() => setCompleting(false))
     }

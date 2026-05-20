@@ -31,8 +31,10 @@ import {
     useRef,
     useState,
 } from 'react'
+import {useTranslation} from 'react-i18next'
 import {useSelector} from 'react-redux'
 import {useLocation, useNavigate} from 'react-router-dom'
+import {resolveError} from '@logistics/i18n/resolveError'
 import type {
     DataItem,
     DetailEventHandler,
@@ -226,6 +228,7 @@ export function MuiEditor(props: MuiEditorProps) {
     const setDetailEditMode = useContext(DetailEditModeContext)
     const rootItem = useContext(RootItemContext)
     const invalidate = useInvalidateEntities()
+    const { t } = useTranslation('common')
     const [values, setValues] = useState<Dictionary>(props.data as Dictionary)
 
     // Sync the form values from props.data once it actually loads — `useState`
@@ -313,8 +316,7 @@ export function MuiEditor(props: MuiEditorProps) {
                         }
                         setAlert({
                             status: 'danger',
-                            message:
-                                r.response?.data?.detail || 'Unknown error',
+                            message: resolveError(r, t('error')),
                         })
                     })
             }
@@ -346,7 +348,7 @@ export function MuiEditor(props: MuiEditorProps) {
                 .catch((r) =>
                     setAlert({
                         status: 'danger',
-                        message: r.response?.data?.detail || 'Unknown error',
+                        message: resolveError(r, t('error')),
                     }),
                 )
         }

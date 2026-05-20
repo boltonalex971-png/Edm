@@ -33,6 +33,7 @@ import type {
 } from '@logistics/data/types'
 import { useAlertSetter } from '@logistics/components/InlineAlert'
 import { getData, postData, useGet } from '@logistics/hooks/hooks'
+import { resolveError } from '@logistics/i18n/resolveError'
 import { useTareTransfer } from '@logistics/hooks/useTareTransfer'
 import { formatUnits } from '@logistics/utils/format'
 import { SubRootPage } from '@microprojects/edm-components/components/chrome/SubRootPage'
@@ -345,7 +346,7 @@ export function Repacking() {
             } catch (e: any) {
                 setAlert({
                     status: 'danger',
-                    message: e.message || t('widgets:errors.failedToLoadTare'),
+                    message: resolveError(e, t('widgets:errors.failedToLoadTare')),
                 })
             }
             return
@@ -383,7 +384,7 @@ export function Repacking() {
         } catch (e: any) {
             setAlert({
                 status: 'danger',
-                message: e.message || t('widgets:errors.failedToAddTare'),
+                message: resolveError(e, t('widgets:errors.failedToAddTare')),
             })
         }
     }

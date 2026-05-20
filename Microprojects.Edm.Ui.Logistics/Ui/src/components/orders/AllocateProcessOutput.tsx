@@ -41,6 +41,7 @@ import {
     useInvalidateEntities,
 } from '@logistics/hooks/entityRefresh'
 import { getData, postData, useGet } from '@logistics/hooks/hooks'
+import { resolveError } from '@logistics/i18n/resolveError'
 import { useTareTransfer } from '@logistics/hooks/useTareTransfer'
 import { SmartScroll, SmartScrollContent } from '@microprojects/tools'
 import {
@@ -280,7 +281,7 @@ export function AllocateProcessOutput({
                 addTargetTareToWorkspace(tare, items || [])
                 setNewTarePicked(null)
             } catch (e: any) {
-                setError(e.message || t('widgets:errors.failedToLoadTare'))
+                setError(resolveError(e, t('widgets:errors.failedToLoadTare')))
             }
             return
         }
@@ -316,7 +317,7 @@ export function AllocateProcessOutput({
                 setNewTarePicked(null)
             }
         } catch (e: any) {
-            setError(e.message || t('widgets:errors.failedToAddTare'))
+            setError(resolveError(e, t('widgets:errors.failedToAddTare')))
         }
     }
 
@@ -375,7 +376,7 @@ export function AllocateProcessOutput({
                 onChanged?.()
             }
         } catch (e: any) {
-            setError(e.message || t('allocate.allocationRequestFailed', 'Allocation request failed'))
+            setError(resolveError(e, t('allocate.allocationRequestFailed', 'Allocation request failed')))
         }
         setSubmitting(false)
     }
@@ -406,7 +407,7 @@ export function AllocateProcessOutput({
             ])
             onChanged?.()
         } catch (e: any) {
-            setError(e.message || t('allocate.gradeAssignmentFailed', 'Grade assignment failed'))
+            setError(resolveError(e, t('allocate.gradeAssignmentFailed', 'Grade assignment failed')))
         }
     }
 

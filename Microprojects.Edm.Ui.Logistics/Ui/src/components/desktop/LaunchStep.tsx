@@ -7,6 +7,7 @@ import type {
     UUID,
 } from '@logistics/data/types'
 import { getData } from '@logistics/hooks/hooks'
+import { resolveError } from '@logistics/i18n/resolveError'
 import { formatUnits } from '@logistics/utils/format'
 import {
     Alert,
@@ -64,10 +65,7 @@ export const LaunchStep = ({
             )
             setSpecs(data ?? [])
         } catch (e) {
-            setError(
-                (e as { message?: string })?.message ||
-                    t('launch.failedToLoadSpecs'),
-            )
+            setError(resolveError(e, t('launch.failedToLoadSpecs')))
         } finally {
             setLoading(false)
         }

@@ -30,6 +30,7 @@ import {
     useInvalidateEntities,
 } from '@logistics/hooks/entityRefresh'
 import { useGet } from '@logistics/hooks/hooks.ts'
+import { resolveError } from '@logistics/i18n/resolveError'
 import { formatLocalDate, parseUtcDate } from '@logistics/utils/format'
 import {
     EditorSection,
@@ -174,10 +175,7 @@ export function OrderDetail({
             })
             .catch((e) => {
                 setAlert({
-                    message:
-                        e.response.data.detail ||
-                        e.response.statusText ||
-                        t('common:error'),
+                    message: resolveError(e, t('common:error')),
                     status: 'danger',
                 })
             })
@@ -198,10 +196,7 @@ export function OrderDetail({
             })
             .catch((e) => {
                 setAlert({
-                    message:
-                        e.response?.data?.detail ||
-                        e.response?.statusText ||
-                        t('detail.toast.completeFailed', 'Failed to complete the order'),
+                    message: resolveError(e, t('detail.toast.completeFailed', 'Failed to complete the order')),
                     status: 'danger',
                 })
             })

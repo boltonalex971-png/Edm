@@ -20,6 +20,7 @@ import type {
 } from '@logistics/data/types'
 import { useInvalidateEntities } from '@logistics/hooks/entityRefresh'
 import { getData, useGet } from '@logistics/hooks/hooks'
+import { resolveError } from '@logistics/i18n/resolveError'
 import { formatUnits } from '@logistics/utils/format'
 import {
     EditorSection,
@@ -297,7 +298,7 @@ function BatchForm({
         } catch (err: any) {
             setAlert({
                 status: 'danger',
-                message: err.response?.data?.detail || err.message || t('common:error', 'Error'),
+                message: resolveError(err, t('common:error', 'Error')),
             })
         }
     }

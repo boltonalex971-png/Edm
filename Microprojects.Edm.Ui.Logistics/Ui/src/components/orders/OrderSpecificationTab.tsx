@@ -3,6 +3,7 @@ import { type AlertState, useAlertSetter } from '@logistics/components/InlineAle
 import { RelationTable } from '@logistics/components/RelationTable.tsx'
 import { ItemSearch } from '@logistics/components/items/ItemSearch.tsx'
 import type { AllocateItemsRequest, Item, UUID } from '@logistics/data/types'
+import { resolveError } from '@logistics/i18n/resolveError'
 import { formatQuantity, formatUnits } from '@logistics/utils/format'
 import { FormControlLabel, Switch } from '@mui/material'
 import { Column as GridColumn } from '@microprojects/edm-components/components'
@@ -50,7 +51,7 @@ export function OrderSpecificationTab({
                 onDone()
             })
             .catch((e) => {
-                setAlert({ message: e.response.data.detail, status: 'danger' })
+                setAlert({ message: resolveError(e, t('common:error')), status: 'danger' })
                 onDone()
             })
     }
