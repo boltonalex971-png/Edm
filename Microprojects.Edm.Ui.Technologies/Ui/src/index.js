@@ -3,6 +3,9 @@ import { BrowserRouter } from 'react-router-dom';
 import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
 import { CssBaseline, ThemeProvider } from '@mui/material';
+// Side-effect import — initializes i18next + LanguageDetector synchronously
+// before React mounts so the first paint is in the persisted locale.
+import './i18n/i18n';
 import App from './App.tsx';
 import { store } from './store';
 import { theme } from './theme';

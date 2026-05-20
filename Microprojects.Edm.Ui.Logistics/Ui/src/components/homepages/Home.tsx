@@ -617,6 +617,7 @@ function ActionTile({
     accentDeep,
     onClick,
 }: ActionTileProps) {
+    const { t } = useTranslation('homepages')
     return (
         <Paper
             elevation={0}
@@ -698,7 +699,7 @@ function ActionTile({
                     letterSpacing: '0.05em',
                 }}
             >
-                Open
+                {t('action.open')}
                 <ArrowIcon sx={{ fontSize: 14 }} />
             </Box>
         </Paper>

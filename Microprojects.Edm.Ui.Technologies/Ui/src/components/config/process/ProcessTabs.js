@@ -1,6 +1,7 @@
 ﻿import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { Tabs, Tab, Box } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import { ProcessProfilesTab } from './ProcessProfilesTab';
 import { ProcessQualifiersTab } from './ProcessQualifiersTab';
 import { SmoothTabContainer } from '@microprojects/edm-components/components';
@@ -14,6 +15,7 @@ ProcessTabs.propTypes = {
 
 export function ProcessTabs(props) {
     const [selected, setSelected] = useState(0);
+    const { t } = useTranslation('tech');
 
     const handleChange = (event, newValue) => {
         setSelected(newValue);
@@ -24,9 +26,9 @@ export function ProcessTabs(props) {
     return (
         <Box sx={{ width: '100%' }}>
             <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                <Tabs value={selected} onChange={handleChange} aria-label="process tabs">
-                    <Tab label="Profiles" sx={{ textTransform: 'none' }} />
-                    <Tab label="Qualifiers" sx={{ textTransform: 'none' }} />
+                <Tabs value={selected} onChange={handleChange} aria-label={t('process.tabs.profiles')}>
+                    <Tab label={t('process.tabs.profiles')} sx={{ textTransform: 'none' }} />
+                    <Tab label={t('process.tabs.qualifiers')} sx={{ textTransform: 'none' }} />
                 </Tabs>
             </Box>
             <Box sx={{ pt: 2 }}>

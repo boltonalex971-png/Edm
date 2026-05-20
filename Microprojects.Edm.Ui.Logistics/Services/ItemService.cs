@@ -133,10 +133,12 @@ public class ItemService : ServiceBase<Item>, IItemService
         var tare = await Set<Tare>().AsNoTracking()
             .Include(t => t.TareType)
             .FirstOrDefaultAsync(t => t.Id == item.TareId)
-            ?? throw new EdmException("Tare not found for assigned tare.");
+            ?? throw new EdmException("Logistics.Tare.NotFoundForItem", null,
+                "Tare not found for the assigned item.");
         if (tare.TareType == null)
         {
-            throw new EdmException("Tare type not found for assigned tare.");
+            throw new EdmException("Logistics.Tare.TypeNotFoundForItem", null,
+                "Tare type not found for the assigned tare.");
         }
 
         if (tare.TareType.Dimensions <= 0)
@@ -464,11 +466,13 @@ public class ItemService : ServiceBase<Item>, IItemService
         {
             tare = await Set<Tare>().AsNoTracking()
                 .FirstOrDefaultAsync(t => t.Id == request.TareId.Value)
-                ?? throw new EdmException("Tare not found.");
+                ?? throw new EdmException("Logistics.Tare.NotFound", null,
+                    "Tare not found.");
 
             if (tare.TareTypeId != request.TareTypeId)
             {
-                throw new EdmException("Tare type mismatch.");
+                throw new EdmException("Logistics.Tare.TypeMismatch", null,
+                    "Tare type does not match the requested tare type.");
             }
 
             var itemsInTare = await Set<Item>().AsNoTracking()

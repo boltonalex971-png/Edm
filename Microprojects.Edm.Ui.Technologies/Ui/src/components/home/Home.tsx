@@ -1,6 +1,7 @@
-﻿import React, {useEffect, useState} from 'react';
+﻿import React, {useEffect, useMemo, useState} from 'react';
 import {useSelector} from 'react-redux';
 import {NavLink} from 'react-router-dom';
+import {useTranslation} from 'react-i18next';
 import {
     PlayCircleOutline as RunIcon,
     DashboardOutlined as DashboardIcon,
@@ -28,19 +29,14 @@ interface LauncherCard {
     roles?: string[];
 }
 
-const ROLE_LABEL: Record<string, string> = {
-    [appRoles.admin]:        'Administrator',
-    [appRoles.technologist]: 'Technologist',
-    [appRoles.operator]:     'Operator',
-};
-
-function useClock(): string {
+function useClock(lng: string): string {
     const [now, setNow] = useState(() => new Date());
     useEffect(() => {
         const t = setInterval(() => setNow(new Date()), 30000);
         return () => clearInterval(t);
     }, []);
-    return now.toLocaleString('en-GB', {
+    const locale = lng?.startsWith('ru') ? 'ru-RU' : 'en-GB';
+    return now.toLocaleString(locale, {
         day: '2-digit', month: 'short', year: 'numeric',
         hour: '2-digit', minute: '2-digit',
     });
@@ -50,38 +46,45 @@ export function Home() {
     const userFull = useSelector((state: RootState) => state.user.name);
     const user = displayUserName(userFull);
     const userRole = useSelector((state: RootState) => state.user.role);
-    const clock = useClock();
+    const {t, i18n} = useTranslation('tech');
+    const clock = useClock(i18n.language);
+
+    const roleLabel = useMemo<Record<string, string>>(() => ({
+        [appRoles.admin]:        t('roles.administrator'),
+        [appRoles.technologist]: t('roles.technologist'),
+        [appRoles.operator]:     t('roles.operator'),
+    }), [t]);
 
     const cards: LauncherCard[] = [
         {
-            title: 'Start operation',
-            description: 'Launch a new hardware test or production process from a workbench.',
-            cta: 'New operation',
+            title: t('home.cards.startOperation.title'),
+            description: t('home.cards.startOperation.description'),
+            cta: t('home.cards.startOperation.cta'),
             path: '/operation',
             icon: <RunIcon />,
             hueClass: styles.run,
         },
         {
-            title: 'Dashboard',
-            description: 'Monitor real-time status and analyse process data across the floor.',
-            cta: userRole === appRoles.operator ? 'Open operations' : 'Open dashboard',
+            title: t('home.cards.dashboard.title'),
+            description: t('home.cards.dashboard.description'),
+            cta: userRole === appRoles.operator ? t('home.cards.dashboard.ctaOperator') : t('home.cards.dashboard.cta'),
             path: userRole === appRoles.operator ? '/dashboard/operations' : '/dashboard',
             icon: <DashboardIcon />,
             hueClass: styles.dashboard,
         },
         {
-            title: 'Configuration',
-            description: 'Manage workplaces, hosts and device profiles for the plant.',
-            cta: 'Open configuration',
+            title: t('home.cards.configuration.title'),
+            description: t('home.cards.configuration.description'),
+            cta: t('home.cards.configuration.cta'),
             path: '/config/processes',
             icon: <ConfigIcon />,
             hueClass: styles.config,
             roles: [appRoles.admin, appRoles.technologist],
         },
         {
-            title: 'Plugins',
-            description: 'Browse system extensions, hardware drivers and operation apps.',
-            cta: 'Open plugins',
+            title: t('home.cards.plugins.title'),
+            description: t('home.cards.plugins.description'),
+            cta: t('home.cards.plugins.cta'),
             path: '/plugins/drivers',
             icon: <PluginIcon />,
             hueClass: styles.plugin,
@@ -98,18 +101,17 @@ export function Home() {
             <div className={styles.page}>
                 <header className={styles.hero}>
                     <div className={styles.heroMain}>
-                        <div className={styles.heroEyebrow}>Welcome</div>
+                        <div className={styles.heroEyebrow}>{t('home.welcome')}</div>
                         <h1 className={styles.heroTitle} title={userFull || undefined}>
-                            {user ? `Hello, ${user}` : 'Welcome to EDM'}
+                            {user ? t('home.hello', {name: user}) : t('home.welcomeToEdm')}
                         </h1>
                         <p className={styles.heroLead}>
-                            Enterprise data management for industrial process monitoring,
-                            configuration and analysis. Pick where you want to start.
+                            {t('home.lead')}
                         </p>
                     </div>
                     <div className={styles.heroMeta}>
                         {userRole && (
-                            <span><b>Role</b> · {ROLE_LABEL[userRole] || userRole}</span>
+                            <span><b>{t('home.role')}</b> · {roleLabel[userRole] || userRole}</span>
                         )}
                         <span>{clock}</span>
                     </div>
@@ -117,9 +119,9 @@ export function Home() {
 
                 <section className={styles.section}>
                     <header className={styles.sectionHeader}>
-                        <span className={styles.sectionNum}>01</span>
-                        <h2 className={styles.sectionTitle}>Quick launch</h2>
-                        <p className={styles.sectionTagline}>Pick a surface to jump into.</p>
+                        <span className={styles.sectionNum}>{t('home.quickLaunchNum')}</span>
+                        <h2 className={styles.sectionTitle}>{t('home.quickLaunch')}</h2>
+                        <p className={styles.sectionTagline}>{t('home.quickLaunchTagline')}</p>
                     </header>
 
                     <div className={styles.launcherGrid}>

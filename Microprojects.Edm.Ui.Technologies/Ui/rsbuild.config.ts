@@ -36,6 +36,11 @@ const emotionStyledDir  = path.resolve(__dirname, 'node_modules/@emotion/styled'
 const reactRouterDomDir = path.resolve(__dirname, 'node_modules/react-router-dom')
 // RR7 bundles `react-router` and `history` internally — no separate packages.
 // Aliases for those would resolve to non-existent paths and break the build.
+// i18next + react-i18next must be singletons across the bundle — both
+// libraries hold module-level state. Same pattern as Logistics/Hub; see
+// docs/specs/multilang-spec.md §6.
+const i18nextDir      = path.resolve(__dirname, 'node_modules/i18next')
+const reactI18nextDir = path.resolve(__dirname, 'node_modules/react-i18next')
 
 export default defineConfig({
   plugins: [
@@ -63,6 +68,8 @@ export default defineConfig({
         // Router is context-based too — a duplicate copy sees no <Router> ancestor
         // and `useLocation`/`useNavigate` return undefined.
         'react-router-dom':    reactRouterDomDir,
+        i18next:               i18nextDir,
+        'react-i18next':       reactI18nextDir,
     },
   },
   html: {

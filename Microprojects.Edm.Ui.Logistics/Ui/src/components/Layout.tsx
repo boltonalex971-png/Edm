@@ -1,4 +1,5 @@
 import api from '@logistics/features/api/api'
+import { resolveError } from '@logistics/i18n/resolveError'
 import type { RootState } from '@logistics/store.ts'
 import {
     AutorenewOutlined as RepackingIcon,
@@ -106,7 +107,7 @@ export const Layout = ({ children, hideMenu }: LayoutProps) => {
             .catch((err) =>
                 setAlert({
                     status: 'danger',
-                    message: err.response?.data?.detail || err.message,
+                    message: resolveError(err, t('common:error')),
                 }),
             )
     }

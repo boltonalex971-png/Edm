@@ -1,8 +1,10 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 const Schedule = (props) => {
+    const { t } = useTranslation('tech');
     return (
-        <p>Here you can check device workloads on Gantt chart</p>
+        <p>{t('dashboard.scheduleStub')}</p>
     );
 };
 

@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import { RelationTable } from '@microprojects/edm-components/components';
 import { DropDownCell, LinkTextCell } from '@microprojects/edm-components/components';
 import { useGet } from '@microprojects/edm-components/hooks';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { DeviceDetail } from '../Devices';
 import { DeviceConfigEditor } from './DeviceConfigEditor';
@@ -18,6 +19,7 @@ WorkbenchDevicesTab.propTypes = {
 
 export function WorkbenchDevicesTab({ id, api, processId, onDetailSelected }) {
     const navigate = useNavigate();
+    const { t } = useTranslation('tech');
     const [[devices]] = useGet(`${Api.workplaces}/processes/workbenches/${id}/requireddevices`, [id]);
     const [[profiles]] = useGet(`${Api.processes}/${processId}/profiles`, [processId]);
     const devicesPath = '/config/devices';
@@ -42,16 +44,16 @@ export function WorkbenchDevicesTab({ id, api, processId, onDetailSelected }) {
     const columns = [
         {
             field: 'profileId',
-            headerName: 'Profile',
+            headerName: t('workbench.profile'),
             width: 200,
             editable: true,
             renderCell: (params) => (
-                <DropDownCell 
+                <DropDownCell
                     {...params}
-                    getData={() => profilers || []} 
-                    dataKey='id' 
-                    text='name' 
-                    fieldId='profileId' 
+                    getData={() => profilers || []}
+                    dataKey='id'
+                    text='name'
+                    fieldId='profileId'
                     fieldName='profileName'
                     onClick={(profileId, itemUpdate) => onDetailSelected(
                         <ProfileDetail
@@ -66,16 +68,16 @@ export function WorkbenchDevicesTab({ id, api, processId, onDetailSelected }) {
         },
         {
             field: 'workplaceHostDeviceId',
-            headerName: 'Device',
+            headerName: t('common.device'),
             width: 200,
             editable: true,
             renderCell: (params) => (
-                <DropDownCell 
+                <DropDownCell
                     {...params}
-                    getData={() => devices || []} 
-                    dataKey='id' 
-                    text='device' 
-                    fieldId='deviceId' 
+                    getData={() => devices || []}
+                    dataKey='id'
+                    text='device'
+                    fieldId='deviceId'
                     fieldName='deviceName'
                     onChange={(e) => handleDeviceChange(e, params.onChange)}
                     onClick={(deviceId, itemUpdate) => devices && devices.length &&
@@ -92,19 +94,19 @@ export function WorkbenchDevicesTab({ id, api, processId, onDetailSelected }) {
                 />
             )
         },
-        { field: 'hostName', headerName: 'Host', width: 150, editable: false },
+        { field: 'hostName', headerName: t('common.host'), width: 150, editable: false },
         {
             field: 'configuration',
-            headerName: 'Configuration',
+            headerName: t('device.configurationLabel'),
             flex: 1,
             editable: false,
             renderCell: (params) => (
-                <LinkTextCell 
+                <LinkTextCell
                     {...params}
-                    fieldId='id' 
+                    fieldId='id'
                     onClick={configClick}
                     editable={false}
-                    template={<span title='Edit device configuration'>Edit&hellip;</span>}
+                    template={<span title={t('device.editConfig')}>{t('common.edit')}</span>}
                 />
             )
         }

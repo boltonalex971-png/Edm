@@ -2,6 +2,7 @@
 import PropTypes from 'prop-types';
 import { useGet } from '@microprojects/edm-components/hooks';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useBasePath } from '@microprojects/edm-components/hooks';
 import { MasterDetail, reloadMaster, Detail, Editor } from '@microprojects/edm-components/components';
 import { DeviceTabs } from './device/DeviceTabs';
@@ -17,13 +18,14 @@ export function Devices() {
     const navigate = useNavigate();
     const path = useBasePath();
     const api = Api.devices;
+    const { t } = useTranslation('tech');
     return (
         <MasterDetail
             api={api}
             hierarchiesApi={Api.hierarchies}
             folderComponent={Folder}
             path={path}
-            stubMessage='Please select a device'
+            stubMessage={t('config.stub.device')}
             detail={(
                 <DeviceDetail
                     api={api}
@@ -53,6 +55,7 @@ export function DeviceDetail({ deviceId, parents, ...props }) {
     let [[data, setData], loading, error] = useGet(`${props.api}/${id}`, [id]);
     const [[models]] = useGet(`${props.api}/models`, []);
     const [[drivers]] = useGet(`${props.api}/drivers`, []);
+    const { t } = useTranslation('tech');
 
     data = data || {};
     return (
@@ -67,9 +70,9 @@ export function DeviceDetail({ deviceId, parents, ...props }) {
             data={data}
             card={
                 <Properties>
-                    <Property label="Driver" value={data.driverName} muted={!data.driverName} placeholder="No driver" />
-                    <Property label="Device type" value={data.profilerName} muted={!data.profilerName} placeholder="Any" />
-                    <Property label="Model" value={data.model} mono placeholder="—" />
+                    <Property label={t('common.driver')} value={data.driverName} muted={!data.driverName} placeholder={t('device.noDriver')} />
+                    <Property label={t('device.deviceType')} value={data.profilerName} muted={!data.profilerName} placeholder={t('device.any')} />
+                    <Property label={t('common.model')} value={data.model} mono placeholder="—" />
                 </Properties>
             }
             editor={
@@ -89,7 +92,7 @@ export function DeviceDetail({ deviceId, parents, ...props }) {
                             <Box>
                                 <EditorSection
                                     number={1}
-                                    title="Identity"
+                                    title={t('common.identity')}
                                     filled={identityFilled}
                                     total={2}
                                     done={identityFilled === 2 && !nameMissing}
@@ -97,18 +100,18 @@ export function DeviceDetail({ deviceId, parents, ...props }) {
                                     <Field
                                         full
                                         name="name"
-                                        label="Name"
+                                        label={t('common.name')}
                                         required
                                         value={values.name}
                                         onChange={handleChange}
                                         state={nameMissing ? 'invalid' : 'pristine'}
-                                        help={nameMissing ? 'A device must have a name.' : 'Shown in the master tree and in workplace device-config rows.'}
+                                        help={nameMissing ? t('device.nameMissing') : t('device.nameHelp')}
                                     />
                                     <Field
                                         full
                                         kind="textarea"
                                         name="description"
-                                        label="Description"
+                                        label={t('common.description')}
                                         rows={2}
                                         value={values.description}
                                         onChange={handleChange}
@@ -117,7 +120,7 @@ export function DeviceDetail({ deviceId, parents, ...props }) {
 
                                 <EditorSection
                                     number={2}
-                                    title="Hardware"
+                                    title={t('device.hardware')}
                                     filled={hardwareFilled}
                                     total={2}
                                     done={hardwareFilled === 2 && !driverMissing}
@@ -125,23 +128,23 @@ export function DeviceDetail({ deviceId, parents, ...props }) {
                                     <Field
                                         kind="select"
                                         name="model"
-                                        label="Model"
+                                        label={t('common.model')}
                                         value={values.model}
                                         onChange={handleChange}
-                                        placeholder="Select model"
+                                        placeholder={t('device.selectModel')}
                                         options={(models || []).map(m => ({ value: m, label: m }))}
                                     />
                                     <Field
                                         kind="select"
                                         name="driverGuid"
-                                        label="Driver"
+                                        label={t('common.driver')}
                                         required
                                         value={values.driverGuid}
                                         onChange={handleChange}
-                                        placeholder="Select driver"
+                                        placeholder={t('device.selectDriver')}
                                         options={(drivers || []).map(d => ({ value: d.guid, label: d.name }))}
                                         state={driverMissing ? 'invalid' : 'pristine'}
-                                        help={driverMissing ? 'Pick the driver that talks to this device.' : undefined}
+                                        help={driverMissing ? t('device.driverRequired') : undefined}
                                     />
                                 </EditorSection>
                             </Box>

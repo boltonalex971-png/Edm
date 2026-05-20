@@ -9,14 +9,16 @@ import commonEn from './common.locales/en.json'
 import commonRu from './common.locales/ru.json'
 import widgetsEn from './widgets.locales/en.json'
 import widgetsRu from './widgets.locales/ru.json'
+import errorsEn from './errors.locales/en.json'
+import errorsRu from './errors.locales/ru.json'
 
 void i18n
     .use(LanguageDetector)
     .use(initReactI18next)
     .init({
         resources: {
-            en: { common: commonEn, widgets: widgetsEn },
-            ru: { common: commonRu, widgets: widgetsRu },
+            en: { common: commonEn, widgets: widgetsEn, errors: errorsEn },
+            ru: { common: commonRu, widgets: widgetsRu, errors: errorsRu },
         },
         supportedLngs: ['en', 'ru'],
         fallbackLng: 'en',

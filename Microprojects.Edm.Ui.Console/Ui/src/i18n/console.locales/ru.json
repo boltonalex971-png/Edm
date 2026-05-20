@@ -1,0 +1,47 @@
+{
+    "sidebar": {
+        "ariaLabel": "Разделы консоли",
+        "eyebrow": "Операции"
+    },
+    "nav": {
+        "jobs": "Задания",
+        "drivers": "Драйверы",
+        "log": "Журнал"
+    },
+    "dataTable": {
+        "empty": "Нет записей."
+    },
+    "jobs": {
+        "column": {
+            "name": "Задание",
+            "description": "Описание",
+            "status": "Статус",
+            "lifetime": "Тип"
+        },
+        "card": {
+            "running": "Выполняются",
+            "available": "Доступные"
+        },
+        "empty": {
+            "running": "Нет выполняющихся заданий.",
+            "available": "Нет доступных заданий."
+        }
+    },
+    "drivers": {
+        "title": "Драйверы",
+        "column": {
+            "name": "Драйвер",
+            "description": "Описание",
+            "profile": "Профиль",
+            "guid": "GUID"
+        },
+        "empty": "Драйверы не загружены."
+    },
+    "log": {
+        "title": "Журнал хоста",
+        "filterAll": "Все",
+        "empty": "Нет записей в журнале.",
+        "loadingMore": "Загрузка…",
+        "endOfLog": "Конец журнала"
+    }
+}

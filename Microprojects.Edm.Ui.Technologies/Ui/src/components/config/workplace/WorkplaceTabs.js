@@ -1,6 +1,7 @@
 ﻿import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { Tabs, Tab, Box } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import { WorkplaceDevicesTab } from './WorkplaceDevicesTab';
 import { WorkplaceProcessesTab } from './WorkplaceProcessesTab';
 import { SmoothTabContainer } from '@microprojects/edm-components/components';
@@ -13,6 +14,7 @@ WorkplaceTabs.propTypes = {
 
 export function WorkplaceTabs(props) {
     const [selected, setSelected] = useState(0);
+    const { t } = useTranslation('tech');
 
     const handleChange = (event, newValue) => {
         setSelected(newValue);
@@ -23,9 +25,9 @@ export function WorkplaceTabs(props) {
     return (
         <Box sx={{ width: '100%' }}>
             <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                <Tabs value={selected} onChange={handleChange} aria-label="workplace tabs">
-                    <Tab label="Devices" sx={{ textTransform: 'none' }} />
-                    <Tab label="Processes" sx={{ textTransform: 'none' }} />
+                <Tabs value={selected} onChange={handleChange} aria-label={t('workplace.tabs.devices')}>
+                    <Tab label={t('workplace.tabs.devices')} sx={{ textTransform: 'none' }} />
+                    <Tab label={t('workplace.tabs.processes')} sx={{ textTransform: 'none' }} />
                 </Tabs>
             </Box>
             <Box sx={{ pt: 2 }}>

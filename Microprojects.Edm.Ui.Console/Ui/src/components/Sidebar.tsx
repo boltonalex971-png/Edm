@@ -1,8 +1,9 @@
-import ListAltOutlined from '@mui/icons-material/ListAltOutlined'
+﻿import ListAltOutlined from '@mui/icons-material/ListAltOutlined'
 import PlayArrowOutlined from '@mui/icons-material/PlayArrowOutlined'
 import PowerOutlined from '@mui/icons-material/PowerOutlined'
 import { Box } from '@mui/material'
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 
 export type ConsoleSection = 'jobs' | 'drivers' | 'log'
 
@@ -14,22 +15,24 @@ interface SidebarProps {
 
 interface NavEntry {
     key: ConsoleSection
-    label: string
+    labelKey: string
+    fallback: string
     icon: ReactNode
 }
 
 const NAV: NavEntry[] = [
-    { key: 'jobs', label: 'Jobs', icon: <PlayArrowOutlined fontSize="small" /> },
-    { key: 'drivers', label: 'Drivers', icon: <PowerOutlined fontSize="small" /> },
-    { key: 'log', label: 'Log', icon: <ListAltOutlined fontSize="small" /> },
+    { key: 'jobs', labelKey: 'nav.jobs', fallback: 'Jobs', icon: <PlayArrowOutlined fontSize="small" /> },
+    { key: 'drivers', labelKey: 'nav.drivers', fallback: 'Drivers', icon: <PowerOutlined fontSize="small" /> },
+    { key: 'log', labelKey: 'nav.log', fallback: 'Log', icon: <ListAltOutlined fontSize="small" /> },
 ]
 
 // 220px master-list rail per handoff CMP-13. Selected row gets the inset 3px
 // accent bar + tint background — never a full-color fill.
 export function Sidebar({ value, onChange, counts }: SidebarProps) {
+    const { t } = useTranslation('console')
     return (
-        <Box component="nav" className="console-sidebar" aria-label="Console sections">
-            <div className="sidebar-eyebrow">Operations</div>
+        <Box component="nav" className="console-sidebar" aria-label={t('sidebar.ariaLabel', 'Console sections')}>
+            <div className="sidebar-eyebrow">{t('sidebar.eyebrow', 'Operations')}</div>
             <ul className="sidebar-list">
                 {NAV.map((item) => {
                     const active = item.key === value
@@ -42,7 +45,7 @@ export function Sidebar({ value, onChange, counts }: SidebarProps) {
                                 onClick={() => onChange(item.key)}
                             >
                                 <span className="icon">{item.icon}</span>
-                                <span className="label">{item.label}</span>
+                                <span className="label">{t(item.labelKey, item.fallback)}</span>
                                 {count !== undefined && (
                                     <span className="count">{count}</span>
                                 )}

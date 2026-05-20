@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { pluginColor, pluginGlyph, type PluginSummary } from '../api'
 
 interface PluginListProps {
@@ -15,18 +16,15 @@ export function PluginList({
     activeGuid,
     onActivate,
 }: PluginListProps) {
+    const { t } = useTranslation('hub')
     if (error) {
         return <div className="plugin-list-error">{error}</div>
     }
     if (loading && plugins.length === 0) {
-        return <div className="plugin-list-empty">Loading modules…</div>
+        return <div className="plugin-list-empty">{t('pluginList.loadingModules')}</div>
     }
     if (plugins.length === 0) {
-        return (
-            <div className="plugin-list-empty">
-                No application plugins are loaded.
-            </div>
-        )
+        return <div className="plugin-list-empty">{t('pluginList.empty')}</div>
     }
     return (
         // Activate-clear handlers live at the panel level (not per tile) so the

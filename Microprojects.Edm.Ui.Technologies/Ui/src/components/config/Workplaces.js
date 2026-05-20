@@ -2,6 +2,7 @@
 import PropTypes from 'prop-types';
 import { useGet } from '@microprojects/edm-components/hooks';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useBasePath } from '@microprojects/edm-components/hooks';
 import { Business as BusinessIcon } from '@mui/icons-material';
 import { MasterDetail, reloadMaster, Detail, Editor } from '@microprojects/edm-components/components';
@@ -17,13 +18,14 @@ export function Workplaces() {
     const path = useBasePath();
     const navigate = useNavigate();
     const api = Api.workplaces;
+    const { t } = useTranslation('tech');
     return (
         <MasterDetail
             api={api}
             hierarchiesApi={Api.hierarchies}
             folderComponent={Folder}
             path={path}
-            stubMessage='Please select a workplace'
+            stubMessage={t('config.stub.workplace')}
             detail={(
                 <WorkplaceDetail
                     api={api}
@@ -50,6 +52,7 @@ export function WorkplaceDetail({ workplaceId, parents, ...props }) {
     id = workplaceId || parseInt(id);
     let [[data, setData], loading, error] = useGet(`${props.api}/${id}`, [id]);
     let [sub, setSub] = useState();
+    const { t } = useTranslation('tech');
     useEffect(setSub, [id]);
     if (!data || data.id === 0) {
         data = { ...data, name: '', description: '' };
@@ -79,7 +82,7 @@ export function WorkplaceDetail({ workplaceId, parents, ...props }) {
                             <Box>
                                 <EditorSection
                                     number={1}
-                                    title="Identity"
+                                    title={t('common.identity')}
                                     filled={identityFilled}
                                     total={2}
                                     done={identityFilled === 2 && !nameMissing}
@@ -87,18 +90,18 @@ export function WorkplaceDetail({ workplaceId, parents, ...props }) {
                                     <Field
                                         full
                                         name="name"
-                                        label="Name"
+                                        label={t('common.name')}
                                         required
                                         value={values.name}
                                         onChange={handleChange}
                                         state={nameMissing ? 'invalid' : 'pristine'}
-                                        help={nameMissing ? 'A workplace must have a name.' : 'Shown across the tree, breadcrumbs, and dispatch board.'}
+                                        help={nameMissing ? t('workplace.nameMissing') : t('workplace.nameHelp')}
                                     />
                                     <Field
                                         full
                                         kind="textarea"
                                         name="description"
-                                        label="Description"
+                                        label={t('common.description')}
                                         rows={2}
                                         value={values.description}
                                         onChange={handleChange}

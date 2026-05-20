@@ -1,0 +1,10 @@
+{
+    "Logistics": {
+        "Tare": {
+            "NotFound": "Tare not found.",
+            "NotFoundForItem": "Tare not found for the assigned item.",
+            "TypeNotFoundForItem": "Tare type not found for the assigned tare.",
+            "TypeMismatch": "Tare type does not match the requested tare type."
+        }
+    }
+}

@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { 
-    Dialog, 
-    DialogTitle, 
-    DialogContent, 
-    DialogActions, 
-    TextField, 
-    Button, 
+import { useTranslation } from 'react-i18next';
+import {
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    TextField,
+    Button,
     Autocomplete,
     Box,
     Typography
@@ -21,7 +22,8 @@ ZoneEditor.propTypes = {
 
 export function ZoneEditor(props) {
     const [fields, setFields] = useState(props.data);
-    
+    const { t } = useTranslation('tech');
+
     const handleSave = (e) => {
         e.preventDefault();
         props.onSave(fields);
@@ -29,25 +31,25 @@ export function ZoneEditor(props) {
 
     return (
         <Dialog open={true} onClose={props.onClose} maxWidth="xs" fullWidth>
-            <DialogTitle sx={{ fontWeight: 600, fontSize: '16px' }}>Zone</DialogTitle>
+            <DialogTitle sx={{ fontWeight: 600, fontSize: '16px' }}>{t('audit.zone')}</DialogTitle>
             <DialogContent>
                 <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
                     <TextField
-                        label="Zone #"
+                        label={t('audit.zoneHash')}
                         value={fields.no || ''}
                         onChange={(e) => setFields({ ...fields, no: e.target.value })}
                         size="small"
                         fullWidth
                     />
                     <TextField
-                        label="Active When"
+                        label={t('audit.activeWhen')}
                         value={fields.activeWhen || ''}
                         onChange={(e) => setFields({ ...fields, activeWhen: e.target.value })}
                         size="small"
                         fullWidth
                     />
                     <TextField
-                        label="Offset (min)"
+                        label={t('audit.offsetMin')}
                         type="number"
                         value={fields.offset || 0}
                         onChange={(e) => setFields({ ...fields, offset: parseFloat(e.target.value) })}
@@ -55,7 +57,7 @@ export function ZoneEditor(props) {
                         fullWidth
                     />
                     <TextField
-                        label="Duration (min)"
+                        label={t('audit.durationMin')}
                         type="number"
                         value={fields.duration || 0}
                         onChange={(e) => setFields({ ...fields, duration: parseFloat(e.target.value) })}
@@ -66,22 +68,22 @@ export function ZoneEditor(props) {
             </DialogContent>
             <DialogActions sx={{ p: 2, px: 3 }}>
                 {fields.id !== 0 && (
-                    <Button 
-                        color="error" 
+                    <Button
+                        color="error"
                         onClick={() => props.onDelete(fields)}
                         sx={{ textTransform: 'none' }}
                     >
-                        Delete
+                        {t('common.delete')}
                     </Button>
                 )}
                 <Box sx={{ flex: 1 }} />
-                <Button onClick={props.onClose} sx={{ textTransform: 'none' }}>Cancel</Button>
-                <Button 
-                    variant="contained" 
+                <Button onClick={props.onClose} sx={{ textTransform: 'none' }}>{t('common:cancel')}</Button>
+                <Button
+                    variant="contained"
                     onClick={handleSave}
                     sx={{ textTransform: 'none', borderRadius: '4px' }}
                 >
-                    Save
+                    {t('common:save')}
                 </Button>
             </DialogActions>
         </Dialog>
@@ -100,6 +102,7 @@ CriterionEditor.propTypes = {
 export function CriterionEditor(props) {
     const [fields, setFields] = useState(props.data);
     const selectedFunc = props.functions.filter(f => f.name === fields.function)[0];
+    const { t } = useTranslation('tech');
 
     const handleSave = (e) => {
         e.preventDefault();
@@ -108,28 +111,28 @@ export function CriterionEditor(props) {
 
     return (
         <Dialog open={true} onClose={props.onClose} maxWidth="xs" fullWidth>
-            <DialogTitle sx={{ fontWeight: 600, fontSize: '16px' }}>Criterion</DialogTitle>
+            <DialogTitle sx={{ fontWeight: 600, fontSize: '16px' }}>{t('audit.criterion')}</DialogTitle>
             <DialogContent>
                 <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
                     <Autocomplete
                         options={props.params || []}
                         value={fields.param || null}
                         onChange={(event, newValue) => setFields({ ...fields, param: newValue })}
-                        renderInput={(params) => <TextField {...params} label="Parameter" size="small" />}
+                        renderInput={(params) => <TextField {...params} label={t('audit.parameter')} size="small" />}
                         fullWidth
                     />
                     <Autocomplete
                         options={props.functions.map(f => f.name) || []}
                         value={fields.function || null}
                         onChange={(event, newValue) => setFields({ ...fields, function: newValue })}
-                        renderInput={(params) => <TextField {...params} label="Function" size="small" />}
+                        renderInput={(params) => <TextField {...params} label={t('audit.function')} size="small" />}
                         fullWidth
                     />
-                    
+
                     {selectedFunc && selectedFunc.args && (
                         <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
                             <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase' }}>
-                                Arguments
+                                {t('audit.arguments')}
                             </Typography>
                             {selectedFunc.args[0] && (
                                 <TextField
@@ -156,22 +159,22 @@ export function CriterionEditor(props) {
             </DialogContent>
             <DialogActions sx={{ p: 2, px: 3 }}>
                 {fields.id !== 0 && (
-                    <Button 
-                        color="error" 
+                    <Button
+                        color="error"
                         onClick={() => props.onDelete(fields)}
                         sx={{ textTransform: 'none' }}
                     >
-                        Delete
+                        {t('common.delete')}
                     </Button>
                 )}
                 <Box sx={{ flex: 1 }} />
-                <Button onClick={props.onClose} sx={{ textTransform: 'none' }}>Cancel</Button>
-                <Button 
-                    variant="contained" 
+                <Button onClick={props.onClose} sx={{ textTransform: 'none' }}>{t('common:cancel')}</Button>
+                <Button
+                    variant="contained"
                     onClick={handleSave}
                     sx={{ textTransform: 'none', borderRadius: '4px' }}
                 >
-                    Save
+                    {t('common:save')}
                 </Button>
             </DialogActions>
         </Dialog>

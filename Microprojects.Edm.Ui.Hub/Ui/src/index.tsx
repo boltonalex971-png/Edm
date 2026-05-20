@@ -4,6 +4,9 @@ import { defaultTheme } from '@microprojects/edm-components/styles/theme'
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
+// Side-effect import — initializes i18next + LanguageDetector synchronously
+// before React mounts so the first paint is in the persisted locale.
+import './i18n/i18n'
 import App from './App'
 import '@microprojects/edm-components/styles/tokens.css'
 import '@microprojects/edm-components/styles/chrome.css'

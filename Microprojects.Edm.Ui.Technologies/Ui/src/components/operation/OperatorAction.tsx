@@ -1,15 +1,16 @@
-import { 
-    Dialog, 
-    DialogTitle, 
-    DialogContent, 
-    DialogActions, 
-    Button, 
-    TextField, 
-    Typography, 
-    Box 
+import {
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Button,
+    TextField,
+    Typography,
+    Box
 } from "@mui/material";
 import { Check as CheckIcon } from "@mui/icons-material";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Countdown } from "@edm/components/operation/Countdown.tsx";
 
 interface IOperatorActionProps {
@@ -23,11 +24,12 @@ interface IOperatorActionProps {
 }
 
 export const OperatorAction = ({ step, onSubmit }: IOperatorActionProps) => {
-    const [current] = useState<any>({ 
-        params: step.parameters ? JSON.parse(step.parameters) : [], 
-        ...step 
+    const [current] = useState<any>({
+        params: step.parameters ? JSON.parse(step.parameters) : [],
+        ...step
     });
     const [values, setValues] = useState<any>({});
+    const { t } = useTranslation('tech');
 
     const handleChange = (name: string, value: string) => {
         setValues((prev: any) => ({ ...prev, [name]: value }));
@@ -73,7 +75,7 @@ export const OperatorAction = ({ step, onSubmit }: IOperatorActionProps) => {
                     fullWidth
                     sx={{ textTransform: 'none', py: 1 }}
                 >
-                    Completed
+                    {t('operation.completed')}
                 </Button>
             </DialogActions>
         </Dialog>

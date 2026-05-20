@@ -1,0 +1,343 @@
+{
+    "nav": {
+        "home": "Главная",
+        "dashboard": "Панель",
+        "configuration": "Настройка",
+        "plugins": "Плагины",
+        "operations": "Операции"
+    },
+    "roles": {
+        "administrator": "Администратор",
+        "technologist": "Технолог",
+        "operator": "Оператор"
+    },
+    "home": {
+        "welcome": "Добро пожаловать",
+        "hello": "Здравствуйте, {{name}}",
+        "welcomeToEdm": "Добро пожаловать в EDM",
+        "lead": "Управление данными предприятия для мониторинга промышленных процессов, конфигурации и анализа. Выберите, с чего начать.",
+        "role": "Роль",
+        "quickLaunchNum": "01",
+        "quickLaunch": "Быстрый старт",
+        "quickLaunchTagline": "Выберите раздел, чтобы начать.",
+        "cards": {
+            "startOperation": {
+                "title": "Запустить операцию",
+                "description": "Запустите новый тест оборудования или производственный процесс с рабочего места.",
+                "cta": "Новая операция"
+            },
+            "dashboard": {
+                "title": "Панель управления",
+                "description": "Контролируйте статус в реальном времени и анализируйте данные процессов на производстве.",
+                "cta": "Открыть панель",
+                "ctaOperator": "Открыть операции"
+            },
+            "configuration": {
+                "title": "Настройка",
+                "description": "Управляйте рабочими местами, хостами и профилями устройств.",
+                "cta": "Открыть настройки"
+            },
+            "plugins": {
+                "title": "Плагины",
+                "description": "Просмотр системных расширений, драйверов оборудования и приложений операций.",
+                "cta": "Открыть плагины"
+            }
+        }
+    },
+    "dashboard": {
+        "title": "Панель",
+        "operations": "Операции",
+        "users": "Пользователи",
+        "schedule": "Расписание",
+        "usersStub": "Здесь вы можете увидеть активных пользователей в системе",
+        "scheduleStub": "Здесь вы можете проверить загрузку устройств на диаграмме Ганта"
+    },
+    "operations": {
+        "periods": {
+            "running": "В работе",
+            "today": "Сегодня",
+            "week": "Неделя"
+        },
+        "states": {
+            "idle": "Ожидание",
+            "scheduled": "Запланирована",
+            "running": "Выполняется",
+            "completed": "Завершена",
+            "cancelled": "Отменена",
+            "faulted": "Ошибка"
+        },
+        "timeline": {
+            "startAt": "Старт в",
+            "willStartAt": "Старт в",
+            "started": "Начата",
+            "completed": "Завершена",
+            "cancelled": "Отменена",
+            "checked": "Проверена",
+            "scheduled": "Запланирована",
+            "created": "Создана"
+        },
+        "autoRefresh": "автообновление 10с",
+        "empty": {
+            "running": {
+                "title": "Нет выполняющихся операций",
+                "help": "Запустите новую операцию с рабочего места или выберите другой период для просмотра прошлых запусков."
+            },
+            "today": {
+                "title": "Сегодня нет операций",
+                "help": "Сегодня ещё ничего не завершено. Откройте вкладку Неделя для расширенной истории."
+            },
+            "week": {
+                "title": "Ничего за последние 7 дней",
+                "help": "За прошедшую неделю не завершено ни одной операции. Попробуйте «В работе», чтобы увидеть текущие."
+            }
+        },
+        "actions": "Действия с операцией",
+        "complete": "Завершить",
+        "copy": "Копировать",
+        "toasts": {
+            "completed": "Операция завершена",
+            "failedComplete": "Не удалось завершить операцию",
+            "failedCopy": "Не удалось скопировать операцию",
+            "failedStart": "Не удалось запустить операцию",
+            "failedStop": "Не удалось остановить операцию"
+        }
+    },
+    "operation": {
+        "showToolbar": "Показать панель",
+        "hideToolbar": "Скрыть панель",
+        "home": "Главная",
+        "configuration": "Настройка",
+        "operator": "Оператор: {{name}}",
+        "stopTitle": "Остановить операцию?",
+        "stopMessage": "Текущая операция будет отменена. Несохранённый прогресс будет потерян.",
+        "stopAction": "Остановить операцию",
+        "completeTitle": "Завершить операцию?",
+        "completeMessage": "Отметить операцию как завершённую. Она будет перенесена в список завершённых.",
+        "completeAction": "Завершить",
+        "start": "Старт",
+        "stop": "Стоп",
+        "closeWindow": "Закрыть окно",
+        "console": "Консоль операции",
+        "completed": "Завершено"
+    },
+    "config": {
+        "title": "Настройка",
+        "processes": "Процессы",
+        "workplaces": "Рабочие места",
+        "hosts": "Хосты",
+        "devices": "Устройства",
+        "selectOption": "Выберите один из пунктов выше",
+        "stub": {
+            "process": "Выберите процесс",
+            "host": "Выберите хост",
+            "device": "Выберите устройство",
+            "workplace": "Выберите рабочее место"
+        }
+    },
+    "common": {
+        "name": "Имя",
+        "description": "Описание",
+        "identity": "Идентификация",
+        "address": "Адрес",
+        "host": "Хост",
+        "device": "Устройство",
+        "driver": "Драйвер",
+        "profiler": "Профилировщик",
+        "model": "Модель",
+        "mode": "Режим",
+        "environment": "Окружение",
+        "version": "Версия",
+        "delete": "Удалить",
+        "edit": "Изменить…",
+        "configure": "Настроить...",
+        "online": "В сети",
+        "offline": "Не в сети",
+        "none": "Нет",
+        "type": "Тип"
+    },
+    "process": {
+        "operation": "Операция",
+        "operationNotBound": "Не привязана",
+        "commonUid": "Общий UID",
+        "commonUidPlaceholder": "напр. 7G-MNT-014",
+        "commonUidHelp": "Стабильный идентификатор для внешних систем (ERP, MES). Необязательно.",
+        "nameHelp": "Отображается в дереве, навигации и на доске диспетчеризации.",
+        "nameMissing": "У процесса должно быть имя.",
+        "descriptionHelp": "Свободные заметки — что делает процесс, где используется.",
+        "operationBinding": "Привязка операции",
+        "noOperation": "Без операции",
+        "operationWired": "Операция связана с входящими параметрами.",
+        "operationHelp": "Выберите плагин операции, который управляет этим процессом.",
+        "paramSingular_one": "Параметр {{params}} недоступен как выходной",
+        "paramSingular_few": "Параметры {{params}} недоступны как выходные",
+        "paramSingular_many": "Параметры {{params}} недоступны как выходные",
+        "paramSingular_other": "Параметры {{params}} недоступны как выходные",
+        "paramUnresolved_one": "{{count}} параметр не разрешён: {{params}}",
+        "paramUnresolved_few": "{{count}} параметра не разрешены: {{params}}",
+        "paramUnresolved_many": "{{count}} параметров не разрешены: {{params}}",
+        "paramUnresolved_other": "{{count}} параметров не разрешены: {{params}}",
+        "tabs": {
+            "profiles": "Профили",
+            "qualifiers": "Уточнители"
+        }
+    },
+    "host": {
+        "endpoint": "Точка подключения",
+        "port": "Порт",
+        "portPlaceholder": "напр. 16332",
+        "addressPlaceholder": "имя хоста или IP",
+        "addressHelp": "gRPC-эндпоинт, без префикса протокола.",
+        "addressRequired": "Требуется для подключения к хосту.",
+        "nameMissing": "У хоста должно быть имя.",
+        "nameHelp": "Отображается в дереве, навигации и на доске диспетчеризации.",
+        "openConsole": "Открыть консоль хоста",
+        "consoleTitle": "Консоль хоста",
+        "console": "Консоль",
+        "tabs": {
+            "devices": "Устройства"
+        }
+    },
+    "device": {
+        "deviceType": "Тип устройства",
+        "noDriver": "Без драйвера",
+        "any": "Любой",
+        "hardware": "Оборудование",
+        "selectModel": "Выберите модель",
+        "selectDriver": "Выберите драйвер",
+        "driverRequired": "Выберите драйвер для общения с этим устройством.",
+        "nameMissing": "У устройства должно быть имя.",
+        "nameHelp": "Отображается в дереве и в строках конфигурации устройств рабочих мест.",
+        "config": "Конфигурация устройства",
+        "configurationLabel": "Конфигурация",
+        "editConfig": "Изменить конфигурацию устройства",
+        "deviceNameConfig": "Конфигурация {{deviceName}}",
+        "deviceOnHost": "Устройство {{driverName}} на {{hostName}}",
+        "tabs": {
+            "hosts": "Хосты"
+        }
+    },
+    "workplace": {
+        "nameMissing": "У рабочего места должно быть имя.",
+        "nameHelp": "Отображается в дереве, навигации и на доске диспетчеризации.",
+        "tabs": {
+            "devices": "Устройства",
+            "processes": "Процессы"
+        },
+        "process": "Процесс",
+        "workbenches": "Стенды",
+        "selectProcess": "Выберите процесс"
+    },
+    "workbench": {
+        "deviceConfigurations": "Конфигурации устройств",
+        "startOperation": "Запустить операцию",
+        "nameMissing": "У стенда должно быть имя.",
+        "nameHelp": "Отображается в дереве, навигации и на доске диспетчеризации.",
+        "commonUidPlaceholder": "напр. WB-014-A",
+        "commonUidHelp": "Стабильный идентификатор для внешних систем (ERP, MES). Необязательно.",
+        "workbenchesTitle": "Стенды",
+        "forProcessOn": "Для {{processName}} на {{workplaceName}}",
+        "profile": "Профиль"
+    },
+    "folder": {
+        "nameMissing": "У папки должно быть имя.",
+        "nameHelp": "Отображается в мастер-дереве.",
+        "organization": "Организация",
+        "division": "Подразделение",
+        "noDivision": "Без подразделения"
+    },
+    "profile": {
+        "profileLabel": "Профилировщик",
+        "noProfilerAttached": "Профилировщик не назначен",
+        "inputParams": "Входные параметры",
+        "outputParams": "Выходные параметры",
+        "noneItalic": "Нет",
+        "parameters": "Параметры",
+        "declareInOut": "объявите входы и выходы",
+        "inputsHelp": "Имена параметров, которые этот профиль получает из вышестоящих операций.",
+        "outputsHelp": "Имена параметров, которые этот профиль производит для нижестоящих потребителей.",
+        "addParam": "Введите параметр и нажмите Enter",
+        "nameMissing": "У профиля должно быть имя.",
+        "nameHelp": "Отображается в дереве, навигации и привязках процессов.",
+        "tabs": {
+            "profile": "Профиль",
+            "audits": "Аудиты"
+        },
+        "inputParamsShort": "Входные",
+        "outputParamsShort": "Выходные",
+        "missingParameter": "Отсутствующий параметр"
+    },
+    "audit": {
+        "nameMissing": "У аудита должно быть имя.",
+        "nameHelp": "Отображается в дереве, навигации и привязках процессов.",
+        "addZone": "Добавить зону",
+        "zone": "Зона",
+        "zonesTable": "таблица зон аудита",
+        "zoneHash": "Зона №",
+        "activeWhen": "Активна когда",
+        "offsetMin": "Смещение (мин)",
+        "durationMin": "Длительность (мин)",
+        "criterion": "Критерий",
+        "parameter": "Параметр",
+        "function": "Функция",
+        "arguments": "Аргументы",
+        "tableZone": "ЗОНА",
+        "tableParameters": "ПАРАМЕТРЫ",
+        "tableInterval": "ИНТЕРВАЛ",
+        "tableActiveWhen": "АКТИВНА КОГДА",
+        "tabs": {
+            "zones": "Зоны",
+            "qualifiers": "Уточнители"
+        }
+    },
+    "newOperation": {
+        "title": "Новая операция",
+        "selectProcessToRun": "Выберите подходящий процесс для запуска",
+        "process": "Процесс",
+        "none": "Нет",
+        "viewInfo": "Посмотреть информацию",
+        "selectDevicesForProcess": "Выберите устройства для выбранного процесса",
+        "specifyInputs": "Укажите необходимые входные параметры",
+        "startOperation": "Запустить операцию",
+        "startedSuccess": "Операция успешно запущена!",
+        "finallyCreate": "Наконец, вы можете создать операцию",
+        "createNow": "Создать операцию сейчас",
+        "selectProcessToStart": "Выберите процесс для запуска",
+        "selectedProcessInfo": "Информация о процессе",
+        "selectOptionsAbove": "Выберите параметры выше",
+        "loadingProfiles": "Загрузка профилей...",
+        "chooseWorkbench_one": "Выберите стенд или подходящее устройство и задайте параметры",
+        "chooseWorkbench_few": "Выберите стенд или подходящие устройства и задайте параметры",
+        "chooseWorkbench_many": "Выберите стенд или подходящие устройства и задайте параметры",
+        "chooseWorkbench_other": "Выберите стенд или подходящие устройства и задайте параметры",
+        "doesNotRequireDevice": "{{processName}} не требует устройств",
+        "workbench": "Стенд",
+        "checkMissingInputs": "Проверка отсутствующих входов...",
+        "noMissingParameters": "В этом процессе нет отсутствующих параметров",
+        "specifyInputCount_one": "Укажите {{count}} входной параметр",
+        "specifyInputCount_few": "Укажите {{count}} входных параметра",
+        "specifyInputCount_many": "Укажите {{count}} входных параметров",
+        "specifyInputCount_other": "Укажите {{count}} входных параметров",
+        "editParameters": "Изменить параметры",
+        "editOptions": "Изменить параметры",
+        "selectedDeviceInfo": "Информация об устройстве",
+        "type": "Тип",
+        "deviceConfiguration": "Конфигурация устройства",
+        "missingInputs": "Отсутствующие входные параметры процесса",
+        "acceptParameters": "Принять параметры"
+    },
+    "plugins": {
+        "title": "Плагины",
+        "drivers": "Драйверы",
+        "profiles": "Профили",
+        "operations": "Операции",
+        "driverPlugins": "Плагины драйверов",
+        "profilePlugins": "Плагины профилей",
+        "operationPlugins": "Плагины операций",
+        "selectOption": "Выберите один из пунктов выше",
+        "guid": "Глобальный идентификатор",
+        "driverName": "Имя драйвера",
+        "profilerName": "Имя профилировщика",
+        "operationName": "Имя операции",
+        "profileTypeName": "Имя типа профиля"
+    }
+}

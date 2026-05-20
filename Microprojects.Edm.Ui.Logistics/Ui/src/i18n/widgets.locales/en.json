@@ -25,5 +25,12 @@
     },
     "changelog": {
         "loadFailed": "Failed to load changelog: {{error}}"
+    },
+    "auth": {
+        "noRole": "As user {{name}} you are not authorized to access ISTP application. No role is assigned to your account. Please refer to your system administrator.",
+        "notAuthenticated": "You are not authenticated to access ISTP application. Please refer to your system administrator."
+    },
+    "routes": {
+        "notFound": "Page not found"
     }
 }

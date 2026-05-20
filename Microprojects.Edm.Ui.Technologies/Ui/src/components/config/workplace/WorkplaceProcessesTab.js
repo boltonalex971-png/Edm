@@ -3,6 +3,7 @@ import Api from '../../api';
 import PropTypes from 'prop-types';
 import { RelationTable } from '@microprojects/edm-components/components';
 import { useGet } from '@microprojects/edm-components/hooks';
+import { useTranslation } from 'react-i18next';
 import { ProcessDetail } from '../Processes';
 import { useNavigate } from 'react-router-dom';
 import { ProcessWorkbenchesDetail } from './ProcessWorkbenches';
@@ -17,6 +18,7 @@ WorkplaceProcessesTab.propTypes = {
 export function WorkplaceProcessesTab({ id, api, onDetailSelected, parents }) {
     const navigate = useNavigate();
     const [[data]] = useGet(`${api}/processes`);
+    const { t } = useTranslation('tech');
 
     const workbenchesClick = (wsPrId) => {
         onDetailSelected(
@@ -32,11 +34,11 @@ export function WorkplaceProcessesTab({ id, api, onDetailSelected, parents }) {
     const columns = [
         {
             field: 'processId',
-            headerName: 'Process',
+            headerName: t('workplace.process'),
             width: 250,
             editable: true,
             renderCell: (params) => {
-                const processName = params.row.processName || 'Select Process';
+                const processName = params.row.processName || t('workplace.selectProcess');
                 return (
                     <Link
                         component="button"
@@ -79,7 +81,7 @@ export function WorkplaceProcessesTab({ id, api, onDetailSelected, parents }) {
         },
         {
             field: 'id',
-            headerName: 'Workbenches',
+            headerName: t('workplace.workbenches'),
             width: 150,
             renderCell: (params) => {
                 return (
@@ -92,14 +94,14 @@ export function WorkplaceProcessesTab({ id, api, onDetailSelected, parents }) {
                         }}
                         sx={{ textDecoration: 'none' }}
                     >
-                        Configure...
+                        {t('common.configure')}
                     </Link>
                 );
             }
         },
         {
             field: 'processDescription',
-            headerName: 'Description',
+            headerName: t('common.description'),
             flex: 1,
             editable: false
         }

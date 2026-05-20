@@ -9,6 +9,7 @@ import {
     AutorenewOutlined as RefreshIcon,
 } from '@mui/icons-material';
 import {useParams, useLocation, useNavigate} from "react-router-dom";
+import {useTranslation} from 'react-i18next';
 import Axios from "axios";
 import api, {spaUrl} from '../api';
 import {useGet} from '@microprojects/edm-components/hooks';
@@ -21,37 +22,28 @@ import styles from './Operations.module.scss';
 // rail, mono eyebrow ID, status badge top-right, process name title,
 // optional location line, single-line foot with the latest timestamp.
 
-const PERIODS = [
-    {value: 'running', label: 'Running'},
-    {value: 'today',   label: 'Today'},
-    {value: 'week',    label: 'Week'},
-];
-
-const STATE_TO_VISUAL = {
-    Idle:       {rail: 'warn',   badge: 'warn',   label: 'Idle'},
-    Scheduled:  {rail: 'queued', badge: 'queued', label: 'Scheduled'},
-    InProgress: {rail: 'run',    badge: 'run',    label: 'Running'},
-    Completed:  {rail: 'done',   badge: 'idle',   label: 'Completed'},
-    Cancelled:  {rail: 'done',   badge: 'idle',   label: 'Cancelled'},
-    Faulted:    {rail: 'fault',  badge: 'fault',  label: 'Faulted'},
+const STATE_KEY = {
+    Idle: 'idle',
+    Scheduled: 'scheduled',
+    InProgress: 'running',
+    Completed: 'completed',
+    Cancelled: 'cancelled',
+    Faulted: 'faulted',
 };
 
-const EMPTY_BY_PERIOD = {
-    running: {
-        Icon: RunningEmptyIcon,
-        title: 'No operation is running',
-        help: 'Start a new operation from a workbench, or pick a different period to view past runs.',
-    },
-    today: {
-        Icon: TodayEmptyIcon,
-        title: 'No operations today',
-        help: 'Nothing has been completed yet today. Check the Week tab for the wider history.',
-    },
-    week: {
-        Icon: WeekEmptyIcon,
-        title: 'Nothing in the last 7 days',
-        help: 'No operations completed in the past week. Try Running for what is currently in flight.',
-    },
+const STATE_TO_VISUAL = {
+    Idle:       {rail: 'warn',   badge: 'warn'},
+    Scheduled:  {rail: 'queued', badge: 'queued'},
+    InProgress: {rail: 'run',    badge: 'run'},
+    Completed:  {rail: 'done',   badge: 'idle'},
+    Cancelled:  {rail: 'done',   badge: 'idle'},
+    Faulted:    {rail: 'fault',  badge: 'fault'},
+};
+
+const EMPTY_ICON_BY_PERIOD = {
+    running: RunningEmptyIcon,
+    today:   TodayEmptyIcon,
+    week:    WeekEmptyIcon,
 };
 
 const Operations = () => {
@@ -59,6 +51,7 @@ const Operations = () => {
     const navigate = useNavigate();
     const {when} = useParams();
     const period = when ?? 'running';
+    const { t } = useTranslation('tech');
     /* When `when` is in the URL, strip it; otherwise the pathname is
        already the base. Earlier the ternary was collapsed into a single
        `.replace('/${when ?? ""}', '')` which silently turned into
@@ -67,11 +60,17 @@ const Operations = () => {
         ? location.pathname.replace(`/${when}`, '')
         : location.pathname.replace(/\/$/, '');
 
+    const periods = [
+        {value: 'running', label: t('operations.periods.running')},
+        {value: 'today',   label: t('operations.periods.today')},
+        {value: 'week',    label: t('operations.periods.week')},
+    ];
+
     return (
         <Box>
             <Box className={styles.toolbar}>
                 <nav className={styles.periodTabs}>
-                    {PERIODS.map(p => (
+                    {periods.map(p => (
                         <button
                             key={p.value}
                             type="button"
@@ -84,7 +83,7 @@ const Operations = () => {
                 </nav>
                 <span className={styles.refreshHint}>
                     <RefreshIcon fontSize="inherit" />
-                    auto-refresh 10s
+                    {t('operations.autoRefresh')}
                 </span>
             </Box>
             <OperationsWhen period={period}/>
@@ -97,6 +96,7 @@ const OperationsWhen = ({period}) => {
     const [time, setTime] = useState();
     const [[operations]] = useGet(`${api.operations}/${period}`, [time, period], null, true);
     const toast = useToast();
+    const { t } = useTranslation('tech');
 
     useEffect(() => {
         const interval = setInterval(() => setTime(Date.now()), 10000);
@@ -109,10 +109,10 @@ const OperationsWhen = ({period}) => {
     const completeOperation = () => {
         Axios.post(`${api.operations}/${menu.id}/complete`)
             .then(() => {
-                toast.success('Operation completed');
+                toast.success(t('operations.toasts.completed'));
                 setTime(Date.now());
             })
-            .catch((error) => toast.error(errorOf(error, 'Failed to complete operation')))
+            .catch((error) => toast.error(errorOf(error, t('operations.toasts.failedComplete'))))
             .finally(() => setMenu(null));
     };
     const copyOperation = () => {
@@ -120,7 +120,7 @@ const OperationsWhen = ({period}) => {
             .then((response) => {
                 window.open(spaUrl(`/operations/${response.data.id}`), '_blank');
             })
-            .catch((error) => toast.error(errorOf(error, 'Failed to copy operation')))
+            .catch((error) => toast.error(errorOf(error, t('operations.toasts.failedCopy'))))
             .finally(() => setMenu(null));
     };
 
@@ -137,15 +137,16 @@ const OperationsWhen = ({period}) => {
     }
 
     if (operations && operations.length === 0) {
-        const empty = EMPTY_BY_PERIOD[period] || EMPTY_BY_PERIOD.running;
-        const EmptyIcon = empty.Icon;
+        const EmptyIcon = EMPTY_ICON_BY_PERIOD[period] || EMPTY_ICON_BY_PERIOD.running;
+        const titleKey = `operations.empty.${period in EMPTY_ICON_BY_PERIOD ? period : 'running'}.title`;
+        const helpKey = `operations.empty.${period in EMPTY_ICON_BY_PERIOD ? period : 'running'}.help`;
         return (
             <div className={styles.emptyState}>
                 <div className={styles.emptyIcon}>
                     <EmptyIcon />
                 </div>
-                <div className={styles.emptyTitle}>{empty.title}</div>
-                <div className={styles.emptyHelp}>{empty.help}</div>
+                <div className={styles.emptyTitle}>{t(titleKey)}</div>
+                <div className={styles.emptyHelp}>{t(helpKey)}</div>
             </div>
         );
     }
@@ -175,8 +176,8 @@ const OperationsWhen = ({period}) => {
                 transformOrigin={{horizontal: 'right', vertical: 'top'}}
                 anchorOrigin={{horizontal: 'right', vertical: 'bottom'}}
             >
-                {period === 'running' && <MenuItem onClick={completeOperation}>Complete</MenuItem>}
-                <MenuItem onClick={copyOperation}>Copy</MenuItem>
+                {period === 'running' && <MenuItem onClick={completeOperation}>{t('operations.complete')}</MenuItem>}
+                <MenuItem onClick={copyOperation}>{t('operations.copy')}</MenuItem>
             </Menu>
         </>
     );
@@ -207,18 +208,20 @@ function OperationCardSkeleton() {
 
 function OperationCard({operation, onMore}) {
     const visual = STATE_TO_VISUAL[operation.state] || STATE_TO_VISUAL.Idle;
+    const { t } = useTranslation('tech');
+    const stateKey = STATE_KEY[operation.state] || 'idle';
     const open = () => window.open(spaUrl(`/operations/${operation.id}`), '_blank');
 
     // Pick the latest meaningful timestamp; the others are reachable via
     // the operation page itself.
     const foot = useMemo(() => {
-        if (operation.completed) return {label: 'Completed', value: dateToHumanSpan(utcDateToLocal(operation.completed))};
-        if (operation.cancelled) return {label: 'Cancelled', value: dateToHumanSpan(utcDateToLocal(operation.cancelled))};
-        if (operation.started)   return {label: 'Started',   value: dateToHumanSpan(utcDateToLocal(operation.started))};
-        if (operation.scheduled) return {label: 'Scheduled', value: dateToHumanSpan(utcDateToLocal(operation.scheduled))};
-        if (operation.created)   return {label: 'Created',   value: dateToHumanSpan(utcDateToLocal(operation.created))};
+        if (operation.completed) return {label: t('operations.timeline.completed'), value: dateToHumanSpan(utcDateToLocal(operation.completed))};
+        if (operation.cancelled) return {label: t('operations.timeline.cancelled'), value: dateToHumanSpan(utcDateToLocal(operation.cancelled))};
+        if (operation.started)   return {label: t('operations.timeline.started'),   value: dateToHumanSpan(utcDateToLocal(operation.started))};
+        if (operation.scheduled) return {label: t('operations.timeline.scheduled'), value: dateToHumanSpan(utcDateToLocal(operation.scheduled))};
+        if (operation.created)   return {label: t('operations.timeline.created'),   value: dateToHumanSpan(utcDateToLocal(operation.created))};
         return null;
-    }, [operation]);
+    }, [operation, t]);
 
     return (
         <article
@@ -238,14 +241,14 @@ function OperationCard({operation, onMore}) {
                 <span className={styles.opCardBadgeWrap}>
                     <span className={`badge ${visual.badge}`}>
                         <span className="dot" />
-                        {visual.label}
+                        {t(`operations.states.${stateKey}`)}
                     </span>
                 </span>
                 <IconButton
                     size="small"
                     className={styles.opCardMore}
                     onClick={onMore}
-                    aria-label="Operation actions"
+                    aria-label={t('operations.actions')}
                 >
                     <MoreVertIcon fontSize="small" />
                 </IconButton>

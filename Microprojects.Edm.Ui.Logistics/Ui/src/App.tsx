@@ -4,6 +4,7 @@ import type { RootState } from '@logistics/store.ts'
 import { Loading } from '@microprojects/edm-components/components'
 import axios from 'axios'
 import React, { Suspense, lazy, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 import { Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
@@ -39,6 +40,7 @@ const Supplies = lazy(() =>
 )
 
 export function App() {
+    const { t } = useTranslation()
     const user = useSelector((state: RootState) => state.user)
     const userDispatch = useDispatch()
 
@@ -104,22 +106,15 @@ export function App() {
                         <Route path="/items/*" element={<Items />} />
                         <Route path="/repacking" element={<Repacking />} />
                         <Route path="/changes" element={<Changelog />} />
-                        <Route path="*" element={<span>Page not exist</span>} />
+                        <Route path="*" element={<span>{t('widgets:routes.notFound')}</span>} />
                     </Routes>
                 </Suspense>
             )}
             {isAuthenticated && !hasRole && (
-                <span>
-                    As user {user.name} you are not authorized to access ISTP
-                    application. No role is assigned to your account. Please
-                    refer to your system administrator.
-                </span>
+                <span>{t('widgets:auth.noRole', { name: user.name })}</span>
             )}
             {!isAuthenticated && (
-                <span>
-                    You are not authenticated to access ISTP application. Please
-                    refer to your system administrator.
-                </span>
+                <span>{t('widgets:auth.notAuthenticated')}</span>
             )}
         </Layout>
     )

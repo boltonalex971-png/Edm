@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microprojects.Edm;
 using Microprojects.Edm.Utils;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
@@ -31,6 +32,21 @@ internal sealed class GlobalExceptionHandler : IExceptionHandler
             Detail = exception.GetMeaningfulMessage(),
             Instance = $"{httpContext.Request.Method} {httpContext.Request.Path}"
         };
+
+        // Surface code + params for the frontend's t(code, params) resolver.
+        // EdmException is the only carrier today; wrapped EdmException (in
+        // InnerException) also counts so wrappers from job/service layers
+        // don't strip the catalog key.
+        var edm = exception as EdmException ?? exception.InnerException as EdmException;
+        if (edm?.Code != null)
+        {
+            problemDetails.Extensions["code"] = edm.Code;
+            if (edm.Params != null)
+            {
+                problemDetails.Extensions["params"] = edm.Params;
+            }
+        }
+
         _logger.LogError(exception, "{Type}: {Instance} {Message}", problemDetails.Type, problemDetails.Instance,
             problemDetails.Detail);
         httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;

@@ -36,6 +36,7 @@
         "quickActions": "Quick actions"
     },
     "action": {
+        "open": "Open",
         "manageOrders": { "title": "Manage orders",    "sub": "Create, launch, monitor" },
         "browseItems":  { "title": "Browse items",     "sub": "History & genealogy" },
         "receiveSupplies": { "title": "Receive supplies", "sub": "Inbound shipments" },

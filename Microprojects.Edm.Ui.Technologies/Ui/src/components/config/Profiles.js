@@ -2,6 +2,7 @@
 import PropTypes from 'prop-types';
 import { useGet } from '@microprojects/edm-components/hooks';
 import { useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Detail, Editor } from '@microprojects/edm-components/components';
 import { ProfileTabs } from './profile/ProfileTabs';
 import { Box, Chip, TextField, Autocomplete } from '@mui/material';
@@ -26,6 +27,7 @@ export function ProfileDetail({ profileId, parents, deletable = true, ...props }
     let [sub, setSub] = useState();
     useEffect(setSub, [id]);
     let [[data, setData], loading, error] = useGet(`${props.api}/${id}`, [id]);
+    const { t } = useTranslation('tech');
     if (!data || data.id === 0) {
         data = { ...data, name: '', description: '', url: '' };
     }
@@ -33,7 +35,7 @@ export function ProfileDetail({ profileId, parents, deletable = true, ...props }
     const inputs = JSON.parse(data.input || '[]');
     const outputs = JSON.parse(data.output || '[]');
     const renderParams = (params) => params.length === 0
-        ? <span style={{ color: 'var(--ink-4)', fontStyle: 'italic' }}>None</span>
+        ? <span style={{ color: 'var(--ink-4)', fontStyle: 'italic' }}>{t('profile.noneItalic')}</span>
         : (
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                 {params.map(p => (
@@ -56,21 +58,21 @@ export function ProfileDetail({ profileId, parents, deletable = true, ...props }
             card={
                 <Properties>
                     <Property
-                        label="Profiler"
+                        label={t('profile.profileLabel')}
                         value={data.profilerName}
                         muted={!data.profilerName}
-                        placeholder="No profiler attached"
+                        placeholder={t('profile.noProfilerAttached')}
                         full
                     />
                     <Property
-                        label="Input parameters"
+                        label={t('profile.inputParams')}
                         full
                         multiline
                     >
                         {renderParams(inputs)}
                     </Property>
                     <Property
-                        label="Output parameters"
+                        label={t('profile.outputParams')}
                         full
                         multiline
                     >
@@ -95,7 +97,7 @@ export function ProfileDetail({ profileId, parents, deletable = true, ...props }
                             <Box>
                                 <EditorSection
                                     number={1}
-                                    title="Identity"
+                                    title={t('common.identity')}
                                     filled={identityFilled}
                                     total={2}
                                     done={identityFilled === 2 && !nameMissing}
@@ -103,18 +105,18 @@ export function ProfileDetail({ profileId, parents, deletable = true, ...props }
                                     <Field
                                         full
                                         name="name"
-                                        label="Name"
+                                        label={t('common.name')}
                                         required
                                         value={values.name}
                                         onChange={handleChange}
                                         state={nameMissing ? 'invalid' : 'pristine'}
-                                        help={nameMissing ? 'A profile must have a name.' : 'Shown across the tree, breadcrumbs, and process bindings.'}
+                                        help={nameMissing ? t('profile.nameMissing') : t('profile.nameHelp')}
                                     />
                                     <Field
                                         full
                                         kind="textarea"
                                         name="description"
-                                        label="Description"
+                                        label={t('common.description')}
                                         rows={2}
                                         value={values.description}
                                         onChange={handleChange}
@@ -123,25 +125,27 @@ export function ProfileDetail({ profileId, parents, deletable = true, ...props }
 
                                 <EditorSection
                                     number={2}
-                                    title="Parameters"
+                                    title={t('profile.parameters')}
                                     filled={paramsFilled}
                                     total={2}
                                     done={paramsFilled === 2}
-                                    fillNote={paramsFilled < 2 ? 'declare inputs and outputs' : undefined}
+                                    fillNote={paramsFilled < 2 ? t('profile.declareInOut') : undefined}
                                 >
                                     <ParamsField
-                                        label="Input parameters"
+                                        label={t('profile.inputParams')}
                                         name="input"
                                         value={inputArr}
                                         onChange={(v) => handleChange({ target: { name: 'input', value: JSON.stringify(v) } })}
-                                        help="Names of parameters this profile consumes from upstream operations."
+                                        help={t('profile.inputsHelp')}
+                                        placeholder={t('profile.addParam')}
                                     />
                                     <ParamsField
-                                        label="Output parameters"
+                                        label={t('profile.outputParams')}
                                         name="output"
                                         value={outputArr}
                                         onChange={(v) => handleChange({ target: { name: 'output', value: JSON.stringify(v) } })}
-                                        help="Names of parameters this profile produces for downstream consumers."
+                                        help={t('profile.outputsHelp')}
+                                        placeholder={t('profile.addParam')}
                                     />
                                 </EditorSection>
                             </Box>
@@ -159,7 +163,7 @@ export function ProfileDetail({ profileId, parents, deletable = true, ...props }
 
 // Parameter chip-list editor — keeps MUI Autocomplete (freeSolo + chips) wrapped
 // in a v2-style label/help frame so it sits alongside the Field primitives.
-function ParamsField({ label, name, value, onChange, help }) {
+function ParamsField({ label, name, value, onChange, help, placeholder }) {
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: '5px', gridColumn: '1 / -1' }}>
             <span style={{
@@ -179,7 +183,7 @@ function ParamsField({ label, name, value, onChange, help }) {
                     ))
                 }
                 renderInput={(params) => (
-                    <TextField {...params} name={name} placeholder="Add parameter and press Enter" />
+                    <TextField {...params} name={name} placeholder={placeholder} />
                 )}
             />
             {help && <span style={{

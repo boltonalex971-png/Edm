@@ -2,6 +2,7 @@ import {Box} from '@mui/material'
 import {SmartScroll, SmartScrollContent} from '@microprojects/tools'
 import {Changelog} from '@microprojects/edm-components/components/chrome/Changelog'
 import {useEffect, useMemo, useState} from 'react'
+import {useTranslation} from 'react-i18next'
 import {Route, Routes} from 'react-router-dom'
 import {
     cleanName,
@@ -35,6 +36,7 @@ const HUB_IDENTITY = {
 const SMART_SCROLL_OFFSET = 64
 
 export default function App() {
+    const {t} = useTranslation('hub')
     const [plugins, setPlugins] = useState<PluginSummary[]>([])
     const [user, setUser] = useState<UserInfo>(EMPTY_USER)
     const [hubAbout, setHubAbout] = useState<string>('')
@@ -54,7 +56,7 @@ export default function App() {
             })
             .catch((e: Error) => {
                 if (cancelled) return
-                setError(`Failed to load: ${e.message}`)
+                setError(t('loadFailed', {message: e.message}))
             })
             .finally(() => {
                 if (!cancelled) setLoading(false)
@@ -62,7 +64,7 @@ export default function App() {
         return () => {
             cancelled = true
         }
-    }, [])
+    }, [t])
 
     // Lazy-fetch a plugin's ABOUT the first time the user hovers/focuses its tile.
     useEffect(() => {

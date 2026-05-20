@@ -2,16 +2,18 @@
 import { Alert, Box, CircularProgress, Typography, Link } from '@mui/material';
 import { useGet } from '@microprojects/edm-components/hooks';
 import { RelationTable } from '@microprojects/edm-components/components';
+import { useTranslation } from 'react-i18next';
 import api from '../api';
 
 export const OperationPlugins = (props) => {
     const [[ops], loading, error] = useGet(`${api.plugins}/operations`, []);
+    const { t } = useTranslation('tech');
 
     const columns = [
-        { field: 'guid', headerName: 'Global Unique Identifier', width: 350 },
-        { 
-            field: 'name', 
-            headerName: 'Operation Name', 
+        { field: 'guid', headerName: t('plugins.guid'), width: 350 },
+        {
+            field: 'name',
+            headerName: t('plugins.operationName'),
             width: 250,
             renderCell: (params) => (
                 <Link
@@ -27,13 +29,13 @@ export const OperationPlugins = (props) => {
                 </Link>
             )
         },
-        { field: 'description', headerName: 'Description', flex: 1 }
+        { field: 'description', headerName: t('common.description'), flex: 1 }
     ];
 
     return (
         <Box sx={{ p: 2 }}>
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-                Operation Plugins
+                {t('plugins.operationPlugins')}
             </Typography>
             {error && <Alert severity="error">{error}</Alert>}
             {loading && !ops && (

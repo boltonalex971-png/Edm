@@ -1,4 +1,5 @@
 import ReactMarkdown from 'react-markdown'
+import { useTranslation } from 'react-i18next'
 import remarkGfm from 'remark-gfm'
 
 interface AboutPanelProps {
@@ -14,8 +15,9 @@ export function AboutPanel({
     glyphColor,
     glyphLabel,
 }: AboutPanelProps) {
+    const { t } = useTranslation('hub')
     if (loading && !markdown) {
-        return <div className="about-panel about-panel--loading">Loading…</div>
+        return <div className="about-panel about-panel--loading">{t('about.loading')}</div>
     }
     return (
         <article className="about-panel">
