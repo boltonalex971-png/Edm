@@ -2,14 +2,17 @@ import Api from '@features/api/api'
 import { Loading } from '@features/utils/Utils'
 import { ItemDetail } from '@logistics/components/items/ItemDetail'
 import { Detail } from '@logistics/components/MasterDetail'
+import '@logistics/components/tare' // side-effect: registers the `tare` namespace
 import { TareSchematic } from '@logistics/components/tare/TareSchematic'
 import type { Item, TareInfo, UUID } from '@logistics/data/types'
 import { useGet } from '@logistics/hooks/hooks'
+import { useDataGridLocaleText } from '@logistics/i18n/dataGridLocale'
 import { WidgetsOutlined as TareIcon } from '@mui/icons-material'
 import { Box, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material'
 import { DataGrid, type GridColDef } from '@mui/x-data-grid'
 import type React from 'react'
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 type TareDetailProps = {
     tareId: UUID
@@ -29,14 +32,6 @@ type TareDetailProps = {
 
 type ViewMode = 'schema' | 'grid'
 
-const COLUMNS: GridColDef<Item>[] = [
-    { field: 'nomenclatureName', headerName: 'Nomenclature', flex: 1, minWidth: 160 },
-    { field: 'serialNo', headerName: 'Serial No', width: 120 },
-    { field: 'address', headerName: 'Address', width: 90, type: 'number' },
-    { field: 'quantity', headerName: 'Quantity', width: 100, type: 'number' },
-    { field: 'tareTareTypeUnits', headerName: 'Units', width: 80 },
-]
-
 export function TareDetail({
     tareId,
     label,
@@ -45,6 +40,18 @@ export function TareDetail({
     tare: scopedTare,
     parents,
 }: TareDetailProps) {
+    const { t } = useTranslation('tare')
+    const dgLocaleText = useDataGridLocaleText()
+    const columns = useMemo<GridColDef<Item>[]>(
+        () => [
+            { field: 'nomenclatureName', headerName: t('detail.column.nomenclature'), flex: 1, minWidth: 160 },
+            { field: 'serialNo', headerName: t('detail.column.serialNo'), width: 120 },
+            { field: 'address', headerName: t('detail.column.address'), width: 90, type: 'number' },
+            { field: 'quantity', headerName: t('detail.column.quantity'), width: 100, type: 'number' },
+            { field: 'tareTareTypeUnits', headerName: t('detail.column.units'), width: 80 },
+        ],
+        [t],
+    )
     const skipFetch = scopedItems != null && scopedTare != null
     const [[fetched], fetchLoading, fetchError] = useGet<Item[]>(
         skipFetch ? null : `${Api.items}/tare/${tareId}`,
@@ -100,7 +107,7 @@ export function TareDetail({
             error={error as string}
             data={
                 {
-                    name: label || tare?.barcode || 'Tare',
+                    name: label || tare?.barcode || t('detail.fallbackName'),
                     description: tare?.tareTypeName || '',
                 } as any
             }
@@ -124,10 +131,10 @@ export function TareDetail({
                                     onChange={(_, v) => v && setView(v)}
                                 >
                                     <ToggleButton value="schema">
-                                        Schema
+                                        {t('detail.view.schema')}
                                     </ToggleButton>
                                     <ToggleButton value="grid">
-                                        Grid
+                                        {t('detail.view.grid')}
                                     </ToggleButton>
                                 </ToggleButtonGroup>
                             </Box>
@@ -143,10 +150,11 @@ export function TareDetail({
                                 <Box sx={{ width: '100%' }}>
                                     <DataGrid
                                         rows={rows}
-                                        columns={COLUMNS}
+                                        columns={columns}
                                         autoHeight
                                         density="compact"
                                         disableRowSelectionOnClick
+                                        localeText={dgLocaleText}
                                         hideFooter={rows.length <= 25}
                                         pageSizeOptions={[25, 50, 100]}
                                         onRowClick={(params) =>
@@ -169,7 +177,7 @@ export function TareDetail({
                                 fontStyle: 'italic',
                             }}
                         >
-                            No items in this tare
+                            {t('detail.noItems')}
                         </Typography>
                     )}
                 </Box>

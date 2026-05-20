@@ -1,4 +1,12 @@
 {
+    "nav": {
+        "home": "Главная",
+        "orders": "Заказы",
+        "supplies": "Поставки",
+        "items": "Продукция",
+        "repacking": "Перепаковка",
+        "config": "Настройки"
+    },
     "status": {
         "Running": "Выполняется",
         "OutputsPending": "Ожидают вывод",
@@ -14,5 +22,8 @@
         "failedToLoadTare": "Не удалось загрузить тару",
         "tareNotFoundSelectType": "Тара не найдена. Выберите тип тары для создания новой.",
         "failedToAddTare": "Не удалось добавить тару"
+    },
+    "changelog": {
+        "loadFailed": "Не удалось загрузить список изменений: {{error}}"
     }
 }

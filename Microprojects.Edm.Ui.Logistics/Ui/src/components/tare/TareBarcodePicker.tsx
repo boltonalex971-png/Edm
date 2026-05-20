@@ -1,4 +1,5 @@
 import api from '@features/api/api'
+import '@logistics/components/tare' // side-effect: registers the `tare` namespace
 import type { AvailableTare, TareInfo, UUID } from '@logistics/data/types'
 import { getData } from '@logistics/hooks/hooks'
 import { formatUnits } from '@logistics/utils/format'
@@ -11,6 +12,7 @@ import {
     useRef,
     useState,
 } from 'react'
+import { useTranslation } from 'react-i18next'
 
 export type TareBarcodeSelection = {
     /** The matched tare when the user picked an existing one. */
@@ -96,6 +98,7 @@ function measureOptions(
     opts: PickerOption[],
     monoFamily: string,
     captionFamily: string,
+    noBarcodeLabel: string,
 ): RowMeasurements {
     if (opts.length === 0) return { barcodePx: 0, leftPx: 0 }
     const ctx = getMeasureCtx()
@@ -106,7 +109,7 @@ function measureOptions(
     let leftPx = 0
     for (const o of opts) {
         ctx.font = monoFont
-        const bw = ctx.measureText(o.__barcode || '(no barcode)').width
+        const bw = ctx.measureText(o.__barcode || noBarcodeLabel).width
         if (bw > barcodePx) barcodePx = bw
         let captionPx = 0
         if (o.tareTypeName) {
@@ -144,11 +147,14 @@ export const TareBarcodePicker = ({
     tareTypeId,
     nomenclatureId,
     includeFull = false,
-    placeholder = 'Tare barcode…',
+    placeholder,
     disabled,
     style,
     className,
 }: TareBarcodePickerProps) => {
+    const { t } = useTranslation('tare')
+    const effectivePlaceholder = placeholder ?? t('picker.placeholder')
+    const noBarcodeLabel = t('picker.noBarcode')
     const [options, setOptions] = useState<PickerOption[]>([])
     const [serverQuery, setServerQuery] = useState<string>('')
     const [inputValue, setInputValue] = useState<string>(value?.barcode ?? '')
@@ -204,6 +210,7 @@ export const TareBarcodePicker = ({
             options,
             monoFamily,
             captionFamily,
+            noBarcodeLabel,
         )
         if (barcodePx > 0) {
             setInputPx(
@@ -221,7 +228,7 @@ export const TareBarcodePicker = ({
                 ),
             )
         }
-    }, [options])
+    }, [options, noBarcodeLabel])
 
     // Client-side narrow within the loaded set so typing past the current
     // server query stays responsive. Substring match keeps the UX parity
@@ -405,7 +412,7 @@ export const TareBarcodePicker = ({
                                         whiteSpace: 'nowrap',
                                     }}
                                 >
-                                    {option.__barcode || '(no barcode)'}
+                                    {option.__barcode || noBarcodeLabel}
                                 </Typography>
                                 {option.tareTypeName && (
                                     <Typography
@@ -469,7 +476,7 @@ export const TareBarcodePicker = ({
                                             lineHeight: 1.1,
                                         }}
                                     >
-                                        {isFull ? 'full' : 'free'}
+                                        {isFull ? t('picker.full') : t('picker.free')}
                                     </Typography>
                                 </Box>
                             )}
@@ -482,7 +489,7 @@ export const TareBarcodePicker = ({
                 renderInput={(params) => (
                     <TextField
                         {...params}
-                        placeholder={placeholder}
+                        placeholder={effectivePlaceholder}
                         sx={{
                             '& .MuiOutlinedInput-root': {
                                 background: 'var(--surface)',

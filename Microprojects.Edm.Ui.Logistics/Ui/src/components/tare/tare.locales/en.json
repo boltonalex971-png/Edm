@@ -1,0 +1,38 @@
+{
+    "tooltip": {
+        "address": "Address",
+        "nomenclature": "Nomenclature",
+        "serialNo": "Serial No",
+        "quantity": "Quantity",
+        "grade": "Grade"
+    },
+    "picker": {
+        "placeholder": "Tare barcode…",
+        "noBarcode": "(no barcode)",
+        "full": "full",
+        "free": "free"
+    },
+    "detail": {
+        "fallbackName": "Tare",
+        "view": {
+            "schema": "Schema",
+            "grid": "Grid"
+        },
+        "noItems": "No items in this tare",
+        "column": {
+            "nomenclature": "Nomenclature",
+            "serialNo": "Serial No",
+            "address": "Address",
+            "quantity": "Quantity",
+            "units": "Units"
+        }
+    },
+    "items": {
+        "noItems": "No items",
+        "slots": "{{placed}} / {{capacity}} slots",
+        "orphanSuffix_one": " (+{{count}} orphan)",
+        "orphanSuffix_other": " (+{{count}} orphans)",
+        "bulkQty": "{{total}} / {{capacity}}",
+        "empty": "Empty"
+    }
+}

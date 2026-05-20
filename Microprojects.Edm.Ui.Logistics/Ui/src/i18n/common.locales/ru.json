@@ -11,5 +11,6 @@
     "search": "Поиск",
     "loading": "Загрузка…",
     "error": "Ошибка",
-    "language": "Язык"
+    "language": "Язык",
+    "cannotLoadData": "Не удалось загрузить данные"
 }

@@ -16,6 +16,7 @@ import {
 } from '@mui/icons-material'
 import { Box, Typography } from '@mui/material'
 import { type EffectCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import type {
     DetailEventHandler,
@@ -32,6 +33,7 @@ import {
     MasterDetail,
     MuiEditor,
 } from '../../MasterDetail'
+import './index' // side-effect: registers the `config/process` namespace
 import { ProcessTabs } from './ProcessTabs'
 
 export function Processes({ kind }: { kind?: ProcessKind }) {
@@ -40,6 +42,7 @@ export function Processes({ kind }: { kind?: ProcessKind }) {
     const navigate = useNavigate()
     const api = Api.processes
     const entityType = kind ? kind.toLowerCase() : 'process'
+    const { t } = useTranslation('config/process')
     return (
         <MasterDetail
             type={type}
@@ -47,7 +50,7 @@ export function Processes({ kind }: { kind?: ProcessKind }) {
             entityType={entityType}
             getHierarchyQuery={kind ? () => ({ kind }) : undefined}
             path={path || ''}
-            stubMessage="Please select a process"
+            stubMessage={t('stubMessage')}
             detail={
                 <ProcessDetail
                     type={type}
@@ -81,6 +84,7 @@ export function ProcessDetail({
     const id = processId?.toString() || params.id
     const [sub, setSub] = useState<React.ReactElement>()
     useEffect(setSub as EffectCallback, [id])
+    const { t } = useTranslation('config/process')
     const [[noms]] = useGet<TreeDataItem[]>(
         `${Api.nomenclatures}/hierarchy`,
         [],
@@ -120,7 +124,10 @@ export function ProcessDetail({
             error={error as string}
             validation={
                 missedInputs.length > 0
-                    ? `Parameter${missedInputs.length > 1 ? 's' : ''} ${missedInputs.join(', ')} ${missedInputs.length > 1 ? 'are' : 'is'} not available as output parameters`
+                    ? t('validation.parameter', {
+                          count: missedInputs.length,
+                          names: missedInputs.join(', '),
+                      })
                     : ''
             }
             data={data}
@@ -130,9 +137,9 @@ export function ProcessDetail({
                     content={
                         data && (
                             <Properties>
-                                <Property label="Kind" value={data.kind} />
+                                <Property label={t('card.kind')} value={data.kind} />
                                 <Property
-                                    label="Nomenclature"
+                                    label={t('card.nomenclature')}
                                     value={data.nomenclatureName}
                                 />
                             </Properties>
@@ -174,7 +181,7 @@ export function ProcessDetail({
                             <Box>
                                 <EditorSection
                                     number={1}
-                                    title="Identity"
+                                    title={t('section.identity')}
                                     filled={identityFilled}
                                     total={3}
                                     done={
@@ -184,7 +191,7 @@ export function ProcessDetail({
                                     <Field
                                         full
                                         name="name"
-                                        label="Name"
+                                        label={t('field.name')}
                                         required
                                         value={(values.name as string) ?? ''}
                                         onChange={handleChange}
@@ -193,15 +200,15 @@ export function ProcessDetail({
                                         }
                                         help={
                                             nameMissing
-                                                ? 'A process must have a name.'
-                                                : 'Shown in tree, dispatch, and routing.'
+                                                ? t('help.nameMissing')
+                                                : t('help.name')
                                         }
                                     />
                                     <Field
                                         full
                                         kind="textarea"
                                         name="description"
-                                        label="Description"
+                                        label={t('field.description')}
                                         rows={2}
                                         value={
                                             (values.description as string) ??
@@ -221,7 +228,7 @@ export function ProcessDetail({
                                                 mb: 0.5,
                                             }}
                                         >
-                                            Process kind
+                                            {t('field.processKind')}
                                         </Typography>
                                         <Box
                                             sx={{
@@ -247,7 +254,7 @@ export function ProcessDetail({
 
                                 <EditorSection
                                     number={2}
-                                    title="Target"
+                                    title={t('section.target')}
                                     filled={targetFilled}
                                     total={1}
                                     done={targetFilled === 1}
@@ -264,7 +271,7 @@ export function ProcessDetail({
                                                 mb: 0.5,
                                             }}
                                         >
-                                            Nomenclature
+                                            {t('field.nomenclature')}
                                         </Typography>
                                         <HierarchyPicker
                                             data={noms}

@@ -18,6 +18,7 @@ import {
 } from '@mui/material'
 import type React from 'react'
 import { type MouseEventHandler, useMemo } from 'react'
+import { Trans, useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
 import { useParams } from 'react-router-dom'
 import type { TreeNode } from '../../data/types'
@@ -30,6 +31,7 @@ import {
     Info,
     MuiEditor,
 } from '../MasterDetail'
+import './index'
 
 type FolderProps = {
     onChange?: () => void
@@ -61,6 +63,7 @@ function toGroupNames(groups: unknown): string[] {
 }
 
 export function Folder(props: FolderProps) {
+    const { t } = useTranslation('config')
     const user = useSelector((state: RootState) => state.user)
     const { id } = useParams()
     const entityToken = useEntityToken([{ type: props.type, id }])
@@ -97,7 +100,7 @@ export function Folder(props: FolderProps) {
                             <Properties>
                                 <Property
                                     full
-                                    label="Description"
+                                    label={t('folder.description')}
                                     value={data.description}
                                     multiline
                                 />
@@ -130,7 +133,7 @@ export function Folder(props: FolderProps) {
                             <Box>
                                 <EditorSection
                                     number={1}
-                                    title="Identity"
+                                    title={t('folder.identity')}
                                     filled={identityFilled}
                                     total={2}
                                     done={
@@ -140,7 +143,7 @@ export function Folder(props: FolderProps) {
                                     <Field
                                         full
                                         name="name"
-                                        label="Name"
+                                        label={t('folder.name')}
                                         required
                                         value={(values.name as string) ?? ''}
                                         onChange={handleChange}
@@ -149,15 +152,15 @@ export function Folder(props: FolderProps) {
                                         }
                                         help={
                                             nameMissing
-                                                ? 'A folder must have a name.'
-                                                : 'Shown in the tree under its parent folder.'
+                                                ? t('folder.nameMissing')
+                                                : t('folder.nameHelp')
                                         }
                                     />
                                     <Field
                                         full
                                         kind="textarea"
                                         name="description"
-                                        label="Description"
+                                        label={t('folder.description')}
                                         rows={2}
                                         value={
                                             (values.description as string) ??
@@ -193,6 +196,7 @@ function AccessBanner({
     restricted,
     groups,
 }: { restricted: boolean; groups: string[] }) {
+    const { t } = useTranslation('config')
     const Icon = restricted ? LockIcon : PublicIcon
     const tone = restricted ? 'var(--sig-warn-deep)' : 'var(--ink-3)'
     const bg = restricted ? 'var(--sig-warn-soft)' : 'var(--surface-2)'
@@ -223,7 +227,9 @@ function AccessBanner({
                         color: tone,
                     }}
                 >
-                    {restricted ? 'Restricted access' : 'Open to everyone'}
+                    {restricted
+                        ? t('folder.restrictedAccess')
+                        : t('folder.openToEveryone')}
                 </Typography>
                 {restricted ? (
                     <Box
@@ -255,8 +261,7 @@ function AccessBanner({
                         variant="caption"
                         sx={{ color: 'var(--ink-3)' }}
                     >
-                        Any signed-in user can see this folder and its
-                        contents.
+                        {t('folder.openBanner')}
                     </Typography>
                 )}
             </Box>
@@ -277,17 +282,18 @@ function AccessSection({
     divisions,
     onChange,
 }: AccessSectionProps) {
+    const { t } = useTranslation('config')
     const restricted = groups.length > 0
     const Icon = restricted ? LockIcon : PublicIcon
     const tone = restricted ? 'var(--sig-warn-deep)' : 'var(--ink-3)'
     return (
         <EditorSection
             number={sectionNumber}
-            title="Access control"
+            title={t('folder.accessControl')}
             fillNote={
                 restricted
-                    ? `restricted to ${groups.length} group${groups.length === 1 ? '' : 's'}`
-                    : 'open to everyone'
+                    ? t('folder.restrictedNote', { count: groups.length })
+                    : t('folder.openNote')
             }
             done={false}
         >
@@ -311,7 +317,7 @@ function AccessSection({
                             color: tone,
                         }}
                     >
-                        Groups
+                        {t('folder.groups')}
                     </Typography>
                 </Box>
                 <Autocomplete
@@ -346,8 +352,8 @@ function AccessSection({
                             {...params}
                             placeholder={
                                 restricted
-                                    ? 'Add another group…'
-                                    : 'Leave empty to open the folder to everyone'
+                                    ? t('folder.addAnotherGroup')
+                                    : t('folder.leaveEmptyOpen')
                             }
                             sx={{
                                 '& .MuiOutlinedInput-root': {
@@ -375,9 +381,11 @@ function AccessSection({
                         mt: 0.75,
                     }}
                 >
-                    Empty list means <b>everyone</b> can see this folder. Add a
-                    group name to restrict the folder (and its contents) to
-                    members of that group.
+                    <Trans
+                        i18nKey="folder.emptyMeansEveryone"
+                        ns="config"
+                        components={[<b key="0" />]}
+                    />
                 </Typography>
             </Box>
         </EditorSection>

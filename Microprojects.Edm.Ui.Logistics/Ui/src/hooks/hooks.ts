@@ -67,7 +67,7 @@ function useFetch<T>(
                     setState({
                         loading: false,
                         data: undefined,
-                        error: 'Cannot load the data',
+                        error: i18n.t('cannotLoadData'),
                     })
                 }
             }

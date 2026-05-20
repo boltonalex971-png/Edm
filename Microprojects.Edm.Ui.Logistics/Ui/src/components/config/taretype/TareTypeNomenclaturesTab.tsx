@@ -1,11 +1,13 @@
 import Api from '@features/api/api'
 import { useGet } from '@logistics/hooks/hooks'
 import { Column as GridColumn } from '@microprojects/edm-components/components'
+import { useTranslation } from 'react-i18next'
 import type { TreeDataItem, UUID } from '../../../data/types'
 import { CheckboxCell } from '../../CheckboxCell'
 import { DropDownTreeCell } from '../../DropDownTreeCell'
 import { RelationTable } from '../../RelationTable'
 import { NomenclatureDetail } from '../nomenclature/Nomenclatures'
+import './index' // side-effect: registers the `config/taretype` namespace
 
 type TareTypeNomenclaturesTabProps = {
     id: UUID
@@ -18,6 +20,7 @@ export function TareTypeNomenclaturesTab({
     api,
     onDetailSelected,
 }: TareTypeNomenclaturesTabProps) {
+    const { t } = useTranslation('config/taretype')
     const [[nomenclatureHierarchy]] = useGet<TreeDataItem[]>(
         `${Api.nomenclatures}/hierarchy`,
         [],
@@ -31,7 +34,7 @@ export function TareTypeNomenclaturesTab({
         >
             <GridColumn
                 field="nomenclatureId"
-                title="Nomenclature"
+                title={t('nomenclaturesTab.nomenclature')}
                 width={240}
                 cell={(p) => (
                     <DropDownTreeCell
@@ -56,19 +59,19 @@ export function TareTypeNomenclaturesTab({
             />
             <GridColumn
                 field="nomenclatureCategory"
-                title="Category"
+                title={t('nomenclaturesTab.category')}
                 width={140}
                 editable={false}
             />
             <GridColumn
                 field="nomenclatureDescription"
-                title="Description"
+                title={t('nomenclaturesTab.description')}
                 width="auto"
                 editable={false}
             />
             <GridColumn
                 field="isDefault"
-                title="Default"
+                title={t('nomenclaturesTab.default')}
                 width={100}
                 cell={(p) => <CheckboxCell {...p} editable={false} />}
             />

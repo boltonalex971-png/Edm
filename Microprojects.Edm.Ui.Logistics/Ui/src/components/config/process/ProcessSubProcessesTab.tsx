@@ -6,10 +6,12 @@ import {
 } from '@logistics/data/processKinds'
 import type { ProcessKind, TreeDataItem, UUID } from '@logistics/data/types'
 import { Column as GridColumn } from '@microprojects/edm-components/components'
+import { useTranslation } from 'react-i18next'
 import Api from '../../../features/api/api'
 import { useGet } from '../../../hooks/hooks'
 import { DropDownTreeCell } from '../../DropDownTreeCell'
 import { RelationTable } from '../../RelationTable'
+import './index' // side-effect: registers the `config/process` namespace
 
 export type ProcessProfilesTabProps = {
     id: UUID
@@ -25,6 +27,7 @@ export function ProcessSubProcessesTab({
     kind,
     onDetailSelected,
 }: ProcessProfilesTabProps) {
+    const { t } = useTranslation('config/process')
     const allowedChildKind =
         kind === MANUFACTURING
             ? TECHNOLOGY
@@ -44,12 +47,12 @@ export function ProcessSubProcessesTab({
             editable={true}
             creatable={!!allowedChildKind}
         >
-            <GridColumn width="100" title={'Order'} field={'order'} editable />
+            <GridColumn width="100" title={t('subprocesses.order')} field={'order'} editable />
             <GridColumn
                 editable={false}
                 width="200"
                 field="linkedProcessId"
-                title="Process"
+                title={t('subprocesses.process')}
                 cell={(cellProps) => (
                     <DropDownTreeCell
                         {...cellProps}
@@ -71,12 +74,12 @@ export function ProcessSubProcessesTab({
             />
             <GridColumn
                 field="linkedProcessKind"
-                title="Kind"
+                title={t('subprocesses.kind')}
                 editable={false}
             />
             <GridColumn
                 field="linkedProcessDescription"
-                title="Description"
+                title={t('subprocesses.description')}
                 editable={false}
             />
         </RelationTable>

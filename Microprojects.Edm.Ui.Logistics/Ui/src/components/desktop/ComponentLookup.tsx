@@ -1,4 +1,5 @@
 import api from '@features/api/api.ts'
+import '@logistics/components/desktop' // side-effect: registers the `desktop` namespace
 import {
     type TareGroup,
     groupByTare,
@@ -34,6 +35,7 @@ import {
     Typography,
 } from '@mui/material'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 type ComponentLookupProps = {
     orderId: UUID
@@ -48,6 +50,8 @@ export const ComponentLookup = ({
     onClose,
     onAllocated,
 }: ComponentLookupProps) => {
+    const { t } = useTranslation('desktop')
+    const { t: tTare } = useTranslation('tare')
     const [items, setItems] = useState<Item[]>([])
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
@@ -89,7 +93,7 @@ export const ComponentLookup = ({
                 if (!cancelled)
                     setError(
                         (e as { message?: string })?.message ||
-                            'Failed to load items',
+                            t('lookup.failedToLoad'),
                     )
             } finally {
                 if (!cancelled) setLoading(false)
@@ -98,7 +102,7 @@ export const ComponentLookup = ({
         return () => {
             cancelled = true
         }
-    }, [spec.nomenclatureId])
+    }, [spec.nomenclatureId, t])
 
     const groups: TareGroup[] = useMemo(() => groupByTare(items), [items])
 
@@ -169,7 +173,7 @@ export const ComponentLookup = ({
         } catch (e) {
             setError(
                 (e as { message?: string })?.message ||
-                    'Failed to allocate items',
+                    t('lookup.failedToAllocate'),
             )
         } finally {
             setSubmitting(false)
@@ -225,14 +229,21 @@ export const ComponentLookup = ({
                             color: 'var(--ink-1)',
                         }}
                     >
-                        Pick items — {spec.nomenclatureName ?? 'Nomenclature'}
+                        {t('lookup.title', {
+                            name:
+                                spec.nomenclatureName ??
+                                t('lookup.nomenclatureFallback'),
+                        })}
                     </Typography>
                     <Typography
                         variant="caption"
                         sx={{ color: 'var(--ink-3)' }}
                     >
-                        Required {spec.amount} · already allocated{' '}
-                        {spec.total} · need {Math.max(remaining, 0)} more
+                        {t('lookup.summary', {
+                            required: spec.amount,
+                            allocated: spec.total,
+                            remaining: Math.max(remaining, 0),
+                        })}
                     </Typography>
                 </Box>
                 {selected.size > 0 && (
@@ -244,7 +255,10 @@ export const ComponentLookup = ({
                             fontFamily: 'var(--font-mono)',
                         }}
                     >
-                        {selected.size} selected · {totalSelectedQty} qty
+                        {t('lookup.selectionSummary', {
+                            count: selected.size,
+                            qty: totalSelectedQty,
+                        })}
                     </Typography>
                 )}
             </DialogTitle>
@@ -275,7 +289,9 @@ export const ComponentLookup = ({
                         }}
                     >
                         <CircularProgress size={14} />
-                        <Typography variant="caption">Loading…</Typography>
+                        <Typography variant="caption">
+                            {t('common:loading')}
+                        </Typography>
                     </Box>
                 )}
                 {!loading && groups.length === 0 && (
@@ -287,7 +303,7 @@ export const ComponentLookup = ({
                             fontStyle: 'italic',
                         }}
                     >
-                        No available items for this nomenclature.
+                        {t('lookup.noAvailable')}
                     </Box>
                 )}
                 {groups.map((group) => {
@@ -316,7 +332,7 @@ export const ComponentLookup = ({
                             <Box
                                 onClick={() => onRowClick(key)}
                                 onDoubleClick={() => onRowDoubleClick(group)}
-                                title="Click to expand · double-click to select all"
+                                title={t('lookup.rowHint')}
                                 sx={{
                                     display: 'flex',
                                     alignItems: 'center',
@@ -354,7 +370,7 @@ export const ComponentLookup = ({
                                         color: 'var(--ink-1)',
                                     }}
                                 >
-                                    {group.tare.barcode || '(no barcode)'}
+                                    {group.tare.barcode || t('lookup.noBarcode')}
                                 </Typography>
                                 <Typography
                                     variant="caption"
@@ -367,7 +383,7 @@ export const ComponentLookup = ({
                                     variant="caption"
                                     sx={{ color: 'var(--ink-3)' }}
                                 >
-                                    {tareSummary(group)}
+                                    {tareSummary(group, tTare)}
                                 </Typography>
                             </Box>
                             {isExpanded && (
@@ -396,7 +412,7 @@ export const ComponentLookup = ({
                 }}
             >
                 <MuiButton variant="outlined" onClick={onClose}>
-                    Cancel
+                    {t('common:cancel')}
                 </MuiButton>
                 <MuiButton
                     variant="contained"
@@ -405,8 +421,8 @@ export const ComponentLookup = ({
                     disabled={selected.size === 0 || submitting}
                 >
                     {submitting
-                        ? 'Allocating…'
-                        : `Allocate ${selected.size}`}
+                        ? t('lookup.allocating')
+                        : t('lookup.allocate', { count: selected.size })}
                 </MuiButton>
             </DialogActions>
         </Dialog>

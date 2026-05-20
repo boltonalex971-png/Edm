@@ -1,0 +1,45 @@
+{
+    "welcome": {
+        "eyebrow": "Добро пожаловать",
+        "titleNamed": "Здравствуйте, {{name}}",
+        "titleAnonymous": "Добро пожаловать в EDM Логистика",
+        "lead": "Учёт и отслеживание производственных заказов, поставок и тары. Выберите, с чего начать."
+    },
+    "meta": {
+        "role": "Роль"
+    },
+    "kpi": {
+        "activeOrders": {
+            "eyebrow": "Активные заказы",
+            "sublabel": "в работе"
+        },
+        "runningNow": {
+            "eyebrow": "Выполняются",
+            "sublabel": "в исполнении",
+            "sublabelMine_one": "{{count}} ваш",
+            "sublabelMine_few": "{{count}} ваших",
+            "sublabelMine_many": "{{count}} ваших"
+        },
+        "outputsPending": {
+            "eyebrow": "Ожидают вывода",
+            "sublabel": "ожидают сдачи"
+        },
+        "overdue": {
+            "eyebrow": "Просрочены",
+            "sublabel": "истёк срок"
+        }
+    },
+    "section": {
+        "activeWork": "Активная работа",
+        "allOrders": "Все заказы →",
+        "noActiveOrders": "Сейчас нет выполняющихся заказов.",
+        "quickActions": "Быстрые действия"
+    },
+    "action": {
+        "manageOrders":    { "title": "Управление заказами", "sub": "Создание, запуск, контроль" },
+        "browseItems":     { "title": "Обзор продукции",     "sub": "История и генеалогия" },
+        "receiveSupplies": { "title": "Приём поставок",      "sub": "Входящие отгрузки" },
+        "repackItems":     { "title": "Перепаковка",         "sub": "Перемещение между тарами" },
+        "config":          { "title": "Настройки",           "sub": "Папки, процессы, типы" }
+    }
+}

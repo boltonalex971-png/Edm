@@ -1,3 +1,4 @@
+import '@logistics/components/tare' // side-effect: registers the `tare` namespace
 import {
     type SlotData,
     TareSchematic,
@@ -12,6 +13,7 @@ import {
     ChevronRightOutlined as ChevronRight,
 } from '@mui/icons-material'
 import type React from 'react'
+import { useTranslation } from 'react-i18next'
 import './TareItemsPanel.css'
 
 type TareGroupRowProps = {
@@ -60,6 +62,7 @@ export const TareGroupRow = ({
     highlightEmpty,
     headerExtra,
 }: TareGroupRowProps) => {
+    const { t } = useTranslation('tare')
     const names = [
         ...new Set(group.items.map((i) => i.nomenclatureName).filter(Boolean)),
     ]
@@ -84,7 +87,7 @@ export const TareGroupRow = ({
                     )}
                 </button>
                 <span className="tare-row-barcode">
-                    {group.tare.barcode || '(no barcode)'}
+                    {group.tare.barcode || t('picker.noBarcode')}
                 </span>
                 <span className="tare-row-type">
                     {group.tare.tareTypeName}
@@ -92,7 +95,9 @@ export const TareGroupRow = ({
                 <span className="tare-row-nomenclatures">
                     {names.join(', ')}
                 </span>
-                <span className="tare-row-summary">{tareSummary(group)}</span>
+                <span className="tare-row-summary">
+                    {tareSummary(group, t)}
+                </span>
                 {group.tare.tareTypeUnits && (
                     <span className="tare-row-units">
                         {group.tare.tareTypeUnits}

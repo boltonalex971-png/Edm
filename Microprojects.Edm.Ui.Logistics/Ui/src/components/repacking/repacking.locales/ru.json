@@ -1,0 +1,32 @@
+{
+    "title": "Перепаковка",
+    "toolbar": {
+        "searchSourceLabel": "Найти исходную тару по штрихкоду",
+        "searchSourcePlaceholder": "Сканируйте или введите штрихкод…",
+        "nomenclatureLabel": "Номенклатура",
+        "nomenclaturePlaceholder": "Выберите номенклатуру…",
+        "addTargetLabel": "Добавить целевую тару",
+        "tareBarcodePlaceholder": "Штрихкод тары…",
+        "tareTypePlaceholder": "Тип (для новой)…",
+        "autoFill": "Автозаполнение",
+        "saving": "Сохранение…",
+        "apply": "Применить ({{count}})",
+        "reset": "Сбросить",
+        "moved": "Перемещено: {{amount}}."
+    },
+    "source": {
+        "heading": "Исходные тары",
+        "selectionTitle": "Кликните по свободному месту в целевой таре для размещения. Shift+клик — диапазон, Ctrl/Cmd+клик — переключение. ПКМ для дополнительных действий.",
+        "emptyWithNomenclature": "Выберите или отсканируйте тару, чтобы добавить её партии.",
+        "emptyWithoutNomenclature": "Сначала выберите номенклатуру, затем тару для загрузки её партий.",
+        "remove": "Убрать"
+    },
+    "target": {
+        "heading": "Целевые тары",
+        "empty": "Добавьте целевые тары по штрихкоду или создайте новые",
+        "remove": "Убрать"
+    },
+    "errors": {
+        "requestFailed": "Ошибка запроса"
+    }
+}

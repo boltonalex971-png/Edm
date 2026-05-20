@@ -7,10 +7,8 @@ import { registerEdmComponentsLocales } from '@microprojects/edm-components/i18n
 // via registerNs() from each folder's index.ts as Phase 3 lands them.
 import commonEn from './common.locales/en.json'
 import commonRu from './common.locales/ru.json'
-import commonEs from './common.locales/es-ES.json'
 import widgetsEn from './widgets.locales/en.json'
 import widgetsRu from './widgets.locales/ru.json'
-import widgetsEs from './widgets.locales/es-ES.json'
 
 void i18n
     .use(LanguageDetector)
@@ -19,9 +17,8 @@ void i18n
         resources: {
             en: { common: commonEn, widgets: widgetsEn },
             ru: { common: commonRu, widgets: widgetsRu },
-            'es-ES': { common: commonEs, widgets: widgetsEs },
         },
-        supportedLngs: ['en', 'ru', 'es-ES'],
+        supportedLngs: ['en', 'ru'],
         fallbackLng: 'en',
         defaultNS: 'common',
         interpolation: { escapeValue: false },

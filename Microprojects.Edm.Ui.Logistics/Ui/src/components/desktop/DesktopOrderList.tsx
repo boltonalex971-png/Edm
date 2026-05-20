@@ -1,4 +1,5 @@
 import api from '@features/api/api.ts'
+import '@logistics/components/desktop' // side-effect: registers the `desktop` namespace
 import type { Order, OrderStatus, UUID } from '@logistics/data/types'
 import { usePost } from '@logistics/hooks/hooks'
 import { formatLocalDate, parseUtcDate } from '@logistics/utils/format'
@@ -100,6 +101,7 @@ const monoLabelSx = {
 }
 
 export const DesktopOrderList = ({ onOpen }: DesktopOrderListProps) => {
+    const { t } = useTranslation('desktop')
     const [[orders], loading, error] = usePost<Order[]>(
         `${api.orders}/search`,
         { active: true },
@@ -132,12 +134,12 @@ export const DesktopOrderList = ({ onOpen }: DesktopOrderListProps) => {
                 <Alert severity="error" sx={{ mb: 1.5 }}>
                     {typeof error === 'string'
                         ? error
-                        : 'Failed to load orders'}
+                        : t('list.failedToLoad')}
                 </Alert>
             )}
 
             {mine.length > 0 && (
-                <SectionHeader title="My pending orders" count={mine.length} />
+                <SectionHeader title={t('list.myPending')} count={mine.length} />
             )}
             {mine.length > 0 && (
                 <CardGrid>
@@ -153,15 +155,15 @@ export const DesktopOrderList = ({ onOpen }: DesktopOrderListProps) => {
             )}
 
             <SectionHeader
-                title="Available orders"
+                title={t('list.available')}
                 count={available.length}
                 topGap={mine.length > 0 ? 'lg' : 'sm'}
             />
             {loading && available.length === 0 && (
-                <EmptyMsg text="Loading…" />
+                <EmptyMsg text={t('common:loading')} />
             )}
             {!loading && available.length === 0 && (
-                <EmptyMsg text="No orders are available to start right now." />
+                <EmptyMsg text={t('list.noneAvailable')} />
             )}
             {available.length > 0 && (
                 <CardGrid>
@@ -250,7 +252,7 @@ interface OrderCardProps {
 }
 
 function OrderCard({ order, variant, onOpen }: OrderCardProps) {
-    const { t } = useTranslation('widgets')
+    const { t } = useTranslation('desktop')
     const tone = statusTone(order.status)
     const overdue = isOverdue(order.dueDate)
     const clickable = variant !== 'locked'
@@ -342,7 +344,7 @@ function OrderCard({ order, variant, onOpen }: OrderCardProps) {
                                 }}
                             />
                         }
-                        label="Overdue"
+                        label={t('list.overdue')}
                         sx={{
                             height: 22,
                             fontFamily: 'var(--font-mono)',
@@ -402,10 +404,13 @@ function OrderCard({ order, variant, onOpen }: OrderCardProps) {
                         mt: 0.25,
                     }}
                 >
-                    <KeyValue label="Amount" value={`${order.amount} pcs`} />
+                    <KeyValue
+                        label={t('list.amount')}
+                        value={t('list.amountPcs', { count: order.amount })}
+                    />
                     {order.dueDate && (
                         <KeyValue
-                            label="Due"
+                            label={t('list.due')}
                             value={formatLocalDate(order.dueDate)}
                             tone={overdue ? 'fault' : undefined}
                         />
@@ -423,7 +428,7 @@ function OrderCard({ order, variant, onOpen }: OrderCardProps) {
                 >
                     <Chip
                         size="small"
-                        label={t(`status.${order.status ?? 'Draft'}`)}
+                        label={t(`widgets:status.${order.status ?? 'Draft'}`)}
                         sx={{
                             height: 24,
                             fontFamily: 'var(--font-mono)',
@@ -447,7 +452,7 @@ function OrderCard({ order, variant, onOpen }: OrderCardProps) {
                         >
                             {variant === 'mine' ? (
                                 <Box component="span" sx={{ fontWeight: 600 }}>
-                                    You
+                                    {t('list.you')}
                                 </Box>
                             ) : (
                                 order.executor
@@ -474,9 +479,9 @@ function OrderCard({ order, variant, onOpen }: OrderCardProps) {
                 >
                     <LockIcon fontSize="small" />
                     <Box component="span">
-                        Executed by{' '}
+                        {t('list.executedBy')}
                         <Box component="strong" sx={{ color: 'var(--ink-2)' }}>
-                            {order.executor || 'another operator'}
+                            {order.executor || t('list.anotherOperator')}
                         </Box>
                     </Box>
                 </Box>
@@ -507,7 +512,7 @@ function OrderCard({ order, variant, onOpen }: OrderCardProps) {
                             textTransform: 'none',
                         }}
                     >
-                        {variant === 'mine' ? 'Continue' : 'Open'}
+                        {variant === 'mine' ? t('list.continue') : t('list.open')}
                     </MuiButton>
                 </Box>
             )}

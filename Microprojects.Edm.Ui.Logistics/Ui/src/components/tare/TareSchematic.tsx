@@ -1,8 +1,10 @@
+import '@logistics/components/tare' // side-effect: registers the `tare` namespace
 import type { Item, TareInfo, UUID } from '@logistics/data/types'
 import { colorForGradeId } from '@logistics/utils/gradePalette'
 import { Popper } from '@mui/material'
 import type React from 'react'
 import { useCallback, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ItemSlotTooltip } from './ItemSlotTooltip'
 import './TareSchematic.css'
 
@@ -39,6 +41,7 @@ type TooltipState = {
 }
 
 function BulkTareView({ tare, items }: { tare: TareInfo; items: Item[] }) {
+    const { t } = useTranslation('tare')
     const totalQty = items.reduce((s, i) => s + i.quantity, 0)
     const pct = tare.capacity > 0 ? Math.min(totalQty / tare.capacity, 1) : 0
     const fillColor = 'var(--accent)'
@@ -60,7 +63,9 @@ function BulkTareView({ tare, items }: { tare: TareInfo; items: Item[] }) {
                         </span>
                     </>
                 ) : (
-                    <span style={{ color: 'var(--ink-3)' }}>Empty</span>
+                    <span style={{ color: 'var(--ink-3)' }}>
+                        {t('items.empty')}
+                    </span>
                 )}
             </div>
         </div>

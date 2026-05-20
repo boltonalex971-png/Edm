@@ -1,7 +1,9 @@
+import '@logistics/components/transfer' // side-effect: registers the `transfer` namespace
 import type { LegendEntry } from '@logistics/components/transfer/visibleFromItems'
 import type { TareInfo, UUID } from '@logistics/data/types'
 import { colorForGradeId } from '@logistics/utils/gradePalette'
 import { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 
 export type ContextTareOption = TareInfo & {
     occupied: number
@@ -64,6 +66,7 @@ export function TransferContextMenu({
     onAssignGrade,
     onClose,
 }: TransferContextMenuProps) {
+    const { t } = useTranslation('transfer')
     const showGrades = !!grades && grades.length > 0 && !!onAssignGrade
     useEffect(() => {
         const onKey = (e: KeyboardEvent) => {
@@ -103,32 +106,32 @@ export function TransferContextMenu({
                     style={canAutofill ? ROW_STYLE : ROW_DISABLED_STYLE}
                     onClick={canAutofill ? onAutofillAll : undefined}
                 >
-                    Autofill to tare ({targetCount})
+                    {t('menu.autofill', { count: targetCount })}
                 </div>
                 {tares.length > 0 && (
                     <>
                         <div style={DIVIDER} />
-                        <div style={HEADER_STYLE}>Fill into</div>
-                        {tares.map((t) => {
-                            const free = Math.max(0, t.capacity - t.occupied)
+                        <div style={HEADER_STYLE}>{t('menu.fillInto')}</div>
+                        {tares.map((tare) => {
+                            const free = Math.max(0, tare.capacity - tare.occupied)
                             const enabled = canAutofill && free > 0
                             return (
                                 <div
-                                    key={t.id}
+                                    key={tare.id}
                                     style={
                                         enabled ? ROW_STYLE : ROW_DISABLED_STYLE
                                     }
                                     onClick={
                                         enabled
-                                            ? () => onFillTare(t.id)
+                                            ? () => onFillTare(tare.id)
                                             : undefined
                                     }
                                 >
                                     <span style={{ flex: 1 }}>
-                                        {t.barcode || t.tareTypeName || 'Tare'}
+                                        {tare.barcode || tare.tareTypeName || t('menu.fallbackTareLabel')}
                                     </span>
                                     <small style={{ color: 'var(--ink-3)' }}>
-                                        {t.occupied}/{t.capacity}
+                                        {tare.occupied}/{tare.capacity}
                                     </small>
                                 </div>
                             )
@@ -138,7 +141,7 @@ export function TransferContextMenu({
                 {showGrades && (
                     <>
                         <div style={DIVIDER} />
-                        <div style={HEADER_STYLE}>Grades</div>
+                        <div style={HEADER_STYLE}>{t('menu.gradesHeader')}</div>
                         {grades!.map((g) => (
                             <div
                                 key={g.id}
@@ -172,7 +175,7 @@ export function TransferContextMenu({
                                     border: '1px solid var(--line-strong)',
                                 }}
                             />
-                            (No grade)
+                            {t('menu.noGrade')}
                         </div>
                     </>
                 )}

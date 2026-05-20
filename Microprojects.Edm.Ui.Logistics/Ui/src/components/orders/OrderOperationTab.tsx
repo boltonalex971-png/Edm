@@ -1,9 +1,11 @@
+import '@logistics/components/orders' // side-effect: registers the `orders` namespace
 import {
     DateTimeCell,
     RelationTable,
 } from '@logistics/components/RelationTable.tsx'
 import type { UUID } from '@logistics/data/types'
 import { Column as GridColumn } from '@microprojects/edm-components/components'
+import { useTranslation } from 'react-i18next'
 
 type OrderOperationTabProps = {
     id: UUID
@@ -11,12 +13,13 @@ type OrderOperationTabProps = {
 }
 
 export function OrderOperationTab({ id, api }: OrderOperationTabProps) {
+    const { t } = useTranslation('orders')
     return (
         <RelationTable api={`${api}/${id}/operations`} readonly>
-            <GridColumn field="processName" title="Process" editable={false} />
-            <GridColumn field="processNomenclatureName" title="Name" />
-            <GridColumn field="startTime" title="Started" cell={DateTimeCell} />
-            <GridColumn field="endTime" title="Completed" cell={DateTimeCell} />
+            <GridColumn field="processName" title={t('operations.column.process', 'Process')} editable={false} />
+            <GridColumn field="processNomenclatureName" title={t('operations.column.name', 'Name')} />
+            <GridColumn field="startTime" title={t('operations.column.started', 'Started')} cell={DateTimeCell} />
+            <GridColumn field="endTime" title={t('operations.column.completed', 'Completed')} cell={DateTimeCell} />
         </RelationTable>
     )
 }

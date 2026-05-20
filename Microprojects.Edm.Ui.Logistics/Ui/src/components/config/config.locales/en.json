@@ -1,0 +1,30 @@
+{
+    "title": "Configurations",
+    "menu": {
+        "manufacturing": "Manufacturing",
+        "technology": "Technology",
+        "operations": "Operations",
+        "nomenclatures": "Nomenclatures",
+        "tareTypes": "Tare types"
+    },
+    "selectOption": "Select one of the options above",
+    "pageNotExists": "Page not exists",
+    "folder": {
+        "identity": "Identity",
+        "name": "Name",
+        "description": "Description",
+        "nameMissing": "A folder must have a name.",
+        "nameHelp": "Shown in the tree under its parent folder.",
+        "restrictedAccess": "Restricted access",
+        "openToEveryone": "Open to everyone",
+        "openBanner": "Any signed-in user can see this folder and its contents.",
+        "restrictedNote_one": "restricted to {{count}} group",
+        "restrictedNote_other": "restricted to {{count}} groups",
+        "openNote": "open to everyone",
+        "accessControl": "Access control",
+        "groups": "Groups",
+        "addAnotherGroup": "Add another group…",
+        "leaveEmptyOpen": "Leave empty to open the folder to everyone",
+        "emptyMeansEveryone": "Empty list means <0>everyone</0> can see this folder. Add a group name to restrict the folder (and its contents) to members of that group."
+    }
+}

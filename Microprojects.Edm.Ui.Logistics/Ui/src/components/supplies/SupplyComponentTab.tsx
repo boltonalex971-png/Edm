@@ -1,11 +1,13 @@
 import Api from '@features/api/api'
 import { BatchItemCreate } from '@logistics/components/items/BatchItemCreate'
 import { ItemDetail } from '@logistics/components/items/ItemDetail'
+import '@logistics/components/supplies' // side-effect: registers the `supplies` namespace
 import { TareDetail } from '@logistics/components/tare/TareDetail'
 import { TareItemsPanel } from '@logistics/components/tare/TareItemsPanel'
 import type { UUID } from '@logistics/data/types'
 import { AddOutlined as AddIcon } from '@mui/icons-material'
 import { Box, Button as MuiButton } from '@mui/material'
+import { useTranslation } from 'react-i18next'
 
 type SupplyComponentTabProps = {
     id: UUID
@@ -18,6 +20,7 @@ export function SupplyComponentTab({
     api,
     onDetailSelected,
 }: SupplyComponentTabProps) {
+    const { t } = useTranslation('supplies')
     return (
         <TareItemsPanel
             api={`${api}/${id}/items`}
@@ -42,7 +45,7 @@ export function SupplyComponentTab({
                             marginBottom: '0.5rem'
                         }}
                     >
-                        Add items
+                        {t('actions.addItems')}
                     </MuiButton>
                 </Box>
             }

@@ -1,0 +1,138 @@
+{
+    "page": {
+        "title": "Заказы",
+        "newOrder": "Новый заказ",
+        "menu": {
+            "active": "Активные",
+            "completed": "Завершённые"
+        },
+        "actions": {
+            "search": "Поиск",
+            "createNew": "Создать"
+        }
+    },
+    "detail": {
+        "defaultTitle": "Заказ",
+        "executedBy": "Исполнитель",
+        "executeOrder": "Выполнить заказ",
+        "allocateOutput": "Распределить выход",
+        "completeOrder": "Завершить заказ",
+        "viewAllocation": "Просмотр распределения",
+        "field": {
+            "nomenclature": "Номенклатура",
+            "amount": "Количество",
+            "amountValue": "{{count}} шт",
+            "process": "Процесс",
+            "start": "Начало",
+            "due": "Срок",
+            "description": "Описание"
+        },
+        "editor": {
+            "section": {
+                "identity": "Идентификация",
+                "process": "Процесс",
+                "schedule": "График"
+            },
+            "field": {
+                "orderNumber": "№ заказа",
+                "description": "Описание",
+                "technologyProcess": "Технологический процесс",
+                "amount": "Количество",
+                "amountInvalid": "Количество должно быть больше 0.",
+                "startDate": "Дата начала",
+                "dueDate": "Срок выполнения"
+            }
+        },
+        "disabledReason": {
+            "orderDeleted": "Заказ удалён",
+            "orderCompleted": "Заказ завершён",
+            "processCompleted": "Процесс уже завершён"
+        },
+        "toast": {
+            "executedCompleted": "Заказ выполнен и завершён",
+            "executedSuccessfully": "Заказ выполнен успешно",
+            "completeFailed": "Не удалось завершить заказ"
+        }
+    },
+    "search": {
+        "title": "Поиск заказов",
+        "description": "Поиск заказов",
+        "placeholder": "Поиск по номеру, процессу или номенклатуре",
+        "column": {
+            "orderNumber": "№ заказа",
+            "process": "Процесс",
+            "nomenclature": "Номенклатура",
+            "amount": "Количество",
+            "description": "Описание",
+            "start": "Начало",
+            "due": "Срок",
+            "status": "Статус",
+            "executor": "Исполнитель"
+        }
+    },
+    "tabs": {
+        "operations": "Операции",
+        "specification": "Спецификация",
+        "components": "Компоненты",
+        "output": "Выход"
+    },
+    "specification": {
+        "hideAllocated": "Скрыть полностью распределённые компоненты",
+        "column": {
+            "category": "Категория",
+            "name": "Наименование",
+            "description": "Описание",
+            "required": "Требуется",
+            "allocated": "Распределено"
+        },
+        "alreadyAllocated": "{{name}} уже полностью распределён",
+        "componentFallback": "Компонент",
+        "allocated": "Распределено: {{quantity}}",
+        "stopped": "Остановлено: {{reason}}"
+    },
+    "operations": {
+        "column": {
+            "process": "Процесс",
+            "name": "Наименование",
+            "started": "Начато",
+            "completed": "Завершено"
+        }
+    },
+    "output": {
+        "notExecuted": "Ещё не выполнен",
+        "allocated": "Распределено",
+        "unallocated": "Не распределено",
+        "noBarcode": "(нет штрихкода)"
+    },
+    "allocate": {
+        "title": "Распределение выхода процесса",
+        "completedSuffix": "Завершён",
+        "addTargetTare": "Добавить целевую тару",
+        "tareBarcodePlaceholder": "Штрихкод тары…",
+        "tareTypePlaceholder": "Тип (для новой)…",
+        "saving": "Сохранение…",
+        "apply": "Применить ({{count}})",
+        "reset": "Сбросить",
+        "unallocatedOutputs": "Нераспределённые выходы",
+        "targetTares": "Целевая тара",
+        "noUnallocated": "Нет нераспределённых выходов",
+        "noTargetTares": "Добавьте целевую тару по штрихкоду или создайте новую",
+        "loading": "Загрузка…",
+        "tareFallback": "Тара",
+        "remove": "Удалить",
+        "selectionHint": "Кликните по пустой ячейке для размещения или правой кнопкой для большего.",
+        "selectedCount_one": "Выбран {{count}}",
+        "selectedCount_few": "Выбрано {{count}}",
+        "selectedCount_many": "Выбрано {{count}}",
+        "allocationRequestFailed": "Ошибка запроса распределения",
+        "gradeAssignmentFailed": "Ошибка назначения сорта"
+    },
+    "outputItems": {
+        "outputs": "Выходы",
+        "mixedNomenclatures": "Смешанная номенклатура",
+        "selectedOf": "Выбрано {{selected}} из {{total}}",
+        "itemCount_one": "{{count}} элемент",
+        "itemCount_few": "{{count}} элемента",
+        "itemCount_many": "{{count}} элементов"
+    }
+}

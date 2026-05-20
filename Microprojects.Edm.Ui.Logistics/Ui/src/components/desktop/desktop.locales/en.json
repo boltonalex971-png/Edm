@@ -1,0 +1,108 @@
+{
+    "operator": {
+        "lead": "Pick an order from the list to claim it and start running. Orders already assigned to you appear first."
+    },
+    "list": {
+        "myPending": "My pending orders",
+        "available": "Available orders",
+        "noneAvailable": "No orders are available to start right now.",
+        "failedToLoad": "Failed to load orders",
+        "overdue": "Overdue",
+        "amount": "Amount",
+        "amountPcs": "{{count}} pcs",
+        "due": "Due",
+        "you": "You",
+        "continue": "Continue",
+        "open": "Open",
+        "executedBy": "Executed by ",
+        "anotherOperator": "another operator"
+    },
+    "run": {
+        "backToOrders": "Back to orders",
+        "order": "Order",
+        "orderFallback": "Order",
+        "amountPcs": "{{count}} pcs",
+        "executedReadOnly": "Executed by <0>{{name}}</0> — read-only. You can view progress but cannot change anything.",
+        "executingReadOnly": "Executing by <0>{{name}}</0> — read-only. You can view progress but cannot change anything.",
+        "reviewingEarlier": "Reviewing earlier step — order is currently at <0>{{step}}</0>.",
+        "resume": "Resume",
+        "failedToLaunch": "Failed to launch",
+        "failedToComplete": "Failed to complete the order"
+    },
+    "steps": {
+        "review": "Review",
+        "launch": "Launch",
+        "distribute": "Distribute",
+        "done": "Done"
+    },
+    "review": {
+        "summary": "Order summary",
+        "quantity": "Quantity",
+        "due": "Due",
+        "plannedStart": "Planned start",
+        "operatorPrefix": "Operator · {{name}}",
+        "unclaimed": "Unclaimed",
+        "notes": "Notes",
+        "startRunning": "Start running",
+        "continueReview": "Continue review",
+        "next": "Next",
+        "resume": "Resume"
+    },
+    "due": {
+        "inTime": "In time",
+        "overdueDays_one": "Overdue {{count}} d",
+        "overdueDays_other": "Overdue {{count}} d",
+        "aheadDays_one": "{{count}} d before plan",
+        "aheadDays_other": "{{count}} d before plan"
+    },
+    "complete": {
+        "orderCompleted": "Order completed",
+        "readyToComplete": "Ready to complete",
+        "allOutputsAllocated_one": "All outputs allocated to {{count}} tare.",
+        "allOutputsAllocated_other": "All outputs allocated to {{count}} tares.",
+        "everyOutputAllocated": "Every output is allocated. Confirm to close the order.",
+        "completedAt": "Completed at",
+        "outcome": "Outcome",
+        "outputs": "Outputs",
+        "taresUsed": "Tares used",
+        "due": "Due",
+        "dueBy": "Due by",
+        "perTare": "≈ {{value}} per tare",
+        "byGrade": "By grade",
+        "noGrade": "No grade",
+        "backToList": "Back to list",
+        "readOnly": "Read-only",
+        "completing": "Completing…",
+        "completeOrder": "Complete order",
+        "allMustBeAllocated": "All outputs must be allocated before completing"
+    },
+    "launch": {
+        "failedToLoadSpecs": "Failed to load specifications",
+        "addedQty": "Added {{qty}}",
+        "addedQtyStopped": "Added {{qty}} (stopped: {{reason}})",
+        "hint": "Click a row to pick available items for that nomenclature.",
+        "noSpecs": "No input specifications for this process — ready to launch.",
+        "colNomenclature": "Nomenclature",
+        "colRequired": "Required",
+        "colAllocated": "Allocated",
+        "clickToPick": "Click to pick items",
+        "resume": "Resume",
+        "launch": "Launch",
+        "launching": "Launching…",
+        "readOnly": "Read-only",
+        "allMustBeAllocated": "All inputs must be allocated before launch"
+    },
+    "lookup": {
+        "title": "Pick items — {{name}}",
+        "nomenclatureFallback": "Nomenclature",
+        "summary": "Required {{required}} · already allocated {{allocated}} · need {{remaining}} more",
+        "selectionSummary": "{{count}} selected · {{qty}} qty",
+        "noAvailable": "No available items for this nomenclature.",
+        "noBarcode": "(no barcode)",
+        "rowHint": "Click to expand · double-click to select all",
+        "failedToLoad": "Failed to load items",
+        "failedToAllocate": "Failed to allocate items",
+        "allocating": "Allocating…",
+        "allocate": "Allocate {{count}}"
+    }
+}

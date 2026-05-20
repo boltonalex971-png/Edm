@@ -1,9 +1,11 @@
 import api from '@features/api/api'
 import { Loading } from '@features/utils/Utils.tsx'
 import { Detail } from '@logistics/components/MasterDetail'
+import '@logistics/components/supplies' // side-effect: registers the `supplies` namespace
 import { SupplyDetail } from '@logistics/components/supplies/SupplyDetail'
 import type { Supply } from '@logistics/data/types'
 import { useGet } from '@logistics/hooks/hooks'
+import { useDataGridLocaleText } from '@logistics/i18n/dataGridLocale'
 import { formatLocalDateTime } from '@logistics/utils/format'
 import { SubRootPage } from '@microprojects/edm-components/components/chrome/SubRootPage'
 import { useBasePath } from '@microprojects/edm-components/hooks/useBasePath'
@@ -27,32 +29,34 @@ import {
 } from '@mui/x-data-grid'
 import type React from 'react'
 import { type EffectCallback, useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 export function Supplies() {
     const path = useBasePath()
+    const { t } = useTranslation('supplies')
 
     const menuItems = [
-        { label: 'Remains', path: `${path}/remaining`, icon: <RemainsIcon fontSize="small" /> },
-        { label: 'Consumed', path: `${path}/consumed`, icon: <ConsumedIcon fontSize="small" /> },
+        { label: t('page.menu.remains'), path: `${path}/remaining`, icon: <RemainsIcon fontSize="small" /> },
+        { label: t('page.menu.consumed'), path: `${path}/consumed`, icon: <ConsumedIcon fontSize="small" /> },
     ]
 
     return (
-        <SubRootPage title="Supplies" menuItems={menuItems}>
+        <SubRootPage title={t('page.title')} menuItems={menuItems}>
             <Search
                 actions={[
                     {
                         key: 'search',
-                        label: 'Search',
+                        label: t('actions.search'),
                         icon: <SearchIcon fontSize="small" />,
                         panel: <SupplySearch />,
                     },
                     {
                         key: 'create',
-                        label: 'Create new',
+                        label: t('actions.createNew'),
                         icon: <AddIcon fontSize="small" />,
                         panel: (
                             <SupplyDetail
-                                title="New Supply"
+                                title={t('detail.newTitle')}
                                 editMode={true}
                                 api={api.supplies}
                             />
@@ -64,20 +68,29 @@ export function Supplies() {
     )
 }
 
-const COLUMNS: GridColDef<Supply>[] = [
-    { field: 'barcode', headerName: 'Barcode', flex: 1, minWidth: 140 },
-    { field: 'shipment', headerName: 'Shipment', flex: 1, minWidth: 140 },
-    { field: 'shipmentExternalId', headerName: 'Shipment Id', flex: 1, minWidth: 140 },
-    {
-        field: 'metaCreated',
-        headerName: 'Created',
-        flex: 1,
-        minWidth: 160,
-        renderCell: (p) => formatLocalDateTime(p.value as any),
-    },
-]
+function useColumns(): GridColDef<Supply>[] {
+    const { t } = useTranslation('supplies')
+    return useMemo(
+        () => [
+            { field: 'barcode', headerName: t('field.barcode'), flex: 1, minWidth: 140 },
+            { field: 'shipment', headerName: t('field.shipment'), flex: 1, minWidth: 140 },
+            { field: 'shipmentExternalId', headerName: t('field.shipmentExternalId'), flex: 1, minWidth: 140 },
+            {
+                field: 'metaCreated',
+                headerName: t('field.created'),
+                flex: 1,
+                minWidth: 160,
+                renderCell: (p) => formatLocalDateTime(p.value as any),
+            },
+        ],
+        [t],
+    )
+}
 
 function SupplySearch() {
+    const { t } = useTranslation('supplies')
+    const dgLocaleText = useDataGridLocaleText()
+    const columns = useColumns()
     const [[data], loading, error] = useGet<Supply[]>(`${api.supplies}`, [api])
     const [filter, setFilter] = useState<string>('')
     const [subDetail, setSubDetail] = useState<React.ReactElement>()
@@ -104,8 +117,8 @@ function SupplySearch() {
             error={error as any}
             data={
                 {
-                    name: 'Supply search',
-                    description: 'Search for supplies',
+                    name: t('search.name'),
+                    description: t('search.description'),
                 } as any
             }
             subDetail={subDetail}
@@ -114,7 +127,7 @@ function SupplySearch() {
                     <TextField
                         fullWidth
                         size="small"
-                        placeholder="Search by shipment or barcode"
+                        placeholder={t('search.placeholder')}
                         value={filter}
                         onChange={(e) => setFilter(e.target.value)}
                         sx={{ mb: 1.5 }}
@@ -135,10 +148,11 @@ function SupplySearch() {
                     {data && (
                         <DataGrid
                             rows={filteredData}
-                            columns={COLUMNS}
+                            columns={columns}
                             autoHeight
                             density="compact"
                             disableRowSelectionOnClick
+                            localeText={dgLocaleText}
                             initialState={{
                                 pagination: {
                                     paginationModel: { pageSize: 10, page: 0 },

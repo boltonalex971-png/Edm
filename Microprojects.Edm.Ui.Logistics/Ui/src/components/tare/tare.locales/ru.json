@@ -1,0 +1,39 @@
+{
+    "tooltip": {
+        "address": "Адрес",
+        "nomenclature": "Номенклатура",
+        "serialNo": "Серийный №",
+        "quantity": "Количество",
+        "grade": "Сорт"
+    },
+    "picker": {
+        "placeholder": "Штрихкод тары…",
+        "noBarcode": "(без штрихкода)",
+        "full": "полн.",
+        "free": "своб."
+    },
+    "detail": {
+        "fallbackName": "Тара",
+        "view": {
+            "schema": "Схема",
+            "grid": "Таблица"
+        },
+        "noItems": "В этой таре нет партий",
+        "column": {
+            "nomenclature": "Номенклатура",
+            "serialNo": "Серийный №",
+            "address": "Адрес",
+            "quantity": "Количество",
+            "units": "Ед."
+        }
+    },
+    "items": {
+        "noItems": "Нет партий",
+        "slots": "{{placed}} / {{capacity}} мест",
+        "orphanSuffix_one": " (+{{count}} без адреса)",
+        "orphanSuffix_few": " (+{{count}} без адреса)",
+        "orphanSuffix_many": " (+{{count}} без адреса)",
+        "bulkQty": "{{total}} / {{capacity}}",
+        "empty": "Пусто"
+    }
+}

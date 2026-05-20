@@ -1,6 +1,7 @@
 import { Box, Typography } from '@mui/material'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import './index' // side-effect: registers the `homepages` namespace
 
 export function useClock(): string {
     const { i18n } = useTranslation()
@@ -33,8 +34,8 @@ interface HeroProps {
 }
 
 export const Hero = ({ userName, userFull, role, lead, clock }: HeroProps) => {
-    const { t } = useTranslation('widgets')
-    const roleLabel = role ? t(`role.${role}`, role) : undefined
+    const { t } = useTranslation('homepages')
+    const roleLabel = role ? t(`widgets:role.${role}`, role) : undefined
     return (
         <Box
             component="header"
@@ -70,7 +71,7 @@ export const Hero = ({ userName, userFull, role, lead, clock }: HeroProps) => {
                         },
                     }}
                 >
-                    Welcome
+                    {t('welcome.eyebrow')}
                 </Box>
                 <Typography
                     component="h1"
@@ -85,7 +86,9 @@ export const Hero = ({ userName, userFull, role, lead, clock }: HeroProps) => {
                         lineHeight: 1.05,
                     }}
                 >
-                    {userName ? `Hello, ${userName}` : 'Welcome to EDM Logistics'}
+                    {userName
+                        ? t('welcome.titleNamed', { name: userName })
+                        : t('welcome.titleAnonymous')}
                 </Typography>
                 <Typography
                     component="p"
@@ -119,7 +122,7 @@ export const Hero = ({ userName, userFull, role, lead, clock }: HeroProps) => {
                 >
                     {roleLabel && (
                         <span>
-                            <b>Role</b> · {roleLabel}
+                            <b>{t('meta.role')}</b> · {roleLabel}
                         </span>
                     )}
                     {clock && <span>{clock}</span>}

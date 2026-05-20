@@ -1,0 +1,111 @@
+{
+    "operator": {
+        "lead": "Выберите заказ из списка, чтобы взять его в работу. Заказы, уже назначенные вам, отображаются первыми."
+    },
+    "list": {
+        "myPending": "Мои заказы в работе",
+        "available": "Доступные заказы",
+        "noneAvailable": "Сейчас нет заказов, доступных для запуска.",
+        "failedToLoad": "Не удалось загрузить заказы",
+        "overdue": "Просрочен",
+        "amount": "Количество",
+        "amountPcs": "{{count}} шт.",
+        "due": "Срок",
+        "you": "Вы",
+        "continue": "Продолжить",
+        "open": "Открыть",
+        "executedBy": "Выполняет ",
+        "anotherOperator": "другой оператор"
+    },
+    "run": {
+        "backToOrders": "К списку заказов",
+        "order": "Заказ",
+        "orderFallback": "Заказ",
+        "amountPcs": "{{count}} шт.",
+        "executedReadOnly": "Выполнено пользователем <0>{{name}}</0> — только просмотр. Можно смотреть прогресс, но не вносить изменения.",
+        "executingReadOnly": "Выполняется пользователем <0>{{name}}</0> — только просмотр. Можно смотреть прогресс, но не вносить изменения.",
+        "reviewingEarlier": "Просмотр предыдущего шага — заказ сейчас на этапе <0>{{step}}</0>.",
+        "resume": "Продолжить",
+        "failedToLaunch": "Не удалось запустить",
+        "failedToComplete": "Не удалось завершить заказ"
+    },
+    "steps": {
+        "review": "Обзор",
+        "launch": "Запуск",
+        "distribute": "Распределение",
+        "done": "Готово"
+    },
+    "review": {
+        "summary": "Сводка по заказу",
+        "quantity": "Количество",
+        "due": "Срок",
+        "plannedStart": "Плановый старт",
+        "operatorPrefix": "Оператор · {{name}}",
+        "unclaimed": "Не назначен",
+        "notes": "Примечания",
+        "startRunning": "Начать выполнение",
+        "continueReview": "Продолжить обзор",
+        "next": "Далее",
+        "resume": "Продолжить"
+    },
+    "due": {
+        "inTime": "В срок",
+        "overdueDays_one": "Просрочка {{count}} д.",
+        "overdueDays_few": "Просрочка {{count}} д.",
+        "overdueDays_many": "Просрочка {{count}} д.",
+        "aheadDays_one": "{{count}} д. до срока",
+        "aheadDays_few": "{{count}} д. до срока",
+        "aheadDays_many": "{{count}} д. до срока"
+    },
+    "complete": {
+        "orderCompleted": "Заказ завершён",
+        "readyToComplete": "Готов к завершению",
+        "allOutputsAllocated_one": "Все выходы размещены в {{count}} тару.",
+        "allOutputsAllocated_few": "Все выходы размещены в {{count}} тары.",
+        "allOutputsAllocated_many": "Все выходы размещены в {{count}} тар.",
+        "everyOutputAllocated": "Все выходы размещены. Подтвердите, чтобы закрыть заказ.",
+        "completedAt": "Завершён",
+        "outcome": "Итог",
+        "outputs": "Выходы",
+        "taresUsed": "Использовано тар",
+        "due": "Срок",
+        "dueBy": "Срок до",
+        "perTare": "≈ {{value}} на тару",
+        "byGrade": "По сортам",
+        "noGrade": "Без сорта",
+        "backToList": "К списку",
+        "readOnly": "Только просмотр",
+        "completing": "Завершение…",
+        "completeOrder": "Завершить заказ",
+        "allMustBeAllocated": "Перед завершением все выходы должны быть размещены"
+    },
+    "launch": {
+        "failedToLoadSpecs": "Не удалось загрузить спецификации",
+        "addedQty": "Добавлено {{qty}}",
+        "addedQtyStopped": "Добавлено {{qty}} (остановлено: {{reason}})",
+        "hint": "Выберите строку, чтобы подобрать доступные партии по этой номенклатуре.",
+        "noSpecs": "Для этого процесса нет входных спецификаций — можно запускать.",
+        "colNomenclature": "Номенклатура",
+        "colRequired": "Требуется",
+        "colAllocated": "Подобрано",
+        "clickToPick": "Нажмите, чтобы подобрать партии",
+        "resume": "Продолжить",
+        "launch": "Запустить",
+        "launching": "Запуск…",
+        "readOnly": "Только просмотр",
+        "allMustBeAllocated": "Перед запуском все входы должны быть подобраны"
+    },
+    "lookup": {
+        "title": "Выбор партий — {{name}}",
+        "nomenclatureFallback": "Номенклатура",
+        "summary": "Требуется {{required}} · уже подобрано {{allocated}} · нужно ещё {{remaining}}",
+        "selectionSummary": "выбрано {{count}} · количество {{qty}}",
+        "noAvailable": "Нет доступных партий по этой номенклатуре.",
+        "noBarcode": "(без штрихкода)",
+        "rowHint": "Клик — развернуть · двойной клик — выбрать всю тару",
+        "failedToLoad": "Не удалось загрузить партии",
+        "failedToAllocate": "Не удалось подобрать партии",
+        "allocating": "Подбор…",
+        "allocate": "Подобрать {{count}}"
+    }
+}

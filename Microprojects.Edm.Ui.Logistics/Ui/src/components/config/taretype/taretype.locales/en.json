@@ -1,0 +1,43 @@
+{
+    "stubMessage": "Please select a tare type",
+    "section": {
+        "identity": "Identity",
+        "capacity": "Capacity"
+    },
+    "field": {
+        "name": "Name",
+        "description": "Description",
+        "units": "Units",
+        "unitsPlaceholder": "e.g. kg, l, pcs",
+        "unitsHelp": "Label shown next to the capacity value.",
+        "countable": "Countable (whole pieces)",
+        "countableHelp": "Toggles capacity between integer piece count (countable) and decimal volume/weight (non-countable).",
+        "layout": "Layout",
+        "bulk": "Bulk",
+        "slots": "Slots (X×Y×Z)",
+        "layoutHelp": "Bulk uses integer piece-count capacity. Slots uses addressed capacity = X×Y×Z.",
+        "capacity": "Capacity",
+        "capacityWithUnits": "Capacity ({{units}})",
+        "computedCapacity_one": "Capacity (auto): {{count}} slot",
+        "computedCapacity_other": "Capacity (auto): {{count}} slots"
+    },
+    "help": {
+        "nameMissing": "A tare type must have a name.",
+        "name": "Shown in tree, pickers, and relations."
+    },
+    "card": {
+        "countable": "Countable",
+        "measuredIn": "Measured in",
+        "size": "Size",
+        "capacity": "Capacity"
+    },
+    "tabs": {
+        "allowedNomenclatures": "Allowed nomenclatures"
+    },
+    "nomenclaturesTab": {
+        "nomenclature": "Nomenclature",
+        "category": "Category",
+        "description": "Description",
+        "default": "Default"
+    }
+}

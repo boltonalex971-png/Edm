@@ -1,3 +1,4 @@
+import '@logistics/components/orders' // side-effect: registers the `orders` namespace
 import Api from '@features/api/api.ts'
 import { OrderDetail } from '@logistics/components/orders/OrderDetail'
 import { OrderSearch } from '@logistics/components/orders/OrderSearch.tsx'
@@ -13,12 +14,14 @@ import {
     Search as SearchIcon,
 } from '@mui/icons-material'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 
 export function Orders() {
     const { name } = useRouteMatch()
     const path = useBasePath()
     const navigate = useNavigate()
+    const { t } = useTranslation('orders')
     const [query, setQuery] = useState<OrderSearchQuery>()
     // After a successful Create, flip the Create-panel from the empty
     // "New Order" form to a view-mode detail of the just-created order.
@@ -50,7 +53,7 @@ export function Orders() {
     ) : (
         <OrderDetail
             key="new"
-            title="New Order"
+            title={t('page.newOrder', 'New Order')}
             editMode={true}
             api={Api.orders}
             type="order"
@@ -62,23 +65,23 @@ export function Orders() {
     )
 
     const menuItems = [
-        { label: 'Active', path: `${path}/ongoing`, icon: <ActiveIcon fontSize="small" /> },
-        { label: 'Completed', path: `${path}/completed`, icon: <CompletedIcon fontSize="small" /> },
+        { label: t('page.menu.active', 'Active'), path: `${path}/ongoing`, icon: <ActiveIcon fontSize="small" /> },
+        { label: t('page.menu.completed', 'Completed'), path: `${path}/completed`, icon: <CompletedIcon fontSize="small" /> },
     ]
 
     return (
-        <SubRootPage title="Orders" menuItems={menuItems}>
+        <SubRootPage title={t('page.title', 'Orders')} menuItems={menuItems}>
             <Search
                 actions={[
                     {
                         key: 'search',
-                        label: 'Search',
+                        label: t('page.actions.search', 'Search'),
                         icon: <SearchIcon fontSize="small" />,
                         panel: <OrderSearch query={query} />,
                     },
                     {
                         key: 'create',
-                        label: 'Create new',
+                        label: t('page.actions.createNew', 'Create new'),
                         icon: <AddIcon fontSize="small" />,
                         panel: detail,
                     },

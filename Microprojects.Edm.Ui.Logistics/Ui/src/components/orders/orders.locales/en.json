@@ -1,0 +1,135 @@
+{
+    "page": {
+        "title": "Orders",
+        "newOrder": "New Order",
+        "menu": {
+            "active": "Active",
+            "completed": "Completed"
+        },
+        "actions": {
+            "search": "Search",
+            "createNew": "Create new"
+        }
+    },
+    "detail": {
+        "defaultTitle": "Order",
+        "executedBy": "Executed by",
+        "executeOrder": "Execute order",
+        "allocateOutput": "Allocate output",
+        "completeOrder": "Complete order",
+        "viewAllocation": "View allocation",
+        "field": {
+            "nomenclature": "Nomenclature",
+            "amount": "Amount",
+            "amountValue": "{{count}} pcs",
+            "process": "Process",
+            "start": "Start",
+            "due": "Due",
+            "description": "Description"
+        },
+        "editor": {
+            "section": {
+                "identity": "Identity",
+                "process": "Process",
+                "schedule": "Schedule"
+            },
+            "field": {
+                "orderNumber": "Order #",
+                "description": "Description",
+                "technologyProcess": "Technology process",
+                "amount": "Amount",
+                "amountInvalid": "Amount must be greater than 0.",
+                "startDate": "Start Date",
+                "dueDate": "Due Date"
+            }
+        },
+        "disabledReason": {
+            "orderDeleted": "Order is deleted",
+            "orderCompleted": "Order is completed",
+            "processCompleted": "Process is already completed"
+        },
+        "toast": {
+            "executedCompleted": "The order executed and completed",
+            "executedSuccessfully": "The order executed successfully",
+            "completeFailed": "Failed to complete the order"
+        }
+    },
+    "search": {
+        "title": "Order search",
+        "description": "Search for orders",
+        "placeholder": "Search by number, process or nomenclature",
+        "column": {
+            "orderNumber": "Order #",
+            "process": "Process",
+            "nomenclature": "Nomenclature",
+            "amount": "Amount",
+            "description": "Description",
+            "start": "Start",
+            "due": "Due",
+            "status": "Status",
+            "executor": "Executor"
+        }
+    },
+    "tabs": {
+        "operations": "Operations",
+        "specification": "Specification",
+        "components": "Components",
+        "output": "Output"
+    },
+    "specification": {
+        "hideAllocated": "Hide totally allocated components",
+        "column": {
+            "category": "Category",
+            "name": "Name",
+            "description": "Description",
+            "required": "Required",
+            "allocated": "Allocated"
+        },
+        "alreadyAllocated": "{{name}} is already fully allocated",
+        "componentFallback": "Component",
+        "allocated": "{{quantity}} allocated",
+        "stopped": "Stopped: {{reason}}"
+    },
+    "operations": {
+        "column": {
+            "process": "Process",
+            "name": "Name",
+            "started": "Started",
+            "completed": "Completed"
+        }
+    },
+    "output": {
+        "notExecuted": "Not executed yet",
+        "allocated": "Allocated",
+        "unallocated": "Unallocated",
+        "noBarcode": "(no barcode)"
+    },
+    "allocate": {
+        "title": "Allocate process output",
+        "completedSuffix": "Completed",
+        "addTargetTare": "Add target tare",
+        "tareBarcodePlaceholder": "Tare barcode…",
+        "tareTypePlaceholder": "Type (for new)…",
+        "saving": "Saving…",
+        "apply": "Apply ({{count}})",
+        "reset": "Reset",
+        "unallocatedOutputs": "Unallocated outputs",
+        "targetTares": "Target tares",
+        "noUnallocated": "No unallocated outputs",
+        "noTargetTares": "Add target tares by barcode search or create new ones",
+        "loading": "Loading…",
+        "tareFallback": "Tare",
+        "remove": "Remove",
+        "selectionHint": "Click an empty target slot to place, or right-click for more.",
+        "selectedCount": "{{count}} selected",
+        "allocationRequestFailed": "Allocation request failed",
+        "gradeAssignmentFailed": "Grade assignment failed"
+    },
+    "outputItems": {
+        "outputs": "Outputs",
+        "mixedNomenclatures": "Mixed nomenclatures",
+        "selectedOf": "{{selected}} of {{total}} selected",
+        "itemCount_one": "{{count}} item",
+        "itemCount_other": "{{count}} items"
+    }
+}

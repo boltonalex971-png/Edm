@@ -1,0 +1,33 @@
+{
+    "page": {
+        "title": "Supplies",
+        "menu": {
+            "remains": "Remains",
+            "consumed": "Consumed"
+        }
+    },
+    "actions": {
+        "search": "Search",
+        "createNew": "Create new",
+        "addItems": "Add items"
+    },
+    "search": {
+        "name": "Supply search",
+        "description": "Search for supplies",
+        "placeholder": "Search by shipment or barcode"
+    },
+    "detail": {
+        "title": "Supply",
+        "newTitle": "New Supply",
+        "section": "Supply"
+    },
+    "field": {
+        "barcode": "Barcode",
+        "shipment": "Shipment",
+        "shipmentExternalId": "Shipment Id",
+        "created": "Created"
+    },
+    "tabs": {
+        "components": "Components"
+    }
+}

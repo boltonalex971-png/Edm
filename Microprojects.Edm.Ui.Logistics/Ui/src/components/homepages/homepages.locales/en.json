@@ -1,0 +1,45 @@
+{
+    "welcome": {
+        "eyebrow": "Welcome",
+        "titleNamed": "Hello, {{name}}",
+        "titleAnonymous": "Welcome to EDM Logistics",
+        "lead": "Inventory and shop-floor tracking for production orders, supplies and tare. Pick where you want to start."
+    },
+    "meta": {
+        "role": "Role"
+    },
+    "kpi": {
+        "activeOrders": {
+            "eyebrow": "Active orders",
+            "sublabel": "open in pipeline"
+        },
+        "runningNow": {
+            "eyebrow": "Running now",
+            "sublabel": "in execution",
+            "sublabelMine_one": "{{count}} run by you",
+            "sublabelMine_few": "{{count}} run by you",
+            "sublabelMine_many": "{{count}} run by you"
+        },
+        "outputsPending": {
+            "eyebrow": "Outputs pending",
+            "sublabel": "awaiting submission"
+        },
+        "overdue": {
+            "eyebrow": "Overdue",
+            "sublabel": "past due date"
+        }
+    },
+    "section": {
+        "activeWork": "Active work",
+        "allOrders": "All orders →",
+        "noActiveOrders": "No orders are currently being executed.",
+        "quickActions": "Quick actions"
+    },
+    "action": {
+        "manageOrders": { "title": "Manage orders",    "sub": "Create, launch, monitor" },
+        "browseItems":  { "title": "Browse items",     "sub": "History & genealogy" },
+        "receiveSupplies": { "title": "Receive supplies", "sub": "Inbound shipments" },
+        "repackItems":  { "title": "Repack items",     "sub": "Move between tares" },
+        "config":       { "title": "Configuration",    "sub": "Folders, processes, types" }
+    }
+}

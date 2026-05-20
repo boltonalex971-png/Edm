@@ -1,11 +1,13 @@
 import Api from '@features/api/api'
 import { useGet } from '@logistics/hooks/hooks'
 import { Column as GridColumn } from '@microprojects/edm-components/components'
+import { useTranslation } from 'react-i18next'
 import type { TreeDataItem, UUID } from '../../../data/types'
 import { CheckboxCell } from '../../CheckboxCell'
 import { DropDownTreeCell } from '../../DropDownTreeCell'
 import { RelationTable } from '../../RelationTable'
 import { TareTypeDetail } from '../taretype/TareTypes'
+import './index' // side-effect: registers the `config/nomenclature` namespace
 
 type NomenclatureTaresTabProps = {
     id: UUID
@@ -18,6 +20,7 @@ export function NomenclatureTaresTab({
     api,
     onDetailSelected,
 }: NomenclatureTaresTabProps) {
+    const { t } = useTranslation('config/nomenclature')
     const [[tareHierarchy]] = useGet<TreeDataItem[]>(
         `${Api.taretypes}/hierarchy`,
         [],
@@ -31,7 +34,7 @@ export function NomenclatureTaresTab({
         >
             <GridColumn
                 field="tareTypeId"
-                title="Tare type"
+                title={t('taresTab.tareType')}
                 width={240}
                 cell={(p) => (
                     <DropDownTreeCell
@@ -56,13 +59,13 @@ export function NomenclatureTaresTab({
             />
             <GridColumn
                 field="tareTypeDescription"
-                title="Description"
+                title={t('taresTab.description')}
                 width="auto"
                 editable={false}
             />
             <GridColumn
                 field="isDefault"
-                title="Default"
+                title={t('taresTab.default')}
                 width={100}
                 cell={(p) => <CheckboxCell {...p} />}
             />

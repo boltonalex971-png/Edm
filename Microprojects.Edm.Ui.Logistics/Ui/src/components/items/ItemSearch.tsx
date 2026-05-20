@@ -1,3 +1,4 @@
+import './index' // side-effect: registers the `items` namespace
 import api from '@features/api/api'
 import Api from '@features/api/api'
 import { Loading } from '@features/utils/Utils'
@@ -50,6 +51,7 @@ import {
     useRef,
     useState,
 } from 'react'
+import { type TFunction, useTranslation } from 'react-i18next'
 
 type ItemSearchProps = {
     onClose: () => void
@@ -64,7 +66,7 @@ type ItemSearchProps = {
 
 type TareRow = TareGroup & { id: string }
 
-function sourceChip(items: Item[]) {
+function sourceChip(items: Item[], t: TFunction) {
     const hasOutput = items.some((i) => i.isOutput)
     const hasSupply = items.some((i) => i.supplyId && !i.isOutput)
     const hasStore = items.some((i) => i.isStore)
@@ -72,8 +74,8 @@ function sourceChip(items: Item[]) {
         return (
             <Chip
                 size="small"
-                label="Output"
-                title="This tare contains items produced by an order execution."
+                label={t('source.Output', 'Output')}
+                title={t('source.tareOutputTitle', 'This tare contains items produced by an order execution.')}
                 sx={{
                     height: 22,
                     fontFamily: 'var(--font-mono)',
@@ -89,8 +91,8 @@ function sourceChip(items: Item[]) {
         return (
             <Chip
                 size="small"
-                label="Supply"
-                title="This tare contains items received through a supply."
+                label={t('source.Supply', 'Supply')}
+                title={t('source.tareSupplyTitle', 'This tare contains items received through a supply.')}
                 sx={{
                     height: 22,
                     fontFamily: 'var(--font-mono)',
@@ -106,8 +108,8 @@ function sourceChip(items: Item[]) {
         return (
             <Chip
                 size="small"
-                label="Store"
-                title="This tare contains items created directly from store."
+                label={t('source.Store', 'Store')}
+                title={t('source.tareStoreTitle', 'This tare contains items created directly from store.')}
                 sx={{
                     height: 22,
                     fontFamily: 'var(--font-mono)',
@@ -120,7 +122,7 @@ function sourceChip(items: Item[]) {
         )
     }
     return (
-        <Box component="span" sx={{ color: 'var(--ink-3)' }} title="No supply or process recorded.">
+        <Box component="span" sx={{ color: 'var(--ink-3)' }} title={t('source.noRecorded', 'No supply or process recorded.')}>
             —
         </Box>
     )
@@ -164,6 +166,8 @@ const TRUNCATE_SX = {
 }
 
 export const ItemSearch = (props: ItemSearchProps) => {
+    const { t } = useTranslation('items')
+    const { t: tTare } = useTranslation('tare')
     const token = useEntityToken([{ type: 'item' }, { type: 'tare' }])
     const invalidate = useInvalidateEntities()
     const [[items], loading, error] = usePost<Item[]>(
@@ -326,10 +330,12 @@ export const ItemSearch = (props: ItemSearchProps) => {
             error={error as string}
             data={
                 {
-                    name: `Component ${props.lookup ? 'lookup' : 'search'}`,
+                    name: props.lookup
+                        ? t('search.titleLookup', 'Component lookup')
+                        : t('search.title', 'Component search'),
                     description: props.lookup
-                        ? 'Binding component to the order'
-                        : 'Search for components',
+                        ? t('search.subtitleLookup', 'Binding component to the order')
+                        : t('search.subtitle', 'Search for components'),
                 } as DataItem
             }
             subDetail={subDetail}
@@ -338,7 +344,7 @@ export const ItemSearch = (props: ItemSearchProps) => {
                     <TextField
                         fullWidth
                         size="small"
-                        placeholder="Search by nomenclature, tare or barcode"
+                        placeholder={t('search.placeholder', 'Search by nomenclature, tare or barcode')}
                         value={filter}
                         onChange={(e) => setFilter(e.target.value)}
                         sx={{ mb: 1.5 }}
@@ -365,13 +371,16 @@ export const ItemSearch = (props: ItemSearchProps) => {
                                 size="small"
                                 onClick={allocateSelected}
                             >
-                                Allocate {selectedItemIds.size} selected
+                                {t('search.allocateSelected', {
+                                    count: selectedItemIds.size,
+                                    defaultValue: 'Allocate {{count}} selected',
+                                })}
                             </MuiButton>
                             <MuiButton
                                 size="small"
                                 onClick={() => setSelectedItemIds(new Set())}
                             >
-                                Clear selection
+                                {t('search.clearSelection', 'Clear selection')}
                             </MuiButton>
                         </Box>
                     )}
@@ -398,8 +407,11 @@ export const ItemSearch = (props: ItemSearchProps) => {
                             />
                             <Typography variant="caption">
                                 {filter
-                                    ? `Nothing matches "${filter}".`
-                                    : 'No items match the current query.'}
+                                    ? t('search.nothingMatches', {
+                                          filter,
+                                          defaultValue: 'Nothing matches "{{filter}}".',
+                                      })
+                                    : t('search.noItems', 'No items match the current query.')}
                             </Typography>
                         </Box>
                     )}
@@ -421,10 +433,10 @@ export const ItemSearch = (props: ItemSearchProps) => {
                             >
                                 <Box sx={COL_SX.chev} />
                                 <Box sx={{ ...COL_SX.barcode, ...HEADER_LABEL_SX }}>
-                                    Barcode
+                                    {t('search.col.barcode', 'Barcode')}
                                 </Box>
                                 <Box sx={{ ...COL_SX.type, ...HEADER_LABEL_SX }}>
-                                    Tare type
+                                    {t('search.col.tareType', 'Tare type')}
                                 </Box>
                                 <Box
                                     sx={{
@@ -432,16 +444,16 @@ export const ItemSearch = (props: ItemSearchProps) => {
                                         ...HEADER_LABEL_SX,
                                     }}
                                 >
-                                    Nomenclatures
+                                    {t('search.col.nomenclatures', 'Nomenclatures')}
                                 </Box>
                                 <Box sx={{ ...COL_SX.fill, ...HEADER_LABEL_SX }}>
-                                    Fill
+                                    {t('search.col.fill', 'Fill')}
                                 </Box>
                                 <Box sx={{ ...COL_SX.source, ...HEADER_LABEL_SX }}>
-                                    Source
+                                    {t('search.col.source', 'Source')}
                                 </Box>
                                 <Box sx={{ ...COL_SX.units, ...HEADER_LABEL_SX }}>
-                                    Units
+                                    {t('search.col.units', 'Units')}
                                 </Box>
                             </Box>
                             {tareRows.map((row) => {
@@ -484,8 +496,8 @@ export const ItemSearch = (props: ItemSearchProps) => {
                                             }
                                             title={
                                                 lookupActive
-                                                    ? 'Click to expand · double-click to allocate the whole tare'
-                                                    : 'Click to open the tare'
+                                                    ? t('search.rowTitleLookup', 'Click to expand · double-click to allocate the whole tare')
+                                                    : t('search.rowTitleOpen', 'Click to open the tare')
                                             }
                                             sx={{
                                                 ...ROW_SX,
@@ -525,7 +537,7 @@ export const ItemSearch = (props: ItemSearchProps) => {
                                                 }}
                                                 title={row.tare.barcode || ''}
                                             >
-                                                {row.tare.barcode || '(none)'}
+                                                {row.tare.barcode || t('search.noBarcode', '(none)')}
                                             </Typography>
                                             <Typography
                                                 sx={{
@@ -558,10 +570,10 @@ export const ItemSearch = (props: ItemSearchProps) => {
                                                     color: 'var(--ink-2)',
                                                 }}
                                             >
-                                                {tareSummary(row)}
+                                                {tareSummary(row, tTare)}
                                             </Typography>
                                             <Box sx={COL_SX.source}>
-                                                {sourceChip(row.items)}
+                                                {sourceChip(row.items, t)}
                                             </Box>
                                             <Typography
                                                 sx={{

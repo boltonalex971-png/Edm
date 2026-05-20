@@ -1,4 +1,12 @@
 {
+    "nav": {
+        "home": "Home",
+        "orders": "Orders",
+        "supplies": "Supplies",
+        "items": "Items",
+        "repacking": "Repacking",
+        "config": "Settings"
+    },
     "status": {
         "Running": "Running",
         "OutputsPending": "Outputs pending",
@@ -14,5 +22,8 @@
         "failedToLoadTare": "Failed to load tare",
         "tareNotFoundSelectType": "Tare not found. Select a tare type to create a new one.",
         "failedToAddTare": "Failed to add tare"
+    },
+    "changelog": {
+        "loadFailed": "Failed to load changelog: {{error}}"
     }
 }

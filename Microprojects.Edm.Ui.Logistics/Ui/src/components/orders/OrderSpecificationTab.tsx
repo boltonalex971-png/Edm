@@ -1,3 +1,4 @@
+import '@logistics/components/orders' // side-effect: registers the `orders` namespace
 import { type AlertState, useAlertSetter } from '@logistics/components/InlineAlert'
 import { RelationTable } from '@logistics/components/RelationTable.tsx'
 import { ItemSearch } from '@logistics/components/items/ItemSearch.tsx'
@@ -6,6 +7,7 @@ import { formatQuantity, formatUnits } from '@logistics/utils/format'
 import { FormControlLabel, Switch } from '@mui/material'
 import { Column as GridColumn } from '@microprojects/edm-components/components'
 import axios from 'axios'
+import { useTranslation } from 'react-i18next'
 
 type OrderSpecificationTabProps = {
     id: UUID
@@ -19,6 +21,7 @@ export function OrderSpecificationTab({
     onDetailSelected,
 }: OrderSpecificationTabProps) {
     const setAlert = useAlertSetter()
+    const { t } = useTranslation('orders')
     const addComponents = (
         items: Item[],
         itemUpdate: (item: any) => void,
@@ -35,8 +38,10 @@ export function OrderSpecificationTab({
                     result.data
                 const qtyTxt = formatUnits(allocatedQuantity, units, countable)
                 const msg =
-                    `${qtyTxt} allocated` +
-                    (stoppedReason ? `. Stopped: ${stoppedReason}` : '')
+                    t('specification.allocated', '{{quantity}} allocated', { quantity: qtyTxt }) +
+                    (stoppedReason
+                        ? `. ${t('specification.stopped', 'Stopped: {{reason}}', { reason: stoppedReason })}`
+                        : '')
                 setAlert({
                     message: msg,
                     status: stoppedReason ? 'warning' : undefined,
@@ -54,7 +59,9 @@ export function OrderSpecificationTab({
         const total = Number(item?.total ?? 0)
         if (amount > 0 && total >= amount) {
             setAlert({
-                message: `${item?.nomenclatureName ?? 'Component'} is already fully allocated`,
+                message: t('specification.alreadyAllocated', '{{name}} is already fully allocated', {
+                    name: item?.nomenclatureName ?? t('specification.componentFallback', 'Component'),
+                }),
                 status: 'warning',
             })
             return
@@ -79,7 +86,7 @@ export function OrderSpecificationTab({
             toolbarEnd={
                 <FormControlLabel
                     control={<Switch size="small" disabled />}
-                    label="Hide totally allocated components"
+                    label={t('specification.hideAllocated', 'Hide totally allocated components')}
                     sx={{
                         m: 0,
                         '& .MuiFormControlLabel-label': { fontSize: 13 },
@@ -89,24 +96,24 @@ export function OrderSpecificationTab({
         >
             <GridColumn
                 field="nomenclatureCategory"
-                title="Category"
+                title={t('specification.column.category', 'Category')}
                 width="100"
                 editable={false}
             />
             <GridColumn
                 field="nomenclatureName"
-                title="Name"
+                title={t('specification.column.name', 'Name')}
                 width="auto"
             />
             <GridColumn
                 field="nomenclatureDescription"
-                title="Description"
+                title={t('specification.column.description', 'Description')}
                 width="auto"
                 editable={false}
             />
             <GridColumn
                 field="amount"
-                title="Required"
+                title={t('specification.column.required', 'Required')}
                 width="100"
                 cell={(p) =>
                     formatQuantity(
@@ -117,7 +124,7 @@ export function OrderSpecificationTab({
             />
             <GridColumn
                 field="total"
-                title="Allocated"
+                title={t('specification.column.allocated', 'Allocated')}
                 width="100"
                 cell={(p) =>
                     formatQuantity(

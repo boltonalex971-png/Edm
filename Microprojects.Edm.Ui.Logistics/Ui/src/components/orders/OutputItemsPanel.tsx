@@ -1,3 +1,4 @@
+import '@logistics/components/orders' // side-effect: registers the `orders` namespace
 import { ItemSlotTooltip } from '@logistics/components/tare/ItemSlotTooltip'
 import '@logistics/components/tare/TareSchematic.css'
 import type { Item, UUID } from '@logistics/data/types'
@@ -6,6 +7,7 @@ import { colorForGradeId } from '@logistics/utils/gradePalette'
 import { Popper } from '@mui/material'
 import type React from 'react'
 import { useCallback, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 type OutputItemsPanelProps = {
     items: Item[]
@@ -41,6 +43,7 @@ export function OutputItemsPanel({
     onToggleAll,
     onItemContextMenu,
 }: OutputItemsPanelProps) {
+    const { t } = useTranslation('orders')
     const [tooltip, setTooltip] = useState<TooltipState | null>(null)
     const hideTimer = useRef<ReturnType<typeof setTimeout>>()
 
@@ -61,8 +64,8 @@ export function OutputItemsPanel({
     const headerLabel = useMemo(() => {
         if (items.length === 0) return ''
         const names = [...new Set(items.map((i) => i.nomenclatureName))]
-        return names.length === 1 ? names[0] : 'Mixed nomenclatures'
-    }, [items])
+        return names.length === 1 ? names[0] : t('outputItems.mixedNomenclatures', 'Mixed nomenclatures')
+    }, [items, t])
 
     return (
         <div className="tare-schematic">
@@ -89,18 +92,21 @@ export function OutputItemsPanel({
                             onChange={onToggleAll}
                         />
                         <span className="tare-label">
-                            {headerLabel || 'Outputs'}
+                            {headerLabel || t('outputItems.outputs', 'Outputs')}
                         </span>
                     </label>
                 ) : (
                     <span className="tare-label">
-                        {headerLabel || 'Outputs'}
+                        {headerLabel || t('outputItems.outputs', 'Outputs')}
                     </span>
                 )}
                 <small className="tare-info">
                     {selectable
-                        ? `${selectedSet.size} of ${items.length} selected`
-                        : `${items.length} item${items.length === 1 ? '' : 's'}`}
+                        ? t('outputItems.selectedOf', '{{selected}} of {{total}} selected', {
+                              selected: selectedSet.size,
+                              total: items.length,
+                          })
+                        : t('outputItems.itemCount', { count: items.length, defaultValue: '{{count}} items' })}
                 </small>
             </div>
             <div className="tare-flex-grid">

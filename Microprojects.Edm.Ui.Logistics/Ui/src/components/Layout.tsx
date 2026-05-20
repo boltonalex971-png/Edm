@@ -28,9 +28,8 @@ import { useAlertSetter } from './InlineAlert'
 import logo from '../../public/applogo.svg'
 
 const LANGUAGES = [
-    { code: 'en',    label: 'English' },
-    { code: 'ru',    label: 'Русский' },
-    { code: 'es-ES', label: 'Español' },
+    { code: 'en', label: 'English' },
+    { code: 'ru', label: 'Русский' },
 ] as const
 
 const ROLE_ICONS = {
@@ -84,14 +83,14 @@ export const Layout = ({ children, hideMenu }: LayoutProps) => {
     const navItems = useMemo(() => {
         if (hideMenu) return []
         return [
-            { id: 'home', label: 'Home', path: '/', icon: <HomeIcon fontSize="small" />, exact: true },
-            { id: 'orders', label: 'Orders', path: '/orders', icon: <OrdersIcon fontSize="small" /> },
-            { id: 'supplies', label: 'Supplies', path: '/supplies', icon: <SuppliesIcon fontSize="small" /> },
-            { id: 'items', label: 'Items', path: '/items', icon: <ItemsIcon fontSize="small" /> },
-            { id: 'repacking', label: 'Repacking', path: '/repacking', icon: <RepackingIcon fontSize="small" /> },
-            { id: 'config', label: 'Settings', path: '/config', icon: <SettingsIcon fontSize="small" /> },
+            { id: 'home',      label: t('widgets:nav.home'),      path: '/',          icon: <HomeIcon fontSize="small" />,      exact: true },
+            { id: 'orders',    label: t('widgets:nav.orders'),    path: '/orders',    icon: <OrdersIcon fontSize="small" /> },
+            { id: 'supplies',  label: t('widgets:nav.supplies'),  path: '/supplies',  icon: <SuppliesIcon fontSize="small" /> },
+            { id: 'items',     label: t('widgets:nav.items'),     path: '/items',     icon: <ItemsIcon fontSize="small" /> },
+            { id: 'repacking', label: t('widgets:nav.repacking'), path: '/repacking', icon: <RepackingIcon fontSize="small" /> },
+            { id: 'config',    label: t('widgets:nav.config'),    path: '/config',    icon: <SettingsIcon fontSize="small" /> },
         ]
-    }, [hideMenu])
+    }, [hideMenu, t])
 
     const setRole = (role: string) => {
         axios

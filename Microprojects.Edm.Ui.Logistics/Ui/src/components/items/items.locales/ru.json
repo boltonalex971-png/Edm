@@ -1,0 +1,128 @@
+{
+    "title": "Партия",
+    "titlePlural": "Продукция",
+    "source": {
+        "Output": "Выпуск",
+        "OutputTitle": "Произведено при выполнении заказа.",
+        "Supply": "Поставка",
+        "SupplyTitle": "Получено через поставку.",
+        "Store": "Склад",
+        "StoreTitle": "Создано напрямую со склада (без зарегистрированного источника).",
+        "tareOutputTitle": "Эта тара содержит партии, произведённые при выполнении заказа.",
+        "tareSupplyTitle": "Эта тара содержит партии, полученные через поставку.",
+        "tareStoreTitle": "Эта тара содержит партии, созданные напрямую со склада.",
+        "noRecorded": "Поставка или процесс не зарегистрированы."
+    },
+    "field": {
+        "nomenclature": "Номенклатура",
+        "quantity": "Количество",
+        "serialNo": "Серийный №",
+        "tare": "Тара",
+        "tareType": "Тип тары",
+        "tareBarcode": "Штрихкод тары",
+        "address": "Адрес",
+        "supply": "Поставка",
+        "order": "Заказ",
+        "producedBy": "Произведено",
+        "process": "Процесс",
+        "id": "Идентификатор",
+        "status": "Статус",
+        "inactive": "Неактивна"
+    },
+    "editor": {
+        "sectionWhat": "Что",
+        "sectionWhere": "Где"
+    },
+    "search": {
+        "title": "Поиск компонентов",
+        "titleLookup": "Подбор компонентов",
+        "subtitle": "Поиск компонентов",
+        "subtitleLookup": "Привязка компонента к заказу",
+        "placeholder": "Поиск по номенклатуре, таре или штрихкоду",
+        "allocateSelected_one": "Привязать {{count}} выбранную",
+        "allocateSelected_few": "Привязать {{count}} выбранных",
+        "allocateSelected_many": "Привязать {{count}} выбранных",
+        "allocateSelected_other": "Привязать {{count}} выбранных",
+        "clearSelection": "Очистить выбор",
+        "nothingMatches": "Ничего не найдено по запросу «{{filter}}».",
+        "noItems": "По текущему запросу ничего не найдено.",
+        "col": {
+            "barcode": "Штрихкод",
+            "tareType": "Тип тары",
+            "nomenclatures": "Номенклатуры",
+            "fill": "Заполнение",
+            "source": "Источник",
+            "units": "Ед. изм."
+        },
+        "noBarcode": "(нет)",
+        "rowTitleLookup": "Клик — раскрыть · двойной клик — привязать всю тару",
+        "rowTitleOpen": "Клик — открыть тару"
+    },
+    "batch": {
+        "title": "Новые партии",
+        "subtitleSupply": "Добавить к поставке",
+        "section": "Создание партий",
+        "barcodePlaceholder": "Выберите существующий, введите новый или оставьте пустым",
+        "validation": {
+            "typeMismatch": "Тип выбранной тары не совпадает с указанным типом тары.",
+            "typeNotAllowed": "Тип выбранной тары не допустим для указанной номенклатуры."
+        },
+        "existingRemaining": "Существующая тара — остаток: {{remaining}}",
+        "newTareWithBarcode": "Будет создана новая тара со штрихкодом «{{barcode}}».",
+        "newTareNoBarcode": "Будет создана новая тара без штрихкода.",
+        "fieldNumberOfItems": "Количество штук",
+        "fieldQuantity": "Количество",
+        "max": "Макс: {{max}}",
+        "created": "Создано {{quantity}} в таре {{tare}}{{type}}.{{remaining}}",
+        "tareTypeSuffix": " ({{name}})",
+        "remainingCapacity": " Свободная вместимость: {{capacity}}.",
+        "noBarcode": "(без штрихкода)",
+        "create": "Создать",
+        "cancel": "Отмена"
+    },
+    "genealogy": {
+        "title": "Генеалогия",
+        "processPrefix": "Процесс: {{name}}",
+        "executionOutput": "Выпуск исполнения",
+        "supplyReceipt": "Приём поставки",
+        "storeEntry": "Запись со склада",
+        "splitFromParent": "Разделено из родительской",
+        "missing": "(нет {{id}})",
+        "groupedNote": "{{count}} похожих партий сгруппировано — раскройте, чтобы увидеть отдельные записи",
+        "tooltip": {
+            "quantity": "Количество",
+            "consumed": "Израсходовано",
+            "serialNo": "SN",
+            "tare": "Тара",
+            "address": "Адрес"
+        },
+        "truncatedTitle": "Часть ветвей скрыта за пределами текущей глубины.",
+        "truncated": "обрезано",
+        "depth": "Глубина",
+        "depthFull": "Полностью",
+        "depthFullTitle": "Загрузить всё дерево",
+        "depthLimitTitle": "Ограничить глубиной {{depth}}",
+        "itemCount_one": "{{count}} партия",
+        "itemCount_few": "{{count}} партии",
+        "itemCount_many": "{{count}} партий",
+        "itemCount_other": "{{count}} партий",
+        "inputsAria": "Входные партии",
+        "outputsAria": "Выходные партии",
+        "inputsHeader": "Входы ◀",
+        "outputsHeader": "Выходы ▶",
+        "noInputs": "Входные партии не зарегистрированы.",
+        "noOutputs": "Выходные партии не зарегистрированы.",
+        "originLabel": {
+            "out": "ВЫП",
+            "supply": "ПОСТ",
+            "store": "СКЛАД",
+            "split": "ДЕЛ"
+        }
+    },
+    "tabs": {
+        "available": "Доступные",
+        "consumed": "Израсходованные",
+        "search": "Поиск",
+        "createNew": "Создать"
+    }
+}

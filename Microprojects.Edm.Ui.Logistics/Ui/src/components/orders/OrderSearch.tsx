@@ -1,3 +1,4 @@
+import '@logistics/components/orders' // side-effect: registers the `orders` namespace
 import api from '@features/api/api.ts'
 import Api from '@features/api/api.ts'
 import { Loading } from '@features/utils/Utils'
@@ -17,6 +18,7 @@ import {
     useEntityToken,
 } from '@logistics/hooks/entityRefresh'
 import { usePost } from '@logistics/hooks/hooks.ts'
+import { useDataGridLocaleText } from '@logistics/i18n/dataGridLocale'
 import { formatLocalDate } from '@logistics/utils/format'
 import { Search as SearchIcon } from '@mui/icons-material'
 import {
@@ -37,12 +39,15 @@ import {
     useRef,
     useState,
 } from 'react'
+import { useTranslation } from 'react-i18next'
 
 type OrderSearchProps = {
     query?: ItemSearchQuery
 }
 
 export const OrderSearch = (props: OrderSearchProps) => {
+    const { t } = useTranslation('orders')
+    const dgLocaleText = useDataGridLocaleText()
     // Two-tier subscription: list-tag for membership changes
     // (create/delete/complete) plus per-id tokens for orders currently in
     // the list. Edits to off-list orders fire only the broad `{type:'order'}`
@@ -61,7 +66,7 @@ export const OrderSearch = (props: OrderSearchProps) => {
     const fingerprint = useMemo(
         () =>
             subscribedTags
-                .map((t) => (t.id ? `${t.type}:${t.id}` : t.type))
+                .map((tag) => (tag.id ? `${tag.type}:${tag.id}` : tag.type))
                 .sort()
                 .join('|'),
         [subscribedTags],
@@ -112,10 +117,10 @@ export const OrderSearch = (props: OrderSearchProps) => {
 
     const columns: GridColDef<Order>[] = useMemo(
         () => [
-            { field: 'number', headerName: 'Order #', width: 110 },
+            { field: 'number', headerName: t('search.column.orderNumber', 'Order #'), width: 110 },
             {
                 field: 'processName',
-                headerName: 'Process',
+                headerName: t('search.column.process', 'Process'),
                 flex: 1,
                 minWidth: 160,
                 renderCell: (p) => (
@@ -136,7 +141,7 @@ export const OrderSearch = (props: OrderSearchProps) => {
             },
             {
                 field: 'processNomenclatureName',
-                headerName: 'Nomenclature',
+                headerName: t('search.column.nomenclature', 'Nomenclature'),
                 flex: 1,
                 minWidth: 160,
                 renderCell: (p) => (
@@ -155,30 +160,30 @@ export const OrderSearch = (props: OrderSearchProps) => {
                     />
                 ),
             },
-            { field: 'amount', headerName: 'Amount', width: 90, type: 'number' },
-            { field: 'description', headerName: 'Description', flex: 1, minWidth: 140 },
+            { field: 'amount', headerName: t('search.column.amount', 'Amount'), width: 90, type: 'number' },
+            { field: 'description', headerName: t('search.column.description', 'Description'), flex: 1, minWidth: 140 },
             {
                 field: 'startDate',
-                headerName: 'Start',
+                headerName: t('search.column.start', 'Start'),
                 width: 110,
                 renderCell: (p) => formatLocalDate(p.value as any),
             },
             {
                 field: 'dueDate',
-                headerName: 'Due',
+                headerName: t('search.column.due', 'Due'),
                 width: 110,
                 renderCell: (p) => formatLocalDate(p.value as any),
             },
             {
                 field: 'status',
-                headerName: 'Status',
+                headerName: t('search.column.status', 'Status'),
                 width: 140,
                 renderCell: (p) =>
-                    p.value === 'OutputsPending' ? 'Outputs pending' : (p.value as string),
+                    p.value ? t(`widgets:status.${p.value as string}`) : '',
             },
-            { field: 'executor', headerName: 'Executor', width: 160 },
+            { field: 'executor', headerName: t('search.column.executor', 'Executor'), width: 160 },
         ],
-        [],
+        [t],
     )
 
     return (
@@ -189,8 +194,8 @@ export const OrderSearch = (props: OrderSearchProps) => {
             error={error as string}
             data={
                 {
-                    name: 'Order search',
-                    description: 'Search for orders',
+                    name: t('search.title', 'Order search'),
+                    description: t('search.description', 'Search for orders'),
                 } as DataItem
             }
             subDetail={subDetail}
@@ -199,7 +204,7 @@ export const OrderSearch = (props: OrderSearchProps) => {
                     <TextField
                         fullWidth
                         size="small"
-                        placeholder="Search by number, process or nomenclature"
+                        placeholder={t('search.placeholder', 'Search by number, process or nomenclature')}
                         value={filter}
                         onChange={(e) => setFilter(e.target.value)}
                         sx={{ mb: 1.5 }}
@@ -224,6 +229,7 @@ export const OrderSearch = (props: OrderSearchProps) => {
                             autoHeight
                             density="compact"
                             disableRowSelectionOnClick
+                            localeText={dgLocaleText}
                             initialState={{
                                 pagination: {
                                     paginationModel: { pageSize: 10, page: 0 },

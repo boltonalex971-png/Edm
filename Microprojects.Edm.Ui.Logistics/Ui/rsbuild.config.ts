@@ -3,7 +3,7 @@ import { pluginReact } from '@rsbuild/plugin-react'
 import { pluginEslint } from '@rsbuild/plugin-eslint'
 import { pluginSass } from '@rsbuild/plugin-sass'
 import { pluginBasicSsl } from '@rsbuild/plugin-basic-ssl'
-import { edmFontTag } from '@microprojects/edm-components/styles/fonts'
+import { edmFontTags } from '@microprojects/edm-components/styles/fonts'
 import CompressionPlugin from 'compression-webpack-plugin'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
@@ -147,7 +147,7 @@ export default defineConfig({
     html: {
         title: 'Edm Logistics',
         favicon: './public/favicon.ico',
-        tags: [edmFontTag],
+        tags: edmFontTags,
     },
     server: {
         port: 3000,

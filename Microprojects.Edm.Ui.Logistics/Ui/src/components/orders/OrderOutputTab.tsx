@@ -1,3 +1,4 @@
+import '@logistics/components/orders' // side-effect: registers the `orders` namespace
 import Api from '@features/api/api'
 import { Loading } from '@features/utils/Utils'
 import { ItemDetail } from '@logistics/components/items/ItemDetail'
@@ -19,6 +20,7 @@ import {
 } from '@mui/icons-material'
 import { Alert } from '@mui/material'
 import React, { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import '@logistics/components/tare/TareItemsPanel.css'
 
 type OrderOutputTabProps = {
@@ -33,6 +35,8 @@ export function OrderOutputTab({
     api,
     onDetailSelected,
 }: OrderOutputTabProps) {
+    const { t } = useTranslation('orders')
+    const { t: tTare } = useTranslation('tare')
     const [[data], loading, error] = useGet<OrderOutputItems>(
         `${api}/${id}/output-items`,
         [id],
@@ -76,7 +80,7 @@ export function OrderOutputTab({
             {!loading &&
                 allocatedGroups.length === 0 &&
                 unallocated.length === 0 && (
-                    <div className="tare-items-empty">Not executed yet</div>
+                    <div className="tare-items-empty">{t('output.notExecuted', 'Not executed yet')}</div>
                 )}
 
             {!loading && (
@@ -86,7 +90,7 @@ export function OrderOutputTab({
                             <h5
                                 style={{ marginTop: 0, marginBottom: '0.5rem' }}
                             >
-                                Allocated
+                                {t('output.allocated', 'Allocated')}
                             </h5>
                             <div
                                 className="tare-items-panel"
@@ -143,7 +147,7 @@ export function OrderOutputTab({
                                                 </button>
                                                 <span className="tare-row-barcode">
                                                     {group.tare.barcode ||
-                                                        '(no barcode)'}
+                                                        t('output.noBarcode', '(no barcode)')}
                                                 </span>
                                                 <span className="tare-row-type">
                                                     {group.tare.tareTypeName}
@@ -159,7 +163,7 @@ export function OrderOutputTab({
                                                     ].join(', ')}
                                                 </span>
                                                 <span className="tare-row-summary">
-                                                    {tareSummary(group)}
+                                                    {tareSummary(group, tTare)}
                                                 </span>
                                                 {group.tare.tareTypeUnits && (
                                                     <span className="tare-row-units">
@@ -202,7 +206,7 @@ export function OrderOutputTab({
                                     marginBottom: '0.5rem',
                                 }}
                             >
-                                Unallocated
+                                {t('output.unallocated', 'Unallocated')}
                             </h5>
                             <OutputItemsPanel
                                 items={unallocated}

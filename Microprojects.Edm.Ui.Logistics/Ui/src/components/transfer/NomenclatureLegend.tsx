@@ -1,5 +1,7 @@
+import '@logistics/components/transfer' // side-effect: registers the `transfer` namespace
 import type { LegendEntry } from '@logistics/components/transfer/visibleFromItems'
 import type { UUID } from '@logistics/data/types'
+import { useTranslation } from 'react-i18next'
 
 type NomenclatureLegendProps = {
     nomenclatures: LegendEntry[]
@@ -24,6 +26,7 @@ export function NomenclatureLegend({
     nomenclatures,
     onPick,
 }: NomenclatureLegendProps) {
+    const { t } = useTranslation('transfer')
     if (!nomenclatures || nomenclatures.length <= 1) return null
     const interactive = !!onPick
     return (
@@ -38,7 +41,7 @@ export function NomenclatureLegend({
             }}
         >
             <span style={{ fontWeight: 600, marginRight: 4 }}>
-                Nomenclatures:
+                {t('nomenclatures.label')}
             </span>
             {nomenclatures.map((n) => (
                 <span
@@ -47,11 +50,11 @@ export function NomenclatureLegend({
                     onClick={onPick ? () => onPick(n.id) : undefined}
                     title={
                         interactive
-                            ? 'Select items with this nomenclature'
+                            ? t('nomenclatures.pickTitle')
                             : undefined
                     }
                 >
-                    {n.name || '(unnamed)'}
+                    {n.name || t('nomenclatures.unnamed')}
                 </span>
             ))}
         </div>
