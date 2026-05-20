@@ -1,4 +1,5 @@
 import { useEffect, useReducer } from 'react'
+import i18n from '../i18n/i18n'
 
 enum RequestType {
     GET = 'GET',
@@ -37,6 +38,7 @@ function useFetch<T>(
         credentials: 'include',
         headers: {
             'Content-Type': 'application/json',
+            'Accept-Language': i18n.language,
         },
         referrerPolicy: 'no-referrer',
         body: data && JSON.stringify(data),
@@ -113,6 +115,7 @@ export const query = async <T>(
         credentials: 'include',
         headers: {
             'Content-Type': 'application/json',
+            'Accept-Language': i18n.language,
         },
         body: JSON.stringify(body),
     }

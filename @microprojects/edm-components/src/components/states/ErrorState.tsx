@@ -1,10 +1,11 @@
-﻿import React from 'react';
+import React from 'react';
 import {
     ErrorOutline as ErrorIcon,
     Refresh as RefreshIcon,
     ArrowBack as BackIcon,
 } from '@mui/icons-material';
 import {Button} from '@mui/material';
+import {useTranslation} from 'react-i18next';
 import styles from './StateSurface.module.scss';
 
 // HANDOFF · v2 04c.3 · canonical error state.
@@ -33,14 +34,15 @@ export function ErrorState({
     size = 'md',
     className,
 }: ErrorStateProps) {
+    const {t} = useTranslation('edm-states');
     return (
         <div className={`${styles.surface} ${styles.fault} ${styles[size]} ${className || ''}`}>
             <div className={styles.icon}>
                 <ErrorIcon />
             </div>
-            <h3 className={styles.title}>{title || 'Something went wrong'}</h3>
+            <h3 className={styles.title}>{title || t('errorState.defaultTitle', 'Something went wrong')}</h3>
             {message && <p className={styles.help}>{message}</p>}
-            {code && <span className={styles.codeChip}>Error code: {code}</span>}
+            {code && <span className={styles.codeChip}>{t('errorState.codePrefix', 'Error code:')} {code}</span>}
             {(onRetry || onBack) && (
                 <div className={styles.actions}>
                     {onRetry && (
@@ -50,7 +52,7 @@ export function ErrorState({
                             startIcon={<RefreshIcon />}
                             onClick={onRetry}
                         >
-                            Try again
+                            {t('errorState.tryAgain', 'Try again')}
                         </Button>
                     )}
                     {onBack && (
@@ -59,7 +61,7 @@ export function ErrorState({
                             startIcon={<BackIcon />}
                             onClick={onBack}
                         >
-                            Go back
+                            {t('errorState.goBack', 'Go back')}
                         </Button>
                     )}
                 </div>
@@ -76,11 +78,12 @@ export function ErrorStub({error, code, onRefresh, onBack}: {
     onRefresh?: () => void;
     onBack?: () => void;
 }) {
+    const {t} = useTranslation('edm-states');
     return (
         <ErrorState
             size="lg"
-            title="Failed to load data"
-            message={error || "We couldn't load the requested information. This might be due to a network issue or the item may no longer exist."}
+            title={t('errorStub.title', 'Failed to load data')}
+            message={error || t('errorStub.message', "We couldn't load the requested information. This might be due to a network issue or the item may no longer exist.")}
             code={code}
             onRetry={onRefresh}
             onBack={onBack}

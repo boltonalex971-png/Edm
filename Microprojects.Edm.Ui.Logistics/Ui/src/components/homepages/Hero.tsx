@@ -1,19 +1,15 @@
 import { Box, Typography } from '@mui/material'
 import { useEffect, useState } from 'react'
-
-const ROLE_LABEL: Record<string, string> = {
-    Admin: 'Administrator',
-    Technologist: 'Technologist',
-    Operator: 'Operator',
-}
+import { useTranslation } from 'react-i18next'
 
 export function useClock(): string {
+    const { i18n } = useTranslation()
     const [now, setNow] = useState(() => new Date())
     useEffect(() => {
         const t = setInterval(() => setNow(new Date()), 30000)
         return () => clearInterval(t)
     }, [])
-    return now.toLocaleString('en-GB', {
+    return now.toLocaleString(i18n.language, {
         day: '2-digit',
         month: 'short',
         year: 'numeric',
@@ -37,7 +33,8 @@ interface HeroProps {
 }
 
 export const Hero = ({ userName, userFull, role, lead, clock }: HeroProps) => {
-    const roleLabel = role ? ROLE_LABEL[role] || role : undefined
+    const { t } = useTranslation('widgets')
+    const roleLabel = role ? t(`role.${role}`, role) : undefined
     return (
         <Box
             component="header"

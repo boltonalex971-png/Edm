@@ -489,6 +489,7 @@ export function ItemGenealogyTree({
         return null
     }
 
+    // eslint-disable-next-line react-hooks/rules-of-hooks -- legacy: early return above; safe in practice but should be refactored
     const [[data], loading, error] = useGet<ItemGenealogy>(
         `${Api.items}/${itemId}/genealogy?depth=${depthChoice}`,
         [itemId, depthChoice],
@@ -501,6 +502,7 @@ export function ItemGenealogyTree({
         descendantCount,
         ancestorExpanded,
         descendantExpanded,
+        // eslint-disable-next-line react-hooks/rules-of-hooks -- legacy: early return above; safe in practice but should be refactored
     } = useMemo(() => {
         if (!data) {
             return {

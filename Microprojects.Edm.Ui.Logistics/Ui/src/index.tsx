@@ -3,6 +3,9 @@ import axios from 'axios'
 import { createRoot } from 'react-dom/client'
 import { Provider } from 'react-redux'
 import { BrowserRouter } from 'react-router-dom'
+// Side-effect import — initializes i18next + LanguageDetector synchronously
+// before React mounts so the first paint is in the persisted locale.
+import i18n from './i18n/i18n'
 import App from './App'
 import { EntityRefreshProvider } from './hooks/entityRefresh'
 import { EntityRefreshSignalRBridge } from './hooks/entityRefreshBridge'
@@ -56,6 +59,7 @@ axios.interceptors.request.use((config) => {
     if (id) {
         config.headers.set('X-Edm-Connection-Id', id)
     }
+    config.headers.set('Accept-Language', i18n.language)
     return config
 })
 

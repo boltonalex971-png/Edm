@@ -1,0 +1,1 @@
+export { registerEdmComponentsLocales } from './register'

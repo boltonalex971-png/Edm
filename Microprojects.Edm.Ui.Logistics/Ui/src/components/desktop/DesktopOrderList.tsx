@@ -17,19 +17,11 @@ import {
     Typography,
 } from '@mui/material'
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 
 type DesktopOrderListProps = {
     onOpen: (id: UUID, mine: boolean, lockedByOther: boolean) => void
 }
-
-const STATUS_LABEL: Record<string, string> = {
-    Running: 'Running',
-    OutputsPending: 'Outputs pending',
-    Completed: 'Completed',
-}
-
-const statusLabel = (status?: OrderStatus) =>
-    (status && STATUS_LABEL[status]) || 'Draft'
 
 interface Tone {
     bg: string
@@ -258,6 +250,7 @@ interface OrderCardProps {
 }
 
 function OrderCard({ order, variant, onOpen }: OrderCardProps) {
+    const { t } = useTranslation('widgets')
     const tone = statusTone(order.status)
     const overdue = isOverdue(order.dueDate)
     const clickable = variant !== 'locked'
@@ -430,7 +423,7 @@ function OrderCard({ order, variant, onOpen }: OrderCardProps) {
                 >
                     <Chip
                         size="small"
-                        label={statusLabel(order.status)}
+                        label={t(`status.${order.status ?? 'Draft'}`)}
                         sx={{
                             height: 24,
                             fontFamily: 'var(--font-mono)',

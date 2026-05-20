@@ -30,6 +30,7 @@ import type {
     TreeDataItem,
     UUID,
 } from '@logistics/data/types'
+import { useAlertSetter } from '@logistics/components/InlineAlert'
 import { getData, postData, useGet } from '@logistics/hooks/hooks'
 import { useTareTransfer } from '@logistics/hooks/useTareTransfer'
 import { formatUnits } from '@logistics/utils/format'
@@ -44,6 +45,7 @@ import {
 } from '@mui/material'
 import type React from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 const monoLabelSx = {
     fontFamily: 'var(--font-mono)',
@@ -72,6 +74,8 @@ const panelPaperSx = {
 }
 
 export function Repacking() {
+    const { t } = useTranslation('widgets')
+    const setAlert = useAlertSetter()
     const [[nomenclatures]] = useGet<TreeDataItem[]>(
         `${api.nomenclatures}/hierarchy`,
         [],
@@ -338,7 +342,10 @@ export function Repacking() {
                 )
                 addTargetTareToWorkspace(tare, items || [])
             } catch (e: any) {
-                alert(e.message || 'Failed to load tare')
+                setAlert({
+                    status: 'danger',
+                    message: e.message || t('errors.failedToLoadTare'),
+                })
             }
             return
         }
@@ -359,7 +366,10 @@ export function Repacking() {
                 return
             }
             if (!newTareTypeId) {
-                alert('Tare not found. Select a tare type to create a new one.')
+                setAlert({
+                    status: 'warning',
+                    message: t('errors.tareNotFoundSelectType'),
+                })
                 return
             }
             const created = await postData<TareInfo>(`${api.tares}`, {
@@ -370,7 +380,10 @@ export function Repacking() {
                 addTargetTareToWorkspace(created, [])
             }
         } catch (e: any) {
-            alert(e.message || 'Failed to add tare')
+            setAlert({
+                status: 'danger',
+                message: e.message || t('errors.failedToAddTare'),
+            })
         }
     }
 

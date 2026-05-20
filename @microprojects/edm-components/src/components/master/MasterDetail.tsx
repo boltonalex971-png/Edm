@@ -1,5 +1,6 @@
-﻿import React, {createContext, useCallback, useContext, useEffect, useRef, useState} from 'react';
+import React, {createContext, useCallback, useContext, useEffect, useRef, useState} from 'react';
 import {useNavigate, Routes, Route, useLocation} from 'react-router-dom';
+import {Trans, useTranslation} from 'react-i18next';
 import axios from 'axios';
 import {useAcquireEntityLock, useEntityLockState} from '../../hooks/entityLocks';
 import {listTag, useOptionalInvalidateEntities} from '../../hooks/entityRefresh';
@@ -407,6 +408,7 @@ export interface DetailProps {
 export function Detail(props: DetailProps) {
     const navigate = useNavigate();
     const toast = useToast();
+    const {t} = useTranslation('edm-master');
     const invalidate = useOptionalInvalidateEntities();
     const subDetailRef = React.useRef<HTMLDivElement | null>(null);
     const detailContainerRef = React.useRef<HTMLDivElement | null>(null);
@@ -510,7 +512,9 @@ export function Detail(props: DetailProps) {
         setDeleteDialogOpen(false);
         axios.delete(`${props.api}/${props.data?.id}`)
             .then(() => {
-                toast.success(`${props.data?.name || 'Item'} deleted`);
+                toast.success(t('toast.deleted', '{{name}} deleted', {
+                    name: props.data?.name || t('toast.fallbackName', 'Item'),
+                }));
                 props.onChange && props.onChange();
                 if (props.type) {
                     invalidate([
@@ -522,7 +526,7 @@ export function Detail(props: DetailProps) {
                 if (props.path) navigate(props.path);
                 props.onClose && props.onClose();
             })
-            .catch((err: any) => toast.error(err.response?.data?.detail || err.message || 'Delete failed'));
+            .catch((err: any) => toast.error(err.response?.data?.detail || err.message || t('error.deleteFailed', 'Delete failed')));
     };
 
     if (props.error) {
@@ -604,28 +608,31 @@ export function Detail(props: DetailProps) {
                                         sx={{display: 'flex', alignItems: 'center', gap: 0.5}}
                                     >
                                         {displayProps.icon && React.cloneElement(displayProps.icon, {sx: {fontSize: '12px !important'}} as any)}
-                                        {pluralize(displayProps.entityType || displayProps.type)}
+                                        {(() => {
+                                            const k = displayProps.entityType || displayProps.type;
+                                            return k ? t(`entityPlural.${k}`, pluralize(k)) : pluralize(k);
+                                        })()}
                                     </Typography>
                                 </Breadcrumbs>
 
                                 <Box className={styles.dpName}>
                                     <Typography variant="h6" className={styles.title}>
-                                        {displayProps.title || displayProps.data?.name || 'New Item'}
+                                        {displayProps.title || displayProps.data?.name || t('title.newItem', 'New Item')}
                                         {lockedByOther && (
                                             <Box
                                                 component="span"
                                                 sx={{ml: '0.6rem', fontSize: '0.75em', fontWeight: 'normal', color: '#b58900'}}
                                             >
-                                                🔒 Locked by {remoteLock.lockedBy}
+                                                {t('badge.lockedBy', '🔒 Locked by {{name}}', {name: remoteLock.lockedBy})}
                                             </Box>
                                         )}
                                         {outdated && (
                                             <Box
                                                 component="span"
-                                                title="A newer version exists. This record is preserved for historical references and cannot be edited."
+                                                title={t('badge.outdatedTooltip', 'A newer version exists. This record is preserved for historical references and cannot be edited.')}
                                                 sx={{ml: '0.6rem', fontSize: '0.75em', fontWeight: 'normal', color: 'var(--ink-3)', fontStyle: 'italic'}}
                                             >
-                                                outdated
+                                                {t('badge.outdated', 'outdated')}
                                             </Box>
                                         )}
                                     </Typography>
@@ -648,10 +655,12 @@ export function Detail(props: DetailProps) {
                                             <Tooltip
                                                 title={
                                                     outdated
-                                                        ? 'Outdated — open the current version to edit'
+                                                        ? t('action.outdatedEdit', 'Outdated — open the current version to edit')
                                                         : lockedByOther
-                                                            ? `Locked by ${remoteLock.lockedBy}`
-                                                            : editMode ? 'View mode' : 'Edit mode'
+                                                            ? t('action.lockedBy', 'Locked by {{name}}', {name: remoteLock.lockedBy})
+                                                            : editMode
+                                                                ? t('action.viewMode', 'View mode')
+                                                                : t('action.editMode', 'Edit mode')
                                                 }
                                             >
                                                 <span>
@@ -667,7 +676,7 @@ export function Detail(props: DetailProps) {
                                             </Tooltip>
                                             )}
                                             {displayProps.copyable !== false && (
-                                            <Tooltip title={lockedByOther ? `Locked by ${remoteLock.lockedBy}` : 'Copy'}>
+                                            <Tooltip title={lockedByOther ? t('action.lockedBy', 'Locked by {{name}}', {name: remoteLock.lockedBy}) : t('action.copy', 'Copy')}>
                                                 <span>
                                                     <IconButton
                                                         className={styles.actionBtn}
@@ -678,7 +687,7 @@ export function Detail(props: DetailProps) {
                                                             const data = {...displayProps.data, id: newId, name: `${displayProps.data?.name} (Copy)`};
                                                             axios.post(`${displayProps.api}`, data)
                                                                 .then((response) => {
-                                                                    toast.success('Copied');
+                                                                    toast.success(t('toast.copied', 'Copied'));
                                                                     displayProps.onChange && displayProps.onChange(response.data);
                                                                     if (displayProps.type) {
                                                                         invalidate([
@@ -689,7 +698,7 @@ export function Detail(props: DetailProps) {
                                                                     }
                                                                     if (displayProps.path) navigate(`${displayProps.path}/${response.data.id}`);
                                                                 })
-                                                                .catch((err: any) => toast.error(err.response?.data?.detail || err.message || 'Copy failed'));
+                                                                .catch((err: any) => toast.error(err.response?.data?.detail || err.message || t('toast.copyFailed', 'Copy failed')));
                                                         }}
                                                         size="small"
                                                     >
@@ -699,7 +708,7 @@ export function Detail(props: DetailProps) {
                                             </Tooltip>
                                             )}
                                             {displayProps.deletable !== false && (
-                                            <Tooltip title={lockedByOther ? `Locked by ${remoteLock.lockedBy}` : 'Delete'}>
+                                            <Tooltip title={lockedByOther ? t('action.lockedBy', 'Locked by {{name}}', {name: remoteLock.lockedBy}) : t('action.delete', 'Delete')}>
                                                 <span>
                                                     <IconButton
                                                         className={`${styles.actionBtn} ${styles.delete}`}
@@ -715,7 +724,7 @@ export function Detail(props: DetailProps) {
                                         </>
                                     )}
                                     {displayProps.onClose && (
-                                        <Tooltip title='Close'>
+                                        <Tooltip title={t('action.close', 'Close')}>
                                             <IconButton className={styles.actionBtn} onClick={displayProps.onClose} size="small">
                                                 <CloseIcon fontSize="small" />
                                             </IconButton>
@@ -747,7 +756,7 @@ export function Detail(props: DetailProps) {
                                                     parents: [
                                                         ...(displayProps.parents || []),
                                                         {
-                                                            name: displayProps.data?.name || 'New Item',
+                                                            name: displayProps.data?.name || t('title.newItem', 'New Item'),
                                                             icon: displayProps.icon,
                                                             ref: detailContainerRef,
                                                         },
@@ -765,20 +774,33 @@ export function Detail(props: DetailProps) {
                                 onClose={() => setDeleteDialogOpen(false)}
                                 PaperProps={{sx: {width: 380, maxWidth: '90vw'}}}
                             >
-                                <DialogTitle>Delete {displayProps.type || 'item'}</DialogTitle>
+                                <DialogTitle>
+                                    {t('action.deleteFor', 'Delete {{type}}', {
+                                        type: displayProps.type || t('toast.fallbackName', 'Item').toLowerCase(),
+                                    })}
+                                </DialogTitle>
                                 <DialogContent sx={{pt: 2}}>
                                     <DialogContentText sx={{color: 'var(--ink-2)'}}>
-                                        Permanently delete{' '}
-                                        <Box component="span" sx={{fontFamily: 'var(--font-mono)', color: 'var(--ink-1)', fontWeight: 700}}>
-                                            {displayProps.data?.name}
-                                        </Box>
-                                        ? This action cannot be undone.
+                                        <Trans
+                                            i18nKey="dialog.delete.confirmPrompt"
+                                            ns="edm-master"
+                                            values={{name: displayProps.data?.name}}
+                                            components={[
+                                                <Box
+                                                    key="0"
+                                                    component="span"
+                                                    sx={{fontFamily: 'var(--font-mono)', color: 'var(--ink-1)', fontWeight: 700}}
+                                                />,
+                                            ]}
+                                        />
                                     </DialogContentText>
                                 </DialogContent>
                                 <DialogActions>
-                                    <MuiButton onClick={() => setDeleteDialogOpen(false)}>Cancel</MuiButton>
+                                    <MuiButton onClick={() => setDeleteDialogOpen(false)}>{t('action.cancel', 'Cancel')}</MuiButton>
                                     <MuiButton onClick={handleDelete} color="error" variant="contained" autoFocus>
-                                        Delete {displayProps.type || 'item'}
+                                        {t('action.deleteFor', 'Delete {{type}}', {
+                                            type: displayProps.type || t('toast.fallbackName', 'Item').toLowerCase(),
+                                        })}
                                     </MuiButton>
                                 </DialogActions>
                             </Dialog>
@@ -813,7 +835,7 @@ export function Detail(props: DetailProps) {
                                 parents: [
                                     ...(displayProps.parents || []),
                                     {
-                                        name: displayProps.title || displayProps.data?.name || 'New Item',
+                                        name: displayProps.title || displayProps.data?.name || t('title.newItem', 'New Item'),
                                         icon: displayProps.icon,
                                         ref: detailContainerRef,
                                     },
@@ -956,6 +978,7 @@ export function Editor(props: EditorProps) {
     const navigate = useNavigate();
     const location = useLocation();
     const toast = useToast();
+    const {t} = useTranslation('edm-master');
     const setDetailEditMode = useContext(DetailEditModeContext);
     const invalidate = useOptionalInvalidateEntities();
     const [values, setValues] = useState<any>(props.data);
@@ -971,7 +994,7 @@ export function Editor(props: EditorProps) {
         const foreignData = flattenForeignData(data);
 
         const onSaveError = (err: any) =>
-            toast.error(err.response?.data?.detail || err.message || 'Save failed');
+            toast.error(err.response?.data?.detail || err.message || t('error.saveFailed', 'Save failed'));
 
         if (data.id) {
             // PUT path with fork-required handling: backends signal "this change
@@ -983,7 +1006,9 @@ export function Editor(props: EditorProps) {
                     : `${props.api}/${props.data.id}`;
                 return axios.put(url, foreignData)
                     .then((response) => {
-                        toast.success(force ? 'Saved as a new version' : 'Saved');
+                        toast.success(force
+                            ? t('toast.savedAsNewVersion', 'Saved as a new version')
+                            : t('toast.saved', 'Saved'));
                         props.onUpdate && props.onUpdate(response.data);
                         props.onChange && props.onChange(response.data);
                         props.setData(response.data);
@@ -1005,8 +1030,8 @@ export function Editor(props: EditorProps) {
                             && r.response?.data?.code === 'fork-required'
                         ) {
                             const detail = r.response?.data?.detail
-                                || 'This change will create a new version.';
-                            if (window.confirm(`${detail}\n\nProceed and create a new version?`)) {
+                                || t('editor.forkDefaultDetail', 'This change will create a new version.');
+                            if (window.confirm(t('editor.forkConfirm', '{{detail}}\n\nProceed and create a new version?', {detail}))) {
                                 return sendUpdate(true);
                             }
                             return;
@@ -1035,7 +1060,7 @@ export function Editor(props: EditorProps) {
                 hierarchyId: effectiveParentId,
             })
                 .then((response) => {
-                    toast.success('Created');
+                    toast.success(t('toast.created', 'Created'));
                     props.onUpdate && props.onUpdate(response.data);
                     props.onChange && props.onChange(response.data);
                     props.setData(response.data);
@@ -1072,7 +1097,7 @@ export function Editor(props: EditorProps) {
                     color="primary"
                     startIcon={<SaveIcon />}
                 >
-                    Save Changes
+                    {t('action.saveChanges', 'Save Changes')}
                 </MuiButton>
             </Box>
         </Box>

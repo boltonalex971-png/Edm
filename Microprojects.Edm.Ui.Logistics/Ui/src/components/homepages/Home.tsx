@@ -18,6 +18,7 @@ import {
 } from '@mui/icons-material'
 import { Box, Chip, Paper, Typography } from '@mui/material'
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
 import { Link as RouterLink, useNavigate } from 'react-router-dom'
 
@@ -35,13 +36,6 @@ const sectionTitleSx = {
     ...eyebrowSx,
     fontSize: 12,
     m: 0,
-}
-
-const STATUS_LABEL: Record<OrderStatus, string> = {
-    Running: 'Running',
-    OutputsPending: 'Outputs pending',
-    Completed: 'Completed',
-    Draft: 'Draft',
 }
 
 const STATUS_TONE: Record<OrderStatus, { bg: string; fg: string; border: string }> = {
@@ -453,6 +447,7 @@ interface ActiveRowProps {
 }
 
 function ActiveRow({ order, divider, onOpen }: ActiveRowProps) {
+    const { t } = useTranslation('widgets')
     const tone = order.status ? STATUS_TONE[order.status] : STATUS_TONE.Draft
     const overdue = isOverdue(order.dueDate)
     return (
@@ -544,11 +539,7 @@ function ActiveRow({ order, divider, onOpen }: ActiveRowProps) {
             >
                 <Chip
                     size="small"
-                    label={
-                        order.status
-                            ? STATUS_LABEL[order.status]
-                            : STATUS_LABEL.Draft
-                    }
+                    label={t(`status.${order.status ?? 'Draft'}`)}
                     sx={{
                         height: 22,
                         fontFamily: 'var(--font-mono)',

@@ -1,5 +1,6 @@
 import { defineConfig } from '@rsbuild/core'
 import { pluginReact } from '@rsbuild/plugin-react'
+import { pluginEslint } from '@rsbuild/plugin-eslint'
 import { pluginSass } from '@rsbuild/plugin-sass'
 import { pluginBasicSsl } from '@rsbuild/plugin-basic-ssl'
 import { edmFontTag } from '@microprojects/edm-components/styles/fonts'
@@ -34,6 +35,14 @@ const muiXVirtualizerDir= path.resolve(__dirname, 'node_modules/@mui/x-virtualiz
 const emotionReactDir   = path.resolve(__dirname, 'node_modules/@emotion/react')
 const emotionStyledDir  = path.resolve(__dirname, 'node_modules/@emotion/styled')
 const reactRouterDomDir = path.resolve(__dirname, 'node_modules/react-router-dom')
+// i18next + react-i18next must be singletons across the bundle — both
+// libraries hold module-level state (the active language, registered
+// bundles, the React context). edm-components ships its own dev copy in
+// node_modules; without these aliases the package's `useTranslation`
+// subscribes to a different instance than Logistics initializes, and
+// translations register on one singleton while components read the other.
+const i18nextDir          = path.resolve(__dirname, 'node_modules/i18next')
+const reactI18nextDir     = path.resolve(__dirname, 'node_modules/react-i18next')
 // Logistics is on react-router-dom@7 — `react-router` and `history` are
 // bundled internally and not installed as separate packages. Aliases
 // omitted for those; if a future Phase 3 swap needs them, install them
@@ -42,6 +51,7 @@ const reactRouterDomDir = path.resolve(__dirname, 'node_modules/react-router-dom
 export default defineConfig({
     plugins: [
         pluginReact(),
+        pluginEslint(),
         pluginSass({ sassLoaderOptions: { warnRuleAsWarning: false } }),
         pluginBasicSsl(),
     ],
@@ -62,6 +72,8 @@ export default defineConfig({
             '@emotion/react':       emotionReactDir,
             '@emotion/styled':      emotionStyledDir,
             'react-router-dom':     reactRouterDomDir,
+            i18next:                i18nextDir,
+            'react-i18next':        reactI18nextDir,
         },
     },
     dev: {

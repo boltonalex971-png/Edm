@@ -1,0 +1,18 @@
+{
+    "status": {
+        "Running": "Выполняется",
+        "OutputsPending": "Ожидают вывод",
+        "Completed": "Завершён",
+        "Draft": "Черновик"
+    },
+    "role": {
+        "Admin": "Администратор",
+        "Technologist": "Технолог",
+        "Operator": "Оператор"
+    },
+    "errors": {
+        "failedToLoadTare": "Не удалось загрузить тару",
+        "tareNotFoundSelectType": "Тара не найдена. Выберите тип тары для создания новой.",
+        "failedToAddTare": "Не удалось добавить тару"
+    }
+}

@@ -1,0 +1,18 @@
+{
+    "status": {
+        "Running": "En ejecución",
+        "OutputsPending": "Salidas pendientes",
+        "Completed": "Completado",
+        "Draft": "Borrador"
+    },
+    "role": {
+        "Admin": "Administrador",
+        "Technologist": "Tecnólogo",
+        "Operator": "Operador"
+    },
+    "errors": {
+        "failedToLoadTare": "Error al cargar contenedor",
+        "tareNotFoundSelectType": "Contenedor no encontrado. Seleccione un tipo para crear uno nuevo.",
+        "failedToAddTare": "Error al añadir contenedor"
+    }
+}

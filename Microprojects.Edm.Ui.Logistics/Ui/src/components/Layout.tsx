@@ -2,8 +2,10 @@ import api from '@logistics/features/api/api'
 import type { RootState } from '@logistics/store.ts'
 import {
     AutorenewOutlined as RepackingIcon,
+    Check as CheckIcon,
     HomeOutlined as HomeIcon,
     Inventory2Outlined as ItemsIcon,
+    Language as LanguageIcon,
     ListAltOutlined as OrdersIcon,
     LocalShippingOutlined as SuppliesIcon,
     SettingsOutlined as SettingsIcon,
@@ -11,6 +13,7 @@ import {
     EngineeringOutlined as TechnologistIcon,
     PersonOutline as OperatorIcon,
 } from '@mui/icons-material'
+import { Divider, ListSubheader, MenuItem } from '@mui/material'
 import { Layout as PkgLayout } from '@microprojects/edm-components/components/chrome/Layout'
 import { NavMenu } from '@microprojects/edm-components/components/chrome/NavMenu'
 import {
@@ -19,16 +22,21 @@ import {
 } from '@microprojects/edm-components/styles/UiPreferencesContext'
 import axios from 'axios'
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
+import { useAlertSetter } from './InlineAlert'
 import logo from '../../public/applogo.svg'
 
-const ROLE_DESCRIPTORS = {
-    Admin: { label: 'Administrator', icon: <AdminIcon fontSize="small" /> },
-    Technologist: {
-        label: 'Technologist',
-        icon: <TechnologistIcon fontSize="small" />,
-    },
-    Operator: { label: 'Operator', icon: <OperatorIcon fontSize="small" /> },
+const LANGUAGES = [
+    { code: 'en',    label: 'English' },
+    { code: 'ru',    label: 'Русский' },
+    { code: 'es-ES', label: 'Español' },
+] as const
+
+const ROLE_ICONS = {
+    Admin: <AdminIcon fontSize="small" />,
+    Technologist: <TechnologistIcon fontSize="small" />,
+    Operator: <OperatorIcon fontSize="small" />,
 }
 
 type LayoutProps = {
@@ -40,6 +48,38 @@ type LayoutProps = {
 export const Layout = ({ children, hideMenu }: LayoutProps) => {
     const user = useSelector((s: RootState) => s.user)
     const { density, scheme } = useUiPreferences()
+    const { t, i18n } = useTranslation()
+    const setAlert = useAlertSetter()
+    const activeLng = LANGUAGES.find((l) => l.code === i18n.language)?.code
+        ?? LANGUAGES.find((l) => i18n.language?.startsWith(l.code.split('-')[0]))?.code
+        ?? 'en'
+
+    const languageMenuItems = (
+        <>
+            <Divider />
+            <ListSubheader sx={{
+                fontFamily: 'var(--font-mono)', fontSize: 10.5, lineHeight: '24px',
+                textTransform: 'uppercase', letterSpacing: '0.06em',
+                color: 'var(--ink-4)', background: 'transparent', pl: 2,
+            }}>
+                {t('language')}
+            </ListSubheader>
+            {LANGUAGES.map(({ code, label }) => (
+                <MenuItem
+                    key={code}
+                    selected={code === activeLng}
+                    onClick={() => i18n.changeLanguage(code)}
+                    sx={{ pr: 2 }}
+                >
+                    <LanguageIcon fontSize="small" sx={{ mr: 1.5, color: 'var(--ink-3)' }} />
+                    <span style={{ flex: 1 }}>{label}</span>
+                    {code === activeLng && (
+                        <CheckIcon fontSize="small" sx={{ color: 'var(--accent)' }} />
+                    )}
+                </MenuItem>
+            ))}
+        </>
+    )
 
     const navItems = useMemo(() => {
         if (hideMenu) return []
@@ -64,8 +104,22 @@ export const Layout = ({ children, hideMenu }: LayoutProps) => {
                 const target = base.endsWith('/') ? base : `${base}/`
                 window.location.assign(target)
             })
-            .catch((err) => alert(err.response?.data?.detail || err.message))
+            .catch((err) =>
+                setAlert({
+                    status: 'danger',
+                    message: err.response?.data?.detail || err.message,
+                }),
+            )
     }
+
+    const roleDescriptors = useMemo(
+        () => ({
+            Admin:        { label: t('widgets:role.Admin'),        icon: ROLE_ICONS.Admin },
+            Technologist: { label: t('widgets:role.Technologist'), icon: ROLE_ICONS.Technologist },
+            Operator:     { label: t('widgets:role.Operator'),     icon: ROLE_ICONS.Operator },
+        }),
+        [t],
+    )
 
     const navMenu = (
         <NavMenu
@@ -73,9 +127,10 @@ export const Layout = ({ children, hideMenu }: LayoutProps) => {
             pluginName="Logistics"
             logoSrc={logo}
             user={user as any}
-            roles={ROLE_DESCRIPTORS}
+            roles={roleDescriptors}
             setRole={setRole}
             navItems={navItems}
+            extraUserMenuItems={languageMenuItems}
         />
     )
 
