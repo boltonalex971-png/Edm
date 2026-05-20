@@ -28,4 +28,8 @@ export default {
         whatsNew: 'Что нового',
         updatedTo: 'Обновлено до {{version}}',
     },
+    changelog: {
+        loadFailed: 'Не удалось загрузить список изменений: {{error}}',
+        loading: 'Загрузка…',
+    },
 } as const

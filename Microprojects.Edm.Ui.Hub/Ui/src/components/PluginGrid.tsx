@@ -1,4 +1,5 @@
 import { Box, Container } from '@mui/material'
+import { useTranslation } from 'react-i18next'
 import { pluginColor, pluginGlyph, type PluginSummary } from '../api'
 
 interface PluginGridProps {
@@ -8,6 +9,8 @@ interface PluginGridProps {
 }
 
 export function PluginGrid({ plugins, loading, error }: PluginGridProps) {
+    const { t: tHub } = useTranslation('hub')
+    const { t: tPlugins } = useTranslation('plugins')
     return (
         <Container maxWidth="lg" sx={{ pb: { xs: 8, md: 12 }, px: { xs: 4, md: 7 } }}>
             {error && (
@@ -27,23 +30,27 @@ export function PluginGrid({ plugins, loading, error }: PluginGridProps) {
             )}
 
             <Box className="plugin-cards">
-                {plugins.map((p) => (
-                    <a key={p.guid} className="plugin-card" href={`/${p.homepage ?? ''}`}>
-                        <div className="lead-row">
-                            <div
-                                className="glyph"
-                                style={{ background: pluginColor(p.guid) }}
-                            >
-                                {pluginGlyph(p.name)}
+                {plugins.map((p) => {
+                    const localName = p.nameKey ? tPlugins(p.nameKey, p.name) : p.name
+                    const localDesc = p.descriptionKey ? tPlugins(p.descriptionKey, p.description) : p.description
+                    return (
+                        <a key={p.guid} className="plugin-card" href={`/${p.homepage ?? ''}`}>
+                            <div className="lead-row">
+                                <div
+                                    className="glyph"
+                                    style={{ background: pluginColor(p.guid) }}
+                                >
+                                    {pluginGlyph(localName)}
+                                </div>
+                                <div className="name">
+                                    <span className="edm-prefix">EDM</span>
+                                    {localName}
+                                </div>
                             </div>
-                            <div className="name">
-                                <span className="edm-prefix">EDM</span>
-                                {p.name}
-                            </div>
-                        </div>
-                        <div className="desc">{p.description}</div>
-                    </a>
-                ))}
+                            <div className="desc">{localDesc}</div>
+                        </a>
+                    )
+                })}
                 {!loading && plugins.length === 0 && !error && (
                     <Box
                         sx={{
@@ -56,7 +63,7 @@ export function PluginGrid({ plugins, loading, error }: PluginGridProps) {
                             background: 'var(--surface)',
                         }}
                     >
-                        No application plugins are loaded.
+                        {tHub('pluginList.empty')}
                     </Box>
                 )}
             </Box>

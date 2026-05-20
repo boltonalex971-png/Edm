@@ -19,7 +19,12 @@
     <EmbeddedResource Include="ui\dist\**" />
     <EmbeddedResource Remove="ui\node_modules\**" />
     <EmbeddedResource Include="CHANGES.md" />
+    <!-- WithCulture=false keeps locale-suffixed markdown in the main assembly;
+         MSBuild otherwise treats `.ru.` as a culture hint and creates a `ru/`
+         satellite assembly the controller can't read from. -->
+    <EmbeddedResource Include="CHANGES.*.md" WithCulture="false" />
     <EmbeddedResource Include="ABOUT.md" />
+    <EmbeddedResource Include="ABOUT.*.md" WithCulture="false" />
     <None Remove="ui\dist\**" />
     <None Remove="ui\node_modules\**" />
   </ItemGroup>

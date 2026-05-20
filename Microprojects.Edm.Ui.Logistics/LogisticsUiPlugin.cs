@@ -13,6 +13,8 @@ namespace Microprojects.Edm.Ui.Logistics
     [ApplicationPlugin(
         Name = "Logistics",
         Description = "Product flow from supply to finished item: nomenclature, tare, items, orders, batch genealogy and the operator desktop.",
+        NameKey = "Logistics.name",
+        DescriptionKey = "Logistics.description",
         Guid = "05D4D838-86C7-4488-814E-7FDE19049125",
         SpaPath = "Ui/dist",
         UiRoot = "logistics")]

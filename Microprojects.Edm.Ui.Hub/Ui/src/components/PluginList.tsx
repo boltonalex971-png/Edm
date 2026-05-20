@@ -17,6 +17,7 @@ export function PluginList({
     onActivate,
 }: PluginListProps) {
     const { t } = useTranslation('hub')
+    const { t: tPlugins } = useTranslation('plugins')
     if (error) {
         return <div className="plugin-list-error">{error}</div>
     }
@@ -43,6 +44,11 @@ export function PluginList({
         >
             {plugins.map((p) => {
                 const active = p.guid === activeGuid
+                // Resolve localized name/description against the `plugins`
+                // namespace, falling back to the server-supplied English
+                // literal when the SPA's catalog lacks the key.
+                const localName = p.nameKey ? tPlugins(p.nameKey, p.name) : p.name
+                const localDesc = p.descriptionKey ? tPlugins(p.descriptionKey, p.description) : p.description
                 return (
                     <li key={p.guid}>
                         <a
@@ -58,14 +64,14 @@ export function PluginList({
                                     className="glyph"
                                     style={{ background: pluginColor(p.guid) }}
                                 >
-                                    {pluginGlyph(p.name)}
+                                    {pluginGlyph(localName)}
                                 </div>
                                 <div className="name">
                                     <span className="edm-prefix">EDM</span>
-                                    {p.name}
+                                    {localName}
                                 </div>
                             </div>
-                            <div className="desc">{p.description}</div>
+                            <div className="desc">{localDesc}</div>
                         </a>
                     </li>
                 )

@@ -10,6 +10,11 @@ namespace Microprojects.Edm.Ui.Hub.Controllers
     /// Surfaces the platform's product version and per-plugin ABOUT
     /// markdown so the landing page can render the active plugin's promo
     /// without modifying every plugin's own MetaController.
+    ///
+    /// ABOUT/CHANGES resources are looked up locale-aware via
+    /// <see cref="PluginResource.ReadLocalized"/>: the request's Accept-Language
+    /// drives <see cref="System.Globalization.CultureInfo.CurrentUICulture"/>,
+    /// which falls back from <c>ru-RU</c> → <c>ru</c> → invariant.
     /// </summary>
     [ApiController]
     [AllowAnonymous]
@@ -18,7 +23,6 @@ namespace Microprojects.Edm.Ui.Hub.Controllers
     {
         private static readonly Guid HubGuid = Guid.Parse(HubUiPlugin.PluginGuid);
         private static readonly Assembly PluginAssembly = typeof(HubUiPlugin).Assembly;
-        private const string ChangelogResourceName = "Microprojects.Edm.Ui.Hub.CHANGES.md";
 
         private readonly IPluginContainer _container;
 
@@ -41,13 +45,10 @@ namespace Microprojects.Edm.Ui.Hub.Controllers
         [HttpGet("changelog")]
         public IActionResult GetChangelog()
         {
-            using var stream = PluginAssembly.GetManifestResourceStream(ChangelogResourceName);
-            if (stream is null)
-            {
-                return NotFound();
-            }
-            using var reader = new StreamReader(stream);
-            return Content(reader.ReadToEnd(), "text/markdown; charset=utf-8");
+            var content = PluginResource.ReadLocalized(PluginAssembly, "CHANGES");
+            return content is null
+                ? NotFound()
+                : Content(content, "text/markdown; charset=utf-8");
         }
 
         /// <summary>The Hub's own ABOUT — the default landing promo.</summary>
@@ -76,15 +77,10 @@ namespace Microprojects.Edm.Ui.Hub.Controllers
                 return NotFound();
             }
 
-            var assembly = plugin.GetType().Assembly;
-            var resourceName = $"{assembly.GetName().Name}.ABOUT.md";
-            using var stream = assembly.GetManifestResourceStream(resourceName);
-            if (stream is null)
-            {
-                return NotFound();
-            }
-            using var reader = new StreamReader(stream);
-            return Content(reader.ReadToEnd(), "text/markdown; charset=utf-8");
+            var content = PluginResource.ReadLocalized(plugin.GetType().Assembly, "ABOUT");
+            return content is null
+                ? NotFound()
+                : Content(content, "text/markdown; charset=utf-8");
         }
     }
 }

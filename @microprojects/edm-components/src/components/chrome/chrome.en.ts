@@ -28,4 +28,8 @@ export default {
         whatsNew: "What's new",
         updatedTo: 'Updated to {{version}}',
     },
+    changelog: {
+        loadFailed: 'Failed to load changelog: {{error}}',
+        loading: 'Loading…',
+    },
 } as const

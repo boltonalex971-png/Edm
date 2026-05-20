@@ -488,7 +488,82 @@ If the folder needs strings from `common` / `widgets` / another folder, use cros
 
 ---
 
-## 12. Adding a new locale — recipe
+## 12. Plugin metadata + ABOUT/CHANGES
+
+Two complementary mechanisms, both keyed off the same `Accept-Language` header that drives error codes (§10).
+
+### 12.1 Plugin Name / Description — i18next-keyed
+
+`PluginAttribute` carries optional `NameKey` / `DescriptionKey` properties alongside the literal `Name` / `Description`:
+
+```csharp
+[ApplicationPlugin(
+    Name = "Logistics",
+    Description = "Product flow from supply to finished item: …",
+    NameKey = "Logistics.name",
+    DescriptionKey = "Logistics.description",
+    Guid = "…",
+    SpaPath = "Ui/dist",
+    UiRoot = "logistics")]
+public class LogisticsUiPlugin : PluginBase, IOperationPlugin { … }
+```
+
+The Hub's `/api/hub/plugins` endpoint emits both the literal and the key:
+
+```json
+{ "guid": "…", "name": "Logistics", "description": "…",
+  "nameKey": "Logistics.name", "descriptionKey": "Logistics.description",
+  "homepage": "logistics" }
+```
+
+Frontends resolve through the **`plugins`** namespace, falling back to the literal when the SPA's catalog lacks the key:
+
+```ts
+const localName = p.nameKey ? tPlugins(p.nameKey, p.name) : p.name
+const localDesc = p.descriptionKey ? tPlugins(p.descriptionKey, p.description) : p.description
+```
+
+Catalog location: each consuming SPA owns its own `plugins.locales/{en,ru}.json` (Hub is currently the only consumer; if Console / Tech later list plugins, they get their own copy). Shape:
+
+```json
+{
+  "Logistics": { "name": "Логистика", "description": "Движение продукции от поставки…" },
+  "Technologies": { "name": "Технологии", "description": "…" }
+}
+```
+
+Adding a new plugin: set `NameKey` / `DescriptionKey` in the attribute, drop the entry into Hub's `plugins.locales/{en,ru}.json`. No controller change needed.
+
+### 12.2 ABOUT.md / CHANGES.md — locale-aware resource lookup
+
+Both files are embedded as resources at each plugin's csproj root:
+
+```xml
+<EmbeddedResource Include="CHANGES.md" />
+<EmbeddedResource Include="CHANGES.*.md" />
+<EmbeddedResource Include="ABOUT.md" />
+<EmbeddedResource Include="ABOUT.*.md" />
+```
+
+Files: `ABOUT.md` + `ABOUT.ru.md` + (optionally) `ABOUT.ru-RU.md`. Same for `CHANGES`. The language-neutral file (`ABOUT.md`) is the English source of truth and the final fallback.
+
+`Edm/Plugins/PluginResource.cs` does the lookup:
+
+```csharp
+PluginResource.ReadLocalized(assembly, "ABOUT")  // returns the markdown body or null
+```
+
+The lookup walks the `CultureInfo.CurrentUICulture` chain — `ru-RU` → `ru` → invariant — probing `{Asm}.ABOUT.ru-RU.md`, then `{Asm}.ABOUT.ru.md`, then `{Asm}.ABOUT.md`. `UseRequestLocalization` (§10) sets `CurrentUICulture` from `Accept-Language`, so the controller doesn't need any header parsing of its own.
+
+Wiring sites:
+- `Hub/Controllers/MetaController.cs` for the hub-served `/api/hub/meta/about` and `/api/hub/meta/changelog`.
+- Per-plugin `MetaController.cs` for `/api/<plugin>/meta/changelog`.
+
+Adding a new locale variant: drop `ABOUT.<lng>.md` next to the existing files. No controller or csproj change needed (the glob `*.md` matches automatically).
+
+---
+
+## 13. Adding a new locale — recipe
 
 For locale `<lng>` (e.g. `fr-FR`):
 
@@ -512,7 +587,7 @@ That's it. No rsbuild config change is needed — the new JSON modules are picke
 
 ---
 
-## 13. Trigger files (where to look when changes land here)
+## 14. Trigger files (where to look when changes land here)
 
 - **Boot:** `Microprojects.Edm.Ui.Logistics/Ui/src/i18n/i18n.ts`, `Microprojects.Edm.Ui.Logistics/Ui/src/index.tsx`
 - **Per-folder registration:** `Microprojects.Edm.Ui.Logistics/Ui/src/i18n/registerNs.ts`, every `components/**/index.ts`
@@ -524,11 +599,16 @@ That's it. No rsbuild config change is needed — the new JSON modules are picke
 - **Package per-group dictionaries:** `@microprojects/edm-components/src/components/<group>/<group>.{en,ru}.ts`
 - **Package entry export:** `@microprojects/edm-components/package.json` `exports['./i18n']`
 - **Detail breadcrumb plural map:** `@microprojects/edm-components/src/components/master/master.{en,ru}.ts` (`entityPlural` block) + `MasterDetail.tsx` lookup
-- **Backend pipeline (future):** `Optosense.Edm.WebApi/Program.cs`, `Microprojects.Edm.Ui.Logistics/Controllers/**`, `EdmException` ctor
+- **Backend culture pipeline:** `Optosense.Edm.WebApi/Extensions/EdmHostBuilderExtensions.cs` (`AddLocalization` + `UseRequestLocalization`)
+- **EdmException ctor + error envelope:** `Edm/EdmException.cs`, `Optosense.Edm.WebApi/Services/GlobalExceptionHandler.cs`
+- **Frontend error resolver:** `<plugin>/Ui/src/i18n/resolveError.ts` (one per consuming SPA)
+- **Backend error catalogs:** `<plugin>/Ui/src/i18n/errors.locales/{en,ru}.json`
+- **Plugin metadata localization:** `Edm/Plugins/PluginAttribute.cs` (`NameKey` / `DescriptionKey`), `Hub/Controllers/PluginsController.cs`, `<plugin>/Ui/src/i18n/plugins.locales/{en,ru}.json` (consumer-side)
+- **ABOUT/CHANGES locale lookup:** `Edm/Plugins/PluginResource.cs`, every `<plugin>/Controllers/MetaController.cs`, plus the per-locale `ABOUT.<lng>.md` / `CHANGES.<lng>.md` files at each plugin's csproj root
 
 ---
 
-## 14. Common pitfalls
+## 15. Common pitfalls
 
 | Symptom | Cause | Fix |
 |---|---|---|
@@ -543,17 +623,17 @@ That's it. No rsbuild config change is needed — the new JSON modules are picke
 
 ---
 
-## 15. Out of scope (tracked elsewhere)
+## 16. Out of scope (tracked elsewhere)
 
 - **Entity-content i18n** — translating user-edited `Name`/`Description`/`Units` per locale. Schema changes, EF Core comparers, JSON search, unique-constraint policy. See `.claude/plans/logistics-content-i18n.md`.
-- **Backend culture pipeline** — `AddLocalization()`, `UseRequestLocalization()`, error-code catalog. Phase 4 of `.claude/plans/multilang-logistics.md`.
-- **Other Application plugins** (Console, Tech, Hub) — same pattern, not yet ported. Logistics is the reference implementation.
-- **Sub-iframe locale propagation** — Logistics may later embed operation monitors / profile editors. Their locale comes from the parent via `INIT { data: { locale } }` + `Locale` postMessage, per `docs/specs/plugin-iframe-messaging-spec.md`. Not relevant to standalone Application plugins.
+- **Sub-iframe locale propagation** — top-level plugins may later embed operation monitors / profile editors. Their locale comes from the parent via `INIT { data: { locale } }` + `Locale` postMessage, per `docs/specs/plugin-iframe-messaging-spec.md`. Not relevant to standalone Application plugins.
 
 ---
 
-## 16. History
+## 17. History
 
+- **2026-05-20 (later):** Plugin metadata + ABOUT/CHANGES localized. `PluginAttribute` gains `NameKey` / `DescriptionKey`; `PluginResource.ReadLocalized` resolves `ABOUT.<lng>.md` / `CHANGES.<lng>.md` per request culture; Hub gains `plugins` namespace + `ABOUT.ru.md` + `CHANGES.ru.md` per plugin.
+- **2026-05-20:** Backend error-code pipeline complete. `AddLocalization` + `UseRequestLocalization` wired; `EdmException(code, params, fallback)` ctor; `GlobalExceptionHandler` emits `code`/`params`; ~97 throw sites migrated solution-wide; Tech / Board / cross-cutting `Edm.*` catalogs added; Logistics + Tech frontends gain `resolveError` helper.
 - **2026-05-20:** Phase 3 sweep complete. All 10 Logistics feature folders converted. `tareSummary()` wired through 4 callers. ES-ES dropped from Phase 1.
 - **2026-05 (mid-month):** edm-components i18n primitives (Phase 2.5) — 8 `edm-<group>` namespaces, `registerEdmComponentsLocales` entry point, peer deps on `i18next` / `react-i18next`.
 - **2026-05 (early):** Phase 1 plumbing landed — i18next + LanguageDetector + axios `Accept-Language` interceptor. Logistics established as the reference standalone Application plugin (no iframe coupling).
