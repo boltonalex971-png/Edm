@@ -43,7 +43,9 @@ public static class PluginManagerHelper
     {
         if (config == null)
         {
-            throw new EdmException("Startup: Configuration action must be provided");
+            throw new EdmException(
+                "Edm.Startup.ConfigurationRequired",
+                "Startup: Configuration action must be provided");
         }
 
         var conf = new PluginsConfig();
@@ -51,7 +53,9 @@ public static class PluginManagerHelper
         
         if (conf.PluginsPaths == null || !conf.PluginsPaths.Any())
         {
-            throw new EdmException("Startup: 'PluginsPaths' option must be specified");
+            throw new EdmException(
+                "Edm.Startup.PluginsPathsRequired",
+                "Startup: 'PluginsPaths' option must be specified");
         }
 
         // Register PluginRegistry as singleton
@@ -75,7 +79,9 @@ public static class PluginManagerHelper
         var pluginManager = builder.ApplicationServices.GetService<IPluginContainer>();
         if (pluginManager == null || !pluginManager.GetAllPlugins().Any())
         {
-            throw new EdmException("Startup: plugins must be loaded by 'IServiceCollection.AddPlugins' method");
+            throw new EdmException(
+                "Edm.Startup.PluginsNotLoaded",
+                "Startup: plugins must be loaded by 'IServiceCollection.AddPlugins' method");
         }
 
         var spaPlugins = pluginManager.GetAllPlugins()
@@ -434,7 +440,10 @@ class PluginRoutingConvention : Attribute, IControllerModelConvention
         var plugin = controller.ControllerType.Assembly
             .GetTypes().Where(t => t.GetCustomAttribute(typeof(PluginAttribute)) != null
                 && controller.ControllerType.Namespace.Contains(t.Namespace)).FirstOrDefault() ??
-                    throw new EdmException($"No corresponding plugin found for controller {controller.ControllerType.FullName}. Beginning of controller namespace must must match plugin namespace.");
+                    throw new EdmException(
+                        "Edm.Startup.ControllerNamespaceMismatch",
+                        new Dictionary<string, object> { ["controller"] = controller.ControllerType.FullName },
+                        $"No corresponding plugin found for controller {controller.ControllerType.FullName}. Beginning of controller namespace must match plugin namespace.");
         var root = plugin.GetCustomAttribute<PluginAttribute>().UiRoot;
         var homepage = root != null ? $"{root}/" : string.Empty;
         var routeAttributes = controller.Selectors.Where(selector =>

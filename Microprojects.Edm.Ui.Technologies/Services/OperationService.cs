@@ -68,7 +68,10 @@ namespace Microprojects.Edm.Ui.Technologies.Services
             var origin = await Db.Operations.AsNoTracking()
                              .Include(o => o.Devices)
                              .FirstOrDefaultAsync(o => o.Id == operationId)
-                         ?? throw new EdmException($"Operation with id {operationId} not found");
+                         ?? throw new EdmException(
+                             "Technologies.Operation.NotFound",
+                             new Dictionary<string, object> { ["operationId"] = operationId },
+                             $"Operation with id {operationId} not found");
             var operation = (Operation)origin.Copy();
             operation.Created = DateTime.UtcNow;
             operation.Cancelled = null;
@@ -126,11 +129,17 @@ namespace Microprojects.Edm.Ui.Technologies.Services
         public async Task<Operation> Start(int operationId, DateTime startAt)
         {
             var operation = await Db.Operations.FirstOrDefaultAsync(o => o.Id == operationId) ??
-                            throw new EdmException("Operation not found");
+                            throw new EdmException(
+                                "Technologies.Operation.NotFound",
+                                new Dictionary<string, object> { ["operationId"] = operationId },
+                                "Operation not found");
             var result = await _commands.StartOperation(operationId, startAt);
             if (result.Status != JobStatus.SUCCESS)
             {
-                throw new EdmException($"Cannot start operation: {result.Message}");
+                throw new EdmException(
+                    "Technologies.Operation.StartFailed",
+                    new Dictionary<string, object> { ["message"] = result.Message },
+                    $"Cannot start operation: {result.Message}");
             }
 
             operation.Started = startAt;
@@ -145,7 +154,10 @@ namespace Microprojects.Edm.Ui.Technologies.Services
             var status = await Status(operationId);
             if (status.State != OperationState.InProgress && status.State != OperationState.Faulted)
             {
-                throw new EdmException($"Operation with id {operationId} is not running");
+                throw new EdmException(
+                    "Technologies.Operation.NotRunning",
+                    new Dictionary<string, object> { ["operationId"] = operationId },
+                    $"Operation with id {operationId} is not running");
             }
 
             if (status.State == OperationState.InProgress)
@@ -165,7 +177,10 @@ namespace Microprojects.Edm.Ui.Technologies.Services
         public async Task<OperationStatus> Status(int operationId)
         {
             var operation = await Db.Operations.FirstOrDefaultAsync(o => o.Id == operationId)
-                            ?? throw new EdmException($"Operation with id {operationId} is not found");
+                            ?? throw new EdmException(
+                                "Technologies.Operation.NotFound",
+                                new Dictionary<string, object> { ["operationId"] = operationId },
+                                $"Operation with id {operationId} is not found");
 
             return await GetStatus(operation);
         }
@@ -240,10 +255,15 @@ namespace Microprojects.Edm.Ui.Technologies.Services
 
         public async Task<Operation> CompleteOperation(int operationId)
         {
-            var result = await Get(operationId) ?? 
-                throw new EdmException("Operation not found");
+            var result = await Get(operationId) ??
+                throw new EdmException(
+                    "Technologies.Operation.NotFound",
+                    new Dictionary<string, object> { ["operationId"] = operationId },
+                    "Operation not found");
             if (result.Cancelled != null || result.Completed != null)
-                throw new EdmException($"Operation has been finished already");
+                throw new EdmException(
+                    "Technologies.Operation.AlreadyFinished",
+                    "Operation has been finished already.");
             result.Completed = DateTime.UtcNow;
             await Db.SaveChangesAsync();
             Db.Entry(result).State = EntityState.Detached;
@@ -257,7 +277,9 @@ namespace Microprojects.Edm.Ui.Technologies.Services
                                 .FirstOrDefaultAsync(w =>
                                     w.CommonUid == workbenchUid &&
                                     w.WorkplaceProcess.Process.CommonUid == processUid) ??
-                            throw new EdmException("Workbench for the specified process cannot be found");
+                            throw new EdmException(
+                                "Technologies.Workbench.NotFound",
+                                "Workbench for the specified process cannot be found.");
             var operation = await Create(new Operation() { WorkbenchId = workbench.Id });
 
             return (operation, workbench.WorkplaceProcess.Process);

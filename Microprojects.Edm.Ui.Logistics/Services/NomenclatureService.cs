@@ -44,6 +44,7 @@ public class NomenclatureService : ServiceBase<Nomenclature>, INomenclatureServi
         if (persisted.Meta.Completed != null)
         {
             throw new EdmException(
+                "Logistics.Nomenclature.Outdated",
                 "This nomenclature is outdated and cannot be edited. Open the current version instead.");
         }
 
@@ -65,7 +66,9 @@ public class NomenclatureService : ServiceBase<Nomenclature>, INomenclatureServi
         }
 
         var oldMeta = await Set<Meta>().FindAsync(persisted.Id)
-                      ?? throw new EdmException("Cannot find Meta for the existing nomenclature.");
+                      ?? throw new EdmException(
+                          "Logistics.Nomenclature.MetaNotFound",
+                          "Cannot find Meta for the existing nomenclature.");
         var oldId = oldMeta.Id;
 
         ForkEntity(entity, oldMeta);
@@ -154,12 +157,16 @@ public class NomenclatureService : ServiceBase<Nomenclature>, INomenclatureServi
     public async Task<NomenclatureTareType> AddAllowedTareType(Guid nomenclatureId, Guid tareTypeId, bool makeDefault)
     {
         var nomenclature = await Db.Nomenclatures.FirstOrDefaultAsync(n => n.Id == nomenclatureId)
-            ?? throw new EdmException("Nomenclature not found.");
+            ?? throw new EdmException(
+                "Logistics.Nomenclature.NotFound",
+                "Nomenclature not found.");
         var exists = await Db.NomenclatureTareTypes
             .AnyAsync(x => x.NomenclatureId == nomenclatureId && x.TareTypeId == tareTypeId);
         if (exists)
         {
-            throw new EdmException("This tare type is already in the allowed list.");
+            throw new EdmException(
+                "Logistics.Nomenclature.TareTypeAlreadyAllowed",
+                "This tare type is already in the allowed list.");
         }
 
         var row = new NomenclatureTareType
@@ -181,9 +188,13 @@ public class NomenclatureService : ServiceBase<Nomenclature>, INomenclatureServi
     public async Task<NomenclatureTareType> SetAllowedTareTypeDefault(Guid nomenclatureId, Guid linkId, bool makeDefault)
     {
         var row = await Db.NomenclatureTareTypes.FirstOrDefaultAsync(x => x.Id == linkId && x.NomenclatureId == nomenclatureId)
-            ?? throw new EdmException("Allowed-tare row not found.");
+            ?? throw new EdmException(
+                "Logistics.Nomenclature.AllowedTareNotFound",
+                "Allowed-tare row not found.");
         var nomenclature = await Db.Nomenclatures.FirstOrDefaultAsync(n => n.Id == nomenclatureId)
-            ?? throw new EdmException("Nomenclature not found.");
+            ?? throw new EdmException(
+                "Logistics.Nomenclature.NotFound",
+                "Nomenclature not found.");
 
         if (makeDefault)
         {

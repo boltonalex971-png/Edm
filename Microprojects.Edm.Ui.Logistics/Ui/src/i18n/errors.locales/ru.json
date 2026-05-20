@@ -1,10 +1,103 @@
 {
     "Logistics": {
+        "Directory": {
+            "NoTypeRoot": "Не настроен корневой каталог для типа «{{entryType}}».",
+            "NotFound": "Каталог с Id {{id}} не найден.",
+            "MustCreateInTypeRoot": "Новые папки должны создаваться внутри корня типа.",
+            "ParentNotUnderTypeRoot": "Родительская папка не находится в распознанном корне типа.",
+            "BuiltInNotEditable": "Встроенные папки нельзя редактировать.",
+            "BuiltInNotDeletable": "Встроенные папки нельзя удалять."
+        },
+        "Folder": {
+            "OwnParent": "Папка не может быть собственным родителем.",
+            "BuiltInNotMovable": "Встроенные папки нельзя перемещать.",
+            "MustLiveInTypeRoot": "Папки должны находиться внутри корня типа, а не непосредственно под корнем.",
+            "NotFound": "Папка с Id {{id}} не найдена.",
+            "NoCrossTypeMove": "Папки нельзя перемещать между корнями разных типов."
+        },
+        "Entry": {
+            "NotFound": "{{type}} с Id {{id}} не найден.",
+            "IdAmbiguous": "Неоднозначный идентификатор {{type}}.",
+            "MustLiveInTypeRoot": "{{type}} должен находиться внутри корня своего типа.",
+            "CannotPlaceOutsideTypeRoot": "{{type}} нельзя размещать вне корня своего типа."
+        },
+        "Item": {
+            "TareRequired": "У элемента должна быть тара.",
+            "NomenclatureNotFound": "Номенклатура для элемента не найдена.",
+            "AddressForbidden": "Адрес недопустим для неподсчитываемых номенклатур.",
+            "AddressRequired": "Для подсчитываемых номенклатур адрес обязателен.",
+            "AddressOutOfRange": "Адрес должен быть в диапазоне 1..{{capacity}} для этой тары.",
+            "AddressInUse": "Этот адрес уже занят в данной таре.",
+            "NotFound": "Элемент {{itemId}} не найден.",
+            "QuantityMustBePositive": "Количество должно быть больше нуля.",
+            "QuantityExceedsCapacity": "Количество {{quantity}} превышает оставшуюся ёмкость {{remaining}}."
+        },
         "Tare": {
             "NotFound": "Тара не найдена.",
             "NotFoundForItem": "Не найдена тара, к которой привязан элемент.",
             "TypeNotFoundForItem": "Не найден тип тары для привязанной тары.",
-            "TypeMismatch": "Тип тары не соответствует запрошенному."
+            "TypeMismatch": "Тип тары не соответствует запрошенному.",
+            "TargetTypeNotFound": "Целевой тип тары не найден.",
+            "QuantityMustBeInteger": "Количество должно быть целым для «{{context}}»."
+        },
+        "TareType": {
+            "NotFound": "Тип тары не найден.",
+            "AllowedNomenclatureNotFound": "Запись о допустимой номенклатуре не найдена.",
+            "MetaNotFound": "Не найдена служебная информация для существующего типа тары.",
+            "Outdated": "Этот тип тары устарел и не может быть отредактирован. Откройте актуальную версию.",
+            "CapacityMustBePositive": "Ёмкость должна быть положительным целым числом для подсчитываемых нештучных типов тары.",
+            "NomenclatureAlreadyAllowed": "Эта номенклатура уже есть в списке разрешённых."
+        },
+        "Nomenclature": {
+            "NotFound": "Номенклатура не найдена.",
+            "MetaNotFound": "Не найдена служебная информация для существующей номенклатуры.",
+            "Outdated": "Эта номенклатура устарела и не может быть отредактирована. Откройте актуальную версию.",
+            "TareTypeAlreadyAllowed": "Этот тип тары уже есть в списке разрешённых.",
+            "AllowedTareNotFound": "Запись о допустимой таре не найдена."
+        },
+        "Order": {
+            "NotFound": "Заказ с id {{orderId}} не найден.",
+            "AmountMustBePositive": "Количество должно быть больше 0.",
+            "AmountMustBeInteger": "Количество должно быть целым для подсчитываемой выходной номенклатуры.",
+            "AlreadyCompleted": "Заказ уже завершён.",
+            "AlreadyExecuted": "Заказ уже выполнен.",
+            "NoProcess": "У заказа не указан процесс.",
+            "ComponentsUnavailable": "Не все необходимые компоненты доступны.",
+            "InsufficientInputQuantity": "Недостаточно входного количества для расхода.",
+            "InsufficientInputForOutput": "Недостаточно входного количества для распределения требуемого выпуска.",
+            "CannotCompleteUnallocatedOutputs": "Невозможно завершить заказ: часть выпусков не распределена.",
+            "LockedByExecutor": "Заказ выполняется пользователем {{executor}}. Изменения может вносить только исполнитель или Администратор.",
+            "RelaunchLocked": "Заказ выполняется пользователем {{executor}}. Перезапустить может только исполнитель или Администратор.",
+            "SpecificationNotFound": "Спецификация для номенклатуры {{nomenclatureId}} не найдена.",
+            "GradeNotInProcess": "Сорт {{gradeId}} не относится к процессу заказа."
+        },
+        "Supply": {
+            "ItemNotLinked": "Элемент {{itemId}} не связан с поставкой {{supplyId}}."
+        },
+        "Meta": {
+            "NotFound": "Не найдена соответствующая служебная информация.",
+            "EntityNull": "Сущность не может быть null."
+        }
+    },
+    "Edm": {
+        "Job": {
+            "TypeNotJob": "Тип {{type}} не является задачей.",
+            "NotRegistered": "Задача не зарегистрирована: {{jobType}}.",
+            "ParamsTypeMismatch": "Параметры задачи должны быть экземпляром {{paramsType}}.",
+            "InitFailed": "Не удалось инициализировать задачу {{job}}.",
+            "ParamsTypeUndefined": "Тип параметров для {{jobType}} не определён."
+        },
+        "Plugin": {
+            "DriverNotFound": "Драйверный плагин не найден.",
+            "ProfilerNotFound": "Профайлерный плагин не найден.",
+            "DriverInitFailed": "Не удалось инициализировать {{driver}}: {{message}}",
+            "RemoteFailed": "{{message}}"
+        },
+        "Startup": {
+            "ConfigurationRequired": "Запуск: необходимо передать действие конфигурации.",
+            "PluginsPathsRequired": "Запуск: должен быть указан параметр «PluginsPaths».",
+            "PluginsNotLoaded": "Запуск: плагины должны быть загружены через 'IServiceCollection.AddPlugins'.",
+            "ControllerNamespaceMismatch": "Не найден соответствующий плагин для контроллера {{controller}}. Начало пространства имён контроллера должно совпадать с пространством имён плагина."
         }
     }
 }

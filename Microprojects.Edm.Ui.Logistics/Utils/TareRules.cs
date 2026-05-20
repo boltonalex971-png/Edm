@@ -61,7 +61,10 @@ public static class TareRules
         var rounded = Math.Round(quantity);
         if (Math.Abs(quantity - rounded) > Eps)
         {
-            throw new EdmException($"Quantity must be an integer for {context}.");
+            throw new EdmException(
+                "Logistics.Tare.QuantityMustBeInteger",
+                new Dictionary<string, object> { ["context"] = context },
+                $"Quantity must be an integer for {context}.");
         }
     }
 }

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using Microsoft.AspNetCore.Mvc;
 using Microprojects.Edm.Ui.Logistics.Contracts;
@@ -34,7 +35,10 @@ public class ProcessesController : EntriesControllerBase<Process, ProcessViewMod
     {
         var predicate = BuildKindPredicate(kind);
         var rootId = GetEntryRootId(kind)
-            ?? throw new EdmException($"No type root configured for {nameof(Process)}.");
+            ?? throw new EdmException(
+                "Logistics.Directory.NoTypeRoot",
+                new Dictionary<string, object> { ["entryType"] = nameof(Process) },
+                $"No type root configured for {nameof(Process)}.");
         var entries = await Service.GetAll(predicate);
         return await BuildEntryHierarchy(entries, rootId);
     }

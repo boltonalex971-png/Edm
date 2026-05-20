@@ -37,8 +37,18 @@ namespace Microprojects.Edm
         }
 
         /// <summary>
-        /// Code-bearing constructor. The fallback message is the English
-        /// rendering the server uses when the client lacks the catalog key.
+        /// Code-bearing constructor (no params). The fallback message is the
+        /// English rendering the server uses when the client lacks the catalog key.
+        /// </summary>
+        public EdmException(string code, string fallbackMessage) : base(fallbackMessage)
+        {
+            Code = code;
+            Params = null;
+        }
+
+        /// <summary>
+        /// Code-bearing constructor with interpolation params keyed by
+        /// `{{placeholder}}` names in the client-side catalog template.
         /// </summary>
         public EdmException(string code, IReadOnlyDictionary<string, object> @params, string fallbackMessage)
             : base(fallbackMessage)

@@ -172,7 +172,9 @@ public class TaresController : AuthControllerBase
     {
         var tareType = await _db.TareTypes.AsNoTracking()
             .FirstOrDefaultAsync(t => t.Id == model.TareTypeId)
-            ?? throw new EdmException("Tare type not found.");
+            ?? throw new EdmException(
+                "Logistics.TareType.NotFound",
+                "Tare type not found.");
 
         // Route through the service so the required Meta row is created (Tare
         // now implements IWithMeta and has an FK on Meta.Id).

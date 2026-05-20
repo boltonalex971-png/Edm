@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Microprojects.Edm.Ui.Logistics.Contracts;
 using Microprojects.Edm.Ui.Logistics.Models;
 using Microprojects.Edm.Ui.Logistics.Persistence;
@@ -73,7 +74,10 @@ public class SupplyService : ServiceBase<Supply>, ISupplyService
 
         if (item == null)
         {
-            throw new EdmException($"Item {itemId} is not linked to supply {supplyId}.");
+            throw new EdmException(
+                "Logistics.Supply.ItemNotLinked",
+                new Dictionary<string, object> { ["itemId"] = itemId, ["supplyId"] = supplyId },
+                $"Item {itemId} is not linked to supply {supplyId}.");
         }
 
         item.SupplyId = null;

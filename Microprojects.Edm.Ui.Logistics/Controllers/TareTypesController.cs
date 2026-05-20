@@ -38,7 +38,9 @@ public class TareTypesController : EntriesControllerBase<TareType, TareTypeViewM
     {
         var rows = await Service.GetAllowedNomenclatures(id);
         var row = rows.FirstOrDefault(r => r.Id == model.Id)
-            ?? throw new EdmException("Allowed-nomenclature row not found.");
+            ?? throw new EdmException(
+                "Logistics.TareType.AllowedNomenclatureNotFound",
+                "Allowed-nomenclature row not found.");
         return row.ToViewModel();
     }
 

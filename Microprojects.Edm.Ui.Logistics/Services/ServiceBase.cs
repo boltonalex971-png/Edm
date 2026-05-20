@@ -124,13 +124,19 @@ public class ServiceBase<TEntity> : IGenericService<TEntity> where TEntity : cla
         var entry = await Set<TEntry>().FindAsync(id);
         if (entry == null)
         {
-            throw new EdmException($"Directory entry {typeof(TEntry).Name} with Id {id} not found.");
+            throw new EdmException(
+                "Logistics.Entry.NotFound",
+                new Dictionary<string, object> { ["type"] = typeof(TEntry).Name, ["id"] = id },
+                $"Directory entry {typeof(TEntry).Name} with Id {id} not found.");
         }
 
         var folder = await Set<Directory>().FindAsync(newParentId);
         if (folder == null)
         {
-            throw new EdmException($"Directory with Id {newParentId} not found.");
+            throw new EdmException(
+                "Logistics.Directory.NotFound",
+                new Dictionary<string, object> { ["id"] = newParentId },
+                $"Directory with Id {newParentId} not found.");
         }
 
         entry.DirectoryId = folder.Id;
@@ -301,8 +307,10 @@ public class ServiceBase<TEntity> : IGenericService<TEntity> where TEntity : cla
             else
             {
                 withMeta.Meta = null!;
-                var meta = await Set<Meta>().FindAsync(entity.Id) ?? 
-                           throw new EdmException("Cannot find the corresponding meta information.");
+                var meta = await Set<Meta>().FindAsync(entity.Id) ??
+                           throw new EdmException(
+                               "Logistics.Meta.NotFound",
+                               "Cannot find the corresponding meta information.");
                 meta.Modified = DateTime.UtcNow;
                 Set<History>().Add(new History
                 {
@@ -362,11 +370,19 @@ public class ServiceBase<TEntity> : IGenericService<TEntity> where TEntity : cla
         switch (entity)
         {
             case null:
-                throw new EdmException("Entity cannot be null.", new ArgumentNullException(typeof(TEntity).Name));
+                throw new EdmException(
+                    "Logistics.Meta.EntityNull",
+                    null,
+                    "Entity cannot be null.",
+                    new ArgumentNullException(typeof(TEntity).Name));
             case IWithMeta:
             {
                 var info = await Set<Meta>().FindAsync(entity.Id)
-                           ?? throw new EdmException("Cannot find the corresponding meta information.", new ArgumentNullException(typeof(TEntity).Name));
+                           ?? throw new EdmException(
+                               "Logistics.Meta.NotFound",
+                               null,
+                               "Cannot find the corresponding meta information.",
+                               new ArgumentNullException(typeof(TEntity).Name));
                 info.Deleted = DateTime.UtcNow;
                 break;
             }

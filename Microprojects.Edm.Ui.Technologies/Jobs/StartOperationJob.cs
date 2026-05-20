@@ -124,7 +124,14 @@ namespace Microprojects.Edm.Ui.Technologies.Jobs
                 Logger.LogDebug("Operation started device at {Time}", DateTime.UtcNow.ToString("hh:mm:ss.fff"));
                 if (response.Status != JobStatus.SUCCESS)
                 {
-                    throw new EdmException($"{deviceJob.Name} failed: {response.Message}");
+                    throw new EdmException(
+                        "Technologies.Operation.DeviceJobFailed",
+                        new Dictionary<string, object>
+                        {
+                            ["deviceJob"] = deviceJob.Name,
+                            ["message"] = response.Message,
+                        },
+                        $"{deviceJob.Name} failed: {response.Message}");
                 }
             }
 

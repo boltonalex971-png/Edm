@@ -386,39 +386,87 @@ If the user-visible string is a technical constant that happens to look like a w
 
 ---
 
-## 10. Backend (Accept-Language) — current state
+## 10. Backend (error codes + Accept-Language)
 
-**Implemented (Logistics):** the axios interceptor in `src/index.tsx` sets `Accept-Language: <i18n.language>` on every outbound request:
+### 10.1 Pipeline
 
-```ts
-axios.interceptors.request.use((config) => {
-    config.headers.set('Accept-Language', i18n.language)
-    return config
-})
+**SPA side:** every Application plugin SPA's axios interceptor (and `fetch` shim) sets `Accept-Language: <i18n.language>` on every outbound request.
+
+**Server side:** `Optosense.Edm.WebApi/Extensions/EdmHostBuilderExtensions.cs` wires `AddLocalization()` + `UseRequestLocalization(en, ru)`. The default `AcceptLanguageHeaderRequestCultureProvider` reads the header and sets `CultureInfo.CurrentUICulture` per request. `RequestLocalization` runs **before** `UseAuthentication` so downstream code paths (incl. exception handler) see the right culture.
+
+### 10.2 Error code envelope
+
+`Edm/EdmException.cs` carries a `Code` + `Params` pair in addition to its message:
+
+```csharp
+public EdmException(string code, string fallbackMessage)
+public EdmException(string code, IReadOnlyDictionary<string,object> @params, string fallbackMessage)
+public EdmException(string code, IReadOnlyDictionary<string,object> @params, string fallbackMessage, Exception innerException)
 ```
 
-The non-axios `fetch` call in `src/hooks/hooks.ts` does the same.
-
-**Not yet implemented (server-side):** `Optosense.Edm.WebApi/Program.cs` does **not** call `AddLocalization()` or `UseRequestLocalization()`. The header arrives but the server-side `CultureInfo.CurrentUICulture` stays at the default. Effect today:
-
-- `ProblemDetails.Detail` strings raised by `GlobalExceptionHandler.GetMeaningfulMessage()` are English literals.
-- Frontend translates only the **frontend-known** error strings; raw `error.response?.data?.detail` is shown as-is.
-
-**Planned (Phase 4 of the multilang plan):** server responds with a stable code + params:
+`Optosense.Edm.WebApi/Services/GlobalExceptionHandler.cs` projects them onto the response via `ProblemDetails.Extensions`:
 
 ```json
 {
-  "type":   "https://edm/errors/tare-not-found",
-  "title":  "Tare not found",
-  "detail": "Tare not found",
+  "type":   "Bad request",
+  "title":  "EdmException",
+  "status": 400,
+  "detail": "Tare not found.",
   "code":   "Logistics.Tare.NotFound",
-  "params": { "tareId": "…" }
+  "params": { },
+  "instance": "PUT /api/logistics/items"
 }
 ```
 
-Frontend resolves `t(error.code, error.params)` with `error.title` as fallback. Catalog lives per plugin (e.g. `Microprojects.Edm.Ui.Logistics/Resources/Errors.{en,ru}.resx`). `EdmException` gains a `(string code, object? @params, string fallbackMessage)` constructor; existing usages keep working. DataAnnotations stay English-only.
+If the throwing `EdmException` (or its `InnerException`) lacks a code, the response simply omits the `code`/`params` extensions — the frontend falls back to `detail`.
 
-Defer adding `AddLocalization()` until this catalog shape is also being threaded through — otherwise the server is half-localized and noise enters production.
+### 10.3 Code naming and catalog locations
+
+| Prefix | Owner | Catalog location |
+|---|---|---|
+| `Logistics.*` | `Microprojects.Edm.Ui.Logistics` services + controllers | `Microprojects.Edm.Ui.Logistics/Ui/src/i18n/errors.locales/{en,ru}.json` |
+| `Technologies.*` | `Microprojects.Edm.Ui.Technologies` services + jobs | `Microprojects.Edm.Ui.Technologies/Ui/src/i18n/errors.locales/{en,ru}.json` |
+| `Board.*` | `Optosense.Edm.Profiles.Board` (driver / plan generator) | replicated in **every** consumer SPA catalog (Logistics + Tech) — Board has no SPA of its own |
+| `Edm.Job.*`, `Edm.Plugin.*`, `Edm.Startup.*` | Cross-cutting infrastructure (`Edm/Jobs`, `Microprojects.Edm.Host`, `Microprojects.Edm.Shared/Jobs`) | replicated in every consumer SPA catalog |
+
+Codes are dot-paths under the `errors` namespace. JSON shape is nested-by-segment:
+
+```json
+{
+  "Logistics": {
+    "Tare": {
+      "NotFound": "Tare not found."
+    }
+  }
+}
+```
+
+The frontend `resolveError(err, fallback)` helper (one per SPA — see Logistics's `src/i18n/resolveError.ts`) does:
+
+```ts
+const key = `errors:${data.code}`
+if (i18n.exists(key)) return i18n.t(key, data.params ?? {})
+return data?.detail || err?.message || fallback
+```
+
+### 10.4 Authoring a new code
+
+1. **Pick a path.** `Plugin.Category.Specific` (e.g. `Logistics.Order.NotFound`, `Technologies.Operation.AlreadyFinished`). Reuse existing categories where possible — don't invent a new sub-tree per file.
+2. **Add the key** to the owning plugin's `errors.locales/{en,ru}.json` (and to any other consumer SPAs' catalogs if cross-cutting). Use `{{placeholder}}` for interpolation.
+3. **Throw with the code:**
+   ```csharp
+   throw new EdmException(
+       "Logistics.Order.NotFound",
+       new Dictionary<string, object> { ["orderId"] = orderId },
+       $"Order with id {orderId} not found.");
+   ```
+   For no-params errors, use the 2-arg overload:
+   ```csharp
+   throw new EdmException("Logistics.Order.AlreadyCompleted", "Order is already completed.");
+   ```
+4. **Frontend** — no change needed. Any catch block already routed through `resolveError(err, fallback)` translates automatically.
+
+DataAnnotations stay English-only — they don't go through `EdmException`.
 
 ---
 

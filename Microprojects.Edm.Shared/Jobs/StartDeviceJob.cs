@@ -56,9 +56,13 @@ namespace Microprojects.Edm.Jobs
             try
             {
                 _profilerPlugin = _plugins.GetProfile(Parameters.Profiler) ??
-                                  throw new EdmException("Profiler plugin not found");
+                                  throw new EdmException(
+                                      "Edm.Plugin.ProfilerNotFound",
+                                      "Profiler plugin not found.");
                 _driverPlugin = _plugins.GetDriver(Parameters.Driver) ??
-                                throw new EdmException("Driver plugin not found");
+                                throw new EdmException(
+                                    "Edm.Plugin.DriverNotFound",
+                                    "Driver plugin not found.");
                 _driver = _driverPlugin.GetDriver(Parameters);
                 if (_driver is IReactiveDriver reactiveDriver)
                 {
@@ -136,7 +140,14 @@ namespace Microprojects.Edm.Jobs
             catch (Exception e)
             {
                 _logger.LogError(Parameters.Operation, e, "Cannot init device");
-                throw new EdmException($"Cannot init {_driverPlugin.Name}: {e.Message}");
+                throw new EdmException(
+                    "Edm.Plugin.DriverInitFailed",
+                    new Dictionary<string, object>
+                    {
+                        ["driver"] = _driverPlugin.Name,
+                        ["message"] = e.Message,
+                    },
+                    $"Cannot init {_driverPlugin.Name}: {e.Message}");
             }
 
             return Task.FromResult(true);
@@ -283,7 +294,10 @@ namespace Microprojects.Edm.Jobs
 
             if (throwEx && response.State != DriverResponseState.Ok)
             {
-                throw new EdmException(response.Message);
+                throw new EdmException(
+                    "Edm.Plugin.RemoteFailed",
+                    new Dictionary<string, object> { ["message"] = response.Message },
+                    response.Message);
             }
         }
 
