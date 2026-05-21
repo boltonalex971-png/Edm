@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microprojects.Edm.Controllers;
 using Microprojects.Edm.Ui.Logistics.Contracts;
 using Microprojects.Edm.Ui.Logistics.Models;
@@ -59,7 +59,7 @@ public abstract class CrudControllerBase<TObject, TObjectViewModel, TService> : 
             var result = await Service.Save(entry, force);
             return ToViewModel(result);
         }
-        catch (Services.ForkRequiredException ex)
+        catch (Microprojects.Edm.Shared.Services.ForkRequiredException ex)
         {
             return Conflict(new { detail = ex.Message, code = "fork-required" });
         }

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microprojects.Edm.Domain;
+using Microprojects.Edm.Shared.Contracts;
 using Microprojects.Edm.Shared.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,6 +10,43 @@ namespace Microprojects.Edm.Shared.Utils;
 
 public static class DirectoryHelper
 {
+    // Builds the per-leaf /hierarchy response: the subtree rooted at rootId
+    // with folder + leaf children nested into a deep tree. Mirrors what
+    // Logistics's EntriesControllerBase.BuildEntryHierarchy returns so the
+    // Tech and Logistics frontends consume the same shape via MasterDetail.
+    public static async System.Threading.Tasks.Task<IEnumerable<DirectoryEntryViewModel>> BuildEntryHierarchy<TEntry>(
+        IEnumerable<TEntry> entries,
+        Guid rootId,
+        IDirectoryService directoryService,
+        Func<TEntry, DirectoryEntryViewModel> toViewModel)
+        where TEntry : DirectoryEntry
+    {
+        var entryViewModels = entries.Select(toViewModel).ToList();
+
+        var subtreeFolders = (await directoryService.GetSubtreeFolders(rootId))
+            .Select(d => d.ToEntryViewModel())
+            .ToList();
+
+        var rootFolder = subtreeFolders.FirstOrDefault(f => f.Id == rootId);
+        if (rootFolder is null)
+        {
+            // Root not visible to user — return empty rather than leaking entries
+            // up to the global Root.
+            return Array.Empty<DirectoryEntryViewModel>();
+        }
+
+        var subtreeFolderIds = subtreeFolders.Select(f => f.Id).ToHashSet();
+        var subtreeEntries = entryViewModels
+            .Where(e => e.DirectoryId.HasValue && subtreeFolderIds.Contains(e.DirectoryId.Value))
+            .ToList();
+
+        var items = subtreeFolders.Concat(subtreeEntries).ToList();
+        rootFolder.Items = items.ToDeepTree(rootId).ToArray();
+        rootFolder.DirectoryId = null;
+
+        return new[] { rootFolder };
+    }
+
     public static IEnumerable<DirectoryEntryViewModel> ToTree(this ICollection<DirectoryEntryViewModel> items)
     {
         var ids = items.Where(i => i.IsFolder).Select(i => i.Id).ToHashSet();

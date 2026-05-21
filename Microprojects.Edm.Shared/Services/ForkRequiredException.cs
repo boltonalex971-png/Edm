@@ -1,6 +1,6 @@
-using Microprojects.Edm.Plugins;
+﻿using Microprojects.Edm.Plugins;
 
-namespace Microprojects.Edm.Ui.Logistics.Services;
+namespace Microprojects.Edm.Shared.Services;
 
 /// <summary>
 /// Thrown by forkable services when a save would create a new version (the

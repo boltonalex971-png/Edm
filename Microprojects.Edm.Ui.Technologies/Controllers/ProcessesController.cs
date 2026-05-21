@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microprojects.Edm.Controllers;
 using Microprojects.Edm.Plugins;
 using Microprojects.Edm.Shared.Contracts;
+using Microprojects.Edm.Shared.Utils;
 using Microprojects.Edm.Shared.ViewModels;
 using Microprojects.Edm.Ui.Technologies.Contracts;
 using Microprojects.Edm.Ui.Technologies.Models;
@@ -83,6 +84,14 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
         public async Task<Process> ChangeParent(Guid id, [FromBody] DomainObjectViewModel parent)
         {
             return await _processService.ChangeParent<Process>(id, parent.Id);
+        }
+
+        [HttpGet("hierarchy")]
+        public async Task<IEnumerable<DirectoryEntryViewModel>> GetProcessHierarchy()
+        {
+            var processes = await _processService.GetAll();
+            return await DirectoryHelper.BuildEntryHierarchy(
+                processes, WellKnownDirectoryIds.Processes, _directoryService, p => p.ToEntryViewModel());
         }
 
         #region profiles

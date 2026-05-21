@@ -6,6 +6,7 @@ using Microprojects.Edm.Controllers;
 using Microprojects.Edm.Jobs;
 using Microprojects.Edm.Plugins;
 using Microprojects.Edm.Shared.Contracts;
+using Microprojects.Edm.Shared.Utils;
 using Microprojects.Edm.Shared.ViewModels;
 using Microprojects.Edm.Ui.Technologies.Contracts;
 using Microprojects.Edm.Ui.Technologies.Models;
@@ -100,6 +101,14 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
         public async Task<Host> ChangeParent(Guid id, [FromBody] DomainObjectViewModel parent)
         {
             return await _hostService.ChangeParent<Host>(id, parent.Id);
+        }
+
+        [HttpGet("hierarchy")]
+        public async Task<IEnumerable<DirectoryEntryViewModel>> GetHostHierarchy()
+        {
+            var hosts = await _hostService.GetAll();
+            return await DirectoryHelper.BuildEntryHierarchy(
+                hosts, WellKnownDirectoryIds.Hosts, _directoryService, h => h.ToEntryViewModel());
         }
 
         #region devices

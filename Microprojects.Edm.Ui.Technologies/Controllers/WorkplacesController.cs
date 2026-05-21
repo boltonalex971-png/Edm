@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microprojects.Edm.Controllers;
 using Microprojects.Edm.Plugins;
 using Microprojects.Edm.Shared.Contracts;
+using Microprojects.Edm.Shared.Utils;
 using Microprojects.Edm.Shared.ViewModels;
 using Microprojects.Edm.Ui.Technologies.Contracts;
 using Microprojects.Edm.Ui.Technologies.Models;
@@ -90,6 +91,14 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
         public async Task<Workplace> ChangeParent(Guid id, [FromBody] DomainObjectViewModel parent)
         {
             return await _workplaceService.ChangeParent<Workplace>(id, parent.Id);
+        }
+
+        [HttpGet("hierarchy")]
+        public async Task<IEnumerable<DirectoryEntryViewModel>> GetWorkplaceHierarchy()
+        {
+            var workplaces = await _workplaceService.GetAll();
+            return await DirectoryHelper.BuildEntryHierarchy(
+                workplaces, WellKnownDirectoryIds.Workplaces, _directoryService, w => w.ToEntryViewModel());
         }
 
         #region devices
