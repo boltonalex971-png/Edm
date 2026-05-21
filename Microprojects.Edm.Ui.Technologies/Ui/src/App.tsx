@@ -18,6 +18,7 @@ import {Home} from "./components/home/Home";
 import {ApiContext} from './ApiContext';
 import {roleAttr} from './styles/role';
 import api from "./components/api";
+import {resolveError} from "./i18n/resolveError";
 import applogo from './assets/applogo.svg';
 import {ToastProvider} from "@microprojects/edm-components/components";
 import {AuthInterstitial} from "@microprojects/edm-components/components";
@@ -100,8 +101,8 @@ function AppShell() {
     const setRole = useCallback((role: string) => {
         axios.put(`${api.auth}/user/role`, JSON.stringify(role), { headers: { 'Content-Type': 'application/json' } })
             .then(() => window.location.reload())
-            .catch(r => alert(r.response?.data?.detail || r.message));
-    }, []);
+            .catch(r => alert(resolveError(r, t('common:error'))));
+    }, [t]);
 
     const activeLng = LANGUAGES.find((l) => l.code === i18n.language)?.code
         ?? LANGUAGES.find((l) => i18n.language?.startsWith(l.code.split('-')[0]))?.code

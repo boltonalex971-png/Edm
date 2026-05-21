@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { fetchLog, fetchLogLevels, type LogEntry } from '../api'
 import { type SignalKind, StatusBadge } from '../components/StatusBadge'
+import { resolveError } from '../i18n/resolveError'
 
 const PAGE_SIZE = 50
 
@@ -73,12 +74,12 @@ export function LogPage() {
             })
             .catch((e: Error) => {
                 if (requestIdRef.current !== id) return
-                setError(e.message)
+                setError(resolveError(e, t('common:error')))
             })
             .finally(() => {
                 if (requestIdRef.current === id) setLoading(false)
             })
-    }, [activeLevel])
+    }, [activeLevel, t])
 
     const loadMore = useCallback(() => {
         if (loading || loadingMore || !hasMore) return
@@ -93,7 +94,7 @@ export function LogPage() {
             })
             .catch((e: Error) => {
                 if (requestIdRef.current !== id) return
-                setError(e.message)
+                setError(resolveError(e, t('common:error')))
             })
             .finally(() => {
                 if (requestIdRef.current === id) setLoadingMore(false)

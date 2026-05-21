@@ -1,0 +1,23 @@
+{
+    "Edm": {
+        "Job": {
+            "TypeNotJob": "Type {{type}} is not a job.",
+            "NotRegistered": "Job is not registered: {{jobType}}.",
+            "ParamsTypeMismatch": "Job parameters must be instance of {{paramsType}}.",
+            "InitFailed": "Cannot initialize the job {{job}}.",
+            "ParamsTypeUndefined": "Parameters type for {{jobType}} is not defined."
+        },
+        "Plugin": {
+            "DriverNotFound": "Driver plugin not found.",
+            "ProfilerNotFound": "Profiler plugin not found.",
+            "DriverInitFailed": "Cannot init {{driver}}: {{message}}",
+            "RemoteFailed": "{{message}}"
+        },
+        "Startup": {
+            "ConfigurationRequired": "Startup: Configuration action must be provided.",
+            "PluginsPathsRequired": "Startup: 'PluginsPaths' option must be specified.",
+            "PluginsNotLoaded": "Startup: plugins must be loaded by 'IServiceCollection.AddPlugins' method.",
+            "ControllerNamespaceMismatch": "No corresponding plugin found for controller {{controller}}. Beginning of controller namespace must match plugin namespace."
+        }
+    }
+}

@@ -7,14 +7,16 @@ import commonEn  from './common.locales/en.json'
 import commonRu  from './common.locales/ru.json'
 import consoleEn from './console.locales/en.json'
 import consoleRu from './console.locales/ru.json'
+import errorsEn  from './errors.locales/en.json'
+import errorsRu  from './errors.locales/ru.json'
 
 void i18n
     .use(LanguageDetector)
     .use(initReactI18next)
     .init({
         resources: {
-            en: { common: commonEn, console: consoleEn },
-            ru: { common: commonRu, console: consoleRu },
+            en: { common: commonEn, console: consoleEn, errors: errorsEn },
+            ru: { common: commonRu, console: consoleRu, errors: errorsRu },
         },
         supportedLngs: ['en', 'ru'],
         fallbackLng: 'en',

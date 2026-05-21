@@ -27,6 +27,7 @@ import {
     ArrowForward as ArrowForwardIcon
 } from '@mui/icons-material';
 import api, {spaUrl} from '../api';
+import {resolveError} from '../../i18n/resolveError';
 import { useGet } from '@microprojects/edm-components/hooks';
 import { SmartScroll, SmartScrollContent } from '@microprojects/tools';
 import { Loading } from '@microprojects/edm-components/components';
@@ -124,7 +125,7 @@ export function NewOperationWizard() {
             .then((op) => {
                 window.open(spaUrl(`/operations/${op.data.id}`), '_blank')
             })
-            .catch((error) => setError(error.message || error));
+            .catch((error) => setError(resolveError(error, t('common:error'))));
     };
 
     return (

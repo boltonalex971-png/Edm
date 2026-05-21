@@ -4,6 +4,7 @@ import {Changelog} from '@microprojects/edm-components/components/chrome/Changel
 import {useEffect, useMemo, useState} from 'react'
 import {useTranslation} from 'react-i18next'
 import {Route, Routes} from 'react-router-dom'
+import {resolveError} from './i18n/resolveError'
 import {
     cleanName,
     fetchHubAbout,
@@ -59,7 +60,7 @@ export default function App() {
             })
             .catch((e: Error) => {
                 if (cancelled) return
-                setError(t('loadFailed', {message: e.message}))
+                setError(resolveError(e, t('loadFailed', {message: e.message})))
             })
             .finally(() => {
                 if (!cancelled) setLoading(false)

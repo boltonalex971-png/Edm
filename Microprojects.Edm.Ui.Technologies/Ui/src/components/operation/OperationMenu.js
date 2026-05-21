@@ -22,6 +22,7 @@ import {useTranslation} from 'react-i18next';
 import {useDialog} from "@microprojects/edm-components/hooks";
 import {useSignalR} from "@microprojects/edm-components/hooks";
 import api, {spaUrl} from "../api.js";
+import {resolveError} from '../../i18n/resolveError';
 import {useToast} from "@microprojects/edm-components/components";
 import {displayUserName} from "@microprojects/edm-components/utils";
 import styles from './OperationLayout.module.scss';
@@ -152,9 +153,6 @@ function OperationToolbar({operation}) {
         setBusy(null);
     });
 
-    const errorOf = (error, fallback) =>
-        error.response?.data?.detail || error.response?.data?.title || error.message || fallback;
-
     const copy = () => {
         setBusy('copy');
         Axios.post(`${api.operations}/${operation.id}`)
@@ -163,7 +161,7 @@ function OperationToolbar({operation}) {
             })
             .catch((error) => {
                 setBusy(null);
-                toast.error(errorOf(error, t('operations.toasts.failedCopy')));
+                toast.error(resolveError(error, t('operations.toasts.failedCopy')));
             });
     };
 
@@ -176,7 +174,7 @@ function OperationToolbar({operation}) {
         })
             .catch((error) => {
                 setBusy(null);
-                toast.error(errorOf(error, t('operations.toasts.failedStart')));
+                toast.error(resolveError(error, t('operations.toasts.failedStart')));
             });
     };
 
@@ -189,7 +187,7 @@ function OperationToolbar({operation}) {
             Axios.post(`${api.operations}/${operation.id}/stop`)
                 .catch((error) => {
                     setBusy(null);
-                    toast.error(errorOf(error, t('operations.toasts.failedStop')));
+                    toast.error(resolveError(error, t('operations.toasts.failedStop')));
                 });
         }
     });
@@ -203,7 +201,7 @@ function OperationToolbar({operation}) {
             Axios.post(`${api.operations}/${operation.id}/complete`)
                 .catch((error) => {
                     setBusy(null);
-                    toast.error(errorOf(error, t('operations.toasts.failedComplete')));
+                    toast.error(resolveError(error, t('operations.toasts.failedComplete')));
                 });
         }
     });

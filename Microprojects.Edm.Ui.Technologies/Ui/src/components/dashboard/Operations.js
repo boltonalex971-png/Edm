@@ -12,6 +12,7 @@ import {useParams, useLocation, useNavigate} from "react-router-dom";
 import {useTranslation} from 'react-i18next';
 import Axios from "axios";
 import api, {spaUrl} from '../api';
+import {resolveError} from '../../i18n/resolveError';
 import {useGet} from '@microprojects/edm-components/hooks';
 import {dateToHumanSpan, utcDateToLocal} from '@microprojects/edm-components/utils';
 import {useToast} from "@microprojects/edm-components/components";
@@ -103,16 +104,13 @@ const OperationsWhen = ({period}) => {
         return () => clearInterval(interval);
     }, []);
 
-    const errorOf = (error, fallback) =>
-        error.response?.data?.detail || error.response?.data?.title || error.message || fallback;
-
     const completeOperation = () => {
         Axios.post(`${api.operations}/${menu.id}/complete`)
             .then(() => {
                 toast.success(t('operations.toasts.completed'));
                 setTime(Date.now());
             })
-            .catch((error) => toast.error(errorOf(error, t('operations.toasts.failedComplete'))))
+            .catch((error) => toast.error(resolveError(error, t('operations.toasts.failedComplete'))))
             .finally(() => setMenu(null));
     };
     const copyOperation = () => {
@@ -120,7 +118,7 @@ const OperationsWhen = ({period}) => {
             .then((response) => {
                 window.open(spaUrl(`/operations/${response.data.id}`), '_blank');
             })
-            .catch((error) => toast.error(errorOf(error, t('operations.toasts.failedCopy'))))
+            .catch((error) => toast.error(resolveError(error, t('operations.toasts.failedCopy'))))
             .finally(() => setMenu(null));
     };
 

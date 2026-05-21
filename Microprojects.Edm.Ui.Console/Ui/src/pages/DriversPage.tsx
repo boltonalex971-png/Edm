@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { type DriverInfo, fetchDrivers } from '../api'
 import { DataTable, type DataTableColumn } from '../components/DataTable'
+import { resolveError } from '../i18n/resolveError'
 
 interface DriversPageProps {
     onCount?: (count: number) => void
@@ -50,7 +51,7 @@ export function DriversPage({ onCount }: DriversPageProps) {
             })
             .catch((e: Error) => {
                 if (cancelled) return
-                setError(e.message)
+                setError(resolveError(e, t('common:error')))
             })
             .finally(() => {
                 if (!cancelled) setLoading(false)

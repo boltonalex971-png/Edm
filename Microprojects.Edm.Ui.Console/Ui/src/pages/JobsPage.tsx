@@ -8,6 +8,7 @@ import {
 } from '../api'
 import { DataTable, type DataTableColumn } from '../components/DataTable'
 import { StatusBadge, statusToKind } from '../components/StatusBadge'
+import { resolveError } from '../i18n/resolveError'
 
 interface JobsPageProps {
     onCounts?: (counts: { running: number; available: number }) => void
@@ -62,7 +63,7 @@ export function JobsPage({ onCounts }: JobsPageProps) {
             })
             .catch((e: Error) => {
                 if (cancelled) return
-                setError(e.message)
+                setError(resolveError(e, t('common:error')))
             })
             .finally(() => {
                 if (!cancelled) setLoading(false)
