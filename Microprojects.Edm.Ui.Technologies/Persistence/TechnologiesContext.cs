@@ -6,6 +6,7 @@ using Microprojects.Edm.Ui.Technologies.Models;
 using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Directory = Microprojects.Edm.Domain.Directory;
 
 namespace Microprojects.Edm.Ui.Technologies.Persistence
 {
@@ -35,6 +36,7 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence
 
         public DbSet<Meta> Meta { get; set; }
         public DbSet<History> History { get; set; }
+        public DbSet<Directory> Directories { get; set; }
 
         public TechnologiesContext(DbContextOptions<TechnologiesContext> options) : base(options)
         {
