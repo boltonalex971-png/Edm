@@ -22,6 +22,10 @@
 
 	<ItemGroup>
 		<Using Include="Microprojects.Edm.Domain" />
+		<Using Include="Microprojects.Edm.Shared.Contracts" />
+		<Using Include="Microprojects.Edm.Shared.Services" />
+		<Using Include="Microprojects.Edm.Shared.Utils" />
+		<Using Include="Microprojects.Edm.Shared.ViewModels" />
 	</ItemGroup>
 
 	<ItemGroup>

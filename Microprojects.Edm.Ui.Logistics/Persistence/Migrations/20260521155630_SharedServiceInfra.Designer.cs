@@ -4,6 +4,7 @@ using Microprojects.Edm.Ui.Logistics.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 {
     [DbContext(typeof(LogisticsContext))]
-    partial class LogisticsContextModelSnapshot : ModelSnapshot
+    [Migration("20260521155630_SharedServiceInfra")]
+    partial class SharedServiceInfra
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -41,7 +44,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("DirectoryId");
 
-                    b.ToTable("Directories", (string)null);
+                    b.ToTable("Directories");
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Domain.History", b =>
@@ -67,7 +70,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("MetaId");
 
-                    b.ToTable("History", (string)null);
+                    b.ToTable("History");
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Domain.Meta", b =>
@@ -107,7 +110,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Meta", (string)null);
+                    b.ToTable("Meta");
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Assignment", b =>
@@ -128,7 +131,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("NomenclatureId");
 
-                    b.ToTable("Tasks", (string)null);
+                    b.ToTable("Tasks");
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Changelog", b =>
@@ -152,7 +155,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Changelog", (string)null);
+                    b.ToTable("Changelog");
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Grade", b =>
@@ -177,7 +180,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("ProcessId");
 
-                    b.ToTable("Grades", (string)null);
+                    b.ToTable("Grades");
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Item", b =>
@@ -226,7 +229,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("TareId");
 
-                    b.ToTable("Items", (string)null);
+                    b.ToTable("Items");
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.ItemLink", b =>
@@ -254,7 +257,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("TargetItemId");
 
-                    b.ToTable("ItemLinks", (string)null);
+                    b.ToTable("ItemLinks");
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Nomenclature", b =>
@@ -287,7 +290,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("DirectoryId");
 
-                    b.ToTable("Nomenclatures", (string)null);
+                    b.ToTable("Nomenclatures");
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.NomenclatureTareType", b =>
@@ -308,7 +311,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
                     b.HasIndex("NomenclatureId", "TareTypeId")
                         .IsUnique();
 
-                    b.ToTable("NomenclatureTareTypes", (string)null);
+                    b.ToTable("NomenclatureTareTypes");
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Order", b =>
@@ -340,7 +343,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("ProcessId");
 
-                    b.ToTable("Order", (string)null);
+                    b.ToTable("Order");
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.OrderProcess", b =>
@@ -369,7 +372,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("ProcessId");
 
-                    b.ToTable("OrderProcess", (string)null);
+                    b.ToTable("OrderProcess");
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.OrderSpecificationNomenclature", b =>
@@ -397,7 +400,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("OrderId", "NomenclatureId");
 
-                    b.ToTable("OrderSpecificationNomenclatures", (string)null);
+                    b.ToTable("OrderSpecificationNomenclatures");
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Process", b =>
@@ -427,7 +430,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("NomenclatureId");
 
-                    b.ToTable("Processes", (string)null);
+                    b.ToTable("Processes");
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Specification", b =>
@@ -457,7 +460,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("ProcessId");
 
-                    b.ToTable("Specifications", (string)null);
+                    b.ToTable("Specifications");
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.SpecificationNomenclature", b =>
@@ -480,7 +483,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("SpecificationId");
 
-                    b.ToTable("SpecificationNomenclatures", (string)null);
+                    b.ToTable("SpecificationNomenclatures");
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.SubProcess", b =>
@@ -522,7 +525,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Supplies", (string)null);
+                    b.ToTable("Supplies");
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Tare", b =>
@@ -540,7 +543,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("TareTypeId");
 
-                    b.ToTable("Tares", (string)null);
+                    b.ToTable("Tares");
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.TareType", b =>
@@ -581,7 +584,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("DirectoryId");
 
-                    b.ToTable("TareTypes", (string)null);
+                    b.ToTable("TareTypes");
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Domain.Directory", b =>

@@ -1,11 +1,14 @@
+﻿using System.Linq;
 using System.Runtime.Versioning;
 using System.Security.Claims;
-using System.Security.Principal;
 using Microprojects.Edm.Auth;
-using Microprojects.Edm.Controllers;
-using Microprojects.Edm.Ui.Logistics.Contracts;
+using Microprojects.Edm.Shared.Contracts;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
-namespace Microprojects.Edm.Ui.Logistics.Services;
+namespace Microprojects.Edm.Shared.Services;
 
 public class UserService : IUserService
 {
@@ -25,18 +28,15 @@ public class UserService : IUserService
         _userInfo = GetUserInfo();
     }
 
-
     public string? GetUserName() => _userInfo.Name;
 
     public string[] GetUserGroups() => _userInfo.Divisions.ToArray() ?? [];
 
     public bool IsAdmin() => GetUserRole() == EdmRoles.Admin;
 
-    /// <summary>
-    /// Returns the user's active role, honoring a session-selected role if the
-    /// user has one (matches <c>AuthControllerBase.UserInfo</c>). Falls back to
-    /// the first role claim when no session selection is present.
-    /// </summary>
+    // Returns the user's active role, honoring a session-selected role
+    // when present (matches AuthControllerBase.UserInfo). Falls back to
+    // the first role claim otherwise.
     public string? GetUserRole()
     {
         var session = _httpContextAccessor.HttpContext?.Session;
@@ -56,11 +56,10 @@ public class UserService : IUserService
     {
         var context = _httpContextAccessor.HttpContext;
         var request = _httpContextAccessor.HttpContext?.Request;
-        // Defense-in-depth: in production, refuse to surface the Windows
-        // identity to a request whose Origin doesn't match Host (would catch
-        // an XHR from another site abusing cached Negotiate creds). Skipped in
-        // development because the rsbuild dev proxy preserves Origin while
-        // CORS already controls who can talk to the API.
+        // Defense-in-depth CSRF guard: in production, refuse to surface the
+        // Windows identity when Origin's host doesn't match Host. Skipped
+        // in dev because the rsbuild proxy preserves Origin while CORS
+        // already controls who can talk to the API.
         if (!_env.IsDevelopment() &&
             !string.IsNullOrEmpty(request.Headers.Origin.ToString()) &&
             !request.Headers.Origin.ToString().EndsWith(request.Headers.Host))
@@ -73,7 +72,7 @@ public class UserService : IUserService
         {
             // JwtService emits already-stripped division names as "Divisions"
             // claims; mirror AuthControllerBase rather than re-deriving them
-            // from a "Groups" claim that no longer exists (PR 819 / 2a250b8).
+            // from a "Groups" claim that no longer exists.
             var divisions = claimsIdentity.FindAll("Divisions")
                 .Select(c => c.Value)
                 .ToList();

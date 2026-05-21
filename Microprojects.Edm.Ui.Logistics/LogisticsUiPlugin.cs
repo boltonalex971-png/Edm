@@ -1,7 +1,4 @@
-using Microprojects.Edm.Plugins;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Microprojects.Edm.Plugins;
 using Microprojects.Edm.Ui.Logistics.Contracts;
 using Microprojects.Edm.Ui.Logistics.Events;
 using Microprojects.Edm.Ui.Logistics.Persistence;
@@ -37,7 +34,8 @@ namespace Microprojects.Edm.Ui.Logistics
                     provider.GetRequiredService<LogisticsPublishingInterceptor>());
             }, poolSize: 128);
 
-            services.AddScoped<IDirectoryService, DirectoryService>();
+            services.AddScoped<IDirectoryRootRegistry, LogisticsDirectoryRootRegistry>();
+            services.AddScoped<IDirectoryService, DirectoryService<LogisticsContext>>();
             services.AddScoped<IItemService, ItemService>();
             services.AddScoped<ISupplyService, SupplyService>();
             services.AddScoped<INomenclatureService, NomenclatureService>();
