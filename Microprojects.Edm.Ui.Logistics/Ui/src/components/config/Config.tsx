@@ -14,30 +14,33 @@ import {
     PlayArrowOutlined as OperationsIcon,
     PrecisionManufacturingOutlined as TechnologyIcon,
 } from '@mui/icons-material'
+import { useTranslation } from 'react-i18next'
 import { Route, Routes } from 'react-router-dom'
 import { Processes } from './process/Processes'
+import './index' // side-effect: registers the `config` namespace
 
 export function Config() {
     const path = useBasePath()
+    const { t } = useTranslation('config')
 
     const menuItems = [
-        { label: 'Manufacturing', path: `${path}/manufacturing`, icon: <ManufacturingIcon fontSize="small" /> },
-        { label: 'Technology', path: `${path}/technology`, icon: <TechnologyIcon fontSize="small" /> },
-        { label: 'Operations', path: `${path}/operations`, icon: <OperationsIcon fontSize="small" /> },
-        { label: 'Nomenclatures', path: `${path}/nomenclatures`, icon: <NomenclaturesIcon fontSize="small" /> },
-        { label: 'Tare types', path: `${path}/taretypes`, icon: <TareTypesIcon fontSize="small" /> },
+        { label: t('menu.manufacturing'), path: `${path}/manufacturing`, icon: <ManufacturingIcon fontSize="small" /> },
+        { label: t('menu.technology'), path: `${path}/technology`, icon: <TechnologyIcon fontSize="small" /> },
+        { label: t('menu.operations'), path: `${path}/operations`, icon: <OperationsIcon fontSize="small" /> },
+        { label: t('menu.nomenclatures'), path: `${path}/nomenclatures`, icon: <NomenclaturesIcon fontSize="small" /> },
+        { label: t('menu.tareTypes'), path: `${path}/taretypes`, icon: <TareTypesIcon fontSize="small" /> },
     ]
 
     return (
-        <SubRootPage title="Configurations" menuItems={menuItems}>
+        <SubRootPage title={t('title')} menuItems={menuItems}>
             <Routes>
-                <Route index element={<p>Select one of the options above</p>} />
+                <Route index element={<p>{t('selectOption')}</p>} />
                 <Route path="manufacturing/*" element={<Processes kind={MANUFACTURING} />} />
                 <Route path="technology/*" element={<Processes kind={TECHNOLOGY} />} />
                 <Route path="operations/*" element={<Processes kind={OPERATION} />} />
                 <Route path="nomenclatures/*" element={<Nomenclatures />} />
                 <Route path="taretypes/*" element={<TareTypes />} />
-                <Route path="*" element={<span>Page not exists</span>} />
+                <Route path="*" element={<span>{t('pageNotExists')}</span>} />
             </Routes>
         </SubRootPage>
     )

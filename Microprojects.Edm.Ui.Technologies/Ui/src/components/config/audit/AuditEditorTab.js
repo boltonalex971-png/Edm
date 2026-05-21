@@ -27,6 +27,7 @@ import {
 } from '@mui/icons-material';
 import { useGet } from '@microprojects/edm-components/hooks';
 import { Loading } from '@microprojects/edm-components/components';
+import { useTranslation } from 'react-i18next';
 import { CriterionEditor, ZoneEditor } from './AuditZoneEditor';
 
 AuditEditorTab.propTypes = {
@@ -41,6 +42,7 @@ export function AuditEditorTab({ id, api, params }) {
     const [hoveredCell, setHoveredCell] = useState(null);
     const [showCriterionEditor, setShowCriterionEditor] = useState();
     const [showZoneEditor, setShowZoneEditor] = useState();
+    const { t } = useTranslation('tech');
 
     let parameters = zones && [...new Set(zones.flatMap(z => (z.criteria || []).map(p => p.param)))].sort((a, b) => `${a}`.localeCompare(`${b}`));
     parameters = (parameters && parameters.length) ? parameters : [' '];
@@ -154,28 +156,28 @@ export function AuditEditorTab({ id, api, params }) {
             }
 
             <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-start' }}>
-                <Button 
-                    variant="contained" 
-                    size="small" 
-                    startIcon={<AddIcon />} 
+                <Button
+                    variant="contained"
+                    size="small"
+                    startIcon={<AddIcon />}
                     onClick={addZone}
                     sx={{ textTransform: 'none', borderRadius: '4px' }}
                 >
-                    Add Zone
+                    {t('audit.addZone')}
                 </Button>
             </Box>
 
             <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: '4px', boxShadow: 'none' }}>
-                <Table size="small" aria-label="audit zones table">
+                <Table size="small" aria-label={t('audit.zonesTable')}>
                     <TableHead>
                         <TableRow sx={{ backgroundColor: 'var(--surface-2)' }}>
-                            <TableCell colSpan={3} align="center" sx={{ fontWeight: 700, borderRight: '1px solid var(--line)', fontSize: '12px', py: 1 }}>ZONE</TableCell>
-                            <TableCell colSpan={parameters.length} align="center" sx={{ fontWeight: 700, fontSize: '12px', py: 1 }}>PARAMETERS</TableCell>
+                            <TableCell colSpan={3} align="center" sx={{ fontWeight: 700, borderRight: '1px solid var(--line)', fontSize: '12px', py: 1 }}>{t('audit.tableZone')}</TableCell>
+                            <TableCell colSpan={parameters.length} align="center" sx={{ fontWeight: 700, fontSize: '12px', py: 1 }}>{t('audit.tableParameters')}</TableCell>
                         </TableRow>
                         <TableRow sx={{ backgroundColor: 'var(--surface-2)' }}>
                             <TableCell sx={{ fontWeight: 600, fontSize: '11px', width: 50 }}>#</TableCell>
-                            <TableCell sx={{ fontWeight: 600, fontSize: '11px', width: 120 }}>INTERVAL</TableCell>
-                            <TableCell sx={{ fontWeight: 600, fontSize: '11px', borderRight: '1px solid var(--line)' }}>ACTIVE WHEN</TableCell>
+                            <TableCell sx={{ fontWeight: 600, fontSize: '11px', width: 120 }}>{t('audit.tableInterval')}</TableCell>
+                            <TableCell sx={{ fontWeight: 600, fontSize: '11px', borderRight: '1px solid var(--line)' }}>{t('audit.tableActiveWhen')}</TableCell>
                             {parameters.map(p => (
                                 <TableCell key={p} sx={{ fontWeight: 600, fontSize: '11px' }}>{p}</TableCell>
                             ))}

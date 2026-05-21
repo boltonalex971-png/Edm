@@ -1,6 +1,8 @@
+import '@logistics/components/transfer' // side-effect: registers the `transfer` namespace
 import type { LegendEntry } from '@logistics/components/transfer/visibleFromItems'
 import type { UUID } from '@logistics/data/types'
 import { colorForGradeId } from '@logistics/utils/gradePalette'
+import { useTranslation } from 'react-i18next'
 
 type GradeLegendProps = {
     grades: LegendEntry[]
@@ -18,6 +20,7 @@ const CHIP_STYLE = (interactive: boolean): React.CSSProperties => ({
 })
 
 export function GradeLegend({ grades, onPick }: GradeLegendProps) {
+    const { t } = useTranslation('transfer')
     if (!grades || grades.length === 0) return null
     const interactive = !!onPick
     return (
@@ -31,14 +34,16 @@ export function GradeLegend({ grades, onPick }: GradeLegendProps) {
                 color: 'var(--ink-2)',
             }}
         >
-            <span style={{ fontWeight: 600, marginRight: 4 }}>Grades:</span>
+            <span style={{ fontWeight: 600, marginRight: 4 }}>
+                {t('grades.label')}
+            </span>
             {grades.map((g) => (
                 <span
                     key={g.id}
                     style={CHIP_STYLE(interactive)}
                     onClick={onPick ? () => onPick(g.id) : undefined}
                     title={
-                        interactive ? 'Select items with this grade' : undefined
+                        interactive ? t('grades.pickTitle') : undefined
                     }
                 >
                     <span
@@ -57,7 +62,7 @@ export function GradeLegend({ grades, onPick }: GradeLegendProps) {
             <span
                 style={{ ...CHIP_STYLE(interactive), color: 'var(--ink-3)' }}
                 onClick={onPick ? () => onPick(null) : undefined}
-                title={interactive ? 'Select items without a grade' : undefined}
+                title={interactive ? t('grades.pickNoGradeTitle') : undefined}
             >
                 <span
                     style={{
@@ -68,7 +73,7 @@ export function GradeLegend({ grades, onPick }: GradeLegendProps) {
                         border: '1px solid var(--line-strong)',
                     }}
                 />
-                No grade
+                {t('grades.noGrade')}
             </span>
         </div>
     )

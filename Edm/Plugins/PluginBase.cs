@@ -15,6 +15,8 @@ namespace Microprojects.Edm.Plugins
         public Guid Guid { get => new Guid(pluginAttribute?.Guid ?? Guid.Empty.ToString()); }
         public string Name { get => pluginAttribute?.Name; }
         public string Description { get => pluginAttribute?.Description; }
+        public string NameKey { get => pluginAttribute?.NameKey; }
+        public string DescriptionKey { get => pluginAttribute?.DescriptionKey; }
         public virtual string Homepage { get => pluginAttribute?.UiRoot; }
         public virtual void InjectDependencies(IServiceCollection services, IConfiguration configuration)
         {

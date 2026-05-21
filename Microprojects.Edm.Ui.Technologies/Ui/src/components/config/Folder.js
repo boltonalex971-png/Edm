@@ -4,6 +4,7 @@ import { useGet } from '@microprojects/edm-components/hooks';
 import { Detail, Editor } from '@microprojects/edm-components/components';
 import { useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { Box } from '@mui/material';
 import { Folder as FolderIcon } from '@mui/icons-material';
 import { Properties, Property } from '@microprojects/edm-components/components';
@@ -25,6 +26,7 @@ export function Folder(props) {
     // makes the failure loud rather than silently dropping rows into the wrong bucket.
     const editorType = props.entityType || type;
     const user = useSelector(s => s.user)
+    const { t } = useTranslation('tech');
     let { id } = useParams();
     id = parseInt(id);
     let [[data, setData], loading, error] = useGet(`${props.api}/${id}`, [id]);
@@ -42,7 +44,7 @@ export function Folder(props) {
             data={data}
             card={data.group ? (
                 <Properties>
-                    <Property label="Division" value={data.group} />
+                    <Property label={t('folder.division')} value={data.group} />
                 </Properties>
             ) : null}
             editor={
@@ -60,7 +62,7 @@ export function Folder(props) {
                             <Box>
                                 <EditorSection
                                     number={1}
-                                    title="Identity"
+                                    title={t('common.identity')}
                                     filled={identityFilled}
                                     total={2}
                                     done={identityFilled === 2 && !nameMissing}
@@ -68,18 +70,18 @@ export function Folder(props) {
                                     <Field
                                         full
                                         name="name"
-                                        label="Name"
+                                        label={t('common.name')}
                                         required
                                         value={values.name}
                                         onChange={handleChange}
                                         state={nameMissing ? 'invalid' : 'pristine'}
-                                        help={nameMissing ? 'A folder must have a name.' : 'Shown in the master tree.'}
+                                        help={nameMissing ? t('folder.nameMissing') : t('folder.nameHelp')}
                                     />
                                     <Field
                                         full
                                         kind="textarea"
                                         name="description"
-                                        label="Description"
+                                        label={t('common.description')}
                                         rows={2}
                                         value={values.description}
                                         onChange={handleChange}
@@ -89,7 +91,7 @@ export function Folder(props) {
                                 {divisions.length > 0 && (
                                     <EditorSection
                                         number={2}
-                                        title="Organization"
+                                        title={t('folder.organization')}
                                         filled={values.group ? 1 : 0}
                                         total={1}
                                         done={!!values.group}
@@ -98,10 +100,10 @@ export function Folder(props) {
                                             full
                                             kind="select"
                                             name="group"
-                                            label="Division"
+                                            label={t('folder.division')}
                                             value={values.group}
                                             onChange={handleChange}
-                                            placeholder="No division"
+                                            placeholder={t('folder.noDivision')}
                                             options={divisions.map(d => ({ value: d, label: d }))}
                                         />
                                     </EditorSection>

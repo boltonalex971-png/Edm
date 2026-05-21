@@ -1,0 +1,32 @@
+{
+    "title": "Repacking",
+    "toolbar": {
+        "searchSourceLabel": "Search source tare by barcode",
+        "searchSourcePlaceholder": "Scan or type barcode…",
+        "nomenclatureLabel": "Nomenclature",
+        "nomenclaturePlaceholder": "Select nomenclature…",
+        "addTargetLabel": "Add target tare",
+        "tareBarcodePlaceholder": "Tare barcode…",
+        "tareTypePlaceholder": "Type (for new)…",
+        "autoFill": "Auto-fill",
+        "saving": "Saving…",
+        "apply": "Apply ({{count}} moves)",
+        "reset": "Reset",
+        "moved": "Moved {{amount}}."
+    },
+    "source": {
+        "heading": "Source tares",
+        "selectionTitle": "Click an empty target slot to place. Shift+click for range, Ctrl/Cmd+click to toggle. Right-click for more.",
+        "emptyWithNomenclature": "Pick or scan a tare to add its matching items here.",
+        "emptyWithoutNomenclature": "Select a nomenclature, then pick a tare to load its items.",
+        "remove": "Remove"
+    },
+    "target": {
+        "heading": "Target tares",
+        "empty": "Add target tares by barcode search or create new ones",
+        "remove": "Remove"
+    },
+    "errors": {
+        "requestFailed": "Request failed"
+    }
+}

@@ -1,4 +1,5 @@
 import { Loading } from '@features/utils/Utils'
+import '@logistics/components/tare' // side-effect: registers the `tare` namespace
 import { TareGroupRow } from '@logistics/components/tare/TareGroupRow'
 import type { Item, TareInfo, UUID } from '@logistics/data/types'
 import { useEntityToken } from '@logistics/hooks/entityRefresh'
@@ -6,6 +7,7 @@ import { useGet } from '@logistics/hooks/hooks'
 import { Alert } from '@mui/material'
 import type React from 'react'
 import { useMemo, useState } from 'react'
+import { type TFunction, useTranslation } from 'react-i18next'
 import './TareItemsPanel.css'
 
 export type TareGroup = {
@@ -47,7 +49,10 @@ export function groupByTare(items: Item[]): TareGroup[] {
     return Array.from(map.values())
 }
 
-export function tareSummary(group: TareGroup): string {
+export function tareSummary(
+    group: TareGroup,
+    t?: TFunction<any, any>,
+): string {
     const { tare, items } = group
     const totalQty = items.reduce((s, i) => s + i.quantity, 0)
     if ((tare.sizeX ?? 0) > 0) {
@@ -56,10 +61,18 @@ export function tareSummary(group: TareGroup): string {
         // shape changed after they were stored) and surface separately.
         const placed = items.filter((i) => i.address != null).length
         const orphans = items.length - placed
-        const base = `${placed} / ${Math.floor(tare.capacity)} slots`
-        return orphans > 0 ? `${base} (+${orphans} orphan)` : base
+        const base = t
+            ? t('items.slots', { placed, capacity: Math.floor(tare.capacity) })
+            : `${placed} / ${Math.floor(tare.capacity)} slots`
+        if (orphans <= 0) return base
+        const suffix = t
+            ? t('items.orphanSuffix', { count: orphans })
+            : ` (+${orphans} orphan)`
+        return `${base}${suffix}`
     }
-    return `${totalQty} / ${tare.capacity}`
+    return t
+        ? t('items.bulkQty', { total: totalQty, capacity: tare.capacity })
+        : `${totalQty} / ${tare.capacity}`
 }
 
 export function TareItemsPanel({
@@ -69,6 +82,7 @@ export function TareItemsPanel({
     toolbar,
     supplyId,
 }: TareItemsPanelProps) {
+    const { t } = useTranslation('tare')
     const token = useEntityToken([
         { type: 'item' },
         { type: 'tare' },
@@ -97,7 +111,7 @@ export function TareItemsPanel({
             {error && <Alert severity="error">{error}</Alert>}
             {loading && <Loading />}
             {!loading && groups.length === 0 && (
-                <div className="tare-items-empty">No items</div>
+                <div className="tare-items-empty">{t('items.noItems')}</div>
             )}
             {groups.map((group) => {
                 const key = group.tare.id || 'no-tare'

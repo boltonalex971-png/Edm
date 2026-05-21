@@ -3,7 +3,11 @@
    Direction A · "Steel" — primary industrial system
    ========================================================================= */
 
-@import url("https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..600,0..1,-25..0&display=swap");
+/* Onest replaced Archivo: Google Fonts ships no Cyrillic subset for Archivo,
+   so Russian text was falling through to system-ui. Onest is a bilingual
+   geometric grotesque with matched Latin / Cyrillic stroke contrast. */
+@import url("https://fonts.googleapis.com/css?family=Onest:400,500,600,700,800|JetBrains+Mono:400,500,600&subset=latin,latin-ext,cyrillic,cyrillic-ext&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..600,0..1,-25..0&display=swap");
 
 /* ---------- Color tokens — Steel (light) ---------- */
 :root {
@@ -82,7 +86,7 @@
   --sig-queued-soft:#ECE5FF;
 
   /* ---------- Typography ---------- */
-  --font-sans: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: "Onest", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
   --font-icon: "Material Symbols Outlined";
 

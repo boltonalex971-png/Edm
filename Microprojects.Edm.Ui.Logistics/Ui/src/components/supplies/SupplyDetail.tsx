@@ -6,6 +6,7 @@ import {
     Info,
     MuiEditor,
 } from '@logistics/components/MasterDetail'
+import '@logistics/components/supplies' // side-effect: registers the `supplies` namespace
 import { SupplyTabs } from '@logistics/components/supplies/SupplyTabs'
 import type { DetailEventHandler, Supply, UUID } from '@logistics/data/types'
 import { useGet } from '@logistics/hooks/hooks'
@@ -20,6 +21,7 @@ import { LocalShippingOutlined as SupplyIcon } from '@mui/icons-material'
 import { Box } from '@mui/material'
 import type React from 'react'
 import { type EffectCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 export interface SupplyDetailProps extends DetailProps {
     onUpdate?: DetailEventHandler
@@ -28,9 +30,11 @@ export interface SupplyDetailProps extends DetailProps {
 
 export function SupplyDetail({
     id,
-    title = 'Supply',
+    title,
     ...props
 }: SupplyDetailProps) {
+    const { t } = useTranslation('supplies')
+    const resolvedTitle = title ?? t('detail.title')
     const [subDetail, setSubDetail] = useState<React.ReactElement>()
     useEffect(setSubDetail as EffectCallback, [id])
 
@@ -49,7 +53,7 @@ export function SupplyDetail({
             {...props}
             id={id}
             icon={<SupplyIcon />}
-            title={title}
+            title={resolvedTitle}
             subTitle={data.shipment || data.barcode}
             loading={loading}
             error={error as string}
@@ -60,22 +64,22 @@ export function SupplyDetail({
                     content={
                         <Properties>
                             <Property
-                                label="Barcode"
+                                label={t('field.barcode')}
                                 value={data.barcode}
                                 mono
                             />
                             <Property
-                                label="Shipment"
+                                label={t('field.shipment')}
                                 value={data.shipment}
                             />
                             <Property
-                                label="Shipment Id"
+                                label={t('field.shipmentExternalId')}
                                 value={data.shipmentExternalId}
                                 mono
                             />
                             {(data as any).metaCreated && (
                                 <Property
-                                    label="Created"
+                                    label={t('field.created')}
                                     value={formatLocalDateTime(
                                         (data as any).metaCreated,
                                     )}
@@ -98,25 +102,25 @@ export function SupplyDetail({
                         <Box>
                             <EditorSection
                                 number={1}
-                                title="Supply"
+                                title={t('detail.section')}
                                 done={false}
                             >
                                 <Field
                                     full
                                     name="barcode"
-                                    label="Barcode"
+                                    label={t('field.barcode')}
                                     value={(values.barcode as string) ?? ''}
                                     onChange={handleChange}
                                 />
                                 <Field
                                     name="shipment"
-                                    label="Shipment"
+                                    label={t('field.shipment')}
                                     value={(values.shipment as string) ?? ''}
                                     onChange={handleChange}
                                 />
                                 <Field
                                     name="shipmentExternalId"
-                                    label="Shipment Id"
+                                    label={t('field.shipmentExternalId')}
                                     value={
                                         (values.shipmentExternalId as string) ??
                                         ''

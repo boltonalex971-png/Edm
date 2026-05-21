@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { RelationTable } from '@microprojects/edm-components/components';
 import { useGet } from '@microprojects/edm-components/hooks';
 import { DropDownCell } from '@microprojects/edm-components/components';
+import { useTranslation } from 'react-i18next';
 
 AuditQualifiersTab.propTypes = {
     id: PropTypes.number,
@@ -11,29 +12,30 @@ AuditQualifiersTab.propTypes = {
 
 export function AuditQualifiersTab({ id, api }) {
     const [[data]] = useGet(`${api}/${id}/process/qualifiers`);
+    const { t } = useTranslation('tech');
 
     const columns = [
         {
             field: 'id',
-            headerName: 'Name',
+            headerName: t('common.name'),
             width: 200,
             renderCell: (params) => (
-                <DropDownCell 
+                <DropDownCell
                     {...params}
-                    getData={() => data || []} 
-                    dataKey='id' 
-                    text='name' 
-                    fieldId='id' 
+                    getData={() => data || []}
+                    dataKey='id'
+                    text='name'
+                    fieldId='id'
                 />
             )
         },
-        { field: 'description', headerName: 'Description', flex: 1, editable: false }
+        { field: 'description', headerName: t('common.description'), flex: 1, editable: false }
     ];
 
     return (
-        <RelationTable 
-            api={`${api}/${id}/qualifiers`} 
-            removable 
+        <RelationTable
+            api={`${api}/${id}/qualifiers`}
+            removable
             columns={columns}
         />
     );

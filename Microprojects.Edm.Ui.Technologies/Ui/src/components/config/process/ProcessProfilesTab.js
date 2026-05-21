@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import { RelationTable } from '@microprojects/edm-components/components';
 import { DropDownCell, LinkTextCell } from '@microprojects/edm-components/components';
 import { useGet } from '@microprojects/edm-components/hooks';
+import { useTranslation } from 'react-i18next';
 import { ProfileDetail } from '../Profiles';
 import { Chip, Stack, Box, Tooltip } from '@mui/material';
 import { Warning as WarningIcon, CheckCircle as CheckCircleIcon } from '@mui/icons-material';
@@ -17,28 +18,29 @@ ProcessProfilesTab.propTypes = {
 
 export function ProcessProfilesTab({ id, api, missedInputs, onDetailSelected, parents }) {
     const [[data]] = useGet(`${Api.devices}/profilers`);
+    const { t } = useTranslation('tech');
 
     const columns = [
         {
             field: 'profilerGuid',
-            headerName: 'Profiler',
+            headerName: t('common.profiler'),
             width: 200,
             renderCell: (params) => (
-                <DropDownCell 
-                    {...params} 
-                    getData={() => data || []} 
-                    dataKey='guid' 
-                    text='name' 
-                    fieldId='guid' 
+                <DropDownCell
+                    {...params}
+                    getData={() => data || []}
+                    dataKey='guid'
+                    text='name'
+                    fieldId='guid'
                 />
             )
         },
         {
             field: 'name',
-            headerName: 'Name',
+            headerName: t('common.name'),
             width: 200,
             renderCell: (params) => (
-                <LinkTextCell 
+                <LinkTextCell
                     {...params}
                     fieldId='id'
                     onClick={(profileId, itemUpdate) => onDetailSelected(
@@ -56,12 +58,12 @@ export function ProcessProfilesTab({ id, api, missedInputs, onDetailSelected, pa
         },
         {
             field: 'description',
-            headerName: 'Description',
+            headerName: t('common.description'),
             flex: 1
         },
         {
             field: 'input',
-            headerName: 'Input params',
+            headerName: t('profile.inputParamsShort'),
             width: 250,
             renderCell: (params) => {
                 const items = JSON.parse(params.value || '[]');
@@ -70,10 +72,10 @@ export function ProcessProfilesTab({ id, api, missedInputs, onDetailSelected, pa
                         {items.map((el) => {
                             const missed = (missedInputs || []).find(item => item === el);
                             return (
-                                <Tooltip key={el} title={missed ? 'Missing parameter' : ''}>
-                                    <Chip 
-                                        label={el} 
-                                        size="small" 
+                                <Tooltip key={el} title={missed ? t('profile.missingParameter') : ''}>
+                                    <Chip
+                                        label={el}
+                                        size="small"
                                         variant="outlined"
                                         color={missed ? 'error' : 'default'}
                                         icon={missed ? <WarningIcon sx={{ fontSize: '14px !important' }} /> : <CheckCircleIcon sx={{ fontSize: '14px !important' }} />}
@@ -88,7 +90,7 @@ export function ProcessProfilesTab({ id, api, missedInputs, onDetailSelected, pa
         },
         {
             field: 'output',
-            headerName: 'Output params',
+            headerName: t('profile.outputParamsShort'),
             width: 250,
             renderCell: (params) => {
                 const items = JSON.parse(params.value || '[]');

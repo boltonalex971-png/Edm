@@ -27,12 +27,14 @@ import {
     ArrowForward as ArrowForwardIcon
 } from '@mui/icons-material';
 import api, {spaUrl} from '../api';
+import {resolveError} from '../../i18n/resolveError';
 import { useGet } from '@microprojects/edm-components/hooks';
 import { SmartScroll, SmartScrollContent } from '@microprojects/tools';
 import { Loading } from '@microprojects/edm-components/components';
 import { PluginContainer } from '@microprojects/react-utils';
 import { ApiContext } from '../../ApiContext';
 import { useDispatch, useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { clearDevices, reset, setDevice, setDriverOptions, setParameters, setProcess, setProfiles, setWorkbench } from '../../slices/newOperationSlice.ts';
 import axios from 'axios';
 import { SubRootPage } from '@microprojects/edm-components/components';
@@ -40,6 +42,7 @@ import { SubRootPage } from '@microprojects/edm-components/components';
 export function NewOperationWizard() {
     const params = useSelector(s => s.newOperation)
     const dispatch = useDispatch()
+    const { t } = useTranslation('tech');
     const [error, setError] = useState();
     const [started] = useState(false);
     const [[processList]] = useGet(`${api.workplaces}/processes/allowed`, [], data => {
@@ -122,12 +125,12 @@ export function NewOperationWizard() {
             .then((op) => {
                 window.open(spaUrl(`/operations/${op.data.id}`), '_blank')
             })
-            .catch((error) => setError(error.message || error));
+            .catch((error) => setError(resolveError(error, t('common:error'))));
     };
 
     return (
-        <SubRootPage 
-            title="New operation" 
+        <SubRootPage
+            title={t('newOperation.title')}
             menuItems={[]}
         >
             <SmartScroll offsetTop={dynamicOffset} style={{ display: "flex", flexDirection: "row", alignItems: 'flex-start', gap: 4 }}>
@@ -135,18 +138,18 @@ export function NewOperationWizard() {
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                         <Step step={1} active={true}>
                             <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                                Select appropriate process to run
+                                {t('newOperation.selectProcessToRun')}
                             </Typography>
                             <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
                                 <FormControl fullWidth size="small">
-                                    <InputLabel>Process</InputLabel>
+                                    <InputLabel>{t('newOperation.process')}</InputLabel>
                                     <Select
                                         sx={{ width: '100%' }}
                                         value={params.process ? `process-${params.process.id}` : ''}
-                                        label="Process"
+                                        label={t('newOperation.process')}
                                         onChange={onProcessChange}
                                     >
-                                        <MenuItem value=""><em>None</em></MenuItem>
+                                        <MenuItem value=""><em>{t('newOperation.none')}</em></MenuItem>
                                         {processList?.map((p) => {
                                             const itemValue = p.isFolder ? `folder-${p.id}` : `process-${p.id}`;
                                             return (
@@ -171,9 +174,9 @@ export function NewOperationWizard() {
                                     </Select>
                                 </FormControl>
                                 {params.process && (
-                                    <Tooltip title="View Info">
-                                        <IconButton 
-                                            size="small" 
+                                    <Tooltip title={t('newOperation.viewInfo')}>
+                                        <IconButton
+                                            size="small"
                                             color="info"
                                             onClick={() => setDetail(<ProcessDetail id={params.process.id} />)}
                                         >
@@ -184,10 +187,10 @@ export function NewOperationWizard() {
                             </Box>
                         </Step>
 
-                        <Step 
-                            step={2} 
+                        <Step
+                            step={2}
                             disabled={step2Disabled}
-                            description="Select devices for chosen process"
+                            description={t('newOperation.selectDevicesForProcess')}
                         >
                             {!step2Disabled && (
                                 <DevicesStep
@@ -198,10 +201,10 @@ export function NewOperationWizard() {
                             )}
                         </Step>
 
-                        <Step 
-                            step={3} 
+                        <Step
+                            step={3}
                             disabled={step3Disabled}
-                            description="Specify required input parameters"
+                            description={t('newOperation.specifyInputs')}
                         >
                             {!step3Disabled && (
                                 <InputsStep
@@ -211,20 +214,20 @@ export function NewOperationWizard() {
                             )}
                         </Step>
 
-                        <Step 
-                            step={4} 
+                        <Step
+                            step={4}
                             disabled={step4Disabled}
-                            description="Start operation"
+                            description={t('newOperation.startOperation')}
                         >
                             {started ? (
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'success.main' }}>
                                     <CheckCircleIcon />
-                                    <Typography>Operation has been started successfully!</Typography>
+                                    <Typography>{t('newOperation.startedSuccess')}</Typography>
                                 </Box>
                             ) : (
                                 <Box>
                                     <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
-                                        Finally, you can create the operation
+                                        {t('newOperation.finallyCreate')}
                                     </Typography>
                                     {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
                                     <Button
@@ -235,7 +238,7 @@ export function NewOperationWizard() {
                                         onClick={onOperationStart}
                                         sx={{ textTransform: 'none', py: 1 }}
                                     >
-                                        Create operation now
+                                        {t('newOperation.createNow')}
                                     </Button>
                                 </Box>
                             )}
@@ -253,31 +256,35 @@ export function NewOperationWizard() {
     );
 }
 
-const ProcessDetailStub = () => (
-    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'text.disabled', py: 8 }}>
-        <InfoIcon sx={{ fontSize: 48, mb: 2, opacity: 0.5 }} />
-        <Typography variant="body1">Select process to start</Typography>
-    </Box>
-);
+const ProcessDetailStub = () => {
+    const { t } = useTranslation('tech');
+    return (
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'text.disabled', py: 8 }}>
+            <InfoIcon sx={{ fontSize: 48, mb: 2, opacity: 0.5 }} />
+            <Typography variant="body1">{t('newOperation.selectProcessToStart')}</Typography>
+        </Box>
+    );
+};
 
 const ProcessDetail = ({ id }) => {
     const process = useSelector(state => state.newOperation.process)
     const dispatch = useDispatch()
+    const { t } = useTranslation('tech');
     useGet(`${api.workplaces}/processes/${id}`, [], data => {
         dispatch(setProcess(data))
     })
     if (!process) return <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}><CircularProgress size={24} /></Box>
     return (
         <Box>
-            <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>Selected process info</Typography>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>{t('newOperation.selectedProcessInfo')}</Typography>
             <Divider sx={{ mb: 2 }} />
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                 <Box>
-                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase' }}>Name</Typography>
+                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase' }}>{t('common.name')}</Typography>
                     <Typography variant="body2">{process.processName}</Typography>
                 </Box>
                 <Box>
-                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase' }}>Description</Typography>
+                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase' }}>{t('common.description')}</Typography>
                     <Typography variant="body2">{process.processDescription || '—'}</Typography>
                 </Box>
             </Box>
@@ -286,6 +293,7 @@ const ProcessDetail = ({ id }) => {
 }
 
 function Step({ step, children, disabled, description, active }) {
+    const { t } = useTranslation('tech');
     return (
         <Paper
             variant="outlined"
@@ -299,10 +307,10 @@ function Step({ step, children, disabled, description, active }) {
         >
             <Grid container spacing={2}>
                 <Grid item sx={{ display: 'flex', alignItems: 'flex-start', pt: '4px !important' }}>
-                    <Typography 
-                        variant="h4" 
-                        sx={{ 
-                            fontWeight: 700, 
+                    <Typography
+                        variant="h4"
+                        sx={{
+                            fontWeight: 700,
                             color: disabled ? 'text.disabled' : 'primary.main',
                             lineHeight: 1,
                             width: '24px'
@@ -314,7 +322,7 @@ function Step({ step, children, disabled, description, active }) {
                 <Grid item xs sx={{width:'80%'}}>
                     {disabled ? (
                         <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
-                            {description || 'Select the options above'}
+                            {description || t('newOperation.selectOptionsAbove')}
                         </Typography>
                     ) : children}
                 </Grid>
@@ -327,6 +335,7 @@ function DevicesStep({ changeDetail }) {
     const process = useSelector(state => state.newOperation.process)
     const workbench = useSelector(state => state.newOperation.workbench)
     const dispatch = useDispatch()
+    const { t } = useTranslation('tech');
     const [[workbenches]] = useGet(`${api.workplaces}/processes/${process.id}/workbenches`)
     const [[profiles]] = useGet(`${api.processes}/${process.processId}/profiles`, [], data => {
         dispatch(setProfiles(data.map(p => p.id)))
@@ -357,23 +366,23 @@ function DevicesStep({ changeDetail }) {
         if (workbench) workbenchChosen(workbench);
     }, []);
 
-    if (!profiles || !workbenches) return <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}><CircularProgress size={16} /><Typography variant="caption">Loading profiles...</Typography></Box>
+    if (!profiles || !workbenches) return <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}><CircularProgress size={16} /><Typography variant="caption">{t('newOperation.loadingProfiles')}</Typography></Box>
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                 {profiles.length > 0 ?
-                    `Please choose the workbench or appropriate device${profiles.length > 1 ? 's' : ''} and set options` :
-                    `${process.processName} does not require any device`
+                    t('newOperation.chooseWorkbench', { count: profiles.length }) :
+                    t('newOperation.doesNotRequireDevice', { processName: process.processName })
                 }
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                 {workbenches?.length > 0 && (
                     <FormControl fullWidth size="small">
-                        <InputLabel>Workbench</InputLabel>
+                        <InputLabel>{t('newOperation.workbench')}</InputLabel>
                         <Select
                             value={workbench?.id || ''}
-                            label="Workbench"
+                            label={t('newOperation.workbench')}
                             onChange={(e) => {
                                 const w = workbenches.find(item => item.id === e.target.value);
                                 workbenchChosen(w);
@@ -409,7 +418,8 @@ function DevicesStep({ changeDetail }) {
 function InputsStep({ id, changeDetail }) {
     const [[inputs]] = useGet(`${api.processes}/${id}/inputs`)
     const dispatch = useDispatch()
-    
+    const { t } = useTranslation('tech');
+
     useEffect(() => {
         if (inputs) {
             if (inputs.length) {
@@ -420,13 +430,13 @@ function InputsStep({ id, changeDetail }) {
         }
     }, [inputs, changeDetail, dispatch])
 
-    if (!inputs) return <Typography variant="body2">Check missing inputs...</Typography>
-    if (!inputs.length) return <Typography variant="body2">No missing parameters in this process</Typography>
+    if (!inputs) return <Typography variant="body2">{t('newOperation.checkMissingInputs')}</Typography>
+    if (!inputs.length) return <Typography variant="body2">{t('newOperation.noMissingParameters')}</Typography>
 
     return (
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Typography variant="body2">
-                Specify {inputs.length} input parameter{inputs.length > 1 ? 's' : ''}
+                {t('newOperation.specifyInputCount', { count: inputs.length })}
             </Typography>
             <Button
                 variant="outlined"
@@ -435,7 +445,7 @@ function InputsStep({ id, changeDetail }) {
                 onClick={() => changeDetail(<InputsDetail inputs={inputs} />)}
                 sx={{ textTransform: 'none', borderRadius: '4px' }}
             >
-                Edit Parameters
+                {t('newOperation.editParameters')}
             </Button>
         </Box>
     );
@@ -444,7 +454,8 @@ function InputsStep({ id, changeDetail }) {
 function DeviceDropDown({ api, type, profileId, onChange }) {
     const device = useSelector(state => state.newOperation.devices[profileId])
     const [[data]] = useGet(api);
-    
+    const { t } = useTranslation('tech');
+
     return (
         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
             <FormControl fullWidth size="small">
@@ -463,9 +474,9 @@ function DeviceDropDown({ api, type, profileId, onChange }) {
                 </Select>
             </FormControl>
             {device && (
-                <Tooltip title="Edit Options">
-                    <IconButton 
-                        size="small" 
+                <Tooltip title={t('newOperation.editOptions')}>
+                    <IconButton
+                        size="small"
                         color="primary"
                         onClick={() => onChange(device)}
                     >
@@ -482,7 +493,8 @@ function DeviceDetail({ id, profile }) {
     const options = useSelector(state => state.newOperation.options[profile.id])
     const dispatch = useDispatch()
     const apiContext = useContext(ApiContext)
-    
+    const { t } = useTranslation('tech');
+
     useGet(`${api.workplaces}/devices/${id}`, [], data => {
         dispatch(setDevice({ profileId: profile.id, ...data }))
         if (!options || Object.entries(options).length === 0) {
@@ -499,31 +511,31 @@ function DeviceDetail({ id, profile }) {
 
     return (
         <Box>
-            <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>Selected device info</Typography>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>{t('newOperation.selectedDeviceInfo')}</Typography>
             <Divider sx={{ mb: 2 }} />
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 3 }}>
                 <Grid container spacing={2}>
                     <Grid item xs={6}>
-                        <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase' }}>Device</Typography>
+                        <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase' }}>{t('common.device')}</Typography>
                         <Typography variant="body2">{device.device}</Typography>
                     </Grid>
                     <Grid item xs={6}>
-                        <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase' }}>Model</Typography>
+                        <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase' }}>{t('common.model')}</Typography>
                         <Typography variant="body2">{device.driverName}</Typography>
                     </Grid>
                     <Grid item xs={6}>
-                        <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase' }}>Type</Typography>
+                        <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase' }}>{t('common.type')}</Typography>
                         <Typography variant="body2">{device.profilerName}</Typography>
                     </Grid>
                     <Grid item xs={6}>
-                        <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase' }}>Host</Typography>
+                        <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase' }}>{t('common.host')}</Typography>
                         <Typography variant="body2">{device.host}</Typography>
                     </Grid>
                 </Grid>
             </Box>
             <Box sx={{ mt: 2 }}>
-                <PluginContainer 
-                    title="Device Configuration"
+                <PluginContainer
+                    title={t('newOperation.deviceConfiguration')}
                     data={options}
                     width="100%"
                     src={`${apiContext}/${device.driverHomepage}/options`}
@@ -538,6 +550,7 @@ function InputsDetail({ inputs }) {
     const parameters = useSelector(state => state.newOperation.parameters)
     const [localParams, setLocalParams] = useState(parameters || {});
     const dispatch = useDispatch()
+    const { t } = useTranslation('tech');
 
     const handleInputChange = (name, value) => {
         setLocalParams(prev => ({ ...prev, [name]: value }));
@@ -549,7 +562,7 @@ function InputsDetail({ inputs }) {
 
     return (
         <Box>
-            <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>Process missing input parameters</Typography>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>{t('newOperation.missingInputs')}</Typography>
             <Divider sx={{ mb: 2 }} />
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {inputs.map((i) => (
@@ -569,7 +582,7 @@ function InputsDetail({ inputs }) {
                     onClick={handleAccept}
                     sx={{ mt: 2, textTransform: 'none', borderRadius: '4px' }}
                 >
-                    Accept Parameters
+                    {t('newOperation.acceptParameters')}
                 </Button>
             </Box>
         </Box>

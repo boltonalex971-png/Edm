@@ -1,0 +1,29 @@
+{
+    "stubMessage": "Выберите номенклатуру",
+    "section": {
+        "identity": "Идентификация",
+        "classification": "Классификация"
+    },
+    "field": {
+        "name": "Название",
+        "description": "Описание",
+        "category": "Категория",
+        "countable": "Штучный учёт"
+    },
+    "help": {
+        "nameMissing": "Номенклатура должна иметь название.",
+        "name": "Отображается в дереве, навигации и выпадающих списках."
+    },
+    "card": {
+        "category": "Категория",
+        "countable": "Штучный учёт"
+    },
+    "tabs": {
+        "allowedTares": "Допустимая тара"
+    },
+    "taresTab": {
+        "tareType": "Тип тары",
+        "description": "Описание",
+        "default": "По умолчанию"
+    }
+}

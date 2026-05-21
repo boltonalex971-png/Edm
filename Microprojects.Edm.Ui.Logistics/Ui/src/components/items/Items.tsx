@@ -1,3 +1,4 @@
+import './index' // side-effect: registers the `items` namespace
 import { BatchItemCreate } from '@logistics/components/items/BatchItemCreate.tsx'
 import { ItemSearch } from '@logistics/components/items/ItemSearch.tsx'
 import type { ItemSearchQuery } from '@logistics/data/types'
@@ -12,9 +13,11 @@ import {
     Search as SearchIcon,
 } from '@mui/icons-material'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 
 export function Items() {
+    const { t } = useTranslation('items')
     const { name } = useRouteMatch()
     const path = useBasePath()
     const navigate = useNavigate()
@@ -34,23 +37,23 @@ export function Items() {
     }, [name])
 
     const menuItems = [
-        { label: 'Available', path: `${path}/remaining`, icon: <AvailableIcon fontSize="small" /> },
-        { label: 'Consumed', path: `${path}/consumed`, icon: <ConsumedIcon fontSize="small" /> },
+        { label: t('tabs.available', 'Available'), path: `${path}/remaining`, icon: <AvailableIcon fontSize="small" /> },
+        { label: t('tabs.consumed', 'Consumed'), path: `${path}/consumed`, icon: <ConsumedIcon fontSize="small" /> },
     ]
 
     return (
-        <SubRootPage title="Items" menuItems={menuItems}>
+        <SubRootPage title={t('titlePlural', 'Items')} menuItems={menuItems}>
             <Search
                 actions={[
                     {
                         key: 'search',
-                        label: 'Search',
+                        label: t('tabs.search', 'Search'),
                         icon: <SearchIcon fontSize="small" />,
                         panel: <ItemSearch query={query} />,
                     },
                     {
                         key: 'create',
-                        label: 'Create new',
+                        label: t('tabs.createNew', 'Create new'),
                         icon: <AddIcon fontSize="small" />,
                         panel: <BatchItemCreate />,
                     },

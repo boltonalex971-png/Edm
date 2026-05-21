@@ -1,3 +1,4 @@
+import '@logistics/components/orders' // side-effect: registers the `orders` namespace
 import { AllocateProcessOutput } from '@logistics/components/orders/AllocateProcessOutput'
 import type { UUID } from '@logistics/data/types'
 import { CloseOutlined as CloseIcon } from '@mui/icons-material'
@@ -8,6 +9,7 @@ import {
     DialogTitle,
     IconButton,
 } from '@mui/material'
+import { useTranslation } from 'react-i18next'
 
 type AllocateOutputWindowProps = {
     orderId: UUID
@@ -20,6 +22,7 @@ export function AllocateOutputWindow({
     onClose,
     onChanged,
 }: AllocateOutputWindowProps) {
+    const { t } = useTranslation('orders')
     return (
         <Dialog
             open
@@ -56,7 +59,7 @@ export function AllocateOutputWindow({
                     color: 'var(--ink-1)',
                 }}
             >
-                <Box sx={{ flex: 1 }}>Allocate process output</Box>
+                <Box sx={{ flex: 1 }}>{t('allocate.title', 'Allocate process output')}</Box>
                 <IconButton
                     size="small"
                     onClick={onClose}

@@ -1,0 +1,11 @@
+{
+    "loadFailed": "Failed to load: {{message}}",
+    "greeting": "Welcome{{suffix}}.",
+    "pluginList": {
+        "loadingModules": "Loading modules…",
+        "empty": "No application plugins are loaded."
+    },
+    "about": {
+        "loading": "Loading…"
+    }
+}

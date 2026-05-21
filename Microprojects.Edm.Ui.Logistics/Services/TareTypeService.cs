@@ -50,6 +50,7 @@ public class TareTypeService : ServiceBase<TareType>, ITareTypeService
         if (persisted.Meta.Completed != null)
         {
             throw new EdmException(
+                "Logistics.TareType.Outdated",
                 "This tare type is outdated and cannot be edited. Open the current version instead.");
         }
 
@@ -71,7 +72,9 @@ public class TareTypeService : ServiceBase<TareType>, ITareTypeService
         }
 
         var oldMeta = await Set<Meta>().FindAsync(persisted.Id)
-                      ?? throw new EdmException("Cannot find Meta for the existing tare type.");
+                      ?? throw new EdmException(
+                          "Logistics.TareType.MetaNotFound",
+                          "Cannot find Meta for the existing tare type.");
         var oldId = oldMeta.Id;
 
         ForkEntity(entity, oldMeta);
@@ -109,7 +112,9 @@ public class TareTypeService : ServiceBase<TareType>, ITareTypeService
             var rounded = Math.Round(entity.Capacity);
             if (entity.Capacity < 1 || Math.Abs(entity.Capacity - rounded) > eps)
             {
-                throw new EdmException("Capacity must be a positive integer for countable bulk tare types.");
+                throw new EdmException(
+                    "Logistics.TareType.CapacityMustBePositive",
+                    "Capacity must be a positive integer for countable bulk tare types.");
             }
 
             entity.Capacity = rounded;
@@ -165,7 +170,9 @@ public class TareTypeService : ServiceBase<TareType>, ITareTypeService
             .AnyAsync(x => x.NomenclatureId == nomenclatureId && x.TareTypeId == tareTypeId);
         if (exists)
         {
-            throw new EdmException("This nomenclature is already in the allowed list.");
+            throw new EdmException(
+                "Logistics.TareType.NomenclatureAlreadyAllowed",
+                "This nomenclature is already in the allowed list.");
         }
 
         var row = new NomenclatureTareType

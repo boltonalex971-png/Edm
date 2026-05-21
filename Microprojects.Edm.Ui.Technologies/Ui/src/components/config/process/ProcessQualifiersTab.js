@@ -1,6 +1,7 @@
 ﻿import React from 'react';
 import PropTypes from 'prop-types';
 import { RelationTable } from '@microprojects/edm-components/components';
+import { useTranslation } from 'react-i18next';
 
 ProcessQualifiersTab.propTypes = {
     id: PropTypes.number,
@@ -8,9 +9,10 @@ ProcessQualifiersTab.propTypes = {
 }
 
 export function ProcessQualifiersTab({ id, api }) {
+    const { t } = useTranslation('tech');
     const columns = [
-        { field: 'name', headerName: 'Name', width: 200, editable: true },
-        { field: 'description', headerName: 'Description', flex: 1, editable: true }
+        { field: 'name', headerName: t('common.name'), width: 200, editable: true },
+        { field: 'description', headerName: t('common.description'), flex: 1, editable: true }
     ];
 
     return (

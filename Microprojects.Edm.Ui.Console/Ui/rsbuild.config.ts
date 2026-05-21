@@ -26,6 +26,11 @@ const muiStyledEngineDir= path.resolve(__dirname, 'node_modules/@mui/styled-engi
 const emotionReactDir   = path.resolve(__dirname, 'node_modules/@emotion/react')
 const emotionStyledDir  = path.resolve(__dirname, 'node_modules/@emotion/styled')
 const reactRouterDomDir = path.resolve(__dirname, 'node_modules/react-router-dom')
+// i18next + react-i18next must be singletons across the bundle — both
+// libraries hold module-level state. Same pattern as Logistics; see
+// docs/specs/multilang-spec.md §6.
+const i18nextDir      = path.resolve(__dirname, 'node_modules/i18next')
+const reactI18nextDir = path.resolve(__dirname, 'node_modules/react-i18next')
 
 export default defineConfig({
     plugins: [
@@ -45,6 +50,8 @@ export default defineConfig({
             '@emotion/react':       emotionReactDir,
             '@emotion/styled':      emotionStyledDir,
             'react-router-dom':     reactRouterDomDir,
+            i18next:                i18nextDir,
+            'react-i18next':        reactI18nextDir,
         },
     },
     dev: {

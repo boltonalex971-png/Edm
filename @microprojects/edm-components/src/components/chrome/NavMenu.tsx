@@ -1,4 +1,4 @@
-﻿import React, {useState} from 'react';
+import React, {useState} from 'react';
 import {
     Box,
     Menu,
@@ -23,6 +23,7 @@ import {
     Check as CheckIcon,
 } from '@mui/icons-material';
 import {Link, useLocation} from 'react-router-dom';
+import {useTranslation} from 'react-i18next';
 import {displayUserName, userInitials} from '../../utils/userName';
 import {useConnectionState, STATUS_TO_PIP, UseConnectionStateOptions} from '../realtime/useConnectionState';
 import {useUiPreferences} from '../../styles/UiPreferencesContext';
@@ -76,15 +77,15 @@ interface NavMenuProps {
     onLogout?: () => void;
 }
 
-const DENSITY_OPTIONS: Array<{value: Density; label: string; Icon: typeof DensityCompactIcon}> = [
-    {value: 'compact',     label: 'Compact',     Icon: DensityCompactIcon},
-    {value: 'comfortable', label: 'Comfortable', Icon: DensityComfortIcon},
-    {value: 'touch',       label: 'Touch',       Icon: DensityTouchIcon},
+const DENSITY_OPTIONS: Array<{value: Density; labelKey: string; fallback: string; Icon: typeof DensityCompactIcon}> = [
+    {value: 'compact',     labelKey: 'density.compact',     fallback: 'Compact',     Icon: DensityCompactIcon},
+    {value: 'comfortable', labelKey: 'density.comfortable', fallback: 'Comfortable', Icon: DensityComfortIcon},
+    {value: 'touch',       labelKey: 'density.touch',       fallback: 'Touch',       Icon: DensityTouchIcon},
 ];
 
-const SCHEME_OPTIONS: Array<{value: Scheme; label: string; Icon: typeof LightIcon}> = [
-    {value: 'light', label: 'Light', Icon: LightIcon},
-    {value: 'dark',  label: 'Dark',  Icon: DarkIcon},
+const SCHEME_OPTIONS: Array<{value: Scheme; labelKey: string; fallback: string; Icon: typeof LightIcon}> = [
+    {value: 'light', labelKey: 'scheme.light', fallback: 'Light', Icon: LightIcon},
+    {value: 'dark',  labelKey: 'scheme.dark',  fallback: 'Dark',  Icon: DarkIcon},
 ];
 
 export const NavMenu = ({
@@ -102,11 +103,13 @@ export const NavMenu = ({
     onLogout,
 }: NavMenuProps) => {
     const location = useLocation();
+    const {t} = useTranslation('edm-chrome');
     const [userMenuAnchor, setUserMenuAnchor] = useState<HTMLElement | null>(null);
     const [roleMenuAnchor, setRoleMenuAnchor] = useState<HTMLElement | null>(null);
     /* HANDOFF · v2 04f.4 · live SignalR status drives the chrome pip. */
     const {status: connStatus} = useConnectionState(hubUrl, connectionOptions);
     const pip = STATUS_TO_PIP[connStatus];
+    const pipLabel = t(`pip.${connStatus}`, pip.label);
 
     const isPathActive = (path: string, exact?: boolean) => {
         if (exact) return location.pathname === path;
@@ -144,7 +147,7 @@ export const NavMenu = ({
             {showSearch && (
                 <button type="button" className="tb-search" tabIndex={-1}>
                     <SearchIcon fontSize="small" className="tb-search-icon" />
-                    <span className="tb-search-text">Search…</span>
+                    <span className="tb-search-text">{t('search', 'Search…')}</span>
                     <span className="kbd">⌘K</span>
                 </button>
             )}
@@ -161,9 +164,9 @@ export const NavMenu = ({
                 </button>
             )}
 
-            <span className={`tb-pip ${pip.kind}`} title={`Hub status: ${pip.label.toLowerCase()}`}>
+            <span className={`tb-pip ${pip.kind}`} title={`${t('pip.statusTooltip', 'Hub status:')} ${pipLabel.toLowerCase()}`}>
                 <span className="dot" />
-                <span className="tb-pip-text">{pip.label}</span>
+                <span className="tb-pip-text">{pipLabel}</span>
             </span>
 
             {user?.name && (
@@ -234,11 +237,11 @@ export const NavMenu = ({
                 <Divider />
                 <MenuItem onClick={() => setUserMenuAnchor(null)}>
                     <PersonIcon fontSize="small" sx={{mr: 1.5}} />
-                    Profile
+                    {t('userMenu.profile', 'Profile')}
                 </MenuItem>
                 <MenuItem onClick={() => setUserMenuAnchor(null)}>
                     <SettingsIcon fontSize="small" sx={{mr: 1.5}} />
-                    Account Settings
+                    {t('userMenu.accountSettings', 'Account Settings')}
                 </MenuItem>
 
                 <Divider />
@@ -248,9 +251,9 @@ export const NavMenu = ({
                     color: 'var(--ink-4)', background: 'transparent',
                     pl: 2,
                 }}>
-                    Density
+                    {t('density.header', 'Density')}
                 </ListSubheader>
-                {DENSITY_OPTIONS.map(({value, label, Icon}) => (
+                {DENSITY_OPTIONS.map(({value, labelKey, fallback, Icon}) => (
                     <MenuItem
                         key={value}
                         selected={density === value}
@@ -258,7 +261,7 @@ export const NavMenu = ({
                         sx={{pr: 2}}
                     >
                         <Icon fontSize="small" sx={{mr: 1.5, color: 'var(--ink-3)'}} />
-                        <span style={{flex: 1}}>{label}</span>
+                        <span style={{flex: 1}}>{t(labelKey, fallback)}</span>
                         {density === value && <CheckIcon fontSize="small" sx={{color: 'var(--accent)'}} />}
                     </MenuItem>
                 ))}
@@ -270,9 +273,9 @@ export const NavMenu = ({
                     color: 'var(--ink-4)', background: 'transparent',
                     pl: 2,
                 }}>
-                    Scheme
+                    {t('scheme.header', 'Scheme')}
                 </ListSubheader>
-                {SCHEME_OPTIONS.map(({value, label, Icon}) => (
+                {SCHEME_OPTIONS.map(({value, labelKey, fallback, Icon}) => (
                     <MenuItem
                         key={value}
                         selected={scheme === value}
@@ -280,7 +283,7 @@ export const NavMenu = ({
                         sx={{pr: 2}}
                     >
                         <Icon fontSize="small" sx={{mr: 1.5, color: 'var(--ink-3)'}} />
-                        <span style={{flex: 1}}>{label}</span>
+                        <span style={{flex: 1}}>{t(labelKey, fallback)}</span>
                         {scheme === value && <CheckIcon fontSize="small" sx={{color: 'var(--accent)'}} />}
                     </MenuItem>
                 ))}
@@ -295,7 +298,7 @@ export const NavMenu = ({
                             sx={{color: 'var(--sig-fault-deep)'}}
                         >
                             <LogoutIcon fontSize="small" sx={{mr: 1.5}} />
-                            Logout
+                            {t('userMenu.logout', 'Logout')}
                         </MenuItem>
                     </>
                 )}

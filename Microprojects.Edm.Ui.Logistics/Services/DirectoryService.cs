@@ -45,36 +45,50 @@ namespace Microprojects.Edm.Ui.Logistics.Services
         {
             if (id == newParentId)
             {
-                throw new EdmException("Folder cannot be its own parent.");
+                throw new EdmException(
+                    "Logistics.Folder.OwnParent",
+                    "Folder cannot be its own parent.");
             }
 
             if (id == Directory.GeneralRootId || WellKnownDirectoryIds.IsTypeRoot(id))
             {
-                throw new EdmException("Built-in folders cannot be moved.");
+                throw new EdmException(
+                    "Logistics.Folder.BuiltInNotMovable",
+                    "Built-in folders cannot be moved.");
             }
 
             if (newParentId == Directory.GeneralRootId)
             {
-                throw new EdmException("Folders must live inside a type root, not directly under Root.");
+                throw new EdmException(
+                    "Logistics.Folder.MustLiveInTypeRoot",
+                    "Folders must live inside a type root, not directly under Root.");
             }
 
             var folder = await Get(id);
             if (folder == null)
             {
-                throw new EdmException($"Folder with Id {id} not found.");
+                throw new EdmException(
+                    "Logistics.Folder.NotFound",
+                    new Dictionary<string, object> { ["id"] = id },
+                    $"Folder with Id {id} not found.");
             }
 
             var parent = await Get(newParentId);
             if (parent == null)
             {
-                throw new EdmException($"Folder with Id {newParentId} not found.");
+                throw new EdmException(
+                    "Logistics.Folder.NotFound",
+                    new Dictionary<string, object> { ["id"] = newParentId },
+                    $"Folder with Id {newParentId} not found.");
             }
 
             var sourceRoot = await ResolveTypeRoot(id);
             var targetRoot = await ResolveTypeRoot(newParentId);
             if (sourceRoot is null || targetRoot is null || sourceRoot != targetRoot)
             {
-                throw new EdmException("Folders cannot be moved across entry-type roots.");
+                throw new EdmException(
+                    "Logistics.Folder.NoCrossTypeMove",
+                    "Folders cannot be moved across entry-type roots.");
             }
 
             folder.DirectoryId = parent.Id;

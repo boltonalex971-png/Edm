@@ -1,9 +1,11 @@
 import { DesktopOrderList } from '@logistics/components/desktop/DesktopOrderList'
+import '@logistics/components/desktop' // side-effect: registers the `desktop` namespace
 import { OrderRunView } from '@logistics/components/desktop/OrderRunView'
 import { Hero, useClock } from '@logistics/components/homepages/Hero'
 import type { RootState } from '@logistics/store'
 import { displayUserName } from '@microprojects/edm-components/utils'
 import { Box } from '@mui/material'
+import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
 import { Route, Routes, useNavigate } from 'react-router-dom'
 
@@ -12,6 +14,7 @@ export const OperatorDesktop = () => {
     const user = useSelector((s: RootState) => s.user)
     const userShort = displayUserName(user.name)
     const clock = useClock()
+    const { t } = useTranslation('desktop')
 
     return (
         <Box
@@ -35,13 +38,7 @@ export const OperatorDesktop = () => {
                                 userFull={user.name}
                                 role={user.role}
                                 clock={clock}
-                                lead={
-                                    <>
-                                        Pick an order from the list to claim
-                                        it and start running. Orders already
-                                        assigned to you appear first.
-                                    </>
-                                }
+                                lead={t('operator.lead')}
                             />
                             <DesktopOrderList
                                 onOpen={(id) => navigate(`/order/${id}`)}

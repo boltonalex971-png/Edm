@@ -1,3 +1,4 @@
+import './index' // side-effect: registers the `items` namespace
 import api from '@features/api/api.ts'
 import Api from '@features/api/api.ts'
 import { DetailLinkText } from '@logistics/components/DropDownCell.tsx'
@@ -40,6 +41,7 @@ import { Inventory2Outlined as ItemIcon } from '@mui/icons-material'
 import { Box, Chip, Typography } from '@mui/material'
 import type React from 'react'
 import { type EffectCallback, useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 export interface ItemDetailProps extends DetailProps {
     onUpdate?: DetailEventHandler
@@ -52,7 +54,9 @@ function numberOrNull(v: string): number | null {
     return Number.isFinite(n) ? n : null
 }
 
-export function ItemDetail({ id, title = 'Item', ...props }: ItemDetailProps) {
+export function ItemDetail({ id, title, ...props }: ItemDetailProps) {
+    const { t } = useTranslation('items')
+    const resolvedTitle = title ?? t('title', 'Item')
     const [subDetail, setSubDetail] = useState<React.ReactElement>()
     useEffect(setSubDetail as EffectCallback, [id])
     const [[taretypes]] = useGet<TreeDataItem[]>(
@@ -107,8 +111,8 @@ export function ItemDetail({ id, title = 'Item', ...props }: ItemDetailProps) {
     const sourceChip = data.isOutput ? (
         <Chip
             size="small"
-            label="Output"
-            title="Produced by an order execution."
+            label={t('source.Output', 'Output')}
+            title={t('source.OutputTitle', 'Produced by an order execution.')}
             sx={{
                 ml: 1,
                 height: 22,
@@ -122,8 +126,8 @@ export function ItemDetail({ id, title = 'Item', ...props }: ItemDetailProps) {
     ) : data.supplyId ? (
         <Chip
             size="small"
-            label="Supply"
-            title="Received through a supply."
+            label={t('source.Supply', 'Supply')}
+            title={t('source.SupplyTitle', 'Received through a supply.')}
             sx={{
                 ml: 1,
                 height: 22,
@@ -137,8 +141,8 @@ export function ItemDetail({ id, title = 'Item', ...props }: ItemDetailProps) {
     ) : data.isStore ? (
         <Chip
             size="small"
-            label="Store"
-            title="Created directly from store (no recorded origin)."
+            label={t('source.Store', 'Store')}
+            title={t('source.StoreTitle', 'Created directly from store (no recorded origin).')}
             sx={{
                 ml: 1,
                 height: 22,
@@ -156,7 +160,7 @@ export function ItemDetail({ id, title = 'Item', ...props }: ItemDetailProps) {
             {...props}
             id={id}
             icon={<ItemIcon />}
-            title={title}
+            title={resolvedTitle}
             subTitle={data.description}
             loading={loading}
             error={error as string}
@@ -167,7 +171,7 @@ export function ItemDetail({ id, title = 'Item', ...props }: ItemDetailProps) {
                     content={
                         data && (
                             <Properties>
-                                <Property label="Nomenclature" full>
+                                <Property label={t('field.nomenclature', 'Nomenclature')} full>
                                     {data.nomenclatureName ? (
                                         <DetailLinkText
                                             id={data.nomenclatureId}
@@ -212,7 +216,7 @@ export function ItemDetail({ id, title = 'Item', ...props }: ItemDetailProps) {
                                 </Property>
 
                                 <Property
-                                    label="Quantity"
+                                    label={t('field.quantity', 'Quantity')}
                                     value={formatUnits(
                                         data.quantity,
                                         data.tareTareTypeUnits ??
@@ -224,14 +228,14 @@ export function ItemDetail({ id, title = 'Item', ...props }: ItemDetailProps) {
 
                                 {data.serialNo && (
                                     <Property
-                                        label="Serial No"
+                                        label={t('field.serialNo', 'Serial No')}
                                         value={data.serialNo}
                                         mono
                                     />
                                 )}
 
                                 {(data.tareBarcode || data.tareTareTypeName) && (
-                                    <Property label="Tare">
+                                    <Property label={t('field.tare', 'Tare')}>
                                         {data.tareTareTypeName && (
                                             <span>{data.tareTareTypeName}</span>
                                         )}
@@ -254,14 +258,14 @@ export function ItemDetail({ id, title = 'Item', ...props }: ItemDetailProps) {
 
                                 {showAddress && data.address != null && (
                                     <Property
-                                        label="Address"
+                                        label={t('field.address', 'Address')}
                                         value={`#${data.address}`}
                                         mono
                                     />
                                 )}
 
                                 {data.supplyId && (
-                                    <Property label="Supply">
+                                    <Property label={t('field.supply', 'Supply')}>
                                         <DetailLinkText
                                             id={data.supplyId}
                                             text={
@@ -287,7 +291,7 @@ export function ItemDetail({ id, title = 'Item', ...props }: ItemDetailProps) {
                                 )}
 
                                 {data.orderId && (
-                                    <Property label="Order">
+                                    <Property label={t('field.order', 'Order')}>
                                         <DetailLinkText
                                             id={data.orderId}
                                             text={
@@ -332,8 +336,8 @@ export function ItemDetail({ id, title = 'Item', ...props }: ItemDetailProps) {
                                     <Property
                                         label={
                                             data.isOutput
-                                                ? 'Produced by'
-                                                : 'Process'
+                                                ? t('field.producedBy', 'Produced by')
+                                                : t('field.process', 'Process')
                                         }
                                     >
                                         <DetailLinkText
@@ -363,17 +367,17 @@ export function ItemDetail({ id, title = 'Item', ...props }: ItemDetailProps) {
                                 )}
 
                                 <Property
-                                    label="Id"
+                                    label={t('field.id', 'Id')}
                                     value={String(data.id)}
                                     mono
                                     muted
                                 />
 
                                 {data.isActive === false && (
-                                    <Property label="Status">
+                                    <Property label={t('field.status', 'Status')}>
                                         <Chip
                                             size="small"
-                                            label="Inactive"
+                                            label={t('field.inactive', 'Inactive')}
                                             sx={{
                                                 height: 22,
                                                 fontSize: 11,
@@ -402,7 +406,7 @@ export function ItemDetail({ id, title = 'Item', ...props }: ItemDetailProps) {
                         <Box>
                             <EditorSection
                                 number={1}
-                                title="What"
+                                title={t('editor.sectionWhat', 'What')}
                                 done={false}
                             >
                                 <Box sx={{ gridColumn: '1 / -1' }}>
@@ -417,7 +421,7 @@ export function ItemDetail({ id, title = 'Item', ...props }: ItemDetailProps) {
                                             mb: 0.5,
                                         }}
                                     >
-                                        Nomenclature
+                                        {t('field.nomenclature', 'Nomenclature')}
                                     </Typography>
                                     <HierarchyPicker
                                         data={nomenclatures}
@@ -434,14 +438,14 @@ export function ItemDetail({ id, title = 'Item', ...props }: ItemDetailProps) {
                                 </Box>
                                 <Field
                                     name="serialNo"
-                                    label="Serial No"
+                                    label={t('field.serialNo', 'Serial No')}
                                     value={(values.serialNo as string) ?? ''}
                                     onChange={handleChange}
                                 />
                                 <Field
                                     type="number"
                                     name="quantity"
-                                    label="Quantity"
+                                    label={t('field.quantity', 'Quantity')}
                                     value={(values.quantity as number) ?? ''}
                                     onChange={(e) =>
                                         handleChange({
@@ -458,7 +462,7 @@ export function ItemDetail({ id, title = 'Item', ...props }: ItemDetailProps) {
 
                             <EditorSection
                                 number={2}
-                                title="Where"
+                                title={t('editor.sectionWhere', 'Where')}
                                 done={false}
                             >
                                 <Box sx={{ gridColumn: '1 / -1' }}>
@@ -473,7 +477,7 @@ export function ItemDetail({ id, title = 'Item', ...props }: ItemDetailProps) {
                                             mb: 0.5,
                                         }}
                                     >
-                                        Tare Type
+                                        {t('field.tareType', 'Tare Type')}
                                     </Typography>
                                     <HierarchyPicker
                                         data={tareTypeOptions}
@@ -490,7 +494,7 @@ export function ItemDetail({ id, title = 'Item', ...props }: ItemDetailProps) {
                                 </Box>
                                 <Field
                                     name="tareBarcode"
-                                    label="Tare Barcode"
+                                    label={t('field.tareBarcode', 'Tare Barcode')}
                                     value={
                                         (values.tareBarcode as string) ?? ''
                                     }
@@ -500,7 +504,7 @@ export function ItemDetail({ id, title = 'Item', ...props }: ItemDetailProps) {
                                     <Field
                                         type="number"
                                         name="address"
-                                        label="Address"
+                                        label={t('field.address', 'Address')}
                                         value={
                                             (values.address as number) ?? ''
                                         }

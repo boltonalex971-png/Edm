@@ -1,0 +1,20 @@
+{
+    "grades": {
+        "label": "Grades:",
+        "pickTitle": "Select items with this grade",
+        "noGrade": "No grade",
+        "pickNoGradeTitle": "Select items without a grade"
+    },
+    "nomenclatures": {
+        "label": "Nomenclatures:",
+        "pickTitle": "Select items with this nomenclature",
+        "unnamed": "(unnamed)"
+    },
+    "menu": {
+        "autofill": "Autofill to tare ({{count}})",
+        "fillInto": "Fill into",
+        "fallbackTareLabel": "Tare",
+        "gradesHeader": "Grades",
+        "noGrade": "(No grade)"
+    }
+}

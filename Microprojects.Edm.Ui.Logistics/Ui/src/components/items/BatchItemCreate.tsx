@@ -1,3 +1,4 @@
+import './index' // side-effect: registers the `items` namespace
 import Api from '@features/api/api'
 import {
     HierarchyPicker,
@@ -19,6 +20,7 @@ import type {
 } from '@logistics/data/types'
 import { useInvalidateEntities } from '@logistics/hooks/entityRefresh'
 import { getData, useGet } from '@logistics/hooks/hooks'
+import { resolveError } from '@logistics/i18n/resolveError'
 import { formatUnits } from '@logistics/utils/format'
 import {
     EditorSection,
@@ -31,6 +33,7 @@ import {
 import { Box, Button as MuiButton, Typography } from '@mui/material'
 import axios from 'axios'
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 type BatchItemCreateProps = {
     supplyId?: UUID
@@ -56,6 +59,7 @@ export function BatchItemCreate({
     onCreated,
     onClose,
 }: BatchItemCreateProps) {
+    const { t } = useTranslation('items')
     const [[nomenclatures]] = useGet<TreeDataItem[]>(
         `${Api.nomenclatures}/hierarchy`,
         [],
@@ -73,8 +77,8 @@ export function BatchItemCreate({
             editMode={true}
             readonly={true}
             icon={<ItemIcon />}
-            title="New items"
-            subTitle={supplyId ? 'Add to supply' : undefined}
+            title={t('batch.title', 'New items')}
+            subTitle={supplyId ? t('batch.subtitleSupply', 'Add to supply') : undefined}
             onClose={onClose ?? (() => {})}
             editor={
                 <BatchForm
@@ -104,6 +108,7 @@ function BatchForm({
     onCreated,
     onClose,
 }: BatchFormProps) {
+    const { t } = useTranslation('items')
     const setAlert = useAlertSetter()
     const invalidate = useInvalidateEntities()
     const [values, setValues] = useState<BatchFormValues>({})
@@ -222,13 +227,13 @@ function BatchForm({
     const tareValidation = useMemo<string | null>(() => {
         if (!tare?.id) return null
         if (tareTypeId && tare.tareTypeId !== tareTypeId) {
-            return "Picked tare's type doesn't match the selected tare type."
+            return t('batch.validation.typeMismatch', "Picked tare's type doesn't match the selected tare type.")
         }
         if (allowedTareTypeIds && !allowedTareTypeIds.has(tare.tareTypeId)) {
-            return "Picked tare's type is not allowed for the selected nomenclature."
+            return t('batch.validation.typeNotAllowed', "Picked tare's type is not allowed for the selected nomenclature.")
         }
         return null
-    }, [tare, tareTypeId, allowedTareTypeIds])
+    }, [tare, tareTypeId, allowedTareTypeIds, t])
 
     const canSubmit = !!(
         nomenclatureId &&
@@ -264,14 +269,24 @@ function BatchForm({
             )
             const remainingTxt =
                 result.remaining > 0
-                    ? ` Remaining capacity: ${formatUnits(result.remaining, result.units, result.countable)}.`
+                    ? t('batch.remainingCapacity', {
+                          capacity: formatUnits(result.remaining, result.units, result.countable),
+                          defaultValue: ' Remaining capacity: {{capacity}}.',
+                      })
                     : ''
             setAlert({
-                message:
-                    `Created ${qtyTxt} in tare ` +
-                    `${result.tareBarcode || '(no barcode)'}` +
-                    `${result.tareTypeName ? ` (${result.tareTypeName})` : ''}.` +
-                    remainingTxt,
+                message: t('batch.created', {
+                    quantity: qtyTxt,
+                    tare: result.tareBarcode || t('batch.noBarcode', '(no barcode)'),
+                    type: result.tareTypeName
+                        ? t('batch.tareTypeSuffix', {
+                              name: result.tareTypeName,
+                              defaultValue: ' ({{name}})',
+                          })
+                        : '',
+                    remaining: remainingTxt,
+                    defaultValue: 'Created {{quantity}} in tare {{tare}}{{type}}.{{remaining}}',
+                }),
             })
             invalidate([
                 { type: 'item' },
@@ -283,7 +298,7 @@ function BatchForm({
         } catch (err: any) {
             setAlert({
                 status: 'danger',
-                message: err.response?.data?.detail || err.message || 'Error',
+                message: resolveError(err, t('common:error', 'Error')),
             })
         }
     }
@@ -300,9 +315,9 @@ function BatchForm({
 
     return (
         <Box component="form" onSubmit={handleSubmit} noValidate>
-            <EditorSection number={1} title="Batch create items" done={false}>
+            <EditorSection number={1} title={t('batch.section', 'Batch create items')} done={false}>
                 <Box sx={{ gridColumn: '1 / -1' }}>
-                    <Typography sx={monoLabelSx}>Nomenclature</Typography>
+                    <Typography sx={monoLabelSx}>{t('field.nomenclature', 'Nomenclature')}</Typography>
                     <HierarchyPicker
                         data={nomenclatures}
                         value={nomenclatureId}
@@ -315,7 +330,7 @@ function BatchForm({
                     />
                 </Box>
                 <Box sx={{ gridColumn: '1 / -1' }}>
-                    <Typography sx={monoLabelSx}>Tare Type</Typography>
+                    <Typography sx={monoLabelSx}>{t('field.tareType', 'Tare Type')}</Typography>
                     <HierarchyPicker
                         data={tareTypeOptions}
                         value={tareTypeId}
@@ -328,15 +343,15 @@ function BatchForm({
                     />
                 </Box>
                 <Box sx={{ gridColumn: '1 / -1' }}>
-                    <Typography sx={monoLabelSx}>Tare Barcode</Typography>
+                    <Typography sx={monoLabelSx}>{t('field.tareBarcode', 'Tare Barcode')}</Typography>
                     <TareBarcodePicker
                         tareTypeId={tareTypeId}
                         nomenclatureId={nomenclatureId}
                         value={tare ?? null}
-                        onChange={(t) =>
-                            setValues((prev) => ({ ...prev, tare: t }))
+                        onChange={(picked) =>
+                            setValues((prev) => ({ ...prev, tare: picked }))
                         }
-                        placeholder="Select existing, type new, or leave empty"
+                        placeholder={t('batch.barcodePlaceholder', 'Select existing, type new, or leave empty')}
                     />
                     {tareValidation && (
                         <Typography
@@ -359,7 +374,10 @@ function BatchForm({
                                 color: 'var(--ink-3)',
                             }}
                         >
-                            Existing tare — remaining: {tare?.remaining}
+                            {t('batch.existingRemaining', {
+                                remaining: tare?.remaining,
+                                defaultValue: 'Existing tare — remaining: {{remaining}}',
+                            })}
                         </Typography>
                     )}
                     {!tareValidation && !isExistingTare && (
@@ -371,11 +389,12 @@ function BatchForm({
                                 color: 'var(--ink-3)',
                             }}
                         >
-                            New tare will be created
                             {tare?.barcode
-                                ? ` with barcode “${tare.barcode}”`
-                                : ' without barcode'}
-                            .
+                                ? t('batch.newTareWithBarcode', {
+                                      barcode: tare.barcode,
+                                      defaultValue: 'New tare will be created with barcode "{{barcode}}".',
+                                  })
+                                : t('batch.newTareNoBarcode', 'New tare will be created without barcode.')}
                         </Typography>
                     )}
                 </Box>
@@ -384,7 +403,9 @@ function BatchForm({
                         type="number"
                         name="quantity"
                         label={
-                            isCountable ? 'Number of items' : 'Quantity'
+                            isCountable
+                                ? t('batch.fieldNumberOfItems', 'Number of items')
+                                : t('batch.fieldQuantity', 'Quantity')
                         }
                         value={quantity ?? ''}
                         onChange={(e) => {
@@ -401,7 +422,7 @@ function BatchForm({
                         }}
                         help={
                             maxQuantity > 0
-                                ? `Max: ${maxQuantity}`
+                                ? t('batch.max', { max: maxQuantity, defaultValue: 'Max: {{max}}' })
                                 : undefined
                         }
                     />
@@ -427,11 +448,11 @@ function BatchForm({
                     startIcon={<SaveIcon />}
                     disabled={!canSubmit}
                 >
-                    Create
+                    {t('batch.create', 'Create')}
                 </MuiButton>
                 {onClose && (
                     <MuiButton onClick={onClose} type="button">
-                        Cancel
+                        {t('batch.cancel', 'Cancel')}
                     </MuiButton>
                 )}
             </Box>

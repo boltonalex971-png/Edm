@@ -120,7 +120,10 @@ namespace Microprojects.Edm.Ui.Technologies.Jobs
             });
             if (response.Status != "Ok")
             {
-                throw new EdmException(response.Message);
+                throw new EdmException(
+                    "Technologies.Operation.RemoteJobFailed",
+                    new Dictionary<string, object> { ["message"] = response.Message },
+                    response.Message);
             }
             return response.Response;
         }

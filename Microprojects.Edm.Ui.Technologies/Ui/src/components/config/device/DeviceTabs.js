@@ -1,6 +1,7 @@
 ﻿import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { Tabs, Tab, Box } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import { DeviceHostsTab } from './DeviceHostsTab';
 import { SmoothTabContainer } from '@microprojects/edm-components/components';
 
@@ -12,6 +13,7 @@ DeviceTabs.propTypes = {
 
 export function DeviceTabs(props) {
     const [selected, setSelected] = useState(0);
+    const { t } = useTranslation('tech');
 
     const handleChange = (event, newValue) => {
         setSelected(newValue);
@@ -22,8 +24,8 @@ export function DeviceTabs(props) {
     return (
         <Box sx={{ width: '100%' }}>
             <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                <Tabs value={selected} onChange={handleChange} aria-label="device tabs">
-                    <Tab label="Hosts" sx={{ textTransform: 'none' }} />
+                <Tabs value={selected} onChange={handleChange} aria-label={t('device.tabs.hosts')}>
+                    <Tab label={t('device.tabs.hosts')} sx={{ textTransform: 'none' }} />
                 </Tabs>
             </Box>
             <Box sx={{ pt: 2 }}>

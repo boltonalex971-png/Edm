@@ -1,3 +1,4 @@
+import '@logistics/components/orders' // side-effect: registers the `orders` namespace
 import api from '@features/api/api.ts'
 import Api from '@features/api/api.ts'
 import { DetailLinkText } from '@logistics/components/DropDownCell.tsx'
@@ -29,6 +30,7 @@ import {
     useInvalidateEntities,
 } from '@logistics/hooks/entityRefresh'
 import { useGet } from '@logistics/hooks/hooks.ts'
+import { resolveError } from '@logistics/i18n/resolveError'
 import { formatLocalDate, parseUtcDate } from '@logistics/utils/format'
 import {
     EditorSection,
@@ -47,6 +49,7 @@ import { Box, Button as MuiButton, Chip, Typography } from '@mui/material'
 import axios from 'axios'
 import type React from 'react'
 import { type EffectCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 
 export interface OrderDetailProps extends DetailProps {
@@ -82,9 +85,11 @@ function fromDateInputValue(s: string): Date | null {
 
 export function OrderDetail({
     id,
-    title = 'Order',
+    title,
     ...props
 }: OrderDetailProps) {
+    const { t } = useTranslation('orders')
+    const resolvedTitle = title ?? t('detail.defaultTitle', 'Order')
     const setAlert = useAlertSetter()
     const [subDetail, setSubDetail] = useState<React.ReactElement>()
     const [allocateOpen, setAllocateOpen] = useState(false)
@@ -142,11 +147,11 @@ export function OrderDetail({
     const startDisabled =
         !effectiveId || isCompleted || isDeleted || processCompleted
     const startDisabledReason = isDeleted
-        ? 'Order is deleted'
+        ? t('detail.disabledReason.orderDeleted', 'Order is deleted')
         : isCompleted
-          ? 'Order is completed'
+          ? t('detail.disabledReason.orderCompleted', 'Order is completed')
           : processCompleted
-            ? 'Process is already completed'
+            ? t('detail.disabledReason.processCompleted', 'Process is already completed')
             : undefined
     const startOrder = () => {
         axios
@@ -164,16 +169,13 @@ export function OrderDetail({
                 }
                 setAlert({
                     message: completed
-                        ? 'The order executed and completed'
-                        : 'The order executed successfully',
+                        ? t('detail.toast.executedCompleted', 'The order executed and completed')
+                        : t('detail.toast.executedSuccessfully', 'The order executed successfully'),
                 })
             })
             .catch((e) => {
                 setAlert({
-                    message:
-                        e.response.data.detail ||
-                        e.response.statusText ||
-                        'Error',
+                    message: resolveError(e, t('common:error')),
                     status: 'danger',
                 })
             })
@@ -194,10 +196,7 @@ export function OrderDetail({
             })
             .catch((e) => {
                 setAlert({
-                    message:
-                        e.response?.data?.detail ||
-                        e.response?.statusText ||
-                        'Failed to complete the order',
+                    message: resolveError(e, t('detail.toast.completeFailed', 'Failed to complete the order')),
                     status: 'danger',
                 })
             })
@@ -206,11 +205,7 @@ export function OrderDetail({
     const statusChip = data?.status ? (
         <Chip
             size="small"
-            label={
-                data.status === 'OutputsPending'
-                    ? 'Outputs pending'
-                    : data.status
-            }
+            label={t(`widgets:status.${data.status}`)}
             sx={{
                 height: 22,
                 fontFamily: 'var(--font-mono)',
@@ -238,7 +233,7 @@ export function OrderDetail({
                 {...props}
                 id={id}
                 icon={<OrderIcon />}
-                title={data?.number ? `#${data.number}` : title}
+                title={data?.number ? `#${data.number}` : resolvedTitle}
                 subTitle={data.description}
                 loading={loading}
                 error={error as string}
@@ -277,7 +272,7 @@ export function OrderDetail({
                                                 variant="caption"
                                                 sx={{ color: 'var(--ink-3)' }}
                                             >
-                                                Executed by{' '}
+                                                {t('detail.executedBy', 'Executed by')}{' '}
                                                 <b>{data.executor}</b>
                                             </Typography>
                                         )}
@@ -291,7 +286,7 @@ export function OrderDetail({
                                                 disabled={startDisabled}
                                                 title={startDisabledReason}
                                             >
-                                                Execute order
+                                                {t('detail.executeOrder', 'Execute order')}
                                             </MuiButton>
                                         )}
                                         {processCompleted &&
@@ -307,11 +302,11 @@ export function OrderDetail({
                                                     disabled={isDeleted}
                                                     title={
                                                         isDeleted
-                                                            ? 'Order is deleted'
+                                                            ? t('detail.disabledReason.orderDeleted', 'Order is deleted')
                                                             : undefined
                                                     }
                                                 >
-                                                    Allocate output
+                                                    {t('detail.allocateOutput', 'Allocate output')}
                                                 </MuiButton>
                                             )}
                                         {processCompleted &&
@@ -326,11 +321,11 @@ export function OrderDetail({
                                                     disabled={isDeleted}
                                                     title={
                                                         isDeleted
-                                                            ? 'Order is deleted'
+                                                            ? t('detail.disabledReason.orderDeleted', 'Order is deleted')
                                                             : undefined
                                                     }
                                                 >
-                                                    Complete order
+                                                    {t('detail.completeOrder', 'Complete order')}
                                                 </MuiButton>
                                             )}
                                         {isCompleted && (
@@ -342,12 +337,12 @@ export function OrderDetail({
                                                     setAllocateOpen(true)
                                                 }
                                             >
-                                                View allocation
+                                                {t('detail.viewAllocation', 'View allocation')}
                                             </MuiButton>
                                         )}
                                     </Box>
                                     <Properties>
-                                        <Property label="Nomenclature">
+                                        <Property label={t('detail.field.nomenclature', 'Nomenclature')}>
                                             <DetailLinkText
                                                 id={data.processNomenclatureId}
                                                 text={
@@ -374,11 +369,11 @@ export function OrderDetail({
                                             />
                                         </Property>
                                         <Property
-                                            label="Amount"
-                                            value={`${data.amount} pcs`}
+                                            label={t('detail.field.amount', 'Amount')}
+                                            value={t('detail.field.amountValue', '{{count}} pcs', { count: data.amount as number })}
                                             mono
                                         />
-                                        <Property label="Process" full>
+                                        <Property label={t('detail.field.process', 'Process')} full>
                                             <DetailLinkText
                                                 id={data.processId}
                                                 text={data.processName}
@@ -399,18 +394,18 @@ export function OrderDetail({
                                             />
                                         </Property>
                                         <Property
-                                            label="Start"
+                                            label={t('detail.field.start', 'Start')}
                                             value={formatLocalDate(data.startDate)}
                                             mono
                                         />
                                         <Property
-                                            label="Due"
+                                            label={t('detail.field.due', 'Due')}
                                             value={formatLocalDate(data.dueDate)}
                                             mono
                                         />
                                         {data.description && (
                                             <Property
-                                                label="Description"
+                                                label={t('detail.field.description', 'Description')}
                                                 value={data.description}
                                                 multiline
                                                 full
@@ -439,12 +434,12 @@ export function OrderDetail({
                                 <Box>
                                     <EditorSection
                                         number={1}
-                                        title="Identity"
+                                        title={t('detail.editor.section.identity', 'Identity')}
                                         done={false}
                                     >
                                         <Field
                                             name="number"
-                                            label="Order #"
+                                            label={t('detail.editor.field.orderNumber', 'Order #')}
                                             value={
                                                 (values.number as string) ?? ''
                                             }
@@ -454,7 +449,7 @@ export function OrderDetail({
                                             full
                                             kind="textarea"
                                             name="description"
-                                            label="Description"
+                                            label={t('detail.editor.field.description', 'Description')}
                                             rows={2}
                                             value={
                                                 (values.description as string) ??
@@ -466,7 +461,7 @@ export function OrderDetail({
 
                                     <EditorSection
                                         number={2}
-                                        title="Process"
+                                        title={t('detail.editor.section.process', 'Process')}
                                         done={false}
                                     >
                                         <Box>
@@ -482,7 +477,7 @@ export function OrderDetail({
                                                     mb: 0.5,
                                                 }}
                                             >
-                                                Technology process
+                                                {t('detail.editor.field.technologyProcess', 'Technology process')}
                                             </Typography>
                                             <HierarchyPicker
                                                 data={hierarchy}
@@ -500,7 +495,7 @@ export function OrderDetail({
                                         <Field
                                             type="number"
                                             name="amount"
-                                            label="Amount"
+                                            label={t('detail.editor.field.amount', 'Amount')}
                                             required
                                             value={
                                                 (values.amount as number) ??
@@ -523,7 +518,10 @@ export function OrderDetail({
                                             }
                                             help={
                                                 amountInvalid
-                                                    ? 'Amount must be greater than 0.'
+                                                    ? t(
+                                                          'detail.editor.field.amountInvalid',
+                                                          'Amount must be greater than 0.',
+                                                      )
                                                     : undefined
                                             }
                                         />
@@ -531,13 +529,13 @@ export function OrderDetail({
 
                                     <EditorSection
                                         number={3}
-                                        title="Schedule"
+                                        title={t('detail.editor.section.schedule', 'Schedule')}
                                         done={false}
                                     >
                                         <Field
                                             type="date"
                                             name="startDate"
-                                            label="Start Date"
+                                            label={t('detail.editor.field.startDate', 'Start Date')}
                                             value={toDateInputValue(
                                                 values.startDate ??
                                                     parseUtcDate(
@@ -558,7 +556,7 @@ export function OrderDetail({
                                         <Field
                                             type="date"
                                             name="dueDate"
-                                            label="Due Date"
+                                            label={t('detail.editor.field.dueDate', 'Due Date')}
                                             value={toDateInputValue(
                                                 values.dueDate ??
                                                     parseUtcDate(

@@ -120,7 +120,10 @@ public class JobContainer : IJobContainer
     private async Task<IJob> GetScopedJob(IServiceScope scope, Type jobType, IJobParameters parameters = null)
     {
         var job = (IJob)scope.ServiceProvider.GetService(jobType) ??
-                  throw new EdmException($"Job is not registered: {jobType.Name}");
+                  throw new EdmException(
+                      "Edm.Job.NotRegistered",
+                      new Dictionary<string, object> { ["jobType"] = jobType.Name },
+                      $"Job is not registered: {jobType.Name}");
 
         if (job is INeedServiceScope scopedJob)
         {
@@ -131,7 +134,10 @@ public class JobContainer : IJobContainer
         {
             if (!parameters.GetType().IsAssignableTo(jobType.GetJobParameters()))
             {
-                throw new EdmException($"Job parameters must be instance of {jobType.GetJobParameters().Name}");
+                throw new EdmException(
+                    "Edm.Job.ParamsTypeMismatch",
+                    new Dictionary<string, object> { ["paramsType"] = jobType.GetJobParameters().Name },
+                    $"Job parameters must be instance of {jobType.GetJobParameters().Name}");
             }
 
             job.JobParameters = parameters;
@@ -144,7 +150,10 @@ public class JobContainer : IJobContainer
         if (await job.InitAsync())
             return job;
 
-        throw new EdmException($"Cannot initialize the job {job.Name}");
+        throw new EdmException(
+            "Edm.Job.InitFailed",
+            new Dictionary<string, object> { ["job"] = job.Name },
+            $"Cannot initialize the job {job.Name}");
     }
 
     // public Task<ResponseData> ExecuteAsync(Action job)
@@ -399,6 +408,8 @@ public class JobContainer : IJobContainer
                                       return jobParams.ContainsKey(p.Key) && jobParams[p.Key].Equals(p.Value);
                                   })) ?? 
                       throw new EdmException(
+                          "Edm.Job.NotRegistered",
+                          new Dictionary<string, object> { ["jobType"] = jobName.ToString() },
                           $"Job, executing with parameters {JsonConvert.SerializeObject(parameters)} cannot be found");
             pid = job.Task.Id;
         }
@@ -415,7 +426,10 @@ public class JobContainer : IJobContainer
     private static IJobParameters ConvertParameters(Type jobType, string data)
     {
         var jobParamsType = jobType.GetCustomAttribute<JobAttribute>(true)?.Parameters
-                            ?? throw new EdmException($"Parameters type for {jobType.Name} is not defined");
+                            ?? throw new EdmException(
+                                "Edm.Job.ParamsTypeUndefined",
+                                new Dictionary<string, object> { ["jobType"] = jobType.Name },
+                                $"Parameters type for {jobType.Name} is not defined");
         var param = (IJobParameters)Activator.CreateInstance(jobParamsType);
         JsonConvert.PopulateObject(data ?? "{}", param);
         return param;

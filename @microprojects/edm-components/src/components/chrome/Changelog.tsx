@@ -1,5 +1,6 @@
-﻿import {Box, Typography} from '@mui/material';
+import {Box, Typography} from '@mui/material';
 import {useEffect, useState} from 'react';
+import {useTranslation} from 'react-i18next';
 import * as ReactMarkdownNs from 'react-markdown';
 import * as remarkGfmNs from 'remark-gfm';
 
@@ -18,14 +19,23 @@ interface ChangelogProps {
 }
 
 export function Changelog({changelogUrl}: ChangelogProps) {
+    const {t, i18n} = useTranslation('edm-chrome');
+    const lng = i18n.language;
     const [text, setText] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+        setText(null);
+        setError(null);
         const controller = new AbortController();
+        // Stamp Accept-Language explicitly — the consuming SPA's axios
+        // interceptor doesn't apply to raw fetch(), so the server would
+        // otherwise fall back to its default culture and serve the English
+        // changelog regardless of the active SPA locale.
         fetch(changelogUrl, {
             credentials: 'include',
             signal: controller.signal,
+            headers: {'Accept-Language': lng},
         })
             .then(async (r) => {
                 if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -36,18 +46,24 @@ export function Changelog({changelogUrl}: ChangelogProps) {
                 if (e.name !== 'AbortError') setError(e.message);
             });
         return () => controller.abort();
-    }, [changelogUrl]);
+    }, [changelogUrl, lng]);
 
     return (
         <Box className="markdown" sx={{maxWidth: 860, margin: '24px auto', padding: '0 16px'}}>
             {error && (
                 <Typography color="error">
-                    Failed to load changelog: {error}
+                    {t('changelog.loadFailed', 'Failed to load changelog: {{error}}', {error})}
                 </Typography>
             )}
-            {!error && text == null && <Typography>Loading…</Typography>}
+            {!error && text == null && <Typography>{t('changelog.loading', 'Loading…')}</Typography>}
             {text != null && (
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
+                // CHANGES.md / .ru.md carry hidden `<!-- cite: PR ... -->`
+                // dedupe markers per the update-changes policy; react-markdown
+                // doesn't recognise inline HTML by default and escapes them as
+                // visible text, so strip before rendering.
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {text.replace(/<!--[\s\S]*?-->/g, '')}
+                </ReactMarkdown>
             )}
         </Box>
     );

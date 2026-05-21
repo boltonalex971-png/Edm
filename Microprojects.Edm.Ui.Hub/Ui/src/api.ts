@@ -6,6 +6,10 @@ export interface PluginSummary {
     guid: string
     name: string
     description: string
+    /** i18next key for the localized name. Optional — falls back to {@link name}. */
+    nameKey?: string
+    /** i18next key for the localized description. Optional — falls back to {@link description}. */
+    descriptionKey?: string
     homepage: string
 }
 

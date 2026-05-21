@@ -77,22 +77,22 @@ namespace Microprojects.Edm.Ui.Technologies.Services
         public async Task<IEnumerable<Qualifier>> GetProcessQualifiers(int auditId)
         {
             var audit = await Get(auditId, a => a.Profile.Process.Qualifiers) ?? 
-                throw new EdmException("No audit found");
+                throw new EdmException("Technologies.Audit.NotFound", "No audit found.");
             return audit.Profile.Process.Qualifiers;
         }
 
         public async Task<IEnumerable<Qualifier>> GetQualifiers(int id)
         {
-            var audit = await Get(id, a => a.Qualifiers) ?? throw new EdmException("No audit found");
+            var audit = await Get(id, a => a.Qualifiers) ?? throw new EdmException("Technologies.Audit.NotFound", "No audit found.");
             return audit.Qualifiers;
         }
 
         public async Task<Qualifier> AddQualifier(int auditId, Qualifier qualifier)
         {
             var audit = await Get(auditId, a => a.Qualifiers) ??
-                throw new EdmException("No audit found");
+                throw new EdmException("Technologies.Audit.NotFound", "No audit found.");
             var chosen = (await GetProcessQualifiers(auditId)).FirstOrDefault(q => q.Id == qualifier.Id) ??
-                throw new EdmException("Specified qualifier does not belong to an appropriate process");
+                throw new EdmException("Technologies.Audit.QualifierMismatch", "Specified qualifier does not belong to an appropriate process.");
             audit.Qualifiers.Add(chosen);
             await Db.SaveChangesAsync();
             return qualifier;
@@ -101,9 +101,9 @@ namespace Microprojects.Edm.Ui.Technologies.Services
         public async Task<bool> DeleteQualifier(int auditId, int qualifierId)
         {
             var audit = await Get(auditId, a => a.Qualifiers) ??
-                throw new EdmException("No audit found");
+                throw new EdmException("Technologies.Audit.NotFound", "No audit found.");
             var chosen = audit.Qualifiers.FirstOrDefault(q => q.Id == qualifierId) ??
-                throw new EdmException("Specified qualifier does not belong to an appropriate process");
+                throw new EdmException("Technologies.Audit.QualifierMismatch", "Specified qualifier does not belong to an appropriate process.");
             audit.Qualifiers.Remove(chosen);
             await Db.SaveChangesAsync();
             return true;

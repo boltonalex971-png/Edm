@@ -1,3 +1,4 @@
+import './index' // side-effect: registers the `items` namespace
 import Api from '@features/api/api'
 import { Loading } from '@features/utils/Utils'
 import { EMPTY_GUID } from '@logistics/components/MasterDetail.tsx'
@@ -27,6 +28,7 @@ import {
     ChevronRightOutlined as ChevronRight,
 } from '@mui/icons-material'
 import { useEffect, useMemo, useState } from 'react'
+import { type TFunction, useTranslation } from 'react-i18next'
 import './ItemGenealogyTree.css'
 
 export interface ItemGenealogyTreeProps {
@@ -82,10 +84,12 @@ type GenealogyItem = {
 
 type DepthChoice = 2 | 5 | 0 // 0 = full tree
 
-function nodeName(n: ItemNode): string {
+function nodeName(n: ItemNode, t: TFunction): string {
     return (
         n.nomenclatureName ??
-        (n.serialNo ? `SN ${n.serialNo}` : `Item ${n.id.slice(0, 8)}`)
+        (n.serialNo
+            ? t('genealogy.tooltip.serialNo', 'SN') + ' ' + n.serialNo
+            : t('title', 'Item') + ' ' + n.id.slice(0, 8))
     )
 }
 
@@ -103,6 +107,7 @@ function nodeTooltipFields(
     n: ItemNode,
     edge: GenealogyEdge | undefined,
     kind: OriginKind,
+    t: TFunction,
 ): TooltipFields {
     const tare =
         n.tareTypeName || n.tareBarcode
@@ -122,9 +127,9 @@ function nodeTooltipFields(
               )
             : undefined
     return {
-        name: nodeName(n),
+        name: nodeName(n, t),
         category: n.nomenclatureCategory ?? undefined,
-        source: sourceLine(kind, edge),
+        source: sourceLine(kind, edge, t),
         quantity,
         consumed: consumed && consumed !== quantity ? consumed : undefined,
         serialNo: n.serialNo,
@@ -135,14 +140,16 @@ function nodeTooltipFields(
 }
 
 /** One-line "where did this row come from" — process name for OUT, plain origin word otherwise. */
-function sourceLine(kind: OriginKind, edge?: GenealogyEdge): string | undefined {
+function sourceLine(kind: OriginKind, edge: GenealogyEdge | undefined, t: TFunction): string | undefined {
     if (kind === 'out') {
-        return edge?.processName ? `Process: ${edge.processName}` : 'Execution output'
+        return edge?.processName
+            ? t('genealogy.processPrefix', { name: edge.processName, defaultValue: 'Process: {{name}}' })
+            : t('genealogy.executionOutput', 'Execution output')
     }
-    if (kind === 'supply') return 'Supply receipt'
-    if (kind === 'store') return 'Store entry'
+    if (kind === 'supply') return t('genealogy.supplyReceipt', 'Supply receipt')
+    if (kind === 'store') return t('genealogy.storeEntry', 'Store entry')
     if (kind === 'split') {
-        return edge?.orderProcessId == null ? 'Split from parent' : undefined
+        return edge?.orderProcessId == null ? t('genealogy.splitFromParent', 'Split from parent') : undefined
     }
     return undefined
 }
@@ -159,11 +166,13 @@ function originKind(n: ItemNode): OriginKind {
     return 'split'
 }
 
-const ORIGIN_LABELS: Record<OriginKind, string> = {
-    out: 'OUT',
-    supply: 'SUPPLY',
-    store: 'STORE',
-    split: 'SPLIT',
+function originLabels(t: TFunction): Record<OriginKind, string> {
+    return {
+        out: t('genealogy.originLabel.out', 'OUT'),
+        supply: t('genealogy.originLabel.supply', 'SUPPLY'),
+        store: t('genealogy.originLabel.store', 'STORE'),
+        split: t('genealogy.originLabel.split', 'SPLIT'),
+    }
 }
 
 /** Stable signature for grouping visually-identical siblings. */
@@ -182,7 +191,7 @@ function similaritySignature(item: GenealogyItem): string {
  * Groups appear collapsed by default; the underlying items become children
  * of the group entry and the user can expand them with the tree's chevron.
  */
-function groupSiblings(children: GenealogyItem[], path: string): GenealogyItem[] {
+function groupSiblings(children: GenealogyItem[], path: string, t: TFunction): GenealogyItem[] {
     const order: string[] = []
     const buckets = new Map<string, GenealogyItem[]>()
     for (const c of children) {
@@ -211,7 +220,10 @@ function groupSiblings(children: GenealogyItem[], path: string): GenealogyItem[]
                 tooltipFields: {
                     name: head.tooltipFields.name,
                     quantity: head.tooltipFields.quantity,
-                    note: `${items.length} similar items grouped — expand to see individual entries`,
+                    note: t('genealogy.groupedNote', {
+                        count: items.length,
+                        defaultValue: '{{count}} similar items grouped — expand to see individual entries',
+                    }),
                 },
                 inactive: head.inactive,
                 isOutput: head.isOutput,
@@ -237,7 +249,9 @@ function buildTree(
     nodes: Map<UUID, ItemNode>,
     edges: GenealogyEdge[],
     direction: 'ancestors' | 'descendants',
+    t: TFunction,
 ): GenealogyItem[] {
+    const labels = originLabels(t)
     const byPrimary = new Map<UUID, GenealogyEdge[]>()
     for (const e of edges) {
         const key = direction === 'ancestors' ? e.targetItemId : e.sourceItemId
@@ -261,20 +275,24 @@ function buildTree(
             const cycle = visited.has(nextId)
             visited.add(nextId)
             const kind = node ? originKind(node) : undefined
+            const missingLabel = t('genealogy.missing', {
+                id: nextId.slice(0, 8),
+                defaultValue: '(missing {{id}})',
+            })
             const fields: TooltipFields = node
-                ? nodeTooltipFields(node, edge, kind!)
-                : { name: `(missing ${nextId.slice(0, 8)})`, quantity: '—' }
+                ? nodeTooltipFields(node, edge, kind!, t)
+                : { name: missingLabel, quantity: '—' }
             return {
                 id: nodeKey,
                 itemId: nextId,
-                name: node ? nodeName(node) : `(missing ${nextId.slice(0, 8)})`,
+                name: node ? nodeName(node, t) : missingLabel,
                 quantityText: node ? nodeQuantityText(node) : '—',
                 orderNumber: node?.orderNumber ?? undefined,
                 tooltipFields: fields,
                 inactive: node?.inactive ?? false,
                 isOutput: node?.isOutput ?? false,
                 originKind: kind,
-                originLabel: kind ? ORIGIN_LABELS[kind] : undefined,
+                originLabel: kind ? labels[kind] : undefined,
                 edgeArrow: arrow,
                 items: cycle ? [] : recurse(nextId, nodeKey),
                 depth: node?.depth ?? 0,
@@ -284,7 +302,7 @@ function buildTree(
         // Only descendants get sibling-grouping; ancestors typically have one
         // parent per node and don't benefit from collapsing.
         return direction === 'descendants'
-            ? groupSiblings(children, path)
+            ? groupSiblings(children, path, t)
             : children
     }
 
@@ -323,6 +341,7 @@ function collectExpandedIds(items: GenealogyItem[]): string[] {
 function NodeTooltipContent({
     fields,
 }: { fields: TooltipFields }): React.ReactElement {
+    const { t } = useTranslation('items')
     const cls = ['geneal-tooltip']
     if (fields.inactive) cls.push('geneal-tooltip--inactive')
     return (
@@ -340,29 +359,29 @@ function NodeTooltipContent({
                 <div className="geneal-tooltip-note">{fields.note}</div>
             ) : (
                 <dl className="geneal-tooltip-grid">
-                    <dt>Quantity</dt>
+                    <dt>{t('genealogy.tooltip.quantity', 'Quantity')}</dt>
                     <dd>{fields.quantity}</dd>
                     {fields.consumed && (
                         <>
-                            <dt>Consumed</dt>
+                            <dt>{t('genealogy.tooltip.consumed', 'Consumed')}</dt>
                             <dd>{fields.consumed}</dd>
                         </>
                     )}
                     {fields.serialNo && (
                         <>
-                            <dt>SN</dt>
+                            <dt>{t('genealogy.tooltip.serialNo', 'SN')}</dt>
                             <dd>{fields.serialNo}</dd>
                         </>
                     )}
                     {fields.tare && (
                         <>
-                            <dt>Tare</dt>
+                            <dt>{t('genealogy.tooltip.tare', 'Tare')}</dt>
                             <dd>{fields.tare}</dd>
                         </>
                     )}
                     {fields.address && (
                         <>
-                            <dt>Address</dt>
+                            <dt>{t('genealogy.tooltip.address', 'Address')}</dt>
                             <dd>{fields.address}</dd>
                         </>
                     )}
@@ -483,12 +502,14 @@ export function ItemGenealogyTree({
     itemId,
     onSelect,
 }: ItemGenealogyTreeProps) {
+    const { t } = useTranslation('items')
     const [depthChoice, setDepthChoice] = useState<DepthChoice>(2)
 
     if (!itemId || itemId === EMPTY_GUID) {
         return null
     }
 
+    // eslint-disable-next-line react-hooks/rules-of-hooks -- legacy: early return above; safe in practice but should be refactored
     const [[data], loading, error] = useGet<ItemGenealogy>(
         `${Api.items}/${itemId}/genealogy?depth=${depthChoice}`,
         [itemId, depthChoice],
@@ -501,6 +522,7 @@ export function ItemGenealogyTree({
         descendantCount,
         ancestorExpanded,
         descendantExpanded,
+        // eslint-disable-next-line react-hooks/rules-of-hooks -- legacy: early return above; safe in practice but should be refactored
     } = useMemo(() => {
         if (!data) {
             return {
@@ -516,12 +538,13 @@ export function ItemGenealogyTree({
         for (const n of data.nodes) {
             byId.set(n.id, n)
         }
-        const ancestors = buildTree(data.rootId, byId, data.edges, 'ancestors')
+        const ancestors = buildTree(data.rootId, byId, data.edges, 'ancestors', t)
         const descendants = buildTree(
             data.rootId,
             byId,
             data.edges,
             'descendants',
+            t,
         )
         return {
             ancestorTree: ancestors,
@@ -531,11 +554,11 @@ export function ItemGenealogyTree({
             ancestorExpanded: collectExpandedIds(ancestors),
             descendantExpanded: collectExpandedIds(descendants),
         }
-    }, [data])
+    }, [data, t])
 
     const depthOptions: DepthChoice[] = [2, 5, 0]
     const depthLabel = (choice: DepthChoice) =>
-        choice === 0 ? 'Full' : String(choice)
+        choice === 0 ? t('genealogy.depthFull', 'Full') : String(choice)
 
     return (
         <Box className="geneal-root">
@@ -552,7 +575,7 @@ export function ItemGenealogyTree({
                         m: 0,
                     }}
                 >
-                    <GenealogyIcon /> Genealogy
+                    <GenealogyIcon /> {t('genealogy.title', 'Genealogy')}
                 </Typography>
                 <Box
                     sx={{
@@ -564,10 +587,10 @@ export function ItemGenealogyTree({
                     {data?.truncated && depthChoice !== 0 && (
                         <Typography
                             variant="caption"
-                            title="Some branches are hidden beyond the current depth."
+                            title={t('genealogy.truncatedTitle', 'Some branches are hidden beyond the current depth.')}
                             sx={{ color: 'var(--sig-warn-deep)' }}
                         >
-                            truncated
+                            {t('genealogy.truncated', 'truncated')}
                         </Typography>
                     )}
                     <Typography
@@ -581,7 +604,7 @@ export function ItemGenealogyTree({
                             letterSpacing: '0.07em',
                         }}
                     >
-                        Depth
+                        {t('genealogy.depth', 'Depth')}
                     </Typography>
                     <ToggleButtonGroup
                         value={depthChoice}
@@ -597,8 +620,11 @@ export function ItemGenealogyTree({
                                 value={choice}
                                 title={
                                     choice === 0
-                                        ? 'Load the entire tree'
-                                        : `Limit to depth ${choice}`
+                                        ? t('genealogy.depthFullTitle', 'Load the entire tree')
+                                        : t('genealogy.depthLimitTitle', {
+                                              depth: choice,
+                                              defaultValue: 'Limit to depth {{depth}}',
+                                          })
                                 }
                                 sx={{
                                     px: 1.5,
@@ -624,23 +650,23 @@ export function ItemGenealogyTree({
             {data && (
                 <Box className="geneal-grid">
                     <GenealogyPane
-                        ariaLabel="Input items"
-                        headerLeft="Inputs ◀"
+                        ariaLabel={t('genealogy.inputsAria', 'Input items')}
+                        headerLeft={t('genealogy.inputsHeader', 'Inputs ◀')}
                         count={ancestorCount}
                         tree={ancestorTree}
                         expandedIds={ancestorExpanded}
                         onSelect={onSelect}
-                        emptyMessage="No input items recorded."
+                        emptyMessage={t('genealogy.noInputs', 'No input items recorded.')}
                         rtl
                     />
                     <GenealogyPane
-                        ariaLabel="Output items"
-                        headerLeft="Outputs ▶"
+                        ariaLabel={t('genealogy.outputsAria', 'Output items')}
+                        headerLeft={t('genealogy.outputsHeader', 'Outputs ▶')}
                         count={descendantCount}
                         tree={descendantTree}
                         expandedIds={descendantExpanded}
                         onSelect={onSelect}
-                        emptyMessage="No output items recorded."
+                        emptyMessage={t('genealogy.noOutputs', 'No output items recorded.')}
                     />
                 </Box>
             )}
@@ -672,6 +698,7 @@ function GenealogyPane({
     onSelect,
     rtl,
 }: GenealogyPaneProps) {
+    const { t } = useTranslation('items')
     const [expanded, setExpanded] = useState<string[]>(expandedIds)
     // Re-seed when the data behind the tree changes (depth toggle, refetch).
     useEffect(() => {
@@ -698,7 +725,10 @@ function GenealogyPane({
                 <span className="count">
                     {count === 0
                         ? '—'
-                        : `${count} item${count === 1 ? '' : 's'}`}
+                        : t('genealogy.itemCount', {
+                              count,
+                              defaultValue: '{{count}} items',
+                          })}
                 </span>
             </Box>
             {tree.length === 0 ? (

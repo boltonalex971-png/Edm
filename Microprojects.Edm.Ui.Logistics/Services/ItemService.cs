@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using Microprojects.Edm.Ui.Logistics.Contracts;
@@ -77,7 +78,9 @@ public class ItemService : ServiceBase<Item>, IItemService
         {
             if (item.ProcessId == null)
             {
-                throw new EdmException("Item must have a tare.");
+                throw new EdmException(
+                    "Logistics.Item.TareRequired",
+                    "Item must have a tare.");
             }
             item.Address = null;
             item.Tare = null;
@@ -133,10 +136,14 @@ public class ItemService : ServiceBase<Item>, IItemService
         var tare = await Set<Tare>().AsNoTracking()
             .Include(t => t.TareType)
             .FirstOrDefaultAsync(t => t.Id == item.TareId)
-            ?? throw new EdmException("Tare not found for assigned tare.");
+            ?? throw new EdmException(
+                "Logistics.Tare.NotFoundForItem",
+                "Tare not found for the assigned item.");
         if (tare.TareType == null)
         {
-            throw new EdmException("Tare type not found for assigned tare.");
+            throw new EdmException(
+                "Logistics.Tare.TypeNotFoundForItem",
+                "Tare type not found for the assigned tare.");
         }
 
         if (tare.TareType.Dimensions <= 0)
@@ -147,24 +154,32 @@ public class ItemService : ServiceBase<Item>, IItemService
 
         var nomenclature = await Set<Nomenclature>().AsNoTracking()
             .FirstOrDefaultAsync(n => n.Id == item.NomenclatureId)
-            ?? throw new EdmException("Nomenclature not found for item.");
+            ?? throw new EdmException(
+                "Logistics.Item.NomenclatureNotFound",
+                "Nomenclature not found for item.");
 
         if (!nomenclature.Countable)
         {
             if (item.Address != null)
             {
-                throw new EdmException("Address must be empty for non-countable nomenclatures.");
+                throw new EdmException(
+                    "Logistics.Item.AddressForbidden",
+                    "Address must be empty for non-countable nomenclatures.");
             }
             return;
         }
 
         if (item.Address == null)
         {
-            throw new EdmException("Address is required for countable nomenclatures.");
+            throw new EdmException(
+                "Logistics.Item.AddressRequired",
+                "Address is required for countable nomenclatures.");
         }
         if (item.Address < 1 || item.Address > tare.TareType.Capacity)
         {
             throw new EdmException(
+                "Logistics.Item.AddressOutOfRange",
+                new Dictionary<string, object> { ["capacity"] = tare.TareType.Capacity },
                 $"Address must be in range 1..{tare.TareType.Capacity} for this tare.");
         }
         var alreadyUsed = await Set<Item>()
@@ -176,7 +191,9 @@ public class ItemService : ServiceBase<Item>, IItemService
                 i.Id != item.Id);
         if (alreadyUsed)
         {
-            throw new EdmException("Address is already in use for this tare.");
+            throw new EdmException(
+                "Logistics.Item.AddressInUse",
+                "Address is already in use for this tare.");
         }
     }
 
@@ -248,7 +265,10 @@ public class ItemService : ServiceBase<Item>, IItemService
 
         if (root == null)
         {
-            throw new EdmException($"Item {rootItemId} not found.");
+            throw new EdmException(
+                "Logistics.Item.NotFound",
+                new Dictionary<string, object> { ["itemId"] = rootItemId },
+                $"Item {rootItemId} not found.");
         }
 
         var links = Db.Set<ItemLink>().AsNoTracking();
@@ -441,15 +461,21 @@ public class ItemService : ServiceBase<Item>, IItemService
     {
         var nomenclature = await Set<Nomenclature>().AsNoTracking()
             .FirstOrDefaultAsync(n => n.Id == request.NomenclatureId)
-            ?? throw new EdmException("Nomenclature not found.");
+            ?? throw new EdmException(
+                "Logistics.Nomenclature.NotFound",
+                "Nomenclature not found.");
 
         var tareType = await Set<TareType>().AsNoTracking()
             .FirstOrDefaultAsync(t => t.Id == request.TareTypeId)
-            ?? throw new EdmException("Tare type not found.");
+            ?? throw new EdmException(
+                "Logistics.TareType.NotFound",
+                "Tare type not found.");
 
         if (request.Quantity <= 0)
         {
-            throw new EdmException("Quantity must be greater than zero.");
+            throw new EdmException(
+                "Logistics.Item.QuantityMustBePositive",
+                "Quantity must be greater than zero.");
         }
 
         if (TareRules.IsCountableBulk(tareType))
@@ -464,11 +490,15 @@ public class ItemService : ServiceBase<Item>, IItemService
         {
             tare = await Set<Tare>().AsNoTracking()
                 .FirstOrDefaultAsync(t => t.Id == request.TareId.Value)
-                ?? throw new EdmException("Tare not found.");
+                ?? throw new EdmException(
+                    "Logistics.Tare.NotFound",
+                    "Tare not found.");
 
             if (tare.TareTypeId != request.TareTypeId)
             {
-                throw new EdmException("Tare type mismatch.");
+                throw new EdmException(
+                    "Logistics.Tare.TypeMismatch",
+                    "Tare type does not match the requested tare type.");
             }
 
             var itemsInTare = await Set<Item>().AsNoTracking()
@@ -496,6 +526,12 @@ public class ItemService : ServiceBase<Item>, IItemService
         if (request.Quantity > remaining)
         {
             throw new EdmException(
+                "Logistics.Item.QuantityExceedsCapacity",
+                new Dictionary<string, object>
+                {
+                    ["quantity"] = request.Quantity,
+                    ["remaining"] = remaining,
+                },
                 $"Quantity {request.Quantity} exceeds remaining capacity {remaining}.");
         }
 
@@ -666,7 +702,9 @@ public class ItemService : ServiceBase<Item>, IItemService
                     continue;
                 }
 
-                var targetType = tare.TareType ?? throw new EdmException("Target tare type not found.");
+                var targetType = tare.TareType ?? throw new EdmException(
+                    "Logistics.Tare.TargetTypeNotFound",
+                    "Target tare type not found.");
                 var sourceType = item.Tare?.TareType;
                 var isTargetAddressed = TareRules.IsAddressed(targetType);
 

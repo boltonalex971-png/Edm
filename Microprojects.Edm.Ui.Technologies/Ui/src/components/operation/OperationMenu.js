@@ -18,9 +18,11 @@ import {
 } from '@mui/icons-material';
 import Axios from 'axios';
 import {useSelector} from 'react-redux';
+import {useTranslation} from 'react-i18next';
 import {useDialog} from "@microprojects/edm-components/hooks";
 import {useSignalR} from "@microprojects/edm-components/hooks";
 import api, {spaUrl} from "../api.js";
+import {resolveError} from '../../i18n/resolveError';
 import {useToast} from "@microprojects/edm-components/components";
 import {displayUserName} from "@microprojects/edm-components/utils";
 import styles from './OperationLayout.module.scss';
@@ -35,27 +37,37 @@ const Spinner = () => <CircularProgress size={16} thickness={5} sx={{ color: 'cu
 // clock · timeline · action buttons · close. Everything aligns on a
 // 38 px baseline — no stacked rows, no AppBar/Toolbar chrome.
 
-const STATE_TO_BADGE = {
-    Idle:       {kind: 'idle',   label: 'Idle'},
-    Scheduled:  {kind: 'queued', label: 'Scheduled'},
-    InProgress: {kind: 'run',    label: 'Running'},
-    Completed:  {kind: 'idle',   label: 'Completed'},
-    Cancelled:  {kind: 'idle',   label: 'Cancelled'},
-    Faulted:    {kind: 'fault',  label: 'Faulted'},
+const STATE_TO_BADGE_KIND = {
+    Idle:       'idle',
+    Scheduled:  'queued',
+    InProgress: 'run',
+    Completed:  'idle',
+    Cancelled:  'idle',
+    Faulted:    'fault',
 };
 
-const STATE_TO_TIMELINE_LABEL = {
-    Idle:       'Start at',
-    Scheduled:  'Will start at',
-    InProgress: 'Started',
-    Completed:  'Completed',
-    Cancelled:  'Cancelled',
-    Faulted:    'Checked',
+const STATE_KEY = {
+    Idle: 'idle',
+    Scheduled: 'scheduled',
+    InProgress: 'running',
+    Completed: 'completed',
+    Cancelled: 'cancelled',
+    Faulted: 'faulted',
+};
+
+const STATE_TIMELINE_KEY = {
+    Idle:       'startAt',
+    Scheduled:  'willStartAt',
+    InProgress: 'started',
+    Completed:  'completed',
+    Cancelled:  'cancelled',
+    Faulted:    'checked',
 };
 
 export function OperationMenu({operation, to, onCollapse, collapsed}) {
     const operatorFull = useSelector(s => s.user?.name);
     const operatorShort = displayUserName(operatorFull);
+    const {t} = useTranslation('tech');
 
     return (
         <header className={styles.menu} data-collapsed={collapsed ? 'true' : 'false'}>
@@ -68,7 +80,7 @@ export function OperationMenu({operation, to, onCollapse, collapsed}) {
                 {operatorShort && (
                     <>
                         <span className={styles.opSep}>·</span>
-                        <span className={styles.operatorName} title={`Operator: ${operatorFull}`}>
+                        <span className={styles.operatorName} title={t('operation.operator', {name: operatorFull})}>
                             {operatorShort}
                         </span>
                     </>
@@ -76,12 +88,12 @@ export function OperationMenu({operation, to, onCollapse, collapsed}) {
             </div>
 
             <div className={styles.navGroup}>
-                <Tooltip title="Home">
+                <Tooltip title={t('operation.home')}>
                     <IconButton size="small" className={styles.navBtn} onClick={() => to('')}>
                         <HomeIcon fontSize="small" />
                     </IconButton>
                 </Tooltip>
-                <Tooltip title="Configuration">
+                <Tooltip title={t('operation.configuration')}>
                     <IconButton size="small" className={styles.navBtn} onClick={() => to('config')}>
                         <SettingsIcon fontSize="small" />
                     </IconButton>
@@ -96,8 +108,8 @@ export function OperationMenu({operation, to, onCollapse, collapsed}) {
                 type="button"
                 className={styles.collapseInline}
                 onClick={onCollapse}
-                title="Hide toolbar"
-                aria-label="Hide toolbar"
+                title={t('operation.hideToolbar')}
+                aria-label={t('operation.hideToolbar')}
             >
                 <CollapseIcon fontSize="small" />
             </button>
@@ -107,14 +119,17 @@ export function OperationMenu({operation, to, onCollapse, collapsed}) {
 
 function Clock() {
     const [now, setNow] = useState(new Date());
+    const {i18n} = useTranslation('tech');
     useEffect(() => {
         const interval = setInterval(() => setNow(new Date()), 1000);
         return () => clearInterval(interval);
     }, []);
 
+    const locale = i18n.language?.startsWith('ru') ? 'ru-RU' : 'en-GB';
+
     return (
         <span className={styles.clock}>
-            {now.toLocaleString('en-GB', {
+            {now.toLocaleString(locale, {
                 hour: '2-digit',
                 minute: '2-digit',
                 second: '2-digit',
@@ -131,14 +146,12 @@ function OperationToolbar({operation}) {
     const startAtRef = useRef();
     const {dialog, confirm, warning} = useDialog();
     const toast = useToast();
+    const {t, i18n} = useTranslation('tech');
 
     useSignalR(`${api.baseUrl}/hub`, `Operation-${operation.id}-lifecycle`, (message) => {
         setStatus(message);
         setBusy(null);
     });
-
-    const errorOf = (error, fallback) =>
-        error.response?.data?.detail || error.response?.data?.title || error.message || fallback;
 
     const copy = () => {
         setBusy('copy');
@@ -148,7 +161,7 @@ function OperationToolbar({operation}) {
             })
             .catch((error) => {
                 setBusy(null);
-                toast.error(errorOf(error, 'Failed to copy operation'));
+                toast.error(resolveError(error, t('operations.toasts.failedCopy')));
             });
     };
 
@@ -161,43 +174,47 @@ function OperationToolbar({operation}) {
         })
             .catch((error) => {
                 setBusy(null);
-                toast.error(errorOf(error, 'Failed to start operation'));
+                toast.error(resolveError(error, t('operations.toasts.failedStart')));
             });
     };
 
     const stop = () => warning({
-        title: 'Stop operation?',
-        message: 'The current operation will be cancelled. Any unsaved progress is lost.',
-        actionLabel: 'Stop operation',
+        title: t('operation.stopTitle'),
+        message: t('operation.stopMessage'),
+        actionLabel: t('operation.stopAction'),
         onConfirm: () => {
             setBusy('stop');
             Axios.post(`${api.operations}/${operation.id}/stop`)
                 .catch((error) => {
                     setBusy(null);
-                    toast.error(errorOf(error, 'Failed to stop operation'));
+                    toast.error(resolveError(error, t('operations.toasts.failedStop')));
                 });
         }
     });
 
     const complete = () => confirm({
-        title: 'Complete operation?',
-        message: 'Mark this operation as complete. It will move to the completed list.',
-        actionLabel: 'Complete',
+        title: t('operation.completeTitle'),
+        message: t('operation.completeMessage'),
+        actionLabel: t('operation.completeAction'),
         onConfirm: () => {
             setBusy('complete');
             Axios.post(`${api.operations}/${operation.id}/complete`)
                 .catch((error) => {
                     setBusy(null);
-                    toast.error(errorOf(error, 'Failed to complete operation'));
+                    toast.error(resolveError(error, t('operations.toasts.failedComplete')));
                 });
         }
     });
 
     const close = () => window.close();
 
-    const badge = STATE_TO_BADGE[status.state] || {kind: 'idle', label: status.state || ''};
-    const timelineLabel = STATE_TO_TIMELINE_LABEL[status.state] || '';
-    const timestamp = status.stateTimestamp ? new Date(status.stateTimestamp).toLocaleString('en-GB', {
+    const badgeKind = STATE_TO_BADGE_KIND[status.state] || 'idle';
+    const stateKey = STATE_KEY[status.state];
+    const stateLabel = stateKey ? t(`operations.states.${stateKey}`) : (status.state || '');
+    const timelineKey = STATE_TIMELINE_KEY[status.state];
+    const timelineLabel = timelineKey ? t(`operations.timeline.${timelineKey}`) : '';
+    const locale = i18n.language?.startsWith('ru') ? 'ru-RU' : 'en-GB';
+    const timestamp = status.stateTimestamp ? new Date(status.stateTimestamp).toLocaleString(locale, {
         day: '2-digit',
         month: 'short',
         hour: '2-digit',
@@ -210,9 +227,9 @@ function OperationToolbar({operation}) {
 
             <Clock />
 
-            <span className={`badge ${badge.kind}`}>
+            <span className={`badge ${badgeKind}`}>
                 <span className="dot" />
-                {badge.label}
+                {stateLabel}
             </span>
 
             <div className={styles.timeline}>
@@ -238,7 +255,7 @@ function OperationToolbar({operation}) {
                     disabled={!!busy}
                     className={`${styles.action} ${styles.start}`}
                 >
-                    Start
+                    {t('operation.start')}
                 </Button>
             )}
             {status.state === 'InProgress' && (
@@ -249,7 +266,7 @@ function OperationToolbar({operation}) {
                     disabled={!!busy}
                     className={`${styles.action} ${styles.stop}`}
                 >
-                    Stop
+                    {t('operation.stop')}
                 </Button>
             )}
             {(status.state !== 'InProgress' && status.state !== 'Idle') && (
@@ -260,7 +277,7 @@ function OperationToolbar({operation}) {
                     disabled={!!busy}
                     className={`${styles.action} ${styles.copy}`}
                 >
-                    Copy
+                    {t('operations.copy')}
                 </Button>
             )}
             {(status.state === 'Idle' || status.state === 'Faulted') && (
@@ -271,10 +288,10 @@ function OperationToolbar({operation}) {
                     disabled={!!busy}
                     className={`${styles.action} ${styles.complete}`}
                 >
-                    Complete
+                    {t('operation.completeAction')}
                 </Button>
             )}
-            <Tooltip title="Close window">
+            <Tooltip title={t('operation.closeWindow')}>
                 <IconButton size="small" onClick={close} className={styles.closeBtn}>
                     <CloseIcon fontSize="small" />
                 </IconButton>

@@ -1,0 +1,20 @@
+{
+    "grades": {
+        "label": "Сорта:",
+        "pickTitle": "Выбрать партии с этим сортом",
+        "noGrade": "Без сорта",
+        "pickNoGradeTitle": "Выбрать партии без сорта"
+    },
+    "nomenclatures": {
+        "label": "Номенклатуры:",
+        "pickTitle": "Выбрать партии с этой номенклатурой",
+        "unnamed": "(без названия)"
+    },
+    "menu": {
+        "autofill": "Заполнить тару ({{count}})",
+        "fillInto": "Заполнить в",
+        "fallbackTareLabel": "Тара",
+        "gradesHeader": "Сорта",
+        "noGrade": "(без сорта)"
+    }
+}

@@ -1,6 +1,6 @@
 using System.Diagnostics;
-using System.IO;
 using System.Reflection;
+using Microprojects.Edm.Plugins;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,7 +12,6 @@ namespace Microprojects.Edm.Ui.Console.Controllers
     public class MetaController : ControllerBase
     {
         private static readonly Assembly PluginAssembly = typeof(HostConsolePlugin).Assembly;
-        private const string ChangelogResourceName = "Microprojects.Edm.Ui.Console.CHANGES.md";
 
         [HttpGet("version")]
         public IActionResult GetVersion()
@@ -28,13 +27,10 @@ namespace Microprojects.Edm.Ui.Console.Controllers
         [HttpGet("changelog")]
         public IActionResult GetChangelog()
         {
-            using var stream = PluginAssembly.GetManifestResourceStream(ChangelogResourceName);
-            if (stream is null)
-            {
-                return NotFound();
-            }
-            using var reader = new StreamReader(stream);
-            return Content(reader.ReadToEnd(), "text/markdown; charset=utf-8");
+            var content = PluginResource.ReadLocalized(PluginAssembly, "CHANGES");
+            return content is null
+                ? NotFound()
+                : Content(content, "text/markdown; charset=utf-8");
         }
     }
 }

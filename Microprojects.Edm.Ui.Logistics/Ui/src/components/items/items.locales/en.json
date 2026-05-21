@@ -1,0 +1,128 @@
+{
+    "title": "Item",
+    "titlePlural": "Items",
+    "source": {
+        "Output": "Output",
+        "OutputTitle": "Produced by an order execution.",
+        "Supply": "Supply",
+        "SupplyTitle": "Received through a supply.",
+        "Store": "Store",
+        "StoreTitle": "Created directly from store (no recorded origin).",
+        "tareOutputTitle": "This tare contains items produced by an order execution.",
+        "tareSupplyTitle": "This tare contains items received through a supply.",
+        "tareStoreTitle": "This tare contains items created directly from store.",
+        "noRecorded": "No supply or process recorded."
+    },
+    "field": {
+        "nomenclature": "Nomenclature",
+        "quantity": "Quantity",
+        "serialNo": "Serial No",
+        "tare": "Tare",
+        "tareType": "Tare Type",
+        "tareBarcode": "Tare Barcode",
+        "address": "Address",
+        "supply": "Supply",
+        "order": "Order",
+        "producedBy": "Produced by",
+        "process": "Process",
+        "id": "Id",
+        "status": "Status",
+        "inactive": "Inactive"
+    },
+    "editor": {
+        "sectionWhat": "What",
+        "sectionWhere": "Where"
+    },
+    "search": {
+        "title": "Component search",
+        "titleLookup": "Component lookup",
+        "subtitle": "Search for components",
+        "subtitleLookup": "Binding component to the order",
+        "placeholder": "Search by nomenclature, tare or barcode",
+        "allocateSelected_one": "Allocate {{count}} selected",
+        "allocateSelected_few": "Allocate {{count}} selected",
+        "allocateSelected_many": "Allocate {{count}} selected",
+        "allocateSelected_other": "Allocate {{count}} selected",
+        "clearSelection": "Clear selection",
+        "nothingMatches": "Nothing matches \"{{filter}}\".",
+        "noItems": "No items match the current query.",
+        "col": {
+            "barcode": "Barcode",
+            "tareType": "Tare type",
+            "nomenclatures": "Nomenclatures",
+            "fill": "Fill",
+            "source": "Source",
+            "units": "Units"
+        },
+        "noBarcode": "(none)",
+        "rowTitleLookup": "Click to expand · double-click to allocate the whole tare",
+        "rowTitleOpen": "Click to open the tare"
+    },
+    "batch": {
+        "title": "New items",
+        "subtitleSupply": "Add to supply",
+        "section": "Batch create items",
+        "barcodePlaceholder": "Select existing, type new, or leave empty",
+        "validation": {
+            "typeMismatch": "Picked tare's type doesn't match the selected tare type.",
+            "typeNotAllowed": "Picked tare's type is not allowed for the selected nomenclature."
+        },
+        "existingRemaining": "Existing tare — remaining: {{remaining}}",
+        "newTareWithBarcode": "New tare will be created with barcode \"{{barcode}}\".",
+        "newTareNoBarcode": "New tare will be created without barcode.",
+        "fieldNumberOfItems": "Number of items",
+        "fieldQuantity": "Quantity",
+        "max": "Max: {{max}}",
+        "created": "Created {{quantity}} in tare {{tare}}{{type}}.{{remaining}}",
+        "tareTypeSuffix": " ({{name}})",
+        "remainingCapacity": " Remaining capacity: {{capacity}}.",
+        "noBarcode": "(no barcode)",
+        "create": "Create",
+        "cancel": "Cancel"
+    },
+    "genealogy": {
+        "title": "Genealogy",
+        "processPrefix": "Process: {{name}}",
+        "executionOutput": "Execution output",
+        "supplyReceipt": "Supply receipt",
+        "storeEntry": "Store entry",
+        "splitFromParent": "Split from parent",
+        "missing": "(missing {{id}})",
+        "groupedNote": "{{count}} similar items grouped — expand to see individual entries",
+        "tooltip": {
+            "quantity": "Quantity",
+            "consumed": "Consumed",
+            "serialNo": "SN",
+            "tare": "Tare",
+            "address": "Address"
+        },
+        "truncatedTitle": "Some branches are hidden beyond the current depth.",
+        "truncated": "truncated",
+        "depth": "Depth",
+        "depthFull": "Full",
+        "depthFullTitle": "Load the entire tree",
+        "depthLimitTitle": "Limit to depth {{depth}}",
+        "itemCount_one": "{{count}} item",
+        "itemCount_few": "{{count}} items",
+        "itemCount_many": "{{count}} items",
+        "itemCount_other": "{{count}} items",
+        "inputsAria": "Input items",
+        "outputsAria": "Output items",
+        "inputsHeader": "Inputs ◀",
+        "outputsHeader": "Outputs ▶",
+        "noInputs": "No input items recorded.",
+        "noOutputs": "No output items recorded.",
+        "originLabel": {
+            "out": "OUT",
+            "supply": "SUPPLY",
+            "store": "STORE",
+            "split": "SPLIT"
+        }
+    },
+    "tabs": {
+        "available": "Available",
+        "consumed": "Consumed",
+        "search": "Search",
+        "createNew": "Create new"
+    }
+}

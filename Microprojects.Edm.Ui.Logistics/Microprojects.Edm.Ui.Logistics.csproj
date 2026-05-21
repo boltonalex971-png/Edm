@@ -26,7 +26,13 @@
 		<EmbeddedResource Include="ui\dist\**" />
 		<EmbeddedResource Remove="ui\node_modules\**" />
 		<EmbeddedResource Include="CHANGES.md" />
+		<!-- WithCulture=false keeps locale-suffixed markdown (e.g. CHANGES.ru.md)
+		     in the main assembly. MSBuild otherwise treats `.ru.` as a culture
+		     hint and shifts the file into a `ru/` satellite, where
+		     GetManifestResourceStream against the main assembly can't see it. -->
+		<EmbeddedResource Include="CHANGES.*.md" WithCulture="false" />
 		<EmbeddedResource Include="ABOUT.md" />
+		<EmbeddedResource Include="ABOUT.*.md" WithCulture="false" />
 		<None Remove="ui\dist\**" />
 		<None Remove="ui\node_modules\**" />
 	</ItemGroup>

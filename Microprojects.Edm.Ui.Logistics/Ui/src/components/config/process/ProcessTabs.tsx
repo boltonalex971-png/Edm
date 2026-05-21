@@ -5,6 +5,8 @@ import type { ProcessKind, UUID } from '@logistics/data/types'
 import { SmoothTabContainer } from '@microprojects/edm-components/components/master/MasterDetail'
 import { Box, Tab, Tabs } from '@mui/material'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import './index' // side-effect: registers the `config/process` namespace
 import { ProcessSubProcessesTab } from './ProcessSubProcessesTab.tsx'
 
 type ProcessTabsProps = {
@@ -17,6 +19,7 @@ type ProcessTabsProps = {
 
 export function ProcessTabs(props: ProcessTabsProps) {
     const [selected, setSelected] = useState(0)
+    const { t } = useTranslation('config/process')
     const showSpecAndGrades =
         props.kind !== OPERATION && props.kind !== MANUFACTURING
     if (props.kind === OPERATION) return null
@@ -24,9 +27,9 @@ export function ProcessTabs(props: ProcessTabsProps) {
         <Box sx={{ width: '100%' }}>
             <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                 <Tabs value={selected} onChange={(_, v) => setSelected(v)}>
-                    <Tab label="Processes" />
-                    {showSpecAndGrades && <Tab label="Specification" />}
-                    {showSpecAndGrades && <Tab label="Grades" />}
+                    <Tab label={t('tabs.processes')} />
+                    {showSpecAndGrades && <Tab label={t('tabs.specification')} />}
+                    {showSpecAndGrades && <Tab label={t('tabs.grades')} />}
                 </Tabs>
             </Box>
             <Box sx={{ pt: 2 }}>

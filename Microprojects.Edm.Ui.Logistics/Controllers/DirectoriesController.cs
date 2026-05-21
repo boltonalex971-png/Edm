@@ -1,11 +1,12 @@
-using Microsoft.AspNetCore.Mvc;
-using Directory = Microprojects.Edm.Ui.Logistics.Models.Directory;
+using System.Collections.Generic;
 using Microprojects.Edm.Cache;
 using Microprojects.Edm.Controllers;
 using Microprojects.Edm.Ui.Logistics.Contracts;
 using Microprojects.Edm.Ui.Logistics.Models;
 using Microprojects.Edm.Ui.Logistics.Utils;
 using Microprojects.Edm.Ui.Logistics.ViewModels;
+using Microsoft.AspNetCore.Mvc;
+using Directory = Microprojects.Edm.Ui.Logistics.Models.Directory;
 
 namespace Microprojects.Edm.Ui.Logistics.Controllers;
 
@@ -56,7 +57,10 @@ public class DirectoriesController : AuthControllerBase
         [FromQuery] string? kind = null)
     {
         var rootId = WellKnownDirectoryIds.ResolveRoot(entryType, kind)
-            ?? throw new EdmException($"No type root configured for {entryType}.");
+            ?? throw new EdmException(
+                "Logistics.Directory.NoTypeRoot",
+                new Dictionary<string, object> { ["entryType"] = entryType },
+                $"No type root configured for {entryType}.");
 
         var folders = (await _directoryService.GetSubtreeFolders(rootId))
             .Select(d => d.ToEntryViewModel())
@@ -69,13 +73,17 @@ public class DirectoriesController : AuthControllerBase
     {
         if (model.DirectoryId is null || model.DirectoryId == Directory.GeneralRootId)
         {
-            throw new EdmException("New folders must be created inside a type root.");
+            throw new EdmException(
+                "Logistics.Directory.MustCreateInTypeRoot",
+                "New folders must be created inside a type root.");
         }
 
         var parentRoot = await _directoryService.ResolveTypeRoot(model.DirectoryId.Value);
         if (parentRoot is null)
         {
-            throw new EdmException("Parent folder is not under a recognized type root.");
+            throw new EdmException(
+                "Logistics.Directory.ParentNotUnderTypeRoot",
+                "Parent folder is not under a recognized type root.");
         }
 
         var directory = model.ToEntity();
@@ -98,7 +106,9 @@ public class DirectoriesController : AuthControllerBase
     {
         if (WellKnownDirectoryIds.IsTypeRoot(id) || id == Directory.GeneralRootId)
         {
-            throw new EdmException("Built-in folders cannot be edited.");
+            throw new EdmException(
+                "Logistics.Directory.BuiltInNotEditable",
+                "Built-in folders cannot be edited.");
         }
 
         var directory = model.ToEntity();
@@ -121,7 +131,9 @@ public class DirectoriesController : AuthControllerBase
     {
         if (WellKnownDirectoryIds.IsTypeRoot(id) || id == Directory.GeneralRootId)
         {
-            throw new EdmException("Built-in folders cannot be deleted.");
+            throw new EdmException(
+                "Logistics.Directory.BuiltInNotDeletable",
+                "Built-in folders cannot be deleted.");
         }
 
         var deleted = await _directoryService.Delete(id);

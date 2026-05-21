@@ -1,0 +1,47 @@
+{
+    "Technologies": {
+        "Audit": {
+            "NotFound": "No audit found.",
+            "QualifierMismatch": "Specified qualifier does not belong to an appropriate process."
+        },
+        "Operation": {
+            "NotFound": "Operation with id {{operationId}} not found.",
+            "NotRunning": "Operation with id {{operationId}} is not running.",
+            "AlreadyFinished": "Operation has been finished already.",
+            "StartFailed": "Cannot start operation: {{message}}",
+            "RemoteJobFailed": "{{message}}",
+            "DeviceJobFailed": "{{deviceJob}} failed: {{message}}"
+        },
+        "Workbench": {
+            "NotFound": "Workbench for the specified process cannot be found."
+        }
+    },
+    "Board": {
+        "MuxNotResponding": "Multiplexor is not responding.",
+        "RequestTypeMismatch": "{{driver}} driver parameters must be of type BoardDriverRequest.",
+        "InstructionRequired": "Instruction for board driver must not be null.",
+        "OutputParamMissing": "Output param for instruction \"{{instruction}}\" is missing.",
+        "ProfileEmpty": "Profile JSON representation is empty."
+    },
+    "Edm": {
+        "Job": {
+            "TypeNotJob": "Type {{type}} is not a job.",
+            "NotRegistered": "Job is not registered: {{jobType}}.",
+            "ParamsTypeMismatch": "Job parameters must be instance of {{paramsType}}.",
+            "InitFailed": "Cannot initialize the job {{job}}.",
+            "ParamsTypeUndefined": "Parameters type for {{jobType}} is not defined."
+        },
+        "Plugin": {
+            "DriverNotFound": "Driver plugin not found.",
+            "ProfilerNotFound": "Profiler plugin not found.",
+            "DriverInitFailed": "Cannot init {{driver}}: {{message}}",
+            "RemoteFailed": "{{message}}"
+        },
+        "Startup": {
+            "ConfigurationRequired": "Startup: Configuration action must be provided.",
+            "PluginsPathsRequired": "Startup: 'PluginsPaths' option must be specified.",
+            "PluginsNotLoaded": "Startup: plugins must be loaded by 'IServiceCollection.AddPlugins' method.",
+            "ControllerNamespaceMismatch": "No corresponding plugin found for controller {{controller}}. Beginning of controller namespace must match plugin namespace."
+        }
+    }
+}

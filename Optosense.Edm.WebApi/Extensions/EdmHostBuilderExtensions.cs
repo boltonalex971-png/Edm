@@ -1,10 +1,13 @@
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text.Json.Serialization;
 using Microprojects.Edm;
 using Microprojects.Edm.Host;
 using Microprojects.Edm.Host.SignalR;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -20,6 +23,12 @@ public static class EdmHostBuilderExtensions
     {
         builder.Services.AddProblemDetails();
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
+        // Resource catalogs live alongside the throwing code in each plugin
+        // (e.g. Microprojects.Edm.Ui.Logistics/Resources/Errors.{en,ru}.resx).
+        // RequestLocalization wires Accept-Language → CurrentUICulture so
+        // ResourceManager.GetString picks the right .resx automatically.
+        builder.Services.AddLocalization();
 
         builder.Services.Configure<IntercomOptions>(builder.Configuration.GetSection("Edm:Intercom"));
         builder.Services.Configure<Peer>(options => ConfigurePeer(options, builder.Configuration, builder.Environment));
@@ -81,6 +90,23 @@ public static class EdmHostBuilderExtensions
         {
             app.UseCors();
         }
+        // RequestLocalization must run BEFORE the auth/exception middleware
+        // so error messages thrown downstream resolve against the request's
+        // CurrentUICulture (set from Accept-Language by AcceptLanguageHeaderRequestCultureProvider).
+        var supportedCultures = new List<CultureInfo>
+        {
+            new("en"),
+            new("ru"),
+        };
+        app.UseRequestLocalization(new RequestLocalizationOptions
+        {
+            DefaultRequestCulture = new RequestCulture("en"),
+            SupportedCultures = supportedCultures,
+            SupportedUICultures = supportedCultures,
+            // Drop the cookie / query-string providers — Accept-Language is the
+            // only signal we care about (Logistics SPA's axios interceptor
+            // already sets it from i18n.language on every request).
+        });
         app.UseAuthentication();
         app.UseAuthorization();
         app.UseSession();

@@ -1,0 +1,36 @@
+{
+    "nav": {
+        "home": "Home",
+        "orders": "Orders",
+        "supplies": "Supplies",
+        "items": "Items",
+        "repacking": "Repacking",
+        "config": "Settings"
+    },
+    "status": {
+        "Running": "Running",
+        "OutputsPending": "Outputs pending",
+        "Completed": "Completed",
+        "Draft": "Draft"
+    },
+    "role": {
+        "Admin": "Administrator",
+        "Technologist": "Technologist",
+        "Operator": "Operator"
+    },
+    "errors": {
+        "failedToLoadTare": "Failed to load tare",
+        "tareNotFoundSelectType": "Tare not found. Select a tare type to create a new one.",
+        "failedToAddTare": "Failed to add tare"
+    },
+    "changelog": {
+        "loadFailed": "Failed to load changelog: {{error}}"
+    },
+    "auth": {
+        "noRole": "As user {{name}} you are not authorized to access ISTP application. No role is assigned to your account. Please refer to your system administrator.",
+        "notAuthenticated": "You are not authenticated to access ISTP application. Please refer to your system administrator."
+    },
+    "routes": {
+        "notFound": "Page not found"
+    }
+}

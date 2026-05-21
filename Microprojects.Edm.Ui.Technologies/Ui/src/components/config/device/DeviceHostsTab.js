@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { RelationTable } from '@microprojects/edm-components/components';
 import { DropDownCell } from '@microprojects/edm-components/components';
 import { useGet } from '@microprojects/edm-components/hooks';
+import { useTranslation } from 'react-i18next';
 import { HostDetail } from '../Hosts';
 import Api from '../../api';
 import { useNavigate } from 'react-router-dom';
@@ -16,14 +17,15 @@ DeviceHostsTab.propTypes = {
 export function DeviceHostsTab({ id, api, onDetailSelected, parents }) {
     const navigate = useNavigate();
     const [[data]] = useGet(`${api}/hosts`);
+    const { t } = useTranslation('tech');
 
     const columns = [
         {
             field: 'hostId',
-            headerName: 'Host',
+            headerName: t('common.host'),
             width: 200,
             renderCell: (params) => (
-                <DropDownCell 
+                <DropDownCell
                     {...params}
                     getData={() => data || []}
                     dataKey='id'
@@ -48,7 +50,7 @@ export function DeviceHostsTab({ id, api, onDetailSelected, parents }) {
                 />
             )
         },
-        { field: 'hostUrl', headerName: 'Address', flex: 1, editable: false }
+        { field: 'hostUrl', headerName: t('common.address'), flex: 1, editable: false }
     ];
 
     return (

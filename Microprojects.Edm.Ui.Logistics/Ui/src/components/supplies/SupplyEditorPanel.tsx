@@ -3,6 +3,7 @@ import {
     EMPTY_GUID,
     MuiEditor,
 } from '@logistics/components/MasterDetail.tsx'
+import '@logistics/components/supplies' // side-effect: registers the `supplies` namespace
 import type { DetailEventHandler } from '@logistics/data/types'
 import {
     EditorSection,
@@ -10,6 +11,7 @@ import {
 } from '@microprojects/edm-components/components'
 import { Box } from '@mui/material'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 export interface SupplyEditorPanelProps extends DetailProps {
     onChange?: DetailEventHandler
@@ -20,6 +22,7 @@ export interface SupplyEditorPanelProps extends DetailProps {
 }
 
 export const SupplyEditorPanel = (props: SupplyEditorPanelProps) => {
+    const { t } = useTranslation('supplies')
     const [data, setData] = useState({ id: EMPTY_GUID })
     return (
         <MuiEditor
@@ -32,23 +35,23 @@ export const SupplyEditorPanel = (props: SupplyEditorPanelProps) => {
             onUpdate={props.onUpdate}
             content={({ values, handleChange }) => (
                 <Box>
-                    <EditorSection number={1} title="Supply" done={false}>
+                    <EditorSection number={1} title={t('detail.section')} done={false}>
                         <Field
                             full
                             name="barcode"
-                            label="Barcode"
+                            label={t('field.barcode')}
                             value={(values.barcode as string) ?? ''}
                             onChange={handleChange}
                         />
                         <Field
                             name="shipment"
-                            label="Shipment"
+                            label={t('field.shipment')}
                             value={(values.shipment as string) ?? ''}
                             onChange={handleChange}
                         />
                         <Field
                             name="shipmentExternalId"
-                            label="Shipment Id"
+                            label={t('field.shipmentExternalId')}
                             value={
                                 (values.shipmentExternalId as string) ?? ''
                             }

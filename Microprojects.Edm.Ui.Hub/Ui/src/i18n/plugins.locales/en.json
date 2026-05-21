@@ -1,0 +1,18 @@
+{
+    "Hub": {
+        "name": "Hub",
+        "description": "Platform landing — module catalog with an at-a-glance promo for each loaded application."
+    },
+    "Logistics": {
+        "name": "Logistics",
+        "description": "Product flow from supply to finished item: nomenclature, tare, items, orders, batch genealogy and the operator desktop."
+    },
+    "Technologies": {
+        "name": "Technologies",
+        "description": "Manufacturing process tree — profiles, devices, hosts and routings authored once and consumed across the platform."
+    },
+    "Console": {
+        "name": "Host Console",
+        "description": "Live host operations — tasks, drivers, plugin health and log streams from the host process."
+    }
+}

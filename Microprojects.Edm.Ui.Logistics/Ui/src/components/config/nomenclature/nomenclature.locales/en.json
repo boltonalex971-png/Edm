@@ -1,0 +1,29 @@
+{
+    "stubMessage": "Please select a nomenclature",
+    "section": {
+        "identity": "Identity",
+        "classification": "Classification"
+    },
+    "field": {
+        "name": "Name",
+        "description": "Description",
+        "category": "Category",
+        "countable": "Countable"
+    },
+    "help": {
+        "nameMissing": "A nomenclature must have a name.",
+        "name": "Shown across the tree, breadcrumbs, and pickers."
+    },
+    "card": {
+        "category": "Category",
+        "countable": "Countable"
+    },
+    "tabs": {
+        "allowedTares": "Allowed tares"
+    },
+    "taresTab": {
+        "tareType": "Tare type",
+        "description": "Description",
+        "default": "Default"
+    }
+}

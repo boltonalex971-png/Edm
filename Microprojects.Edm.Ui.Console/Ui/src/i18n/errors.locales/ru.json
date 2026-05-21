@@ -1,0 +1,23 @@
+{
+    "Edm": {
+        "Job": {
+            "TypeNotJob": "Тип {{type}} не является задачей.",
+            "NotRegistered": "Задача не зарегистрирована: {{jobType}}.",
+            "ParamsTypeMismatch": "Параметры задачи должны быть экземпляром {{paramsType}}.",
+            "InitFailed": "Не удалось инициализировать задачу {{job}}.",
+            "ParamsTypeUndefined": "Тип параметров для {{jobType}} не определён."
+        },
+        "Plugin": {
+            "DriverNotFound": "Драйверный плагин не найден.",
+            "ProfilerNotFound": "Профайлерный плагин не найден.",
+            "DriverInitFailed": "Не удалось инициализировать {{driver}}: {{message}}",
+            "RemoteFailed": "{{message}}"
+        },
+        "Startup": {
+            "ConfigurationRequired": "Запуск: необходимо передать действие конфигурации.",
+            "PluginsPathsRequired": "Запуск: должен быть указан параметр «PluginsPaths».",
+            "PluginsNotLoaded": "Запуск: плагины должны быть загружены через 'IServiceCollection.AddPlugins'.",
+            "ControllerNamespaceMismatch": "Не найден соответствующий плагин для контроллера {{controller}}. Начало пространства имён контроллера должно совпадать с пространством имён плагина."
+        }
+    }
+}

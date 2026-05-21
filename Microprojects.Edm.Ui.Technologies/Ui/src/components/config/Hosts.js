@@ -2,6 +2,7 @@
 import PropTypes from 'prop-types';
 import { useGet } from '@microprojects/edm-components/hooks';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useBasePath } from '@microprojects/edm-components/hooks';
 import { MasterDetail, reloadMaster, Detail, Editor } from '@microprojects/edm-components/components';
 import { HostTabs } from './host/HostTabs';
@@ -18,13 +19,14 @@ export function Hosts() {
     const navigate = useNavigate();
     const path = useBasePath();
     const api = Api.hosts;
+    const { t } = useTranslation('tech');
     return (
         <MasterDetail
             api={api}
             hierarchiesApi={Api.hierarchies}
             folderComponent={Folder}
             path={path}
-            stubMessage='Please select a host'
+            stubMessage={t('config.stub.host')}
             detail={(
                 <HostDetail
                     api={api}
@@ -52,6 +54,7 @@ export function HostDetail({ hostId, parents, ...props }) {
     let [sub, setSub] = useState();
     useEffect(setSub, [id]);
     let [[data, setData], loading, error] = useGet(`${props.api}/${id}`, [id]);
+    const { t } = useTranslation('tech');
     if (!data || data.id === 0) {
         data = { ...data, name: '', description: '', url: '' };
     }
@@ -59,7 +62,7 @@ export function HostDetail({ hostId, parents, ...props }) {
     const statusBadge = (
         <span className={`badge ${data.active ? 'run' : 'idle'}`}>
             <span className="dot" />
-            {data.active ? 'Online' : 'Offline'}
+            {data.active ? t('common.online') : t('common.offline')}
         </span>
     );
 
@@ -77,10 +80,10 @@ export function HostDetail({ hostId, parents, ...props }) {
             card={
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                     <Properties>
-                        <Property label="Address" value={`${data.url || ''}${data.port ? `:${data.port}` : ''}`} mono placeholder="—" />
-                        <Property label="Version" value={data.version} mono placeholder="—" />
-                        <Property label="Mode" value={data.mode} placeholder="—" />
-                        <Property label="Environment" value={data.environment} placeholder="—" />
+                        <Property label={t('common.address')} value={`${data.url || ''}${data.port ? `:${data.port}` : ''}`} mono placeholder="—" />
+                        <Property label={t('common.version')} value={data.version} mono placeholder="—" />
+                        <Property label={t('common.mode')} value={data.mode} placeholder="—" />
+                        <Property label={t('common.environment')} value={data.environment} placeholder="—" />
                     </Properties>
                     <Box>
                         <MuiButton
@@ -95,7 +98,7 @@ export function HostDetail({ hostId, parents, ...props }) {
                                 />)
                             }
                         >
-                            Open Host Console
+                            {t('host.openConsole')}
                         </MuiButton>
                     </Box>
                 </Box>
@@ -118,7 +121,7 @@ export function HostDetail({ hostId, parents, ...props }) {
                             <Box>
                                 <EditorSection
                                     number={1}
-                                    title="Identity"
+                                    title={t('common.identity')}
                                     filled={identityFilled}
                                     total={2}
                                     done={identityFilled === 2 && !nameMissing}
@@ -126,18 +129,18 @@ export function HostDetail({ hostId, parents, ...props }) {
                                     <Field
                                         full
                                         name="name"
-                                        label="Name"
+                                        label={t('common.name')}
                                         required
                                         value={values.name}
                                         onChange={handleChange}
                                         state={nameMissing ? 'invalid' : 'pristine'}
-                                        help={nameMissing ? 'A host must have a name.' : 'Shown across the tree, breadcrumbs, and dispatch board.'}
+                                        help={nameMissing ? t('host.nameMissing') : t('host.nameHelp')}
                                     />
                                     <Field
                                         full
                                         kind="textarea"
                                         name="description"
-                                        label="Description"
+                                        label={t('common.description')}
                                         rows={2}
                                         value={values.description}
                                         onChange={handleChange}
@@ -146,28 +149,28 @@ export function HostDetail({ hostId, parents, ...props }) {
 
                                 <EditorSection
                                     number={2}
-                                    title="Endpoint"
+                                    title={t('host.endpoint')}
                                     filled={endpointFilled}
                                     total={2}
                                     done={endpointFilled === 2 && !urlMissing}
                                 >
                                     <Field
                                         name="url"
-                                        label="Address"
+                                        label={t('common.address')}
                                         required
                                         value={values.url}
                                         onChange={handleChange}
-                                        placeholder="hostname or IP"
+                                        placeholder={t('host.addressPlaceholder')}
                                         state={urlMissing ? 'invalid' : 'pristine'}
-                                        help={urlMissing ? 'Required to reach the host.' : 'gRPC endpoint, no protocol prefix.'}
+                                        help={urlMissing ? t('host.addressRequired') : t('host.addressHelp')}
                                     />
                                     <Field
                                         name="port"
-                                        label="Port"
+                                        label={t('host.port')}
                                         type="number"
                                         value={values.port}
                                         onChange={handleChange}
-                                        placeholder="e.g. 16332"
+                                        placeholder={t('host.portPlaceholder')}
                                     />
                                 </EditorSection>
                             </Box>

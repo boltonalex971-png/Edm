@@ -2,6 +2,7 @@
 import PropTypes from 'prop-types';
 import { RelationTable } from '@microprojects/edm-components/components';
 import { LinkTextCell } from '@microprojects/edm-components/components';
+import { useTranslation } from 'react-i18next';
 import { WorkbenchDetail } from '../Workbenches';
 
 ProcessWorkbenchesTab.propTypes = {
@@ -11,14 +12,15 @@ ProcessWorkbenchesTab.propTypes = {
 }
 
 export function ProcessWorkbenchesTab({ id, api, onDetailSelected, parents }) {
+    const { t } = useTranslation('tech');
     const columns = [
         {
             field: 'name',
-            headerName: 'Name',
+            headerName: t('common.name'),
             width: 200,
             editable: true,
             renderCell: (params) => (
-                <LinkTextCell 
+                <LinkTextCell
                     {...params}
                     fieldId='id'
                     onClick={(wbId, itemUpdate) => {
@@ -35,7 +37,7 @@ export function ProcessWorkbenchesTab({ id, api, onDetailSelected, parents }) {
                 />
             )
         },
-        { field: 'description', headerName: 'Description', flex: 1, editable: true }
+        { field: 'description', headerName: t('common.description'), flex: 1, editable: true }
     ];
 
     return (

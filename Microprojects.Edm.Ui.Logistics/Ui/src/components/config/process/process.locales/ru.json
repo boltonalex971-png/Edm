@@ -1,0 +1,49 @@
+{
+    "stubMessage": "Выберите процесс",
+    "validation": {
+        "parameter_one": "Параметр {{names}} не доступен как выходной параметр",
+        "parameter_few": "Параметры {{names}} не доступны как выходные параметры",
+        "parameter_many": "Параметры {{names}} не доступны как выходные параметры",
+        "parameter_other": "Параметры {{names}} не доступны как выходные параметры"
+    },
+    "section": {
+        "identity": "Идентификация",
+        "target": "Цель"
+    },
+    "field": {
+        "name": "Название",
+        "description": "Описание",
+        "processKind": "Тип процесса",
+        "nomenclature": "Номенклатура"
+    },
+    "help": {
+        "nameMissing": "Процесс должен иметь название.",
+        "name": "Отображается в дереве, диспетчеризации и маршрутизации."
+    },
+    "card": {
+        "kind": "Тип",
+        "nomenclature": "Номенклатура"
+    },
+    "tabs": {
+        "processes": "Процессы",
+        "specification": "Спецификация",
+        "grades": "Сорта"
+    },
+    "grades": {
+        "name": "Название",
+        "description": "Описание",
+        "qualifier": "Квалификатор"
+    },
+    "specification": {
+        "category": "Категория",
+        "name": "Название",
+        "description": "Описание",
+        "quantity": "Количество"
+    },
+    "subprocesses": {
+        "order": "Порядок",
+        "process": "Процесс",
+        "kind": "Тип",
+        "description": "Описание"
+    }
+}

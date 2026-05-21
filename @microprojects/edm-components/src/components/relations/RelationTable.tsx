@@ -1,4 +1,5 @@
-﻿import React, {useState, useMemo, useCallback} from 'react';
+import React, {useState, useMemo, useCallback} from 'react';
+import {useTranslation} from 'react-i18next';
 import axios from 'axios';
 import {
     Box,
@@ -201,6 +202,7 @@ export function RelationTable({
     const [searchQuery, setSearchQuery] = useState('');
     const gridWrapperRef = React.useRef<HTMLDivElement | null>(null);
     const toast = useToast();
+    const {t} = useTranslation('edm-relations');
     const {dialog, warning} = useDialog();
     const {density: uiDensity} = useUiPreferences();
 
@@ -283,18 +285,18 @@ export function RelationTable({
 
     const handleDeleteClick = (id: any, name?: string) => () => {
         warning({
-            title: 'Delete record?',
+            title: t('deleteDialog.title', 'Delete record?'),
             message: name
-                ? `Permanently delete "${name}". This action cannot be undone.`
-                : 'Permanently delete this record. This action cannot be undone.',
-            actionLabel: 'Delete',
+                ? t('deleteDialog.messageNamed', 'Permanently delete "{{name}}". This action cannot be undone.', {name})
+                : t('deleteDialog.messageAnonymous', 'Permanently delete this record. This action cannot be undone.'),
+            actionLabel: t('deleteDialog.action', 'Delete'),
             onConfirm: async () => {
                 try {
                     await axios.delete(`${api}/${id}`);
-                    toast.success('Record deleted');
+                    toast.success(t('deleteResult.success', 'Record deleted'));
                     setReload((r) => !r);
                 } catch (err: any) {
-                    toast.error(err.response?.data?.detail || err.response?.data?.title || err.message || 'Failed to delete');
+                    toast.error(err.response?.data?.detail || err.response?.data?.title || err.message || t('deleteResult.failure', 'Failed to delete'));
                 }
             },
         });

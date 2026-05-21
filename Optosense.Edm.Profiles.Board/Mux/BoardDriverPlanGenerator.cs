@@ -21,7 +21,9 @@ namespace Optosense.Edm.Drivers.Mux
         {
             if (profileJson == null)
             {
-                throw new EdmException("Profile JSON representation is empty");
+                throw new EdmException(
+                    "Board.ProfileEmpty",
+                    "Profile JSON representation is empty.");
             }
 
             var profile = JsonConvert.DeserializeObject<BoardProfile>(profileJson);
@@ -94,7 +96,9 @@ namespace Optosense.Edm.Drivers.Mux
         {
             if (profileJson == null)
             {
-                throw new EdmException("Profile JSON representation is empty");
+                throw new EdmException(
+                    "Board.ProfileEmpty",
+                    "Profile JSON representation is empty.");
             }
 
             var profile = JsonConvert.DeserializeObject<BoardProfile>(profileJson);

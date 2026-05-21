@@ -1,7 +1,6 @@
 using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
-using Microsoft.EntityFrameworkCore;
-using Directory = Microprojects.Edm.Ui.Logistics.Models.Directory;
 using Microprojects.Edm.Intercom;
 using Microprojects.Edm.Ui.Logistics.Contracts;
 using Microprojects.Edm.Ui.Logistics.Events;
@@ -9,6 +8,8 @@ using Microprojects.Edm.Ui.Logistics.Models;
 using Microprojects.Edm.Ui.Logistics.Persistence;
 using Microprojects.Edm.Ui.Logistics.Utils;
 using Microprojects.Edm.Ui.Logistics.ViewModels;
+using Microsoft.EntityFrameworkCore;
+using Directory = Microprojects.Edm.Ui.Logistics.Models.Directory;
 
 namespace Microprojects.Edm.Ui.Logistics.Services;
 
@@ -83,7 +84,9 @@ public class OrderService : ServiceBase<Order>, IOrderService
     {
         if (order.Amount <= 0)
         {
-            throw new EdmException("Amount must be greater than 0.");
+            throw new EdmException(
+                "Logistics.Order.AmountMustBePositive",
+                "Amount must be greater than 0.");
         }
         var create = order.Id == Guid.Empty;
         // Avoid creating a new process
@@ -207,6 +210,8 @@ public class OrderService : ServiceBase<Order>, IOrderService
         if (!string.Equals(executor, user, StringComparison.OrdinalIgnoreCase))
         {
             throw new EdmException(
+                "Logistics.Order.LockedByExecutor",
+                new Dictionary<string, object> { ["executor"] = executor },
                 $"Order is being executed by {executor}. Only the executor or an Admin can modify it.");
         }
     }
@@ -325,6 +330,8 @@ public class OrderService : ServiceBase<Order>, IOrderService
         var specification = (await GetSpecifications(id))
                             .FirstOrDefault(s => s.NomenclatureId == item.NomenclatureId)
                             ?? throw new EdmException(
+                                "Logistics.Order.SpecificationNotFound",
+                                new Dictionary<string, object> { ["nomenclatureId"] = item.NomenclatureId },
                                 $"Specification for nomenclature {item.NomenclatureId} not found");
         if (specification.Total >= specification.Amount)
         {
@@ -333,7 +340,10 @@ public class OrderService : ServiceBase<Order>, IOrderService
 
         var storeItem = await Set<Item>()
                             .FirstOrDefaultAsync(i => i.Id == item.Id)
-                        ?? throw new EdmException($"Item with id {item.Id} not found");
+                        ?? throw new EdmException(
+                            "Logistics.Item.NotFound",
+                            new Dictionary<string, object> { ["itemId"] = item.Id },
+                            $"Item with id {item.Id} not found");
         var tare = storeItem.Tare;
         var requiredAmount = specification.Amount - specification.Total;
         // Available = Quantity minus prior non-execution splits (allocation /
@@ -450,12 +460,17 @@ public class OrderService : ServiceBase<Order>, IOrderService
 
         if (order == null)
         {
-            throw new EdmException($"Order with id {id} not found");
+            throw new EdmException(
+                "Logistics.Order.NotFound",
+                new Dictionary<string, object> { ["orderId"] = id },
+                $"Order with id {id} not found");
         }
 
         if (order.Meta.Completed != null)
         {
-            throw new EdmException("Order is already completed.");
+            throw new EdmException(
+                "Logistics.Order.AlreadyCompleted",
+                "Order is already completed.");
         }
 
         var orderProcess = await Set<OrderProcess>()
@@ -463,11 +478,15 @@ public class OrderService : ServiceBase<Order>, IOrderService
             .Where(op => op.OrderId == id)
             .OrderBy(op => op.Ordering)
             .FirstOrDefaultAsync()
-            ?? throw new EdmException("Order has no process.");
+            ?? throw new EdmException(
+                "Logistics.Order.NoProcess",
+                "Order has no process.");
 
         if (orderProcess.StartTime != null)
         {
-            throw new EdmException("Order has already been executed.");
+            throw new EdmException(
+                "Logistics.Order.AlreadyExecuted",
+                "Order has already been executed.");
         }
 
         // First operator to launch becomes Executor and takes responsibility
@@ -479,6 +498,8 @@ public class OrderService : ServiceBase<Order>, IOrderService
             !string.Equals(UserService.GetUserRole(), "Admin", StringComparison.Ordinal))
         {
             throw new EdmException(
+                "Logistics.Order.RelaunchLocked",
+                new Dictionary<string, object> { ["executor"] = order.Meta.Executor },
                 $"Order is being executed by {order.Meta.Executor}. Only the executor or an Admin can relaunch.");
         }
 
@@ -487,7 +508,9 @@ public class OrderService : ServiceBase<Order>, IOrderService
 
         // Check if all required components for the process are allocated
         if (specifications.Any(n => n.Total + Eps < n.Amount))
-            throw new EdmException("Not all required components are available");
+            throw new EdmException(
+                "Logistics.Order.ComponentsUnavailable",
+                "Not all required components are available");
 
         // Wrap the entire execution (output creation + input allocation + links
         // + completion state) into a single DB transaction so any failure rolls
@@ -517,7 +540,9 @@ public class OrderService : ServiceBase<Order>, IOrderService
                 var rounded = Math.Round(order.Amount);
                 if (Math.Abs(order.Amount - rounded) > Eps)
                 {
-                    throw new EdmException("Order amount must be an integer for countable output nomenclature.");
+                    throw new EdmException(
+                        "Logistics.Order.AmountMustBeInteger",
+                        "Order amount must be an integer for countable output nomenclature.");
                 }
 
                 var outputCount = (int)rounded;
@@ -601,7 +626,9 @@ public class OrderService : ServiceBase<Order>, IOrderService
 
                 if (remaining > Eps)
                 {
-                    throw new EdmException("Not enough input quantity to consume.");
+                    throw new EdmException(
+                        "Logistics.Order.InsufficientInputQuantity",
+                        "Not enough input quantity to consume.");
                 }
 
                 continue;
@@ -615,7 +642,9 @@ public class OrderService : ServiceBase<Order>, IOrderService
                 {
                     if (inputIndex >= inputItems.Count)
                     {
-                        throw new EdmException("Not enough input quantity to allocate required output.");
+                        throw new EdmException(
+                            "Logistics.Order.InsufficientInputForOutput",
+                            "Not enough input quantity to allocate required output.");
                     }
 
                     var inputItem = inputItems[inputIndex];
@@ -715,7 +744,10 @@ public class OrderService : ServiceBase<Order>, IOrderService
         var order = await Set()
             .Include(o => o.Meta)
             .FirstOrDefaultAsync(o => o.Id == orderId)
-            ?? throw new EdmException($"Order with id {orderId} not found");
+            ?? throw new EdmException(
+                "Logistics.Order.NotFound",
+                new Dictionary<string, object> { ["orderId"] = orderId },
+                $"Order with id {orderId} not found");
         AssertCanMutate(order);
 
         var errors = new List<string>();
@@ -777,7 +809,10 @@ public class OrderService : ServiceBase<Order>, IOrderService
         var order = await Set()
             .Include(o => o.Meta)
             .FirstOrDefaultAsync(o => o.Id == orderId)
-            ?? throw new EdmException($"Order with id {orderId} not found");
+            ?? throw new EdmException(
+                "Logistics.Order.NotFound",
+                new Dictionary<string, object> { ["orderId"] = orderId },
+                $"Order with id {orderId} not found");
         AssertCanMutate(order);
 
         if (request.GradeId != null)
@@ -787,6 +822,8 @@ public class OrderService : ServiceBase<Order>, IOrderService
             if (!gradeBelongs)
             {
                 throw new EdmException(
+                    "Logistics.Order.GradeNotInProcess",
+                    new Dictionary<string, object> { ["gradeId"] = request.GradeId },
                     $"Grade {request.GradeId} does not belong to the order's process.");
             }
         }
@@ -836,12 +873,17 @@ public class OrderService : ServiceBase<Order>, IOrderService
         var order = await Set()
             .Include(o => o.Meta)
             .FirstOrDefaultAsync(o => o.Id == orderId)
-            ?? throw new EdmException($"Order with id {orderId} not found");
+            ?? throw new EdmException(
+                "Logistics.Order.NotFound",
+                new Dictionary<string, object> { ["orderId"] = orderId },
+                $"Order with id {orderId} not found");
         AssertCanMutate(order);
 
         if (order.Meta.Completed != null)
         {
-            throw new EdmException("Order is already completed.");
+            throw new EdmException(
+                "Logistics.Order.AlreadyCompleted",
+                "Order is already completed.");
         }
 
         var hasPending = await Set<Item>().AsNoTracking()
@@ -854,7 +896,9 @@ public class OrderService : ServiceBase<Order>, IOrderService
 
         if (hasPending)
         {
-            throw new EdmException("Cannot complete the order: some outputs are still unallocated.");
+            throw new EdmException(
+                "Logistics.Order.CannotCompleteUnallocatedOutputs",
+                "Cannot complete the order: some outputs are still unallocated.");
         }
 
         order.Meta.Completed = DateTime.UtcNow;

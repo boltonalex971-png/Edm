@@ -1,5 +1,6 @@
 import api from '@logistics/features/api/api'
 import { Hero, useClock } from '@logistics/components/homepages/Hero'
+import '@logistics/components/homepages' // side-effect: registers the `homepages` namespace
 import { usePost } from '@logistics/hooks/hooks'
 import type { Order, OrderStatus } from '@logistics/data/types'
 import type { RootState } from '@logistics/store'
@@ -18,6 +19,7 @@ import {
 } from '@mui/icons-material'
 import { Box, Chip, Paper, Typography } from '@mui/material'
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
 import { Link as RouterLink, useNavigate } from 'react-router-dom'
 
@@ -35,13 +37,6 @@ const sectionTitleSx = {
     ...eyebrowSx,
     fontSize: 12,
     m: 0,
-}
-
-const STATUS_LABEL: Record<OrderStatus, string> = {
-    Running: 'Running',
-    OutputsPending: 'Outputs pending',
-    Completed: 'Completed',
-    Draft: 'Draft',
 }
 
 const STATUS_TONE: Record<OrderStatus, { bg: string; fg: string; border: string }> = {
@@ -78,6 +73,7 @@ const isOverdue = (due: Order['dueDate']) => {
 export const Home = () => {
     const user = useSelector((s: RootState) => s.user)
     const navigate = useNavigate()
+    const { t } = useTranslation('homepages')
 
     const [[orders], loading] = usePost<Order[]>(
         `${api.orders}/search`,
@@ -130,13 +126,7 @@ export const Home = () => {
                 userFull={user.name}
                 role={user.role}
                 clock={clock}
-                lead={
-                    <>
-                        Inventory and shop-floor tracking for production
-                        orders, supplies and tare. Pick where you want to
-                        start.
-                    </>
-                }
+                lead={t('welcome.lead')}
             />
 
             <Box
@@ -151,20 +141,20 @@ export const Home = () => {
                 }}
             >
                 <KpiTile
-                    eyebrow="Active orders"
+                    eyebrow={t('kpi.activeOrders.eyebrow')}
                     value={stats.active}
-                    sublabel="open in pipeline"
+                    sublabel={t('kpi.activeOrders.sublabel')}
                     accent="var(--ent-order-deep)"
                     loading={loading}
                     onClick={() => navigate('/orders')}
                 />
                 <KpiTile
-                    eyebrow="Running now"
+                    eyebrow={t('kpi.runningNow.eyebrow')}
                     value={stats.running}
                     sublabel={
                         stats.mineRunning > 0
-                            ? `${stats.mineRunning} run by you`
-                            : 'in execution'
+                            ? t('kpi.runningNow.sublabelMine', { count: stats.mineRunning })
+                            : t('kpi.runningNow.sublabel')
                     }
                     accent="var(--sig-run-deep)"
                     icon={<RunningIcon fontSize="small" />}
@@ -172,18 +162,18 @@ export const Home = () => {
                     onClick={() => navigate('/orders')}
                 />
                 <KpiTile
-                    eyebrow="Outputs pending"
+                    eyebrow={t('kpi.outputsPending.eyebrow')}
                     value={stats.pending}
-                    sublabel="awaiting submission"
+                    sublabel={t('kpi.outputsPending.sublabel')}
                     accent="var(--sig-warn-deep)"
                     icon={<PendingIcon fontSize="small" />}
                     loading={loading}
                     onClick={() => navigate('/orders')}
                 />
                 <KpiTile
-                    eyebrow="Overdue"
+                    eyebrow={t('kpi.overdue.eyebrow')}
                     value={stats.overdue}
-                    sublabel="past due date"
+                    sublabel={t('kpi.overdue.sublabel')}
                     accent="var(--sig-fault-deep)"
                     icon={<OverdueIcon fontSize="small" />}
                     loading={loading}
@@ -194,7 +184,7 @@ export const Home = () => {
 
             <Box sx={{ mt: 3.5 }}>
                 <SectionHeader
-                    title="Active work"
+                    title={t('section.activeWork')}
                     count={inFlight.length}
                     trailing={
                         <RouterLink
@@ -206,7 +196,7 @@ export const Home = () => {
                                 fontWeight: 600,
                             }}
                         >
-                            All orders →
+                            {t('section.allOrders')}
                         </RouterLink>
                     }
                 />
@@ -221,10 +211,10 @@ export const Home = () => {
                     }}
                 >
                     {loading && inFlight.length === 0 && (
-                        <EmptyRow text="Loading…" />
+                        <EmptyRow text={t('common:loading')} />
                     )}
                     {!loading && inFlight.length === 0 && (
-                        <EmptyRow text="No orders are currently being executed." />
+                        <EmptyRow text={t('section.noActiveOrders')} />
                     )}
                     {inFlight.map((o, i) => (
                         <ActiveRow
@@ -238,7 +228,7 @@ export const Home = () => {
             </Box>
 
             <Box sx={{ mt: 3.5 }}>
-                <SectionHeader title="Quick actions" />
+                <SectionHeader title={t('section.quickActions')} />
                 <Box
                     sx={{
                         display: 'grid',
@@ -252,40 +242,40 @@ export const Home = () => {
                     }}
                 >
                     <ActionTile
-                        title="Manage orders"
-                        sub="Create, launch, monitor"
+                        title={t('action.manageOrders.title')}
+                        sub={t('action.manageOrders.sub')}
                         icon={<OrdersIcon />}
                         accentSoft="var(--ent-order-soft)"
                         accentDeep="var(--ent-order-deep)"
                         onClick={() => navigate('/orders')}
                     />
                     <ActionTile
-                        title="Browse items"
-                        sub="History & genealogy"
+                        title={t('action.browseItems.title')}
+                        sub={t('action.browseItems.sub')}
                         icon={<ItemsIcon />}
                         accentSoft="var(--ent-item-soft)"
                         accentDeep="var(--ent-item-deep)"
                         onClick={() => navigate('/items')}
                     />
                     <ActionTile
-                        title="Receive supplies"
-                        sub="Inbound shipments"
+                        title={t('action.receiveSupplies.title')}
+                        sub={t('action.receiveSupplies.sub')}
                         icon={<SuppliesIcon />}
                         accentSoft="var(--ent-supply-soft)"
                         accentDeep="var(--ent-supply-deep)"
                         onClick={() => navigate('/supplies')}
                     />
                     <ActionTile
-                        title="Repack items"
-                        sub="Move between tares"
+                        title={t('action.repackItems.title')}
+                        sub={t('action.repackItems.sub')}
                         icon={<RepackingIcon />}
                         accentSoft="var(--ent-tare-soft)"
                         accentDeep="var(--ent-tare-deep)"
                         onClick={() => navigate('/repacking')}
                     />
                     <ActionTile
-                        title="Configuration"
-                        sub="Folders, processes, types"
+                        title={t('action.config.title')}
+                        sub={t('action.config.sub')}
                         icon={<SettingsIcon />}
                         accentSoft="var(--ent-process-soft)"
                         accentDeep="var(--ent-process-deep)"
@@ -453,6 +443,7 @@ interface ActiveRowProps {
 }
 
 function ActiveRow({ order, divider, onOpen }: ActiveRowProps) {
+    const { t } = useTranslation('widgets')
     const tone = order.status ? STATUS_TONE[order.status] : STATUS_TONE.Draft
     const overdue = isOverdue(order.dueDate)
     return (
@@ -544,11 +535,7 @@ function ActiveRow({ order, divider, onOpen }: ActiveRowProps) {
             >
                 <Chip
                     size="small"
-                    label={
-                        order.status
-                            ? STATUS_LABEL[order.status]
-                            : STATUS_LABEL.Draft
-                    }
+                    label={t(`status.${order.status ?? 'Draft'}`)}
                     sx={{
                         height: 22,
                         fontFamily: 'var(--font-mono)',
@@ -630,6 +617,7 @@ function ActionTile({
     accentDeep,
     onClick,
 }: ActionTileProps) {
+    const { t } = useTranslation('homepages')
     return (
         <Paper
             elevation={0}
@@ -711,7 +699,7 @@ function ActionTile({
                     letterSpacing: '0.05em',
                 }}
             >
-                Open
+                {t('action.open')}
                 <ArrowIcon sx={{ fontSize: 14 }} />
             </Box>
         </Paper>

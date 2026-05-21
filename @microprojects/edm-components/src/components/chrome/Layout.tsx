@@ -1,4 +1,5 @@
 ﻿import React, {useEffect, useState} from 'react';
+import {useTranslation} from 'react-i18next';
 import {Link as RouterLink, useLocation} from 'react-router-dom';
 
 interface LayoutProps {
@@ -37,6 +38,7 @@ export const Layout = ({
     versionChipName = 'EDM',
     versionChipVersionKey = 'product',
 }: LayoutProps) => {
+    const {t} = useTranslation('edm-chrome');
     const currYear = new Date().getFullYear();
     const [versions, setVersions] = useState<VersionInfo | null>(null);
     const [seenVersion, setSeenVersion] = useState<string>(() => {
@@ -83,9 +85,9 @@ export const Layout = ({
                     <RouterLink
                         to={changelogPath}
                         className={`footer-link ${hasNudge ? 'has-nudge' : ''}`}
-                        title={hasNudge ? `Updated to ${versions?.main}` : undefined}
+                        title={hasNudge ? t('footer.updatedTo', {version: versions?.main}) : undefined}
                     >
-                        What's new
+                        {t('footer.whatsNew')}
                         {hasNudge && <span className="nudge-dot" aria-hidden="true" />}
                     </RouterLink>
                 </div>

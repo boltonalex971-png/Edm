@@ -1,0 +1,33 @@
+{
+    "page": {
+        "title": "Поставки",
+        "menu": {
+            "remains": "Остатки",
+            "consumed": "Израсходовано"
+        }
+    },
+    "actions": {
+        "search": "Поиск",
+        "createNew": "Создать",
+        "addItems": "Добавить продукцию"
+    },
+    "search": {
+        "name": "Поиск поставки",
+        "description": "Поиск поставок",
+        "placeholder": "Поиск по накладной или штрихкоду"
+    },
+    "detail": {
+        "title": "Поставка",
+        "newTitle": "Новая поставка",
+        "section": "Поставка"
+    },
+    "field": {
+        "barcode": "Штрихкод",
+        "shipment": "Накладная",
+        "shipmentExternalId": "Номер накладной",
+        "created": "Создано"
+    },
+    "tabs": {
+        "components": "Состав"
+    }
+}

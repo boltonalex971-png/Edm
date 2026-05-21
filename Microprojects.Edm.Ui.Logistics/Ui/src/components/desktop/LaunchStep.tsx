@@ -1,11 +1,13 @@
 import api from '@features/api/api.ts'
 import { ComponentLookup } from '@logistics/components/desktop/ComponentLookup'
+import '@logistics/components/desktop' // side-effect: registers the `desktop` namespace
 import type {
     AllocateItemsResult,
     OrderSpecification,
     UUID,
 } from '@logistics/data/types'
 import { getData } from '@logistics/hooks/hooks'
+import { resolveError } from '@logistics/i18n/resolveError'
 import { formatUnits } from '@logistics/utils/format'
 import {
     Alert,
@@ -20,6 +22,7 @@ import {
     Typography,
 } from '@mui/material'
 import { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 type LaunchStepProps = {
     orderId: UUID
@@ -45,6 +48,7 @@ export const LaunchStep = ({
     reviewOnly,
     onResume,
 }: LaunchStepProps) => {
+    const { t } = useTranslation('desktop')
     const locked = readOnly || reviewOnly === true
 
     const [specs, setSpecs] = useState<OrderSpecification[]>([])
@@ -61,14 +65,11 @@ export const LaunchStep = ({
             )
             setSpecs(data ?? [])
         } catch (e) {
-            setError(
-                (e as { message?: string })?.message ||
-                    'Failed to load specifications',
-            )
+            setError(resolveError(e, t('launch.failedToLoadSpecs')))
         } finally {
             setLoading(false)
         }
-    }, [orderId])
+    }, [orderId, t])
 
     useEffect(() => {
         void reload()
@@ -82,10 +83,12 @@ export const LaunchStep = ({
                 result.countable,
             )
             setInfo(
-                `Added ${qtyTxt}` +
-                    (result.stoppedReason
-                        ? ` (stopped: ${result.stoppedReason})`
-                        : ''),
+                result.stoppedReason
+                    ? t('launch.addedQtyStopped', {
+                          qty: qtyTxt,
+                          reason: result.stoppedReason,
+                      })
+                    : t('launch.addedQty', { qty: qtyTxt }),
             )
         }
         void reload()
@@ -107,8 +110,7 @@ export const LaunchStep = ({
                         mb: 1,
                     }}
                 >
-                    {info ??
-                        'Click a row to pick available items for that nomenclature.'}
+                    {info ?? t('launch.hint')}
                 </Typography>
             )}
 
@@ -129,7 +131,9 @@ export const LaunchStep = ({
                     }}
                 >
                     <CircularProgress size={14} />
-                    <Typography variant="caption">Loading…</Typography>
+                    <Typography variant="caption">
+                        {t('common:loading')}
+                    </Typography>
                 </Box>
             )}
             {!loading && specs.length === 0 && (
@@ -141,7 +145,7 @@ export const LaunchStep = ({
                         fontSize: 14,
                     }}
                 >
-                    No input specifications for this process — ready to launch.
+                    {t('launch.noSpecs')}
                 </Box>
             )}
             {specs.length > 0 && (
@@ -155,7 +159,7 @@ export const LaunchStep = ({
                                     borderBottom: '2px solid var(--line-strong)',
                                 }}
                             >
-                                Nomenclature
+                                {t('launch.colNomenclature')}
                             </TableCell>
                             <TableCell
                                 sx={{
@@ -164,7 +168,7 @@ export const LaunchStep = ({
                                     borderBottom: '2px solid var(--line-strong)',
                                 }}
                             >
-                                Required
+                                {t('launch.colRequired')}
                             </TableCell>
                             <TableCell
                                 sx={{
@@ -173,7 +177,7 @@ export const LaunchStep = ({
                                     borderBottom: '2px solid var(--line-strong)',
                                 }}
                             >
-                                Allocated
+                                {t('launch.colAllocated')}
                             </TableCell>
                         </TableRow>
                     </TableHead>
@@ -191,7 +195,9 @@ export const LaunchStep = ({
                                             : undefined
                                     }
                                     title={
-                                        clickable ? 'Click to pick items' : undefined
+                                        clickable
+                                            ? t('launch.clickToPick')
+                                            : undefined
                                     }
                                     sx={{
                                         cursor: clickable ? 'pointer' : 'default',
@@ -262,7 +268,7 @@ export const LaunchStep = ({
                         onClick={onResume}
                         sx={{ minWidth: 180 }}
                     >
-                        Resume
+                        {t('launch.resume')}
                     </MuiButton>
                 ) : (
                     <MuiButton
@@ -273,18 +279,18 @@ export const LaunchStep = ({
                         disabled={launchDisabled}
                         title={
                             readOnly
-                                ? 'Read-only'
+                                ? t('launch.readOnly')
                                 : !allComplete
-                                  ? 'All inputs must be allocated before launch'
+                                  ? t('launch.allMustBeAllocated')
                                   : undefined
                         }
                         sx={{ minWidth: 180 }}
                     >
                         {readOnly
-                            ? 'Read-only'
+                            ? t('launch.readOnly')
                             : launching
-                              ? 'Launching…'
-                              : 'Launch'}
+                              ? t('launch.launching')
+                              : t('launch.launch')}
                     </MuiButton>
                 )}
             </Box>

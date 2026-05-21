@@ -1,4 +1,5 @@
 import api from '@features/api/api.ts'
+import '@logistics/components/desktop' // side-effect: registers the `desktop` namespace
 import { LaunchStep } from '@logistics/components/desktop/LaunchStep'
 import { AllocateProcessOutput } from '@logistics/components/orders/AllocateProcessOutput'
 import type {
@@ -17,6 +18,7 @@ import {
     useOrderClaimState,
 } from '@logistics/hooks/entityLocks'
 import { useGet } from '@logistics/hooks/hooks'
+import { resolveError } from '@logistics/i18n/resolveError'
 import type { RootState } from '@logistics/store'
 import {
     type DateLike,
@@ -48,19 +50,21 @@ import {
 } from '@mui/material'
 import axios from 'axios'
 import { Fragment, useEffect, useMemo, useState } from 'react'
+import { Trans, useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
 import { useNavigate, useParams } from 'react-router-dom'
 
 type Step = 'review' | 'launch' | 'distribute' | 'complete'
 
-const STEPS: { id: Step; label: string }[] = [
-    { id: 'review', label: 'Review' },
-    { id: 'launch', label: 'Launch' },
-    { id: 'distribute', label: 'Distribute' },
-    { id: 'complete', label: 'Done' },
-]
+const STEP_IDS: Step[] = ['review', 'launch', 'distribute', 'complete']
+const STEP_LABEL_KEYS: Record<Step, string> = {
+    review: 'steps.review',
+    launch: 'steps.launch',
+    distribute: 'steps.distribute',
+    complete: 'steps.done',
+}
 
-const stepIndex = (s: Step) => STEPS.findIndex((x) => x.id === s)
+const stepIndex = (s: Step) => STEP_IDS.indexOf(s)
 
 interface Tone {
     bg: string
@@ -120,6 +124,7 @@ const monoEyebrowSx = {
 }
 
 export const OrderRunView = () => {
+    const { t } = useTranslation('desktop')
     const { id: idParam } = useParams<{ id: string }>()
     const id = idParam as UUID | undefined
     const navigate = useNavigate()
@@ -205,11 +210,7 @@ export const OrderRunView = () => {
                 else setStep('distribute')
             })
             .catch((e) => {
-                setLaunchError(
-                    e.response?.data?.detail ||
-                        e.response?.statusText ||
-                        'Failed to launch',
-                )
+                setLaunchError(resolveError(e, t('run.failedToLaunch')))
             })
             .finally(() => setLaunching(false))
     }
@@ -222,11 +223,7 @@ export const OrderRunView = () => {
             .post(`${api.orders}/${id}/complete`, {})
             .then(() => invalidate([{ type: 'order', id }]))
             .catch((e) => {
-                setCompleteError(
-                    e.response?.data?.detail ||
-                        e.response?.statusText ||
-                        'Failed to complete the order',
-                )
+                setCompleteError(resolveError(e, t('run.failedToComplete')))
             })
             .finally(() => setCompleting(false))
     }
@@ -246,10 +243,7 @@ export const OrderRunView = () => {
 
     const statusTone =
         (order?.status && STATUS_TONE[order.status]) || DRAFT_TONE
-    const statusLabel =
-        order?.status === 'OutputsPending'
-            ? 'Outputs pending'
-            : order?.status || 'Draft'
+    const statusLabel = t(`widgets:status.${order?.status ?? 'Draft'}`)
 
     return (
         <Paper
@@ -278,15 +272,21 @@ export const OrderRunView = () => {
                     severity="warning"
                     sx={{ mx: 1.5, mb: 1, borderRadius: 'var(--r-2)' }}
                 >
-                    {order?.executor ? 'Executed' : 'Executing'} by{' '}
-                    <Box
-                        component="strong"
-                        sx={{ fontFamily: 'var(--font-mono)' }}
-                    >
-                        {occupiedBy}
-                    </Box>{' '}
-                    — read-only. You can view progress but cannot change
-                    anything.
+                    <Trans
+                        i18nKey={
+                            order?.executor
+                                ? 'desktop:run.executedReadOnly'
+                                : 'desktop:run.executingReadOnly'
+                        }
+                        values={{ name: occupiedBy ?? '' }}
+                        components={[
+                            <Box
+                                key="0"
+                                component="strong"
+                                sx={{ fontFamily: 'var(--font-mono)' }}
+                            />,
+                        ]}
+                    />
                 </Alert>
             )}
 
@@ -307,18 +307,23 @@ export const OrderRunView = () => {
                             variant="contained"
                             onClick={() => setStep(liveStep)}
                         >
-                            Resume
+                            {t('run.resume')}
                         </MuiButton>
                     }
                 >
-                    Reviewing earlier step — order is currently at{' '}
-                    <Box
-                        component="strong"
-                        sx={{ fontFamily: 'var(--font-mono)' }}
-                    >
-                        {STEPS[liveStepIndex].label}
-                    </Box>
-                    .
+                    <Trans
+                        i18nKey="desktop:run.reviewingEarlier"
+                        values={{
+                            step: t(STEP_LABEL_KEYS[STEP_IDS[liveStepIndex]]),
+                        }}
+                        components={[
+                            <Box
+                                key="0"
+                                component="strong"
+                                sx={{ fontFamily: 'var(--font-mono)' }}
+                            />,
+                        ]}
+                    />
                 </Alert>
             )}
 
@@ -336,7 +341,11 @@ export const OrderRunView = () => {
                     <ReviewStep
                         order={order}
                         onNext={() => setStep('launch')}
-                        nextLabel={isOnPastStep ? 'Continue review' : 'Next'}
+                        nextLabel={
+                            isOnPastStep
+                                ? t('review.continueReview')
+                                : t('review.next')
+                        }
                         onResume={
                             isOnPastStep ? () => setStep(liveStep) : undefined
                         }
@@ -398,6 +407,7 @@ function RunHeader({
     statusLabel,
     onBack,
 }: RunHeaderProps) {
+    const { t } = useTranslation('desktop')
     return (
         <Box
             sx={{
@@ -415,7 +425,7 @@ function RunHeader({
                     mb: 0.75,
                 }}
             >
-                <Tooltip title="Back to orders">
+                <Tooltip title={t('run.backToOrders')}>
                     <IconButton
                         size="small"
                         onClick={onBack}
@@ -428,7 +438,7 @@ function RunHeader({
                     </IconButton>
                 </Tooltip>
                 <Typography sx={monoEyebrowSx}>
-                    Order
+                    {t('run.order')}
                     {order?.number && (
                         <Box
                             component="span"
@@ -473,7 +483,7 @@ function RunHeader({
                     }}
                 >
                     {order?.processName ||
-                        (loading ? 'Loading…' : 'Order')}
+                        (loading ? t('common:loading') : t('run.orderFallback'))}
                 </Typography>
             </Box>
             {order?.processNomenclatureName && (
@@ -495,7 +505,7 @@ function RunHeader({
                             fontWeight: 700,
                         }}
                     >
-                        {order.amount} pcs
+                        {t('run.amountPcs', { count: order.amount })}
                     </Box>
                 </Typography>
             )}
@@ -511,6 +521,7 @@ interface StepperProps {
 }
 
 function Stepper({ step, liveStep, maxStep, onPick }: StepperProps) {
+    const { t } = useTranslation('desktop')
     const activeIdx = stepIndex(step)
     const liveIdx = stepIndex(liveStep)
     const maxIdx = stepIndex(maxStep)
@@ -536,24 +547,24 @@ function Stepper({ step, liveStep, maxStep, onPick }: StepperProps) {
                     mx: 'auto',
                 }}
             >
-                {STEPS.map((s, idx) => {
+                {STEP_IDS.map((sid, idx) => {
                     const reachable = idx <= maxIdx
                     const isLive = idx === liveIdx
                     const isDone = idx < liveIdx
                     const isViewing = idx === activeIdx
                     return (
-                        <Fragment key={s.id}>
+                        <Fragment key={sid}>
                             {idx > 0 && (
                                 <Connector active={idx <= liveIdx} />
                             )}
                             <StepNode
-                                label={s.label}
+                                label={t(STEP_LABEL_KEYS[sid])}
                                 number={idx + 1}
                                 reachable={reachable}
                                 isLive={isLive}
                                 isDone={isDone}
                                 isViewing={isViewing}
-                                onClick={() => reachable && onPick(s.id)}
+                                onClick={() => reachable && onPick(sid)}
                             />
                         </Fragment>
                     )
@@ -706,9 +717,10 @@ const ReviewStep = ({
     nextLabel,
     onResume,
 }: ReviewStepProps) => {
+    const { t } = useTranslation('desktop')
     const dueStatus = useMemo(
-        () => computeDueStatus(order.dueDate),
-        [order.dueDate],
+        () => computeDueStatus(order.dueDate, undefined, t),
+        [order.dueDate, t],
     )
     const amountLabel = formatUnits(
         order.amount,
@@ -728,7 +740,7 @@ const ReviewStep = ({
                 mx: 'auto',
             }}
         >
-            <Typography sx={monoEyebrowSx}>Order summary</Typography>
+            <Typography sx={monoEyebrowSx}>{t('review.summary')}</Typography>
             <Box
                 sx={{
                     display: 'grid',
@@ -740,14 +752,14 @@ const ReviewStep = ({
                 }}
             >
                 <SummaryTile
-                    eyebrow="Quantity"
+                    eyebrow={t('review.quantity')}
                     icon={<QuantityIcon fontSize="small" />}
                     accent="var(--accent)"
                     value={amountLabel}
                     sub={order.processNomenclatureName ?? '—'}
                 />
                 <SummaryTile
-                    eyebrow="Due"
+                    eyebrow={t('review.due')}
                     icon={<DueIcon fontSize="small" />}
                     accent={dueTone?.border ?? 'var(--line-strong)'}
                     value={
@@ -761,7 +773,7 @@ const ReviewStep = ({
                     }
                 />
                 <SummaryTile
-                    eyebrow="Planned start"
+                    eyebrow={t('review.plannedStart')}
                     icon={<StartIcon fontSize="small" />}
                     accent="var(--line-strong)"
                     value={
@@ -769,14 +781,20 @@ const ReviewStep = ({
                             ? formatLocalDate(order.startDate)
                             : '—'
                     }
-                    sub={order.executor ? `Operator · ${order.executor}` : 'Unclaimed'}
+                    sub={
+                        order.executor
+                            ? t('review.operatorPrefix', {
+                                  name: order.executor,
+                              })
+                            : t('review.unclaimed')
+                    }
                 />
             </Box>
 
             {order.description && (
                 <Box>
                     <Typography sx={{ ...monoEyebrowSx, mb: 0.75 }}>
-                        Notes
+                        {t('review.notes')}
                     </Typography>
                     <Box
                         sx={{
@@ -828,7 +846,7 @@ const ReviewStep = ({
                         fontSize: 15,
                     }}
                 >
-                    {onResume ? 'Resume' : 'Start running'}
+                    {onResume ? t('review.resume') : t('review.startRunning')}
                 </MuiButton>
             </Footer>
         </Box>
@@ -968,14 +986,14 @@ type GradeBucket = {
     quantity: number
 }
 
-const groupByGrade = (items: Item[]): GradeBucket[] => {
+const groupByGrade = (items: Item[], noGradeLabel: string): GradeBucket[] => {
     const map = new Map<string, GradeBucket>()
     for (const item of items) {
         const key = item.gradeId ?? '__none__'
         if (!map.has(key)) {
             map.set(key, {
                 gradeId: item.gradeId ?? null,
-                gradeName: item.gradeName ?? 'No grade',
+                gradeName: item.gradeName ?? noGradeLabel,
                 color: item.gradeId
                     ? colorForGradeId(item.gradeId)
                     : 'var(--surface-3)',
@@ -996,9 +1014,12 @@ type DueStatus =
     | { kind: 'overdue'; label: string }
     | { kind: 'ahead'; label: string }
 
+type TFn = (key: string, options?: Record<string, unknown>) => string
+
 const computeDueStatus = (
     dueRaw: DateLike,
-    completedRaw?: DateLike,
+    completedRaw: DateLike | undefined,
+    t: TFn,
 ): DueStatus | undefined => {
     const due = parseUtcDate(dueRaw)
     if (!due) return undefined
@@ -1006,10 +1027,16 @@ const computeDueStatus = (
     const dueDay = Date.UTC(due.getFullYear(), due.getMonth(), due.getDate())
     const refDay = Date.UTC(ref.getFullYear(), ref.getMonth(), ref.getDate())
     const diffDays = Math.round((refDay - dueDay) / (1000 * 60 * 60 * 24))
-    if (diffDays === 0) return { kind: 'on-time', label: 'In time' }
+    if (diffDays === 0) return { kind: 'on-time', label: t('due.inTime') }
     if (diffDays > 0)
-        return { kind: 'overdue', label: `Overdue ${diffDays} d` }
-    return { kind: 'ahead', label: `${-diffDays} d before plan` }
+        return {
+            kind: 'overdue',
+            label: t('due.overdueDays', { count: diffDays }),
+        }
+    return {
+        kind: 'ahead',
+        label: t('due.aheadDays', { count: -diffDays }),
+    }
 }
 
 const CompleteStep = ({
@@ -1023,6 +1050,7 @@ const CompleteStep = ({
     readOnly,
     onBackToList,
 }: CompleteStepProps) => {
+    const { t } = useTranslation('desktop')
     const distinctTares = useMemo(() => {
         const ids = new Set<string>()
         for (const item of outputs?.allocated ?? []) {
@@ -1051,24 +1079,34 @@ const CompleteStep = ({
     const units = order.processNomenclatureUnits
     const countable = order.processNomenclatureCountable
 
+    const noGradeLabel = t('complete.noGrade')
     const gradeBuckets = useMemo(
         () =>
-            groupByGrade([
-                ...(outputs?.allocated ?? []),
-                ...(outputs?.unallocated ?? []),
-            ]),
-        [outputs],
+            groupByGrade(
+                [
+                    ...(outputs?.allocated ?? []),
+                    ...(outputs?.unallocated ?? []),
+                ],
+                noGradeLabel,
+            ),
+        [outputs, noGradeLabel],
     )
 
     const dueStatus = useMemo(
-        () => computeDueStatus(order.dueDate, order.completed),
-        [order.dueDate, order.completed],
+        () => computeDueStatus(order.dueDate, order.completed, t),
+        [order.dueDate, order.completed, t],
     )
 
     const dueTone = dueStatus ? DUE_TONE[dueStatus.kind] : undefined
     const tareSub =
         distinctTares > 0 && allocatedQty > 0
-            ? `≈ ${formatUnits(Math.round(allocatedQty / distinctTares), units, countable)} per tare`
+            ? t('complete.perTare', {
+                  value: formatUnits(
+                      Math.round(allocatedQty / distinctTares),
+                      units,
+                      countable,
+                  ),
+              })
             : undefined
     const outputsValue = isCompleted
         ? formatUnits(allocatedQty, units, countable)
@@ -1127,7 +1165,9 @@ const CompleteStep = ({
                             color: 'var(--sig-run-deep)',
                         }}
                     >
-                        {isCompleted ? 'Order completed' : 'Ready to complete'}
+                        {isCompleted
+                            ? t('complete.orderCompleted')
+                            : t('complete.readyToComplete')}
                     </Typography>
                     <Typography
                         sx={{
@@ -1137,8 +1177,10 @@ const CompleteStep = ({
                         }}
                     >
                         {isCompleted
-                            ? `All outputs allocated to ${distinctTares} tare${distinctTares === 1 ? '' : 's'}.`
-                            : 'Every output is allocated. Confirm to close the order.'}
+                            ? t('complete.allOutputsAllocated', {
+                                  count: distinctTares,
+                              })
+                            : t('complete.everyOutputAllocated')}
                     </Typography>
                 </Box>
                 {isCompleted && order.completed && (
@@ -1149,7 +1191,7 @@ const CompleteStep = ({
                                 color: 'var(--ink-3)',
                             }}
                         >
-                            Completed at
+                            {t('complete.completedAt')}
                         </Typography>
                         <Typography
                             sx={{
@@ -1166,7 +1208,7 @@ const CompleteStep = ({
                 )}
             </Box>
 
-            <Typography sx={monoEyebrowSx}>Outcome</Typography>
+            <Typography sx={monoEyebrowSx}>{t('complete.outcome')}</Typography>
             <Box
                 sx={{
                     display: 'grid',
@@ -1178,21 +1220,23 @@ const CompleteStep = ({
                 }}
             >
                 <SummaryTile
-                    eyebrow="Outputs"
+                    eyebrow={t('complete.outputs')}
                     icon={<QuantityIcon fontSize="small" />}
                     accent="var(--sig-run-deep)"
                     value={outputsValue}
                     sub={order.processNomenclatureName ?? undefined}
                 />
                 <SummaryTile
-                    eyebrow="Tares used"
+                    eyebrow={t('complete.taresUsed')}
                     icon={<TaresIcon fontSize="small" />}
                     accent="var(--ent-tare-deep)"
                     value={distinctTares}
                     sub={tareSub}
                 />
                 <SummaryTile
-                    eyebrow={isCompleted ? 'Due' : 'Due by'}
+                    eyebrow={
+                        isCompleted ? t('complete.due') : t('complete.dueBy')
+                    }
                     icon={<DueIcon fontSize="small" />}
                     accent={dueTone?.border ?? 'var(--line-strong)'}
                     value={
@@ -1210,7 +1254,7 @@ const CompleteStep = ({
             {gradeBuckets.length > 0 && (
                 <Box>
                     <Typography sx={{ ...monoEyebrowSx, mb: 0.75 }}>
-                        By grade
+                        {t('complete.byGrade')}
                     </Typography>
                     <Box
                         sx={{
@@ -1296,7 +1340,7 @@ const CompleteStep = ({
                             fontSize: 15,
                         }}
                     >
-                        Back to list
+                        {t('complete.backToList')}
                     </MuiButton>
                 ) : (
                     <MuiButton
@@ -1310,9 +1354,9 @@ const CompleteStep = ({
                         startIcon={<CheckIcon />}
                         title={
                             readOnly
-                                ? 'Read-only'
+                                ? t('complete.readOnly')
                                 : unallocatedCount > 0
-                                  ? 'All outputs must be allocated before completing'
+                                  ? t('complete.allMustBeAllocated')
                                   : undefined
                         }
                         sx={{
@@ -1324,10 +1368,10 @@ const CompleteStep = ({
                         }}
                     >
                         {readOnly
-                            ? 'Read-only'
+                            ? t('complete.readOnly')
                             : completing
-                              ? 'Completing…'
-                              : 'Complete order'}
+                              ? t('complete.completing')
+                              : t('complete.completeOrder')}
                     </MuiButton>
                 )}
             </Footer>

@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import Api from '../api';
 import { useGet } from '@microprojects/edm-components/hooks';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useBasePath } from '@microprojects/edm-components/hooks';
 import { MasterDetail, reloadMaster, Detail, Editor } from '@microprojects/edm-components/components';
 import { ProcessTabs } from './process/ProcessTabs';
@@ -19,13 +20,14 @@ export function Processes() {
     const path = useBasePath();
     const navigate = useNavigate();
     const api = Api.processes;
+    const { t } = useTranslation('tech');
     return (
         <MasterDetail
             api={api}
             hierarchiesApi={Api.hierarchies}
             folderComponent={Folder}
             path={path}
-            stubMessage='Please select a process'
+            stubMessage={t('config.stub.process')}
             detail={
                 <ProcessDetail
                     api={api}
@@ -54,6 +56,7 @@ export function ProcessDetail({ processId, parents, ...props }) {
     useEffect(setSub, [id]);
     const [[ops]] = useGet(`${Api.plugins}/operations`, []);
     let [[data, setData], loading, error] = useGet(`${props.api}/${id}`, [id]);
+    const { t } = useTranslation('tech');
     if (!data || data.id === 0) {
         data = { ...data, name: '', description: '' };
     }
@@ -69,8 +72,9 @@ export function ProcessDetail({ processId, parents, ...props }) {
             loading={loading}
             error={error}
             validation={
-                missedInputs.length > 0 ?
-                    `Parameter${missedInputs.length > 1 ? 's' : ''} ${missedInputs.join(', ')} ${missedInputs.length > 1 ? 'are' : 'is'} not available as output parameters` : ''
+                missedInputs.length > 0
+                    ? t('process.paramSingular', { count: missedInputs.length, params: missedInputs.join(', ') })
+                    : ''
             }
             data={data}
             parents={parents}
@@ -78,13 +82,13 @@ export function ProcessDetail({ processId, parents, ...props }) {
             card={
                 <Properties>
                     <Property
-                        label="Operation"
+                        label={t('process.operation')}
                         value={operationName}
                         muted={!operationName}
-                        placeholder="Not bound"
+                        placeholder={t('process.operationNotBound')}
                     />
                     <Property
-                        label="Common UID"
+                        label={t('process.commonUid')}
                         value={data.commonUid}
                         mono
                         placeholder="—"
@@ -106,7 +110,7 @@ export function ProcessDetail({ processId, parents, ...props }) {
                             <Box>
                                 <EditorSection
                                     number={1}
-                                    title="Identity"
+                                    title={t('common.identity')}
                                     filled={identityFilled}
                                     total={3}
                                     done={identityFilled === 3 && identityValid}
@@ -114,41 +118,41 @@ export function ProcessDetail({ processId, parents, ...props }) {
                                     <Field
                                         full
                                         name="name"
-                                        label="Name"
+                                        label={t('common.name')}
                                         required
                                         value={values.name}
                                         onChange={handleChange}
                                         state={values.name && values.name.trim() ? 'pristine' : (values.id ? 'invalid' : 'pristine')}
                                         help={
                                             values.id && (!values.name || !values.name.trim())
-                                                ? 'A process must have a name.'
-                                                : 'Shown across the tree, breadcrumbs, and dispatch board.'
+                                                ? t('process.nameMissing')
+                                                : t('process.nameHelp')
                                         }
                                     />
                                     <Field
                                         full
                                         kind="textarea"
                                         name="description"
-                                        label="Description"
+                                        label={t('common.description')}
                                         rows={2}
                                         value={values.description}
                                         onChange={handleChange}
-                                        help="Free-form notes — what this process does, where it's used."
+                                        help={t('process.descriptionHelp')}
                                     />
                                     <Field
                                         full
                                         name="commonUid"
-                                        label="Common UID"
+                                        label={t('process.commonUid')}
                                         value={values.commonUid}
                                         onChange={handleChange}
-                                        placeholder="e.g. 7G-MNT-014"
-                                        help="Stable identifier shared with external systems (ERP, MES). Optional."
+                                        placeholder={t('process.commonUidPlaceholder')}
+                                        help={t('process.commonUidHelp')}
                                     />
                                 </EditorSection>
 
                                 <EditorSection
                                     number={2}
-                                    title="Operation binding"
+                                    title={t('process.operationBinding')}
                                     filled={operationFilled}
                                     total={1}
                                     done={operationFilled === 1 && missedInputs.length === 0}
@@ -158,18 +162,18 @@ export function ProcessDetail({ processId, parents, ...props }) {
                                         full
                                         kind="select"
                                         name="operationGuid"
-                                        label="Operation"
+                                        label={t('process.operation')}
                                         value={values.operationGuid}
                                         onChange={handleChange}
-                                        placeholder="No operation"
+                                        placeholder={t('process.noOperation')}
                                         options={(ops || []).map(op => ({ value: op.guid, label: op.name }))}
                                         state={missedInputs.length > 0 ? 'warn' : (values.operationGuid ? 'ok' : 'pristine')}
                                         help={
                                             missedInputs.length > 0
-                                                ? `${missedInputs.length} parameter${missedInputs.length > 1 ? 's' : ''} unresolved: ${missedInputs.join(', ')}`
+                                                ? t('process.paramUnresolved', { count: missedInputs.length, params: missedInputs.join(', ') })
                                                 : values.operationGuid
-                                                    ? 'Operation is wired to upstream parameters.'
-                                                    : 'Pick the operation plugin that drives this process.'
+                                                    ? t('process.operationWired')
+                                                    : t('process.operationHelp')
                                         }
                                     />
                                 </EditorSection>

@@ -15,6 +15,7 @@ import {
     FormControlLabel,
 } from '@mui/material'
 import { type EffectCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import type {
     DetailEventHandler,
@@ -29,6 +30,7 @@ import {
     MasterDetail,
     MuiEditor,
 } from '../../MasterDetail'
+import './index' // side-effect: registers the `config/nomenclature` namespace
 import { NomenclatureTabs } from './NomenclatureTabs'
 
 export function Nomenclatures() {
@@ -36,12 +38,13 @@ export function Nomenclatures() {
     const { path } = useBasePath()
     const navigate = useNavigate()
     const api = Api.nomenclatures
+    const { t } = useTranslation('config/nomenclature')
     return (
         <MasterDetail
             type={type}
             api={api}
             path={path || ''}
-            stubMessage="Please select a nomenclature"
+            stubMessage={t('stubMessage')}
             detail={
                 <NomenclatureDetail
                     type={type}
@@ -64,6 +67,7 @@ export function NomenclatureDetail({ id, ...props }: NomenclatureDetailProps) {
     const effectiveId = (id || params.id) as UUID | undefined
     const [sub, setSub] = useState<React.ReactElement>()
     useEffect(setSub as EffectCallback, [effectiveId])
+    const { t } = useTranslation('config/nomenclature')
     const [[categories]] = useGet<string[]>(
         `${Api.nomenclatures}/categories`,
         [],
@@ -94,12 +98,12 @@ export function NomenclatureDetail({ id, ...props }: NomenclatureDetailProps) {
                         data && (
                             <Properties>
                                 <Property
-                                    label="Category"
+                                    label={t('card.category')}
                                     value={data.category}
                                 />
                                 <Property
-                                    label="Countable"
-                                    value={data.countable ? 'Yes' : 'No'}
+                                    label={t('card.countable')}
+                                    value={data.countable ? t('common:yes') : t('common:no')}
                                 />
                             </Properties>
                         )
@@ -131,7 +135,7 @@ export function NomenclatureDetail({ id, ...props }: NomenclatureDetailProps) {
                             <Box>
                                 <EditorSection
                                     number={1}
-                                    title="Identity"
+                                    title={t('section.identity')}
                                     filled={identityFilled}
                                     total={2}
                                     done={identityFilled === 2 && !nameMissing}
@@ -139,7 +143,7 @@ export function NomenclatureDetail({ id, ...props }: NomenclatureDetailProps) {
                                     <Field
                                         full
                                         name="name"
-                                        label="Name"
+                                        label={t('field.name')}
                                         required
                                         value={(values.name as string) ?? ''}
                                         onChange={handleChange}
@@ -148,15 +152,15 @@ export function NomenclatureDetail({ id, ...props }: NomenclatureDetailProps) {
                                         }
                                         help={
                                             nameMissing
-                                                ? 'A nomenclature must have a name.'
-                                                : 'Shown across the tree, breadcrumbs, and pickers.'
+                                                ? t('help.nameMissing')
+                                                : t('help.name')
                                         }
                                     />
                                     <Field
                                         full
                                         kind="textarea"
                                         name="description"
-                                        label="Description"
+                                        label={t('field.description')}
                                         rows={2}
                                         value={
                                             (values.description as string) ??
@@ -167,7 +171,7 @@ export function NomenclatureDetail({ id, ...props }: NomenclatureDetailProps) {
                                 </EditorSection>
                                 <EditorSection
                                     number={2}
-                                    title="Classification"
+                                    title={t('section.classification')}
                                     filled={classFilled}
                                     total={2}
                                     done={classFilled === 2}
@@ -176,7 +180,7 @@ export function NomenclatureDetail({ id, ...props }: NomenclatureDetailProps) {
                                         full
                                         kind="select"
                                         name="category"
-                                        label="Category"
+                                        label={t('field.category')}
                                         placeholder="—"
                                         value={
                                             (values.category as string) ?? ''
@@ -188,7 +192,7 @@ export function NomenclatureDetail({ id, ...props }: NomenclatureDetailProps) {
                                     />
                                     <FormControlLabel
                                         sx={{ mt: 1 }}
-                                        label="Countable"
+                                        label={t('field.countable')}
                                         control={
                                             <Checkbox
                                                 checked={!!values.countable}

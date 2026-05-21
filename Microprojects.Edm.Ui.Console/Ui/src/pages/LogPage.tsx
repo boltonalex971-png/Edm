@@ -1,7 +1,9 @@
-import { Box, Chip, Stack, Typography } from '@mui/material'
+﻿import { Box, Chip, Stack, Typography } from '@mui/material'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { fetchLog, fetchLogLevels, type LogEntry } from '../api'
 import { type SignalKind, StatusBadge } from '../components/StatusBadge'
+import { resolveError } from '../i18n/resolveError'
 
 const PAGE_SIZE = 50
 
@@ -26,6 +28,7 @@ function formatTimestamp(iso: string): string {
 }
 
 export function LogPage() {
+    const { t } = useTranslation('console')
     const [entries, setEntries] = useState<LogEntry[]>([])
     const [levels, setLevels] = useState<string[]>([])
     const [activeLevel, setActiveLevel] = useState<string | null>(null)
@@ -71,12 +74,12 @@ export function LogPage() {
             })
             .catch((e: Error) => {
                 if (requestIdRef.current !== id) return
-                setError(e.message)
+                setError(resolveError(e, t('common:error')))
             })
             .finally(() => {
                 if (requestIdRef.current === id) setLoading(false)
             })
-    }, [activeLevel])
+    }, [activeLevel, t])
 
     const loadMore = useCallback(() => {
         if (loading || loadingMore || !hasMore) return
@@ -91,7 +94,7 @@ export function LogPage() {
             })
             .catch((e: Error) => {
                 if (requestIdRef.current !== id) return
-                setError(e.message)
+                setError(resolveError(e, t('common:error')))
             })
             .finally(() => {
                 if (requestIdRef.current === id) setLoadingMore(false)
@@ -124,7 +127,7 @@ export function LogPage() {
             <section className="card card--fill">
                 <header className="card-h">
                     <Typography component="h2" className="card-title">
-                        Host log
+                        {t('log.title', 'Host log')}
                     </Typography>
                     <span className="card-count">{cardCount}</span>
                 </header>
@@ -132,7 +135,7 @@ export function LogPage() {
                     <div className="card-toolbar">
                         <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
                             <Chip
-                                label="All"
+                                label={t('log.filterAll', 'All')}
                                 size="small"
                                 variant={activeLevel === null ? 'filled' : 'outlined'}
                                 color={activeLevel === null ? 'primary' : 'default'}
@@ -153,11 +156,11 @@ export function LogPage() {
                 )}
                 <div className="card-b">
                     {loading ? (
-                        <div className="loading-eyebrow">Loading…</div>
+                        <div className="loading-eyebrow">{t('common:loading')}</div>
                     ) : error ? (
                         <div className="error-banner">{error}</div>
                     ) : entries.length === 0 ? (
-                        <div className="empty-state">No log entries.</div>
+                        <div className="empty-state">{t('log.empty', 'No log entries.')}</div>
                     ) : (
                         <ul className="log-feed">
                             {entries.map((entry, i) => (
@@ -177,9 +180,9 @@ export function LogPage() {
                             ))}
                             <li ref={sentinelRef} className="log-sentinel" aria-hidden>
                                 {loadingMore ? (
-                                    <span className="loading-eyebrow">Loading more…</span>
+                                    <span className="loading-eyebrow">{t('log.loadingMore', 'Loading more…')}</span>
                                 ) : !hasMore ? (
-                                    <span className="loading-eyebrow">End of log</span>
+                                    <span className="loading-eyebrow">{t('log.endOfLog', 'End of log')}</span>
                                 ) : null}
                             </li>
                         </ul>

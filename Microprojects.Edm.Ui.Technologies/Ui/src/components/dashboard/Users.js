@@ -1,8 +1,10 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 const Users = (props) => {
+    const { t } = useTranslation('tech');
     return (
-        <p>Here you can check active users working in the system</p>
+        <p>{t('dashboard.usersStub')}</p>
     );
 };
 

@@ -2,7 +2,9 @@ import {Box} from '@mui/material'
 import {SmartScroll, SmartScrollContent} from '@microprojects/tools'
 import {Changelog} from '@microprojects/edm-components/components/chrome/Changelog'
 import {useEffect, useMemo, useState} from 'react'
+import {useTranslation} from 'react-i18next'
 import {Route, Routes} from 'react-router-dom'
+import {resolveError} from './i18n/resolveError'
 import {
     cleanName,
     fetchHubAbout,
@@ -35,9 +37,13 @@ const HUB_IDENTITY = {
 const SMART_SCROLL_OFFSET = 64
 
 export default function App() {
+    const {t, i18n} = useTranslation('hub')
+    const lng = i18n.language
     const [plugins, setPlugins] = useState<PluginSummary[]>([])
     const [user, setUser] = useState<UserInfo>(EMPTY_USER)
     const [hubAbout, setHubAbout] = useState<string>('')
+    // Cache key is `<guid>::<lng>` so switching language transparently refetches
+    // the per-locale ABOUT without throwing away cached entries from the previous locale.
     const [aboutCache, setAboutCache] = useState<Record<string, string>>({})
     const [activeGuid, setActiveGuid] = useState<string | null>(null)
     const [loading, setLoading] = useState(true)
@@ -54,7 +60,7 @@ export default function App() {
             })
             .catch((e: Error) => {
                 if (cancelled) return
-                setError(`Failed to load: ${e.message}`)
+                setError(resolveError(e, t('loadFailed', {message: e.message})))
             })
             .finally(() => {
                 if (!cancelled) setLoading(false)
@@ -62,34 +68,37 @@ export default function App() {
         return () => {
             cancelled = true
         }
-    }, [])
+        // Re-fetch on language change so hubAbout reflects the active locale.
+    }, [t, lng])
 
     // Lazy-fetch a plugin's ABOUT the first time the user hovers/focuses its tile.
     useEffect(() => {
-        if (!activeGuid || aboutCache[activeGuid] !== undefined) return
+        if (!activeGuid) return
+        const cacheKey = `${activeGuid}::${lng}`
+        if (aboutCache[cacheKey] !== undefined) return
         let cancelled = false
         fetchPluginAbout(activeGuid)
             .then((md) => {
                 if (cancelled) return
-                setAboutCache((prev) => ({...prev, [activeGuid]: md}))
+                setAboutCache((prev) => ({...prev, [cacheKey]: md}))
             })
             .catch(() => {
                 // Plugin may not ship an ABOUT.md; treat as empty so we don't keep retrying.
                 if (cancelled) return
-                setAboutCache((prev) => ({...prev, [activeGuid]: ''}))
+                setAboutCache((prev) => ({...prev, [cacheKey]: ''}))
             })
         return () => {
             cancelled = true
         }
-    }, [activeGuid, aboutCache])
+    }, [activeGuid, aboutCache, lng])
 
     const displayName = cleanName(user.name)
 
     const activeAbout = useMemo(() => {
         if (!activeGuid) return hubAbout
-        const cached = aboutCache[activeGuid]
+        const cached = aboutCache[`${activeGuid}::${lng}`]
         return cached !== undefined && cached !== '' ? cached : hubAbout
-    }, [activeGuid, aboutCache, hubAbout])
+    }, [activeGuid, aboutCache, hubAbout, lng])
 
     // The glyph above the about title follows whichever plugin's promo is
     // currently shown. Falls back to Hub's identity when no tile is active or
@@ -97,11 +106,11 @@ export default function App() {
     // case, so the glyph should match).
     const activeIdentity = useMemo(() => {
         if (!activeGuid) return HUB_IDENTITY
-        const cached = aboutCache[activeGuid]
+        const cached = aboutCache[`${activeGuid}::${lng}`]
         if (cached === '') return HUB_IDENTITY
         const p = plugins.find((x) => x.guid === activeGuid)
         return p ?? HUB_IDENTITY
-    }, [activeGuid, aboutCache, plugins])
+    }, [activeGuid, aboutCache, plugins, lng])
 
     const landing = (
         <Box className="hub-landing">

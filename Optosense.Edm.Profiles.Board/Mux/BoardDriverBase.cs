@@ -62,7 +62,9 @@ namespace Optosense.Edm.Drivers.Mux
             }
             catch (Exception)
             {
-                throw new EdmException("Multiplexor is not responding");
+                throw new EdmException(
+                    "Board.MuxNotResponding",
+                    "Multiplexor is not responding.");
             }
             
             return OK;
@@ -87,6 +89,8 @@ namespace Optosense.Edm.Drivers.Mux
                 if (req.Command != "Stop")
                 {
                     throw new EdmException(
+                        "Board.RequestTypeMismatch",
+                        new Dictionary<string, object> { ["driver"] = GetType().Name },
                         $"{GetType().Name} driver parameters must be of type {nameof(BoardDriverRequest)}");
                 }
 
@@ -99,7 +103,9 @@ namespace Optosense.Edm.Drivers.Mux
 
             if (request.Instruction is null)
             {
-                throw new EdmException("Instruction for board driver must not be null");
+                throw new EdmException(
+                    "Board.InstructionRequired",
+                    "Instruction for board driver must not be null.");
             }
 
             var instruction = CodeParamsRegex().Replace(request.Instruction.Code ?? request.Command, "").Trim();
@@ -230,7 +236,10 @@ namespace Optosense.Edm.Drivers.Mux
             int? num = bytes != null ? BitConverter.ToInt32(bytes.Take(4).Reverse().ToArray(), 0) : null;
             var outParam = ParametersRegex().Matches(syntax ?? string.Empty)
                 .FirstOrDefault()
-                ?.Groups[1].Value ?? throw new EdmException("Output param for instruction \"KZ\" is missing");
+                ?.Groups[1].Value ?? throw new EdmException(
+                    "Board.OutputParamMissing",
+                    new Dictionary<string, object> { ["instruction"] = "KZ" },
+                    "Output param for instruction \"KZ\" is missing");
             for (var i = 0; i < BoardOptions.Capacity; i++)
             {
                 var value = num >> i & 1;

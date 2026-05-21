@@ -1,0 +1,335 @@
+{
+    "nav": {
+        "home": "Home",
+        "dashboard": "Dashboard",
+        "configuration": "Configuration",
+        "plugins": "Plugins",
+        "operations": "Operations"
+    },
+    "roles": {
+        "administrator": "Administrator",
+        "technologist": "Technologist",
+        "operator": "Operator"
+    },
+    "home": {
+        "welcome": "Welcome",
+        "hello": "Hello, {{name}}",
+        "welcomeToEdm": "Welcome to EDM",
+        "lead": "Enterprise data management for industrial process monitoring, configuration and analysis. Pick where you want to start.",
+        "role": "Role",
+        "quickLaunchNum": "01",
+        "quickLaunch": "Quick launch",
+        "quickLaunchTagline": "Pick a surface to jump into.",
+        "cards": {
+            "startOperation": {
+                "title": "Start operation",
+                "description": "Launch a new hardware test or production process from a workbench.",
+                "cta": "New operation"
+            },
+            "dashboard": {
+                "title": "Dashboard",
+                "description": "Monitor real-time status and analyse process data across the floor.",
+                "cta": "Open dashboard",
+                "ctaOperator": "Open operations"
+            },
+            "configuration": {
+                "title": "Configuration",
+                "description": "Manage workplaces, hosts and device profiles for the plant.",
+                "cta": "Open configuration"
+            },
+            "plugins": {
+                "title": "Plugins",
+                "description": "Browse system extensions, hardware drivers and operation apps.",
+                "cta": "Open plugins"
+            }
+        }
+    },
+    "dashboard": {
+        "title": "Dashboard",
+        "operations": "Operations",
+        "users": "Users",
+        "schedule": "Schedule",
+        "usersStub": "Here you can check active users working in the system",
+        "scheduleStub": "Here you can check device workloads on Gantt chart"
+    },
+    "operations": {
+        "periods": {
+            "running": "Running",
+            "today": "Today",
+            "week": "Week"
+        },
+        "states": {
+            "idle": "Idle",
+            "scheduled": "Scheduled",
+            "running": "Running",
+            "completed": "Completed",
+            "cancelled": "Cancelled",
+            "faulted": "Faulted"
+        },
+        "timeline": {
+            "startAt": "Start at",
+            "willStartAt": "Will start at",
+            "started": "Started",
+            "completed": "Completed",
+            "cancelled": "Cancelled",
+            "checked": "Checked",
+            "scheduled": "Scheduled",
+            "created": "Created"
+        },
+        "autoRefresh": "auto-refresh 10s",
+        "empty": {
+            "running": {
+                "title": "No operation is running",
+                "help": "Start a new operation from a workbench, or pick a different period to view past runs."
+            },
+            "today": {
+                "title": "No operations today",
+                "help": "Nothing has been completed yet today. Check the Week tab for the wider history."
+            },
+            "week": {
+                "title": "Nothing in the last 7 days",
+                "help": "No operations completed in the past week. Try Running for what is currently in flight."
+            }
+        },
+        "actions": "Operation actions",
+        "complete": "Complete",
+        "copy": "Copy",
+        "toasts": {
+            "completed": "Operation completed",
+            "failedComplete": "Failed to complete operation",
+            "failedCopy": "Failed to copy operation",
+            "failedStart": "Failed to start operation",
+            "failedStop": "Failed to stop operation"
+        }
+    },
+    "operation": {
+        "showToolbar": "Show toolbar",
+        "hideToolbar": "Hide toolbar",
+        "home": "Home",
+        "configuration": "Configuration",
+        "operator": "Operator: {{name}}",
+        "stopTitle": "Stop operation?",
+        "stopMessage": "The current operation will be cancelled. Any unsaved progress is lost.",
+        "stopAction": "Stop operation",
+        "completeTitle": "Complete operation?",
+        "completeMessage": "Mark this operation as complete. It will move to the completed list.",
+        "completeAction": "Complete",
+        "start": "Start",
+        "stop": "Stop",
+        "closeWindow": "Close window",
+        "console": "Operation Console",
+        "completed": "Completed"
+    },
+    "config": {
+        "title": "Configuration",
+        "processes": "Processes",
+        "workplaces": "Workplaces",
+        "hosts": "Hosts",
+        "devices": "Devices",
+        "selectOption": "Select one of the options above",
+        "stub": {
+            "process": "Please select a process",
+            "host": "Please select a host",
+            "device": "Please select a device",
+            "workplace": "Please select a workplace"
+        }
+    },
+    "common": {
+        "name": "Name",
+        "description": "Description",
+        "identity": "Identity",
+        "address": "Address",
+        "host": "Host",
+        "device": "Device",
+        "driver": "Driver",
+        "profiler": "Profiler",
+        "model": "Model",
+        "mode": "Mode",
+        "environment": "Environment",
+        "version": "Version",
+        "delete": "Delete",
+        "edit": "Edit…",
+        "configure": "Configure...",
+        "online": "Online",
+        "offline": "Offline",
+        "none": "None",
+        "type": "Type"
+    },
+    "process": {
+        "operation": "Operation",
+        "operationNotBound": "Not bound",
+        "commonUid": "Common UID",
+        "commonUidPlaceholder": "e.g. 7G-MNT-014",
+        "commonUidHelp": "Stable identifier shared with external systems (ERP, MES). Optional.",
+        "nameHelp": "Shown across the tree, breadcrumbs, and dispatch board.",
+        "nameMissing": "A process must have a name.",
+        "descriptionHelp": "Free-form notes — what this process does, where it's used.",
+        "operationBinding": "Operation binding",
+        "noOperation": "No operation",
+        "operationWired": "Operation is wired to upstream parameters.",
+        "operationHelp": "Pick the operation plugin that drives this process.",
+        "paramSingular_one": "Parameter {{params}} is not available as output parameters",
+        "paramSingular_other": "Parameters {{params}} are not available as output parameters",
+        "paramUnresolved_one": "{{count}} parameter unresolved: {{params}}",
+        "paramUnresolved_other": "{{count}} parameters unresolved: {{params}}",
+        "tabs": {
+            "profiles": "Profiles",
+            "qualifiers": "Qualifiers"
+        }
+    },
+    "host": {
+        "endpoint": "Endpoint",
+        "port": "Port",
+        "portPlaceholder": "e.g. 16332",
+        "addressPlaceholder": "hostname or IP",
+        "addressHelp": "gRPC endpoint, no protocol prefix.",
+        "addressRequired": "Required to reach the host.",
+        "nameMissing": "A host must have a name.",
+        "nameHelp": "Shown across the tree, breadcrumbs, and dispatch board.",
+        "openConsole": "Open Host Console",
+        "consoleTitle": "Host Console",
+        "console": "Console",
+        "tabs": {
+            "devices": "Devices"
+        }
+    },
+    "device": {
+        "deviceType": "Device type",
+        "noDriver": "No driver",
+        "any": "Any",
+        "hardware": "Hardware",
+        "selectModel": "Select model",
+        "selectDriver": "Select driver",
+        "driverRequired": "Pick the driver that talks to this device.",
+        "nameMissing": "A device must have a name.",
+        "nameHelp": "Shown in the master tree and in workplace device-config rows.",
+        "config": "Device Configuration",
+        "configurationLabel": "Configuration",
+        "editConfig": "Edit device configuration",
+        "deviceNameConfig": "{{deviceName}} configuration",
+        "deviceOnHost": "{{driverName}} device on {{hostName}}",
+        "tabs": {
+            "hosts": "Hosts"
+        }
+    },
+    "workplace": {
+        "nameMissing": "A workplace must have a name.",
+        "nameHelp": "Shown across the tree, breadcrumbs, and dispatch board.",
+        "tabs": {
+            "devices": "Devices",
+            "processes": "Processes"
+        },
+        "process": "Process",
+        "workbenches": "Workbenches",
+        "selectProcess": "Select Process"
+    },
+    "workbench": {
+        "deviceConfigurations": "Device configurations",
+        "startOperation": "Start operation",
+        "nameMissing": "A workbench must have a name.",
+        "nameHelp": "Shown across the tree, breadcrumbs, and dispatch board.",
+        "commonUidPlaceholder": "e.g. WB-014-A",
+        "commonUidHelp": "Stable identifier shared with external systems (ERP, MES). Optional.",
+        "workbenchesTitle": "Workbenches",
+        "forProcessOn": "For {{processName}} on {{workplaceName}}",
+        "profile": "Profile"
+    },
+    "folder": {
+        "nameMissing": "A folder must have a name.",
+        "nameHelp": "Shown in the master tree.",
+        "organization": "Organization",
+        "division": "Division",
+        "noDivision": "No division"
+    },
+    "profile": {
+        "profileLabel": "Profiler",
+        "noProfilerAttached": "No profiler attached",
+        "inputParams": "Input parameters",
+        "outputParams": "Output parameters",
+        "noneItalic": "None",
+        "parameters": "Parameters",
+        "declareInOut": "declare inputs and outputs",
+        "inputsHelp": "Names of parameters this profile consumes from upstream operations.",
+        "outputsHelp": "Names of parameters this profile produces for downstream consumers.",
+        "addParam": "Add parameter and press Enter",
+        "nameMissing": "A profile must have a name.",
+        "nameHelp": "Shown across the tree, breadcrumbs, and process bindings.",
+        "tabs": {
+            "profile": "Profile",
+            "audits": "Audits"
+        },
+        "inputParamsShort": "Input params",
+        "outputParamsShort": "Output params",
+        "missingParameter": "Missing parameter"
+    },
+    "audit": {
+        "nameMissing": "An audit must have a name.",
+        "nameHelp": "Shown across the tree, breadcrumbs, and process bindings.",
+        "addZone": "Add Zone",
+        "zone": "Zone",
+        "zonesTable": "audit zones table",
+        "zoneHash": "Zone #",
+        "activeWhen": "Active When",
+        "offsetMin": "Offset (min)",
+        "durationMin": "Duration (min)",
+        "criterion": "Criterion",
+        "parameter": "Parameter",
+        "function": "Function",
+        "arguments": "Arguments",
+        "tableZone": "ZONE",
+        "tableParameters": "PARAMETERS",
+        "tableInterval": "INTERVAL",
+        "tableActiveWhen": "ACTIVE WHEN",
+        "tabs": {
+            "zones": "Zones",
+            "qualifiers": "Qualifiers"
+        }
+    },
+    "newOperation": {
+        "title": "New operation",
+        "selectProcessToRun": "Select appropriate process to run",
+        "process": "Process",
+        "none": "None",
+        "viewInfo": "View Info",
+        "selectDevicesForProcess": "Select devices for chosen process",
+        "specifyInputs": "Specify required input parameters",
+        "startOperation": "Start operation",
+        "startedSuccess": "Operation has been started successfully!",
+        "finallyCreate": "Finally, you can create the operation",
+        "createNow": "Create operation now",
+        "selectProcessToStart": "Select process to start",
+        "selectedProcessInfo": "Selected process info",
+        "selectOptionsAbove": "Select the options above",
+        "loadingProfiles": "Loading profiles...",
+        "chooseWorkbench_one": "Please choose the workbench or appropriate device and set options",
+        "chooseWorkbench_other": "Please choose the workbench or appropriate devices and set options",
+        "doesNotRequireDevice": "{{processName}} does not require any device",
+        "workbench": "Workbench",
+        "checkMissingInputs": "Check missing inputs...",
+        "noMissingParameters": "No missing parameters in this process",
+        "specifyInputCount_one": "Specify {{count}} input parameter",
+        "specifyInputCount_other": "Specify {{count}} input parameters",
+        "editParameters": "Edit Parameters",
+        "editOptions": "Edit Options",
+        "selectedDeviceInfo": "Selected device info",
+        "type": "Type",
+        "deviceConfiguration": "Device Configuration",
+        "missingInputs": "Process missing input parameters",
+        "acceptParameters": "Accept Parameters"
+    },
+    "plugins": {
+        "title": "Plugins",
+        "drivers": "Drivers",
+        "profiles": "Profiles",
+        "operations": "Operations",
+        "driverPlugins": "Driver Plugins",
+        "profilePlugins": "Profile Plugins",
+        "operationPlugins": "Operation Plugins",
+        "selectOption": "Select one of the options above",
+        "guid": "Global Unique Identifier",
+        "driverName": "Driver Name",
+        "profilerName": "Profiler Name",
+        "operationName": "Operation Name",
+        "profileTypeName": "Profile Type Name"
+    }
+}

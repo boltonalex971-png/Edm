@@ -29,7 +29,10 @@ public class JobConfiguration
         }
         else
         {
-            throw new EdmException($"Type {type.FullName} is not a job");
+            throw new EdmException(
+                "Edm.Job.TypeNotJob",
+                new Dictionary<string, object> { ["type"] = type.FullName },
+                $"Type {type.FullName} is not a job");
         }
 
         return this;

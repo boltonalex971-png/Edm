@@ -1,0 +1,47 @@
+{
+    "sidebar": {
+        "ariaLabel": "Console sections",
+        "eyebrow": "Operations"
+    },
+    "nav": {
+        "jobs": "Jobs",
+        "drivers": "Drivers",
+        "log": "Log"
+    },
+    "dataTable": {
+        "empty": "No items."
+    },
+    "jobs": {
+        "column": {
+            "name": "Job",
+            "description": "Description",
+            "status": "Status",
+            "lifetime": "Lifetime"
+        },
+        "card": {
+            "running": "Running",
+            "available": "Available"
+        },
+        "empty": {
+            "running": "No running jobs.",
+            "available": "No available jobs."
+        }
+    },
+    "drivers": {
+        "title": "Drivers",
+        "column": {
+            "name": "Driver",
+            "description": "Description",
+            "profile": "Profile",
+            "guid": "GUID"
+        },
+        "empty": "No drivers loaded."
+    },
+    "log": {
+        "title": "Host log",
+        "filterAll": "All",
+        "empty": "No log entries.",
+        "loadingMore": "Loading more…",
+        "endOfLog": "End of log"
+    }
+}

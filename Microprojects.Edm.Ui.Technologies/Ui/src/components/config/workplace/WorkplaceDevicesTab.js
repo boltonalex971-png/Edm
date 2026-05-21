@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { RelationTable } from '@microprojects/edm-components/components';
 import { DropDownCell } from '@microprojects/edm-components/components';
 import { useGet } from '@microprojects/edm-components/hooks';
+import { useTranslation } from 'react-i18next';
 import { DeviceDetail } from '../Devices';
 import Api from '../../api';
 import { useNavigate } from 'react-router-dom';
@@ -18,14 +19,15 @@ export function WorkplaceDevicesTab({ id, api, onDetailSelected, parents }) {
     const navigate = useNavigate();
     const [[deviceList]] = useGet(`${api}/devices`, [api]);
     const [[hostList]] = useGet(Api.hosts, []);
+    const { t } = useTranslation('tech');
 
     const columns = [
         {
             field: 'hostDeviceId',
-            headerName: 'Device',
+            headerName: t('common.device'),
             width: 250,
             renderCell: (params) => (
-                <DropDownCell 
+                <DropDownCell
                     {...params}
                     getData={() => deviceList || []}
                     dataKey='id'
@@ -51,11 +53,11 @@ export function WorkplaceDevicesTab({ id, api, onDetailSelected, parents }) {
         },
         {
             field: 'hostId',
-            headerName: 'Host',
+            headerName: t('common.host'),
             width: 200,
             editable: false,
             renderCell: (params) => (
-                <DropDownCell 
+                <DropDownCell
                     {...params}
                     getData={() => hostList || []}
                     dataKey='id'
@@ -79,8 +81,8 @@ export function WorkplaceDevicesTab({ id, api, onDetailSelected, parents }) {
                 />
             )
         },
-        { field: 'driverName', headerName: 'Driver', flex: 1, editable: false },
-        { field: 'profilerName', headerName: 'Profiler', flex: 1, editable: false }
+        { field: 'driverName', headerName: t('common.driver'), flex: 1, editable: false },
+        { field: 'profilerName', headerName: t('common.profiler'), flex: 1, editable: false }
     ];
 
     return (

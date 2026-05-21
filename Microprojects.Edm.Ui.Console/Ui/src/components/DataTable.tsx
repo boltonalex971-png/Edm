@@ -1,5 +1,6 @@
 import { Box } from '@mui/material'
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 
 export interface DataTableColumn<T> {
     key: string
@@ -28,10 +29,11 @@ export function DataTable<T>({
     rowKey,
     selectedKey,
     onSelect,
-    emptyMessage = 'No items.',
+    emptyMessage,
 }: DataTableProps<T>) {
+    const { t } = useTranslation('console')
     if (rows.length === 0) {
-        return <Box className="data-table-empty">{emptyMessage}</Box>
+        return <Box className="data-table-empty">{emptyMessage ?? t('dataTable.empty', 'No items.')}</Box>
     }
 
     return (

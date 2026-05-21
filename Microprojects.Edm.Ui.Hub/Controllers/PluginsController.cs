@@ -33,6 +33,8 @@ namespace Microprojects.Edm.Ui.Hub.Controllers
                     guid = p.Guid,
                     name = p.Name,
                     description = p.Description,
+                    nameKey = p.NameKey,
+                    descriptionKey = p.DescriptionKey,
                     homepage = p.Homepage
                 });
 

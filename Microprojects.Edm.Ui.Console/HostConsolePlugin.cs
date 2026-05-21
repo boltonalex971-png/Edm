@@ -7,6 +7,8 @@ namespace Microprojects.Edm.Ui.Console
     [ApplicationPlugin(
         Name = "Host Console",
         Description = "Live host operations — tasks, drivers, plugin health and log streams from the host process.",
+        NameKey = "Console.name",
+        DescriptionKey = "Console.description",
         Guid = "D765CE7A-F2FB-4A93-83C5-1C7CDF060116",
         SpaPath = "Ui/dist",
         UiRoot = "console")]

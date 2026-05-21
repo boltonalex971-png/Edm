@@ -2,6 +2,7 @@
 import PropTypes from 'prop-types';
 import { useGet } from '@microprojects/edm-components/hooks';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Detail, Editor } from '@microprojects/edm-components/components';
 import { WorkbenchDevicesTab } from './workplace/WorkbenchDevicesTab';
 import { Box, Button as MuiButton, Typography } from '@mui/material';
@@ -27,6 +28,7 @@ export function WorkbenchDetail({ workbenchId, parents, ...props }) {
     const type = 'workbench';
     const navigate = useNavigate()
     const dispatch = useDispatch()
+    const { t } = useTranslation('tech');
     let { id } = useParams();
     id = workbenchId || id;
     let [sub, setSub] = useState();
@@ -61,14 +63,14 @@ export function WorkbenchDetail({ workbenchId, parents, ...props }) {
             deletable={false}
             card={showProperties ? (
                 <Properties>
-                    <Property label="Common UID" value={data.commonUid} mono />
+                    <Property label={t('process.commonUid')} value={data.commonUid} mono />
                 </Properties>
             ) : null}
             relations={
                 <Box>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                         <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'var(--ink-3)', textTransform: 'uppercase', fontSize: '11px', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>
-                            Device configurations
+                            {t('workbench.deviceConfigurations')}
                         </Typography>
                         <MuiButton
                             variant="contained"
@@ -77,7 +79,7 @@ export function WorkbenchDetail({ workbenchId, parents, ...props }) {
                             onClick={onOperationStart}
                             size="small"
                         >
-                            Start operation
+                            {t('workbench.startOperation')}
                         </MuiButton>
                     </Box>
                     <WorkbenchDevicesTab id={parseInt(id)} processId={data.processId} api={props.api} onDetailSelected={setSub} />
@@ -97,7 +99,7 @@ export function WorkbenchDetail({ workbenchId, parents, ...props }) {
                             <Box>
                                 <EditorSection
                                     number={1}
-                                    title="Identity"
+                                    title={t('common.identity')}
                                     filled={identityFilled}
                                     total={3}
                                     done={identityFilled === 3 && !nameMissing}
@@ -105,18 +107,18 @@ export function WorkbenchDetail({ workbenchId, parents, ...props }) {
                                     <Field
                                         full
                                         name="name"
-                                        label="Name"
+                                        label={t('common.name')}
                                         required
                                         value={values.name}
                                         onChange={handleChange}
                                         state={nameMissing ? 'invalid' : 'pristine'}
-                                        help={nameMissing ? 'A workbench must have a name.' : 'Shown across the tree, breadcrumbs, and dispatch board.'}
+                                        help={nameMissing ? t('workbench.nameMissing') : t('workbench.nameHelp')}
                                     />
                                     <Field
                                         full
                                         kind="textarea"
                                         name="description"
-                                        label="Description"
+                                        label={t('common.description')}
                                         rows={2}
                                         value={values.description}
                                         onChange={handleChange}
@@ -124,11 +126,11 @@ export function WorkbenchDetail({ workbenchId, parents, ...props }) {
                                     <Field
                                         full
                                         name="commonUid"
-                                        label="Common UID"
+                                        label={t('process.commonUid')}
                                         value={values.commonUid}
                                         onChange={handleChange}
-                                        placeholder="e.g. WB-014-A"
-                                        help="Stable identifier shared with external systems (ERP, MES). Optional."
+                                        placeholder={t('workbench.commonUidPlaceholder')}
+                                        help={t('workbench.commonUidHelp')}
                                     />
                                 </EditorSection>
                             </Box>

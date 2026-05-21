@@ -75,7 +75,7 @@ html, :root {
     --sig-queued-soft:#ECE5FF;
 
     /* ---------- Typography ---------- */
-    --font-sans: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-sans: "Onest", system-ui, -apple-system, "Segoe UI", sans-serif;
     --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
     --font-icon: "Material Symbols Outlined";
 

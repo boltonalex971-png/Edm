@@ -4,6 +4,7 @@ import {
     findInHierarchy,
     pruneHierarchy,
 } from '@logistics/components/HierarchyPicker'
+import '@logistics/components/repacking' // side-effect: registers the `repacking` namespace
 import { TareBarcodePicker } from '@logistics/components/tare/TareBarcodePicker'
 import { TareGroupRow } from '@logistics/components/tare/TareGroupRow'
 import type { SlotData } from '@logistics/components/tare/TareSchematic'
@@ -30,7 +31,9 @@ import type {
     TreeDataItem,
     UUID,
 } from '@logistics/data/types'
+import { useAlertSetter } from '@logistics/components/InlineAlert'
 import { getData, postData, useGet } from '@logistics/hooks/hooks'
+import { resolveError } from '@logistics/i18n/resolveError'
 import { useTareTransfer } from '@logistics/hooks/useTareTransfer'
 import { formatUnits } from '@logistics/utils/format'
 import { SubRootPage } from '@microprojects/edm-components/components/chrome/SubRootPage'
@@ -44,6 +47,7 @@ import {
 } from '@mui/material'
 import type React from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 const monoLabelSx = {
     fontFamily: 'var(--font-mono)',
@@ -72,6 +76,8 @@ const panelPaperSx = {
 }
 
 export function Repacking() {
+    const { t } = useTranslation('repacking')
+    const setAlert = useAlertSetter()
     const [[nomenclatures]] = useGet<TreeDataItem[]>(
         `${api.nomenclatures}/hierarchy`,
         [],
@@ -338,7 +344,10 @@ export function Repacking() {
                 )
                 addTargetTareToWorkspace(tare, items || [])
             } catch (e: any) {
-                alert(e.message || 'Failed to load tare')
+                setAlert({
+                    status: 'danger',
+                    message: resolveError(e, t('widgets:errors.failedToLoadTare')),
+                })
             }
             return
         }
@@ -359,7 +368,10 @@ export function Repacking() {
                 return
             }
             if (!newTareTypeId) {
-                alert('Tare not found. Select a tare type to create a new one.')
+                setAlert({
+                    status: 'warning',
+                    message: t('widgets:errors.tareNotFoundSelectType'),
+                })
                 return
             }
             const created = await postData<TareInfo>(`${api.tares}`, {
@@ -370,7 +382,10 @@ export function Repacking() {
                 addTargetTareToWorkspace(created, [])
             }
         } catch (e: any) {
-            alert(e.message || 'Failed to add tare')
+            setAlert({
+                status: 'danger',
+                message: resolveError(e, t('widgets:errors.failedToAddTare')),
+            })
         }
     }
 
@@ -429,7 +444,7 @@ export function Repacking() {
                 movedCount: 0,
                 movedQuantity: 0,
                 countable: false,
-                errors: [e.message || 'Request failed'],
+                errors: [e.message || t('errors.requestFailed')],
             })
         }
         setSubmitting(false)
@@ -489,7 +504,7 @@ export function Repacking() {
         >
             <Box>
                 <Typography sx={monoLabelSx}>
-                    Search source tare by barcode
+                    {t('toolbar.searchSourceLabel')}
                 </Typography>
                 <TareBarcodePicker
                     tareTypeId={sourceSuggestionTareTypeId}
@@ -500,18 +515,18 @@ export function Repacking() {
                         setTarePicked(tare)
                         await handleAddSourceTare(tare)
                     }}
-                    placeholder="Scan or type barcode…"
+                    placeholder={t('toolbar.searchSourcePlaceholder')}
                     style={{ width: 240 }}
                 />
             </Box>
             <Box>
-                <Typography sx={monoLabelSx}>Nomenclature</Typography>
+                <Typography sx={monoLabelSx}>{t('toolbar.nomenclatureLabel')}</Typography>
                 <HierarchyPicker
                     data={nomenclatures}
                     value={selectedNomenclatureId}
                     onChange={setSelectedNomenclatureId}
                     width={300}
-                    placeholder="Select nomenclature…"
+                    placeholder={t('toolbar.nomenclaturePlaceholder')}
                 />
             </Box>
         </Box>
@@ -519,7 +534,7 @@ export function Repacking() {
 
     const targetToolbar = (
         <Box sx={{ mb: 1.5 }}>
-            <Typography sx={monoLabelSx}>Add target tare</Typography>
+            <Typography sx={monoLabelSx}>{t('toolbar.addTargetLabel')}</Typography>
             <Box
                 sx={{
                     display: 'flex',
@@ -536,7 +551,7 @@ export function Repacking() {
                         setNewTarePicked(tare)
                         await handleAddTargetTare(tare)
                     }}
-                    placeholder="Tare barcode…"
+                    placeholder={t('toolbar.tareBarcodePlaceholder')}
                     style={{ width: 220 }}
                 />
                 <HierarchyPicker
@@ -544,7 +559,7 @@ export function Repacking() {
                     value={newTareTypeId}
                     onChange={setNewTareTypeId}
                     width={180}
-                    placeholder="Type (for new)…"
+                    placeholder={t('toolbar.tareTypePlaceholder')}
                 />
                 <Box
                     sx={{
@@ -562,7 +577,7 @@ export function Repacking() {
                         sourceItems.length === 0 || targetTares.length === 0
                     }
                 >
-                    Auto-fill
+                    {t('toolbar.autoFill')}
                 </MuiButton>
                 <MuiButton
                     variant="contained"
@@ -571,15 +586,15 @@ export function Repacking() {
                     disabled={pending.length === 0 || submitting}
                 >
                     {submitting
-                        ? 'Saving…'
-                        : `Apply (${pending.length} moves)`}
+                        ? t('toolbar.saving')
+                        : t('toolbar.apply', { count: pending.length })}
                 </MuiButton>
                 <MuiButton
                     variant="outlined"
                     onClick={reset}
                     disabled={pending.length === 0}
                 >
-                    Reset
+                    {t('toolbar.reset')}
                 </MuiButton>
                 {submitResult &&
                     (submitResult.errors.length === 0 ? (
@@ -590,13 +605,13 @@ export function Repacking() {
                                 whiteSpace: 'nowrap',
                             }}
                         >
-                            Moved{' '}
-                            {formatUnits(
-                                submitResult.movedQuantity,
-                                submitResult.units,
-                                submitResult.countable,
-                            )}
-                            .
+                            {t('toolbar.moved', {
+                                amount: formatUnits(
+                                    submitResult.movedQuantity,
+                                    submitResult.units,
+                                    submitResult.countable,
+                                ),
+                            })}
                         </Typography>
                     ) : (
                         <Typography
@@ -614,7 +629,7 @@ export function Repacking() {
     )
 
     return (
-        <SubRootPage title="Repacking" menuItems={[]}>
+        <SubRootPage title={t('title')} menuItems={[]}>
             <SmartScroll
                 offsetTop={10}
                 style={{
@@ -628,7 +643,7 @@ export function Repacking() {
                     {sourceToolbar}
                     <Paper elevation={0} sx={panelPaperSx}>
                         <Typography component="h3" sx={panelHeadingSx}>
-                            Source tares
+                            {t('source.heading')}
                         </Typography>
                         <Box
                             sx={{
@@ -654,7 +669,7 @@ export function Repacking() {
                             {selectionLabel && (
                                 <Typography
                                     variant="caption"
-                                    title="Click an empty target slot to place. Shift+click for range, Ctrl/Cmd+click to toggle. Right-click for more."
+                                    title={t('source.selectionTitle')}
                                     sx={{
                                         color: 'var(--accent)',
                                         fontWeight: 600,
@@ -669,8 +684,8 @@ export function Repacking() {
                             <EmptyMsg
                                 text={
                                     selectedNomenclatureId
-                                        ? 'Pick or scan a tare to add its matching items here.'
-                                        : 'Select a nomenclature, then pick a tare to load its items.'
+                                        ? t('source.emptyWithNomenclature')
+                                        : t('source.emptyWithoutNomenclature')
                                 }
                             />
                         )}
@@ -714,7 +729,7 @@ export function Repacking() {
                                                 removeSourceTare(key)
                                             }
                                         >
-                                            Remove
+                                            {t('source.remove')}
                                         </MuiButton>
                                     }
                                 />
@@ -727,28 +742,28 @@ export function Repacking() {
                     {targetToolbar}
                     <Paper elevation={0} sx={panelPaperSx}>
                         <Typography component="h3" sx={panelHeadingSx}>
-                            Target tares
+                            {t('target.heading')}
                         </Typography>
                         {targetTares.length === 0 && (
-                            <EmptyMsg text="Add target tares by barcode search or create new ones" />
+                            <EmptyMsg text={t('target.empty')} />
                         )}
-                        {targetTares.map((t) => {
-                            const key = t.id
+                        {targetTares.map((tare) => {
+                            const key = tare.id
                             const expanded = expandedTarget.has(key)
                             return (
                                 <TareGroupRow
                                     key={key}
-                                    group={{ tare: t, items: t.items }}
+                                    group={{ tare, items: tare.items }}
                                     expanded={expanded}
                                     onToggleExpanded={() =>
                                         toggleExpandedTarget(key)
                                     }
                                     highlightEmpty
                                     onSlotClick={(slot) =>
-                                        handleTargetSlotClick(t.id, slot)
+                                        handleTargetSlotClick(tare.id, slot)
                                     }
                                     selectedSlot={
-                                        selectedTargetSlot?.tareId === t.id
+                                        selectedTargetSlot?.tareId === tare.id
                                             ? selectedTargetSlot.address
                                             : undefined
                                     }
@@ -760,10 +775,10 @@ export function Repacking() {
                                             size="small"
                                             variant="text"
                                             onClick={() =>
-                                                removeTargetTare(t.id)
+                                                removeTargetTare(tare.id)
                                             }
                                         >
-                                            Remove
+                                            {t('target.remove')}
                                         </MuiButton>
                                     }
                                 />

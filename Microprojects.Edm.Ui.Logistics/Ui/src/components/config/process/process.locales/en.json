@@ -1,0 +1,47 @@
+{
+    "stubMessage": "Please select a process",
+    "validation": {
+        "parameter_one": "Parameter {{names}} is not available as output parameter",
+        "parameter_other": "Parameters {{names}} are not available as output parameters"
+    },
+    "section": {
+        "identity": "Identity",
+        "target": "Target"
+    },
+    "field": {
+        "name": "Name",
+        "description": "Description",
+        "processKind": "Process kind",
+        "nomenclature": "Nomenclature"
+    },
+    "help": {
+        "nameMissing": "A process must have a name.",
+        "name": "Shown in tree, dispatch, and routing."
+    },
+    "card": {
+        "kind": "Kind",
+        "nomenclature": "Nomenclature"
+    },
+    "tabs": {
+        "processes": "Processes",
+        "specification": "Specification",
+        "grades": "Grades"
+    },
+    "grades": {
+        "name": "Name",
+        "description": "Description",
+        "qualifier": "Qualifier"
+    },
+    "specification": {
+        "category": "Category",
+        "name": "Name",
+        "description": "Description",
+        "quantity": "Quantity"
+    },
+    "subprocesses": {
+        "order": "Order",
+        "process": "Process",
+        "kind": "Kind",
+        "description": "Description"
+    }
+}

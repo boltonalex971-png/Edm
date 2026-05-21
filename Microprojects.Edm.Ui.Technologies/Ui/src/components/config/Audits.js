@@ -2,6 +2,7 @@
 import PropTypes from 'prop-types';
 import { useGet } from '@microprojects/edm-components/hooks';
 import { useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Detail, Editor } from '@microprojects/edm-components/components';
 import { AuditTabs } from './audit/AuditTabs';
 import { Box } from '@mui/material';
@@ -26,6 +27,7 @@ export function AuditDetail({ auditId, parents, ...props }) {
     let [sub, setSub] = useState();
     useEffect(setSub, [id]);
     let [[data, setData], loading, error] = useGet(`${props.api}/${id}`, [id]);
+    const { t } = useTranslation('tech');
     if (!data || data.id === 0) {
         data = { ...data, name: '', description: '', url: '' };
     }
@@ -53,7 +55,7 @@ export function AuditDetail({ auditId, parents, ...props }) {
                             <Box>
                                 <EditorSection
                                     number={1}
-                                    title="Identity"
+                                    title={t('common.identity')}
                                     filled={identityFilled}
                                     total={2}
                                     done={identityFilled === 2 && !nameMissing}
@@ -61,18 +63,18 @@ export function AuditDetail({ auditId, parents, ...props }) {
                                     <Field
                                         full
                                         name="name"
-                                        label="Name"
+                                        label={t('common.name')}
                                         required
                                         value={values.name}
                                         onChange={handleChange}
                                         state={nameMissing ? 'invalid' : 'pristine'}
-                                        help={nameMissing ? 'An audit must have a name.' : 'Shown across the tree, breadcrumbs, and process bindings.'}
+                                        help={nameMissing ? t('audit.nameMissing') : t('audit.nameHelp')}
                                     />
                                     <Field
                                         full
                                         kind="textarea"
                                         name="description"
-                                        label="Description"
+                                        label={t('common.description')}
                                         rows={2}
                                         value={values.description}
                                         onChange={handleChange}

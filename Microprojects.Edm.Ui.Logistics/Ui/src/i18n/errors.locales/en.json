@@ -1,0 +1,103 @@
+{
+    "Logistics": {
+        "Directory": {
+            "NoTypeRoot": "No type root configured for {{entryType}}.",
+            "NotFound": "Directory with Id {{id}} not found.",
+            "MustCreateInTypeRoot": "New folders must be created inside a type root.",
+            "ParentNotUnderTypeRoot": "Parent folder is not under a recognized type root.",
+            "BuiltInNotEditable": "Built-in folders cannot be edited.",
+            "BuiltInNotDeletable": "Built-in folders cannot be deleted."
+        },
+        "Folder": {
+            "OwnParent": "Folder cannot be its own parent.",
+            "BuiltInNotMovable": "Built-in folders cannot be moved.",
+            "MustLiveInTypeRoot": "Folders must live inside a type root, not directly under Root.",
+            "NotFound": "Folder with Id {{id}} not found.",
+            "NoCrossTypeMove": "Folders cannot be moved across entry-type roots."
+        },
+        "Entry": {
+            "NotFound": "{{type}} with Id {{id}} not found.",
+            "IdAmbiguous": "{{type}} id is ambiguous.",
+            "MustLiveInTypeRoot": "{{type}} must live under its type root.",
+            "CannotPlaceOutsideTypeRoot": "{{type}} cannot be placed outside its type root."
+        },
+        "Item": {
+            "TareRequired": "Item must have a tare.",
+            "NomenclatureNotFound": "Nomenclature not found for item.",
+            "AddressForbidden": "Address must be empty for non-countable nomenclatures.",
+            "AddressRequired": "Address is required for countable nomenclatures.",
+            "AddressOutOfRange": "Address must be in range 1..{{capacity}} for this tare.",
+            "AddressInUse": "Address is already in use for this tare.",
+            "NotFound": "Item {{itemId}} not found.",
+            "QuantityMustBePositive": "Quantity must be greater than zero.",
+            "QuantityExceedsCapacity": "Quantity {{quantity}} exceeds remaining capacity {{remaining}}."
+        },
+        "Tare": {
+            "NotFound": "Tare not found.",
+            "NotFoundForItem": "Tare not found for the assigned item.",
+            "TypeNotFoundForItem": "Tare type not found for the assigned tare.",
+            "TypeMismatch": "Tare type does not match the requested tare type.",
+            "TargetTypeNotFound": "Target tare type not found.",
+            "QuantityMustBeInteger": "Quantity must be an integer for {{context}}."
+        },
+        "TareType": {
+            "NotFound": "Tare type not found.",
+            "AllowedNomenclatureNotFound": "Allowed-nomenclature row not found.",
+            "MetaNotFound": "Cannot find Meta for the existing tare type.",
+            "Outdated": "This tare type is outdated and cannot be edited. Open the current version instead.",
+            "CapacityMustBePositive": "Capacity must be a positive integer for countable bulk tare types.",
+            "NomenclatureAlreadyAllowed": "This nomenclature is already in the allowed list."
+        },
+        "Nomenclature": {
+            "NotFound": "Nomenclature not found.",
+            "MetaNotFound": "Cannot find Meta for the existing nomenclature.",
+            "Outdated": "This nomenclature is outdated and cannot be edited. Open the current version instead.",
+            "TareTypeAlreadyAllowed": "This tare type is already in the allowed list.",
+            "AllowedTareNotFound": "Allowed-tare row not found."
+        },
+        "Order": {
+            "NotFound": "Order with id {{orderId}} not found.",
+            "AmountMustBePositive": "Amount must be greater than 0.",
+            "AmountMustBeInteger": "Order amount must be an integer for countable output nomenclature.",
+            "AlreadyCompleted": "Order is already completed.",
+            "AlreadyExecuted": "Order has already been executed.",
+            "NoProcess": "Order has no process.",
+            "ComponentsUnavailable": "Not all required components are available.",
+            "InsufficientInputQuantity": "Not enough input quantity to consume.",
+            "InsufficientInputForOutput": "Not enough input quantity to allocate required output.",
+            "CannotCompleteUnallocatedOutputs": "Cannot complete the order: some outputs are still unallocated.",
+            "LockedByExecutor": "Order is being executed by {{executor}}. Only the executor or an Admin can modify it.",
+            "RelaunchLocked": "Order is being executed by {{executor}}. Only the executor or an Admin can relaunch.",
+            "SpecificationNotFound": "Specification for nomenclature {{nomenclatureId}} not found.",
+            "GradeNotInProcess": "Grade {{gradeId}} does not belong to the order's process."
+        },
+        "Supply": {
+            "ItemNotLinked": "Item {{itemId}} is not linked to supply {{supplyId}}."
+        },
+        "Meta": {
+            "NotFound": "Cannot find the corresponding meta information.",
+            "EntityNull": "Entity cannot be null."
+        }
+    },
+    "Edm": {
+        "Job": {
+            "TypeNotJob": "Type {{type}} is not a job.",
+            "NotRegistered": "Job is not registered: {{jobType}}.",
+            "ParamsTypeMismatch": "Job parameters must be instance of {{paramsType}}.",
+            "InitFailed": "Cannot initialize the job {{job}}.",
+            "ParamsTypeUndefined": "Parameters type for {{jobType}} is not defined."
+        },
+        "Plugin": {
+            "DriverNotFound": "Driver plugin not found.",
+            "ProfilerNotFound": "Profiler plugin not found.",
+            "DriverInitFailed": "Cannot init {{driver}}: {{message}}",
+            "RemoteFailed": "{{message}}"
+        },
+        "Startup": {
+            "ConfigurationRequired": "Startup: Configuration action must be provided.",
+            "PluginsPathsRequired": "Startup: 'PluginsPaths' option must be specified.",
+            "PluginsNotLoaded": "Startup: plugins must be loaded by 'IServiceCollection.AddPlugins' method.",
+            "ControllerNamespaceMismatch": "No corresponding plugin found for controller {{controller}}. Beginning of controller namespace must match plugin namespace."
+        }
+    }
+}

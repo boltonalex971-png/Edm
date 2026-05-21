@@ -20,6 +20,7 @@ import {
 } from '@mui/material'
 import { AllInboxOutlined as TareTypeIcon } from '@mui/icons-material'
 import { type EffectCallback, useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import type { DetailEventHandler, TareType, UUID } from '../../../data/types'
 import {
@@ -30,6 +31,7 @@ import {
     MasterDetail,
     MuiEditor,
 } from '../../MasterDetail'
+import './index' // side-effect: registers the `config/taretype` namespace
 import { TareTypeTabs } from './TareTypeTabs'
 
 function formatSize(data: TareType) {
@@ -53,12 +55,13 @@ export function TareTypes() {
     const { path } = useBasePath()
     const navigate = useNavigate()
     const api = Api.taretypes
+    const { t } = useTranslation('config/taretype')
     return (
         <MasterDetail
             type={type}
             api={api}
             path={path || ''}
-            stubMessage="Please select a tare type"
+            stubMessage={t('stubMessage')}
             detail={
                 <TareTypeDetail
                     type={type}
@@ -86,6 +89,7 @@ export function TareTypeDetail({ id, ...props }: TareTypeDetailProps) {
     const effectiveId = (id || params.id) as UUID | undefined
     const [sub, setSub] = useState<React.ReactElement>()
     useEffect(setSub as EffectCallback, [effectiveId])
+    const { t } = useTranslation('config/taretype')
     const entityToken = useEntityToken([
         { type: props.type, id: effectiveId },
     ])
@@ -121,10 +125,10 @@ export function TareTypeDetail({ id, ...props }: TareTypeDetailProps) {
                     content={
                         data && (
                             <Properties>
-                                <Property label="Countable" value={data.countable ? 'Yes' : 'No'} />
-                                <Property label="Measured in" value={data.units} mono />
-                                {data.countable && <Property label="Size" value={formatSize(data)} mono />}
-                                <Property label="Capacity" value={data.capacity} mono />
+                                <Property label={t('card.countable')} value={data.countable ? t('common:yes') : t('common:no')} />
+                                <Property label={t('card.measuredIn')} value={data.units} mono />
+                                {data.countable && <Property label={t('card.size')} value={formatSize(data)} mono />}
+                                <Property label={t('card.capacity')} value={data.capacity} mono />
                             </Properties>
                         )
                     }
@@ -159,6 +163,7 @@ interface EditorBodyProps {
 }
 
 function TareTypeEditorBody({ values, handleChange, setValues }: EditorBodyProps) {
+    const { t } = useTranslation('config/taretype')
     const countable = !!values.countable
     const x = Number(values.sizeX) || 0
     const y = Number(values.sizeY) || 0
@@ -207,7 +212,7 @@ function TareTypeEditorBody({ values, handleChange, setValues }: EditorBodyProps
         <Box>
             <EditorSection
                 number={1}
-                title="Identity"
+                title={t('section.identity')}
                 filled={identityFilled}
                 total={3}
                 done={identityFilled === 3 && !nameMissing}
@@ -215,46 +220,46 @@ function TareTypeEditorBody({ values, handleChange, setValues }: EditorBodyProps
                 <Field
                     full
                     name="name"
-                    label="Name"
+                    label={t('field.name')}
                     required
                     value={(values.name as string) ?? ''}
                     onChange={handleChange}
                     state={nameMissing ? 'invalid' : 'pristine'}
                     help={
                         nameMissing
-                            ? 'A tare type must have a name.'
-                            : 'Shown in tree, pickers, and relations.'
+                            ? t('help.nameMissing')
+                            : t('help.name')
                     }
                 />
                 <Field
                     full
                     kind="textarea"
                     name="description"
-                    label="Description"
+                    label={t('field.description')}
                     rows={2}
                     value={(values.description as string) ?? ''}
                     onChange={handleChange}
                 />
                 <Field
                     name="units"
-                    label="Units"
-                    placeholder="e.g. kg, l, pcs"
+                    label={t('field.units')}
+                    placeholder={t('field.unitsPlaceholder')}
                     value={(values.units as string) ?? ''}
                     onChange={handleChange}
-                    help="Label shown next to the capacity value."
+                    help={t('field.unitsHelp')}
                 />
             </EditorSection>
 
             <EditorSection
                 number={2}
-                title="Capacity"
+                title={t('section.capacity')}
                 filled={capacityFilled}
                 total={1}
                 done={capacityFilled === 1}
             >
                 <Box sx={{ gridColumn: '1 / -1' }}>
                     <FormControlLabel
-                        label="Countable (whole pieces)"
+                        label={t('field.countable')}
                         control={
                             <Checkbox
                                 checked={countable}
@@ -273,8 +278,7 @@ function TareTypeEditorBody({ values, handleChange, setValues }: EditorBodyProps
                         variant="caption"
                         sx={{ display: 'block', color: 'var(--ink-3)' }}
                     >
-                        Toggles capacity between integer piece count
-                        (countable) and decimal volume/weight (non-countable).
+                        {t('field.countableHelp')}
                     </Typography>
                 </Box>
 
@@ -292,7 +296,7 @@ function TareTypeEditorBody({ values, handleChange, setValues }: EditorBodyProps
                                     mb: 0.5,
                                 }}
                             >
-                                Layout
+                                {t('field.layout')}
                             </Typography>
                             <RadioGroup
                                 row
@@ -308,12 +312,12 @@ function TareTypeEditorBody({ values, handleChange, setValues }: EditorBodyProps
                                 <FormControlLabel
                                     value="bulk"
                                     control={<Radio size="small" />}
-                                    label="Bulk"
+                                    label={t('field.bulk')}
                                 />
                                 <FormControlLabel
                                     value="slots"
                                     control={<Radio size="small" />}
-                                    label="Slots (X×Y×Z)"
+                                    label={t('field.slots')}
                                 />
                             </RadioGroup>
                             <Typography
@@ -323,8 +327,7 @@ function TareTypeEditorBody({ values, handleChange, setValues }: EditorBodyProps
                                     color: 'var(--ink-3)',
                                 }}
                             >
-                                Bulk uses integer piece-count capacity. Slots
-                                uses addressed capacity = X×Y×Z.
+                                {t('field.layoutHelp')}
                             </Typography>
                         </Box>
 
@@ -419,8 +422,7 @@ function TareTypeEditorBody({ values, handleChange, setValues }: EditorBodyProps
                                             color: 'var(--ink-3)',
                                         }}
                                     >
-                                        Capacity (auto): {computedCapacity}{' '}
-                                        slots
+                                        {t('field.computedCapacity', { count: computedCapacity })}
                                     </Typography>
                                 )}
                             </>
@@ -429,9 +431,11 @@ function TareTypeEditorBody({ values, handleChange, setValues }: EditorBodyProps
                                 <Field
                                     type="number"
                                     name="capacity"
-                                    label={`Capacity${
-                                        values.units ? ` (${values.units})` : ''
-                                    }`}
+                                    label={
+                                        values.units
+                                            ? t('field.capacityWithUnits', { units: values.units })
+                                            : t('field.capacity')
+                                    }
                                     value={values.capacity ?? ''}
                                     onChange={(e) =>
                                         handleChange({
@@ -454,9 +458,11 @@ function TareTypeEditorBody({ values, handleChange, setValues }: EditorBodyProps
                         <Field
                             type="number"
                             name="capacity"
-                            label={`Capacity${
-                                values.units ? ` (${values.units})` : ''
-                            }`}
+                            label={
+                                values.units
+                                    ? t('field.capacityWithUnits', { units: values.units })
+                                    : t('field.capacity')
+                            }
                             value={values.capacity ?? ''}
                             onChange={(e) =>
                                 handleChange({

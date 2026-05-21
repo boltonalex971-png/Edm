@@ -1,5 +1,6 @@
 ﻿import React, {useState} from 'react';
 import {useParams} from 'react-router-dom'
+import {useTranslation} from 'react-i18next';
 import {useGet} from '@microprojects/edm-components/hooks';
 import api from '../api';
 import {OperationPluginContainer} from './OperationPluginContainer';
@@ -17,6 +18,7 @@ import styles from './OperationLayout.module.scss';
 
 export function OperationLayout() {
     const {id} = useParams()
+    const {t} = useTranslation('tech');
     const [options, setOptions] = useState()
     const [[info]] = useGet(`${api.operations}/${id}/info`, [id], (oi) => {
         axios.get(`${api.plugins}/${oi.process.appGuid}`).then(d => setOptions(d.data)).catch(alert)
@@ -46,8 +48,8 @@ export function OperationLayout() {
                         className={styles.collapseFloat}
                         data-visible={hidden ? 'true' : 'false'}
                         onClick={() => setHidden(false)}
-                        title="Show toolbar"
-                        aria-label="Show toolbar"
+                        title={t('operation.showToolbar')}
+                        aria-label={t('operation.showToolbar')}
                         tabIndex={hidden ? 0 : -1}
                     >
                         <ArrowDownIcon fontSize="small" />
@@ -55,7 +57,7 @@ export function OperationLayout() {
 
                     <div className={styles.body}>
                         <OperationPluginContainer
-                            title='Operation Console'
+                            title={t('operation.console')}
                             id={id}
                             info={info}
                             navigate={to}

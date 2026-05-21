@@ -1,0 +1,47 @@
+{
+    "Technologies": {
+        "Audit": {
+            "NotFound": "Аудит не найден.",
+            "QualifierMismatch": "Выбранный квалификатор не относится к подходящему процессу."
+        },
+        "Operation": {
+            "NotFound": "Операция с id {{operationId}} не найдена.",
+            "NotRunning": "Операция с id {{operationId}} не выполняется.",
+            "AlreadyFinished": "Операция уже завершена.",
+            "StartFailed": "Не удалось запустить операцию: {{message}}",
+            "RemoteJobFailed": "{{message}}",
+            "DeviceJobFailed": "{{deviceJob}}: {{message}}"
+        },
+        "Workbench": {
+            "NotFound": "Не удалось найти рабочее место для указанного процесса."
+        }
+    },
+    "Board": {
+        "MuxNotResponding": "Мультиплексор не отвечает.",
+        "RequestTypeMismatch": "Параметры драйвера {{driver}} должны быть типа BoardDriverRequest.",
+        "InstructionRequired": "Инструкция для драйвера платы не должна быть пустой.",
+        "OutputParamMissing": "Отсутствует выходной параметр для инструкции «{{instruction}}».",
+        "ProfileEmpty": "JSON-представление профиля пусто."
+    },
+    "Edm": {
+        "Job": {
+            "TypeNotJob": "Тип {{type}} не является задачей.",
+            "NotRegistered": "Задача не зарегистрирована: {{jobType}}.",
+            "ParamsTypeMismatch": "Параметры задачи должны быть экземпляром {{paramsType}}.",
+            "InitFailed": "Не удалось инициализировать задачу {{job}}.",
+            "ParamsTypeUndefined": "Тип параметров для {{jobType}} не определён."
+        },
+        "Plugin": {
+            "DriverNotFound": "Драйверный плагин не найден.",
+            "ProfilerNotFound": "Профайлерный плагин не найден.",
+            "DriverInitFailed": "Не удалось инициализировать {{driver}}: {{message}}",
+            "RemoteFailed": "{{message}}"
+        },
+        "Startup": {
+            "ConfigurationRequired": "Запуск: необходимо передать действие конфигурации.",
+            "PluginsPathsRequired": "Запуск: должен быть указан параметр «PluginsPaths».",
+            "PluginsNotLoaded": "Запуск: плагины должны быть загружены через 'IServiceCollection.AddPlugins'.",
+            "ControllerNamespaceMismatch": "Не найден соответствующий плагин для контроллера {{controller}}. Начало пространства имён контроллера должно совпадать с пространством имён плагина."
+        }
+    }
+}

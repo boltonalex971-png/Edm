@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using Microprojects.Edm.Controllers;
 using Microprojects.Edm.Ui.Logistics.Contracts;
@@ -38,7 +39,10 @@ public abstract class EntriesControllerBase<TEntry, TEntryViewModel, TService> :
     public virtual async Task<IEnumerable<DirectoryEntryViewModel>> GetEntryHierarchy([FromQuery] string? kind = null)
     {
         var rootId = GetEntryRootId(kind)
-            ?? throw new EdmException($"No type root configured for {typeof(TEntry).Name}.");
+            ?? throw new EdmException(
+                "Logistics.Directory.NoTypeRoot",
+                new Dictionary<string, object> { ["entryType"] = typeof(TEntry).Name },
+                $"No type root configured for {typeof(TEntry).Name}.");
         var entries = await Service.GetAll();
         return await BuildEntryHierarchy(entries, rootId);
     }
@@ -68,7 +72,10 @@ public abstract class EntriesControllerBase<TEntry, TEntryViewModel, TService> :
         var entry = ToEntity(model);
         if (id != entry.Id)
         {
-            throw new EdmException($"{typeof(TEntry).Name} id is ambiguous");
+            throw new EdmException(
+                "Logistics.Entry.IdAmbiguous",
+                new Dictionary<string, object> { ["type"] = typeof(TEntry).Name },
+                $"{typeof(TEntry).Name} id is ambiguous");
         }
 
         await EnsureEntryParent(entry);
@@ -104,10 +111,16 @@ public abstract class EntriesControllerBase<TEntry, TEntryViewModel, TService> :
     public async Task<TEntryViewModel> ChangeEntryParent(Guid id, [FromBody] DomainObjectViewModel parent)
     {
         var existing = await Service.Get(id)
-            ?? throw new EdmException($"{typeof(TEntry).Name} with Id {id} not found.");
+            ?? throw new EdmException(
+                "Logistics.Entry.NotFound",
+                new Dictionary<string, object> { ["type"] = typeof(TEntry).Name, ["id"] = id },
+                $"{typeof(TEntry).Name} with Id {id} not found.");
 
         var expectedRoot = GetEntryRootIdFor(existing)
-            ?? throw new EdmException($"No type root configured for {typeof(TEntry).Name}.");
+            ?? throw new EdmException(
+                "Logistics.Directory.NoTypeRoot",
+                new Dictionary<string, object> { ["entryType"] = typeof(TEntry).Name },
+                $"No type root configured for {typeof(TEntry).Name}.");
 
         await EnsureParentInTypeRoot(parent.Id, expectedRoot);
 
@@ -129,7 +142,10 @@ public abstract class EntriesControllerBase<TEntry, TEntryViewModel, TService> :
     private async Task EnsureEntryParent(TEntry entity)
     {
         var expectedRoot = GetEntryRootIdFor(entity)
-            ?? throw new EdmException($"No type root configured for {typeof(TEntry).Name}.");
+            ?? throw new EdmException(
+                "Logistics.Directory.NoTypeRoot",
+                new Dictionary<string, object> { ["entryType"] = typeof(TEntry).Name },
+                $"No type root configured for {typeof(TEntry).Name}.");
         await EnsureParentInTypeRoot(entity.DirectoryId, expectedRoot);
     }
 
@@ -137,13 +153,19 @@ public abstract class EntriesControllerBase<TEntry, TEntryViewModel, TService> :
     {
         if (parentId is null || parentId == Guid.Empty)
         {
-            throw new EdmException($"{typeof(TEntry).Name} must live under its type root.");
+            throw new EdmException(
+                "Logistics.Entry.MustLiveInTypeRoot",
+                new Dictionary<string, object> { ["type"] = typeof(TEntry).Name },
+                $"{typeof(TEntry).Name} must live under its type root.");
         }
 
         var actualRoot = await DirectoryService.ResolveTypeRoot(parentId.Value);
         if (actualRoot != expectedRootId)
         {
-            throw new EdmException($"{typeof(TEntry).Name} cannot be placed outside its type root.");
+            throw new EdmException(
+                "Logistics.Entry.CannotPlaceOutsideTypeRoot",
+                new Dictionary<string, object> { ["type"] = typeof(TEntry).Name },
+                $"{typeof(TEntry).Name} cannot be placed outside its type root.");
         }
     }
 

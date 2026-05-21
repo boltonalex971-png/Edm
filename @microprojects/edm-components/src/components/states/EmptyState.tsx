@@ -1,10 +1,11 @@
-﻿import React from 'react';
+import React from 'react';
 import {
     InboxOutlined as DefaultEmptyIcon,
     TouchAppOutlined as TouchAppIcon,
     Add as AddIcon,
 } from '@mui/icons-material';
 import {Button} from '@mui/material';
+import {useTranslation} from 'react-i18next';
 import styles from './StateSurface.module.scss';
 
 // HANDOFF · v2 04c.3 · canonical empty state.
@@ -52,13 +53,14 @@ export function EmptyState({icon, title, help, action, size = 'md', className}: 
    targets the lg surface size and the touch-app icon. Old callers keep
    working; new ones should use <EmptyState> directly. */
 export function DetailStub({message, onAdd}: {message?: string; onAdd?: () => void}) {
+    const {t} = useTranslation('edm-states');
     return (
         <EmptyState
             size="lg"
             icon={<TouchAppIcon />}
-            title="Select an item"
-            help={message || 'Choose an item from the list on the left to view its details, or create a new item to get started.'}
-            action={onAdd ? {label: 'Create new item', onClick: onAdd} : undefined}
+            title={t('detailStub.title', 'Select an item')}
+            help={message || t('detailStub.help', 'Choose an item from the list on the left to view its details, or create a new item to get started.')}
+            action={onAdd ? {label: t('detailStub.action', 'Create new item'), onClick: onAdd} : undefined}
         />
     );
 }

@@ -1,4 +1,5 @@
-﻿import api from '@features/api/api'
+﻿import '@logistics/components/orders' // side-effect: registers the `orders` namespace
+import api from '@features/api/api'
 import {
     HierarchyPicker,
     pruneHierarchy,
@@ -40,6 +41,7 @@ import {
     useInvalidateEntities,
 } from '@logistics/hooks/entityRefresh'
 import { getData, postData, useGet } from '@logistics/hooks/hooks'
+import { resolveError } from '@logistics/i18n/resolveError'
 import { useTareTransfer } from '@logistics/hooks/useTareTransfer'
 import { SmartScroll, SmartScrollContent } from '@microprojects/tools'
 import {
@@ -55,6 +57,7 @@ import {
     Typography,
 } from '@mui/material'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 type AllocateProcessOutputProps = {
     orderId: UUID
@@ -85,6 +88,7 @@ export function AllocateProcessOutput({
     onClose: _onClose,
     onChanged,
 }: AllocateProcessOutputProps) {
+    const { t } = useTranslation('orders')
     const [[tareTypes]] = useGet<TreeDataItem[]>(
         `${api.taretypes}/hierarchy`,
         [],
@@ -277,7 +281,7 @@ export function AllocateProcessOutput({
                 addTargetTareToWorkspace(tare, items || [])
                 setNewTarePicked(null)
             } catch (e: any) {
-                setError(e.message || 'Failed to load tare')
+                setError(resolveError(e, t('widgets:errors.failedToLoadTare')))
             }
             return
         }
@@ -301,9 +305,7 @@ export function AllocateProcessOutput({
                 return
             }
             if (!newTareTypeId) {
-                setError(
-                    'Tare not found. Select a tare type to create a new one.',
-                )
+                setError(t('widgets:errors.tareNotFoundSelectType'))
                 return
             }
             const created = await postData<TareInfo>(`${api.tares}`, {
@@ -315,7 +317,7 @@ export function AllocateProcessOutput({
                 setNewTarePicked(null)
             }
         } catch (e: any) {
-            setError(e.message || 'Failed to add tare')
+            setError(resolveError(e, t('widgets:errors.failedToAddTare')))
         }
     }
 
@@ -329,12 +331,14 @@ export function AllocateProcessOutput({
         const { nomenclatureNames, gradeNames } = selectionSummary(
             selectedItems,
         )
-        const segments = [`${selectedItems.length} selected`]
+        const segments = [
+            t('allocate.selectedCount', '{{count}} selected', { count: selectedItems.length }),
+        ]
         if (nomenclatureNames.length > 0)
             segments.push(nomenclatureNames.join(', '))
         if (gradeNames.length > 0) segments.push(gradeNames.join(', '))
         return segments.join(' · ')
-    }, [selectedItems])
+    }, [selectedItems, t])
 
     const pendingItemIds = useMemo(
         () => new Set(pending.map((p) => p.itemId)),
@@ -372,7 +376,7 @@ export function AllocateProcessOutput({
                 onChanged?.()
             }
         } catch (e: any) {
-            setError(e.message || 'Allocation request failed')
+            setError(resolveError(e, t('allocate.allocationRequestFailed', 'Allocation request failed')))
         }
         setSubmitting(false)
     }
@@ -403,7 +407,7 @@ export function AllocateProcessOutput({
             ])
             onChanged?.()
         } catch (e: any) {
-            setError(e.message || 'Grade assignment failed')
+            setError(resolveError(e, t('allocate.gradeAssignmentFailed', 'Grade assignment failed')))
         }
     }
 
@@ -439,7 +443,7 @@ export function AllocateProcessOutput({
 
     const targetToolbar = (
         <Box>
-            <Typography sx={monoLabelSx}>Add target tare</Typography>
+            <Typography sx={monoLabelSx}>{t('allocate.addTargetTare', 'Add target tare')}</Typography>
             <Box
                 sx={{
                     display: 'flex',
@@ -456,7 +460,7 @@ export function AllocateProcessOutput({
                         setNewTarePicked(tare)
                         await handleAddTargetTare(tare)
                     }}
-                    placeholder="Tare barcode…"
+                    placeholder={t('allocate.tareBarcodePlaceholder', 'Tare barcode…')}
                     style={{ width: 220 }}
                 />
                 <HierarchyPicker
@@ -464,7 +468,7 @@ export function AllocateProcessOutput({
                     value={newTareTypeId}
                     onChange={setNewTareTypeId}
                     width={180}
-                    placeholder="Type (for new)…"
+                    placeholder={t('allocate.tareTypePlaceholder', 'Type (for new)…')}
                 />
                 <Box
                     sx={{
@@ -491,14 +495,16 @@ export function AllocateProcessOutput({
                     onClick={submit}
                     disabled={pending.length === 0 || submitting}
                 >
-                    {submitting ? 'Saving…' : `Apply (${pending.length})`}
+                    {submitting
+                        ? t('allocate.saving', 'Saving…')
+                        : t('allocate.apply', 'Apply ({{count}})', { count: pending.length })}
                 </MuiButton>
                 <MuiButton
                     variant="outlined"
                     onClick={reset}
                     disabled={pending.length === 0}
                 >
-                    Reset
+                    {t('allocate.reset', 'Reset')}
                 </MuiButton>
             </Box>
         </Box>
@@ -570,7 +576,7 @@ export function AllocateProcessOutput({
                                     variant="caption"
                                     sx={{ color: 'var(--sig-run-deep)' }}
                                 >
-                                    · Completed
+                                    · {t('allocate.completedSuffix', 'Completed')}
                                 </Typography>
                             )}
                         </>
@@ -600,7 +606,7 @@ export function AllocateProcessOutput({
                             }}
                         >
                             <Typography component="h3" sx={panelHeadingSx}>
-                                Unallocated outputs
+                                {t('allocate.unallocatedOutputs', 'Unallocated outputs')}
                             </Typography>
                             <Box
                                 sx={{
@@ -628,7 +634,10 @@ export function AllocateProcessOutput({
                                 {selectionLabel && (
                                     <Typography
                                         variant="caption"
-                                        title="Click an empty target slot to place, or right-click for more."
+                                        title={t(
+                                            'allocate.selectionHint',
+                                            'Click an empty target slot to place, or right-click for more.',
+                                        )}
                                         sx={{
                                             color: 'var(--accent)',
                                             fontWeight: 600,
@@ -650,12 +659,12 @@ export function AllocateProcessOutput({
                                 >
                                     <CircularProgress size={14} />
                                     <Typography variant="caption">
-                                        Loading…
+                                        {t('common:loading')}
                                     </Typography>
                                 </Box>
                             )}
                             {!loading && unallocated.length === 0 && (
-                                <EmptyMsg text="No unallocated outputs" />
+                                <EmptyMsg text={t('allocate.noUnallocated', 'No unallocated outputs')} />
                             )}
                             {unallocated.length > 0 && (
                                 <OutputItemsPanel
@@ -680,15 +689,20 @@ export function AllocateProcessOutput({
                             }}
                         >
                             <Typography component="h3" sx={panelHeadingSx}>
-                                Target tares
+                                {t('allocate.targetTares', 'Target tares')}
                             </Typography>
                             {targetTares.length === 0 && (
-                                <EmptyMsg text="Add target tares by barcode search or create new ones" />
+                                <EmptyMsg
+                                    text={t(
+                                        'allocate.noTargetTares',
+                                        'Add target tares by barcode search or create new ones',
+                                    )}
+                                />
                             )}
-                            {targetTares.map((t) => {
-                                const isExpanded = expandedTareIds.has(t.id)
-                                const cap = Math.floor(t.capacity)
-                                const hasCommittedFromOrder = t.items.some(
+                            {targetTares.map((tare) => {
+                                const isExpanded = expandedTareIds.has(tare.id)
+                                const cap = Math.floor(tare.capacity)
+                                const hasCommittedFromOrder = tare.items.some(
                                     (i) =>
                                         i.orderId === orderId &&
                                         !pendingItemIds.has(i.id),
@@ -696,7 +710,7 @@ export function AllocateProcessOutput({
                                 const Icon = isExpanded ? ExpandIcon : CollapseIcon
                                 return (
                                     <Box
-                                        key={t.id}
+                                        key={tare.id}
                                         sx={{
                                             border: '1px solid var(--line)',
                                             borderRadius: 'var(--r-2)',
@@ -707,7 +721,7 @@ export function AllocateProcessOutput({
                                     >
                                         <Box
                                             onClick={() =>
-                                                toggleTareExpanded(t.id)
+                                                toggleTareExpanded(tare.id)
                                             }
                                             sx={{
                                                 display: 'flex',
@@ -735,14 +749,14 @@ export function AllocateProcessOutput({
                                                     color: 'var(--ink-1)',
                                                 }}
                                             >
-                                                {t.barcode || 'Tare'}
+                                                {tare.barcode || t('allocate.tareFallback', 'Tare')}
                                             </Typography>
                                             <Typography
                                                 variant="caption"
                                                 sx={{ color: 'var(--ink-3)' }}
                                             >
-                                                {t.tareTypeName} ·{' '}
-                                                {t.items.length}/{cap}
+                                                {tare.tareTypeName} ·{' '}
+                                                {tare.items.length}/{cap}
                                             </Typography>
                                             <Box sx={{ flex: 1 }} />
                                             {!hasCommittedFromOrder && (
@@ -751,10 +765,10 @@ export function AllocateProcessOutput({
                                                     variant="text"
                                                     onClick={(e) => {
                                                         e.stopPropagation()
-                                                        removeTargetTare(t.id)
+                                                        removeTargetTare(tare.id)
                                                     }}
                                                 >
-                                                    Remove
+                                                    {t('allocate.remove', 'Remove')}
                                                 </MuiButton>
                                             )}
                                         </Box>
@@ -767,12 +781,12 @@ export function AllocateProcessOutput({
                                                 }}
                                             >
                                                 <TareSchematic
-                                                    tare={t}
-                                                    items={t.items}
+                                                    tare={tare}
+                                                    items={tare.items}
                                                     highlightEmpty
                                                     onSlotClick={(slot) =>
                                                         handleTargetSlotClick(
-                                                            t.id,
+                                                            tare.id,
                                                             slot,
                                                         )
                                                     }
