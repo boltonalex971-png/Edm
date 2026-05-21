@@ -54,10 +54,6 @@ try
     await InsertMetaForLeaf(conn, tx, "Workplaces", "Workplace");
 
     await InsertDirectoriesForHierarchies(conn, tx);
-    await InsertDirectoriesForLeaf(conn, tx, "Hosts");
-    await InsertDirectoriesForLeaf(conn, tx, "Devices");
-    await InsertDirectoriesForLeaf(conn, tx, "Processes");
-    await InsertDirectoriesForLeaf(conn, tx, "Workplaces");
 
     await BackfillLeafNewDirectoryId(conn, tx, "Hosts");
     await BackfillLeafNewDirectoryId(conn, tx, "Devices");
@@ -171,18 +167,6 @@ INNER JOIN Hierarchies p ON p.Id = h.ParentId
 LEFT JOIN Directories d ON d.Id = h.NewId
 WHERE d.Id IS NULL;";
     Console.WriteLine($"Directories (child Hierarchies): {await Exec(conn, tx, nonRootsSql)} rows");
-}
-
-static async Task InsertDirectoriesForLeaf(SqlConnection conn, SqlTransaction tx, string table)
-{
-    var sql = $@"
-INSERT INTO Directories (Id, DirectoryId, Name, Description)
-SELECT t.NewId, h.NewId, t.Name, t.Description
-FROM {table} t
-INNER JOIN Hierarchies h ON h.Id = t.HierarchyId
-LEFT JOIN Directories d ON d.Id = t.NewId
-WHERE d.Id IS NULL;";
-    Console.WriteLine($"Directories ({table}): {await Exec(conn, tx, sql)} rows");
 }
 
 static async Task BackfillLeafNewDirectoryId(SqlConnection conn, SqlTransaction tx, string table)
