@@ -3,7 +3,7 @@
 namespace Microprojects.Edm.Ui.Logistics.Services;
 
 // Surfaces Logistics's WellKnownDirectoryIds to the shared DirectoryService.
-internal sealed class LogisticsDirectoryRootRegistry : IDirectoryRootRegistry
+public sealed class LogisticsDirectoryRootRegistry : IPluginDirectoryRootRegistry
 {
     private static readonly Guid[] _typeRoots =
     [

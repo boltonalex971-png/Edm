@@ -222,4 +222,40 @@ public class TechDirectoryTests
         Assert.Equal(nameof(Workbench), meta!.Metatype);
         Assert.Null(meta.Deleted);
     }
+
+    [Fact]
+    public void LogisticsDirectoryRootRegistry_resolves_Nomenclature_root()
+    {
+        // The lifted EntriesControllerBase calls
+        // RootRegistry.ResolveRoot(typeof(TEntry).Name, kind). For TEntry =
+        // Nomenclature, that's ResolveRoot("Nomenclature", null). The Logistics
+        // registry must return the Nomenclatures root Guid, not null.
+        var reg = new Microprojects.Edm.Ui.Logistics.Services.LogisticsDirectoryRootRegistry();
+        var result = reg.ResolveRoot(typeof(Microprojects.Edm.Ui.Logistics.Models.Nomenclature).Name, null);
+        Assert.NotNull(result);
+        Assert.Equal(Microprojects.Edm.Ui.Logistics.Models.WellKnownDirectoryIds.Nomenclatures, result);
+    }
+
+    [Fact]
+    public void CompositeDirectoryRootRegistry_resolves_both_plugins()
+    {
+        // Regression for the bug that broke /api/logistics/nomenclatures/hierarchy:
+        // both Tech and Logistics each register their own IDirectoryRootRegistry in
+        // the host service collection, and last-write-wins meant Logistics's
+        // controllers would receive Tech's registry (which doesn't know
+        // "Nomenclature") at runtime. The composite walks all plugin registries
+        // so both plugins resolve their own entry types regardless of registration
+        // order.
+        IPluginDirectoryRootRegistry logistics = new Microprojects.Edm.Ui.Logistics.Services.LogisticsDirectoryRootRegistry();
+        IPluginDirectoryRootRegistry tech = new Microprojects.Edm.Ui.Technologies.Services.TechDirectoryRootRegistry();
+        var composite = new CompositeDirectoryRootRegistry([tech, logistics]);
+
+        Assert.Equal(
+            Microprojects.Edm.Ui.Logistics.Models.WellKnownDirectoryIds.Nomenclatures,
+            composite.ResolveRoot("Nomenclature"));
+        Assert.Equal(WellKnownDirectoryIds.Hosts, composite.ResolveRoot("hosts"));
+        Assert.Null(composite.ResolveRoot("Unknown"));
+        Assert.True(composite.IsTypeRoot(WellKnownDirectoryIds.Hosts));
+        Assert.True(composite.IsTypeRoot(Microprojects.Edm.Ui.Logistics.Models.WellKnownDirectoryIds.Nomenclatures));
+    }
 }
