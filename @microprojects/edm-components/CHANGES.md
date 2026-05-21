@@ -1,5 +1,12 @@
 ﻿# @microprojects/edm-components — Changes
 
+## 0.4.6 — Drop the `stale` connection state from the header pip
+
+- **`useConnectionState`.** Removed the 60-second client-side idle watchdog that flipped a healthy SignalR connection into a `stale` state. SignalR's own server keep-alive (default 15 s) already drives `onreconnecting` / `onclose` when the transport actually breaks, so the second-guessing layer was crying wolf during normal quiet periods — and since no consumer ever wired `notifyActivity()`, every page that didn't get a push within a minute went `stale` unconditionally.
+- **API shrink.** `ConnectionStatus` is now `connecting | connected | reconnecting | disconnected` (no `stale`). The hook returns `{status}` only — `lastSeen`, `notifyActivity`, and the `staleAfterMs` option are gone, since nothing in the codebase consumed them. `STATUS_TO_PIP` has its `stale` entry removed.
+- **Locales.** Dropped the `pip.stale` keys from `chrome.en.ts` / `chrome.ru.ts`.
+- **Styles.** Removed the `.tb-pip.stale .dot` rule from `chrome.scss` and from the Technologies-app `app.css` mirror.
+
 ## 0.4.5 — `Detail` calls `onClose` after a successful delete
 
 - **`Detail.handleDelete`** now invokes `props.onClose` once the DELETE round-trip succeeds, in addition to the existing `props.onChange` / cache invalidation / `props.path` navigation. Previously, when `Detail` was mounted as a sub-detail (`onClose` set, `path` unset — Logistics's TareDetail, ItemDetail sub-views, RelationTable inline detail panes), confirming the destructive dialog deleted the record but left the now-stale Detail visible until the user manually closed it.

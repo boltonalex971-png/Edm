@@ -1,40 +1,30 @@
-﻿import {useCallback, useEffect, useState} from 'react';
+import {useEffect, useState} from 'react';
 import {HubConnection, HubConnectionBuilder, LogLevel} from '@microsoft/signalr';
 import {getCookie} from '../../hooks/getCookie';
 
 // HANDOFF · v2 chrome.html 04f.4 · connection pip.
-// Drives the top-bar pip from a real SignalR lifecycle. Five states
-// match the v2 .tb-pip CSS modifiers (default / .connecting /
-// .reconnecting / .disconnected / .stale).
+// Reflects the SignalR lifecycle directly — connecting / connected /
+// reconnecting / disconnected. SignalR's own server keep-alive is the
+// source of truth for whether the transport is alive; we don't layer a
+// second client-side watchdog on top of it.
 
 export type ConnectionStatus =
     | 'connecting'
     | 'connected'
     | 'reconnecting'
-    | 'disconnected'
-    | 'stale';
+    | 'disconnected';
 
 export interface ConnectionState {
     status: ConnectionStatus;
-    lastSeen: Date | null;
-    /** Call to mark the connection as active (resets the stale timer, sets lastSeen=now).
-     *  Wire from consumer-side message handlers (SignalR onReceive etc.). */
-    notifyActivity: () => void;
 }
 
 export interface UseConnectionStateOptions {
     /** Override the access-token source (default: read `X-Auth-Token` cookie). */
     getToken?: () => string | null | undefined | Promise<string | null | undefined>;
-    /** Idle threshold in ms before flipping to 'stale' even when connected. Default 60_000. */
-    staleAfterMs?: number;
 }
-
-const DEFAULT_STALE_AFTER_MS = 60_000;
 
 export function useConnectionState(hubUrl: string, options?: UseConnectionStateOptions): ConnectionState {
     const [status, setStatus] = useState<ConnectionStatus>('connecting');
-    const [lastSeen, setLastSeen] = useState<Date | null>(null);
-    const staleAfterMs = options?.staleAfterMs ?? DEFAULT_STALE_AFTER_MS;
 
     useEffect(() => {
         let stopped = false;
@@ -55,9 +45,7 @@ export function useConnectionState(hubUrl: string, options?: UseConnectionStateO
             if (!stopped) setStatus('reconnecting');
         });
         conn.onreconnected(() => {
-            if (stopped) return;
-            setStatus('connected');
-            setLastSeen(new Date());
+            if (!stopped) setStatus('connected');
         });
         conn.onclose(() => {
             if (!stopped) setStatus('disconnected');
@@ -66,9 +54,7 @@ export function useConnectionState(hubUrl: string, options?: UseConnectionStateO
         setStatus('connecting');
         conn.start()
             .then(() => {
-                if (stopped) return;
-                setStatus('connected');
-                setLastSeen(new Date());
+                if (!stopped) setStatus('connected');
             })
             .catch(() => {
                 if (!stopped) setStatus('disconnected');
@@ -80,20 +66,7 @@ export function useConnectionState(hubUrl: string, options?: UseConnectionStateO
         };
     }, [hubUrl]);
 
-    /* Stale-watch: even when SignalR claims connected, fall back to
-       'stale' after staleAfterMs without any confirmed activity. */
-    useEffect(() => {
-        if (status !== 'connected' || !lastSeen) return;
-        const t = window.setTimeout(() => setStatus('stale'), staleAfterMs);
-        return () => window.clearTimeout(t);
-    }, [status, lastSeen, staleAfterMs]);
-
-    const notifyActivity = useCallback(() => {
-        setLastSeen(new Date());
-        setStatus((prev) => (prev === 'stale' ? 'connected' : prev));
-    }, []);
-
-    return {status, lastSeen, notifyActivity};
+    return {status};
 }
 
 /* Maps a status into the v2 .tb-pip slot props (kind class + label). */
@@ -102,5 +75,4 @@ export const STATUS_TO_PIP: Record<ConnectionStatus, {kind: string; label: strin
     connected:    {kind: 'connected',    label: 'Live'},
     reconnecting: {kind: 'reconnecting', label: 'Reconnecting'},
     disconnected: {kind: 'disconnected', label: 'Offline'},
-    stale:        {kind: 'stale',        label: 'Stale'},
 };
