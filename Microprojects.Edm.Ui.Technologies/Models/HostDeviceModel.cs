@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 
 namespace Microprojects.Edm.Ui.Technologies.Models
 {
     public class HostDeviceModel
     {
-        public int Id { get; set; }
-        public int HostId { get; set; }
-        public int DeviceId { get; set; }
+        public Guid Id { get; set; }
+        public Guid HostId { get; set; }
+        public Guid DeviceId { get; set; }
 
         public string HostName { get; set; }
         public string HostUrl { get; set; }

@@ -21,6 +21,14 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<Using Include="Microprojects.Edm.Domain" />
+		<Using Include="Microprojects.Edm.Shared.Contracts" />
+		<Using Include="Microprojects.Edm.Shared.Services" />
+		<Using Include="Microprojects.Edm.Shared.Utils" />
+		<Using Include="Microprojects.Edm.Shared.ViewModels" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<Compile Remove="ui\dist\**" />
 		<Compile Remove="ui\node_modules\**" />
 		<EmbeddedResource Include="ui\dist\**" />

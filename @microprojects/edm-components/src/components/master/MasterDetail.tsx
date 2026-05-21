@@ -115,10 +115,9 @@ export interface MasterDetailProps {
      *  technology / operation). Forwarded to TreeViewMaster. */
     entityType?: string;
     /** URL segment used as the "new (unsaved) item" sentinel by the Add Folder /
-     *  Add Item buttons and the empty-state Add action. Default `'0'` matches
-     *  Tech's int-keyed entities; Logistics passes the empty Guid so the
-     *  new-item route hits a valid Guid the backend recognises. Forwarded to
-     *  TreeViewMaster. */
+     *  Add Item buttons and the empty-state Add action. Default is the empty
+     *  Guid since every consumer is Guid-keyed after the Tech directory
+     *  unification. Forwarded to TreeViewMaster. */
     newId?: string;
 }
 
@@ -126,7 +125,7 @@ const SEPARATOR_MIN_PX = 80;
 
 export function MasterDetail(props: MasterDetailProps) {
     const navigate = useNavigate();
-    const {path, resizable = true, newId = '0'} = props;
+    const {path, resizable = true, newId = EMPTY_GUID} = props;
     const dynamicOffset = useStickyHeaderOffset();
     const FolderComponent = props.folderComponent;
     // Capitalize the URL-derived entity type so it matches backend HierarchyType enum
@@ -1041,13 +1040,13 @@ export function Editor(props: EditorProps) {
             };
             sendUpdate(false);
         } else {
-            // _selectedItem.id is the MUI-prefixed tree id (e.g., "folder-1033"); the backend
-            // wants the raw numeric id. numericId is the unprefixed string; parentId on a leaf
-            // is also the parent's numeric id as a string. Coerce both to int.
+            // _selectedItem.id is the MUI-prefixed tree id (e.g., "folder-<guid>");
+            // the backend wants the raw Guid. numericId/parentId are the unprefixed
+            // Guid strings — no parseInt needed since every consumer is Guid-keyed.
             const rawParent = _selectedItem
                 ? (_selectedItem.isFolder ? _selectedItem.numericId : _selectedItem.parentId)
-                : '0';
-            const parentId = parseInt(rawParent, 10) || 0;
+                : EMPTY_GUID;
+            const parentId = rawParent || EMPTY_GUID;
             // Honor a route-state-supplied parentId (e.g. "Add child" navigations
             // that attach `state: {parentId}` so the new item lands in the right
             // folder regardless of which tree node is currently selected).
@@ -1056,8 +1055,11 @@ export function Editor(props: EditorProps) {
             axios.post(`${props.api}`, {
                 ...foreignData,
                 type: props.type,
+                // directoryId is the canonical field for DirectoryEntry-derived
+                // backends (Tech post-unification, Logistics). parentId stays
+                // for any caller that still binds to it.
+                directoryId: effectiveParentId,
                 parentId: effectiveParentId,
-                hierarchyId: effectiveParentId,
             })
                 .then((response) => {
                     toast.success(t('toast.created', 'Created'));

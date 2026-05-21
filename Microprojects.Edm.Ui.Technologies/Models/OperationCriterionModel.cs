@@ -1,13 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System;
 
 namespace Microprojects.Edm.Ui.Technologies.Models
 {
     public class OperationCriterionModel
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public bool Valid { get; set; }
         public string Selector { get; set; }
         public string Result { get; set; }

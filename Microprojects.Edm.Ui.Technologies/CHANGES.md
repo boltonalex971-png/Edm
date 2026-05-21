@@ -1,9 +1,10 @@
-# Main EDM UI — User Changes
+﻿# Main EDM UI — User Changes
 
 The Main UI is the EDM home screen: dashboard, new-operation wizard, the configuration trees (workbenches, devices, profiles, processes, audits) and the operation card with sensor reports. It is mounted at the site root.
 
 ## v2.0.0.0
 
+- **Configuration trees now use globally-unique IDs.** Host, device, process and workplace records moved off the old per-table integer counters onto stable Guid IDs that are unique across the whole platform. Old bookmarks pointing at `/api/technologies/hierarchies/...` URLs need re-bookmarking under `/api/technologies/directories/...`; in-app links update themselves. Every editable entity (host, device, process, workplace, profile, qualifier, audit, operation, workbench) now records who created or modified it, and deleted rows are soft-hidden instead of erased so historical operations and records keep their context. <!-- cite: F-global-directories -->
 - **Drag-and-drop now lands somewhere sensible.** On the Devices, Workplaces, Hosts and Process trees, dropping a node onto empty space outside any target used to do nothing; the move now falls back to the visible local root. Deleting a folder also refreshes the tree immediately. <!-- cite: PR #70 -->
 - **Density toggle scales the whole window.** Compact, Comfortable and Touch now resize text, spacing and icons together — pick the density that matches your screen and the entire UI follows. <!-- cite: PR #65 -->
 - **Refreshed look across the site.** The home page, master/detail layout, configuration trees, operation card and dashboard adopt the new look shared with Console and Logistics, with density and light/dark controls available from the user menu. <!-- cite: PR #55 -->

@@ -1,36 +1,34 @@
-using Microprojects.Edm.Models;
-using Microprojects.Edm.Ui.Technologies.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
+using Microprojects.Edm.Shared.Contracts;
+using Microprojects.Edm.Ui.Technologies.Models;
 
 namespace Microprojects.Edm.Ui.Technologies.Contracts
 {
     public interface IWorkplaceService : IGenericService<Workplace>
     {
-        Task<Workplace> ChangeParent(int id, int newParentId);
-        Task<IEnumerable<WorkplaceHostDevice>> GetDevices(int workspaceId);
-        Task<WorkplaceHostDevice> GetDevice(int workplaceDeviceId);
+        Task<IEnumerable<WorkplaceHostDevice>> GetDevices(Guid workspaceId);
+        Task<WorkplaceHostDevice> GetDevice(Guid workplaceDeviceId);
         Task<WorkplaceHostDevice> AttachDevice(WorkplaceHostDevice workplaceHostDevice);
         Task<IEnumerable<HostDevice>> GetAvailableHostDevices();
-        Task<bool> DetachDevice(int id, int devId);
-        Task<IEnumerable<WorkplaceProcess>> GetProcesses(int workspaceId);
+        Task<bool> DetachDevice(Guid id, Guid devId);
+        Task<IEnumerable<WorkplaceProcess>> GetProcesses(Guid workspaceId);
         Task<WorkplaceProcess> AttachProcess(WorkplaceProcess workplaceProcess);
         Task<WorkplaceProcess> SaveWorkplaceProcess(WorkplaceProcess workplaceProcess);
-        Task<bool> DetachProcess(int id, int procId);
+        Task<bool> DetachProcess(Guid id, Guid procId);
 
-        Task<IEnumerable<WorkplaceProcess>> GetAllowedProcesses(IEnumerable<string> groups);
+        Task<IEnumerable<WorkplaceProcess>> GetAllowedProcesses();
         Task<IEnumerable<Process>> GetAvailableProcesses();
-        Task<IEnumerable<Workbench>> GetWorkbenches(int workplaceProcessId);
-        Task<WorkplaceProcess> GetWorkplaceProcess(int workplaceProcessId);
+        Task<IEnumerable<Workbench>> GetWorkbenches(Guid workplaceProcessId);
+        Task<WorkplaceProcess> GetWorkplaceProcess(Guid workplaceProcessId);
         Task<Workbench> SaveWorkbench(Workbench workbench);
-        Task<Workbench> GetWorkbench(int workbenchId);
-        Task<Workbench> DeleteWorkbench(int workbenchId);
-        Task<WorkbenchWorkplaceHostDevice> GetWorkbenchDevice(int workbenchId);
-        Task<IEnumerable<WorkbenchWorkplaceHostDevice>> GetWorkbenchDevices(int workbenchId);
+        Task<Workbench> GetWorkbench(Guid workbenchId);
+        Task<Workbench> DeleteWorkbench(Guid workbenchId);
+        Task<WorkbenchWorkplaceHostDevice> GetWorkbenchDevice(Guid id);
+        Task<IEnumerable<WorkbenchWorkplaceHostDevice>> GetWorkbenchDevices(Guid workbenchId);
         Task<WorkbenchWorkplaceHostDevice> SaveWorkbenchDevice(WorkbenchWorkplaceHostDevice device);
-        Task<WorkbenchWorkplaceHostDevice> SaveWorkbenchDeviceOptions(int id, string options);
-        Task<WorkbenchWorkplaceHostDevice> DeleteWorkbenchDevice(int id);
+        Task<WorkbenchWorkplaceHostDevice> SaveWorkbenchDeviceOptions(Guid id, string options);
+        Task<WorkbenchWorkplaceHostDevice> DeleteWorkbenchDevice(Guid id);
     }
 }

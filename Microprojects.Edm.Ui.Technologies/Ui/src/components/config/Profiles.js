@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useGet } from '@microprojects/edm-components/hooks';
 import { useParams } from 'react-router-dom';
@@ -155,7 +155,7 @@ export function ProfileDetail({ profileId, parents, deletable = true, ...props }
             }
 
             relations={
-                <ProfileTabs id={parseInt(id)} api={props.api} onDetailSelected={setSub} profiler={data.profilerName} />
+                <ProfileTabs id={id} api={props.api} onDetailSelected={setSub} profiler={data.profilerName} />
             }
         />
     );

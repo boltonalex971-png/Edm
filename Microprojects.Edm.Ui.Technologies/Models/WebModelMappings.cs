@@ -1,5 +1,4 @@
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
 using Microprojects.Edm.Models;
 using Microprojects.Edm.Plugins;
@@ -19,10 +18,10 @@ namespace Microprojects.Edm.Ui.Technologies.Models
                 Id = s.Id,
                 WorkplaceId = s.WorkplaceId,
                 HostDeviceId = s.HostDeviceId,
-                HostId = s.HostDevice?.HostId ?? 0,
+                HostId = s.HostDevice?.HostId ?? Guid.Empty,
                 Host = s.HostDevice?.Host?.Name,
                 Url = s.HostDevice?.Host?.Url,
-                DeviceId = s.HostDevice?.DeviceId ?? 0,
+                DeviceId = s.HostDevice?.DeviceId ?? Guid.Empty,
                 Device = s.HostDevice?.Device?.Name,
                 DriverGuid = driverGuid,
                 DriverName = driver?.Name,
@@ -48,25 +47,13 @@ namespace Microprojects.Edm.Ui.Technologies.Models
             };
 
         public static IdNameModel ToIdNameModel(this Process s) =>
-            new IdNameModel
-            {
-                Id = s.Id,
-                Name = s.Name,
-            };
+            new IdNameModel { Id = s.Id, Name = s.Name };
 
         public static IdNameModel ToIdNameModel(this Device s) =>
-            new IdNameModel
-            {
-                Id = s.Id,
-                Name = s.Name,
-            };
+            new IdNameModel { Id = s.Id, Name = s.Name };
 
         public static IdNameModel ToIdNameModel(this Host s) =>
-            new IdNameModel
-            {
-                Id = s.Id,
-                Name = s.Name,
-            };
+            new IdNameModel { Id = s.Id, Name = s.Name };
 
         public static WorkplaceProcessModel ToModel(this WorkplaceProcess s) =>
             new WorkplaceProcessModel
@@ -96,9 +83,7 @@ namespace Microprojects.Edm.Ui.Technologies.Models
                 CommonUid = s.CommonUid,
                 Name = s.Name,
                 Description = s.Description,
-                IsActive = s.IsActive,
-                HierarchyType = s.HierarchyType,
-                HierarchyId = s.HierarchyId,
+                DirectoryId = s.DirectoryId,
                 OperationGuid = s.OperationGuid,
                 Message = s.Profiles == null
                     ? null
@@ -118,7 +103,6 @@ namespace Microprojects.Edm.Ui.Technologies.Models
                 Id = s.Id,
                 Name = s.Name,
                 Description = s.Description,
-                IsActive = s.IsActive,
             };
 
         public static Qualifier ToEntity(this QualifierViewModel s) =>
@@ -127,7 +111,7 @@ namespace Microprojects.Edm.Ui.Technologies.Models
                 Id = s.Id,
                 Name = s.Name,
                 Description = s.Description,
-                IsActive = s.IsActive,
+                Meta = null!,
             };
 
         public static HostDeviceModel ToModel(this HostDevice s, IPluginContainer? plugins = null)
@@ -164,10 +148,10 @@ namespace Microprojects.Edm.Ui.Technologies.Models
             new OperationViewModel
             {
                 Id = s.Id,
-                WorkbenchId = s.WorkbenchId ?? 0,
+                WorkbenchId = s.WorkbenchId ?? Guid.Empty,
                 WorkbenchName = s.Workbench?.Name,
                 WorkplaceName = s.WorkplaceProcess?.Workplace?.Name,
-                ProcessId = s.WorkplaceProcess?.ProcessId ?? 0,
+                ProcessId = s.WorkplaceProcess?.ProcessId ?? Guid.Empty,
                 ProcessName = s.WorkplaceProcess?.Process?.Name,
                 ProcessDescription = s.WorkplaceProcess?.Process?.Description,
                 Created = s.Created,
@@ -211,7 +195,6 @@ namespace Microprojects.Edm.Ui.Technologies.Models
                 Input = s.Input,
                 Output = s.Output,
                 ProfilerGuid = s.ProfilerGuid,
-                // ProfilerName is filled in by the controller using IPluginContainer.
             };
 
         public static Profile ToEntity(this ProfileViewModel s) =>
@@ -223,6 +206,7 @@ namespace Microprojects.Edm.Ui.Technologies.Models
                 Input = s.Input,
                 Output = s.Output,
                 ProfilerGuid = s.ProfilerGuid,
+                Meta = null!,
             };
 
         public static WorkbenchViewModel ToViewModel(this Workbench s) =>
@@ -230,15 +214,15 @@ namespace Microprojects.Edm.Ui.Technologies.Models
             {
                 Id = s.Id,
                 CommonUid = s.CommonUid,
-                WorkplaceId = s.WorkplaceProcess?.WorkplaceId ?? 0,
+                WorkplaceId = s.WorkplaceProcess?.WorkplaceId ?? Guid.Empty,
                 WorkplaceProcessId = s.WorkplaceProcessId,
                 Name = s.Name,
                 WorkplaceName = s.WorkplaceProcess?.Workplace?.Name,
-                ProcessId = s.WorkplaceProcess?.ProcessId ?? 0,
+                ProcessId = s.WorkplaceProcess?.ProcessId ?? Guid.Empty,
                 ProcessName = s.WorkplaceProcess?.Process?.Name,
                 OperationGuid = s.WorkplaceProcess?.Process?.OperationGuid ?? Guid.Empty,
                 Description = s.Description,
-                IsActive = s.IsActive,
+                IsActive = s.Meta?.Deleted == null,
             };
 
         public static Workbench ToEntity(this WorkbenchViewModel s) =>
@@ -249,7 +233,7 @@ namespace Microprojects.Edm.Ui.Technologies.Models
                 WorkplaceProcessId = s.WorkplaceProcessId,
                 Name = s.Name,
                 Description = s.Description,
-                IsActive = s.IsActive,
+                Meta = null!,
             };
 
         public static WorkbenchDeviceConfigViewModel ToViewModel(this WorkbenchWorkplaceHostDevice s) =>
@@ -258,17 +242,15 @@ namespace Microprojects.Edm.Ui.Technologies.Models
                 Id = s.Id,
                 WorkbenchId = s.WorkbenchId,
                 WorkplaceHostDeviceId = s.WorkplaceHostDeviceId,
-                HostDeviceId = s.WorkplaceHostDevice?.HostDeviceId ?? 0,
+                HostDeviceId = s.WorkplaceHostDevice?.HostDeviceId ?? Guid.Empty,
                 ProfileId = s.ProfileId,
-                DeviceId = s.WorkplaceHostDevice?.HostDevice?.DeviceId ?? 0,
+                DeviceId = s.WorkplaceHostDevice?.HostDevice?.DeviceId ?? Guid.Empty,
                 DeviceName = s.WorkplaceHostDevice?.HostDevice?.Device?.Name,
                 ProfileName = s.Profile?.Name,
                 HostName = s.WorkplaceHostDevice?.HostDevice?.Host?.Name,
                 Configuration = s.Configuration,
                 DriverGuid = s.WorkplaceHostDevice?.HostDevice?.Device?.DriverGuid ?? Guid.Empty,
                 ProfilerGuid = s.Profile?.ProfilerGuid ?? Guid.Empty,
-                // DriverName, ProfilerName, DriverHomepage, ProfilerHomepage, ProfileOutput
-                // are populated post-mapping in the controller.
             };
 
         public static WorkbenchWorkplaceHostDevice ToEntity(this WorkbenchDeviceConfigViewModel s) =>
@@ -281,78 +263,13 @@ namespace Microprojects.Edm.Ui.Technologies.Models
                 Configuration = s.Configuration,
             };
 
-        public static HierarchyItemViewModel Clone(this HierarchyItemViewModel s) =>
-            new HierarchyItemViewModel
-            {
-                Id = s.Id,
-                ParentId = s.ParentId,
-                Name = s.Name,
-                Description = s.Description,
-                IsFolder = s.IsFolder,
-                IsActive = s.IsActive,
-                HierarchyType = s.HierarchyType,
-                Items = s.Items,
-                expanded = s.expanded,
-            };
-
-        public static HierarchyViewModel ToViewModel(this Hierarchy s) =>
-            new HierarchyViewModel
-            {
-                Id = s.Id,
-                ParentId = s.ParentId,
-                Name = s.Name,
-                Description = s.Description,
-                Type = s.Type,
-                IsPublic = s.IsPublic,
-                Owner = s.Owner,
-                Group = s.Group,
-            };
-
-        public static HierarchyItemViewModel ToHierarchyItem(this Hierarchy s) =>
-            new HierarchyItemViewModel
-            {
-                Id = s.Id,
-                ParentId = s.ParentId ?? 0,
-                Name = s.Name,
-                Description = s.Description,
-                IsFolder = true,
-                IsActive = true,
-                HierarchyType = s.Type,
-                expanded = true,
-            };
-
-        public static HierarchyItemViewModel ToHierarchyItem(this HierarchyObject s) =>
-            new HierarchyItemViewModel
-            {
-                Id = s.Id,
-                ParentId = s.HierarchyId,
-                Name = s.Name,
-                Description = s.Description,
-                IsFolder = false,
-                IsActive = s.IsActive,
-                HierarchyType = s.HierarchyType,
-                expanded = false,
-            };
-
-        public static HierarchyItemViewModel ToHierarchyItem(this WorkplaceProcess s) =>
-            new HierarchyItemViewModel
-            {
-                Id = s.Id,
-                ParentId = s.WorkplaceId,
-                Name = s.Process?.Name,
-                IsFolder = false,
-                IsActive = true,
-                expanded = false,
-            };
-
         public static HostModel ToModel(this Host s, Peer peer) =>
             new HostModel
             {
                 Id = s.Id,
                 Name = s.Name,
                 Description = s.Description,
-                IsActive = s.IsActive,
-                HierarchyId = s.HierarchyId,
+                DirectoryId = s.DirectoryId,
                 Url = s.Url,
                 Port = s.Port,
                 Active = peer.Host != null,
@@ -360,6 +277,7 @@ namespace Microprojects.Edm.Ui.Technologies.Models
                 Environment = peer.Environment,
                 Mode = peer.Mode,
                 UiPort = peer.UiPort,
+                Meta = s.Meta!,
             };
 
         public static PluginInfoViewModel ToViewModel(this IPlugin s) =>

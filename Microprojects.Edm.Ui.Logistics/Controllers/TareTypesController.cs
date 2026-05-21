@@ -1,4 +1,6 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microprojects.Edm.Shared.Contracts;
+using Microprojects.Edm.Shared.Controllers;
 using Microprojects.Edm.Ui.Logistics.Contracts;
 using Microprojects.Edm.Ui.Logistics.Models;
 using Microprojects.Edm.Ui.Logistics.ViewModels;
@@ -10,8 +12,9 @@ namespace Microprojects.Edm.Ui.Logistics.Controllers;
 public class TareTypesController : EntriesControllerBase<TareType, TareTypeViewModel, ITareTypeService>
 {
     public TareTypesController(ILogger<TareTypesController> logger,
-        ITareTypeService service, IDirectoryService directoryService, IConfiguration configuration) :
-        base(service, directoryService, configuration)
+        ITareTypeService service, IDirectoryService directoryService,
+        IDirectoryRootRegistry rootRegistry, IConfiguration configuration) :
+        base(service, directoryService, rootRegistry, configuration)
     {
     }
 

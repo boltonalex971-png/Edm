@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useGet } from '@microprojects/edm-components/hooks';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -22,7 +22,7 @@ export function Devices() {
     return (
         <MasterDetail
             api={api}
-            hierarchiesApi={Api.hierarchies}
+            hierarchiesApi={Api.directories}
             folderComponent={Folder}
             path={path}
             stubMessage={t('config.stub.device')}
@@ -49,7 +49,7 @@ DeviceDetail.propTypes = {
 export function DeviceDetail({ deviceId, parents, ...props }) {
     const type = 'device';
     let { id } = useParams();
-    id = deviceId || parseInt(id);
+    id = deviceId || id;
     let [sub, setSub] = useState();
     useEffect(setSub, [id]);
     let [[data, setData], loading, error] = useGet(`${props.api}/${id}`, [id]);
@@ -153,7 +153,7 @@ export function DeviceDetail({ deviceId, parents, ...props }) {
                 />
             }
             relations={
-                <DeviceTabs id={parseInt(id)} api={props.api} onDetailSelected={setSub} />
+                <DeviceTabs id={id} api={props.api} onDetailSelected={setSub} />
             }
         />
     );

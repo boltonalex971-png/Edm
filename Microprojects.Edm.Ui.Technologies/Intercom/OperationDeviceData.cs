@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace Microprojects.Edm.Ui.Technologies.Intercom;
 
 public class OperationDeviceData : OperationDataBase
 {
-    public int OperationHostDeviceId { get; set; }
+    public Guid OperationHostDeviceId { get; set; }
     public DateTime ScheduledAt { get; set; }
     public DateTime ExecutedAt { get; set; }
     public string Request { get; set; }

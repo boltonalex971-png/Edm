@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import { useGet } from '@microprojects/edm-components/hooks';
 import { Detail, Editor } from '@microprojects/edm-components/components';
@@ -20,15 +20,15 @@ Folder.propTypes = {
 
 export function Folder(props) {
     const type = 'folder';
-    // entityType is the capitalized HierarchyType (Workplace/Process/Host/Device) supplied
-    // by MasterDetail from its api URL. Sent as the POST body's `type` so the backend's
-    // HierarchyType enum binder accepts it; falling back to 'folder' (binder rejects)
-    // makes the failure loud rather than silently dropping rows into the wrong bucket.
+    // entityType is the capitalized entry-type (Workplace/Process/Host/Device)
+    // supplied by MasterDetail from its api URL. After the directory unification
+    // it's informational (the backend's shared DirectoriesController places
+    // folders by DirectoryId, not by a typed bucket) — kept on the wire for
+    // surface consistency.
     const editorType = props.entityType || type;
     const user = useSelector(s => s.user)
     const { t } = useTranslation('tech');
     let { id } = useParams();
-    id = parseInt(id);
     let [[data, setData], loading, error] = useGet(`${props.api}/${id}`, [id]);
     if (!data || data.id === 0) {
         data = { ...data, name: '', description: '', url: '' };

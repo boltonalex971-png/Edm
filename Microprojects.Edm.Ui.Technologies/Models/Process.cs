@@ -1,18 +1,11 @@
-using Microprojects.Edm.Domain;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Ui.Technologies.Models;
+using Microprojects.Edm.Domain;
 
 namespace Microprojects.Edm.Ui.Technologies.Models
 {
-    public class Process : HierarchyObject
+    public class Process : DirectoryEntry
     {
-        public override HierarchyType HierarchyType => HierarchyType.Process;
         public Guid OperationGuid { get; set; }
         public string CommonUid { get; set; }
 

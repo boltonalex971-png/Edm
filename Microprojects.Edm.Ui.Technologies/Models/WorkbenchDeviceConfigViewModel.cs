@@ -1,17 +1,15 @@
-using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Ui.Technologies.Models;
-using System;
+﻿using System;
 
 namespace Microprojects.Edm.Ui.Technologies.Models
 {
     public class WorkbenchDeviceConfigViewModel
     {
-        public int Id { get; set; }
-        public int WorkbenchId { get; set; }
-        public int WorkplaceHostDeviceId { get; set; }
-        public int HostDeviceId {  get; set; }
-        public int ProfileId { get; set; }
-        public int DeviceId { get; set; }
+        public Guid Id { get; set; }
+        public Guid WorkbenchId { get; set; }
+        public Guid WorkplaceHostDeviceId { get; set; }
+        public Guid HostDeviceId { get; set; }
+        public Guid ProfileId { get; set; }
+        public Guid DeviceId { get; set; }
         public string ProfileOutput { get; set; }
         public string DeviceName { get; set; }
         public string ProfileName { get; set; }

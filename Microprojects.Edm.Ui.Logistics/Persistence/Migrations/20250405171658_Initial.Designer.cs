@@ -70,7 +70,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
                     b.ToTable("Changelog");
                 });
 
-            modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Directory", b =>
+            modelBuilder.Entity("Microprojects.Edm.Domain.Directory", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -110,7 +110,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
                     b.ToTable("Directories");
                 });
 
-            modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Meta", b =>
+            modelBuilder.Entity("Microprojects.Edm.Domain.Meta", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -296,9 +296,9 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
                     b.Navigation("Nomenclature");
                 });
 
-            modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Directory", b =>
+            modelBuilder.Entity("Microprojects.Edm.Domain.Directory", b =>
                 {
-                    b.HasOne("Microprojects.Edm.Ui.Logistics.Models.Directory", "Parent")
+                    b.HasOne("Microprojects.Edm.Domain.Directory", "Parent")
                         .WithMany()
                         .HasForeignKey("ParentId");
 

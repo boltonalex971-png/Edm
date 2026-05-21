@@ -1,6 +1,10 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq.Expressions;
 using Microsoft.AspNetCore.Mvc;
+using Microprojects.Edm.Shared.Contracts;
+using Microprojects.Edm.Shared.Controllers;
+using Microprojects.Edm.Shared.Utils;
+using Microprojects.Edm.Shared.ViewModels;
 using Microprojects.Edm.Ui.Logistics.Contracts;
 using Microprojects.Edm.Ui.Logistics.Models;
 using Microprojects.Edm.Ui.Logistics.ViewModels;
@@ -14,8 +18,9 @@ public class ProcessesController : EntriesControllerBase<Process, ProcessViewMod
     private readonly ILogger<ProcessesController> _logger;
 
     public ProcessesController(ILogger<ProcessesController> logger,
-        IProcessService service, IDirectoryService directoryService, IConfiguration configuration) :
-        base(service, directoryService, configuration)
+        IProcessService service, IDirectoryService directoryService,
+        IDirectoryRootRegistry rootRegistry, IConfiguration configuration) :
+        base(service, directoryService, rootRegistry, configuration)
     {
     }
 
@@ -36,18 +41,24 @@ public class ProcessesController : EntriesControllerBase<Process, ProcessViewMod
         var predicate = BuildKindPredicate(kind);
         var rootId = GetEntryRootId(kind)
             ?? throw new EdmException(
-                "Logistics.Directory.NoTypeRoot",
+                "Edm.Directory.NoTypeRoot",
                 new Dictionary<string, object> { ["entryType"] = nameof(Process) },
                 $"No type root configured for {nameof(Process)}.");
         var entries = await Service.GetAll(predicate);
-        return await BuildEntryHierarchy(entries, rootId);
+        return await DirectoryHelper.BuildEntryHierarchy(
+            entries, rootId, DirectoryService, e => e.ToViewModel());
     }
 
+    // Process is split across three kind-specific roots (manufacturing /
+    // technology / operation). The kind comes in as a string query param;
+    // the LogisticsDirectoryRootRegistry forwards it to
+    // WellKnownDirectoryIds.ResolveRoot(string, string) which handles the
+    // enum parsing.
     protected override Guid? GetEntryRootId(string? kind) =>
-        WellKnownDirectoryIds.ResolveRoot(typeof(Process), ParseKindOrDefault(kind));
+        RootRegistry.ResolveRoot(nameof(Process), kind);
 
     protected override Guid? GetEntryRootIdFor(Process entity) =>
-        WellKnownDirectoryIds.ResolveRoot(typeof(Process), entity.Kind);
+        RootRegistry.ResolveRoot(nameof(Process), entity.Kind.ToString());
 
     private static ProcessKinds ParseKindOrDefault(string? kind)
     {

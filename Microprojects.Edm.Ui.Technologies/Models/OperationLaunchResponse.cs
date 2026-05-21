@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,7 +8,7 @@ namespace Microprojects.Edm.Ui.Technologies.Models
 {
     public class OperationLaunchResponse
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public string UiUrl { get; set; }
         public string StatusUrl { get; set; }
         public string ValidityUrl { get; set; }

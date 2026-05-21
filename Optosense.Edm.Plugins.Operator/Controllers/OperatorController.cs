@@ -1,10 +1,11 @@
-﻿using Microprojects.Edm;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microprojects.Edm.Drivers;
 using Microprojects.Edm.Jobs;
 using Microsoft.AspNetCore.Mvc;
 using Optosense.Edm.Drivers.Operator;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace Optosense.Edm.Drivers.OpcUa.Controllers
 {
@@ -19,15 +20,15 @@ namespace Optosense.Edm.Drivers.OpcUa.Controllers
             _jobs = jobs;
         }
 
-        [HttpGet("{operationId:int}/state")]
-        public OperatorState? GetOperatorState(int operationId)
+        [HttpGet("{operationId:guid}/state")]
+        public OperatorState? GetOperatorState(Guid operationId)
         {
             var driver = GetDriver(operationId);
             return (OperatorState?)driver?.GetState();
         }
 
-        [HttpPost("{operationId:int}/response")]
-        public async Task<bool> HandleResponse(int operationId, Dictionary<string, object> parameters)
+        [HttpPost("{operationId:guid}/response")]
+        public async Task<bool> HandleResponse(Guid operationId, Dictionary<string, object> parameters)
         {
             var driver = GetDriver(operationId);
             await driver.HandleResponse(parameters);
@@ -39,20 +40,17 @@ namespace Optosense.Edm.Drivers.OpcUa.Controllers
         // the Technologies refactor, Operator must obtain that data through the plugin
         // data-exchange pattern (SignalR/Intercom-driven) instead of a direct service
         // call across plugin boundaries. Endpoint commented out until the new path lands.
-        // [HttpGet("{operationId:int}/profile")]
-        // public async Task<IEnumerable<Step>> GetProfile(int operationId) { ... }
 
-        private IContainDriver? GetDeviceJob(int operationId)
+        private IContainDriver GetDeviceJob(Guid operationId)
         {
-            var job = (IContainDriver?)_jobs.GetRunningJobs()
+            var job = (IContainDriver)_jobs.GetRunningJobs()
                 .FirstOrDefault(j =>
                     j is IContainDriver jd &&
                     jd.GetDriverGuid() == OperatorDriverPlugin.GetGuid() &&
                     jd.GetOperationId() == operationId);
-            //?? throw new EdmException("Operator driver not found");
             return job;
         }
 
-        private OperatorDriver? GetDriver(int operationId) => (OperatorDriver?)GetDeviceJob(operationId)?.GetDriver();
+        private OperatorDriver GetDriver(Guid operationId) => (OperatorDriver)GetDeviceJob(operationId)?.GetDriver();
     }
 }

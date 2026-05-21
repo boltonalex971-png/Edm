@@ -1,63 +1,64 @@
-using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
-using Microprojects.Edm.Ui.Technologies.Contracts;
-using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Ui.Technologies.Persistence;
-using Microprojects.Edm.Plugins;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
 using System.Threading.Tasks;
+using Microprojects.Edm.Plugins;
+using Microprojects.Edm.Shared.Contracts;
+using Microprojects.Edm.Shared.Services;
+using Microprojects.Edm.Ui.Technologies.Contracts;
+using Microprojects.Edm.Ui.Technologies.Models;
+using Microprojects.Edm.Ui.Technologies.Persistence;
+using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 
 namespace Microprojects.Edm.Ui.Technologies.Services
 {
-    public class ProfileService : ServiceBase<Profile>, IProfileService
+    public class ProfileService : ServiceBase<TechnologiesContext, Profile>, IProfileService
     {
-        #region injected properties
-
-        #endregion
-
         private readonly IPluginContainer _plugins;
 
-        public ProfileService() { }
-
-        public ProfileService(TechnologiesContext db, IPluginContainer plugins) : base(db) 
+        public ProfileService(TechnologiesContext db, IUserService userService, IPluginContainer plugins)
+            : base(db, userService)
         {
             _plugins = plugins;
         }
 
-        public override async Task<Profile> Get(int id)
+        public override async Task<Profile> Get(Guid id)
         {
             var result = await base.Get(id);
+            if (result == null)
+            {
+                return null;
+            }
             var profiler = _plugins.GetProfile(result.ProfilerGuid);
             result.ProfilerName = profiler?.Name;
             return result;
         }
 
-        public override async Task<Profile> Delete(int id)
+        public override async Task<Profile> Delete(Guid id)
         {
             var profile = await Get(id);
-            var used = await Db.OperationHostDevices.AnyAsync(o => o.ProfileId == id);
-            return await Delete(profile, used);
+            if (profile is null)
+            {
+                return null;
+            }
+            // Always soft-delete via Meta.Deleted (the base does it).
+            return await base.Delete(id);
         }
 
-        public async Task<IEnumerable<Profile>> GetByDevice(int deviceId)
+        public async Task<IEnumerable<Profile>> GetByDevice(Guid deviceId)
         {
             var profiler = (await Db.HostDevices
                 .Include(hd => hd.Device)
-                .FirstOrDefaultAsync(hd => hd.Id == deviceId))?.Device.ProfilerGuid ??
-                throw new Exception($"No device with id {deviceId} found");
-            var profiles = await Db.Profiles
-                .Where(p => p.ProfilerGuid == profiler && p.IsActive)
+                .FirstOrDefaultAsync(hd => hd.Id == deviceId))?.Device.ProfilerGuid
+                ?? throw new Exception($"No device with id {deviceId} found");
+            return await Db.Profiles
+                .Include(p => p.Meta)
+                .Where(p => p.ProfilerGuid == profiler && p.Meta.Deleted == null)
                 .ToListAsync();
-            return profiles;
         }
 
-        public async Task<IEnumerable<string>> GetProfileParams(int id)
+        public async Task<IEnumerable<string>> GetProfileParams(Guid id)
         {
             var profile = await Get(id);
             var outputParams = JsonConvert.DeserializeObject<IEnumerable<string>>(profile.Output ?? "[]");
@@ -66,32 +67,33 @@ namespace Microprojects.Edm.Ui.Technologies.Services
             return outputParams.Concat(parameters);
         }
 
-        public async Task<IEnumerable<Audit>> GetAudits(int id)
+        public async Task<IEnumerable<Audit>> GetAudits(Guid id)
         {
-            var audits = await Db.Audits
-                .Where(s => s.ProfileId == id && s.IsActive)
+            return await Db.Audits
+                .Include(a => a.Meta)
+                .Where(s => s.ProfileId == id && s.Meta.Deleted == null)
                 .ToListAsync();
-            return audits;
         }
 
-        public async Task<Audit> AddAudit(int id, Audit audit)
+        public async Task<Audit> AddAudit(Guid id, Audit audit)
         {
             var profile = await Db.Profiles
                 .Include(p => p.Audits)
-                .FirstOrDefaultAsync(p => p.Id == id) ?? throw new ArgumentException("Profile not found");
-            audit.IsActive = true;
+                .FirstOrDefaultAsync(p => p.Id == id)
+                ?? throw new ArgumentException("Profile not found");
             profile.Audits.Add(audit);
             await Db.SaveChangesAsync();
             return audit;
         }
 
-        public async Task<bool> DeleteAudit(int id, int auditId)
+        public async Task<bool> DeleteAudit(Guid id, Guid auditId)
         {
             var profile = await Db.Profiles
                 .Include(p => p.Audits)
-                .FirstOrDefaultAsync(p => p.Id == id) ?? throw new ArgumentException("Profile not found");
-            var audit = profile.Audits.FirstOrDefault(p => p.Id == auditId) ??
-                throw new ArgumentException("Audit not found");
+                .FirstOrDefaultAsync(p => p.Id == id)
+                ?? throw new ArgumentException("Profile not found");
+            var audit = profile.Audits.FirstOrDefault(p => p.Id == auditId)
+                ?? throw new ArgumentException("Audit not found");
             profile.Audits.Remove(audit);
             await Db.SaveChangesAsync();
             return true;

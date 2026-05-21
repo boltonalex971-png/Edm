@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useGet } from '@microprojects/edm-components/hooks';
 import { MasterDetail, reloadMaster, Detail, Info, Editor } from '@microprojects/edm-components/components';
@@ -33,7 +33,7 @@ export function ProcessWorkbenchesDetail({ workplaceProcessId, parents, ...props
 
             subDetail={sub}
             card={
-                <ProcessWorkbenchesTab id={parseInt(id)} api={props.api} onDetailSelected={setSub} parents={[...(parents || []), { name: data.name, icon: <WorkbenchIcon />, ref: { current: null } }]} />
+                <ProcessWorkbenchesTab id={id} api={props.api} onDetailSelected={setSub} parents={[...(parents || []), { name: data.name, icon: <WorkbenchIcon />, ref: { current: null } }]} />
             }
         />
     );

@@ -1,20 +1,15 @@
-using Microprojects.Edm.Ui.Technologies.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System;
 using Microprojects.Edm.Models;
-using Microprojects.Edm.Ui.Technologies.Models;
 
 namespace Microprojects.Edm.Ui.Technologies.Models
 {
     public class OperationViewModel
     {
-        public int Id { get; set; }
-        public int WorkbenchId { get; set; }
+        public Guid Id { get; set; }
+        public Guid WorkbenchId { get; set; }
         public string WorkbenchName { get; set; }
         public string WorkplaceName { get; set; }
-        public int ProcessId { get; set; }
+        public Guid ProcessId { get; set; }
         public string ProcessName { get; set; }
         public string ProcessDescription { get; set; }
         public DateTime Created { get; set; }

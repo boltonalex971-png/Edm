@@ -1,9 +1,12 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microprojects.Edm.Infrastructure;
 using Microprojects.Edm.Plugins;
+using Microprojects.Edm.Shared.Contracts;
+using Microprojects.Edm.Shared.Services;
 using Microprojects.Edm.Ui.Technologies.Contracts;
 using Microprojects.Edm.Ui.Technologies.Jobs;
 using Microprojects.Edm.Ui.Technologies.Persistence;
@@ -43,11 +46,20 @@ namespace Microprojects.Edm.Ui.Technologies
             services.AddScoped<IRemoteJobs, RemoteJobs>();
             services.AddScoped<IAuditService, AuditService>();
             services.AddScoped<IProcessService, ProcessService>();
-            services.AddScoped<IHierarchyService, HierarchyService>();
+            services.AddScoped<IUserService, UserService>();
+            // Plugin-specific registry registered as IPluginDirectoryRootRegistry
+            // (so it accumulates alongside Logistics's). The host resolves
+            // IDirectoryRootRegistry via the shared CompositeDirectoryRootRegistry
+            // below — TryAddScoped because both plugins request it; the first
+            // registration sticks and the rest are no-ops.
+            services.AddScoped<IPluginDirectoryRootRegistry, TechDirectoryRootRegistry>();
+            services.TryAddScoped<IDirectoryRootRegistry, CompositeDirectoryRootRegistry>();
+            services.AddScoped<IDirectoryService, DirectoryService<TechnologiesContext>>();
             services.AddScoped<IHostService, HostService>();
             services.AddScoped<IDeviceService, DeviceService>();
             services.AddScoped<IWorkplaceService, WorkplaceService>();
             services.AddScoped<IProfileService, ProfileService>();
+            services.AddScoped<IQualifierService, QualifierService>();
             services.AddScoped<IOperationService, OperationService>();
             services.AddScoped<ISettingService, SettingService>();
 

@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useGet } from '@microprojects/edm-components/hooks';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -22,7 +22,7 @@ export function Workplaces() {
     return (
         <MasterDetail
             api={api}
-            hierarchiesApi={Api.hierarchies}
+            hierarchiesApi={Api.directories}
             folderComponent={Folder}
             path={path}
             stubMessage={t('config.stub.workplace')}
@@ -49,7 +49,7 @@ WorkplaceDetail.propTypes = {
 export function WorkplaceDetail({ workplaceId, parents, ...props }) {
     const type = 'workplace';
     let { id } = useParams();
-    id = workplaceId || parseInt(id);
+    id = workplaceId || id;
     let [[data, setData], loading, error] = useGet(`${props.api}/${id}`, [id]);
     let [sub, setSub] = useState();
     const { t } = useTranslation('tech');
@@ -114,7 +114,7 @@ export function WorkplaceDetail({ workplaceId, parents, ...props }) {
             }
 
             relations={
-                <WorkplaceTabs id={parseInt(id)} api={props.api} onDetailSelected={setSub} />
+                <WorkplaceTabs id={id} api={props.api} onDetailSelected={setSub} />
             }
         />
     );

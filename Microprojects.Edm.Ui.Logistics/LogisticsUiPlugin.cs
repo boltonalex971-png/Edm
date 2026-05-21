@@ -1,12 +1,10 @@
-using Microprojects.Edm.Plugins;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Microprojects.Edm.Plugins;
 using Microprojects.Edm.Ui.Logistics.Contracts;
 using Microprojects.Edm.Ui.Logistics.Events;
 using Microprojects.Edm.Ui.Logistics.Persistence;
 using Microprojects.Edm.Ui.Logistics.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Microprojects.Edm.Ui.Logistics
 {
@@ -37,7 +35,14 @@ namespace Microprojects.Edm.Ui.Logistics
                     provider.GetRequiredService<LogisticsPublishingInterceptor>());
             }, poolSize: 128);
 
-            services.AddScoped<IDirectoryService, DirectoryService>();
+            // Plugin-specific registry registered as IPluginDirectoryRootRegistry
+            // (so it accumulates alongside Tech's). The host resolves
+            // IDirectoryRootRegistry via the shared CompositeDirectoryRootRegistry
+            // below — TryAddScoped because both plugins request it; the first
+            // registration sticks and the rest are no-ops.
+            services.AddScoped<IPluginDirectoryRootRegistry, LogisticsDirectoryRootRegistry>();
+            services.TryAddScoped<IDirectoryRootRegistry, CompositeDirectoryRootRegistry>();
+            services.AddScoped<IDirectoryService, DirectoryService<LogisticsContext>>();
             services.AddScoped<IItemService, ItemService>();
             services.AddScoped<ISupplyService, SupplyService>();
             services.AddScoped<INomenclatureService, NomenclatureService>();

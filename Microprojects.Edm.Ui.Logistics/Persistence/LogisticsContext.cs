@@ -1,15 +1,14 @@
-﻿using Microprojects.Edm.Ui.Logistics.Models;
+﻿using Microprojects.Edm.Shared.Persistence;
+using Microprojects.Edm.Ui.Logistics.Models;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
-using Directory = Microprojects.Edm.Ui.Logistics.Models.Directory;
+using Directory = Microprojects.Edm.Domain.Directory;
 
 namespace Microprojects.Edm.Ui.Logistics.Persistence;
 
-public class LogisticsContext : DbContext
+public class LogisticsContext : SharedDbContext
 {
     public DbSet<Changelog> Changelog { get; set; }
-    public DbSet<Meta> Meta { get; set; }
-    public DbSet<Directory> Directories { get; set; }
     public DbSet<Item> Items { get; set; }
     public DbSet<Supply> Supplies { get; set; }
     public DbSet<Nomenclature> Nomenclatures { get; set; }
@@ -48,16 +47,6 @@ public class LogisticsContext : DbContext
         //     );
 
         builder.Entity<TareType>().Ignore(t => t.Dimensions);
-
-        // All Ids are generated client-side via DomainObject.NewGuid()
-        // (UUIDNext for SQL Server). Disable the SQL Server convention that
-        // would otherwise plug in SqlServerSequentialGuidValueGenerator and
-        // produce non-time-sortable UUIDv4 Ids whenever a code path forgets
-        // to call SetId() before SaveChanges.
-        ConfigureNoServerGeneratedIds(builder);
-
-        // Foreign keys for tables with metainfo
-        ConfigureMetaEntities(builder);
 
         // Self-referencing relation to build process tree
         builder.Entity<Process>()
@@ -162,32 +151,4 @@ public class LogisticsContext : DbContext
         return base.SaveChangesAsync(cancellationToken);
     }
 
-    private void ConfigureMetaEntities(ModelBuilder builder)
-    {
-        var entityTypes = builder.Model.GetEntityTypes()
-            .Where(t => typeof(IWithMeta).IsAssignableFrom(t.ClrType))
-            .Select(t => t.ClrType);
-
-        foreach (var entityType in entityTypes)
-        {
-            builder.Entity(entityType)
-                .HasOne(nameof(IWithMeta.Meta))
-                .WithOne()
-                .HasForeignKey(entityType.Name, nameof(DomainObject.Id))
-                .OnDelete(DeleteBehavior.NoAction);
-        }
-    }
-
-    private static void ConfigureNoServerGeneratedIds(ModelBuilder builder)
-    {
-        var entityTypes = builder.Model.GetEntityTypes()
-            .Where(t => typeof(IDomainObject).IsAssignableFrom(t.ClrType));
-
-        foreach (var entityType in entityTypes)
-        {
-            builder.Entity(entityType.ClrType)
-                .Property(nameof(IDomainObject.Id))
-                .ValueGeneratedNever();
-        }
-    }
 }

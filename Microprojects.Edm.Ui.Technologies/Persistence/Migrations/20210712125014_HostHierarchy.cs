@@ -1,11 +1,20 @@
-using Microsoft.EntityFrameworkCore.Migrations;
-using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Ui.Technologies.Models;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
 {
     public partial class HostHierarchy : Migration
     {
+        // Legacy enum values from the deleted HierarchyType:
+        //   Any=0, Process=1, Workplace=2, Host=3, Device=4
+        // Inlined as literals so this historical migration keeps compiling
+        // after the enum class was deleted in Phase C of the directory
+        // unification work.
+        private const int HierarchyTypeAny = 0;
+        private const int HierarchyTypeProcess = 1;
+        private const int HierarchyTypeWorkplace = 2;
+        private const int HierarchyTypeHost = 3;
+        private const int HierarchyTypeDevice = 4;
+
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<int>(
@@ -41,13 +50,13 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
                         onDelete: ReferentialAction.Restrict);
                 });
 
-            
+
             migrationBuilder.Sql("SET IDENTITY_INSERT dbo.Hierarchies ON");
-            migrationBuilder.Sql($"INSERT INTO dbo.Hierarchies (Id, ParentId, Type, IsPublic, IsActive, Name, Description) VALUES (0, NULL, {(int)HierarchyType.Any}, 1, 1, 'Root', 'Global hierarchy root node' )");
-            migrationBuilder.Sql($"INSERT INTO dbo.Hierarchies (Id, ParentId, Type, IsPublic, IsActive, Name, Description) VALUES (1, 0, {(int)HierarchyType.Host}, 1, 1, 'Hosts', 'Hosts root node' )");
-            migrationBuilder.Sql($"INSERT INTO dbo.Hierarchies (Id, ParentId, Type, IsPublic, IsActive, Name, Description) VALUES (2, 0, {(int)HierarchyType.Device}, 1, 1, 'Devices', 'Devices root node' )");
-            migrationBuilder.Sql($"INSERT INTO dbo.Hierarchies (Id, ParentId, Type, IsPublic, IsActive, Name, Description) VALUES (3, 0, {(int)HierarchyType.Process}, 1, 1, 'Processes', 'Processes root node' )");
-            migrationBuilder.Sql($"INSERT INTO dbo.Hierarchies (Id, ParentId, Type, IsPublic, IsActive, Name, Description) VALUES (4, 0, {(int)HierarchyType.Workplace}, 1, 1, 'Workplaces', 'Workplaces root node' )");
+            migrationBuilder.Sql($"INSERT INTO dbo.Hierarchies (Id, ParentId, Type, IsPublic, IsActive, Name, Description) VALUES (0, NULL, {HierarchyTypeAny}, 1, 1, 'Root', 'Global hierarchy root node' )");
+            migrationBuilder.Sql($"INSERT INTO dbo.Hierarchies (Id, ParentId, Type, IsPublic, IsActive, Name, Description) VALUES (1, 0, {HierarchyTypeHost}, 1, 1, 'Hosts', 'Hosts root node' )");
+            migrationBuilder.Sql($"INSERT INTO dbo.Hierarchies (Id, ParentId, Type, IsPublic, IsActive, Name, Description) VALUES (2, 0, {HierarchyTypeDevice}, 1, 1, 'Devices', 'Devices root node' )");
+            migrationBuilder.Sql($"INSERT INTO dbo.Hierarchies (Id, ParentId, Type, IsPublic, IsActive, Name, Description) VALUES (3, 0, {HierarchyTypeProcess}, 1, 1, 'Processes', 'Processes root node' )");
+            migrationBuilder.Sql($"INSERT INTO dbo.Hierarchies (Id, ParentId, Type, IsPublic, IsActive, Name, Description) VALUES (4, 0, {HierarchyTypeWorkplace}, 1, 1, 'Workplaces', 'Workplaces root node' )");
             migrationBuilder.Sql("SET IDENTITY_INSERT dbo.Hierarchies OFF");
 
             migrationBuilder.CreateIndex(

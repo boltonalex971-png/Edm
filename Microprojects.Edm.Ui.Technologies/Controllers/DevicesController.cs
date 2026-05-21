@@ -1,15 +1,17 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microprojects.Edm.Controllers;
+using Microprojects.Edm.Plugins;
+using Microprojects.Edm.Shared.Contracts;
+using Microprojects.Edm.Shared.Utils;
+using Microprojects.Edm.Shared.ViewModels;
+using Microprojects.Edm.Ui.Technologies.Contracts;
+using Microprojects.Edm.Ui.Technologies.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Microprojects.Edm.Controllers;
-using Microprojects.Edm.Plugins;
-using Microprojects.Edm.Ui.Technologies.Contracts;
-using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Ui.Technologies.Utils;
 
 namespace Microprojects.Edm.Ui.Technologies.Controllers
 {
@@ -19,15 +21,16 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
     {
         private readonly ILogger<DevicesController> _logger;
         private readonly IDeviceService _deviceService;
-        private readonly IHierarchyService _hierarchyService;
+        private readonly IDirectoryService _directoryService;
         private readonly IPluginContainer _plugins;
 
-        public DevicesController(ILogger<DevicesController> logger, IDeviceService deviceService, IHierarchyService hierarchyService, IPluginContainer pluginContainer, IConfiguration configuration) :
-            base(configuration)
+        public DevicesController(ILogger<DevicesController> logger, IDeviceService deviceService,
+            IDirectoryService directoryService, IPluginContainer pluginContainer,
+            IConfiguration configuration) : base(configuration)
         {
             _logger = logger;
             _deviceService = deviceService;
-            _hierarchyService = hierarchyService;
+            _directoryService = directoryService;
             _plugins = pluginContainer;
         }
 
@@ -37,109 +40,82 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
             return await _deviceService.GetAll();
         }
 
-        [HttpGet("{id:int}")]
-        public async Task<Device> GetById(int id)
+        [HttpGet("{id:guid}")]
+        public async Task<Device> GetById(Guid id)
         {
-            if (id > 0)
+            if (id != Guid.Empty)
             {
                 return await _deviceService.Get(id);
             }
-            else
+            return new Device
             {
-                return new Device
-                {
-                    Name = string.Empty,
-                    Description = string.Empty,
-                    IsActive = true
-                };
-            }
+                Name = string.Empty,
+                Description = string.Empty,
+                Meta = null!,
+            };
         }
 
-        [HttpPut("{id:int}")]
-        public async Task<Device> Save(int id, [FromBody] Device device)
+        [HttpPut("{id:guid}")]
+        public async Task<Device> Save(Guid id, [FromBody] Device device)
         {
             if (id != device.Id)
             {
-                throw new Exception("Process id is ambiguous");
+                throw new Exception("Device id is ambiguous");
             }
-            var result = await _deviceService.Save(device);
-            return result;
+            return await _deviceService.Save(device);
         }
 
-        [HttpDelete("{id:int}")]
-        public async Task<Device> Delete(int id)
+        [HttpDelete("{id:guid}")]
+        public async Task<Device> Delete(Guid id)
         {
-            var process = await _deviceService.Delete(id);
-            return process;
+            return await _deviceService.Delete(id);
         }
 
         [HttpPost]
         public async Task<Device> Create([FromBody] Device device)
         {
-            device.Id = 0;
-            // If hierarchy is not defined select default root
-            device.HierarchyId = device.HierarchyId == 0 ? (await _hierarchyService.GetRoot(HierarchyType.Device)).Id : device.HierarchyId;
-            var result = await _deviceService.Save(device);
-            return result;
+            device.Id = Guid.Empty;
+            device.DirectoryId ??= WellKnownDirectoryIds.Devices;
+            device.Meta = null!;
+            return await _deviceService.Save(device);
         }
 
-        [HttpPut("{id:int}/parent")]
-        public async Task<Device> ChangeParent(int id, [FromBody] DomainObjectViewModel parent)
+        [HttpPut("{id:guid}/parent")]
+        public async Task<Device> ChangeParent(Guid id, [FromBody] DomainObjectViewModel parent)
         {
-            var result = await _deviceService.ChangeParent(id, parent.Id);
-            return result;
+            return await _deviceService.ChangeParent<Device>(id, parent.Id);
         }
 
         [HttpGet("hierarchy")]
-        public async Task<IEnumerable<HierarchyItemViewModel>> GetHierarchy()
+        public async Task<IEnumerable<DirectoryEntryViewModel>> GetDeviceHierarchy()
         {
-            var devices = (await _deviceService.GetAll())
-                .Select(d => d.ToHierarchyItem()).ToList();
-            var folders = (await _hierarchyService.GetTree(HierarchyType.Device, UserInfo.Groups))
-                .Select(h => h.ToHierarchyItem()).ToList();
-
-            var tree = folders.Concat(devices).ToTree().ToList();
-            // always expand root if just one
-            if (tree.Count == 1)
-            {
-                tree.First().expanded = true;
-            }
-
-            return tree;
+            var devices = await _deviceService.GetAll();
+            return await DirectoryHelper.BuildEntryHierarchy(
+                devices, WellKnownDirectoryIds.Devices, _directoryService, d => d.ToEntryViewModel());
         }
 
         [HttpGet("drivers")]
-        public IEnumerable<IDriverPlugin> GetDrivers()
-        {
-            var drivers = _plugins.GetDrivers();
-            return drivers;
-        }
+        public IEnumerable<IDriverPlugin> GetDrivers() => _plugins.GetDrivers();
 
         [HttpGet("profilers")]
-        public IEnumerable<IProfilePlugin> GetProfilers()
-        {
-            var profilers = _plugins.GetProfiles();
-            return profilers;
-        }
+        public IEnumerable<IProfilePlugin> GetProfilers() => _plugins.GetProfiles();
 
         [HttpGet("driver/{driverGuid}")]
         public async Task<IEnumerable<Device>> GetByDriver(string driverGuid)
         {
-            var devices = await _deviceService.Get(d => d.DriverGuid == new Guid(driverGuid) && d.IsActive);
-            return devices;
+            return await _deviceService.Get(d => d.DriverGuid == new Guid(driverGuid));
         }
 
-        #region devices
-
-        [HttpGet("{id:int}/hosts")]
-        public async Task<IEnumerable<HostDeviceModel>> GetDevices(int id)
+        #region hosts
+        [HttpGet("{id:guid}/hosts")]
+        public async Task<IEnumerable<HostDeviceModel>> GetDevices(Guid id)
         {
             var hosts = await _deviceService.GetHosts(id);
             return hosts.Select(h => h.ToModel()).ToList();
         }
 
-        [HttpPost("{id:int}/hosts")]
-        public async Task<HostDeviceModel> AttachHostDevice(int id, HostDeviceModel model)
+        [HttpPost("{id:guid}/hosts")]
+        public async Task<HostDeviceModel> AttachHostDevice(Guid id, HostDeviceModel model)
         {
             var hostDevice = model.ToEntity();
             hostDevice.DeviceId = id;
@@ -147,11 +123,10 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
             return host.ToModel();
         }
 
-        [HttpDelete("{id:int}/hosts/{hostId:int}")]
-        public async Task<bool> DetachDevice(int id, int hostId)
+        [HttpDelete("{id:guid}/hosts/{hostId:guid}")]
+        public async Task<bool> DetachDevice(Guid id, Guid hostId)
         {
-            var wasDetached = await _deviceService.DetachHost(id, hostId);
-            return wasDetached;
+            return await _deviceService.DetachHost(id, hostId);
         }
 
         [HttpGet("hosts")]
@@ -161,13 +136,12 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
             return hosts.Select(h => h.ToIdNameModel()).ToList();
         }
 
-        [HttpGet("hosts/{id:int}")]
-        public async Task<HostDeviceModel> GetHostDevice(int id)
+        [HttpGet("hosts/{id:guid}")]
+        public async Task<HostDeviceModel> GetHostDevice(Guid id)
         {
             var host = await _deviceService.GetHostDevice(id);
             return host.ToModel();
         }
-
         #endregion
     }
 }

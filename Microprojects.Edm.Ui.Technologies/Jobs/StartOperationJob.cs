@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
@@ -231,12 +231,12 @@ namespace Microprojects.Edm.Ui.Technologies.Jobs
             return JobStatus.SUCCESS;
         }
 
-        public int GetOperationId() => Parameters.Operation;
+        public Guid GetOperationId() => Parameters.Operation;
     }
 
     public class StartOperationJobParameters : IJobParameters
     {
-        [JobParameter(Required = true)] public int Operation { get; set; }
+        [JobParameter(Required = true)] public Guid Operation { get; set; }
         public DateTime? StartAt { get; set; }
     }
 }

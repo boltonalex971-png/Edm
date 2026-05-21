@@ -22,6 +22,94 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Microprojects.Edm.Domain.Directory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("DirectoryId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DirectoryId");
+
+                    b.ToTable("Directories", (string)null);
+                });
+
+            modelBuilder.Entity("Microprojects.Edm.Domain.History", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Author")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("JsonValue")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("MetaId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MetaId");
+
+                    b.ToTable("History", (string)null);
+                });
+
+            modelBuilder.Entity("Microprojects.Edm.Domain.Meta", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("Completed")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("Deleted")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Executor")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.PrimitiveCollection<string>("Groups")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Metatype")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("Modified")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("OriginId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Owner")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Meta", (string)null);
+                });
+
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Assignment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -40,7 +128,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("NomenclatureId");
 
-                    b.ToTable("Tasks");
+                    b.ToTable("Tasks", (string)null);
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Changelog", b =>
@@ -64,29 +152,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Changelog");
-                });
-
-            modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Directory", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid?>("DirectoryId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DirectoryId");
-
-                    b.ToTable("Directories");
+                    b.ToTable("Changelog", (string)null);
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Grade", b =>
@@ -111,33 +177,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("ProcessId");
 
-                    b.ToTable("Grades");
-                });
-
-            modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.History", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Author")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("JsonValue")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("MetaId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("Timestamp")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("MetaId");
-
-                    b.ToTable("History");
+                    b.ToTable("Grades", (string)null);
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Item", b =>
@@ -186,7 +226,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("TareId");
 
-                    b.ToTable("Items");
+                    b.ToTable("Items", (string)null);
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.ItemLink", b =>
@@ -214,47 +254,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("TargetItemId");
 
-                    b.ToTable("ItemLinks");
-                });
-
-            modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Meta", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime?>("Completed")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("Created")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("Deleted")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Executor")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.PrimitiveCollection<string>("Groups")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Metatype")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("Modified")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid?>("OriginId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Owner")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Meta");
+                    b.ToTable("ItemLinks", (string)null);
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Nomenclature", b =>
@@ -287,7 +287,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("DirectoryId");
 
-                    b.ToTable("Nomenclatures");
+                    b.ToTable("Nomenclatures", (string)null);
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.NomenclatureTareType", b =>
@@ -308,7 +308,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
                     b.HasIndex("NomenclatureId", "TareTypeId")
                         .IsUnique();
 
-                    b.ToTable("NomenclatureTareTypes");
+                    b.ToTable("NomenclatureTareTypes", (string)null);
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Order", b =>
@@ -340,7 +340,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("ProcessId");
 
-                    b.ToTable("Order");
+                    b.ToTable("Order", (string)null);
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.OrderProcess", b =>
@@ -369,7 +369,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("ProcessId");
 
-                    b.ToTable("OrderProcess");
+                    b.ToTable("OrderProcess", (string)null);
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.OrderSpecificationNomenclature", b =>
@@ -397,7 +397,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("OrderId", "NomenclatureId");
 
-                    b.ToTable("OrderSpecificationNomenclatures");
+                    b.ToTable("OrderSpecificationNomenclatures", (string)null);
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Process", b =>
@@ -427,7 +427,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("NomenclatureId");
 
-                    b.ToTable("Processes");
+                    b.ToTable("Processes", (string)null);
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Specification", b =>
@@ -457,7 +457,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("ProcessId");
 
-                    b.ToTable("Specifications");
+                    b.ToTable("Specifications", (string)null);
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.SpecificationNomenclature", b =>
@@ -480,7 +480,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("SpecificationId");
 
-                    b.ToTable("SpecificationNomenclatures");
+                    b.ToTable("SpecificationNomenclatures", (string)null);
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.SubProcess", b =>
@@ -522,7 +522,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Supplies");
+                    b.ToTable("Supplies", (string)null);
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Tare", b =>
@@ -540,7 +540,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("TareTypeId");
 
-                    b.ToTable("Tares");
+                    b.ToTable("Tares", (string)null);
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.TareType", b =>
@@ -581,7 +581,35 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.HasIndex("DirectoryId");
 
-                    b.ToTable("TareTypes");
+                    b.ToTable("TareTypes", (string)null);
+                });
+
+            modelBuilder.Entity("Microprojects.Edm.Domain.Directory", b =>
+                {
+                    b.HasOne("Microprojects.Edm.Domain.Directory", "Directory")
+                        .WithMany("Children")
+                        .HasForeignKey("DirectoryId");
+
+                    b.HasOne("Microprojects.Edm.Domain.Meta", "Meta")
+                        .WithOne()
+                        .HasForeignKey("Microprojects.Edm.Domain.Directory", "Id")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Directory");
+
+                    b.Navigation("Meta");
+                });
+
+            modelBuilder.Entity("Microprojects.Edm.Domain.History", b =>
+                {
+                    b.HasOne("Microprojects.Edm.Domain.Meta", "Meta")
+                        .WithMany("History")
+                        .HasForeignKey("MetaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Meta");
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Assignment", b =>
@@ -595,23 +623,6 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
                     b.Navigation("Nomenclature");
                 });
 
-            modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Directory", b =>
-                {
-                    b.HasOne("Microprojects.Edm.Ui.Logistics.Models.Directory", "Directory")
-                        .WithMany("Children")
-                        .HasForeignKey("DirectoryId");
-
-                    b.HasOne("Microprojects.Edm.Ui.Logistics.Models.Meta", "Meta")
-                        .WithOne()
-                        .HasForeignKey("Microprojects.Edm.Ui.Logistics.Models.Directory", "Id")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("Directory");
-
-                    b.Navigation("Meta");
-                });
-
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Grade", b =>
                 {
                     b.HasOne("Microprojects.Edm.Ui.Logistics.Models.Process", "Process")
@@ -623,17 +634,6 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
                     b.Navigation("Process");
                 });
 
-            modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.History", b =>
-                {
-                    b.HasOne("Microprojects.Edm.Ui.Logistics.Models.Meta", "Meta")
-                        .WithMany("History")
-                        .HasForeignKey("MetaId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Meta");
-                });
-
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Item", b =>
                 {
                     b.HasOne("Microprojects.Edm.Ui.Logistics.Models.Grade", "Grade")
@@ -641,7 +641,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
                         .HasForeignKey("GradeId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("Microprojects.Edm.Ui.Logistics.Models.Meta", "Meta")
+                    b.HasOne("Microprojects.Edm.Domain.Meta", "Meta")
                         .WithOne()
                         .HasForeignKey("Microprojects.Edm.Ui.Logistics.Models.Item", "Id")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -718,11 +718,11 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("DefaultTareTypeId");
 
-                    b.HasOne("Microprojects.Edm.Ui.Logistics.Models.Directory", "Directory")
+                    b.HasOne("Microprojects.Edm.Domain.Directory", "Directory")
                         .WithMany()
                         .HasForeignKey("DirectoryId");
 
-                    b.HasOne("Microprojects.Edm.Ui.Logistics.Models.Meta", "Meta")
+                    b.HasOne("Microprojects.Edm.Domain.Meta", "Meta")
                         .WithOne()
                         .HasForeignKey("Microprojects.Edm.Ui.Logistics.Models.Nomenclature", "Id")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -756,7 +756,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Order", b =>
                 {
-                    b.HasOne("Microprojects.Edm.Ui.Logistics.Models.Meta", "Meta")
+                    b.HasOne("Microprojects.Edm.Domain.Meta", "Meta")
                         .WithOne()
                         .HasForeignKey("Microprojects.Edm.Ui.Logistics.Models.Order", "Id")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -821,11 +821,11 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Process", b =>
                 {
-                    b.HasOne("Microprojects.Edm.Ui.Logistics.Models.Directory", "Directory")
+                    b.HasOne("Microprojects.Edm.Domain.Directory", "Directory")
                         .WithMany()
                         .HasForeignKey("DirectoryId");
 
-                    b.HasOne("Microprojects.Edm.Ui.Logistics.Models.Meta", "Meta")
+                    b.HasOne("Microprojects.Edm.Domain.Meta", "Meta")
                         .WithOne()
                         .HasForeignKey("Microprojects.Edm.Ui.Logistics.Models.Process", "Id")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -844,11 +844,11 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Specification", b =>
                 {
-                    b.HasOne("Microprojects.Edm.Ui.Logistics.Models.Directory", "Directory")
+                    b.HasOne("Microprojects.Edm.Domain.Directory", "Directory")
                         .WithMany()
                         .HasForeignKey("DirectoryId");
 
-                    b.HasOne("Microprojects.Edm.Ui.Logistics.Models.Meta", "Meta")
+                    b.HasOne("Microprojects.Edm.Domain.Meta", "Meta")
                         .WithOne()
                         .HasForeignKey("Microprojects.Edm.Ui.Logistics.Models.Specification", "Id")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -907,7 +907,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Supply", b =>
                 {
-                    b.HasOne("Microprojects.Edm.Ui.Logistics.Models.Meta", "Meta")
+                    b.HasOne("Microprojects.Edm.Domain.Meta", "Meta")
                         .WithOne()
                         .HasForeignKey("Microprojects.Edm.Ui.Logistics.Models.Supply", "Id")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -918,7 +918,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Tare", b =>
                 {
-                    b.HasOne("Microprojects.Edm.Ui.Logistics.Models.Meta", "Meta")
+                    b.HasOne("Microprojects.Edm.Domain.Meta", "Meta")
                         .WithOne()
                         .HasForeignKey("Microprojects.Edm.Ui.Logistics.Models.Tare", "Id")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -937,11 +937,11 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.TareType", b =>
                 {
-                    b.HasOne("Microprojects.Edm.Ui.Logistics.Models.Directory", "Directory")
+                    b.HasOne("Microprojects.Edm.Domain.Directory", "Directory")
                         .WithMany()
                         .HasForeignKey("DirectoryId");
 
-                    b.HasOne("Microprojects.Edm.Ui.Logistics.Models.Meta", "Meta")
+                    b.HasOne("Microprojects.Edm.Domain.Meta", "Meta")
                         .WithOne()
                         .HasForeignKey("Microprojects.Edm.Ui.Logistics.Models.TareType", "Id")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -952,12 +952,12 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
                     b.Navigation("Meta");
                 });
 
-            modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Directory", b =>
+            modelBuilder.Entity("Microprojects.Edm.Domain.Directory", b =>
                 {
                     b.Navigation("Children");
                 });
 
-            modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Meta", b =>
+            modelBuilder.Entity("Microprojects.Edm.Domain.Meta", b =>
                 {
                     b.Navigation("History");
                 });

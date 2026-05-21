@@ -1,46 +1,34 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using Microprojects.Edm.Plugins;
+using Microprojects.Edm.Shared.Contracts;
+using Microprojects.Edm.Shared.Services;
 using Microprojects.Edm.Ui.Technologies.Contracts;
 using Microprojects.Edm.Ui.Technologies.Models;
 using Microprojects.Edm.Ui.Technologies.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 namespace Microprojects.Edm.Ui.Technologies.Services
 {
-    public class DeviceService : ServiceBase<Device>, IDeviceService
+    public class DeviceService : ServiceBase<TechnologiesContext, Device>, IDeviceService
     {
-        private IPluginContainer _plugins;
-        private IHierarchyService _hierarchyService;
+        private readonly IPluginContainer _plugins;
 
-        protected DeviceService() { }
-
-        public DeviceService(TechnologiesContext db, IHierarchyService hierarchyService, IPluginContainer plugins) : base(db)
+        public DeviceService(TechnologiesContext db, IUserService userService, IPluginContainer plugins)
+            : base(db, userService)
         {
             _plugins = plugins;
-            _hierarchyService = hierarchyService;
         }
 
-        public async Task<Device> ChangeParent(int id, int newParentId)
-        {
-            var device = await Db.Devices.FindAsync(id);
-            var folder = await _hierarchyService.Get(newParentId);
-            if (folder == null)
-            {
-                throw new Microprojects.Edm.EdmException($"Hierarchy folder with Id {newParentId} not found");
-            }
-
-            device.HierarchyId = folder.Id;
-            await Db.SaveChangesAsync();
-            return device;
-        }
-
-        public override async Task<Device> Get(int id)
+        public override async Task<Device> Get(Guid id)
         {
             var result = await base.Get(id);
+            if (result == null)
+            {
+                return null;
+            }
             var driver = _plugins.GetDriver(result.DriverGuid);
             result.DriverName = driver?.Name;
             var profiler = _plugins.GetProfile(driver?.ProfileGuid ?? Guid.Empty);
@@ -49,9 +37,10 @@ namespace Microprojects.Edm.Ui.Technologies.Services
             return result;
         }
 
-        public override async Task<IEnumerable<Device>> GetAll()
+        public override async Task<IEnumerable<Device>> GetAll(
+            System.Linq.Expressions.Expression<Func<Device, bool>> predicate = null)
         {
-            var devices = await base.GetAll();
+            var devices = await base.GetAll(predicate);
             foreach (var device in devices)
             {
                 var driver = _plugins.GetDriver(device.DriverGuid);
@@ -60,18 +49,15 @@ namespace Microprojects.Edm.Ui.Technologies.Services
                 device.ProfilerGuid = driver?.ProfileGuid ?? Guid.Empty;
                 device.ProfilerName = profiler?.Name;
             }
-
             return devices;
         }
 
-        #region hosts
-        public async Task<IEnumerable<HostDevice>> GetHosts(int deviceId)
+        public async Task<IEnumerable<HostDevice>> GetHosts(Guid deviceId)
         {
-            var devices = await Db.HostDevices
+            return await Db.HostDevices
                 .Include(h => h.Host)
                 .Where(h => h.DeviceId == deviceId)
                 .ToListAsync();
-            return devices;
         }
 
         public async Task<HostDevice> AttachHost(HostDevice hostDevice)
@@ -81,7 +67,7 @@ namespace Microprojects.Edm.Ui.Technologies.Services
             return result.Entity;
         }
 
-        public async Task<bool> DetachHost(int id, int hostDeviceId)
+        public async Task<bool> DetachHost(Guid id, Guid hostDeviceId)
         {
             var host = await Db.HostDevices.FindAsync(hostDeviceId);
             Db.HostDevices.Remove(host);
@@ -91,19 +77,20 @@ namespace Microprojects.Edm.Ui.Technologies.Services
 
         public async Task<IEnumerable<Host>> GetAvailableHosts()
         {
-            // TODO implement repository pattern to avoid duplicating code
-            return await Db.Hosts.Where(h => h.IsActive).ToListAsync();
+            // Active hosts (non-deleted). Liveness is reported by HostService via
+            // Host.Active, but here we only need the saved set.
+            return await Db.Hosts
+                .Include(h => h.Meta)
+                .Where(h => h.Meta.Deleted == null)
+                .ToListAsync();
         }
 
-        public async Task<HostDevice> GetHostDevice(int id)
+        public async Task<HostDevice> GetHostDevice(Guid id)
         {
-            var result = await Db.HostDevices
+            return await Db.HostDevices
                 .Include(hd => hd.Device)
                 .Include(hd => hd.Host)
                 .FirstOrDefaultAsync(hd => hd.Id == id);
-            return result;
         }
-
-        #endregion
     }
 }

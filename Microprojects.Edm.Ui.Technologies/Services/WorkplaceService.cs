@@ -1,73 +1,44 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
+using Microprojects.Edm.Shared.Contracts;
+using Microprojects.Edm.Shared.Services;
 using Microprojects.Edm.Ui.Technologies.Contracts;
 using Microprojects.Edm.Ui.Technologies.Models;
 using Microprojects.Edm.Ui.Technologies.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 namespace Microprojects.Edm.Ui.Technologies.Services
 {
-    public class WorkplaceService : ServiceBase<Workplace>, IWorkplaceService
+    public class WorkplaceService : ServiceBase<TechnologiesContext, Workplace>, IWorkplaceService
     {
-        #region injected properties
-        //protected IIstpContextFactory ContextFactory { get; set; }
-        #endregion
-
-        private IHierarchyService _hierarchyService;
-
-        public WorkplaceService() { }
-
-        public WorkplaceService(TechnologiesContext db, IHierarchyService hierarchyService) : base(db)
+        public WorkplaceService(TechnologiesContext db, IUserService userService)
+            : base(db, userService)
         {
-            _hierarchyService = hierarchyService;
         }
 
-        public async Task<Workplace> ChangeParent(int id, int newParentId)
+        public async Task<IEnumerable<WorkplaceHostDevice>> GetDevices(Guid workspaceId)
         {
-            var workplace = await Db.Workplaces.FindAsync(id);
-            var folder = await _hierarchyService.Get(newParentId);
-            if (folder == null)
-            {
-                throw new Microprojects.Edm.EdmException($"Hierarchy folder with Id {newParentId} not found");
-            }
-
-            workplace.HierarchyId = folder.Id;
-            await Db.SaveChangesAsync();
-            return workplace;
-        }
-
-        #region devices
-        public async Task<IEnumerable<WorkplaceHostDevice>> GetDevices(int workspaceId)
-        {
-            var devices = await Db.WorkplaceHostDevices
+            return await Db.WorkplaceHostDevices
                 .Include(w => w.HostDevice.Device)
                 .Include(w => w.HostDevice.Host)
                 .Where(w => w.WorkplaceId == workspaceId)
                 .ToListAsync();
-            return devices;
         }
 
-        public async Task<WorkplaceHostDevice> GetDevice(int workplaceDeviceId)
+        public async Task<WorkplaceHostDevice> GetDevice(Guid workplaceDeviceId)
         {
-            var device = await Db.WorkplaceHostDevices
+            return await Db.WorkplaceHostDevices
                 .Include(w => w.HostDevice.Device)
                 .Include(w => w.HostDevice.Host)
-                .Where(w => w.Id == workplaceDeviceId)
-                .FirstOrDefaultAsync();
-            return device;
+                .FirstOrDefaultAsync(w => w.Id == workplaceDeviceId);
         }
 
-        public async Task<WorkplaceHostDevice> AttachDevice(WorkplaceHostDevice workplaceHostDevice)
-        {
-            var result = Db.WorkplaceHostDevices.Add(workplaceHostDevice);
-            await Db.SaveChangesAsync();
-            return result.Entity;
-        }
+        public async Task<WorkplaceHostDevice> AttachDevice(WorkplaceHostDevice workplaceHostDevice) =>
+            await Save(workplaceHostDevice);
 
-        public async Task<bool> DetachDevice(int id, int devId)
+        public async Task<bool> DetachDevice(Guid id, Guid devId)
         {
             var dev = await Db.WorkplaceHostDevices.FindAsync(devId);
             Db.WorkplaceHostDevices.Remove(dev);
@@ -77,52 +48,41 @@ namespace Microprojects.Edm.Ui.Technologies.Services
 
         public async Task<IEnumerable<HostDevice>> GetAvailableHostDevices()
         {
-            var hostDevices = await Db.HostDevices
+            return await Db.HostDevices
                 .Include(hd => hd.Host)
                 .Include(hd => hd.Device)
                 .Where(hd => hd.IsActive)
                 .ToListAsync();
-            return hostDevices;
         }
-        #endregion
 
-        #region processes
-        public async Task<IEnumerable<WorkplaceProcess>> GetAllowedProcesses(IEnumerable<string> groups)
+        public async Task<IEnumerable<WorkplaceProcess>> GetAllowedProcesses()
         {
-            var tree = await _hierarchyService.GetTree(HierarchyType.Workplace, groups);
-            var ids = tree.Select(t => t.Id);
-            var processes = await Db.WorkplaceProcesses
-                .Include(w => w.Workplace)
-                .Include(w => w.Process)
-                .Where(w => ids.Contains(w.Workplace.HierarchyId) && w.Workplace.IsActive && w.Process.IsActive)
+            // Pre-Phase-C used HierarchyService to filter by user groups; the
+            // shared ServiceBase / DirectoryService folds group filtering into
+            // its own pipeline. Until callers move to the shared tree endpoint
+            // we just return all active workplace-process links.
+            return await Db.WorkplaceProcesses
+                .Include(w => w.Workplace).ThenInclude(w => w.Meta)
+                .Include(w => w.Process).ThenInclude(p => p.Meta)
+                .Where(w => w.Workplace.Meta.Deleted == null && w.Process.Meta.Deleted == null)
                 .ToListAsync();
-            return processes;
         }
 
-        public async Task<IEnumerable<WorkplaceProcess>> GetProcesses(int workspaceId)
+        public async Task<IEnumerable<WorkplaceProcess>> GetProcesses(Guid workspaceId)
         {
-            var devices = await Db.WorkplaceProcesses
+            return await Db.WorkplaceProcesses
                 .Include(w => w.Process.Profiles)
                 .Where(w => w.WorkplaceId == workspaceId)
                 .ToListAsync();
-            return devices;
         }
 
-        public async Task<WorkplaceProcess> AttachProcess(WorkplaceProcess workplaceProcess)
-        {
-            var result = Db.WorkplaceProcesses.Add(workplaceProcess);
-            await Db.SaveChangesAsync();
-            return result.Entity;
-        }
+        public async Task<WorkplaceProcess> AttachProcess(WorkplaceProcess workplaceProcess) =>
+            await Save(workplaceProcess);
 
-        public async Task<WorkplaceProcess> SaveWorkplaceProcess(WorkplaceProcess workplaceProcess)
-        {
-            var result = await Save(workplaceProcess);
-            return result;
-        }
+        public async Task<WorkplaceProcess> SaveWorkplaceProcess(WorkplaceProcess workplaceProcess) =>
+            await Save(workplaceProcess);
 
-        public async Task<bool> DetachProcess(int id, int procId)
-
+        public async Task<bool> DetachProcess(Guid id, Guid procId)
         {
             var dev = await Db.WorkplaceProcesses.FindAsync(procId);
             Db.WorkplaceProcesses.Remove(dev);
@@ -132,94 +92,75 @@ namespace Microprojects.Edm.Ui.Technologies.Services
 
         public async Task<IEnumerable<Process>> GetAvailableProcesses()
         {
-            var processes = await Db.Processes
-                .Where(p => p.IsActive)
+            return await Db.Processes
+                .Include(p => p.Meta)
+                .Where(p => p.Meta.Deleted == null)
                 .ToListAsync();
-            return processes;
         }
 
-        public async Task<IEnumerable<Workbench>> GetWorkbenches(int workplaceProcessId)
+        public async Task<IEnumerable<Workbench>> GetWorkbenches(Guid workplaceProcessId)
         {
-            var workbenches = await Db.Workbenches
+            return await Db.Workbenches
                 .Include(w => w.WorkplaceProcess.Process)
                 .Include(w => w.WorkplaceProcess.Workplace)
-                .Where(w => w.WorkplaceProcessId == workplaceProcessId && w.IsActive)
+                .Include(w => w.Meta)
+                .Where(w => w.WorkplaceProcessId == workplaceProcessId && w.Meta.Deleted == null)
                 .ToListAsync();
-            return workbenches;
         }
 
-        public async Task<WorkplaceProcess> GetWorkplaceProcess(int workplaceProcessId)
+        public async Task<WorkplaceProcess> GetWorkplaceProcess(Guid workplaceProcessId)
         {
-            var result = await Db.WorkplaceProcesses
+            return await Db.WorkplaceProcesses
                 .Include(p => p.Process.Profiles)
                 .Include(p => p.Workplace)
-                .FirstOrDefaultAsync(p => p.Id == workplaceProcessId) ?? throw new ArgumentException("No workspace process found");
-            return result;
+                .FirstOrDefaultAsync(p => p.Id == workplaceProcessId)
+                ?? throw new ArgumentException("No workspace process found");
         }
 
-        public async Task<Workbench> SaveWorkbench(Workbench workbench)
-        {
-            var result = await Save(workbench);
-            return result;
-        }
+        public async Task<Workbench> SaveWorkbench(Workbench workbench) => await Save(workbench);
 
-        public async Task<Workbench> GetWorkbench(int workbenchId)
+        public async Task<Workbench> GetWorkbench(Guid workbenchId)
         {
-            var result = await Db.Workbenches
+            return await Db.Workbenches
                 .Include(w => w.WorkplaceProcess.Process)
                 .Include(w => w.WorkplaceProcess.Workplace)
-                .FirstOrDefaultAsync(w => w.Id == workbenchId) ?? throw new ArgumentException("Workbench not found");
-            return result;
+                .FirstOrDefaultAsync(w => w.Id == workbenchId)
+                ?? throw new ArgumentException("Workbench not found");
         }
 
-        public async Task<Workbench> DeleteWorkbench(int id)
-        {
-            var result = await Delete<Workbench>(id);
-            return result;
-        }
+        public async Task<Workbench> DeleteWorkbench(Guid id) => await Delete<Workbench>(id);
 
-        public async Task<IEnumerable<WorkbenchWorkplaceHostDevice>> GetWorkbenchDevices(int workbenchId)
+        public async Task<IEnumerable<WorkbenchWorkplaceHostDevice>> GetWorkbenchDevices(Guid workbenchId)
         {
-            var result = await Db.WorkbenchDeviceConfigurations
+            return await Db.WorkbenchDeviceConfigurations
                 .Include(d => d.WorkplaceHostDevice.HostDevice.Device)
                 .Include(d => d.WorkplaceHostDevice.HostDevice.Host)
                 .Include(d => d.Profile)
                 .Where(d => d.WorkbenchId == workbenchId)
                 .ToListAsync();
-            return result;
         }
 
-        public async Task<WorkbenchWorkplaceHostDevice> GetWorkbenchDevice(int id)
+        public async Task<WorkbenchWorkplaceHostDevice> GetWorkbenchDevice(Guid id)
         {
-            var result = await Db.WorkbenchDeviceConfigurations
+            return await Db.WorkbenchDeviceConfigurations
                 .Include(d => d.WorkplaceHostDevice.HostDevice.Device)
                 .Include(d => d.WorkplaceHostDevice.HostDevice.Host)
                 .Include(d => d.Profile)
-                .FirstOrDefaultAsync(d => d.Id == id) ?? throw new ArgumentException("Workbench device configuration not found");
-            return result;
+                .FirstOrDefaultAsync(d => d.Id == id)
+                ?? throw new ArgumentException("Workbench device configuration not found");
         }
 
-        public async Task<WorkbenchWorkplaceHostDevice> SaveWorkbenchDevice(WorkbenchWorkplaceHostDevice device)
-        {
-            var result = await Save(device);
-            return result;
-        }
+        public async Task<WorkbenchWorkplaceHostDevice> SaveWorkbenchDevice(WorkbenchWorkplaceHostDevice device) =>
+            await Save(device);
 
-        public async Task<WorkbenchWorkplaceHostDevice> SaveWorkbenchDeviceOptions(int id, string options)
+        public async Task<WorkbenchWorkplaceHostDevice> SaveWorkbenchDeviceOptions(Guid id, string options)
         {
-            var device = await GetWorkbenchDevice(id) ?? throw new ArgumentException("Workbench device not found");
+            var device = await GetWorkbenchDevice(id);
             device.Configuration = options;
-            var result = await Save(device);
-            return result;
+            return await SaveWorkbenchDevice(device);
         }
 
-        public async Task<WorkbenchWorkplaceHostDevice> DeleteWorkbenchDevice(int id)
-        {
-            var result = await Delete<WorkbenchWorkplaceHostDevice>(id);
-            return result;
-        }
-
-        #endregion
-
+        public async Task<WorkbenchWorkplaceHostDevice> DeleteWorkbenchDevice(Guid id) =>
+            await Delete<WorkbenchWorkplaceHostDevice>(id);
     }
 }

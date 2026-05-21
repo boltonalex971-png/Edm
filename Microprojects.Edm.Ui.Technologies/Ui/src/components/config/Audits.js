@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useGet } from '@microprojects/edm-components/hooks';
 import { useParams } from 'react-router-dom';
@@ -87,7 +87,7 @@ export function AuditDetail({ auditId, parents, ...props }) {
             }
 
             relations={
-                <AuditTabs id={parseInt(id)} params={props.params} api={props.api} onDetailSelected={setSub} />
+                <AuditTabs id={id} params={props.params} api={props.api} onDetailSelected={setSub} />
             }
         />
     );

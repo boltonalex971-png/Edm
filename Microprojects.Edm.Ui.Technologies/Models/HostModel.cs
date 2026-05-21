@@ -1,16 +1,10 @@
-using Microprojects.Edm.Ui.Technologies.Models;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Microprojects.Edm.Ui.Technologies.Models
+﻿namespace Microprojects.Edm.Ui.Technologies.Models
 {
     public class HostModel : Host
     {
-        public bool Active { get; set; }
+        // True when a live peer matches this host's Url. Distinct from
+        // Host.Active (entity field, also set by HostService.GetAll).
+        public new bool Active { get; set; }
         public string Version { get; set; }
         public string Mode { get; set; }
         public string Environment { get; set; }

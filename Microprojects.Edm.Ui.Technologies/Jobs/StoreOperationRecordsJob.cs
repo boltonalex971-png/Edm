@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -83,20 +83,20 @@ namespace Microprojects.Edm.Ui.Technologies.Jobs
                         //TODO Check what was saved in the context (and publish it)
                         //     and store the records that weren't
                         // Swallow the exception not to breaking up storing process
-                        _logger.LogWarning(Parameters.Operation, e, "Some Records are lost");
+                        _logger.LogWarning(e, "Some Records are lost for operation {Operation}", Parameters.Operation);
                     }
                 });
 
             await Task.Delay(-1, CancellationToken).ContinueWith(t => { });
 
-            _logger.LogDebug(Parameters.Operation, "{Command} {Action}", 
-                Name, CancellationToken.IsCancellationRequested ? "cancelled" : "completed");
+            _logger.LogDebug("{Command} {Action} for operation {Operation}",
+                Name, CancellationToken.IsCancellationRequested ? "cancelled" : "completed", Parameters.Operation);
             return "Ok";
         }
     }
 
     public class StoreOperationRecordsJobParameters : IJobParameters
     {
-        public int Operation { get; set; }
+        public Guid Operation { get; set; }
     }
 }

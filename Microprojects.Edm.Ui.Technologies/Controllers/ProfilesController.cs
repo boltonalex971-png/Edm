@@ -1,11 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Microprojects.Edm.Ui.Technologies.Contracts;
 using Microprojects.Edm.Ui.Technologies.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace Microprojects.Edm.Ui.Technologies.Controllers
 {
@@ -23,90 +22,63 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
         }
 
         [HttpGet]
-        public async Task<IEnumerable<Microprojects.Edm.Ui.Technologies.Models.Profile>> Get()
-        {
-            return await _profileService.GetAll();
-        }
+        public async Task<IEnumerable<Profile>> Get() => await _profileService.GetAll();
 
-        [HttpGet("{id:int}")]
-        public async Task<Microprojects.Edm.Ui.Technologies.Models.Profile> GetById(int id)
+        [HttpGet("{id:guid}")]
+        public async Task<Profile> GetById(Guid id)
         {
-            var profile = id switch {
-                not 0 => await _profileService.Get(id),
-                0 => new Microprojects.Edm.Ui.Technologies.Models.Profile
-                {
-                    Name = string.Empty,
-                    Description = string.Empty,
-                    TextJson = string.Empty,
-                    IsActive = true
-                }
+            if (id != Guid.Empty)
+            {
+                return await _profileService.Get(id);
+            }
+            return new Profile
+            {
+                Name = string.Empty,
+                Description = string.Empty,
+                TextJson = string.Empty,
+                Meta = null!,
             };
-            return profile;
         }
 
-        [HttpPut("{id:int}")]
-        public async Task<Microprojects.Edm.Ui.Technologies.Models.Profile> Save(int id, [FromBody] Microprojects.Edm.Ui.Technologies.Models.Profile profile)
+        [HttpPut("{id:guid}")]
+        public async Task<Profile> Save(Guid id, [FromBody] Profile profile)
         {
             if (id != profile.Id)
             {
                 throw new Exception("Profile ID is ambiguous");
             }
-            var result = await _profileService.Save(profile);
-            return result;
+            return await _profileService.Save(profile);
         }
 
-        [HttpDelete("{id:int}")]
-        public async Task<Microprojects.Edm.Ui.Technologies.Models.Profile> DeleteProfile(int id)
-        {
-            var profile = await _profileService.Delete(id);
-            return profile;
-        }
+        [HttpDelete("{id:guid}")]
+        public async Task<Profile> DeleteProfile(Guid id) => await _profileService.Delete(id);
 
         [HttpPost]
-        public async Task<Microprojects.Edm.Ui.Technologies.Models.Profile> Create([FromBody] Microprojects.Edm.Ui.Technologies.Models.Profile profile)
+        public async Task<Profile> Create([FromBody] Profile profile)
         {
-            profile.Id = 0;
-            var result = await _profileService.Save(profile);
-            return result;
+            profile.Id = Guid.Empty;
+            profile.Meta = null!;
+            return await _profileService.Save(profile);
         }
 
-        [HttpGet("{id:int}/params")]
-        public async Task<IEnumerable<string>> GetParams(int id)
-        {
-            var parameters = await _profileService.GetProfileParams(id);
-            return parameters;
-        }
+        [HttpGet("{id:guid}/params")]
+        public async Task<IEnumerable<string>> GetParams(Guid id) =>
+            await _profileService.GetProfileParams(id);
 
-        [HttpGet("devices/{id:int}")]
-        public async Task<IEnumerable<Microprojects.Edm.Ui.Technologies.Models.Profile>> GetProfilesByDeviceId(int id)
-        {
-            var profiles = await _profileService.GetByDevice(id);
-            return profiles;
-        }
+        [HttpGet("devices/{id:guid}")]
+        public async Task<IEnumerable<Profile>> GetProfilesByDeviceId(Guid id) =>
+            await _profileService.GetByDevice(id);
 
-        #region profiles
+        [HttpGet("{id:guid}/audits")]
+        public async Task<IEnumerable<Audit>> GetAudits(Guid id) =>
+            await _profileService.GetAudits(id);
 
-        [HttpGet("{id:int}/audits")]
-        public async Task<IEnumerable<Audit>> GetAudits(int id)
-        {
-            var audits = await _profileService.GetAudits(id);
-            return audits;
-        }
+        [HttpPost("{id:guid}/audits")]
+        public async Task<Audit> AddAudit(Guid id, Audit audit) =>
+            await _profileService.AddAudit(id, audit);
 
-        [HttpPost("{id:int}/audits")]
-        public async Task<Audit> AddAudit(int id, Audit audit)
-        {
-            var newAudit = await _profileService.AddAudit(id, audit);
-            return newAudit;
-        }
-
-        [HttpDelete("{id:int}/audits/{auditId:int}")]
-        public async Task<bool> DeleteProfile(int id, int auditId)
-        {
-            var wasDetached = await _profileService.DeleteAudit(id, auditId);
-            return wasDetached;
-        }
-
-        #endregion
+        [HttpDelete("{id:guid}/audits/{auditId:guid}")]
+        public async Task<bool> DeleteProfile(Guid id, Guid auditId) =>
+            await _profileService.DeleteAudit(id, auditId);
     }
 }

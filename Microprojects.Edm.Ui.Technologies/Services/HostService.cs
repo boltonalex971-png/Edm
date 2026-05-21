@@ -1,91 +1,66 @@
-using Microprojects.Edm;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microprojects.Edm.Domain;
 using Microprojects.Edm.Jobs;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query;
+using Microprojects.Edm.Shared.Contracts;
+using Microprojects.Edm.Shared.Services;
 using Microprojects.Edm.Ui.Technologies.Contracts;
 using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Ui.Technologies.Models;
 using Microprojects.Edm.Ui.Technologies.Persistence;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace Microprojects.Edm.Ui.Technologies.Services
 {
-    public class HostService : ServiceBase<Host>, IHostService
+    public class HostService : ServiceBase<TechnologiesContext, Host>, IHostService
     {
-        #region injected properties
-        //protected IIstpContextFactory ContextFactory { get; set; }
-        #endregion
+        private readonly IDeviceService _deviceService;
+        private readonly IJobContainer _container;
 
-        private IDeviceService _deviceService;
-        private IHierarchyService _hierarchyService;
-        private IJobContainer _container;
-
-        protected HostService() { }
-
-        public HostService(TechnologiesContext db, IJobContainer container, IDeviceService deviceService, IHierarchyService hierarchyService) : base(db) 
+        public HostService(TechnologiesContext db, IUserService userService, IJobContainer container,
+            IDeviceService deviceService) : base(db, userService)
         {
             _deviceService = deviceService;
-            _hierarchyService = hierarchyService;
             _container = container;
         }
 
-        public override async Task<IEnumerable<Host>> GetAll()
+        public override async Task<IEnumerable<Host>> GetAll(
+            System.Linq.Expressions.Expression<Func<Host, bool>> predicate = null)
         {
-            var savedHosts = new List<Host>(await base.GetAll());
+            var savedHosts = new List<Host>(await base.GetAll(predicate));
             foreach (var host in savedHosts)
             {
-                host.IsActive = _container.Hive.GetActivePeers()
+                host.Active = _container.Hive.GetActivePeers()
                     .Any(h => h.Host == host.Url);
             }
 
             var unknownHosts = _container.Hive.GetActivePeers()
-                .Where(h => !savedHosts.Any(s => s.Url.StartsWith($"{h.Host}")));
+                .Where(h => !savedHosts.Any(s => s.Url != null && s.Url.StartsWith($"{h.Host}")));
             foreach (var newHost in unknownHosts)
             {
                 var hostUri = new Uri($"{newHost.Host}");
                 var addedHost = await Save(new Host
                 {
-                    HierarchyId = (await _hierarchyService.GetRoot(HierarchyType.Host)).Id,
-                    IsActive = true,
+                    DirectoryId = Microprojects.Edm.Ui.Technologies.Models.WellKnownDirectoryIds.Hosts,
                     Name = hostUri.Host,
                     Port = newHost.GrpcPort,
-                    Url = newHost.Host
+                    Url = newHost.Host,
+                    Meta = null!,
                 });
+                addedHost.Active = true;
                 savedHosts.Add(addedHost);
             }
 
             return savedHosts;
         }
 
-        public async Task<Host> ChangeParent(int id, int newParentId)
+        public async Task<IEnumerable<HostDevice>> GetDevices(Guid hostId)
         {
-            var host = await Db.Hosts.FindAsync(id);
-            var folder = await _hierarchyService.Get(newParentId);
-            if (folder == null)
-            {
-                throw new Microprojects.Edm.EdmException($"Hierarchy folder with Id {newParentId} not found");
-            }
-
-            host.HierarchyId = folder.Id;
-            await Db.SaveChangesAsync();
-            return host;
-        }
-
-        #region devices
-        public async Task<IEnumerable<HostDevice>> GetDevices(int hostId)
-        {
-            var devices = await Db.HostDevices
+            return await Db.HostDevices
                 .Include(h => h.Device)
                 .Where(h => h.HostId == hostId)
                 .ToListAsync();
-            return devices;
         }
 
         public async Task<HostDevice> AttachDevice(HostDevice hostDevice)
@@ -95,7 +70,7 @@ namespace Microprojects.Edm.Ui.Technologies.Services
             return result.Entity;
         }
 
-        public async Task<bool> DetachDevice(int id, int devId)
+        public async Task<bool> DetachDevice(Guid id, Guid devId)
         {
             var dev = await Db.HostDevices.FindAsync(devId);
             Db.HostDevices.Remove(dev);
@@ -108,15 +83,12 @@ namespace Microprojects.Edm.Ui.Technologies.Services
             return await _deviceService.GetAll();
         }
 
-        public async Task<HostDevice> GetHostDevice(int id)
+        public async Task<HostDevice> GetHostDevice(Guid id)
         {
-            var result = await Db.HostDevices
+            return await Db.HostDevices
                 .Include(hd => hd.Device)
                 .Include(hd => hd.Host)
                 .FirstOrDefaultAsync(hd => hd.Id == id);
-            return result;
         }
-
-        #endregion
     }
 }
