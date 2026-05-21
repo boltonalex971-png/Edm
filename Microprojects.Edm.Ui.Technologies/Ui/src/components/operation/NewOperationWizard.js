@@ -1,4 +1,4 @@
-﻿/* eslint-disable no-mixed-operators */
+/* eslint-disable no-mixed-operators */
 import React, { useState, useContext, useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { 
@@ -48,11 +48,10 @@ export function NewOperationWizard() {
     const [[processList]] = useGet(`${api.workplaces}/processes/allowed`, [], data => {
         const flatten = (items, level = 0) => {
             return items?.reduce((acc, item) => {
-                // Robust check for Workplace (HierarchyType 2)
-                const isWorkplace = item.hierarchyType === 2 || 
-                                    item.hierarchyType === 'Workplace' || 
-                                    item.itemType === 'workplace';
-                const isFolder = item.isFolder || isWorkplace;
+                // Post-directory-unification the tree carries a single isFolder
+                // flag (workplace nodes are emitted as folders by the shared
+                // DirectoriesController).
+                const isFolder = item.isFolder;
 
                 return [
                     ...acc,

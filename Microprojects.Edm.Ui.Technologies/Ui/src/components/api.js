@@ -21,7 +21,7 @@ const api = {
     operations: `${baseUrl}/api/technologies/operations`,
     plugins: `${baseUrl}/api/technologies/plugins`,
     profiles: `${baseUrl}/api/technologies/profiles`,
-    hierarchies: `${baseUrl}/api/technologies/hierarchies`,
+    directories: `${baseUrl}/api/technologies/directories`,
     meta: `${baseUrl}/api/technologies/meta`
 };
 

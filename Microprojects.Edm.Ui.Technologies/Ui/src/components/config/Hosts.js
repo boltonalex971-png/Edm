@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useGet } from '@microprojects/edm-components/hooks';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -23,7 +23,7 @@ export function Hosts() {
     return (
         <MasterDetail
             api={api}
-            hierarchiesApi={Api.hierarchies}
+            hierarchiesApi={Api.directories}
             folderComponent={Folder}
             path={path}
             stubMessage={t('config.stub.host')}
@@ -50,7 +50,7 @@ HostDetail.propTypes = {
 export function HostDetail({ hostId, parents, ...props }) {
     const type = 'host';
     let { id } = useParams();
-    id = hostId || parseInt(id);
+    id = hostId || id;
     let [sub, setSub] = useState();
     useEffect(setSub, [id]);
     let [[data, setData], loading, error] = useGet(`${props.api}/${id}`, [id]);
@@ -179,7 +179,7 @@ export function HostDetail({ hostId, parents, ...props }) {
                 />
             }
             relations={
-                <HostTabs id={parseInt(id)} api={props.api} onDetailSelected={setSub} />
+                <HostTabs id={id} api={props.api} onDetailSelected={setSub} />
             }
         />
     );

@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import Api from '../api';
 import { useGet } from '@microprojects/edm-components/hooks';
@@ -24,7 +24,7 @@ export function Processes() {
     return (
         <MasterDetail
             api={api}
-            hierarchiesApi={Api.hierarchies}
+            hierarchiesApi={Api.directories}
             folderComponent={Folder}
             path={path}
             stubMessage={t('config.stub.process')}
@@ -51,7 +51,7 @@ ProcessDetail.propTypes = {
 export function ProcessDetail({ processId, parents, ...props }) {
     const type = 'process';
     let { id } = useParams();
-    id = processId || parseInt(id);
+    id = processId || id;
     let [sub, setSub] = useState();
     useEffect(setSub, [id]);
     const [[ops]] = useGet(`${Api.plugins}/operations`, []);
@@ -183,7 +183,7 @@ export function ProcessDetail({ processId, parents, ...props }) {
                 />
             }
             relations={
-                <ProcessTabs id={parseInt(id)} api={props.api} missedInputs={missedInputs} onDetailSelected={setSub} />
+                <ProcessTabs id={id} api={props.api} missedInputs={missedInputs} onDetailSelected={setSub} />
             }
         />
     );
