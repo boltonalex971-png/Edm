@@ -21,7 +21,6 @@ export default {
         connected: 'Live',
         reconnecting: 'Reconnecting',
         disconnected: 'Offline',
-        stale: 'Stale',
         statusTooltip: 'Hub status:',
     },
     footer: {

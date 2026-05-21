@@ -308,11 +308,6 @@
         background: var(--sig-fault);
         box-shadow: 0 0 0 3px var(--sig-fault-soft);
     }
-
-    &.stale .dot {
-        background: var(--sig-idle);
-        box-shadow: 0 0 0 3px var(--sig-idle-soft);
-    }
 }
 
 @keyframes tb-pip-pulse {

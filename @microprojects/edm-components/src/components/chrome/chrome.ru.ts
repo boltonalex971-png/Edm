@@ -21,7 +21,6 @@ export default {
         connected: 'В сети',
         reconnecting: 'Переподключение',
         disconnected: 'Не в сети',
-        stale: 'Не обновлено',
         statusTooltip: 'Статус хаба:',
     },
     footer: {
