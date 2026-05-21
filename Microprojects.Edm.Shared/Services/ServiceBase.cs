@@ -213,8 +213,26 @@ public class ServiceBase<TContext, TEntity> : IGenericService<TEntity>
 
     protected virtual async Task<T> Save<T>(T entity) where T : class, IDomainObject
     {
-        var track = Set<T>().Attach(entity);
-        track.State = entity.Id == Guid.Empty ? EntityState.Added : EntityState.Modified;
+        var state = entity.Id == Guid.Empty ? EntityState.Added : EntityState.Modified;
+        if (entity is IWithMeta withMeta && state == EntityState.Added)
+        {
+            entity.Id = DomainObject.NewGuid();
+            withMeta.Meta = new Meta
+            {
+                Id = entity.Id,
+                Owner = NameOrPlaceholder(UserService?.GetUserName()),
+                Metatype = typeof(T).Name,
+            };
+            Set<T>().Add(entity);
+        }
+        else
+        {
+            if (state == EntityState.Added)
+            {
+                entity.Id = DomainObject.NewGuid();
+            }
+            Set<T>().Attach(entity).State = state;
+        }
         await Db.SaveChangesAsync();
         return entity;
     }
