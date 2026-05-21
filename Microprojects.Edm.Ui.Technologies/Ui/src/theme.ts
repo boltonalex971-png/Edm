@@ -17,7 +17,7 @@ export const theme = createTheme({
         info: { main: '#1F77E0', light: '#DCEAFB' },
     },
     typography: {
-        fontFamily: '"Archivo", system-ui, -apple-system, "Segoe UI", sans-serif',
+        fontFamily: '"Onest", system-ui, -apple-system, "Segoe UI", sans-serif',
         h1: { fontSize: 40, fontWeight: 700, letterSpacing: '-0.01em', lineHeight: 1.05 },
         h2: { fontSize: 28, fontWeight: 700, letterSpacing: '-0.01em' },
         h3: { fontSize: 22, fontWeight: 700, letterSpacing: '-0.01em' },
