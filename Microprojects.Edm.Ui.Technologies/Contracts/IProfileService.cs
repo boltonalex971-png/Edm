@@ -9,7 +9,7 @@ namespace Microprojects.Edm.Ui.Technologies.Contracts
     public interface IProfileService : IGenericService<Profile>
     {
         Task<IEnumerable<string>> GetProfileParams(Guid id);
-        Task<IEnumerable<Profile>> GetByDevice(int deviceId);
+        Task<IEnumerable<Profile>> GetByDevice(Guid deviceId);
         Task<IEnumerable<Audit>> GetAudits(Guid id);
         Task<Audit> AddAudit(Guid id, Audit audit);
         Task<bool> DeleteAudit(Guid id, Guid auditId);

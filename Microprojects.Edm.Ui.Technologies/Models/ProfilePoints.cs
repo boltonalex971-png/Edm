@@ -3,7 +3,7 @@ using Microprojects.Edm.Domain;
 
 namespace Microprojects.Edm.Ui.Technologies.Models
 {
-    public class ProfilePoint : LegacyIntDomainObject
+    public class ProfilePoint : DomainObject
     {
         public Guid ProfileId { get; set; }
         public int Order { get; set; }

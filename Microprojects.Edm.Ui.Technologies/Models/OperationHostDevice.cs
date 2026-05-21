@@ -6,7 +6,7 @@ namespace Microprojects.Edm.Ui.Technologies.Models
     public class OperationHostDevice : DomainObject
     {
         public Guid OperationId { get; set; }
-        public int HostDeviceId { get; set; }
+        public Guid HostDeviceId { get; set; }
         public Guid ProfileId { get; set; }
         public string Options { get; set; }
 

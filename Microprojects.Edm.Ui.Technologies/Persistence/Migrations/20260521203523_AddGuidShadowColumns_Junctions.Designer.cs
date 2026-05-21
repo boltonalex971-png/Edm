@@ -4,6 +4,7 @@ using Microprojects.Edm.Ui.Technologies.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
 {
     [DbContext(typeof(TechnologiesContext))]
-    partial class TechnologiesContextModelSnapshot : ModelSnapshot
+    [Migration("20260521203523_AddGuidShadowColumns_Junctions")]
+    partial class AddGuidShadowColumns_Junctions
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -264,8 +267,11 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Technologies.Models.HostDevice", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<Guid>("DeviceId")
                         .HasColumnType("uniqueidentifier");
@@ -320,8 +326,8 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
                     b.Property<Guid?>("WorkbenchId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("WorkplaceProcessId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int?>("WorkplaceProcessId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -369,8 +375,8 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("HostDeviceId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("HostDeviceId")
+                        .HasColumnType("int");
 
                     b.Property<Guid>("OperationId")
                         .HasColumnType("uniqueidentifier");
@@ -455,8 +461,11 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Technologies.Models.ProfilePoint", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<long>("Offset")
                         .HasColumnType("bigint");
@@ -562,8 +571,11 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Technologies.Models.Setting", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<Guid>("Guid")
                         .HasColumnType("uniqueidentifier");
@@ -593,8 +605,8 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("WorkplaceProcessId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("WorkplaceProcessId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -617,8 +629,8 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
                     b.Property<Guid>("WorkbenchId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("WorkplaceHostDeviceId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("WorkplaceHostDeviceId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -655,11 +667,14 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Technologies.Models.WorkplaceHostDevice", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
 
-                    b.Property<Guid>("HostDeviceId")
-                        .HasColumnType("uniqueidentifier");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("HostDeviceId")
+                        .HasColumnType("int");
 
                     b.Property<Guid>("WorkplaceId")
                         .HasColumnType("uniqueidentifier");
@@ -675,8 +690,11 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Technologies.Models.WorkplaceProcess", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<Guid>("ProcessId")
                         .HasColumnType("uniqueidentifier");

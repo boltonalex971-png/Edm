@@ -39,8 +39,8 @@ namespace Microprojects.Edm.Ui.Technologies.Models
                 HostDeviceId = s.HostDeviceId,
             };
 
-        public static IntIdNameModel ToIdNameModel(this HostDevice s) =>
-            new IntIdNameModel
+        public static IdNameModel ToIdNameModel(this HostDevice s) =>
+            new IdNameModel
             {
                 Id = s.Id,
                 Name = $"{s.Device?.Name} ({s.Host?.Name})",
@@ -242,7 +242,7 @@ namespace Microprojects.Edm.Ui.Technologies.Models
                 Id = s.Id,
                 WorkbenchId = s.WorkbenchId,
                 WorkplaceHostDeviceId = s.WorkplaceHostDeviceId,
-                HostDeviceId = s.WorkplaceHostDevice?.HostDeviceId ?? 0,
+                HostDeviceId = s.WorkplaceHostDevice?.HostDeviceId ?? Guid.Empty,
                 ProfileId = s.ProfileId,
                 DeviceId = s.WorkplaceHostDevice?.HostDevice?.DeviceId ?? Guid.Empty,
                 DeviceName = s.WorkplaceHostDevice?.HostDevice?.Device?.Name,

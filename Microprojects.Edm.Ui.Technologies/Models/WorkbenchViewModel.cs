@@ -7,7 +7,7 @@ namespace Microprojects.Edm.Ui.Technologies.Models
         public Guid Id { get; set; }
         public string CommonUid { get; set; }
         public Guid WorkplaceId { get; set; }
-        public int WorkplaceProcessId { get; set; }
+        public Guid WorkplaceProcessId { get; set; }
         public string Name { get; set; }
         public string WorkplaceName { get; set; }
         public Guid ProcessId { get; set; }

@@ -3,7 +3,7 @@ using Microprojects.Edm.Domain;
 
 namespace Microprojects.Edm.Ui.Technologies.Models
 {
-    public class HostDevice : LegacyIntDomainObject
+    public class HostDevice : DomainObject
     {
         public Guid DeviceId { get; set; }
         public Guid HostId { get; set; }

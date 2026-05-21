@@ -4,7 +4,7 @@ namespace Microprojects.Edm.Ui.Technologies.Models
 {
     public class WorkplaceProcessModel
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public Guid WorkplaceId { get; set; }
         public Guid ProcessId { get; set; }
 

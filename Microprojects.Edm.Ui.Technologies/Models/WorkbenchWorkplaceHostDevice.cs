@@ -6,7 +6,7 @@ namespace Microprojects.Edm.Ui.Technologies.Models
     public class WorkbenchWorkplaceHostDevice : DomainObject
     {
         public Guid WorkbenchId { get; set; }
-        public int WorkplaceHostDeviceId { get; set; }
+        public Guid WorkplaceHostDeviceId { get; set; }
         public Guid ProfileId { get; set; }
 
         public string Configuration { get; set; }

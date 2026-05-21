@@ -10,7 +10,7 @@ namespace Microprojects.Edm.Ui.Technologies.Models
         public string Description { get; set; }
 
         public Guid? WorkbenchId { get; set; }
-        public int? WorkplaceProcessId { get; set; }
+        public Guid? WorkplaceProcessId { get; set; }
         public DateTime Created { get; set; } = DateTime.UtcNow;
         public DateTime? Scheduled { get; set; }
         public DateTime? Started { get; set; }

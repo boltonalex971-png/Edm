@@ -65,8 +65,8 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
         public async Task<IEnumerable<string>> GetParams(Guid id) =>
             await _profileService.GetProfileParams(id);
 
-        [HttpGet("devices/{id:int}")]
-        public async Task<IEnumerable<Profile>> GetProfilesByDeviceId(int id) =>
+        [HttpGet("devices/{id:guid}")]
+        public async Task<IEnumerable<Profile>> GetProfilesByDeviceId(Guid id) =>
             await _profileService.GetByDevice(id);
 
         [HttpGet("{id:guid}/audits")]

@@ -10,8 +10,8 @@ namespace Microprojects.Edm.Ui.Technologies.Contracts
     {
         Task<IEnumerable<HostDevice>> GetHosts(Guid id);
         Task<HostDevice> AttachHost(HostDevice hostDevice);
-        Task<bool> DetachHost(Guid id, int hostDeviceId);
+        Task<bool> DetachHost(Guid id, Guid hostDeviceId);
         Task<IEnumerable<Host>> GetAvailableHosts();
-        Task<HostDevice> GetHostDevice(int id);
+        Task<HostDevice> GetHostDevice(Guid id);
     }
 }

@@ -70,7 +70,7 @@ namespace Microprojects.Edm.Ui.Technologies.Services
             return result.Entity;
         }
 
-        public async Task<bool> DetachDevice(Guid id, int devId)
+        public async Task<bool> DetachDevice(Guid id, Guid devId)
         {
             var dev = await Db.HostDevices.FindAsync(devId);
             Db.HostDevices.Remove(dev);
@@ -83,7 +83,7 @@ namespace Microprojects.Edm.Ui.Technologies.Services
             return await _deviceService.GetAll();
         }
 
-        public async Task<HostDevice> GetHostDevice(int id)
+        public async Task<HostDevice> GetHostDevice(Guid id)
         {
             return await Db.HostDevices
                 .Include(hd => hd.Device)

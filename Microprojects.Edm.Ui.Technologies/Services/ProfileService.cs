@@ -46,7 +46,7 @@ namespace Microprojects.Edm.Ui.Technologies.Services
             return await base.Delete(id);
         }
 
-        public async Task<IEnumerable<Profile>> GetByDevice(int deviceId)
+        public async Task<IEnumerable<Profile>> GetByDevice(Guid deviceId)
         {
             var profiler = (await Db.HostDevices
                 .Include(hd => hd.Device)

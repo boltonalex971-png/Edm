@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Microprojects.Edm.Domain;
 
 namespace Microprojects.Edm.Ui.Technologies.Models
@@ -7,7 +8,7 @@ namespace Microprojects.Edm.Ui.Technologies.Models
     {
         public string Name { get; set; }
         public string Description { get; set; }
-        public int WorkplaceProcessId { get; set; }
+        public Guid WorkplaceProcessId { get; set; }
         public string CommonUid { get; set; }
 
         public WorkplaceProcess WorkplaceProcess { get; set; }

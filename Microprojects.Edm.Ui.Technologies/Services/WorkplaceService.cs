@@ -27,7 +27,7 @@ namespace Microprojects.Edm.Ui.Technologies.Services
                 .ToListAsync();
         }
 
-        public async Task<WorkplaceHostDevice> GetDevice(int workplaceDeviceId)
+        public async Task<WorkplaceHostDevice> GetDevice(Guid workplaceDeviceId)
         {
             return await Db.WorkplaceHostDevices
                 .Include(w => w.HostDevice.Device)
@@ -35,14 +35,10 @@ namespace Microprojects.Edm.Ui.Technologies.Services
                 .FirstOrDefaultAsync(w => w.Id == workplaceDeviceId);
         }
 
-        public async Task<WorkplaceHostDevice> AttachDevice(WorkplaceHostDevice workplaceHostDevice)
-        {
-            var result = Db.WorkplaceHostDevices.Add(workplaceHostDevice);
-            await Db.SaveChangesAsync();
-            return result.Entity;
-        }
+        public async Task<WorkplaceHostDevice> AttachDevice(WorkplaceHostDevice workplaceHostDevice) =>
+            await Save(workplaceHostDevice);
 
-        public async Task<bool> DetachDevice(Guid id, int devId)
+        public async Task<bool> DetachDevice(Guid id, Guid devId)
         {
             var dev = await Db.WorkplaceHostDevices.FindAsync(devId);
             Db.WorkplaceHostDevices.Remove(dev);
@@ -80,22 +76,13 @@ namespace Microprojects.Edm.Ui.Technologies.Services
                 .ToListAsync();
         }
 
-        public async Task<WorkplaceProcess> AttachProcess(WorkplaceProcess workplaceProcess)
-        {
-            var result = Db.WorkplaceProcesses.Add(workplaceProcess);
-            await Db.SaveChangesAsync();
-            return result.Entity;
-        }
+        public async Task<WorkplaceProcess> AttachProcess(WorkplaceProcess workplaceProcess) =>
+            await Save(workplaceProcess);
 
-        public async Task<WorkplaceProcess> SaveWorkplaceProcess(WorkplaceProcess workplaceProcess)
-        {
-            var track = Db.WorkplaceProcesses.Attach(workplaceProcess);
-            track.State = workplaceProcess.Id == 0 ? EntityState.Added : EntityState.Modified;
-            await Db.SaveChangesAsync();
-            return workplaceProcess;
-        }
+        public async Task<WorkplaceProcess> SaveWorkplaceProcess(WorkplaceProcess workplaceProcess) =>
+            await Save(workplaceProcess);
 
-        public async Task<bool> DetachProcess(Guid id, int procId)
+        public async Task<bool> DetachProcess(Guid id, Guid procId)
         {
             var dev = await Db.WorkplaceProcesses.FindAsync(procId);
             Db.WorkplaceProcesses.Remove(dev);
@@ -111,7 +98,7 @@ namespace Microprojects.Edm.Ui.Technologies.Services
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<Workbench>> GetWorkbenches(int workplaceProcessId)
+        public async Task<IEnumerable<Workbench>> GetWorkbenches(Guid workplaceProcessId)
         {
             return await Db.Workbenches
                 .Include(w => w.WorkplaceProcess.Process)
@@ -121,7 +108,7 @@ namespace Microprojects.Edm.Ui.Technologies.Services
                 .ToListAsync();
         }
 
-        public async Task<WorkplaceProcess> GetWorkplaceProcess(int workplaceProcessId)
+        public async Task<WorkplaceProcess> GetWorkplaceProcess(Guid workplaceProcessId)
         {
             return await Db.WorkplaceProcesses
                 .Include(p => p.Process.Profiles)

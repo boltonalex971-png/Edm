@@ -67,7 +67,7 @@ namespace Microprojects.Edm.Ui.Technologies.Services
             return result.Entity;
         }
 
-        public async Task<bool> DetachHost(Guid id, int hostDeviceId)
+        public async Task<bool> DetachHost(Guid id, Guid hostDeviceId)
         {
             var host = await Db.HostDevices.FindAsync(hostDeviceId);
             Db.HostDevices.Remove(host);
@@ -85,7 +85,7 @@ namespace Microprojects.Edm.Ui.Technologies.Services
                 .ToListAsync();
         }
 
-        public async Task<HostDevice> GetHostDevice(int id)
+        public async Task<HostDevice> GetHostDevice(Guid id)
         {
             return await Db.HostDevices
                 .Include(hd => hd.Device)

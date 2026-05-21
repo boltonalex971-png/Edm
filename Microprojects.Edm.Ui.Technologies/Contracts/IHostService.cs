@@ -11,7 +11,7 @@ namespace Microprojects.Edm.Ui.Technologies.Contracts
         Task<IEnumerable<HostDevice>> GetDevices(Guid hostId);
         Task<HostDevice> AttachDevice(HostDevice hostDevice);
         Task<IEnumerable<Device>> GetAvailableDevices();
-        Task<bool> DetachDevice(Guid hostId, int deviceId);
-        Task<HostDevice> GetHostDevice(int id);
+        Task<bool> DetachDevice(Guid hostId, Guid deviceId);
+        Task<HostDevice> GetHostDevice(Guid id);
     }
 }

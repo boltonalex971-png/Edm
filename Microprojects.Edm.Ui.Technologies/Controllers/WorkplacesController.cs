@@ -100,8 +100,8 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
             return devices.Select(d => d.ToModel(_plugins)).ToList();
         }
 
-        [HttpGet("devices/{workplaceDeviceId:int}")]
-        public async Task<WorkplaceHostDeviceModel> GetDevice(int workplaceDeviceId)
+        [HttpGet("devices/{workplaceDeviceId:guid}")]
+        public async Task<WorkplaceHostDeviceModel> GetDevice(Guid workplaceDeviceId)
         {
             var device = await _workplaceService.GetDevice(workplaceDeviceId);
             return device.ToModel(_plugins);
@@ -116,8 +116,8 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
             return device.ToModel();
         }
 
-        [HttpDelete("{id:guid}/devices/{devId:int}")]
-        public async Task<bool> DetachHostDevice(Guid id, int devId) =>
+        [HttpDelete("{id:guid}/devices/{devId:guid}")]
+        public async Task<bool> DetachHostDevice(Guid id, Guid devId) =>
             await _workplaceService.DetachDevice(id, devId);
 
         [HttpGet("{id:guid}/devices/{profilerGuid:guid}")]
@@ -132,7 +132,7 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
 
         #region processes
         [HttpGet("devices")]
-        public async Task<IEnumerable<IntIdNameModel>> GetAvailableHostDevices(Guid? profilerGuid)
+        public async Task<IEnumerable<IdNameModel>> GetAvailableHostDevices(Guid? profilerGuid)
         {
             var hostDevices = await _workplaceService.GetAvailableHostDevices();
             if (profilerGuid != null)
@@ -171,8 +171,8 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
             return result.ToModel();
         }
 
-        [HttpDelete("{id:guid}/processes/{procId:int}")]
-        public async Task<bool> DetachProcess(Guid id, int procId)
+        [HttpDelete("{id:guid}/processes/{procId:guid}")]
+        public async Task<bool> DetachProcess(Guid id, Guid procId)
         {
             try
             {
@@ -191,22 +191,22 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
             return processes.Select(p => p.ToIdNameModel()).ToList();
         }
 
-        [HttpGet("processes/{wpProcId:int}")]
-        public async Task<WorkplaceProcessModel> GetWorplaceProcess(int wpProcId)
+        [HttpGet("processes/{wpProcId:guid}")]
+        public async Task<WorkplaceProcessModel> GetWorplaceProcess(Guid wpProcId)
         {
             var process = await _workplaceService.GetWorkplaceProcess(wpProcId);
             return process.ToModel();
         }
 
-        [HttpGet("processes/{wpProcId:int}/workbenches")]
-        public async Task<IEnumerable<WorkbenchViewModel>> GetWorkbenches(int wpProcId)
+        [HttpGet("processes/{wpProcId:guid}/workbenches")]
+        public async Task<IEnumerable<WorkbenchViewModel>> GetWorkbenches(Guid wpProcId)
         {
             var wbs = await _workplaceService.GetWorkbenches(wpProcId);
             return wbs.Select(w => w.ToViewModel()).ToList();
         }
 
-        [HttpPost("processes/{wpProcId:int}/workbenches")]
-        public async Task<WorkbenchViewModel> AddWorkbench(int wpProcId, WorkbenchViewModel model)
+        [HttpPost("processes/{wpProcId:guid}/workbenches")]
+        public async Task<WorkbenchViewModel> AddWorkbench(Guid wpProcId, WorkbenchViewModel model)
         {
             var wb = model.ToEntity();
             wb.Id = Guid.Empty;
@@ -230,7 +230,7 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
             return result.ToViewModel();
         }
 
-        [HttpDelete("processes/{procId:int}/workbenches/{id:guid}")]
+        [HttpDelete("processes/{procId:guid}/workbenches/{id:guid}")]
         public async Task<WorkbenchViewModel> DeleteWorkbench(Guid id)
         {
             var wb = await _workplaceService.DeleteWorkbench(id);

@@ -128,8 +128,8 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
             return device.ToModel();
         }
 
-        [HttpDelete("{id:guid}/devices/{devId:int}")]
-        public async Task<bool> DetachDevice(Guid id, int devId)
+        [HttpDelete("{id:guid}/devices/{devId:guid}")]
+        public async Task<bool> DetachDevice(Guid id, Guid devId)
         {
             return await _hostService.DetachDevice(id, devId);
         }
@@ -141,8 +141,8 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
             return devices.Select(d => d.ToIdNameModel()).ToList();
         }
 
-        [HttpGet("devices/{id:int}")]
-        public async Task<HostDeviceModel> GetHostDevice(int id)
+        [HttpGet("devices/{id:guid}")]
+        public async Task<HostDeviceModel> GetHostDevice(Guid id)
         {
             var device = await _hostService.GetHostDevice(id);
             return device.ToModel(_plugins);

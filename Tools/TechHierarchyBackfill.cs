@@ -145,6 +145,29 @@ try
         Console.WriteLine("Operations.NewId not found — Phase F already applied; skipping its steps.");
     }
 
+    // Phase G: remaining int-PK leaftovers. Setting/HostDevice/
+    // WorkplaceHostDevice/WorkplaceProcess/ProfilePoint flip to Guid PK;
+    // none get Meta. Inbound FK shadows fan out to Workbenches/Operations/
+    // WorkbenchDeviceConfigurations/OperationHostDevices.
+    if (await ColumnExists(conn, tx, "Settings", "NewId"))
+    {
+        await BackfillLeafNewIds(conn, tx, "Settings");
+        await BackfillLeafNewIds(conn, tx, "HostDevices");
+        await BackfillLeafNewIds(conn, tx, "WorkplaceHostDevices");
+        await BackfillLeafNewIds(conn, tx, "WorkplaceProcesses");
+        await BackfillLeafNewIds(conn, tx, "ProfilePoint");
+
+        await BackfillIndirectFk(conn, tx, "WorkplaceHostDevices", "NewHostDeviceId", "HostDeviceId", "HostDevices");
+        await BackfillIndirectFk(conn, tx, "OperationHostDevices", "NewHostDeviceId", "HostDeviceId", "HostDevices");
+        await BackfillIndirectFk(conn, tx, "WorkbenchDeviceConfigurations", "NewWorkplaceHostDeviceId", "WorkplaceHostDeviceId", "WorkplaceHostDevices");
+        await BackfillIndirectFk(conn, tx, "Workbenches", "NewWorkplaceProcessId", "WorkplaceProcessId", "WorkplaceProcesses");
+        await BackfillIndirectFk(conn, tx, "Operations", "NewWorkplaceProcessId", "WorkplaceProcessId", "WorkplaceProcesses");
+    }
+    else
+    {
+        Console.WriteLine("Settings.NewId not found — Phase G already applied; skipping its steps.");
+    }
+
     await tx.CommitAsync();
     Console.WriteLine("Backfill complete.");
     return 0;
