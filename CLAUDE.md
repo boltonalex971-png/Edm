@@ -1,4 +1,4 @@
-# CLAUDE.md
+﻿# CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 The solution file is `Edm.slnx` (XML format, not .sln). Projects are grouped by role:
 
 - **Core Platform** — `Optosense.Edm.WebApi`, `Optosense.Edm.Core`, `Optosense.Edm.Core.AspNet`: host, auth, plugin manager.
-- **Domain** — `Optosense.Edm.Domain`: shared base classes only (`DomainObject`, `NamedObject`, `TypeObject`, `HierarchyObject`, `ILogicallyDeletableEntity`). All entity types and EF migrations live in their owning plugin (e.g. `Microprojects.Edm.Ui.Technologies/Persistence/`, `Microprojects.Edm.Ui.Logistics/Persistence/`). Default provider is SQL Server.
+- **Shared Domain** — `Microprojects.Edm.Shared`: shared Guid-id base (`DomainObject` with `Id` minted via `DomainObject.NewGuid()` / UUIDv8), the lifecycle bundle (`IWithMeta`, `Meta`, `History`), the directory tree (`DirectoryEntry`, `Directory`), the shared CRUD infrastructure (`ServiceBase<TContext, TEntity>`, `IGenericService<T>`, `IDirectoryService`, `DirectoryService<TContext>`, `IDirectoryRootRegistry`), and the shared `DirectoriesController` abstract base. Both `LogisticsContext` and `TechnologiesContext` inherit `SharedDbContext`. All entity types and EF migrations live in their owning plugin (e.g. `Microprojects.Edm.Ui.Technologies/Persistence/`, `Microprojects.Edm.Ui.Logistics/Persistence/`). Default provider is SQL Server.
 - **Infrastructure** — `Optosense.Edm.Infrastructure`, `Edm`: plugin loading, caching, Redis, `Edm/Plugins/PluginManager.cs`.
 - **Profile plugins** (`Optosense.Edm.Profiles.*`) — device settings schemas, parameter extraction from profile JSON.
 - **Driver plugins** (`Optosense.Edm.Drivers.*`, `Optosense.Edm.Plugins.OpcUa`, `...Operator`) — profile → execution plan, hardware I/O.
@@ -22,12 +22,14 @@ Each plugin class inherits from the matching base (`ProfilePluginBase`, `DriverP
 
 ## Entity Base Classes
 
-New entities should inherit from one of:
-- `DomainObject` — just `Id`.
-- `NamedObject` — adds `Name`.
-- `TypeObject` — adds `Description` and `IsActive` (soft delete via `IsActive`, not row deletion).
+Every entity is Guid-keyed. Pick a base by lifecycle need:
+- `DomainObject` — just `Id` (Guid). Use for immutable streams and pure junction tables: e.g. `Record`, `HostDevice`, `WorkplaceHostDevice`, `WorkplaceProcess`, `ProfilePoint`, `RecordOperationCriterion`, `OperationCriterion`, `OperationHostDevice`, `Setting`, `AuditZone`, `AuditCriterion`.
+- `DomainObject, IWithMeta` — adds Meta (created/modified/deleted/completed/owner/groups, history). Use for user-managed lifecycle entities: e.g. `Profile`, `Qualifier`, `Audit`, `Operation`, `Workbench`.
+- `DirectoryEntry` (which is `DomainObject, IWithMeta` plus `DirectoryId/Name/Description`) — for tree-organized entities: `Host`, `Device`, `Process`, `Workplace`.
 
-Key existing entities: `Profile`, `Device`, `Host`, `Process` (all `TypeObject`); `Record`, `Operation` (`DomainObject`).
+The legacy `LegacyIntDomainObject`, `NamedObject`, `TypeObject`, `HierarchyObject`, `ILogicallyDeletableEntity`, and Tech's int `ServiceBase<T>` / `ILegacyIntGenericService<T>` are gone — every plugin is on the shared Guid base.
+
+When you add a new entity, choose IWithMeta deliberately. It's overhead per row (a Meta row, a History row on each save) and only earns its keep when the entity has user-managed lifecycle worth tracking. Streams of measurements (Record) or pure junctions stay plain `DomainObject`.
 
 ## Build and Run
 
