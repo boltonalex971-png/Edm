@@ -52,6 +52,7 @@ namespace Microprojects.Edm.Ui.Technologies
             services.AddScoped<IDeviceService, DeviceService>();
             services.AddScoped<IWorkplaceService, WorkplaceService>();
             services.AddScoped<IProfileService, ProfileService>();
+            services.AddScoped<IQualifierService, QualifierService>();
             services.AddScoped<IOperationService, OperationService>();
             services.AddScoped<ISettingService, SettingService>();
 

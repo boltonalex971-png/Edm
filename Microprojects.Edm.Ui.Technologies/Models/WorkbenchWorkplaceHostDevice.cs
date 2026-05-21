@@ -1,12 +1,5 @@
+﻿using System;
 using Microprojects.Edm.Domain;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Ui.Technologies.Models;
 
 namespace Microprojects.Edm.Ui.Technologies.Models
 {
@@ -14,7 +7,7 @@ namespace Microprojects.Edm.Ui.Technologies.Models
     {
         public int WorkbenchId { get; set; }
         public int WorkplaceHostDeviceId { get; set; }
-        public int ProfileId { get; set; }
+        public Guid ProfileId { get; set; }
 
         public string Configuration { get; set; }
 

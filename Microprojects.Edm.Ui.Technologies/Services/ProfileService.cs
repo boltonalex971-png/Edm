@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microprojects.Edm.Plugins;
+using Microprojects.Edm.Shared.Contracts;
+using Microprojects.Edm.Shared.Services;
 using Microprojects.Edm.Ui.Technologies.Contracts;
 using Microprojects.Edm.Ui.Technologies.Models;
 using Microprojects.Edm.Ui.Technologies.Persistence;
@@ -11,18 +13,17 @@ using Newtonsoft.Json;
 
 namespace Microprojects.Edm.Ui.Technologies.Services
 {
-    public class ProfileService : ServiceBase<Profile>, IProfileService
+    public class ProfileService : ServiceBase<TechnologiesContext, Profile>, IProfileService
     {
         private readonly IPluginContainer _plugins;
 
-        public ProfileService() { }
-
-        public ProfileService(TechnologiesContext db, IPluginContainer plugins) : base(db)
+        public ProfileService(TechnologiesContext db, IUserService userService, IPluginContainer plugins)
+            : base(db, userService)
         {
             _plugins = plugins;
         }
 
-        public override async Task<Profile> Get(int id)
+        public override async Task<Profile> Get(Guid id)
         {
             var result = await base.Get(id);
             if (result == null)
@@ -34,11 +35,15 @@ namespace Microprojects.Edm.Ui.Technologies.Services
             return result;
         }
 
-        public override async Task<Profile> Delete(int id)
+        public override async Task<Profile> Delete(Guid id)
         {
             var profile = await Get(id);
-            var used = await Db.OperationHostDevices.AnyAsync(o => o.ProfileId == id);
-            return await Delete(profile, used);
+            if (profile is null)
+            {
+                return null;
+            }
+            // Always soft-delete via Meta.Deleted (the base does it).
+            return await base.Delete(id);
         }
 
         public async Task<IEnumerable<Profile>> GetByDevice(int deviceId)
@@ -48,11 +53,12 @@ namespace Microprojects.Edm.Ui.Technologies.Services
                 .FirstOrDefaultAsync(hd => hd.Id == deviceId))?.Device.ProfilerGuid
                 ?? throw new Exception($"No device with id {deviceId} found");
             return await Db.Profiles
-                .Where(p => p.ProfilerGuid == profiler && p.IsActive)
+                .Include(p => p.Meta)
+                .Where(p => p.ProfilerGuid == profiler && p.Meta.Deleted == null)
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<string>> GetProfileParams(int id)
+        public async Task<IEnumerable<string>> GetProfileParams(Guid id)
         {
             var profile = await Get(id);
             var outputParams = JsonConvert.DeserializeObject<IEnumerable<string>>(profile.Output ?? "[]");
@@ -61,14 +67,14 @@ namespace Microprojects.Edm.Ui.Technologies.Services
             return outputParams.Concat(parameters);
         }
 
-        public async Task<IEnumerable<Audit>> GetAudits(int id)
+        public async Task<IEnumerable<Audit>> GetAudits(Guid id)
         {
             return await Db.Audits
                 .Where(s => s.ProfileId == id && s.IsActive)
                 .ToListAsync();
         }
 
-        public async Task<Audit> AddAudit(int id, Audit audit)
+        public async Task<Audit> AddAudit(Guid id, Audit audit)
         {
             var profile = await Db.Profiles
                 .Include(p => p.Audits)
@@ -80,7 +86,7 @@ namespace Microprojects.Edm.Ui.Technologies.Services
             return audit;
         }
 
-        public async Task<bool> DeleteAudit(int id, int auditId)
+        public async Task<bool> DeleteAudit(Guid id, int auditId)
         {
             var profile = await Db.Profiles
                 .Include(p => p.Audits)

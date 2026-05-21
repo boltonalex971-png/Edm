@@ -103,7 +103,6 @@ namespace Microprojects.Edm.Ui.Technologies.Models
                 Id = s.Id,
                 Name = s.Name,
                 Description = s.Description,
-                IsActive = s.IsActive,
             };
 
         public static Qualifier ToEntity(this QualifierViewModel s) =>
@@ -112,7 +111,7 @@ namespace Microprojects.Edm.Ui.Technologies.Models
                 Id = s.Id,
                 Name = s.Name,
                 Description = s.Description,
-                IsActive = s.IsActive,
+                Meta = null!,
             };
 
         public static HostDeviceModel ToModel(this HostDevice s, IPluginContainer? plugins = null)
@@ -207,6 +206,7 @@ namespace Microprojects.Edm.Ui.Technologies.Models
                 Input = s.Input,
                 Output = s.Output,
                 ProfilerGuid = s.ProfilerGuid,
+                Meta = null!,
             };
 
         public static WorkbenchViewModel ToViewModel(this Workbench s) =>

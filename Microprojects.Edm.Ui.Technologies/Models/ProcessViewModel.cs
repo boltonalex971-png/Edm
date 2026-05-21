@@ -18,9 +18,8 @@ namespace Microprojects.Edm.Ui.Technologies.Models
 
     public class QualifierViewModel
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public string Name { set; get; }
         public string Description { set; get; }
-        public bool IsActive { get; set; }
     }
 }

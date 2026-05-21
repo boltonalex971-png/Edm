@@ -7,16 +7,15 @@ using Microprojects.Edm.Domain;
 namespace Microprojects.Edm.Ui.Technologies.Models
 {
     /// <summary>
-    /// Profile describes a set of steps on timeline to achieve
-    /// apropriate results. Each device driver, defined by
-    /// <code>Model</code> property, is responsible for
-    /// the profile steps interpretaion.
-    /// If <code>IsActive</code> property is false it could mean
-    /// that the profile was customized just for certain operation(s)
-    /// and can not be applied anywhere else
+    /// Profile describes a set of steps on timeline to achieve appropriate
+    /// results. Each device driver, defined by <code>Model</code> property,
+    /// is responsible for the profile steps interpretation. Lifecycle (created,
+    /// modified, deleted, completed) lives in Meta.
     /// </summary>
-    public class Profile : TypeObject
+    public class Profile : DomainObject, IWithMeta
     {
+        public string Name { get; set; }
+        public string Description { get; set; }
         public Guid ProcessId { get; set; }
 
         /// <summary>
@@ -61,5 +60,7 @@ namespace Microprojects.Edm.Ui.Technologies.Models
         /// </summary>
         public ICollection<ProfilePoint> Points { get; set; }
         public ICollection<Audit> Audits { get; set; }
+
+        public Meta Meta { get; set; } = null!;
     }
 }

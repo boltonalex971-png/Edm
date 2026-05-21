@@ -120,8 +120,8 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
             return result.ToViewModel();
         }
 
-        [HttpDelete("{id:guid}/profiles/{profileId:int}")]
-        public async Task<bool> DeleteProfile(Guid id, int profileId) =>
+        [HttpDelete("{id:guid}/profiles/{profileId:guid}")]
+        public async Task<bool> DeleteProfile(Guid id, Guid profileId) =>
             await _processService.DeleteProfile(id, profileId);
         #endregion
 
@@ -141,8 +141,8 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
             return qualifier.ToViewModel();
         }
 
-        [HttpDelete("{id:guid}/qualifiers/{qualifierId:int}")]
-        public async Task<bool> DeleteQualifier(Guid id, int qualifierId) =>
+        [HttpDelete("{id:guid}/qualifiers/{qualifierId:guid}")]
+        public async Task<bool> DeleteQualifier(Guid id, Guid qualifierId) =>
             await _processService.DeleteQualifier(id, qualifierId);
 
         [HttpPut("{processId:guid}/qualifiers")]

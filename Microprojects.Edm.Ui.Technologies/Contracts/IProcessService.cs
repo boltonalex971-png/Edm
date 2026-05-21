@@ -12,11 +12,11 @@ namespace Microprojects.Edm.Ui.Technologies.Contracts
         Task<IEnumerable<string>> GetMissingInputs(Guid id);
         Task<Profile> AddProfile(Guid processId, Profile profile);
         Task<Profile> SaveProfile(Profile profile);
-        Task<bool> DeleteProfile(Guid processId, int profileId);
+        Task<bool> DeleteProfile(Guid processId, Guid profileId);
 
         Task<IEnumerable<Qualifier>> GetQualifiers(Guid id);
         Task<Qualifier> AddQualifier(Guid processId, Qualifier qualifier);
         Task<Qualifier> SaveQualifier(Qualifier qualifier);
-        Task<bool> DeleteQualifier(Guid processId, int qualifierId);
+        Task<bool> DeleteQualifier(Guid processId, Guid qualifierId);
     }
 }

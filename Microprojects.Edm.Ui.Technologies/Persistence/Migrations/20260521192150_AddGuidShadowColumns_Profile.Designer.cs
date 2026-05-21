@@ -4,6 +4,7 @@ using Microprojects.Edm.Ui.Technologies.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
 {
     [DbContext(typeof(TechnologiesContext))]
-    partial class TechnologiesContextModelSnapshot : ModelSnapshot
+    [Migration("20260521192150_AddGuidShadowColumns_Profile")]
+    partial class AddGuidShadowColumns_Profile
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -27,8 +30,8 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
                     b.Property<int>("AuditId")
                         .HasColumnType("int");
 
-                    b.Property<Guid>("QualifiersId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("QualifiersId")
+                        .HasColumnType("int");
 
                     b.HasKey("AuditId", "QualifiersId");
 
@@ -142,8 +145,8 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("ProfileId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("ProfileId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Rules")
                         .HasColumnType("nvarchar(max)");
@@ -405,8 +408,8 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
                     b.Property<string>("Options")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("ProfileId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("ProfileId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -449,14 +452,20 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Technologies.Models.Profile", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Input")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
@@ -497,8 +506,8 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
                     b.Property<int>("Order")
                         .HasColumnType("int");
 
-                    b.Property<Guid>("ProfileId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("ProfileId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -509,11 +518,17 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Technologies.Models.Qualifier", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
@@ -659,8 +674,8 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
                     b.Property<string>("Configuration")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("ProfileId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("ProfileId")
+                        .HasColumnType("int");
 
                     b.Property<int>("WorkbenchId")
                         .HasColumnType("int");
@@ -956,19 +971,11 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Technologies.Models.Profile", b =>
                 {
-                    b.HasOne("Microprojects.Edm.Domain.Meta", "Meta")
-                        .WithOne()
-                        .HasForeignKey("Microprojects.Edm.Ui.Technologies.Models.Profile", "Id")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
                     b.HasOne("Microprojects.Edm.Ui.Technologies.Models.Process", "Process")
                         .WithMany("Profiles")
                         .HasForeignKey("ProcessId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Meta");
 
                     b.Navigation("Process");
                 });
@@ -986,19 +993,11 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Technologies.Models.Qualifier", b =>
                 {
-                    b.HasOne("Microprojects.Edm.Domain.Meta", "Meta")
-                        .WithOne()
-                        .HasForeignKey("Microprojects.Edm.Ui.Technologies.Models.Qualifier", "Id")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
                     b.HasOne("Microprojects.Edm.Ui.Technologies.Models.Process", "Process")
                         .WithMany("Qualifiers")
                         .HasForeignKey("ProcessId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Meta");
 
                     b.Navigation("Process");
                 });

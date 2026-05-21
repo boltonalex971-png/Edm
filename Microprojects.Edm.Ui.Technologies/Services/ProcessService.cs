@@ -15,17 +15,21 @@ namespace Microprojects.Edm.Ui.Technologies.Services
     public class ProcessService : ServiceBase<TechnologiesContext, Process>, IProcessService
     {
         private readonly IProfileService _profileService;
+        private readonly IQualifierService _qualifierService;
 
-        public ProcessService(TechnologiesContext db, IUserService userService, IProfileService profileService)
+        public ProcessService(TechnologiesContext db, IUserService userService,
+            IProfileService profileService, IQualifierService qualifierService)
             : base(db, userService)
         {
             _profileService = profileService;
+            _qualifierService = qualifierService;
         }
 
         public async Task<IEnumerable<Profile>> GetProfiles(Guid id)
         {
             return await Db.Profiles
-                .Where(p => p.ProcessId == id)
+                .Include(p => p.Meta)
+                .Where(p => p.ProcessId == id && p.Meta.Deleted == null)
                 .ToListAsync();
         }
 
@@ -39,78 +43,48 @@ namespace Microprojects.Edm.Ui.Technologies.Services
 
         public async Task<Profile> AddProfile(Guid id, Profile profile)
         {
-            var process = await Db.Processes
-                .Include(p => p.Profiles)
-                .Include(p => p.Meta)
-                .FirstOrDefaultAsync(p => p.Id == id && p.Meta.Deleted == null)
-                ?? throw new ArgumentException("Process not found");
-            profile.IsActive = true;
-            process.Profiles.Add(profile);
-            await Db.SaveChangesAsync();
-            return profile;
-        }
-
-        public async Task<Profile> SaveProfile(Profile profile)
-        {
+            profile.ProcessId = id;
             return await _profileService.Save(profile);
         }
 
-        public async Task<bool> DeleteProfile(Guid id, int profileId)
+        public async Task<Profile> SaveProfile(Profile profile) => await _profileService.Save(profile);
+
+        public async Task<bool> DeleteProfile(Guid id, Guid profileId)
         {
-            var process = await Db.Processes
-                .Include(p => p.Profiles)
-                .FirstOrDefaultAsync(p => p.Id == id)
-                ?? throw new ArgumentException("Process not found");
-            var profile = process.Profiles.FirstOrDefault(p => p.Id == profileId)
-                ?? throw new ArgumentException("Profile not found");
-            process.Profiles.Remove(profile);
-            await Db.SaveChangesAsync();
+            var profile = await _profileService.Get(profileId);
+            if (profile is null || profile.ProcessId != id)
+            {
+                throw new ArgumentException("Profile not found for the given process");
+            }
+            await _profileService.Delete(profileId);
             return true;
         }
 
         public async Task<IEnumerable<Qualifier>> GetQualifiers(Guid id)
         {
             return await Db.Qualifiers
-                .Where(p => p.ProcessId == id)
+                .Include(q => q.Meta)
+                .Where(q => q.ProcessId == id && q.Meta.Deleted == null)
                 .ToListAsync();
         }
 
         public async Task<Qualifier> AddQualifier(Guid id, Qualifier qualifier)
         {
-            var process = await Db.Processes
-                .Include(p => p.Qualifiers)
-                .Include(p => p.Meta)
-                .FirstOrDefaultAsync(p => p.Id == id && p.Meta.Deleted == null)
-                ?? throw new ArgumentException("Process not found");
-            qualifier.IsActive = true;
-            process.Qualifiers.Add(qualifier);
-            await Db.SaveChangesAsync();
-            return qualifier;
+            qualifier.ProcessId = id;
+            return await _qualifierService.Save(qualifier);
         }
 
-        public async Task<bool> DeleteQualifier(Guid id, int qualifierId)
+        public async Task<bool> DeleteQualifier(Guid id, Guid qualifierId)
         {
-            var process = await Db.Processes
-                .Include(p => p.Qualifiers)
-                .FirstOrDefaultAsync(p => p.Id == id)
-                ?? throw new ArgumentException("Process not found");
-            var qualifier = process.Qualifiers.FirstOrDefault(p => p.Id == qualifierId)
-                ?? throw new ArgumentException("Qualifier not found");
-            process.Qualifiers.Remove(qualifier);
-            await Db.SaveChangesAsync();
+            var qualifier = await _qualifierService.Get(qualifierId);
+            if (qualifier is null || qualifier.ProcessId != id)
+            {
+                throw new ArgumentException("Qualifier not found for the given process");
+            }
+            await _qualifierService.Delete(qualifierId);
             return true;
         }
 
-        public async Task<Qualifier> SaveQualifier(Qualifier qualifier)
-        {
-            var track = Db.Qualifiers.Attach(qualifier);
-            track.State = qualifier.Id == 0 ? EntityState.Added : EntityState.Modified;
-            if (track.State == EntityState.Added)
-            {
-                qualifier.IsActive = true;
-            }
-            await Db.SaveChangesAsync();
-            return qualifier;
-        }
+        public async Task<Qualifier> SaveQualifier(Qualifier qualifier) => await _qualifierService.Save(qualifier);
     }
 }

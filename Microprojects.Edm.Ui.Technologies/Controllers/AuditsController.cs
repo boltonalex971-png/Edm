@@ -1,13 +1,13 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Microprojects.Edm.Ui.Technologies.Auditing;
 using Microprojects.Edm.Ui.Technologies.Contracts;
 using Microprojects.Edm.Ui.Technologies.Models;
 using Microprojects.Edm.Ui.Technologies.Services;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace Microprojects.Edm.Ui.Technologies.Controllers
 {
@@ -163,8 +163,8 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
             return qualifier.ToViewModel();
         }
 
-        [HttpDelete("{id:int}/qualifiers/{qualifierId:int}")]
-        public async Task<bool> DeleteQualifier(int id, int qualifierId)
+        [HttpDelete("{id:int}/qualifiers/{qualifierId:guid}")]
+        public async Task<bool> DeleteQualifier(int id, Guid qualifierId)
         {
             var wasDetached = await _auditService.DeleteQualifier(id, qualifierId);
             return wasDetached;

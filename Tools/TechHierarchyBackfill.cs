@@ -41,32 +41,54 @@ await conn.OpenAsync();
 await using var tx = (SqlTransaction)await conn.BeginTransactionAsync();
 try
 {
-    await BackfillHierarchiesNewIds(conn, tx, rootMap);
-    await BackfillLeafNewIds(conn, tx, "Hosts");
-    await BackfillLeafNewIds(conn, tx, "Devices");
-    await BackfillLeafNewIds(conn, tx, "Processes");
-    await BackfillLeafNewIds(conn, tx, "Workplaces");
+    // Phase-C steps only run when the legacy Hierarchies table is still
+    // present (i.e. EnforceNotNullAndSwitchToGuid_Hierarchy has not yet
+    // applied). After Phase C is done they are no-ops via skip.
+    var hierarchiesAlive = await TableExists(conn, tx, "Hierarchies");
+    if (hierarchiesAlive)
+    {
+        await BackfillHierarchiesNewIds(conn, tx, rootMap);
+        await BackfillLeafNewIds(conn, tx, "Hosts");
+        await BackfillLeafNewIds(conn, tx, "Devices");
+        await BackfillLeafNewIds(conn, tx, "Processes");
+        await BackfillLeafNewIds(conn, tx, "Workplaces");
 
-    await InsertMetaForHierarchies(conn, tx);
-    await InsertMetaForLeaf(conn, tx, "Hosts", "Host");
-    await InsertMetaForLeaf(conn, tx, "Devices", "Device");
-    await InsertMetaForLeaf(conn, tx, "Processes", "Process");
-    await InsertMetaForLeaf(conn, tx, "Workplaces", "Workplace");
+        await InsertMetaForHierarchies(conn, tx);
+        await InsertMetaForLeaf(conn, tx, "Hosts", "Host");
+        await InsertMetaForLeaf(conn, tx, "Devices", "Device");
+        await InsertMetaForLeaf(conn, tx, "Processes", "Process");
+        await InsertMetaForLeaf(conn, tx, "Workplaces", "Workplace");
 
-    await InsertDirectoriesForHierarchies(conn, tx);
+        await InsertDirectoriesForHierarchies(conn, tx);
 
-    await BackfillLeafNewDirectoryId(conn, tx, "Hosts");
-    await BackfillLeafNewDirectoryId(conn, tx, "Devices");
-    await BackfillLeafNewDirectoryId(conn, tx, "Processes");
-    await BackfillLeafNewDirectoryId(conn, tx, "Workplaces");
+        await BackfillLeafNewDirectoryId(conn, tx, "Hosts");
+        await BackfillLeafNewDirectoryId(conn, tx, "Devices");
+        await BackfillLeafNewDirectoryId(conn, tx, "Processes");
+        await BackfillLeafNewDirectoryId(conn, tx, "Workplaces");
 
-    await BackfillIndirectFk(conn, tx, "HostDevices", "NewHostId", "HostId", "Hosts");
-    await BackfillIndirectFk(conn, tx, "HostDevices", "NewDeviceId", "DeviceId", "Devices");
-    await BackfillIndirectFk(conn, tx, "Profiles", "NewProcessId", "ProcessId", "Processes");
-    await BackfillIndirectFk(conn, tx, "Qualifiers", "NewProcessId", "ProcessId", "Processes");
-    await BackfillIndirectFk(conn, tx, "WorkplaceHostDevices", "NewWorkplaceId", "WorkplaceId", "Workplaces");
-    await BackfillIndirectFk(conn, tx, "WorkplaceProcesses", "NewWorkplaceId", "WorkplaceId", "Workplaces");
-    await BackfillIndirectFk(conn, tx, "WorkplaceProcesses", "NewProcessId", "ProcessId", "Processes");
+        await BackfillIndirectFk(conn, tx, "HostDevices", "NewHostId", "HostId", "Hosts");
+        await BackfillIndirectFk(conn, tx, "HostDevices", "NewDeviceId", "DeviceId", "Devices");
+        await BackfillIndirectFk(conn, tx, "Profiles", "NewProcessId", "ProcessId", "Processes");
+        await BackfillIndirectFk(conn, tx, "Qualifiers", "NewProcessId", "ProcessId", "Processes");
+        await BackfillIndirectFk(conn, tx, "WorkplaceHostDevices", "NewWorkplaceId", "WorkplaceId", "Workplaces");
+        await BackfillIndirectFk(conn, tx, "WorkplaceProcesses", "NewWorkplaceId", "WorkplaceId", "Workplaces");
+        await BackfillIndirectFk(conn, tx, "WorkplaceProcesses", "NewProcessId", "ProcessId", "Processes");
+    }
+    else
+    {
+        Console.WriteLine("Hierarchies table not found — Phase C already applied; skipping its steps.");
+    }
+
+    // Phase D: Profile + Qualifier shadow Ids, downstream NewProfileId/NewQualifiersId.
+    await BackfillLeafNewIds(conn, tx, "Profiles");
+    await BackfillLeafNewIds(conn, tx, "Qualifiers");
+    await InsertMetaForLegacyEntity(conn, tx, "Profiles", "Profile");
+    await InsertMetaForLegacyEntity(conn, tx, "Qualifiers", "Qualifier");
+    await BackfillIndirectFk(conn, tx, "ProfilePoint", "NewProfileId", "ProfileId", "Profiles");
+    await BackfillIndirectFk(conn, tx, "Audits", "NewProfileId", "ProfileId", "Profiles");
+    await BackfillIndirectFk(conn, tx, "OperationHostDevices", "NewProfileId", "ProfileId", "Profiles");
+    await BackfillIndirectFk(conn, tx, "WorkbenchDeviceConfigurations", "NewProfileId", "ProfileId", "Profiles");
+    await BackfillIndirectFk(conn, tx, "AuditQualifier", "NewQualifiersId", "QualifiersId", "Qualifiers");
 
     await tx.CommitAsync();
     Console.WriteLine("Backfill complete.");
@@ -147,6 +169,22 @@ WHERE m.Id IS NULL;";
     Console.WriteLine($"Meta({metatype}): {rows} rows inserted");
 }
 
+// Same shape as InsertMetaForLeaf — currently identical, but kept separate so
+// later phases can layer per-entity metadata (Profile keeps text-json metadata,
+// Qualifier has no Owner column, etc.).
+static async Task InsertMetaForLegacyEntity(SqlConnection conn, SqlTransaction tx, string table, string metatype)
+{
+    var sql = $@"
+INSERT INTO Meta (Id, Metatype, Owner, [Groups], Created, Deleted)
+SELECT t.NewId, '{metatype}', 'system', '[]', SYSUTCDATETIME(),
+       CASE WHEN t.IsActive = 0 THEN SYSUTCDATETIME() ELSE NULL END
+FROM {table} t
+LEFT JOIN Meta m ON m.Id = t.NewId
+WHERE m.Id IS NULL;";
+    var rows = await Exec(conn, tx, sql);
+    Console.WriteLine($"Meta({metatype}): {rows} rows inserted");
+}
+
 static async Task InsertDirectoriesForHierarchies(SqlConnection conn, SqlTransaction tx)
 {
     // Two passes so the self-ref FK never references a not-yet-inserted parent:
@@ -186,6 +224,14 @@ UPDATE t SET {newCol} = x.NewId
 FROM {table} t INNER JOIN {targetTable} x ON x.Id = t.{oldCol}
 WHERE t.{newCol} IS NULL;";
     Console.WriteLine($"{table}.{newCol}: {await Exec(conn, tx, sql)} rows backfilled");
+}
+
+static async Task<bool> TableExists(SqlConnection conn, SqlTransaction tx, string table)
+{
+    await using var cmd = new SqlCommand(
+        "SELECT COUNT(*) FROM sys.tables WHERE name = @t", conn, tx);
+    cmd.Parameters.AddWithValue("@t", table);
+    return ((int)(await cmd.ExecuteScalarAsync())!) > 0;
 }
 
 static async Task<List<int>> ReadInts(SqlConnection conn, SqlTransaction tx, string sql)

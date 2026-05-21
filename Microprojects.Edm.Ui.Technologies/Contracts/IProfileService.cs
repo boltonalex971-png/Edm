@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microprojects.Edm.Shared.Contracts;
 using Microprojects.Edm.Ui.Technologies.Models;
 
 namespace Microprojects.Edm.Ui.Technologies.Contracts
 {
-    public interface IProfileService : ILegacyIntGenericService<Profile>
+    public interface IProfileService : IGenericService<Profile>
     {
-        Task<IEnumerable<string>> GetProfileParams(int id);
+        Task<IEnumerable<string>> GetProfileParams(Guid id);
         Task<IEnumerable<Profile>> GetByDevice(int deviceId);
-        Task<IEnumerable<Audit>> GetAudits(int id);
-        Task<Audit> AddAudit(int id, Audit audit);
-        Task<bool> DeleteAudit(int id, int auditId);
+        Task<IEnumerable<Audit>> GetAudits(Guid id);
+        Task<Audit> AddAudit(Guid id, Audit audit);
+        Task<bool> DeleteAudit(Guid id, int auditId);
     }
 }
