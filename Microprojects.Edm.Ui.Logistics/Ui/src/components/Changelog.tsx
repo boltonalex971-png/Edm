@@ -40,8 +40,11 @@ export function Changelog() {
                 {error && <p>{t('widgets:changelog.loadFailed', { error })}</p>}
                 {!error && text == null && <p>{t('loading')}</p>}
                 {text != null && (
+                    // Strip hidden `<!-- cite: PR ... -->` dedupe markers
+                    // from CHANGES.md / .ru.md — react-markdown escapes inline
+                    // HTML by default and would render them as visible text.
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                        {text}
+                        {text.replace(/<!--[\s\S]*?-->/g, '')}
                     </ReactMarkdown>
                 )}
             </div>

@@ -7,13 +7,13 @@ This plugin contributes:
 
 ## v1.13.0
 
-- **Async serial-port pipeline** (PR 700, PR 701, PR 702, PR 703). Reads and writes are fully async, a configurable pre-instruction gap stops the board from missing leading characters on slow lines, and in-flight Mux jobs are stopped synchronously when an operation completes or is cancelled — so the next run starts on a clean port.
-- **Diagnostics & response handling** (PR 655, PR 757, PR 787). Instruction responses carry their raw length, driver options accept multi-line responses, and a Test-Mux command runs a synthetic plan to verify wiring without launching a real operation.
-- **Race fix on operation start** (PR 788). Multiple workbench devices starting at the same instant no longer overwrite each other's parameters.
+- **Smoother serial-port behaviour on slow lines.** A configurable pre-instruction gap stops the board from missing leading characters, and in-flight Mux jobs stop cleanly when an operation completes or is cancelled, so the next run starts on a clean port. <!-- cite: PR 700, PR 701, PR 702, PR 703 -->
+- **Better diagnostics and response handling.** Multi-line board responses are accepted, and a Test-Mux command runs a synthetic plan so you can verify wiring without launching a real operation. <!-- cite: PR 655, PR 757, PR 787 -->
+- **Fixed a race when starting an operation.** Multiple workbench devices starting at the same instant no longer overwrite each other's parameters. <!-- cite: PR 788 -->
 
 ## v1.0.0
 
-- **Plugin introduced** (PR 282, PR 286, PR 376). Author Board profiles with typed parameters and run them via the Mux driver.
-- **Defensive command pipeline** (PR 571, PR 580, PR 584, PR 600, PR 603, PR 605, PR 625). KZ uses dedicated routing so its response or timeout doesn't break the rest of the plan; bad or missing board responses produce `null` parameters instead of crashing the operation; profile commands without an instruction are silently skipped during param-extraction and execution; per-instruction wait offsets stop dropped early replies.
-- **Profile-driven start parameters** (PR 590). Values typed into the New-Operation wizard reach the board plan as named parameters.
-- **Submit / Cancel discipline** (PR 597). Driver-options buttons stay disabled and grey until something actually changes.
+- **Plugin introduced.** Author Board profiles with typed parameters and run them via the Mux driver. <!-- cite: PR 282, PR 286, PR 376 -->
+- **More defensive command pipeline.** A failed or timed-out KZ command no longer breaks the rest of the plan; bad or missing board responses produce empty parameters instead of crashing the operation; profile commands without an instruction are skipped silently; per-instruction wait offsets stop dropped early replies. <!-- cite: PR 571, PR 580, PR 584, PR 600, PR 603, PR 605, PR 625 -->
+- **Profile-driven start parameters.** Values typed into the New-Operation wizard reach the board plan as named parameters. <!-- cite: PR 590 -->
+- **Submit / Cancel discipline in driver options.** Buttons stay disabled and grey until something actually changes. <!-- cite: PR 597 -->

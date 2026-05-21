@@ -4,4 +4,4 @@ The Hub app (`/`) is the EDM platform landing page. It mounts at the URL root an
 
 ## v1.0.0
 
-- **Initial release.** Direction A · Steel hero with system summary, plus a 3-column plugin registry grid that lists every loaded application plugin (Logistics, Technologies, Console, ...). Tiles link to each plugin's URL root. Hub is hidden from its own list. Version stat reflects the installed Setup MSI's `ProductVersion`.
+- **Initial release.** Landing page with a tile for every loaded application — pick a module to enter. The Hub itself is hidden from its own list. The footer shows the product version.

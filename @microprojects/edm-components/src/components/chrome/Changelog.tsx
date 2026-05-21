@@ -57,7 +57,13 @@ export function Changelog({changelogUrl}: ChangelogProps) {
             )}
             {!error && text == null && <Typography>{t('changelog.loading', 'Loading…')}</Typography>}
             {text != null && (
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
+                // CHANGES.md / .ru.md carry hidden `<!-- cite: PR ... -->`
+                // dedupe markers per the update-changes policy; react-markdown
+                // doesn't recognise inline HTML by default and escapes them as
+                // visible text, so strip before rendering.
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {text.replace(/<!--[\s\S]*?-->/g, '')}
+                </ReactMarkdown>
             )}
         </Box>
     );
