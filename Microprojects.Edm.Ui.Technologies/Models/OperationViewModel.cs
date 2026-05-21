@@ -5,8 +5,8 @@ namespace Microprojects.Edm.Ui.Technologies.Models
 {
     public class OperationViewModel
     {
-        public int Id { get; set; }
-        public int WorkbenchId { get; set; }
+        public Guid Id { get; set; }
+        public Guid WorkbenchId { get; set; }
         public string WorkbenchName { get; set; }
         public string WorkplaceName { get; set; }
         public Guid ProcessId { get; set; }

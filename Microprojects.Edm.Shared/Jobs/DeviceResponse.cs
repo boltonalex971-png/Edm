@@ -6,7 +6,7 @@ namespace Microprojects.Edm.Jobs
 {
     public class DeviceResponse 
     {
-        public int OperationHostDeviceId { get; set; }
+        public Guid OperationHostDeviceId { get; set; }
         public DateTime ScheduledAt { get; set; }
         public DateTime ExecutedAt { get; set; }
         public string Parameters { get; set; }

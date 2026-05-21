@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Microprojects.Edm.Models
 {
@@ -18,7 +14,7 @@ namespace Microprojects.Edm.Models
 
     public class OperationStatus
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public OperationState State { get; set; }
         /// <summary>
         /// Operation progress in percents
@@ -37,6 +33,5 @@ namespace Microprojects.Edm.Models
         public string Error { get; set; }
         public DateTime Timestamp { get; set; } = DateTime.UtcNow;
         public DateTime StateTimestamp { get; set; } = DateTime.UtcNow;
-
     }
 }

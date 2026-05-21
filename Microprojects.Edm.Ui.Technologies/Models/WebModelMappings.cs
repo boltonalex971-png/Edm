@@ -148,7 +148,7 @@ namespace Microprojects.Edm.Ui.Technologies.Models
             new OperationViewModel
             {
                 Id = s.Id,
-                WorkbenchId = s.WorkbenchId ?? 0,
+                WorkbenchId = s.WorkbenchId ?? Guid.Empty,
                 WorkbenchName = s.Workbench?.Name,
                 WorkplaceName = s.WorkplaceProcess?.Workplace?.Name,
                 ProcessId = s.WorkplaceProcess?.ProcessId ?? Guid.Empty,
@@ -222,7 +222,7 @@ namespace Microprojects.Edm.Ui.Technologies.Models
                 ProcessName = s.WorkplaceProcess?.Process?.Name,
                 OperationGuid = s.WorkplaceProcess?.Process?.OperationGuid ?? Guid.Empty,
                 Description = s.Description,
-                IsActive = s.IsActive,
+                IsActive = s.Meta?.Deleted == null,
             };
 
         public static Workbench ToEntity(this WorkbenchViewModel s) =>
@@ -233,7 +233,7 @@ namespace Microprojects.Edm.Ui.Technologies.Models
                 WorkplaceProcessId = s.WorkplaceProcessId,
                 Name = s.Name,
                 Description = s.Description,
-                IsActive = s.IsActive,
+                Meta = null!,
             };
 
         public static WorkbenchDeviceConfigViewModel ToViewModel(this WorkbenchWorkplaceHostDevice s) =>

@@ -114,6 +114,37 @@ try
         Console.WriteLine("Audits.NewId not found — Phase E already applied; skipping its steps.");
     }
 
+    // Phase F: Operation / Record / Workbench (all IWithMeta) plus four
+    // junctions (OperationCriterion, OperationHostDevice,
+    // WorkbenchDeviceConfigurations, RecordOperationCriteria) flipping to
+    // Guid PK. Records is large (~230k rows); use bulk minting for it.
+    if (await ColumnExists(conn, tx, "Operations", "NewId"))
+    {
+        await BackfillLeafNewIds(conn, tx, "Operations");
+        await BackfillLeafNewIds(conn, tx, "Workbenches");
+        await BackfillLeafNewIdsBulk(conn, tx, "Records");
+        await BackfillLeafNewIdsBulk(conn, tx, "OperationCriteria");
+        await BackfillLeafNewIds(conn, tx, "OperationHostDevices");
+        await BackfillLeafNewIds(conn, tx, "WorkbenchDeviceConfigurations");
+        await BackfillLeafNewIdsBulk(conn, tx, "RecordOperationCriteria");
+
+        await InsertMetaForLegacyEntity(conn, tx, "Operations", "Operation");
+        await InsertMetaForLegacyEntity(conn, tx, "Workbenches", "Workbench");
+        // Records intentionally skipped — immutable measurement stream, not IWithMeta.
+
+        await BackfillIndirectFk(conn, tx, "Operations", "NewWorkbenchId", "WorkbenchId", "Workbenches");
+        await BackfillIndirectFk(conn, tx, "OperationCriteria", "NewOperationId", "OperationId", "Operations");
+        await BackfillIndirectFk(conn, tx, "OperationHostDevices", "NewOperationId", "OperationId", "Operations");
+        await BackfillIndirectFk(conn, tx, "WorkbenchDeviceConfigurations", "NewWorkbenchId", "WorkbenchId", "Workbenches");
+        await BackfillIndirectFk(conn, tx, "Records", "NewOperationHostDeviceId", "OperationHostDeviceId", "OperationHostDevices");
+        await BackfillIndirectFk(conn, tx, "RecordOperationCriteria", "NewRecordId", "RecordId", "Records");
+        await BackfillIndirectFk(conn, tx, "RecordOperationCriteria", "NewOperationCriterionId", "OperationCriterionId", "OperationCriteria");
+    }
+    else
+    {
+        Console.WriteLine("Operations.NewId not found — Phase F already applied; skipping its steps.");
+    }
+
     await tx.CommitAsync();
     Console.WriteLine("Backfill complete.");
     return 0;
@@ -161,6 +192,49 @@ static async Task BackfillLeafNewIds(SqlConnection conn, SqlTransaction tx, stri
     }
 }
 
+// Bulk variant for large tables (Records, OperationCriteria,
+// RecordOperationCriteria). Stages (oldId, newId) pairs in a temp table
+// via SqlBulkCopy in 10k chunks, then runs a single UPDATE...FROM JOIN.
+// Memory-friendly and avoids 200k+ round-trips.
+static async Task BackfillLeafNewIdsBulk(SqlConnection conn, SqlTransaction tx, string table)
+{
+    var ids = await ReadInts(conn, tx, $"SELECT Id FROM {table} WHERE NewId IS NULL");
+    Console.WriteLine($"{table}: bulk-minting Guids for {ids.Count} rows");
+    if (ids.Count == 0) return;
+
+    await Exec(conn, tx, "CREATE TABLE #IdMap (OldId int PRIMARY KEY, NewId uniqueidentifier NOT NULL)");
+    try
+    {
+        var dt = new System.Data.DataTable();
+        dt.Columns.Add("OldId", typeof(int));
+        dt.Columns.Add("NewId", typeof(Guid));
+        foreach (var id in ids)
+        {
+            dt.Rows.Add(id, NewSortableGuid());
+        }
+
+        using (var bulk = new SqlBulkCopy(conn, SqlBulkCopyOptions.Default, tx)
+        {
+            DestinationTableName = "#IdMap",
+            BatchSize = 10_000,
+            BulkCopyTimeout = 600,
+        })
+        {
+            bulk.ColumnMappings.Add("OldId", "OldId");
+            bulk.ColumnMappings.Add("NewId", "NewId");
+            await bulk.WriteToServerAsync(dt);
+        }
+
+        var updated = await Exec(conn, tx,
+            $"UPDATE t SET NewId = m.NewId FROM {table} t INNER JOIN #IdMap m ON m.OldId = t.Id WHERE t.NewId IS NULL");
+        Console.WriteLine($"{table}: {updated} rows backfilled in bulk");
+    }
+    finally
+    {
+        await Exec(conn, tx, "DROP TABLE #IdMap");
+    }
+}
+
 static async Task InsertMetaForHierarchies(SqlConnection conn, SqlTransaction tx)
 {
     var sql = @"
@@ -195,13 +269,19 @@ WHERE m.Id IS NULL;";
 
 // Same shape as InsertMetaForLeaf — currently identical, but kept separate so
 // later phases can layer per-entity metadata (Profile keeps text-json metadata,
-// Qualifier has no Owner column, etc.).
+// Qualifier has no Owner column, etc.). Detects whether the source table has
+// an IsActive column so it works for both TypeObject-derived (Profile/Audit/...)
+// and plain LegacyIntDomainObject (Record) entities.
 static async Task InsertMetaForLegacyEntity(SqlConnection conn, SqlTransaction tx, string table, string metatype)
 {
+    var hasIsActive = await ColumnExists(conn, tx, table, "IsActive");
+    var deletedExpr = hasIsActive
+        ? "CASE WHEN t.IsActive = 0 THEN SYSUTCDATETIME() ELSE NULL END"
+        : "NULL";
     var sql = $@"
 INSERT INTO Meta (Id, Metatype, Owner, [Groups], Created, Deleted)
 SELECT t.NewId, '{metatype}', 'system', '[]', SYSUTCDATETIME(),
-       CASE WHEN t.IsActive = 0 THEN SYSUTCDATETIME() ELSE NULL END
+       {deletedExpr}
 FROM {table} t
 LEFT JOIN Meta m ON m.Id = t.NewId
 WHERE m.Id IS NULL;";

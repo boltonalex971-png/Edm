@@ -1,14 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Grpc.Net.Client;
+using Microprojects.Edm.Grpc;
+using Microprojects.Edm.Infrastructure;
 using Microprojects.Edm.Jobs;
 using Newtonsoft.Json;
-using Microprojects.Edm.Infrastructure;
-using Microprojects.Edm.Grpc;
-using Microprojects.Edm.Jobs;
 
 namespace Microprojects.Edm.Ui.Technologies.Jobs
 {
@@ -35,7 +31,7 @@ namespace Microprojects.Edm.Ui.Technologies.Jobs
         }
 
         public async Task<string> StartDevice(
-            int linkId,
+            Guid linkId,
             string url,
             dynamic options,
             string profile,
@@ -56,7 +52,7 @@ namespace Microprojects.Edm.Ui.Technologies.Jobs
             return response.Response;
         }
 
-        public async Task<ResponseData> StartOperation(int operationId, DateTime startAt)
+        public async Task<ResponseData> StartOperation(Guid operationId, DateTime startAt)
         {
             var parameters = new StartOperationJobParameters
             {
@@ -69,11 +65,11 @@ namespace Microprojects.Edm.Ui.Technologies.Jobs
                     Job = "StartOperation",
                     Params = $@"{JsonConvert.SerializeObject(parameters)}"
                 });
-            
+
             return response;
         }
 
-        public async Task<string> StartTestOperation(int operationId, DateTime startAt)
+        public async Task<string> StartTestOperation(Guid operationId, DateTime startAt)
         {
             var parameters = new StartOperationJobParameters
             {
@@ -89,12 +85,12 @@ namespace Microprojects.Edm.Ui.Technologies.Jobs
             return response.Response;
         }
 
-        public async Task<bool> CheckOperationRun(int operationId)
+        public async Task<bool> CheckOperationRun(Guid operationId)
         {
-            var job = new CheckJob(new StartOperationJob() 
-            { 
-                JobParameters = new StartOperationJobParameters 
-                { 
+            var job = new CheckJob(new StartOperationJob
+            {
+                JobParameters = new StartOperationJobParameters
+                {
                     Operation = operationId
                 }
             });
@@ -102,21 +98,21 @@ namespace Microprojects.Edm.Ui.Technologies.Jobs
             var response = await _jobs.Execute(job);
             if (response.Status == JobStatus.SUCCESS && Enum.TryParse(response.Message, out TaskStatus jobStatus))
             {
-                return jobStatus is TaskStatus.Running 
-                    or TaskStatus.WaitingForActivation 
-                    or TaskStatus.WaitingToRun 
+                return jobStatus is TaskStatus.Running
+                    or TaskStatus.WaitingForActivation
+                    or TaskStatus.WaitingToRun
                     or TaskStatus.WaitingForChildrenToComplete;
             }
 
             return false;
         }
 
-        public async Task<string> CancelOperation(int operationId)
+        public async Task<string> CancelOperation(Guid operationId)
         {
             var response = await _jobs.ExecuteAsync(new JobData
             {
                 Job = "Stop",
-                Params = JsonConvert.SerializeObject(new { Job = "StartOperation", Operation = operationId})
+                Params = JsonConvert.SerializeObject(new { Job = "StartOperation", Operation = operationId })
             });
             if (response.Status != "Ok")
             {

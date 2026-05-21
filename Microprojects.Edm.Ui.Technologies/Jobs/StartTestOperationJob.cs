@@ -1,4 +1,4 @@
-using Microprojects.Edm.Cache;
+﻿using Microprojects.Edm.Cache;
 using Microprojects.Edm.Jobs;
 using Microsoft.EntityFrameworkCore;
 using Microprojects.Edm.Ui.Technologies.Models;
@@ -30,7 +30,7 @@ namespace Microprojects.Edm.Ui.Technologies.Jobs
             var now = DateTime.UtcNow;
             var waitBeforeStart = now > Parameters.StartAt ? TimeSpan.Zero : Parameters.StartAt!.Value - now;
             var cancelled = false;
-            var opHostDeviceId = 0;
+            var opHostDeviceId = Guid.Empty;
             using (var db = await ContextFactory.CreateDbContextAsync())
             {
                 var dev = await db.OperationHostDevices

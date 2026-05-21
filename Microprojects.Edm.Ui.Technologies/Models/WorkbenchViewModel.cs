@@ -4,7 +4,7 @@ namespace Microprojects.Edm.Ui.Technologies.Models
 {
     public class WorkbenchViewModel
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public string CommonUid { get; set; }
         public Guid WorkplaceId { get; set; }
         public int WorkplaceProcessId { get; set; }

@@ -139,7 +139,7 @@ namespace Microprojects.Edm.Jobs
             }
             catch (Exception e)
             {
-                _logger.LogError(Parameters.Operation, e, "Cannot init device");
+                _logger.LogError(e, "Cannot init device for operation {Operation}", Parameters.Operation);
                 throw new EdmException(
                     "Edm.Plugin.DriverInitFailed",
                     new Dictionary<string, object>
@@ -368,8 +368,9 @@ namespace Microprojects.Edm.Jobs
                     var (confirmed, error) = expr.TryEvaluate<bool>(_inputParams);
                     if (error is not null)
                     {
-                        _logger.LogError(Parameters.Operation,
-                            "Cannot evaluate profile condition <{condition}>: {error}", condition, error);
+                        _logger.LogError(
+                            "Cannot evaluate profile condition <{condition}> for operation {operation}: {error}",
+                            condition, Parameters.Operation, error);
                     }
 
                     if (confirmed || CancellationToken.IsCancellationRequested)
@@ -392,13 +393,13 @@ namespace Microprojects.Edm.Jobs
 
         public string GetProfile() => Parameters.Profile;
 
-        public int GetOperationId() => Parameters.Operation;
+        public Guid GetOperationId() => Parameters.Operation;
     }
 
     public class StartDeviceJobParameters : DeviceParameters, IJobParameters
     {
-        [JobParameter(Required = true)] public int OperationHostDevice { get; set; }
-        [JobParameter(Required = true)] public int Operation { get; set; }
+        [JobParameter(Required = true)] public Guid OperationHostDevice { get; set; }
+        [JobParameter(Required = true)] public Guid Operation { get; set; }
         public Guid Profiler { get; set; }
         public Guid Driver { get; set; }
         public DateTime StartAt { get; set; } = DateTime.UtcNow.AddSeconds(10);

@@ -1,42 +1,33 @@
-using Microprojects.Edm.Models;
-using Microprojects.Edm;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query;
-using Newtonsoft.Json;
-using Microprojects.Edm.Ui.Technologies.Contracts;
-using Microprojects.Edm.Infrastructure;
-using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Ui.Technologies.Persistence;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microprojects.Edm;
+using Microprojects.Edm.Infrastructure;
 using Microprojects.Edm.Jobs;
+using Microprojects.Edm.Models;
+using Microprojects.Edm.Shared.Contracts;
+using Microprojects.Edm.Shared.Services;
+using Microprojects.Edm.Ui.Technologies.Contracts;
+using Microprojects.Edm.Ui.Technologies.Models;
+using Microprojects.Edm.Ui.Technologies.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 namespace Microprojects.Edm.Ui.Technologies.Services
 {
-    public class OperationService : ServiceBase<Operation>, IOperationService
+    public class OperationService : ServiceBase<TechnologiesContext, Operation>, IOperationService
     {
-        private IRemoteJobs _commands;
+        private readonly IRemoteJobs _commands;
 
-        public OperationService()
-        {
-        }
-
-        public OperationService(TechnologiesContext db, IRemoteJobs commands) : base(db)
+        public OperationService(TechnologiesContext db, IUserService userService, IRemoteJobs commands)
+            : base(db, userService)
         {
             _commands = commands;
         }
 
         public async Task<Operation> Create(Operation operation)
         {
-            if (operation == null)
-            {
-                throw new ArgumentNullException(nameof(operation));
-            }
+            ArgumentNullException.ThrowIfNull(operation);
 
             if (operation.WorkbenchId != null)
             {
@@ -51,19 +42,17 @@ namespace Microprojects.Edm.Ui.Technologies.Services
                     {
                         HostDeviceId = c.WorkplaceHostDevice.HostDeviceId,
                         Options = c.Configuration,
-                        ProfileId = c.ProfileId
+                        ProfileId = c.ProfileId,
                     })
                     .ToList();
                 operation.WorkplaceProcessId = wb.WorkplaceProcessId;
             }
 
             operation.Created = DateTime.UtcNow;
-            var result = Db.Operations.Add(operation);
-            await Db.SaveChangesAsync();
-            return result.Entity;
+            return await Save(operation);
         }
 
-        public async Task<Operation> Copy(int operationId)
+        public async Task<Operation> Copy(Guid operationId)
         {
             var origin = await Db.Operations.AsNoTracking()
                              .Include(o => o.Devices)
@@ -77,56 +66,47 @@ namespace Microprojects.Edm.Ui.Technologies.Services
             operation.Cancelled = null;
             operation.Completed = null;
             operation.Started = null;
-            operation.Id = 0;
+            operation.Id = Guid.Empty;
+            operation.Meta = null!;
             foreach (var device in operation.Devices)
             {
-                device.Id = 0;
+                device.Id = Guid.Empty;
             }
-            
-            var result = Db.Operations.Add(operation);
-            await Db.SaveChangesAsync();
-            return result.Entity;
+
+            return await Save(operation);
         }
 
-        //public async Task<IEnumerable<Operation>> Get<T>(
-        //    Expression<Func<Operation, bool>> predicate, 
-        //    Expression<Func<Operation, T>> include)
-        //{
-        //    var request = Db.Operations.Include(include);
-        //    var whereReq = request.Where(predicate);
-        //    var result = await whereReq.ToListAsync();
-        //    return result;
-        //}
-
-        public async Task<IEnumerable<Record>> GetRecords(int operationId, int lastRecordId)
+        public async Task<IEnumerable<Record>> GetRecords(Guid operationId, Guid? lastRecordId)
         {
-            var recs = await Db.Records.AsNoTracking()
+            var query = Db.Records.AsNoTracking()
                 .Include(r => r.Device)
-                //.Include(r => r.Criteria).ThenInclude(c => c.OperationCriterion.AuditCriterion.Zone)
-                .Where(r => r.Device.OperationId == operationId && r.Id > lastRecordId)
-                .ToListAsync();
-            return recs;
+                .Where(r => r.Device.OperationId == operationId);
+            if (lastRecordId.HasValue && lastRecordId.Value != Guid.Empty)
+            {
+                // Guids sort lexicographically; UUIDv8 monotonic-ish ordering means
+                // this approximates "records newer than lastRecordId".
+                query = query.Where(r => string.Compare(r.Id.ToString(), lastRecordId.Value.ToString()) > 0);
+            }
+            return await query.ToListAsync();
         }
 
-        public async Task<IEnumerable<OperationCriterion>> GetCriterion(int operationId, int lastId)
+        public async Task<IEnumerable<OperationCriterion>> GetCriterion(Guid operationId, Guid? lastId)
         {
-            var criterion = await Db.OperationCriteria.AsNoTracking()
+            return await Db.OperationCriteria.AsNoTracking()
                 .Include(c => c.AuditCriterion.Zone)
                 .Where(c => c.OperationId == operationId)
                 .ToListAsync();
-            return criterion;
         }
 
-        public async Task<IEnumerable<OperationCriterion>> GetCriteria(int operationId)
+        public async Task<IEnumerable<OperationCriterion>> GetCriteria(Guid operationId)
         {
-            var criteria = await Db.OperationCriteria.AsNoTracking()
+            return await Db.OperationCriteria.AsNoTracking()
                 .Include(c => c.AuditCriterion.Zone)
                 .Where(c => c.OperationId == operationId)
                 .ToListAsync();
-            return criteria;
         }
 
-        public async Task<Operation> Start(int operationId, DateTime startAt)
+        public async Task<Operation> Start(Guid operationId, DateTime startAt)
         {
             var operation = await Db.Operations.FirstOrDefaultAsync(o => o.Id == operationId) ??
                             throw new EdmException(
@@ -147,10 +127,8 @@ namespace Microprojects.Edm.Ui.Technologies.Services
             return operation;
         }
 
-        public async Task<Operation> Stop(int operationId)
+        public async Task<Operation> Stop(Guid operationId)
         {
-            //var operation = await Db.Operations.FindAsync(operationId)
-            //    ?? throw new EdmException($"Operation with id {operationId} is not found");
             var status = await Status(operationId);
             if (status.State != OperationState.InProgress && status.State != OperationState.Faulted)
             {
@@ -169,12 +147,10 @@ namespace Microprojects.Edm.Ui.Technologies.Services
                 await StopOperation(operationId);
             }
 
-            // Operation must be cancelled by command; get new status
-            var operation = await Db.Operations.FindAsync(operationId);
-            return operation;
+            return await Db.Operations.FindAsync(operationId);
         }
 
-        public async Task<OperationStatus> Status(int operationId)
+        public async Task<OperationStatus> Status(Guid operationId)
         {
             var operation = await Db.Operations.FirstOrDefaultAsync(o => o.Id == operationId)
                             ?? throw new EdmException(
@@ -201,7 +177,6 @@ namespace Microprojects.Edm.Ui.Technologies.Services
             };
             if (status.State == OperationState.InProgress)
             {
-                // Check if operation is really performing
                 try
                 {
                     status.State = await _commands.CheckOperationRun(operation.Id)
@@ -233,18 +208,17 @@ namespace Microprojects.Edm.Ui.Technologies.Services
             return status;
         }
 
-        public async Task<IEnumerable<OperationHostDevice>> GetOperationDevices(int id)
+        public async Task<IEnumerable<OperationHostDevice>> GetOperationDevices(Guid id)
         {
-            var devices = await Db.OperationHostDevices.AsNoTracking()
+            return await Db.OperationHostDevices.AsNoTracking()
                 .Include(d => d.HostDevice.Device)
                 .Include(d => d.HostDevice.Host)
                 .Include(d => d.Profile)
                 .Where(d => d.OperationId == id)
                 .ToListAsync();
-            return devices;
         }
 
-        public async Task<Operation> StopOperation(int operationId)
+        public async Task<Operation> StopOperation(Guid operationId)
         {
             var result = await Get(operationId);
             result.Cancelled = DateTime.UtcNow;
@@ -253,7 +227,7 @@ namespace Microprojects.Edm.Ui.Technologies.Services
             return result;
         }
 
-        public async Task<Operation> CompleteOperation(int operationId)
+        public async Task<Operation> CompleteOperation(Guid operationId)
         {
             var result = await Get(operationId) ??
                 throw new EdmException(
@@ -280,12 +254,12 @@ namespace Microprojects.Edm.Ui.Technologies.Services
                             throw new EdmException(
                                 "Technologies.Workbench.NotFound",
                                 "Workbench for the specified process cannot be found.");
-            var operation = await Create(new Operation() { WorkbenchId = workbench.Id });
+            var operation = await Create(new Operation { WorkbenchId = workbench.Id, Meta = null! });
 
             return (operation, workbench.WorkplaceProcess.Process);
         }
 
-        public async Task<(bool, string)> GetResult(int operationId)
+        public async Task<(bool, string)> GetResult(Guid operationId)
         {
             var invalid = await Db.OperationCriteria.AsNoTracking()
                 .FirstOrDefaultAsync(c => c.OperationId == operationId && !c.Valid);

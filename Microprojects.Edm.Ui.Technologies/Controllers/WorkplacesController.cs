@@ -209,36 +209,36 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
         public async Task<WorkbenchViewModel> AddWorkbench(int wpProcId, WorkbenchViewModel model)
         {
             var wb = model.ToEntity();
-            wb.Id = 0;
+            wb.Id = Guid.Empty;
             wb.WorkplaceProcessId = wpProcId;
             wb = await _workplaceService.SaveWorkbench(wb);
             return wb.ToViewModel();
         }
 
-        [HttpGet("processes/workbenches/{id:int}")]
-        public async Task<WorkbenchViewModel> GetWorkbench(int id)
+        [HttpGet("processes/workbenches/{id:guid}")]
+        public async Task<WorkbenchViewModel> GetWorkbench(Guid id)
         {
             var result = await _workplaceService.GetWorkbench(id);
             return result.ToViewModel();
         }
 
-        [HttpPut("processes/workbenches/{id:int}")]
-        public async Task<WorkbenchViewModel> SaveWorkbench(int id, WorkbenchViewModel model)
+        [HttpPut("processes/workbenches/{id:guid}")]
+        public async Task<WorkbenchViewModel> SaveWorkbench(Guid id, WorkbenchViewModel model)
         {
             var wb = model.ToEntity();
             var result = await _workplaceService.SaveWorkbench(wb);
             return result.ToViewModel();
         }
 
-        [HttpDelete("processes/{procId:int}/workbenches/{id:int}")]
-        public async Task<WorkbenchViewModel> DeleteWorkbench(int id)
+        [HttpDelete("processes/{procId:int}/workbenches/{id:guid}")]
+        public async Task<WorkbenchViewModel> DeleteWorkbench(Guid id)
         {
             var wb = await _workplaceService.DeleteWorkbench(id);
             return wb.ToViewModel();
         }
 
-        [HttpGet("processes/workbenches/{id:int}/devices")]
-        public async Task<IEnumerable<WorkbenchDeviceConfigViewModel>> GetWorkbenchDevices(int id)
+        [HttpGet("processes/workbenches/{id:guid}/devices")]
+        public async Task<IEnumerable<WorkbenchDeviceConfigViewModel>> GetWorkbenchDevices(Guid id)
         {
             var devices = await _workplaceService.GetWorkbenchDevices(id);
             var result = devices.Select(d => d.ToViewModel()).ToList();
@@ -254,8 +254,8 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
             return result;
         }
 
-        [HttpGet("processes/workbenches/{id:int}/requireddevices")]
-        public async Task<IEnumerable<WorkplaceHostDeviceModel>> GetWorkbenchRequiredDevices(int id)
+        [HttpGet("processes/workbenches/{id:guid}/requireddevices")]
+        public async Task<IEnumerable<WorkplaceHostDeviceModel>> GetWorkbenchRequiredDevices(Guid id)
         {
             var workbench = await _workplaceService.GetWorkbench(id);
             var profiles = (await _processService.GetProfiles(workbench.WorkplaceProcess.ProcessId))
@@ -282,25 +282,25 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
             return models;
         }
 
-        [HttpPost("processes/workbenches/{id:int}/devices")]
-        public async Task<WorkbenchDeviceConfigViewModel> GetWorkbenchDevices(int id, WorkbenchDeviceConfigViewModel model)
+        [HttpPost("processes/workbenches/{id:guid}/devices")]
+        public async Task<WorkbenchDeviceConfigViewModel> GetWorkbenchDevices(Guid id, WorkbenchDeviceConfigViewModel model)
         {
             var device = model.ToEntity();
-            device.Id = 0;
+            device.Id = Guid.Empty;
             device.WorkbenchId = id;
             var result = await _workplaceService.SaveWorkbenchDevice(device);
             return result.ToViewModel();
         }
 
-        [HttpDelete("processes/workbenches/{wbId:int}/devices/{id:int}")]
-        public async Task<WorkbenchDeviceConfigViewModel> DeleteWorkbenchDevice(int id)
+        [HttpDelete("processes/workbenches/{wbId:guid}/devices/{id:guid}")]
+        public async Task<WorkbenchDeviceConfigViewModel> DeleteWorkbenchDevice(Guid id)
         {
             var device = await _workplaceService.DeleteWorkbenchDevice(id);
             return device.ToViewModel();
         }
 
-        [HttpGet("processes/workbenches/devices/{id:int}")]
-        public async Task<WorkbenchDeviceConfigViewModel> GetWorkbenchDevice(int id)
+        [HttpGet("processes/workbenches/devices/{id:guid}")]
+        public async Task<WorkbenchDeviceConfigViewModel> GetWorkbenchDevice(Guid id)
         {
             var device = await _workplaceService.GetWorkbenchDevice(id);
             var result = device.ToViewModel();
@@ -315,8 +315,8 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
             return result;
         }
 
-        [HttpPut("processes/workbenches/devices/{id:int}")]
-        public async Task<bool> SaveWorkbenchDeviceOptions(int id, [FromBody] object options)
+        [HttpPut("processes/workbenches/devices/{id:guid}")]
+        public async Task<bool> SaveWorkbenchDeviceOptions(Guid id, [FromBody] object options)
         {
             var str = JsonConvert.SerializeObject(options);
             var result = await _workplaceService.SaveWorkbenchDeviceOptions(id, str);

@@ -33,7 +33,7 @@ namespace Microprojects.Edm.Ui.Technologies.Jobs
         private readonly string OffsetParamName = "Offset";
         private IDisposable _paramsSubscriber;
         private Dictionary<string, object> _inputParams = new();
-        private Func<int, Guid, string, string> CacheKey = (opId, critId, addr) =>
+        private Func<Guid, Guid, string, string> CacheKey = (opId, critId, addr) =>
             $"{nameof(Operation)}:{opId}:{nameof(OperationCriterion)}:{critId}:{addr}";
 
 
@@ -180,17 +180,16 @@ namespace Microprojects.Edm.Ui.Technologies.Jobs
                     }
                     catch (Exception ex)
                     {
-                        Logger.LogWarning(Parameters.Operation, 
-                            ex,
-                            "{Command} failed processing incoming records, some data may be lost.\nRecords: {Records}\n{Exception}", 
-                            Name, JsonConvert.SerializeObject(rec), ex.GetFullInfo());
+                        Logger.LogWarning(ex,
+                            "{Command} failed processing incoming records for operation {Operation}, some data may be lost.\nRecords: {Records}\n{Exception}",
+                            Name, Parameters.Operation, JsonConvert.SerializeObject(rec), ex.GetFullInfo());
                     }
                 });
 
             await Task.Delay(-1, CancellationToken).ContinueWith(t => { });
 
-            Logger.LogDebug(Parameters.Operation, "{Command} {Action}", 
-                Name, CancellationToken.IsCancellationRequested ? "cancelled" : "completed" );
+            Logger.LogDebug("{Command} {Action} for operation {Operation}",
+                Name, CancellationToken.IsCancellationRequested ? "cancelled" : "completed", Parameters.Operation);
             
             return JobStatus.SUCCESS;
         }
@@ -216,7 +215,7 @@ namespace Microprojects.Edm.Ui.Technologies.Jobs
             var (confirmed, activeError) = activeExpr.TryEvaluate<bool>(_inputParams);
             if (activeError is not null)
             {
-                Logger.LogError(Parameters.Operation, "Cannot evaluate audit zone {zoneNo} activation condition <{condition}>: {error}", zone.No, zone.ActiveWhen, activeError);
+                Logger.LogError("Cannot evaluate audit zone {zoneNo} activation condition <{condition}> for operation {Operation}: {error}", zone.No, zone.ActiveWhen, Parameters.Operation, activeError);
             }
             
             return confirmed;
@@ -229,7 +228,7 @@ namespace Microprojects.Edm.Ui.Technologies.Jobs
         /// Running operation id
         /// </summary>
         [JobParameter(Required = true)]
-        public int Operation { get; set; }
+        public Guid Operation { get; set; }
 
         /// <summary>
         /// Id of running profile to get associated audits
@@ -239,7 +238,7 @@ namespace Microprojects.Edm.Ui.Technologies.Jobs
         /// <summary>
         /// Id of <code>Microprojects.Edm.Ui.Technologies.Models.OperationHostDevice</code> which Audit belongs to.
         /// </summary>
-        public int Device { get; set; }
+        public Guid Device { get; set; }
         public DateTime StartAt { get; set; } = DateTime.UtcNow;
     }
 

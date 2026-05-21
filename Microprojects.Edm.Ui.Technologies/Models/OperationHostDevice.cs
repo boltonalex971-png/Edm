@@ -3,9 +3,9 @@ using Microprojects.Edm.Domain;
 
 namespace Microprojects.Edm.Ui.Technologies.Models
 {
-    public class OperationHostDevice : LegacyIntDomainObject
+    public class OperationHostDevice : DomainObject
     {
-        public int OperationId { get; set; }
+        public Guid OperationId { get; set; }
         public int HostDeviceId { get; set; }
         public Guid ProfileId { get; set; }
         public string Options { get; set; }

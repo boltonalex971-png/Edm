@@ -1,9 +1,6 @@
-using Microprojects.Edm.Domain;
-using System;
+﻿using System;
 using System.Collections.Generic;
-
-using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Ui.Technologies.Models;
+using Microprojects.Edm.Domain;
 
 namespace Microprojects.Edm.Ui.Technologies.Models
 {
@@ -16,9 +13,14 @@ namespace Microprojects.Edm.Ui.Technologies.Models
         NotCompleted = 4
     }
 
-    public class Record : LegacyIntDomainObject
+    // Records are immutable measurement rows: a high-cardinality append-only
+    // event stream (currently ~230k rows in dev). They have no user-facing
+    // lifecycle to track, so they stay plain DomainObject (Guid PK) rather
+    // than IWithMeta — no Owner/Groups/Deleted/Completed columns and no
+    // Meta row per record.
+    public class Record : DomainObject
     {
-        public int OperationHostDeviceId { get; set; }
+        public Guid OperationHostDeviceId { get; set; }
 
         public DateTime ScheduledAt { get; set; }
         public DateTime ExecutedAt { get; set; }
@@ -29,7 +31,7 @@ namespace Microprojects.Edm.Ui.Technologies.Models
         public ExecutionStatus Status { get; set; }
         public bool IsValid { get; set; }
         public string Message { get; set; }
-        
+
         public OperationHostDevice Device { get; set; }
         public ICollection<RecordOperationCriterion> Criteria { get; set; }
     }

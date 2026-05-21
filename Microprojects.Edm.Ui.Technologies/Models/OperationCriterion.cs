@@ -3,9 +3,9 @@ using Microprojects.Edm.Domain;
 
 namespace Microprojects.Edm.Ui.Technologies.Models
 {
-    public class OperationCriterion : LegacyIntDomainObject
+    public class OperationCriterion : DomainObject
     {
-        public int OperationId { get; set; }
+        public Guid OperationId { get; set; }
         public Guid AuditCriterionId { get; set; }
         public bool Valid { get; set; }
         public string Selector { get; set; }

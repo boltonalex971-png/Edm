@@ -4,6 +4,7 @@ using Microprojects.Edm.Ui.Technologies.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
 {
     [DbContext(typeof(TechnologiesContext))]
-    partial class TechnologiesContextModelSnapshot : ModelSnapshot
+    [Migration("20260521195232_AddGuidShadowColumns_Operation")]
+    partial class AddGuidShadowColumns_Operation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -293,8 +296,11 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Technologies.Models.Operation", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime?>("Cancelled")
                         .HasColumnType("datetime2");
@@ -308,6 +314,9 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
@@ -320,8 +329,8 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
                     b.Property<DateTime?>("Started")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid?>("WorkbenchId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int?>("WorkbenchId")
+                        .HasColumnType("int");
 
                     b.Property<int?>("WorkplaceProcessId")
                         .HasColumnType("int");
@@ -337,8 +346,11 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Technologies.Models.OperationCriterion", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<Guid>("AuditCriterionId")
                         .HasColumnType("uniqueidentifier");
@@ -346,8 +358,8 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
                     b.Property<string>("Message")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("OperationId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("OperationId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Result")
                         .HasColumnType("nvarchar(max)");
@@ -369,14 +381,17 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Technologies.Models.OperationHostDevice", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("HostDeviceId")
                         .HasColumnType("int");
 
-                    b.Property<Guid>("OperationId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("OperationId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Options")
                         .HasColumnType("nvarchar(max)");
@@ -506,8 +521,11 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Technologies.Models.Record", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("ExecutedAt")
                         .HasColumnType("datetime2");
@@ -521,8 +539,8 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
                     b.Property<string>("Message")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("OperationHostDeviceId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("OperationHostDeviceId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Parameters")
                         .HasColumnType("nvarchar(max)");
@@ -548,14 +566,17 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Technologies.Models.RecordOperationCriterion", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
 
-                    b.Property<Guid>("OperationCriterionId")
-                        .HasColumnType("uniqueidentifier");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<Guid>("RecordId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("OperationCriterionId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RecordId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -590,14 +611,20 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Technologies.Models.Workbench", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("CommonUid")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
@@ -614,8 +641,11 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Technologies.Models.WorkbenchWorkplaceHostDevice", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Configuration")
                         .HasColumnType("nvarchar(max)");
@@ -623,8 +653,8 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
                     b.Property<Guid>("ProfileId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("WorkbenchId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("WorkbenchId")
+                        .HasColumnType("int");
 
                     b.Property<int>("WorkplaceHostDeviceId")
                         .HasColumnType("int");
@@ -847,12 +877,6 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Technologies.Models.Operation", b =>
                 {
-                    b.HasOne("Microprojects.Edm.Domain.Meta", "Meta")
-                        .WithOne()
-                        .HasForeignKey("Microprojects.Edm.Ui.Technologies.Models.Operation", "Id")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
                     b.HasOne("Microprojects.Edm.Ui.Technologies.Models.Workbench", "Workbench")
                         .WithMany()
                         .HasForeignKey("WorkbenchId");
@@ -860,8 +884,6 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
                     b.HasOne("Microprojects.Edm.Ui.Technologies.Models.WorkplaceProcess", "WorkplaceProcess")
                         .WithMany()
                         .HasForeignKey("WorkplaceProcessId");
-
-                    b.Navigation("Meta");
 
                     b.Navigation("Workbench");
 
@@ -1012,19 +1034,11 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Technologies.Models.Workbench", b =>
                 {
-                    b.HasOne("Microprojects.Edm.Domain.Meta", "Meta")
-                        .WithOne()
-                        .HasForeignKey("Microprojects.Edm.Ui.Technologies.Models.Workbench", "Id")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
                     b.HasOne("Microprojects.Edm.Ui.Technologies.Models.WorkplaceProcess", "WorkplaceProcess")
                         .WithMany("Workbenches")
                         .HasForeignKey("WorkplaceProcessId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Meta");
 
                     b.Navigation("WorkplaceProcess");
                 });

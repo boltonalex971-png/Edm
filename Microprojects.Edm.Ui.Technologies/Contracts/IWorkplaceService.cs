@@ -23,12 +23,12 @@ namespace Microprojects.Edm.Ui.Technologies.Contracts
         Task<IEnumerable<Workbench>> GetWorkbenches(int workplaceProcessId);
         Task<WorkplaceProcess> GetWorkplaceProcess(int workplaceProcessId);
         Task<Workbench> SaveWorkbench(Workbench workbench);
-        Task<Workbench> GetWorkbench(int workbenchId);
-        Task<Workbench> DeleteWorkbench(int workbenchId);
-        Task<WorkbenchWorkplaceHostDevice> GetWorkbenchDevice(int workbenchId);
-        Task<IEnumerable<WorkbenchWorkplaceHostDevice>> GetWorkbenchDevices(int workbenchId);
+        Task<Workbench> GetWorkbench(Guid workbenchId);
+        Task<Workbench> DeleteWorkbench(Guid workbenchId);
+        Task<WorkbenchWorkplaceHostDevice> GetWorkbenchDevice(Guid id);
+        Task<IEnumerable<WorkbenchWorkplaceHostDevice>> GetWorkbenchDevices(Guid workbenchId);
         Task<WorkbenchWorkplaceHostDevice> SaveWorkbenchDevice(WorkbenchWorkplaceHostDevice device);
-        Task<WorkbenchWorkplaceHostDevice> SaveWorkbenchDeviceOptions(int id, string options);
-        Task<WorkbenchWorkplaceHostDevice> DeleteWorkbenchDevice(int id);
+        Task<WorkbenchWorkplaceHostDevice> SaveWorkbenchDeviceOptions(Guid id, string options);
+        Task<WorkbenchWorkplaceHostDevice> DeleteWorkbenchDevice(Guid id);
     }
 }

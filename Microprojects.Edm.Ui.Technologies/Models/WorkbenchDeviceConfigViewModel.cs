@@ -4,8 +4,8 @@ namespace Microprojects.Edm.Ui.Technologies.Models
 {
     public class WorkbenchDeviceConfigViewModel
     {
-        public int Id { get; set; }
-        public int WorkbenchId { get; set; }
+        public Guid Id { get; set; }
+        public Guid WorkbenchId { get; set; }
         public int WorkplaceHostDeviceId { get; set; }
         public int HostDeviceId { get; set; }
         public Guid ProfileId { get; set; }

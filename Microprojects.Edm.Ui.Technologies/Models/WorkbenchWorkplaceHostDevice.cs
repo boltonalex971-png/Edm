@@ -3,9 +3,9 @@ using Microprojects.Edm.Domain;
 
 namespace Microprojects.Edm.Ui.Technologies.Models
 {
-    public class WorkbenchWorkplaceHostDevice : LegacyIntDomainObject
+    public class WorkbenchWorkplaceHostDevice : DomainObject
     {
-        public int WorkbenchId { get; set; }
+        public Guid WorkbenchId { get; set; }
         public int WorkplaceHostDeviceId { get; set; }
         public Guid ProfileId { get; set; }
 

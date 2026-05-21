@@ -116,7 +116,8 @@ namespace Microprojects.Edm.Ui.Technologies.Services
             return await Db.Workbenches
                 .Include(w => w.WorkplaceProcess.Process)
                 .Include(w => w.WorkplaceProcess.Workplace)
-                .Where(w => w.WorkplaceProcessId == workplaceProcessId && w.IsActive)
+                .Include(w => w.Meta)
+                .Where(w => w.WorkplaceProcessId == workplaceProcessId && w.Meta.Deleted == null)
                 .ToListAsync();
         }
 
@@ -129,19 +130,9 @@ namespace Microprojects.Edm.Ui.Technologies.Services
                 ?? throw new ArgumentException("No workspace process found");
         }
 
-        public async Task<Workbench> SaveWorkbench(Workbench workbench)
-        {
-            var track = Db.Workbenches.Attach(workbench);
-            track.State = workbench.Id == 0 ? EntityState.Added : EntityState.Modified;
-            if (track.State == EntityState.Added)
-            {
-                workbench.IsActive = true;
-            }
-            await Db.SaveChangesAsync();
-            return workbench;
-        }
+        public async Task<Workbench> SaveWorkbench(Workbench workbench) => await Save(workbench);
 
-        public async Task<Workbench> GetWorkbench(int workbenchId)
+        public async Task<Workbench> GetWorkbench(Guid workbenchId)
         {
             return await Db.Workbenches
                 .Include(w => w.WorkplaceProcess.Process)
@@ -150,18 +141,9 @@ namespace Microprojects.Edm.Ui.Technologies.Services
                 ?? throw new ArgumentException("Workbench not found");
         }
 
-        public async Task<Workbench> DeleteWorkbench(int id)
-        {
-            var entity = await Db.Workbenches.FindAsync(id);
-            if (entity != null)
-            {
-                entity.IsActive = false;
-                await Db.SaveChangesAsync();
-            }
-            return entity;
-        }
+        public async Task<Workbench> DeleteWorkbench(Guid id) => await Delete<Workbench>(id);
 
-        public async Task<IEnumerable<WorkbenchWorkplaceHostDevice>> GetWorkbenchDevices(int workbenchId)
+        public async Task<IEnumerable<WorkbenchWorkplaceHostDevice>> GetWorkbenchDevices(Guid workbenchId)
         {
             return await Db.WorkbenchDeviceConfigurations
                 .Include(d => d.WorkplaceHostDevice.HostDevice.Device)
@@ -171,7 +153,7 @@ namespace Microprojects.Edm.Ui.Technologies.Services
                 .ToListAsync();
         }
 
-        public async Task<WorkbenchWorkplaceHostDevice> GetWorkbenchDevice(int id)
+        public async Task<WorkbenchWorkplaceHostDevice> GetWorkbenchDevice(Guid id)
         {
             return await Db.WorkbenchDeviceConfigurations
                 .Include(d => d.WorkplaceHostDevice.HostDevice.Device)
@@ -181,30 +163,17 @@ namespace Microprojects.Edm.Ui.Technologies.Services
                 ?? throw new ArgumentException("Workbench device configuration not found");
         }
 
-        public async Task<WorkbenchWorkplaceHostDevice> SaveWorkbenchDevice(WorkbenchWorkplaceHostDevice device)
-        {
-            var track = Db.WorkbenchDeviceConfigurations.Attach(device);
-            track.State = device.Id == 0 ? EntityState.Added : EntityState.Modified;
-            await Db.SaveChangesAsync();
-            return device;
-        }
+        public async Task<WorkbenchWorkplaceHostDevice> SaveWorkbenchDevice(WorkbenchWorkplaceHostDevice device) =>
+            await Save(device);
 
-        public async Task<WorkbenchWorkplaceHostDevice> SaveWorkbenchDeviceOptions(int id, string options)
+        public async Task<WorkbenchWorkplaceHostDevice> SaveWorkbenchDeviceOptions(Guid id, string options)
         {
             var device = await GetWorkbenchDevice(id);
             device.Configuration = options;
             return await SaveWorkbenchDevice(device);
         }
 
-        public async Task<WorkbenchWorkplaceHostDevice> DeleteWorkbenchDevice(int id)
-        {
-            var entity = await Db.WorkbenchDeviceConfigurations.FindAsync(id);
-            if (entity != null)
-            {
-                Db.WorkbenchDeviceConfigurations.Remove(entity);
-                await Db.SaveChangesAsync();
-            }
-            return entity;
-        }
+        public async Task<WorkbenchWorkplaceHostDevice> DeleteWorkbenchDevice(Guid id) =>
+            await Delete<WorkbenchWorkplaceHostDevice>(id);
     }
 }
