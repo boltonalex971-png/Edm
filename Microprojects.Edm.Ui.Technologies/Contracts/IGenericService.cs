@@ -1,12 +1,18 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Text;
 using System.Threading.Tasks;
+using Microprojects.Edm.Domain;
 
 namespace Microprojects.Edm.Ui.Technologies.Contracts
 {
-    public interface IGenericService<T>
+    // Legacy int-keyed generic service contract for entities still tracked by
+    // int PKs (Profile, Qualifier, Audit, AuditZone, AuditCriterion, Operation,
+    // OperationCriterion, OperationHostDevice, Record, RecordOperationCriterion,
+    // Workbench, WorkbenchWorkplaceHostDevice, WorkplaceHostDevice, WorkplaceProcess,
+    // HostDevice, Setting, ProfilePoint). Guid-id services (Host/Device/Process/
+    // Workplace) inherit Microprojects.Edm.Shared.Contracts.IGenericService instead.
+    public interface ILegacyIntGenericService<T> where T : LegacyIntDomainObject
     {
         Task<IEnumerable<T>> GetAll();
         Task<T> Get(int id);

@@ -1,9 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
+﻿using System.Collections.Generic;
 using Microprojects.Edm.Shared.Persistence;
 using Microprojects.Edm.Ui.Technologies.Models;
-using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Newtonsoft.Json;
 
 namespace Microprojects.Edm.Ui.Technologies.Persistence
 {
@@ -13,7 +13,6 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence
         public DbSet<AuditZone> AuditZones { get; set; }
         public DbSet<AuditCriterion> AuditCriteria { get; set; }
         public DbSet<Device> Devices { get; set; }
-        public DbSet<Hierarchy> Hierarchies { get; set; }
         public DbSet<Host> Hosts { get; set; }
         public DbSet<HostDevice> HostDevices { get; set; }
         public DbSet<Operation> Operations { get; set; }

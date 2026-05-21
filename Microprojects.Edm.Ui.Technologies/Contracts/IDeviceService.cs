@@ -1,17 +1,16 @@
-using Microprojects.Edm.Ui.Technologies.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
+using Microprojects.Edm.Shared.Contracts;
+using Microprojects.Edm.Ui.Technologies.Models;
 
 namespace Microprojects.Edm.Ui.Technologies.Contracts
 {
     public interface IDeviceService : IGenericService<Device>
     {
-        Task<Device> ChangeParent(int id, int newParentId);
-        Task<IEnumerable<HostDevice>> GetHosts(int id);
+        Task<IEnumerable<HostDevice>> GetHosts(Guid id);
         Task<HostDevice> AttachHost(HostDevice hostDevice);
-        Task<bool> DetachHost(int id, int hostDeviceId);
+        Task<bool> DetachHost(Guid id, int hostDeviceId);
         Task<IEnumerable<Host>> GetAvailableHosts();
         Task<HostDevice> GetHostDevice(int id);
     }

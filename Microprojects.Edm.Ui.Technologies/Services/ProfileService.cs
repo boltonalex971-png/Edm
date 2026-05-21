@@ -1,31 +1,23 @@
-using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
-using Microprojects.Edm.Ui.Technologies.Contracts;
-using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Ui.Technologies.Persistence;
-using Microprojects.Edm.Plugins;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
 using System.Threading.Tasks;
+using Microprojects.Edm.Plugins;
+using Microprojects.Edm.Ui.Technologies.Contracts;
+using Microprojects.Edm.Ui.Technologies.Models;
+using Microprojects.Edm.Ui.Technologies.Persistence;
+using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 
 namespace Microprojects.Edm.Ui.Technologies.Services
 {
     public class ProfileService : ServiceBase<Profile>, IProfileService
     {
-        #region injected properties
-
-        #endregion
-
         private readonly IPluginContainer _plugins;
 
         public ProfileService() { }
 
-        public ProfileService(TechnologiesContext db, IPluginContainer plugins) : base(db) 
+        public ProfileService(TechnologiesContext db, IPluginContainer plugins) : base(db)
         {
             _plugins = plugins;
         }
@@ -33,6 +25,10 @@ namespace Microprojects.Edm.Ui.Technologies.Services
         public override async Task<Profile> Get(int id)
         {
             var result = await base.Get(id);
+            if (result == null)
+            {
+                return null;
+            }
             var profiler = _plugins.GetProfile(result.ProfilerGuid);
             result.ProfilerName = profiler?.Name;
             return result;
@@ -49,12 +45,11 @@ namespace Microprojects.Edm.Ui.Technologies.Services
         {
             var profiler = (await Db.HostDevices
                 .Include(hd => hd.Device)
-                .FirstOrDefaultAsync(hd => hd.Id == deviceId))?.Device.ProfilerGuid ??
-                throw new Exception($"No device with id {deviceId} found");
-            var profiles = await Db.Profiles
+                .FirstOrDefaultAsync(hd => hd.Id == deviceId))?.Device.ProfilerGuid
+                ?? throw new Exception($"No device with id {deviceId} found");
+            return await Db.Profiles
                 .Where(p => p.ProfilerGuid == profiler && p.IsActive)
                 .ToListAsync();
-            return profiles;
         }
 
         public async Task<IEnumerable<string>> GetProfileParams(int id)
@@ -68,17 +63,17 @@ namespace Microprojects.Edm.Ui.Technologies.Services
 
         public async Task<IEnumerable<Audit>> GetAudits(int id)
         {
-            var audits = await Db.Audits
+            return await Db.Audits
                 .Where(s => s.ProfileId == id && s.IsActive)
                 .ToListAsync();
-            return audits;
         }
 
         public async Task<Audit> AddAudit(int id, Audit audit)
         {
             var profile = await Db.Profiles
                 .Include(p => p.Audits)
-                .FirstOrDefaultAsync(p => p.Id == id) ?? throw new ArgumentException("Profile not found");
+                .FirstOrDefaultAsync(p => p.Id == id)
+                ?? throw new ArgumentException("Profile not found");
             audit.IsActive = true;
             profile.Audits.Add(audit);
             await Db.SaveChangesAsync();
@@ -89,9 +84,10 @@ namespace Microprojects.Edm.Ui.Technologies.Services
         {
             var profile = await Db.Profiles
                 .Include(p => p.Audits)
-                .FirstOrDefaultAsync(p => p.Id == id) ?? throw new ArgumentException("Profile not found");
-            var audit = profile.Audits.FirstOrDefault(p => p.Id == auditId) ??
-                throw new ArgumentException("Audit not found");
+                .FirstOrDefaultAsync(p => p.Id == id)
+                ?? throw new ArgumentException("Profile not found");
+            var audit = profile.Audits.FirstOrDefault(p => p.Id == auditId)
+                ?? throw new ArgumentException("Audit not found");
             profile.Audits.Remove(audit);
             await Db.SaveChangesAsync();
             return true;

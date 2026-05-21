@@ -1,12 +1,11 @@
-using Microprojects.Edm.Ui.Technologies.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
+using Microprojects.Edm.Ui.Technologies.Models;
 
 namespace Microprojects.Edm.Ui.Technologies.Contracts
 {
-    public interface IProfileService : IGenericService<Profile>
+    public interface IProfileService : ILegacyIntGenericService<Profile>
     {
         Task<IEnumerable<string>> GetProfileParams(int id);
         Task<IEnumerable<Profile>> GetByDevice(int deviceId);

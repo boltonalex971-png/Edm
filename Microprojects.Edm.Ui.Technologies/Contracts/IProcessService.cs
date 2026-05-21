@@ -1,23 +1,22 @@
-using Microprojects.Edm.Ui.Technologies.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
+using Microprojects.Edm.Shared.Contracts;
+using Microprojects.Edm.Ui.Technologies.Models;
 
 namespace Microprojects.Edm.Ui.Technologies.Contracts
 {
     public interface IProcessService : IGenericService<Process>
     {
-        Task<Process> ChangeParent(int id, int newParentId);
-        Task<IEnumerable<Profile>> GetProfiles(int id);
-        Task<IEnumerable<string>> GetMissingInputs(int id);
-        Task<Profile> AddProfile(int processId, Profile profile);
+        Task<IEnumerable<Profile>> GetProfiles(Guid id);
+        Task<IEnumerable<string>> GetMissingInputs(Guid id);
+        Task<Profile> AddProfile(Guid processId, Profile profile);
         Task<Profile> SaveProfile(Profile profile);
-        Task<bool> DeleteProfile(int processId, int profileId);
+        Task<bool> DeleteProfile(Guid processId, int profileId);
 
-        Task<IEnumerable<Qualifier>> GetQualifiers(int id);
-        Task<Qualifier> AddQualifier(int processId, Qualifier qualifier);
+        Task<IEnumerable<Qualifier>> GetQualifiers(Guid id);
+        Task<Qualifier> AddQualifier(Guid processId, Qualifier qualifier);
         Task<Qualifier> SaveQualifier(Qualifier qualifier);
-        Task<bool> DeleteQualifier(int processId, int qualifierId);
+        Task<bool> DeleteQualifier(Guid processId, int qualifierId);
     }
 }

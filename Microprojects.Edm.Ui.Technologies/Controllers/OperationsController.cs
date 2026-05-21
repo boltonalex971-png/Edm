@@ -21,7 +21,7 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
         private ISettingService _settingService;
         private readonly IPluginContainer _plugins;
 
-        private Func<int, string> OperationProcessSettingName = (processId) => $"{nameof(Process).ToLower()}-{processId}";
+        private Func<Guid, string> OperationProcessSettingName = (processId) => $"{nameof(Process).ToLower()}-{processId}";
 
         public OperationsController(
             ILogger<OperationsController> logger,

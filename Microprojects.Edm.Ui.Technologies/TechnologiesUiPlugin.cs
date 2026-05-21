@@ -45,7 +45,6 @@ namespace Microprojects.Edm.Ui.Technologies
             services.AddScoped<IRemoteJobs, RemoteJobs>();
             services.AddScoped<IAuditService, AuditService>();
             services.AddScoped<IProcessService, ProcessService>();
-            services.AddScoped<IHierarchyService, HierarchyService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IDirectoryRootRegistry, TechDirectoryRootRegistry>();
             services.AddScoped<IDirectoryService, DirectoryService<TechnologiesContext>>();

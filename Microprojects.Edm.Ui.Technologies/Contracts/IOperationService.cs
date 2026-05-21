@@ -1,14 +1,12 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microprojects.Edm.Models;
 using Microprojects.Edm.Ui.Technologies.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Microprojects.Edm.Ui.Technologies.Contracts
 {
-    public interface IOperationService : IGenericService<Operation> 
+    public interface IOperationService : ILegacyIntGenericService<Operation>
     {
         Task<Operation> Create(Operation operation);
         Task<(Operation, Process)> Launch(string processUid, string workbenchUid);
@@ -23,6 +21,6 @@ namespace Microprojects.Edm.Ui.Technologies.Contracts
         Task<Operation> StopOperation(int operationId);
         Task<Operation> CompleteOperation(int operationId);
         Task<Operation> Copy(int id);
-        Task <OperationStatus> GetStatus(Operation operation);
+        Task<OperationStatus> GetStatus(Operation operation);
     }
 }

@@ -1,28 +1,23 @@
-using Microprojects.Edm.Domain;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Ui.Technologies.Models;
+using Microprojects.Edm.Domain;
 
 namespace Microprojects.Edm.Ui.Technologies.Models
 {
     /// <summary>
-    /// Profile describes a set of steps on timeline to achieve 
-    /// apropriate results. Each device driver, defined by 
-    /// <code>Model</code> property, is responsible for 
+    /// Profile describes a set of steps on timeline to achieve
+    /// apropriate results. Each device driver, defined by
+    /// <code>Model</code> property, is responsible for
     /// the profile steps interpretaion.
-    /// If <code>IsActive</code> property is false it could mean 
-    /// that the profile was customized just for certain operation(s) 
+    /// If <code>IsActive</code> property is false it could mean
+    /// that the profile was customized just for certain operation(s)
     /// and can not be applied anywhere else
     /// </summary>
     public class Profile : TypeObject
     {
-        public int ProcessId { get; set; }
+        public Guid ProcessId { get; set; }
 
         /// <summary>
         /// Reference to effective profiler plugin

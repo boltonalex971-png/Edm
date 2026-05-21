@@ -1,13 +1,11 @@
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microprojects.Edm.Ui.Technologies.Auditing;
 using Microprojects.Edm.Ui.Technologies.Models;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Microprojects.Edm.Ui.Technologies.Contracts
 {
-    public interface IAuditService : IGenericService<Audit>
+    public interface IAuditService : ILegacyIntGenericService<Audit>
     {
         Task<IEnumerable<Audit>> GetByProfile(int profileId);
         Task<IEnumerable<AuditZone>> GetZones(int auditId);
