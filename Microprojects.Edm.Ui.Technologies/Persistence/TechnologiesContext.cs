@@ -1,16 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
-using Microprojects.Edm.Domain;
 using Microprojects.Edm.Shared.Persistence;
 using Microprojects.Edm.Ui.Technologies.Models;
-using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Directory = Microprojects.Edm.Domain.Directory;
 
 namespace Microprojects.Edm.Ui.Technologies.Persistence
 {
-    public class TechnologiesContext : DbContext
+    public class TechnologiesContext : SharedDbContext
     {
         public DbSet<Audit> Audits { get; set; }
         public DbSet<AuditZone> AuditZones { get; set; }
@@ -34,10 +31,6 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence
         public DbSet<WorkplaceHostDevice> WorkplaceHostDevices { get; set; }
         public DbSet<WorkplaceProcess> WorkplaceProcesses { get; set; }
 
-        public DbSet<Meta> Meta { get; set; }
-        public DbSet<History> History { get; set; }
-        public DbSet<Directory> Directories { get; set; }
-
         public TechnologiesContext(DbContextOptions<TechnologiesContext> options) : base(options)
         {
         }
@@ -45,9 +38,6 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
-            modelBuilder.ConfigureGuidIdsValueGeneratedNever();
-            modelBuilder.ConfigureMetaEntities();
 
             modelBuilder.Entity<Audit>().HasMany(a => a.Qualifiers).WithMany();
 

@@ -6,11 +6,9 @@ using Directory = Microprojects.Edm.Domain.Directory;
 
 namespace Microprojects.Edm.Ui.Logistics.Persistence;
 
-public class LogisticsContext : DbContext
+public class LogisticsContext : SharedDbContext
 {
     public DbSet<Changelog> Changelog { get; set; }
-    public DbSet<Meta> Meta { get; set; }
-    public DbSet<Directory> Directories { get; set; }
     public DbSet<Item> Items { get; set; }
     public DbSet<Supply> Supplies { get; set; }
     public DbSet<Nomenclature> Nomenclatures { get; set; }
@@ -49,9 +47,6 @@ public class LogisticsContext : DbContext
         //     );
 
         builder.Entity<TareType>().Ignore(t => t.Dimensions);
-
-        builder.ConfigureGuidIdsValueGeneratedNever();
-        builder.ConfigureMetaEntities();
 
         // Self-referencing relation to build process tree
         builder.Entity<Process>()
