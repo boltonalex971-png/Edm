@@ -10,7 +10,7 @@ using Microprojects.Edm.Ui.Technologies.Models;
 
 namespace Microprojects.Edm.Ui.Technologies.Models
 {
-    public class WorkbenchWorkplaceHostDevice : DomainObject
+    public class WorkbenchWorkplaceHostDevice : LegacyIntDomainObject
     {
         public int WorkbenchId { get; set; }
         public int WorkplaceHostDeviceId { get; set; }

@@ -10,7 +10,7 @@ namespace Microprojects.Edm.Ui.Technologies.Models
     /// <summary>
     /// Defines a working place with devices allowed to be used in processes, allowed for the workplace.
     /// </summary>
-    public class WorkplaceHostDevice: DomainObject
+    public class WorkplaceHostDevice : LegacyIntDomainObject
     {
         public int WorkplaceId { get; set; }
         public Workplace Workplace { get; set; }

@@ -35,7 +35,7 @@ namespace Microprojects.Edm.Ui.Technologies.Services
             return set;
         }
 
-        protected DbSet<T> Set<T>() where T : DomainObject
+        protected DbSet<T> Set<T>() where T : LegacyIntDomainObject
         {
             var set = Db.Set<T>();
             return set;
@@ -89,7 +89,7 @@ namespace Microprojects.Edm.Ui.Technologies.Services
             return result;
         }
 
-        protected virtual async Task<T> Get<T>(int id) where T : DomainObject
+        protected virtual async Task<T> Get<T>(int id) where T : LegacyIntDomainObject
         {
             var result = await Set<T>()
                 .FirstOrDefaultAsync(p => id == p.Id);
@@ -115,7 +115,7 @@ namespace Microprojects.Edm.Ui.Technologies.Services
             return entity;
         }
 
-        protected virtual async Task<T> Save<T>(T entity) where T : DomainObject
+        protected virtual async Task<T> Save<T>(T entity) where T : LegacyIntDomainObject
         {
             var track = Set<T>().Attach(entity);
             track.State = entity.Id == 0 ? EntityState.Added : EntityState.Modified;
@@ -152,7 +152,7 @@ namespace Microprojects.Edm.Ui.Technologies.Services
             return await Delete(entity, false);
         }
 
-        protected virtual async Task<T> Delete<T>(int id) where T : DomainObject
+        protected virtual async Task<T> Delete<T>(int id) where T : LegacyIntDomainObject
         {
             var entity = await Get<T>(id);
             // TODO Make soft delete as well

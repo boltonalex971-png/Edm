@@ -12,7 +12,7 @@ using Microprojects.Edm.Ui.Technologies.Models;
 
 namespace Microprojects.Edm.Ui.Technologies.Models
 {
-    public class HostDevice : DomainObject
+    public class HostDevice : LegacyIntDomainObject
     {
         public int DeviceId { get; set; }
         public int HostId { get; set; }

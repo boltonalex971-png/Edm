@@ -1,4 +1,4 @@
-using Directory = Microprojects.Edm.Ui.Logistics.Models.Directory;
+using Directory = Microprojects.Edm.Domain.Directory;
 
 namespace Microprojects.Edm.Ui.Logistics.Contracts;
 

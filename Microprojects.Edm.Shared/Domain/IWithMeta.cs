@@ -1,4 +1,4 @@
-namespace Microprojects.Edm.Ui.Logistics.Models;
+﻿namespace Microprojects.Edm.Domain;
 
 public interface IWithMeta : IDomainObject
 {

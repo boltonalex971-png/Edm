@@ -1,10 +1,11 @@
+﻿using System;
 using UUIDNext;
 
-namespace Microprojects.Edm.Ui.Logistics.Models;
+namespace Microprojects.Edm.Domain;
 
 public class DomainObject : IDomainObject
 {
-    public static Guid NewGuid() => Uuid.NewDatabaseFriendly(Database.SqlServer); 
+    public static Guid NewGuid() => Uuid.NewDatabaseFriendly(Database.SqlServer);
     public virtual Guid Id { get; set; }
 }
 

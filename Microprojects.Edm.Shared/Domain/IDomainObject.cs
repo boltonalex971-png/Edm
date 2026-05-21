@@ -1,4 +1,6 @@
-namespace Microprojects.Edm.Ui.Logistics.Models;
+﻿using System;
+
+namespace Microprojects.Edm.Domain;
 
 public interface IDomainObject
 {

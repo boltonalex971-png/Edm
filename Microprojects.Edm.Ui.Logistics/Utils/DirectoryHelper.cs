@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microprojects.Edm.Ui.Logistics.ViewModels;
-using Directory = Microprojects.Edm.Ui.Logistics.Models.Directory;
+using Directory = Microprojects.Edm.Domain.Directory;
 
 namespace Microprojects.Edm.Ui.Logistics.Utils;
 

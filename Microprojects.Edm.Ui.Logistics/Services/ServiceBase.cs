@@ -9,7 +9,7 @@ using Microprojects.Edm.Ui.Logistics.Contracts;
 using Microprojects.Edm.Ui.Logistics.Models;
 using Microprojects.Edm.Ui.Logistics.Persistence;
 using Newtonsoft.Json;
-using Directory = Microprojects.Edm.Ui.Logistics.Models.Directory;
+using Directory = Microprojects.Edm.Domain.Directory;
 
 namespace Microprojects.Edm.Ui.Logistics.Services;
 

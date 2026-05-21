@@ -70,7 +70,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
                     b.ToTable("Changelog");
                 });
 
-            modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Directory", b =>
+            modelBuilder.Entity("Microprojects.Edm.Domain.Directory", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -117,7 +117,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
                     b.ToTable("Grades");
                 });
 
-            modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.History", b =>
+            modelBuilder.Entity("Microprojects.Edm.Domain.History", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -220,7 +220,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
                     b.ToTable("ItemLinks");
                 });
 
-            modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Meta", b =>
+            modelBuilder.Entity("Microprojects.Edm.Domain.Meta", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -547,15 +547,15 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
                     b.Navigation("Nomenclature");
                 });
 
-            modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Directory", b =>
+            modelBuilder.Entity("Microprojects.Edm.Domain.Directory", b =>
                 {
-                    b.HasOne("Microprojects.Edm.Ui.Logistics.Models.Directory", "Directory")
+                    b.HasOne("Microprojects.Edm.Domain.Directory", "Directory")
                         .WithMany("Children")
                         .HasForeignKey("DirectoryId");
 
-                    b.HasOne("Microprojects.Edm.Ui.Logistics.Models.Meta", "Meta")
+                    b.HasOne("Microprojects.Edm.Domain.Meta", "Meta")
                         .WithOne()
-                        .HasForeignKey("Microprojects.Edm.Ui.Logistics.Models.Directory", "Id")
+                        .HasForeignKey("Microprojects.Edm.Domain.Directory", "Id")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
@@ -575,9 +575,9 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
                     b.Navigation("Process");
                 });
 
-            modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.History", b =>
+            modelBuilder.Entity("Microprojects.Edm.Domain.History", b =>
                 {
-                    b.HasOne("Microprojects.Edm.Ui.Logistics.Models.Meta", "Meta")
+                    b.HasOne("Microprojects.Edm.Domain.Meta", "Meta")
                         .WithMany("History")
                         .HasForeignKey("MetaId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -593,7 +593,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
                         .HasForeignKey("GradeId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("Microprojects.Edm.Ui.Logistics.Models.Meta", "Meta")
+                    b.HasOne("Microprojects.Edm.Domain.Meta", "Meta")
                         .WithOne()
                         .HasForeignKey("Microprojects.Edm.Ui.Logistics.Models.Item", "Id")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -670,11 +670,11 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("DefaultTareTypeId");
 
-                    b.HasOne("Microprojects.Edm.Ui.Logistics.Models.Directory", "Directory")
+                    b.HasOne("Microprojects.Edm.Domain.Directory", "Directory")
                         .WithMany()
                         .HasForeignKey("DirectoryId");
 
-                    b.HasOne("Microprojects.Edm.Ui.Logistics.Models.Meta", "Meta")
+                    b.HasOne("Microprojects.Edm.Domain.Meta", "Meta")
                         .WithOne()
                         .HasForeignKey("Microprojects.Edm.Ui.Logistics.Models.Nomenclature", "Id")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -689,7 +689,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Order", b =>
                 {
-                    b.HasOne("Microprojects.Edm.Ui.Logistics.Models.Meta", "Meta")
+                    b.HasOne("Microprojects.Edm.Domain.Meta", "Meta")
                         .WithOne()
                         .HasForeignKey("Microprojects.Edm.Ui.Logistics.Models.Order", "Id")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -731,11 +731,11 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Process", b =>
                 {
-                    b.HasOne("Microprojects.Edm.Ui.Logistics.Models.Directory", "Directory")
+                    b.HasOne("Microprojects.Edm.Domain.Directory", "Directory")
                         .WithMany()
                         .HasForeignKey("DirectoryId");
 
-                    b.HasOne("Microprojects.Edm.Ui.Logistics.Models.Meta", "Meta")
+                    b.HasOne("Microprojects.Edm.Domain.Meta", "Meta")
                         .WithOne()
                         .HasForeignKey("Microprojects.Edm.Ui.Logistics.Models.Process", "Id")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -754,11 +754,11 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Specification", b =>
                 {
-                    b.HasOne("Microprojects.Edm.Ui.Logistics.Models.Directory", "Directory")
+                    b.HasOne("Microprojects.Edm.Domain.Directory", "Directory")
                         .WithMany()
                         .HasForeignKey("DirectoryId");
 
-                    b.HasOne("Microprojects.Edm.Ui.Logistics.Models.Meta", "Meta")
+                    b.HasOne("Microprojects.Edm.Domain.Meta", "Meta")
                         .WithOne()
                         .HasForeignKey("Microprojects.Edm.Ui.Logistics.Models.Specification", "Id")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -817,7 +817,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Supply", b =>
                 {
-                    b.HasOne("Microprojects.Edm.Ui.Logistics.Models.Meta", "Meta")
+                    b.HasOne("Microprojects.Edm.Domain.Meta", "Meta")
                         .WithOne()
                         .HasForeignKey("Microprojects.Edm.Ui.Logistics.Models.Supply", "Id")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -828,7 +828,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Tare", b =>
                 {
-                    b.HasOne("Microprojects.Edm.Ui.Logistics.Models.Meta", "Meta")
+                    b.HasOne("Microprojects.Edm.Domain.Meta", "Meta")
                         .WithOne()
                         .HasForeignKey("Microprojects.Edm.Ui.Logistics.Models.Tare", "Id")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -847,11 +847,11 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.TareType", b =>
                 {
-                    b.HasOne("Microprojects.Edm.Ui.Logistics.Models.Directory", "Directory")
+                    b.HasOne("Microprojects.Edm.Domain.Directory", "Directory")
                         .WithMany()
                         .HasForeignKey("DirectoryId");
 
-                    b.HasOne("Microprojects.Edm.Ui.Logistics.Models.Meta", "Meta")
+                    b.HasOne("Microprojects.Edm.Domain.Meta", "Meta")
                         .WithOne()
                         .HasForeignKey("Microprojects.Edm.Ui.Logistics.Models.TareType", "Id")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -862,12 +862,12 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
                     b.Navigation("Meta");
                 });
 
-            modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Directory", b =>
+            modelBuilder.Entity("Microprojects.Edm.Domain.Directory", b =>
                 {
                     b.Navigation("Children");
                 });
 
-            modelBuilder.Entity("Microprojects.Edm.Ui.Logistics.Models.Meta", b =>
+            modelBuilder.Entity("Microprojects.Edm.Domain.Meta", b =>
                 {
                     b.Navigation("History");
                 });

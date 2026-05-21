@@ -1,4 +1,5 @@
-using Microprojects.Edm.Auth;
+﻿using Microprojects.Edm.Auth;
+using Microprojects.Edm.Domain;
 using Microprojects.Edm.Ui.Logistics.Contracts;
 using Microprojects.Edm.Ui.Logistics.Models;
 using Microprojects.Edm.Ui.Logistics.Persistence;

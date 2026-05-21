@@ -10,7 +10,7 @@ using Microprojects.Edm.Ui.Technologies.Models;
 
 namespace Microprojects.Edm.Ui.Technologies.Models
 {
-    public class Setting : DomainObject
+    public class Setting : LegacyIntDomainObject
     {
         public Guid Guid { get; set; }
         public string Name { get; set; }

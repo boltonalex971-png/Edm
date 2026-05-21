@@ -21,6 +21,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<Using Include="Microprojects.Edm.Domain" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<Compile Remove="ui\dist\**" />
 		<Compile Remove="ui\node_modules\**" />
 		<EmbeddedResource Include="ui\dist\**" />

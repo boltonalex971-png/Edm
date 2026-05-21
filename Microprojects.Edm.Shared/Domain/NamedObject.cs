@@ -1,6 +1,6 @@
 ﻿namespace Microprojects.Edm.Domain
 {
-	public abstract class NamedObject : DomainObject
+	public abstract class NamedObject : LegacyIntDomainObject
 	{
 		public virtual string Name { get; set; }
 

@@ -12,7 +12,7 @@ using Microprojects.Edm.Ui.Technologies.Models;
 namespace Microprojects.Edm.Ui.Technologies.Models
 {
  
-    public class ProfilePoint : DomainObject
+    public class ProfilePoint : LegacyIntDomainObject
     {
         public int ProfileId { get; set; }
         public int Order { get; set; }

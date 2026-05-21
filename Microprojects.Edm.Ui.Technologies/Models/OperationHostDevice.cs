@@ -11,7 +11,7 @@ using Microprojects.Edm.Ui.Technologies.Models;
 
 namespace Microprojects.Edm.Ui.Technologies.Models
 {
-    public class OperationHostDevice : DomainObject
+    public class OperationHostDevice : LegacyIntDomainObject
     {
         public int OperationId { get; set; }
         public int HostDeviceId { get; set; }

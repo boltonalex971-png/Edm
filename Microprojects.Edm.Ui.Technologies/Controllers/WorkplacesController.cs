@@ -167,7 +167,7 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
             var folders = (await _hierarchyService.GetTree(HierarchyType.Workplace, UserInfo.Groups))
                 .Select(h => h.ToHierarchyItem()).ToList();
             var wpProc = (await _workplaceService.GetAllowedProcesses(UserInfo.Groups)).ToList();
-            var workplaces = wpProc.Select(wp => wp.Workplace).Distinct(new DomainObjectComparer<Workplace>())
+            var workplaces = wpProc.Select(wp => wp.Workplace).Distinct(new LegacyIntDomainObjectComparer<Workplace>())
                 .Select(w => w.ToHierarchyItem()).ToList();
             var processes = wpProc.Select(p => p.ToHierarchyItem()).ToList();
             foreach (var w in workplaces)

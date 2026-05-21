@@ -10,7 +10,7 @@ using Microprojects.Edm.Ui.Technologies.Models;
 
 namespace Microprojects.Edm.Ui.Technologies.Models
 {
-    public class AuditCriterion : DomainObject
+    public class AuditCriterion : LegacyIntDomainObject
     {
         public int ZoneId { get; set; }
         public string Param { get; set; }

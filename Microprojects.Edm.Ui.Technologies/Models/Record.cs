@@ -16,7 +16,7 @@ namespace Microprojects.Edm.Ui.Technologies.Models
         NotCompleted = 4
     }
 
-    public class Record : DomainObject
+    public class Record : LegacyIntDomainObject
     {
         public int OperationHostDeviceId { get; set; }
 

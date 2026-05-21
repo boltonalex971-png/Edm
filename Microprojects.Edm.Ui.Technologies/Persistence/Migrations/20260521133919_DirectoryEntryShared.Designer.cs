@@ -4,6 +4,7 @@ using Microprojects.Edm.Ui.Technologies.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
 {
     [DbContext(typeof(TechnologiesContext))]
-    partial class TechnologiesContextModelSnapshot : ModelSnapshot
+    [Migration("20260521133919_DirectoryEntryShared")]
+    partial class DirectoryEntryShared
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -35,72 +38,6 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
                     b.HasIndex("QualifiersId");
 
                     b.ToTable("AuditQualifier");
-                });
-
-            modelBuilder.Entity("Microprojects.Edm.Domain.History", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Author")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("JsonValue")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("MetaId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("Timestamp")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("MetaId");
-
-                    b.ToTable("History");
-                });
-
-            modelBuilder.Entity("Microprojects.Edm.Domain.Meta", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime?>("Completed")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("Created")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("Deleted")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Executor")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.PrimitiveCollection<string>("Groups")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Metatype")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("Modified")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid?>("OriginId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Owner")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Meta");
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Technologies.Models.Audit", b =>
@@ -811,17 +748,6 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Microprojects.Edm.Domain.History", b =>
-                {
-                    b.HasOne("Microprojects.Edm.Domain.Meta", "Meta")
-                        .WithMany("History")
-                        .HasForeignKey("MetaId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Meta");
-                });
-
             modelBuilder.Entity("Microprojects.Edm.Ui.Technologies.Models.Audit", b =>
                 {
                     b.HasOne("Microprojects.Edm.Ui.Technologies.Models.Profile", "Profile")
@@ -1125,11 +1051,6 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
                     b.Navigation("Process");
 
                     b.Navigation("Workplace");
-                });
-
-            modelBuilder.Entity("Microprojects.Edm.Domain.Meta", b =>
-                {
-                    b.Navigation("History");
                 });
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Technologies.Models.Audit", b =>

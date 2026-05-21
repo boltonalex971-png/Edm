@@ -10,7 +10,7 @@ using Microprojects.Edm.Ui.Technologies.Models;
 
 namespace Microprojects.Edm.Ui.Technologies.Models
 {
-    public class RecordOperationCriterion : DomainObject
+    public class RecordOperationCriterion : LegacyIntDomainObject
     {
         public int RecordId { get; set; }
         public int OperationCriterionId { get; set; }
