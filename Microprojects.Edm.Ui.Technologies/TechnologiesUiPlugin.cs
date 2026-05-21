@@ -1,9 +1,11 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microprojects.Edm.Infrastructure;
 using Microprojects.Edm.Plugins;
+using Microprojects.Edm.Shared.Contracts;
+using Microprojects.Edm.Shared.Services;
 using Microprojects.Edm.Ui.Technologies.Contracts;
 using Microprojects.Edm.Ui.Technologies.Jobs;
 using Microprojects.Edm.Ui.Technologies.Persistence;
@@ -44,6 +46,9 @@ namespace Microprojects.Edm.Ui.Technologies
             services.AddScoped<IAuditService, AuditService>();
             services.AddScoped<IProcessService, ProcessService>();
             services.AddScoped<IHierarchyService, HierarchyService>();
+            services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IDirectoryRootRegistry, TechDirectoryRootRegistry>();
+            services.AddScoped<IDirectoryService, DirectoryService<TechnologiesContext>>();
             services.AddScoped<IHostService, HostService>();
             services.AddScoped<IDeviceService, DeviceService>();
             services.AddScoped<IWorkplaceService, WorkplaceService>();
