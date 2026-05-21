@@ -4,8 +4,10 @@ using Microprojects.Edm.Domain;
 
 namespace Microprojects.Edm.Ui.Technologies.Models
 {
-    public class Audit : TypeObject
+    public class Audit : DomainObject, IWithMeta
     {
+        public string Name { get; set; }
+        public string Description { get; set; }
         public Guid ProfileId { get; set; }
 
         /// <summary>
@@ -16,5 +18,7 @@ namespace Microprojects.Edm.Ui.Technologies.Models
         public Profile Profile { get; set; }
         public ICollection<Qualifier> Qualifiers { get; set; }
         public ICollection<AuditZone> Zones { get; set; }
+
+        public Meta Meta { get; set; } = null!;
     }
 }

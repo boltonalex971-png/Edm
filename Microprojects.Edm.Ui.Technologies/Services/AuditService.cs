@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microprojects.Edm;
+using Microprojects.Edm.Shared.Contracts;
+using Microprojects.Edm.Shared.Services;
 using Microprojects.Edm.Ui.Technologies.Auditing;
 using Microprojects.Edm.Ui.Technologies.Contracts;
 using Microprojects.Edm.Ui.Technologies.Models;
@@ -11,20 +13,21 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Microprojects.Edm.Ui.Technologies.Services
 {
-    public class AuditService : ServiceBase<Audit>, IAuditService
+    public class AuditService : ServiceBase<TechnologiesContext, Audit>, IAuditService
     {
-        public AuditService() { }
-
-        public AuditService(TechnologiesContext db) : base(db) { }
+        public AuditService(TechnologiesContext db, IUserService userService) : base(db, userService)
+        {
+        }
 
         public async Task<IEnumerable<Audit>> GetByProfile(Guid profileId)
         {
             return await Set()
-                .Where(a => a.ProfileId == profileId && a.IsActive)
+                .Include(a => a.Meta)
+                .Where(a => a.ProfileId == profileId && a.Meta.Deleted == null)
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<AuditZone>> GetZones(int auditId)
+        public async Task<IEnumerable<AuditZone>> GetZones(Guid auditId)
         {
             return await Db.AuditZones
                 .Include(z => z.Criteria)
@@ -36,27 +39,27 @@ namespace Microprojects.Edm.Ui.Technologies.Services
 
         public async Task<AuditCriterion> SaveCriterion(AuditCriterion criterion) => await Save(criterion);
 
-        public async Task<AuditZone> DeleteZone(int zoneId) => await Delete<AuditZone>(zoneId);
+        public async Task<AuditZone> DeleteZone(Guid zoneId) => await Delete<AuditZone>(zoneId);
 
-        public async Task<AuditCriterion> DeleteCriterion(int criterionId) => await Delete<AuditCriterion>(criterionId);
+        public async Task<AuditCriterion> DeleteCriterion(Guid criterionId) => await Delete<AuditCriterion>(criterionId);
 
         public IEnumerable<AuditFuncMetadata> GetAuditFunctions() => AuditFunctions.GetAnalysisFunctions();
 
-        public async Task<IEnumerable<Qualifier>> GetProcessQualifiers(int auditId)
+        public async Task<IEnumerable<Qualifier>> GetProcessQualifiers(Guid auditId)
         {
             var audit = await Get(auditId, a => a.Profile.Process.Qualifiers)
                 ?? throw new EdmException("Technologies.Audit.NotFound", "No audit found.");
             return audit.Profile.Process.Qualifiers;
         }
 
-        public async Task<IEnumerable<Qualifier>> GetQualifiers(int id)
+        public async Task<IEnumerable<Qualifier>> GetQualifiers(Guid id)
         {
             var audit = await Get(id, a => a.Qualifiers)
                 ?? throw new EdmException("Technologies.Audit.NotFound", "No audit found.");
             return audit.Qualifiers;
         }
 
-        public async Task<Qualifier> AddQualifier(int auditId, Qualifier qualifier)
+        public async Task<Qualifier> AddQualifier(Guid auditId, Qualifier qualifier)
         {
             var audit = await Get(auditId, a => a.Qualifiers)
                 ?? throw new EdmException("Technologies.Audit.NotFound", "No audit found.");
@@ -68,7 +71,7 @@ namespace Microprojects.Edm.Ui.Technologies.Services
             return qualifier;
         }
 
-        public async Task<bool> DeleteQualifier(int auditId, Guid qualifierId)
+        public async Task<bool> DeleteQualifier(Guid auditId, Guid qualifierId)
         {
             var audit = await Get(auditId, a => a.Qualifiers)
                 ?? throw new EdmException("Technologies.Audit.NotFound", "No audit found.");

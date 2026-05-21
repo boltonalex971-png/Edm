@@ -4,6 +4,7 @@ using Microprojects.Edm.Ui.Technologies.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
 {
     [DbContext(typeof(TechnologiesContext))]
-    partial class TechnologiesContextModelSnapshot : ModelSnapshot
+    [Migration("20260521194257_EnforceNotNullAndSwitchToGuid_Audit")]
+    partial class EnforceNotNullAndSwitchToGuid_Audit
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

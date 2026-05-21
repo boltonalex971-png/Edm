@@ -77,8 +77,8 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
         public async Task<Audit> AddAudit(Guid id, Audit audit) =>
             await _profileService.AddAudit(id, audit);
 
-        [HttpDelete("{id:guid}/audits/{auditId:int}")]
-        public async Task<bool> DeleteProfile(Guid id, int auditId) =>
+        [HttpDelete("{id:guid}/audits/{auditId:guid}")]
+        public async Task<bool> DeleteProfile(Guid id, Guid auditId) =>
             await _profileService.DeleteAudit(id, auditId);
     }
 }

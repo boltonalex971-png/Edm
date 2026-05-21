@@ -12,6 +12,6 @@ namespace Microprojects.Edm.Ui.Technologies.Contracts
         Task<IEnumerable<Profile>> GetByDevice(int deviceId);
         Task<IEnumerable<Audit>> GetAudits(Guid id);
         Task<Audit> AddAudit(Guid id, Audit audit);
-        Task<bool> DeleteAudit(Guid id, int auditId);
+        Task<bool> DeleteAudit(Guid id, Guid auditId);
     }
 }

@@ -80,15 +80,39 @@ try
     }
 
     // Phase D: Profile + Qualifier shadow Ids, downstream NewProfileId/NewQualifiersId.
-    await BackfillLeafNewIds(conn, tx, "Profiles");
-    await BackfillLeafNewIds(conn, tx, "Qualifiers");
-    await InsertMetaForLegacyEntity(conn, tx, "Profiles", "Profile");
-    await InsertMetaForLegacyEntity(conn, tx, "Qualifiers", "Qualifier");
-    await BackfillIndirectFk(conn, tx, "ProfilePoint", "NewProfileId", "ProfileId", "Profiles");
-    await BackfillIndirectFk(conn, tx, "Audits", "NewProfileId", "ProfileId", "Profiles");
-    await BackfillIndirectFk(conn, tx, "OperationHostDevices", "NewProfileId", "ProfileId", "Profiles");
-    await BackfillIndirectFk(conn, tx, "WorkbenchDeviceConfigurations", "NewProfileId", "ProfileId", "Profiles");
-    await BackfillIndirectFk(conn, tx, "AuditQualifier", "NewQualifiersId", "QualifiersId", "Qualifiers");
+    if (await ColumnExists(conn, tx, "Profiles", "NewId"))
+    {
+        await BackfillLeafNewIds(conn, tx, "Profiles");
+        await BackfillLeafNewIds(conn, tx, "Qualifiers");
+        await InsertMetaForLegacyEntity(conn, tx, "Profiles", "Profile");
+        await InsertMetaForLegacyEntity(conn, tx, "Qualifiers", "Qualifier");
+        await BackfillIndirectFk(conn, tx, "ProfilePoint", "NewProfileId", "ProfileId", "Profiles");
+        await BackfillIndirectFk(conn, tx, "Audits", "NewProfileId", "ProfileId", "Profiles");
+        await BackfillIndirectFk(conn, tx, "OperationHostDevices", "NewProfileId", "ProfileId", "Profiles");
+        await BackfillIndirectFk(conn, tx, "WorkbenchDeviceConfigurations", "NewProfileId", "ProfileId", "Profiles");
+        await BackfillIndirectFk(conn, tx, "AuditQualifier", "NewQualifiersId", "QualifiersId", "Qualifiers");
+    }
+    else
+    {
+        Console.WriteLine("Profiles.NewId not found — Phase D already applied; skipping its steps.");
+    }
+
+    // Phase E: Audit / AuditZone / AuditCriterion. Audit gets Meta;
+    // AuditZone + AuditCriterion are non-Meta Guid-PK (subordinate lifecycle).
+    if (await ColumnExists(conn, tx, "Audits", "NewId"))
+    {
+        await BackfillLeafNewIds(conn, tx, "Audits");
+        await BackfillLeafNewIds(conn, tx, "AuditZones");
+        await BackfillLeafNewIds(conn, tx, "AuditCriteria");
+        await InsertMetaForLegacyEntity(conn, tx, "Audits", "Audit");
+        await BackfillIndirectFk(conn, tx, "AuditZones", "NewAuditId", "AuditId", "Audits");
+        await BackfillIndirectFk(conn, tx, "AuditCriteria", "NewZoneId", "ZoneId", "AuditZones");
+        await BackfillIndirectFk(conn, tx, "OperationCriteria", "NewAuditCriterionId", "AuditCriterionId", "AuditCriteria");
+    }
+    else
+    {
+        Console.WriteLine("Audits.NewId not found — Phase E already applied; skipping its steps.");
+    }
 
     await tx.CommitAsync();
     Console.WriteLine("Backfill complete.");
@@ -231,6 +255,17 @@ static async Task<bool> TableExists(SqlConnection conn, SqlTransaction tx, strin
     await using var cmd = new SqlCommand(
         "SELECT COUNT(*) FROM sys.tables WHERE name = @t", conn, tx);
     cmd.Parameters.AddWithValue("@t", table);
+    return ((int)(await cmd.ExecuteScalarAsync())!) > 0;
+}
+
+static async Task<bool> ColumnExists(SqlConnection conn, SqlTransaction tx, string table, string column)
+{
+    await using var cmd = new SqlCommand(
+        @"SELECT COUNT(*) FROM sys.columns c
+          INNER JOIN sys.tables t ON t.object_id = c.object_id
+          WHERE t.name = @t AND c.name = @c", conn, tx);
+    cmd.Parameters.AddWithValue("@t", table);
+    cmd.Parameters.AddWithValue("@c", column);
     return ((int)(await cmd.ExecuteScalarAsync())!) > 0;
 }
 

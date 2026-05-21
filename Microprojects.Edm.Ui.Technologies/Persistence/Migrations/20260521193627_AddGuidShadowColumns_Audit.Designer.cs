@@ -4,6 +4,7 @@ using Microprojects.Edm.Ui.Technologies.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
 {
     [DbContext(typeof(TechnologiesContext))]
-    partial class TechnologiesContextModelSnapshot : ModelSnapshot
+    [Migration("20260521193627_AddGuidShadowColumns_Audit")]
+    partial class AddGuidShadowColumns_Audit
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -24,8 +27,8 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
 
             modelBuilder.Entity("AuditQualifier", b =>
                 {
-                    b.Property<Guid>("AuditId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("AuditId")
+                        .HasColumnType("int");
 
                     b.Property<Guid>("QualifiersId")
                         .HasColumnType("uniqueidentifier");
@@ -127,11 +130,17 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Technologies.Models.Audit", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
@@ -151,8 +160,11 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Technologies.Models.AuditCriterion", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Arg1")
                         .HasColumnType("nvarchar(max)");
@@ -169,8 +181,8 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
                     b.Property<string>("Param")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("ZoneId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("ZoneId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -181,14 +193,17 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Technologies.Models.AuditZone", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ActiveWhen")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("AuditId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("AuditId")
+                        .HasColumnType("int");
 
                     b.Property<int>("Duration")
                         .HasColumnType("int");
@@ -349,8 +364,8 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<Guid>("AuditCriterionId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("AuditCriterionId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Message")
                         .HasColumnType("nvarchar(max)");
@@ -780,19 +795,11 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
 
             modelBuilder.Entity("Microprojects.Edm.Ui.Technologies.Models.Audit", b =>
                 {
-                    b.HasOne("Microprojects.Edm.Domain.Meta", "Meta")
-                        .WithOne()
-                        .HasForeignKey("Microprojects.Edm.Ui.Technologies.Models.Audit", "Id")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
                     b.HasOne("Microprojects.Edm.Ui.Technologies.Models.Profile", "Profile")
                         .WithMany("Audits")
                         .HasForeignKey("ProfileId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Meta");
 
                     b.Navigation("Profile");
                 });

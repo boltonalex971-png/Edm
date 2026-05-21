@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -33,8 +33,8 @@ namespace Microprojects.Edm.Ui.Technologies.Jobs
         private readonly string OffsetParamName = "Offset";
         private IDisposable _paramsSubscriber;
         private Dictionary<string, object> _inputParams = new();
-        private Func<int, int, string, string> CacheKey = (opId, opCritId, addr) =>
-            $"{nameof(Operation)}:{opId}:{nameof(OperationCriterion)}:{opCritId}:{addr}";
+        private Func<int, Guid, string, string> CacheKey = (opId, critId, addr) =>
+            $"{nameof(Operation)}:{opId}:{nameof(OperationCriterion)}:{critId}:{addr}";
 
 
         public StartAuditJob() { }
@@ -73,7 +73,9 @@ namespace Microprojects.Edm.Ui.Technologies.Jobs
             IEnumerable<AuditZone> audit;
             await using (var db = await ContextFactory.CreateDbContextAsync()) 
             {
-                var service = new AuditService(db);
+                // Audit zones are read for execution; pass null UserService
+                // since there's no caller-scoped filtering at runtime.
+                var service = new AuditService(db, userService: null);
                 audit = await service.GetZones(Parameters.Audit);
             }
 
@@ -233,7 +235,7 @@ namespace Microprojects.Edm.Ui.Technologies.Jobs
         /// Id of running profile to get associated audits
         /// </summary>
         [JobParameter(Required = true)]
-        public int Audit { get; set; }
+        public Guid Audit { get; set; }
         /// <summary>
         /// Id of <code>Microprojects.Edm.Ui.Technologies.Models.OperationHostDevice</code> which Audit belongs to.
         /// </summary>

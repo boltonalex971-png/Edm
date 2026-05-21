@@ -70,7 +70,8 @@ namespace Microprojects.Edm.Ui.Technologies.Services
         public async Task<IEnumerable<Audit>> GetAudits(Guid id)
         {
             return await Db.Audits
-                .Where(s => s.ProfileId == id && s.IsActive)
+                .Include(a => a.Meta)
+                .Where(s => s.ProfileId == id && s.Meta.Deleted == null)
                 .ToListAsync();
         }
 
@@ -80,13 +81,12 @@ namespace Microprojects.Edm.Ui.Technologies.Services
                 .Include(p => p.Audits)
                 .FirstOrDefaultAsync(p => p.Id == id)
                 ?? throw new ArgumentException("Profile not found");
-            audit.IsActive = true;
             profile.Audits.Add(audit);
             await Db.SaveChangesAsync();
             return audit;
         }
 
-        public async Task<bool> DeleteAudit(Guid id, int auditId)
+        public async Task<bool> DeleteAudit(Guid id, Guid auditId)
         {
             var profile = await Db.Profiles
                 .Include(p => p.Audits)
