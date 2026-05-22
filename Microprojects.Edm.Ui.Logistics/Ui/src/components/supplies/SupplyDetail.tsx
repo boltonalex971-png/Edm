@@ -9,7 +9,7 @@ import {
 import '@logistics/components/supplies' // side-effect: registers the `supplies` namespace
 import { SupplyTabs } from '@logistics/components/supplies/SupplyTabs'
 import type { DetailEventHandler, Supply, UUID } from '@logistics/data/types'
-import { useGet } from '@logistics/hooks/hooks'
+import { useGet } from '@microprojects/edm-components/hooks'
 import { formatLocalDateTime } from '@logistics/utils/format'
 import {
     EditorSection,

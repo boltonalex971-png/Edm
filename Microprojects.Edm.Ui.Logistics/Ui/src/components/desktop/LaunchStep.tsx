@@ -6,7 +6,7 @@ import type {
     OrderSpecification,
     UUID,
 } from '@logistics/data/types'
-import { getData } from '@logistics/hooks/hooks'
+import { getData } from '@microprojects/edm-components/hooks'
 import { resolveError } from '@logistics/i18n/resolveError'
 import { formatUnits } from '@logistics/utils/format'
 import {

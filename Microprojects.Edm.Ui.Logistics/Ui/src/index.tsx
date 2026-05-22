@@ -7,7 +7,7 @@ import { BrowserRouter } from 'react-router-dom'
 // before React mounts so the first paint is in the persisted locale.
 import i18n from './i18n/i18n'
 import App from './App'
-import { EntityRefreshProvider } from '@microprojects/edm-components/hooks'
+import { EntityRefreshProvider, setDefaultAcceptLanguage } from '@microprojects/edm-components/hooks'
 import { EntityRefreshSignalRBridge } from './hooks/entityRefreshBridge'
 import { LockProvider, type LockPublisher } from '@microprojects/edm-components/hooks'
 import { getCurrentConnectionId, publishLogisticsMessage } from './hooks/signalRHooks'
@@ -44,6 +44,10 @@ const lockPublisher: LockPublisher = {
         publishLogisticsMessage(events.orderReleased(orderId, username)),
     getCurrentConnectionId,
 }
+
+// Register the Accept-Language getter so the package's useFetch/query helpers
+// stamp the same locale as the axios interceptor below.
+setDefaultAcceptLanguage(() => i18n.language)
 
 // Required so the X-Auth-Token cookie and Negotiate handshake travel on
 // cross-origin XHR when the SPA is served from the rsbuild dev server

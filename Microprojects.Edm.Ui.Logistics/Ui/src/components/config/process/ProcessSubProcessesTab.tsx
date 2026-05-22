@@ -8,7 +8,7 @@ import type { ProcessKind, TreeDataItem, UUID } from '@logistics/data/types'
 import { Column as GridColumn } from '@microprojects/edm-components/components'
 import { useTranslation } from 'react-i18next'
 import Api from '../../../features/api/api'
-import { useGet } from '../../../hooks/hooks'
+import { useGet } from '@microprojects/edm-components/hooks'
 import { DropDownTreeCell } from '@microprojects/edm-components/components'
 import { RelationTable } from '../../RelationTable'
 import './index' // side-effect: registers the `config/process` namespace

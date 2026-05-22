@@ -29,7 +29,7 @@ import {
     type TreeDataItem,
     type UUID,
 } from '@logistics/data/types'
-import { useGet } from '@logistics/hooks/hooks.ts'
+import { useGet } from '@microprojects/edm-components/hooks'
 import { formatUnits } from '@logistics/utils/format.ts'
 import {
     EditorSection,

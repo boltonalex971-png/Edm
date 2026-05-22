@@ -19,7 +19,7 @@ import type {
     UUID,
 } from '@logistics/data/types'
 import { useInvalidateEntities } from '@microprojects/edm-components/hooks'
-import { getData, useGet } from '@logistics/hooks/hooks'
+import { getData, useGet } from '@microprojects/edm-components/hooks'
 import { resolveError } from '@logistics/i18n/resolveError'
 import { formatUnits } from '@logistics/utils/format'
 import {

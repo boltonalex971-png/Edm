@@ -22,7 +22,7 @@ import {
     useEntityToken,
     useInvalidateEntities,
 } from '@microprojects/edm-components/hooks'
-import { usePost } from '@logistics/hooks/hooks'
+import { usePost } from '@microprojects/edm-components/hooks'
 import {
     ExpandLessOutlined as ChevDown,
     ExpandMoreOutlined as ChevRight,

@@ -16,7 +16,7 @@ import type {
     OrderSpecification,
     UUID,
 } from '@logistics/data/types'
-import { postData } from '@logistics/hooks/hooks'
+import { postData } from '@microprojects/edm-components/hooks'
 import { resolveError } from '@logistics/i18n/resolveError'
 import { useSlotSelection } from '@logistics/hooks/useSlotSelection'
 import {

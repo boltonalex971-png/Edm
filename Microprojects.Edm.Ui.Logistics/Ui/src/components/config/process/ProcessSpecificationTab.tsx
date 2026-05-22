@@ -1,7 +1,7 @@
 import Api from '@features/api/api.ts'
 import { DropDownTreeCell } from '@microprojects/edm-components/components'
 import type { TreeDataItem } from '@logistics/data/types'
-import { useGet } from '@logistics/hooks/hooks.ts'
+import { useGet } from '@microprojects/edm-components/hooks'
 import { Column as GridColumn } from '@microprojects/edm-components/components'
 import { useTranslation } from 'react-i18next'
 import { RelationTable } from '../../RelationTable'

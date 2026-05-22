@@ -40,7 +40,7 @@ import {
     useEntityToken,
     useInvalidateEntities,
 } from '@microprojects/edm-components/hooks'
-import { getData, postData, useGet } from '@logistics/hooks/hooks'
+import { getData, postData, useGet } from '@microprojects/edm-components/hooks'
 import { resolveError } from '@logistics/i18n/resolveError'
 import { useTareTransfer } from '@logistics/hooks/useTareTransfer'
 import { SmartScroll, SmartScrollContent } from '@microprojects/tools'

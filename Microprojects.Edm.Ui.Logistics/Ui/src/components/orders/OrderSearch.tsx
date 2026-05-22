@@ -17,7 +17,7 @@ import {
     listTag,
     useEntityToken,
 } from '@microprojects/edm-components/hooks'
-import { usePost } from '@logistics/hooks/hooks.ts'
+import { usePost } from '@microprojects/edm-components/hooks'
 import { useDataGridLocaleText } from '@logistics/i18n/dataGridLocale'
 import { formatLocalDate } from '@logistics/utils/format'
 import { Search as SearchIcon } from '@mui/icons-material'

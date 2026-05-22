@@ -4,7 +4,7 @@ import { Detail } from '@logistics/components/MasterDetail'
 import '@logistics/components/supplies' // side-effect: registers the `supplies` namespace
 import { SupplyDetail } from '@logistics/components/supplies/SupplyDetail'
 import type { Supply } from '@logistics/data/types'
-import { useGet } from '@logistics/hooks/hooks'
+import { useGet } from '@microprojects/edm-components/hooks'
 import { useDataGridLocaleText } from '@logistics/i18n/dataGridLocale'
 import { formatLocalDateTime } from '@logistics/utils/format'
 import { SubRootPage } from '@microprojects/edm-components/components/chrome/SubRootPage'

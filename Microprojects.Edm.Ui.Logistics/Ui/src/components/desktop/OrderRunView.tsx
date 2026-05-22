@@ -17,7 +17,7 @@ import {
     useAcquireOrderClaim,
     useOrderClaimState,
 } from '@microprojects/edm-components/hooks'
-import { useGet } from '@logistics/hooks/hooks'
+import { useGet } from '@microprojects/edm-components/hooks'
 import { resolveError } from '@logistics/i18n/resolveError'
 import type { RootState } from '@logistics/store'
 import {

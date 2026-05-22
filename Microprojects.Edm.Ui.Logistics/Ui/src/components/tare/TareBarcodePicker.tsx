@@ -1,7 +1,7 @@
 import api from '@features/api/api'
 import '@logistics/components/tare' // side-effect: registers the `tare` namespace
 import type { AvailableTare, TareInfo, UUID } from '@logistics/data/types'
-import { getData } from '@logistics/hooks/hooks'
+import { getData } from '@microprojects/edm-components/hooks'
 import { formatUnits } from '@logistics/utils/format'
 import { Autocomplete, Box, TextField, Typography } from '@mui/material'
 import {

@@ -1,6 +1,6 @@
 import Api from '@features/api/api'
 import { useEntityToken } from '@microprojects/edm-components/hooks'
-import { useGet } from '@logistics/hooks/hooks'
+import { useGet } from '@microprojects/edm-components/hooks'
 import { useBasePath } from '@microprojects/edm-components/hooks'
 import {
     EditorSection,

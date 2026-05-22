@@ -29,7 +29,7 @@ import {
     useEntityToken,
     useInvalidateEntities,
 } from '@microprojects/edm-components/hooks'
-import { useGet } from '@logistics/hooks/hooks.ts'
+import { useGet } from '@microprojects/edm-components/hooks'
 import { resolveError } from '@logistics/i18n/resolveError'
 import { formatLocalDate, parseUtcDate } from '@logistics/utils/format'
 import {
