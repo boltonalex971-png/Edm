@@ -12,7 +12,6 @@ using Microprojects.Edm.Shared.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc.Controllers;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -56,16 +55,17 @@ public static class EdmHostBuilderExtensions
         // (DirectoryService, leaf services) stays plugin-tier.
         builder.Services.AddScoped<IUserService, UserService>();
 
-        // Custom MVC/SignalR activators dispatch controller + hub
-        // construction to the owning plugin's IServiceProvider so each
-        // plugin can only resolve its own scoped services. Registered
-        // here (before AddPlugins) so the default activators registered
-        // by AddControllers/AddSignalR are replaced before plugin
-        // assemblies are scanned.
+        // Custom controller activator dispatches controller construction
+        // to the owning plugin's IServiceProvider so each plugin can only
+        // resolve its own scoped services. Registered here (before
+        // AddPlugins) so the default activator registered by AddControllers
+        // is replaced before plugin assemblies are scanned. SignalR hubs
+        // currently live only in the host assembly (IntercomHub) — the
+        // default IHubActivator handles them correctly. If a plugin ever
+        // ships its own Hub class, mirror this pattern with an
+        // IHubActivator<> replacement.
         builder.Services.Replace(
             ServiceDescriptor.Transient<IControllerActivator, PluginScopedControllerActivator>());
-        builder.Services.Replace(
-            ServiceDescriptor.Transient(typeof(IHubActivator<>), typeof(PluginScopedHubActivator<>)));
 
         builder.Services.AddPlugins(config =>
         {
@@ -108,8 +108,8 @@ public static class EdmHostBuilderExtensions
     {
         // Materialize per-plugin IServiceProviders now that the root
         // container is built. Must run before any HTTP traffic, hence
-        // before app.UseRouting / app.MapControllers. PluginScopedControllerActivator
-        // / PluginScopedHubActivator depend on this being initialized.
+        // before app.UseRouting / app.MapControllers.
+        // PluginScopedControllerActivator depends on this being initialized.
         var pluginProviders = app.Services.GetRequiredService<PluginServiceProviderRegistry>();
         pluginProviders.Initialize(
             app.Services,
