@@ -9,11 +9,9 @@ import {
     Dashboard as DashboardIcon,
     SettingsApplications as ConfigIcon,
     Extension as PluginsIcon,
-    Check as CheckIcon,
-    Language as LanguageIcon,
 } from "@mui/icons-material";
-import {Divider, ListSubheader, MenuItem} from "@mui/material";
-import {Changelog, Layout, NavMenu, Loading} from "@microprojects/edm-components/components";
+import {Changelog, Loading} from "@microprojects/edm-components/components";
+import {AppShell as PkgAppShell} from "@microprojects/edm-components/components/chrome/AppShell";
 import {Home} from "./components/home/Home";
 import {ApiContext} from './ApiContext';
 import {roleAttr} from './styles/role';
@@ -23,7 +21,7 @@ import applogo from './assets/applogo.svg';
 import {ToastProvider} from "@microprojects/edm-components/components";
 import {AuthInterstitial} from "@microprojects/edm-components/components";
 import {displayUserName} from "@microprojects/edm-components/utils";
-import {UiPreferencesProvider, useUiPreferences, densityClass} from "@microprojects/edm-components/styles";
+import {UiPreferencesProvider} from "@microprojects/edm-components/styles";
 
 import {getUserFromToken} from "@microprojects/edm-components/hooks";
 import {useDispatch, useSelector} from "react-redux";
@@ -31,11 +29,6 @@ import {useTranslation} from "react-i18next";
 import {setUser} from "./slices/userSlice";
 import type {RootState} from "@edm/store.ts";
 import {appRoles} from './ApiContext';
-
-const LANGUAGES = [
-    {code: 'en', label: 'English'},
-    {code: 'ru', label: 'Русский'},
-] as const;
 
 // Route-level code splitting — shell + Home eager; everything else fetched
 // on demand so first paint isn't dragged down by the MUI X DataGrid chunk
@@ -63,20 +56,19 @@ export default function App() {
         <ApiContext.Provider value={apiBase}>
             <UiPreferencesProvider>
                 <ToastProvider>
-                    <AppShell/>
+                    <AppFrame/>
                 </ToastProvider>
             </UiPreferencesProvider>
         </ApiContext.Provider>
     );
 }
 
-function AppShell() {
+function AppFrame() {
     const userState = useSelector((state: RootState) => state.user);
     const userRole = userState.role;
     const user = userState.name;
     const userDispatch = useDispatch();
-    const {density, scheme} = useUiPreferences();
-    const {t, i18n} = useTranslation('tech');
+    const {t} = useTranslation('tech');
     const roleDescriptors = useRoleDescriptors();
 
     React.useEffect(() => {
@@ -104,92 +96,48 @@ function AppShell() {
             .catch(r => alert(resolveError(r, t('common:error'))));
     }, [t]);
 
-    const activeLng = LANGUAGES.find((l) => l.code === i18n.language)?.code
-        ?? LANGUAGES.find((l) => i18n.language?.startsWith(l.code.split('-')[0]))?.code
-        ?? 'en';
-
-    const languageMenuItems = (
-        <>
-            <Divider />
-            <ListSubheader sx={{
-                fontFamily: 'var(--font-mono)', fontSize: 10.5, lineHeight: '24px',
-                textTransform: 'uppercase', letterSpacing: '0.06em',
-                color: 'var(--ink-4)', background: 'transparent', pl: 2,
-            }}>
-                {t('common:language')}
-            </ListSubheader>
-            {LANGUAGES.map(({code, label}) => (
-                <MenuItem
-                    key={code}
-                    selected={code === activeLng}
-                    onClick={() => i18n.changeLanguage(code)}
-                    sx={{ pr: 2 }}
-                >
-                    <LanguageIcon fontSize="small" sx={{ mr: 1.5, color: 'var(--ink-3)' }} />
-                    <span style={{ flex: 1 }}>{label}</span>
-                    {code === activeLng && (
-                        <CheckIcon fontSize="small" sx={{ color: 'var(--accent)' }} />
-                    )}
-                </MenuItem>
-            ))}
-        </>
-    );
-
-    const navMenu = (
-        <NavMenu
-            hubUrl={`${api.baseUrl}/hub`}
-            pluginName="Technologies"
-            logoSrc={applogo}
-            user={userState as any}
-            roles={roleDescriptors}
-            setRole={setRole}
-            navItems={navItems}
-            onLogout={() => {}}
-            extraUserMenuItems={languageMenuItems}
-        />
-    );
-
     return (
-        <div
-            className={`page-root ${densityClass(density)}`}
-            data-role={roleAttr(userRole)}
-            data-scheme={scheme}
-            data-plugin="technologies"
-        >
-            <Suspense fallback={<Loading/>}>
-                <Routes>
-                    <Route path="/operations/:id/*" element={<OperationLayout/>}/>
-                    <Route element={
-                        <Layout
-                            navMenu={navMenu}
-                            versionsApiUrl={`${api.meta}/version`}
-                            versionChipName="Technologies"
-                            versionChipVersionKey="main"
-                            copyrightOwner="Microprojects"
-                            copyrightStartYear={2020}
-                        >
-                            <Outlet/>
-                        </Layout>
-                    }>
-                        <Route path="changes" element={<Changelog changelogUrl={`${api.meta}/changelog`}/>}/>
-                        {user && userRole && <>
-                            <Route index element={<Home/>}/>
-                            {userRole === appRoles.operator &&
-                                <Route path="dashboard/operations/*" element={<Operations/>}/>}
-                            {userRole !== appRoles.operator && <Route path="dashboard/*" element={<Dashboard/>}/>}
-                            {userRole !== appRoles.operator && <Route path="config/*" element={<Config/>}/>}
-                            {userRole !== appRoles.operator && <Route path="plugins/*" element={<Plugins/>}/>}
-                            <Route path="operation/*" element={<NewOperationWizard/>}/>
-                        </>}
-                        {user && !userRole &&
-                            <Route path="*" element={<AuthInterstitial kind="no-role" user={displayUserName(user)}/>}/>
-                        }
-                        {!user &&
-                            <Route path="*" element={<AuthInterstitial kind="signin"/>}/>
-                        }
-                    </Route>
-                </Routes>
-            </Suspense>
-        </div>
+        <Suspense fallback={<Loading/>}>
+            <Routes>
+                <Route path="/operations/:id/*" element={<OperationLayout/>}/>
+                <Route element={
+                    <PkgAppShell
+                        pluginName="Technologies"
+                        pluginAttr="technologies"
+                        logoSrc={applogo}
+                        hubUrl={`${api.baseUrl}/hub`}
+                        versionsApiUrl={`${api.meta}/version`}
+                        versionChipName="Technologies"
+                        versionChipVersionKey="main"
+                        copyrightOwner="Microprojects"
+                        copyrightStartYear={2020}
+                        user={userState as any}
+                        roles={roleDescriptors}
+                        setRole={setRole}
+                        navItems={navItems}
+                        roleAttr={roleAttr(userRole)}
+                    >
+                        <Outlet/>
+                    </PkgAppShell>
+                }>
+                    <Route path="changes" element={<Changelog changelogUrl={`${api.meta}/changelog`}/>}/>
+                    {user && userRole && <>
+                        <Route index element={<Home/>}/>
+                        {userRole === appRoles.operator &&
+                            <Route path="dashboard/operations/*" element={<Operations/>}/>}
+                        {userRole !== appRoles.operator && <Route path="dashboard/*" element={<Dashboard/>}/>}
+                        {userRole !== appRoles.operator && <Route path="config/*" element={<Config/>}/>}
+                        {userRole !== appRoles.operator && <Route path="plugins/*" element={<Plugins/>}/>}
+                        <Route path="operation/*" element={<NewOperationWizard/>}/>
+                    </>}
+                    {user && !userRole &&
+                        <Route path="*" element={<AuthInterstitial kind="no-role" user={displayUserName(user)}/>}/>
+                    }
+                    {!user &&
+                        <Route path="*" element={<AuthInterstitial kind="signin"/>}/>
+                    }
+                </Route>
+            </Routes>
+        </Suspense>
     );
 }
