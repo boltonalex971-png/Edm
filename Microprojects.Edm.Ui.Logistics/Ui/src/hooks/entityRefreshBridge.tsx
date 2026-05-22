@@ -4,8 +4,8 @@ import {
     type EntityTag,
     listTag,
     useInvalidateEntities,
-} from './entityRefresh'
-import { useLockSetters } from './entityLocks'
+} from '@microprojects/edm-components/hooks'
+import { useLockSetters } from '@microprojects/edm-components/hooks'
 import {
     EntityOp,
     EntityType,

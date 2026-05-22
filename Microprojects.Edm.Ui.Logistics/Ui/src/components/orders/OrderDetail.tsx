@@ -2,7 +2,7 @@ import '@logistics/components/orders' // side-effect: registers the `orders` nam
 import api from '@features/api/api.ts'
 import Api from '@features/api/api.ts'
 import { DetailLinkText } from '@logistics/components/DropDownCell.tsx'
-import { HierarchyPicker } from '@logistics/components/HierarchyPicker.tsx'
+import { HierarchyPicker } from '@microprojects/edm-components/components/forms/HierarchyPicker'
 import { useAlertSetter } from '@logistics/components/InlineAlert.tsx'
 import {
     Detail,
@@ -28,7 +28,7 @@ import {
     listTag,
     useEntityToken,
     useInvalidateEntities,
-} from '@logistics/hooks/entityRefresh'
+} from '@microprojects/edm-components/hooks'
 import { useGet } from '@logistics/hooks/hooks.ts'
 import { resolveError } from '@logistics/i18n/resolveError'
 import { formatLocalDate, parseUtcDate } from '@logistics/utils/format'

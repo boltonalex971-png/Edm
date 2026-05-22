@@ -16,7 +16,7 @@ import {
     type EntityTag,
     listTag,
     useEntityToken,
-} from '@logistics/hooks/entityRefresh'
+} from '@microprojects/edm-components/hooks'
 import { usePost } from '@logistics/hooks/hooks.ts'
 import { useDataGridLocaleText } from '@logistics/i18n/dataGridLocale'
 import { formatLocalDate } from '@logistics/utils/format'

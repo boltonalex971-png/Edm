@@ -2,7 +2,7 @@ import { Loading } from '@features/utils/Utils'
 import '@logistics/components/tare' // side-effect: registers the `tare` namespace
 import { TareGroupRow } from '@logistics/components/tare/TareGroupRow'
 import type { Item, TareInfo, UUID } from '@logistics/data/types'
-import { useEntityToken } from '@logistics/hooks/entityRefresh'
+import { useEntityToken } from '@microprojects/edm-components/hooks'
 import { useGet } from '@logistics/hooks/hooks'
 import { Alert } from '@mui/material'
 import type React from 'react'

@@ -12,11 +12,11 @@ import type {
 import {
     useEntityToken,
     useInvalidateEntities,
-} from '@logistics/hooks/entityRefresh'
+} from '@microprojects/edm-components/hooks'
 import {
     useAcquireOrderClaim,
     useOrderClaimState,
-} from '@logistics/hooks/entityLocks'
+} from '@microprojects/edm-components/hooks'
 import { useGet } from '@logistics/hooks/hooks'
 import { resolveError } from '@logistics/i18n/resolveError'
 import type { RootState } from '@logistics/store'

@@ -7,9 +7,9 @@ import { BrowserRouter } from 'react-router-dom'
 // before React mounts so the first paint is in the persisted locale.
 import i18n from './i18n/i18n'
 import App from './App'
-import { EntityRefreshProvider } from './hooks/entityRefresh'
+import { EntityRefreshProvider } from '@microprojects/edm-components/hooks'
 import { EntityRefreshSignalRBridge } from './hooks/entityRefreshBridge'
-import { LockProvider, type LockPublisher } from './hooks/entityLocks'
+import { LockProvider, type LockPublisher } from '@microprojects/edm-components/hooks'
 import { getCurrentConnectionId, publishLogisticsMessage } from './hooks/signalRHooks'
 import { events, parseEntityType } from './hooks/logisticsEvents'
 // Use granular subpath imports to avoid pulling the package's RR5-bound

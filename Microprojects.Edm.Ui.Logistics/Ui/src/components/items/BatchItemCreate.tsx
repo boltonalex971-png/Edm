@@ -4,7 +4,7 @@ import {
     HierarchyPicker,
     findInHierarchy,
     pruneHierarchy,
-} from '@logistics/components/HierarchyPicker'
+} from '@microprojects/edm-components/components/forms/HierarchyPicker'
 import { useAlertSetter } from '@logistics/components/InlineAlert.tsx'
 import { Detail, EMPTY_GUID } from '@logistics/components/MasterDetail'
 import { TareBarcodePicker } from '@logistics/components/tare/TareBarcodePicker'
@@ -18,7 +18,7 @@ import type {
     TreeDataItem,
     UUID,
 } from '@logistics/data/types'
-import { useInvalidateEntities } from '@logistics/hooks/entityRefresh'
+import { useInvalidateEntities } from '@microprojects/edm-components/hooks'
 import { getData, useGet } from '@logistics/hooks/hooks'
 import { resolveError } from '@logistics/i18n/resolveError'
 import { formatUnits } from '@logistics/utils/format'

@@ -22,7 +22,7 @@ import { Trans, useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
 import { useParams } from 'react-router-dom'
 import type { TreeNode } from '../../data/types'
-import { useEntityToken } from '../../hooks/entityRefresh'
+import { useEntityToken } from '@microprojects/edm-components/hooks'
 import { useGet } from '../../hooks/hooks'
 import type { RootState } from '../../store'
 import {

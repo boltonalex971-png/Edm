@@ -6,7 +6,7 @@ import {
     HierarchyPicker,
     findInHierarchy,
     pruneHierarchy,
-} from '@logistics/components/HierarchyPicker.tsx'
+} from '@microprojects/edm-components/components/forms/HierarchyPicker'
 import {
     Detail,
     type DetailProps,

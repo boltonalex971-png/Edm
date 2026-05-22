@@ -3,7 +3,7 @@ import {
     HierarchyPicker,
     findInHierarchy,
     pruneHierarchy,
-} from '@logistics/components/HierarchyPicker'
+} from '@microprojects/edm-components/components/forms/HierarchyPicker'
 import '@logistics/components/repacking' // side-effect: registers the `repacking` namespace
 import { TareBarcodePicker } from '@logistics/components/tare/TareBarcodePicker'
 import { TareGroupRow } from '@logistics/components/tare/TareGroupRow'

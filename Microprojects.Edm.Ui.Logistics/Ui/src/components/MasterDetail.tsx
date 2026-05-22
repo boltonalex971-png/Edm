@@ -48,7 +48,7 @@ import {
     listTag,
     useEntityToken,
     useInvalidateEntities,
-} from '../hooks/entityRefresh'
+} from '@microprojects/edm-components/hooks'
 import {Folder} from './config/Folder'
 
 // Re-export the package's context + sentinel so Logistics call sites that

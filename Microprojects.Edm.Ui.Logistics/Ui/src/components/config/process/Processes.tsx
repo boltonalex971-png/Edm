@@ -1,6 +1,6 @@
 import Api from '@features/api/api'
-import { HierarchyPicker } from '@logistics/components/HierarchyPicker'
-import { useEntityToken } from '@logistics/hooks/entityRefresh'
+import { HierarchyPicker } from '@microprojects/edm-components/components/forms/HierarchyPicker'
+import { useEntityToken } from '@microprojects/edm-components/hooks'
 import { useGet } from '@logistics/hooks/hooks'
 import { useBasePath } from '@logistics/hooks/routerHooks'
 import {

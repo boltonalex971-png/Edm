@@ -1,5 +1,5 @@
 import Api from '@features/api/api'
-import { useEntityToken } from '@logistics/hooks/entityRefresh'
+import { useEntityToken } from '@microprojects/edm-components/hooks'
 import { useGet } from '@logistics/hooks/hooks'
 import { useBasePath } from '@logistics/hooks/routerHooks'
 import {

@@ -24,7 +24,7 @@ import type {
 import {
     useEntityToken,
     useInvalidateEntities,
-} from '@logistics/hooks/entityRefresh'
+} from '@microprojects/edm-components/hooks'
 import { usePost } from '@logistics/hooks/hooks'
 import {
     ExpandLessOutlined as ChevDown,
