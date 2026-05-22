@@ -1,4 +1,4 @@
-import { useAlertSetter } from '@logistics/components/InlineAlert.tsx'
+import { useAlertSetter } from '@logistics/hooks/useAlertSetter'
 import {
     DetailEditModeContext,
     EMPTY_GUID,

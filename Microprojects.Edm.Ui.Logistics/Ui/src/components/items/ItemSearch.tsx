@@ -2,10 +2,7 @@ import './index' // side-effect: registers the `items` namespace
 import api from '@features/api/api'
 import Api from '@features/api/api'
 import { Loading } from '@features/utils/Utils'
-import {
-    type AlertState,
-    useAlertSetter,
-} from '@logistics/components/InlineAlert'
+import { type AlertState, useAlertSetter } from '@logistics/hooks/useAlertSetter'
 import { Detail } from '@logistics/components/MasterDetail'
 import { ItemDetail } from '@logistics/components/items/ItemDetail'
 import '@logistics/components/items/ItemGenealogyTree.css'

@@ -31,7 +31,7 @@ import type {
     TreeDataItem,
     UUID,
 } from '@logistics/data/types'
-import { useAlertSetter } from '@logistics/components/InlineAlert'
+import { useAlertSetter } from '@logistics/hooks/useAlertSetter'
 import { getData, postData, useGet } from '@logistics/hooks/hooks'
 import { resolveError } from '@logistics/i18n/resolveError'
 import { useTareTransfer } from '@logistics/hooks/useTareTransfer'

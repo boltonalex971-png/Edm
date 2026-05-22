@@ -5,7 +5,7 @@ import {
     findInHierarchy,
     pruneHierarchy,
 } from '@microprojects/edm-components/components/forms/HierarchyPicker'
-import { useAlertSetter } from '@logistics/components/InlineAlert.tsx'
+import { useAlertSetter } from '@logistics/hooks/useAlertSetter'
 import { Detail, EMPTY_GUID } from '@logistics/components/MasterDetail'
 import { TareBarcodePicker } from '@logistics/components/tare/TareBarcodePicker'
 import type {

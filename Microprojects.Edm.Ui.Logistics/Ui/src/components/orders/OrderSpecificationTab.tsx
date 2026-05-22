@@ -1,5 +1,5 @@
 import '@logistics/components/orders' // side-effect: registers the `orders` namespace
-import { type AlertState, useAlertSetter } from '@logistics/components/InlineAlert'
+import { type AlertState, useAlertSetter } from '@logistics/hooks/useAlertSetter'
 import { RelationTable } from '@logistics/components/RelationTable.tsx'
 import { ItemSearch } from '@logistics/components/items/ItemSearch.tsx'
 import type { AllocateItemsRequest, Item, UUID } from '@logistics/data/types'

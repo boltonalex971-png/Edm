@@ -3,7 +3,7 @@ import api from '@features/api/api.ts'
 import Api from '@features/api/api.ts'
 import { DetailLinkText } from '@logistics/components/DropDownCell.tsx'
 import { HierarchyPicker } from '@microprojects/edm-components/components/forms/HierarchyPicker'
-import { useAlertSetter } from '@logistics/components/InlineAlert.tsx'
+import { useAlertSetter } from '@logistics/hooks/useAlertSetter'
 import {
     Detail,
     type DetailProps,

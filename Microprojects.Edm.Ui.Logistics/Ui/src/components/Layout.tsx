@@ -25,7 +25,7 @@ import axios from 'axios'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
-import { useAlertSetter } from './InlineAlert'
+import { useAlertSetter } from '@logistics/hooks/useAlertSetter'
 import logo from '../../public/applogo.svg'
 
 const LANGUAGES = [
