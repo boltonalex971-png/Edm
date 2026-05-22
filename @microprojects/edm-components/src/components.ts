@@ -9,6 +9,7 @@ export * from './components/states/EmptyState';
 export * from './components/states/ErrorState';
 export * from './components/states/LoadingSkeleton';
 export * from './components/chrome/Layout';
+export * from './components/chrome/AppShell';
 export * from './components/chrome/NavMenu';
 export * from './components/chrome/SubRootPage';
 export * from './components/chrome/Changelog';

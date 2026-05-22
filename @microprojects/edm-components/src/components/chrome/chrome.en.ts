@@ -1,5 +1,6 @@
-export default {
+﻿export default {
     search: 'Search…',
+    language: 'Language',
     userMenu: {
         profile: 'Profile',
         accountSettings: 'Account Settings',
