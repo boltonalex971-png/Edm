@@ -1,7 +1,7 @@
 import Api from '@features/api/api'
 import { useEntityToken } from '@microprojects/edm-components/hooks'
 import { useGet } from '@logistics/hooks/hooks'
-import { useBasePath } from '@logistics/hooks/routerHooks'
+import { useBasePath } from '@microprojects/edm-components/hooks'
 import {
     EditorSection,
     Field,
@@ -52,7 +52,7 @@ function numberOrNull(v: string): number | null {
 
 export function TareTypes() {
     const type = 'taretype'
-    const { path } = useBasePath()
+    const path = useBasePath()
     const navigate = useNavigate()
     const api = Api.taretypes
     const { t } = useTranslation('config/taretype')

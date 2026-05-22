@@ -2,7 +2,7 @@ import Api from '@features/api/api'
 import { HierarchyPicker } from '@microprojects/edm-components/components/forms/HierarchyPicker'
 import { useEntityToken } from '@microprojects/edm-components/hooks'
 import { useGet } from '@logistics/hooks/hooks'
-import { useBasePath } from '@logistics/hooks/routerHooks'
+import { useBasePath } from '@microprojects/edm-components/hooks'
 import {
     EditorSection,
     Field,
@@ -38,7 +38,7 @@ import { ProcessTabs } from './ProcessTabs'
 
 export function Processes({ kind }: { kind?: ProcessKind }) {
     const type = 'process'
-    const { path } = useBasePath()
+    const path = useBasePath()
     const navigate = useNavigate()
     const api = Api.processes
     const entityType = kind ? kind.toLowerCase() : 'process'
