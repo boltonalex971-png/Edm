@@ -1,6 +1,7 @@
 import './App.css'
 import { Home } from '@logistics/components/homepages/Home.tsx'
 import type { RootState } from '@logistics/store.ts'
+import { Changelog } from '@microprojects/edm-components/components/chrome/Changelog'
 import { Loading } from '@microprojects/edm-components/components'
 import axios from 'axios'
 import React, { Suspense, lazy, useEffect } from 'react'
@@ -15,9 +16,6 @@ import { setUser } from './features/auth/userSlice'
 // Route-level code splitting — first paint loads only the shell + Home;
 // each feature area is fetched on demand. Home stays eager because it
 // IS the first paint after sign-in.
-const Changelog = lazy(() =>
-    import('@logistics/components/Changelog.tsx').then((m) => ({ default: m.Changelog })),
-)
 const Config = lazy(() =>
     import('@logistics/components/config/Config.tsx').then((m) => ({ default: m.Config })),
 )
@@ -86,7 +84,7 @@ export function App() {
             <Layout hideMenu>
                 <Suspense fallback={<Loading />}>
                     <Routes>
-                        <Route path="/changes" element={<Changelog />} />
+                        <Route path="/changes" element={<Changelog changelogUrl={`${api.meta}/changelog`} />} />
                         <Route path="/*" element={<OperatorDesktop />} />
                     </Routes>
                 </Suspense>
@@ -105,7 +103,7 @@ export function App() {
                         <Route path="/supplies/*" element={<Supplies />} />
                         <Route path="/items/*" element={<Items />} />
                         <Route path="/repacking" element={<Repacking />} />
-                        <Route path="/changes" element={<Changelog />} />
+                        <Route path="/changes" element={<Changelog changelogUrl={`${api.meta}/changelog`} />} />
                         <Route path="*" element={<span>{t('widgets:routes.notFound')}</span>} />
                     </Routes>
                 </Suspense>
