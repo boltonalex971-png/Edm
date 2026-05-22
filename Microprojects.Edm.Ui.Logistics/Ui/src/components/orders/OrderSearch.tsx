@@ -19,7 +19,7 @@ import {
 } from '@microprojects/edm-components/hooks'
 import { usePost } from '@microprojects/edm-components/hooks'
 import { useDataGridLocaleText } from '@logistics/i18n/dataGridLocale'
-import { formatLocalDate } from '@logistics/utils/format'
+import { formatLocalDate } from '@microprojects/edm-components/utils/dates'
 import { Search as SearchIcon } from '@mui/icons-material'
 import {
     Alert,

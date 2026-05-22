@@ -24,9 +24,9 @@ import {
     type DateLike,
     formatLocalDate,
     formatLocalDateTime,
-    formatUnits,
     parseUtcDate,
-} from '@logistics/utils/format'
+} from '@microprojects/edm-components/utils/dates'
+import { formatUnits } from '@logistics/utils/format'
 import { colorForGradeId } from '@logistics/utils/gradePalette'
 import {
     ArrowBackOutlined as BackIcon,

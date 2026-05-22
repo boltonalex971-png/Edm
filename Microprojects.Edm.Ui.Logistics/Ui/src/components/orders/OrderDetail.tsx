@@ -31,7 +31,7 @@ import {
 } from '@microprojects/edm-components/hooks'
 import { useGet } from '@microprojects/edm-components/hooks'
 import { resolveError } from '@logistics/i18n/resolveError'
-import { formatLocalDate, parseUtcDate } from '@logistics/utils/format'
+import { formatLocalDate, parseUtcDate } from '@microprojects/edm-components/utils/dates'
 import {
     EditorSection,
     Field,

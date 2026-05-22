@@ -10,7 +10,7 @@ import '@logistics/components/supplies' // side-effect: registers the `supplies`
 import { SupplyTabs } from '@logistics/components/supplies/SupplyTabs'
 import type { DetailEventHandler, Supply, UUID } from '@logistics/data/types'
 import { useGet } from '@microprojects/edm-components/hooks'
-import { formatLocalDateTime } from '@logistics/utils/format'
+import { formatLocalDateTime } from '@microprojects/edm-components/utils/dates'
 import {
     EditorSection,
     Field,

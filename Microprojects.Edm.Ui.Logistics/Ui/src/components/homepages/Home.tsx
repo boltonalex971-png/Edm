@@ -4,7 +4,7 @@ import '@logistics/components/homepages' // side-effect: registers the `homepage
 import { usePost } from '@microprojects/edm-components/hooks'
 import type { Order, OrderStatus } from '@logistics/data/types'
 import type { RootState } from '@logistics/store'
-import { formatLocalDate, parseUtcDate } from '@logistics/utils/format'
+import { formatLocalDate, parseUtcDate } from '@microprojects/edm-components/utils/dates'
 import { displayUserName } from '@microprojects/edm-components/utils'
 import {
     ArrowForward as ArrowIcon,
