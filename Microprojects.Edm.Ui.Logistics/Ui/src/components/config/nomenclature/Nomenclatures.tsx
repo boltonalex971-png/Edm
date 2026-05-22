@@ -26,7 +26,7 @@ import {
     Detail,
     type DetailProps,
     MasterDetail,
-} from '../../MasterDetail'
+} from '@microprojects/edm-components/components'
 import {
     Editor,
     EMPTY_GUID,
@@ -43,7 +43,7 @@ export function Nomenclatures() {
     const { t } = useTranslation('config/nomenclature')
     return (
         <MasterDetail
-            type={type}
+            entityType={type}
             api={api}
             path={path || ''}
             stubMessage={t('stubMessage')}

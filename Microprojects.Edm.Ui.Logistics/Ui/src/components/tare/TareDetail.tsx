@@ -1,7 +1,7 @@
 import Api from '@features/api/api'
 import { Loading } from '@features/utils/Utils'
 import { ItemDetail } from '@logistics/components/items/ItemDetail'
-import { Detail } from '@logistics/components/MasterDetail'
+import { Detail } from '@microprojects/edm-components/components'
 import '@logistics/components/tare' // side-effect: registers the `tare` namespace
 import { TareSchematic } from '@logistics/components/tare/TareSchematic'
 import type { Item, TareInfo, UUID } from '@logistics/data/types'

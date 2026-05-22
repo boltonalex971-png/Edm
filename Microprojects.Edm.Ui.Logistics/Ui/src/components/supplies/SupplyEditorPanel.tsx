@@ -1,4 +1,4 @@
-import { type DetailProps } from '@logistics/components/MasterDetail'
+import { type DetailProps } from '@microprojects/edm-components/components'
 import {
     Editor,
     EMPTY_GUID,

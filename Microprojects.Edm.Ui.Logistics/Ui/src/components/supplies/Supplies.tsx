@@ -1,6 +1,6 @@
 import api from '@features/api/api'
 import { Loading } from '@features/utils/Utils.tsx'
-import { Detail } from '@logistics/components/MasterDetail'
+import { Detail } from '@microprojects/edm-components/components'
 import '@logistics/components/supplies' // side-effect: registers the `supplies` namespace
 import { SupplyDetail } from '@logistics/components/supplies/SupplyDetail'
 import type { Supply } from '@logistics/data/types'

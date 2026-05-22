@@ -10,7 +10,7 @@ import { useTranslation } from 'react-i18next'
 import Api from '../../../features/api/api'
 import { useGet } from '@microprojects/edm-components/hooks'
 import { DropDownTreeCell } from '@microprojects/edm-components/components'
-import { RelationTable } from '../../RelationTable'
+import { RelationTable } from '@microprojects/edm-components/components'
 import './index' // side-effect: registers the `config/process` namespace
 
 export type ProcessProfilesTabProps = {

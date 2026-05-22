@@ -17,12 +17,30 @@ import { events, parseEntityType } from './hooks/logisticsEvents'
 // Logistics is on react-router-dom@7 and those modules wouldn't link.
 import { CssBaseline, ThemeProvider } from '@mui/material'
 import { ToastProvider } from '@microprojects/edm-components/components/states/Toast'
+import { MasterDetailDefaultsProvider } from '@microprojects/edm-components/components/master/MasterDetail'
+import { UserProvider } from '@microprojects/edm-components/components/auth/UserContext'
 import { UiPreferencesProvider } from '@microprojects/edm-components/styles/UiPreferencesContext'
 import { defaultTheme } from '@microprojects/edm-components/styles/theme'
+import { Folder } from '@logistics/components/config/Folder'
+import { LOGISTICS_ENTITY_TYPE_MAP, LOGISTICS_ICON_MAP } from '@logistics/logistics-config'
+import api from '@logistics/features/api/api'
+import { useSelector } from 'react-redux'
+import type { RootState } from '@logistics/store'
 import store from './store'
 import '@microprojects/edm-components/styles/tokens.css'
 import '@microprojects/edm-components/styles/chrome.css'
 import './logistics-entities.css'
+
+// Bridges Redux user state into the package's UserContext so Detail can
+// acquire cross-user edit locks without callers passing username explicitly.
+function UserBridge({ children }: { children: React.ReactNode }) {
+    const user = useSelector((s: RootState) => s.user)
+    return (
+        <UserProvider value={{ name: user.name, role: user.role, roles: user.roles }}>
+            {children}
+        </UserProvider>
+    )
+}
 
 // Bridge Logistics's existing SignalR publisher to the package's lock
 // store. Validates `type` via parseEntityType so a typo never escapes
@@ -73,6 +91,7 @@ if (rootEl) {
     const root = createRoot(rootEl)
     root.render(
         <Provider store={store}>
+            <UserBridge>
             <React.StrictMode>
                 <ThemeProvider theme={defaultTheme}>
                     <CssBaseline />
@@ -81,15 +100,24 @@ if (rootEl) {
                             <EntityRefreshProvider>
                                 <LockProvider publisher={lockPublisher}>
                                     <EntityRefreshSignalRBridge />
-                                    <BrowserRouter basename={base}>
-                                        <App />
-                                    </BrowserRouter>
+                                    <MasterDetailDefaultsProvider value={{
+                                        hierarchiesApi: api.directories,
+                                        entityTypeMap: LOGISTICS_ENTITY_TYPE_MAP,
+                                        iconMap: LOGISTICS_ICON_MAP,
+                                        folderComponent: Folder,
+                                        unwrapSingleRoot: true,
+                                    }}>
+                                        <BrowserRouter basename={base}>
+                                            <App />
+                                        </BrowserRouter>
+                                    </MasterDetailDefaultsProvider>
                                 </LockProvider>
                             </EntityRefreshProvider>
                         </ToastProvider>
                     </UiPreferencesProvider>
                 </ThemeProvider>
             </React.StrictMode>
+            </UserBridge>
         </Provider>,
     )
 }

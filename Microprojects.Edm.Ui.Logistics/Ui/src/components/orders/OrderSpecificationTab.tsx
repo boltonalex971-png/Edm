@@ -1,6 +1,6 @@
 import '@logistics/components/orders' // side-effect: registers the `orders` namespace
 import { type AlertState, useAlertSetter } from '@logistics/hooks/useAlertSetter'
-import { RelationTable } from '@logistics/components/RelationTable.tsx'
+import { RelationTable } from '@microprojects/edm-components/components'
 import { ItemSearch } from '@logistics/components/items/ItemSearch.tsx'
 import type { AllocateItemsRequest, Item, UUID } from '@logistics/data/types'
 import { resolveError } from '@logistics/i18n/resolveError'

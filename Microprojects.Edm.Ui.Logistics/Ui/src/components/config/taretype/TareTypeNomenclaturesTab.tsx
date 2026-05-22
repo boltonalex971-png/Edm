@@ -4,7 +4,7 @@ import { Column as GridColumn } from '@microprojects/edm-components/components'
 import { useTranslation } from 'react-i18next'
 import type { TreeDataItem, UUID } from '../../../data/types'
 import { CheckboxCell, DropDownTreeCell } from '@microprojects/edm-components/components'
-import { RelationTable } from '../../RelationTable'
+import { RelationTable } from '@microprojects/edm-components/components'
 import { NomenclatureDetail } from '../nomenclature/Nomenclatures'
 import './index' // side-effect: registers the `config/taretype` namespace
 

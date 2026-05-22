@@ -4,7 +4,7 @@ import type { TreeDataItem } from '@logistics/data/types'
 import { useGet } from '@microprojects/edm-components/hooks'
 import { Column as GridColumn } from '@microprojects/edm-components/components'
 import { useTranslation } from 'react-i18next'
-import { RelationTable } from '../../RelationTable'
+import { RelationTable } from '@microprojects/edm-components/components'
 import './index' // side-effect: registers the `config/process` namespace
 
 type ProcessSpecificationTabProps = {

@@ -25,7 +25,7 @@ import type { TreeNode } from '../../data/types'
 import { useEntityToken } from '@microprojects/edm-components/hooks'
 import { useGet } from '@microprojects/edm-components/hooks'
 import type { RootState } from '../../store'
-import { Detail } from '../MasterDetail'
+import { Detail } from '@microprojects/edm-components/components'
 import {
     Editor,
     EMPTY_GUID,
@@ -38,7 +38,7 @@ type FolderProps = {
     onClose: MouseEventHandler
     path: string
     api: string
-    type: string
+    entityType: string
 }
 
 // Normalise heterogeneous backend shapes ([{name}] vs ['Foo'] vs 'Foo') to a
@@ -66,7 +66,7 @@ export function Folder(props: FolderProps) {
     const { t } = useTranslation('config')
     const user = useSelector((state: RootState) => state.user)
     const { id } = useParams()
-    const entityToken = useEntityToken([{ type: props.type, id }])
+    const entityToken = useEntityToken([{ type: props.entityType, id }])
     let [[data, setData], loading, error] = useGet<TreeNode>(
         `${props.api}/${id}`,
         [id, entityToken],
@@ -114,7 +114,7 @@ export function Folder(props: FolderProps) {
             editor={
                 <Editor
                     {...props}
-                    type={props.type}
+                    type={props.entityType}
                     data={data}
                     setData={setData}
                     content={({ values, handleChange }) => {

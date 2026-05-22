@@ -7,7 +7,7 @@ import { useAlertSetter } from '@logistics/hooks/useAlertSetter'
 import {
     Detail,
     type DetailProps,
-} from '@logistics/components/MasterDetail'
+} from '@microprojects/edm-components/components'
 import {
     Editor,
     EMPTY_GUID,

@@ -29,7 +29,7 @@ import {
     Detail,
     type DetailProps,
     MasterDetail,
-} from '../../MasterDetail'
+} from '@microprojects/edm-components/components'
 import {
     Editor,
     EMPTY_GUID,
@@ -47,7 +47,6 @@ export function Processes({ kind }: { kind?: ProcessKind }) {
     const { t } = useTranslation('config/process')
     return (
         <MasterDetail
-            type={type}
             api={api}
             entityType={entityType}
             getHierarchyQuery={kind ? () => ({ kind }) : undefined}
