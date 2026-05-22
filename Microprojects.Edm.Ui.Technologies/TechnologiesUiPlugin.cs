@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microprojects.Edm.Infrastructure;
 using Microprojects.Edm.Plugins;
@@ -46,14 +45,8 @@ namespace Microprojects.Edm.Ui.Technologies
             services.AddScoped<IRemoteJobs, RemoteJobs>();
             services.AddScoped<IAuditService, AuditService>();
             services.AddScoped<IProcessService, ProcessService>();
-            services.AddScoped<IUserService, UserService>();
-            // Plugin-specific registry registered as IPluginDirectoryRootRegistry
-            // (so it accumulates alongside Logistics's). The host resolves
-            // IDirectoryRootRegistry via the shared CompositeDirectoryRootRegistry
-            // below — TryAddScoped because both plugins request it; the first
-            // registration sticks and the rest are no-ops.
-            services.AddScoped<IPluginDirectoryRootRegistry, TechDirectoryRootRegistry>();
-            services.TryAddScoped<IDirectoryRootRegistry, CompositeDirectoryRootRegistry>();
+            // IUserService is root-tier — registered once by EdmHostBuilderExtensions.
+            services.AddScoped<IDirectoryRootRegistry, TechDirectoryRootRegistry>();
             services.AddScoped<IDirectoryService, DirectoryService<TechnologiesContext>>();
             services.AddScoped<IHostService, HostService>();
             services.AddScoped<IDeviceService, DeviceService>();

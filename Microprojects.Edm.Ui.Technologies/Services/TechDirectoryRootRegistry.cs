@@ -8,7 +8,7 @@ namespace Microprojects.Edm.Ui.Technologies.Services
     // Surfaces Tech's WellKnownDirectoryIds (Hosts/Devices/Processes/Workplaces)
     // to the shared DirectoryService. GeneralRoot is the parent of the four
     // type roots and is NOT itself a type root.
-    public sealed class TechDirectoryRootRegistry : IPluginDirectoryRootRegistry
+    public sealed class TechDirectoryRootRegistry : IDirectoryRootRegistry
     {
         private static readonly Guid[] _typeRoots =
         [

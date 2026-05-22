@@ -4,7 +4,6 @@ using Microprojects.Edm.Ui.Logistics.Events;
 using Microprojects.Edm.Ui.Logistics.Persistence;
 using Microprojects.Edm.Ui.Logistics.Services;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Microprojects.Edm.Ui.Logistics
 {
@@ -35,13 +34,7 @@ namespace Microprojects.Edm.Ui.Logistics
                     provider.GetRequiredService<LogisticsPublishingInterceptor>());
             }, poolSize: 128);
 
-            // Plugin-specific registry registered as IPluginDirectoryRootRegistry
-            // (so it accumulates alongside Tech's). The host resolves
-            // IDirectoryRootRegistry via the shared CompositeDirectoryRootRegistry
-            // below — TryAddScoped because both plugins request it; the first
-            // registration sticks and the rest are no-ops.
-            services.AddScoped<IPluginDirectoryRootRegistry, LogisticsDirectoryRootRegistry>();
-            services.TryAddScoped<IDirectoryRootRegistry, CompositeDirectoryRootRegistry>();
+            services.AddScoped<IDirectoryRootRegistry, LogisticsDirectoryRootRegistry>();
             services.AddScoped<IDirectoryService, DirectoryService<LogisticsContext>>();
             services.AddScoped<IItemService, ItemService>();
             services.AddScoped<ISupplyService, SupplyService>();
@@ -51,7 +44,7 @@ namespace Microprojects.Edm.Ui.Logistics
             services.AddScoped<ITareService, TareService>();
             services.AddScoped<ITareTypeService, TareTypeService>();
             services.AddScoped<ISpecificationService, SpecificationService>();
-            services.AddScoped<IUserService, UserService>();
+            // IUserService is root-tier — registered once by EdmHostBuilderExtensions.
         }
     }
 }
