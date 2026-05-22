@@ -2,6 +2,7 @@ import React, {createContext, useCallback, useContext, useEffect, useRef, useSta
 import {useNavigate, Routes, Route, useLocation} from 'react-router-dom';
 import {Trans, useTranslation} from 'react-i18next';
 import axios from 'axios';
+import {useDialog} from '../../hooks/useDialog';
 import {useAcquireEntityLock, useEntityLockState} from '../../hooks/entityLocks';
 import {listTag, useOptionalInvalidateEntities} from '../../hooks/entityRefresh';
 import {useStickyHeaderOffset} from '../../hooks/useStickyHeaderOffset';
@@ -981,6 +982,15 @@ export function Editor(props: EditorProps) {
     const setDetailEditMode = useContext(DetailEditModeContext);
     const invalidate = useOptionalInvalidateEntities();
     const [values, setValues] = useState<any>(props.data);
+    const lastSyncedIdRef = useRef<unknown>(undefined);
+    useEffect(() => {
+        if (!props.data || props.data.id === undefined) return;
+        if (lastSyncedIdRef.current === props.data.id) return;
+        lastSyncedIdRef.current = props.data.id;
+        setValues(props.data);
+    }, [props.data]);
+
+    const {dialog, confirm} = useDialog();
 
     const handleChange = (e: any) => {
         const {name, value} = e.target;
@@ -1030,9 +1040,12 @@ export function Editor(props: EditorProps) {
                         ) {
                             const detail = r.response?.data?.detail
                                 || t('editor.forkDefaultDetail', 'This change will create a new version.');
-                            if (window.confirm(t('editor.forkConfirm', '{{detail}}\n\nProceed and create a new version?', {detail}))) {
-                                return sendUpdate(true);
-                            }
+                            confirm({
+                                title: t('editor.forkTitle', 'Create new version?'),
+                                message: detail,
+                                actionLabel: t('editor.forkAction', 'Create version'),
+                                onConfirm: () => { sendUpdate(true); },
+                            });
                             return;
                         }
                         onSaveError(r);
@@ -1088,6 +1101,7 @@ export function Editor(props: EditorProps) {
 
     return (
         <Box component="form" onSubmit={handleSubmit} noValidate>
+            {dialog}
             <Box>
                 {content}
             </Box>

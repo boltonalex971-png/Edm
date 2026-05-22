@@ -33,6 +33,8 @@ export default {
     editor: {
         forkDefaultDetail: 'Это изменение создаст новую версию.',
         forkConfirm: '{{detail}}\n\nПродолжить и создать новую версию?',
+        forkTitle: 'Создать новую версию?',
+        forkAction: 'Создать версию',
     },
     title: {
         newItem: 'Новая запись',
