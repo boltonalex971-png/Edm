@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -61,14 +61,29 @@ public static class PluginManagerHelper
         // Register PluginRegistry as singleton
         services.AddSingleton<PluginRegistry>();
 
-        // Collect plugins with isolated load contexts
-        var plugins = services.CollectPlugins(conf);
-        
+        // PluginBlueprintRegistry captures each plugin's deferred service
+        // collection so we can build per-plugin IServiceProviders after the
+        // root container is fully assembled. Snapshot the current root
+        // descriptor list NOW (before plugin InjectDependencies pollutes it)
+        // so the post-build per-plugin container can delegate root services
+        // through reference-handover factories.
+        var blueprints = new PluginBlueprintRegistry
+        {
+            RootDescriptorSnapshot = services,
+        };
+        services.AddSingleton(blueprints);
+
+        // Collect plugins with isolated load contexts (also populates blueprints)
+        var plugins = services.CollectPlugins(conf, blueprints);
+
         // Create plugin manager with registry
         var registry = services.BuildServiceProvider().GetRequiredService<PluginRegistry>();
         var manager = new PluginManager(plugins, registry);
-        
+
         services.AddSingleton<IPluginContainer>(manager);
+        services.AddSingleton<PluginServiceProviderRegistry>();
+        services.AddSingleton<IPluginServiceProvider>(
+            sp => sp.GetRequiredService<PluginServiceProviderRegistry>());
     }
 
     /// <summary>
@@ -263,9 +278,16 @@ public static class PluginManagerHelper
     }
 
     /// <summary>
-    /// Collects plugins from assemblies using isolated load contexts
+    /// Collects plugins from assemblies using isolated load contexts.
+    /// Each plugin's InjectDependencies fires against a private blueprint
+    /// IServiceCollection, NOT the root collection — the blueprint is
+    /// later materialized into a per-plugin IServiceProvider so plugins
+    /// can't shadow each other's interface registrations.
     /// </summary>
-    private static IEnumerable<IPlugin> CollectPlugins(this IServiceCollection services, PluginsConfig config)
+    private static IEnumerable<IPlugin> CollectPlugins(
+        this IServiceCollection services,
+        PluginsConfig config,
+        PluginBlueprintRegistry blueprints)
     {
         var builder = services.AddControllers(options =>
         {
@@ -310,7 +332,14 @@ public static class PluginManagerHelper
 
                         _loadContexts[dllPath] = loadContext;
 
-                        instance.InjectDependencies(services, config.Configuration);
+                        // Plugin-private registrations go into a blueprint
+                        // collection — NOT the root. PluginServiceProviderRegistry
+                        // materializes these into per-plugin containers
+                        // after the host finishes Build(), delegating root
+                        // services via reference-handover.
+                        var blueprint = new ServiceCollection();
+                        instance.InjectDependencies(blueprint, config.Configuration);
+                        blueprints.Register(instance.Guid, blueprint);
 
                         logger.LogInformation(
                             "Loaded plugin {Name} ({Guid}) from {Path}",

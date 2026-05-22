@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -6,10 +6,16 @@ using System.Text.Json.Serialization;
 using Microprojects.Edm;
 using Microprojects.Edm.Host;
 using Microprojects.Edm.Host.SignalR;
+using Microprojects.Edm.Plugins;
+using Microprojects.Edm.Shared.Contracts;
+using Microprojects.Edm.Shared.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.EventLog;
 using Optosense.Edm.WebApi.Services;
@@ -42,6 +48,24 @@ public static class EdmHostBuilderExtensions
             o.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter(allowIntegerValues: false));
         });
         builder.Services.AddControllers().AddNewtonsoftJson(o => { });
+
+        // Root-tier shared services. These MUST be registered before
+        // AddPlugins so they live in the root descriptor snapshot that
+        // each plugin's child container delegates into via
+        // reference-handover. Anything plugins inject for themselves
+        // (DirectoryService, leaf services) stays plugin-tier.
+        builder.Services.AddScoped<IUserService, UserService>();
+
+        // Custom MVC/SignalR activators dispatch controller + hub
+        // construction to the owning plugin's IServiceProvider so each
+        // plugin can only resolve its own scoped services. Registered
+        // here (before AddPlugins) so the default activators registered
+        // by AddControllers/AddSignalR are replaced before plugin
+        // assemblies are scanned.
+        builder.Services.Replace(
+            ServiceDescriptor.Transient<IControllerActivator, PluginScopedControllerActivator>());
+        builder.Services.Replace(
+            ServiceDescriptor.Transient(typeof(IHubActivator<>), typeof(PluginScopedHubActivator<>)));
 
         builder.Services.AddPlugins(config =>
         {
@@ -82,6 +106,16 @@ public static class EdmHostBuilderExtensions
 
     public static void UseEdm(this WebApplication app)
     {
+        // Materialize per-plugin IServiceProviders now that the root
+        // container is built. Must run before any HTTP traffic, hence
+        // before app.UseRouting / app.MapControllers. PluginScopedControllerActivator
+        // / PluginScopedHubActivator depend on this being initialized.
+        var pluginProviders = app.Services.GetRequiredService<PluginServiceProviderRegistry>();
+        pluginProviders.Initialize(
+            app.Services,
+            app.Services.GetRequiredService<IPluginContainer>(),
+            app.Services.GetRequiredService<PluginBlueprintRegistry>());
+
         app.UsePeer();
         app.UseJobs();
         app.JsonConfigure();
