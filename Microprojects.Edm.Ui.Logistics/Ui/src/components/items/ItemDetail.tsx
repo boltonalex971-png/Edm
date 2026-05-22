@@ -1,7 +1,7 @@
 import './index' // side-effect: registers the `items` namespace
 import api from '@features/api/api.ts'
 import Api from '@features/api/api.ts'
-import { DetailLinkText } from '@logistics/components/DropDownCell.tsx'
+import { DetailLinkText } from '@microprojects/edm-components/components'
 import {
     HierarchyPicker,
     findInHierarchy,

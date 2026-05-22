@@ -1,7 +1,7 @@
 import '@logistics/components/orders' // side-effect: registers the `orders` namespace
 import api from '@features/api/api.ts'
 import Api from '@features/api/api.ts'
-import { DetailLinkText } from '@logistics/components/DropDownCell.tsx'
+import { DetailLinkText } from '@microprojects/edm-components/components'
 import { HierarchyPicker } from '@microprojects/edm-components/components/forms/HierarchyPicker'
 import { useAlertSetter } from '@logistics/hooks/useAlertSetter'
 import {

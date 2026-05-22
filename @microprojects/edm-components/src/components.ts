@@ -22,5 +22,8 @@ export * from './components/relations/Column';
 export * from './components/relations/DropDownComp';
 export * from './components/relations/DropDownCell';
 export * from './components/relations/LinkTextCell';
+export * from './components/relations/CheckboxCell';
+export * from './components/relations/DropDownTreeCell';
+export * from './components/relations/DetailLinkText';
 export * from './components/auth/AuthInterstitial';
 export * from './components/page/Search';

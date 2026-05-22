@@ -2,7 +2,7 @@ import '@logistics/components/orders' // side-effect: registers the `orders` nam
 import api from '@features/api/api.ts'
 import Api from '@features/api/api.ts'
 import { Loading } from '@features/utils/Utils'
-import { DetailLinkText } from '@logistics/components/DropDownCell'
+import { DetailLinkText } from '@microprojects/edm-components/components'
 import { Detail } from '@logistics/components/MasterDetail'
 import { NomenclatureDetail } from '@logistics/components/config/nomenclature/Nomenclatures'
 import { ProcessDetail } from '@logistics/components/config/process/Processes'
