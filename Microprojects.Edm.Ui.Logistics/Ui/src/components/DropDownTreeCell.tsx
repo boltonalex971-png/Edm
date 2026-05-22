@@ -2,7 +2,7 @@ import type { TreeDataItem, UUID } from '@logistics/data/types'
 import { HierarchyPicker } from '@microprojects/edm-components/components/forms/HierarchyPicker'
 import { Box, Link } from '@mui/material'
 import { useContext } from 'react'
-import { ParentContext } from './ParentContext'
+import { ParentContext } from '@microprojects/edm-components/components/master/ParentContext'
 
 interface DropDownTreeCellProps {
     getData: () => TreeDataItem[] | undefined

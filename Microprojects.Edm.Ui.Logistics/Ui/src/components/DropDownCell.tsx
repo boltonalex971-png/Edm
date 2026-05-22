@@ -1,4 +1,4 @@
-import { ParentContext } from '@logistics/components/ParentContext'
+import { ParentContext } from '@microprojects/edm-components/components/master/ParentContext'
 import type { DataItem, UUID } from '@logistics/data/types'
 import { useContext } from 'react'
 
