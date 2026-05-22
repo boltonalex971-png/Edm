@@ -25,11 +25,13 @@ import type {
 import {
     Detail,
     type DetailProps,
+    MasterDetail,
+} from '../../MasterDetail'
+import {
+    Editor,
     EMPTY_GUID,
     Info,
-    MasterDetail,
-    MuiEditor,
-} from '../../MasterDetail'
+} from '@microprojects/edm-components/components'
 import './index' // side-effect: registers the `config/nomenclature` namespace
 import { NomenclatureTabs } from './NomenclatureTabs'
 
@@ -111,7 +113,7 @@ export function NomenclatureDetail({ id, ...props }: NomenclatureDetailProps) {
                 />
             }
             editor={
-                <MuiEditor
+                <Editor
                     type={props.type}
                     api={props.api}
                     path={props.path}

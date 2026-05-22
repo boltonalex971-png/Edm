@@ -26,11 +26,13 @@ import type { DetailEventHandler, TareType, UUID } from '../../../data/types'
 import {
     Detail,
     type DetailProps,
+    MasterDetail,
+} from '../../MasterDetail'
+import {
+    Editor,
     EMPTY_GUID,
     Info,
-    MasterDetail,
-    MuiEditor,
-} from '../../MasterDetail'
+} from '@microprojects/edm-components/components'
 import './index' // side-effect: registers the `config/taretype` namespace
 import { TareTypeTabs } from './TareTypeTabs'
 
@@ -135,7 +137,7 @@ export function TareTypeDetail({ id, ...props }: TareTypeDetailProps) {
                 />
             }
             editor={
-                <MuiEditor
+                <Editor
                     type={props.type}
                     api={props.api}
                     path={props.path}

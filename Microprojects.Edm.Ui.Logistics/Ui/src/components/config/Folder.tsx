@@ -25,12 +25,12 @@ import type { TreeNode } from '../../data/types'
 import { useEntityToken } from '@microprojects/edm-components/hooks'
 import { useGet } from '@microprojects/edm-components/hooks'
 import type { RootState } from '../../store'
+import { Detail } from '../MasterDetail'
 import {
-    Detail,
+    Editor,
     EMPTY_GUID,
     Info,
-    MuiEditor,
-} from '../MasterDetail'
+} from '@microprojects/edm-components/components'
 import './index'
 
 type FolderProps = {
@@ -93,8 +93,6 @@ export function Folder(props: FolderProps) {
             data={data}
             card={
                 <Info
-                    {...props}
-                    data={data}
                     content={
                         <Box>
                             <Properties>
@@ -114,7 +112,7 @@ export function Folder(props: FolderProps) {
                 />
             }
             editor={
-                <MuiEditor
+                <Editor
                     {...props}
                     type={props.type}
                     data={data}

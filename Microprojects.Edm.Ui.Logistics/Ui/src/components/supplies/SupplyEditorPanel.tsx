@@ -1,8 +1,8 @@
+import { type DetailProps } from '@logistics/components/MasterDetail'
 import {
-    type DetailProps,
+    Editor,
     EMPTY_GUID,
-    MuiEditor,
-} from '@logistics/components/MasterDetail.tsx'
+} from '@microprojects/edm-components/components'
 import '@logistics/components/supplies' // side-effect: registers the `supplies` namespace
 import type { DetailEventHandler } from '@logistics/data/types'
 import {
@@ -25,7 +25,7 @@ export const SupplyEditorPanel = (props: SupplyEditorPanelProps) => {
     const { t } = useTranslation('supplies')
     const [data, setData] = useState({ id: EMPTY_GUID })
     return (
-        <MuiEditor
+        <Editor
             type={props.type}
             api={props.api}
             path={props.path}

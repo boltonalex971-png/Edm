@@ -10,10 +10,12 @@ import {
 import {
     Detail,
     type DetailProps,
+} from '@logistics/components/MasterDetail'
+import {
+    Editor,
     EMPTY_GUID,
     Info,
-    MuiEditor,
-} from '@logistics/components/MasterDetail.tsx'
+} from '@microprojects/edm-components/components'
 import { NomenclatureDetail } from '@logistics/components/config/nomenclature/Nomenclatures.tsx'
 import { ProcessDetail } from '@logistics/components/config/process/Processes.tsx'
 import { ItemGenealogyTree } from '@logistics/components/items/ItemGenealogyTree.tsx'
@@ -394,7 +396,7 @@ export function ItemDetail({ id, title, ...props }: ItemDetailProps) {
                 />
             }
             editor={
-                <MuiEditor
+                <Editor
                     type={props.type}
                     api={props.api}
                     path={props.path}

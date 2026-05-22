@@ -6,7 +6,8 @@ import {
     pruneHierarchy,
 } from '@microprojects/edm-components/components/forms/HierarchyPicker'
 import { useAlertSetter } from '@logistics/hooks/useAlertSetter'
-import { Detail, EMPTY_GUID } from '@logistics/components/MasterDetail'
+import { Detail } from '@logistics/components/MasterDetail'
+import { EMPTY_GUID } from '@microprojects/edm-components/components'
 import { TareBarcodePicker } from '@logistics/components/tare/TareBarcodePicker'
 import type {
     AvailableTare,

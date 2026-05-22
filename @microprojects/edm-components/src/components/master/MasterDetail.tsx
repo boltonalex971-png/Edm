@@ -946,7 +946,7 @@ export function InfoItem({label, value, children, xs = 12, md = 6}: InfoItemProp
 }
 
 export interface EditorProps {
-    content?: React.ReactNode | ((args: {values: any; handleChange: (e: any) => void}) => React.ReactNode);
+    content?: React.ReactNode | ((args: {values: any; handleChange: (e: any) => void; setValues: (next: any | ((prev: any) => any)) => void}) => React.ReactNode);
     setData: (data: any) => void;
     type?: string;
     onUpdate?: (data: any) => void;
@@ -1094,9 +1094,9 @@ export function Editor(props: EditorProps) {
     };
 
     const content = typeof props.content === 'function'
-        ? props.content({values, handleChange})
+        ? props.content({values, handleChange, setValues})
         : (props.content && React.isValidElement(props.content)
-            ? React.cloneElement(props.content as React.ReactElement<any>, {values, handleChange})
+            ? React.cloneElement(props.content as React.ReactElement<any>, {values, handleChange, setValues})
             : props.content);
 
     return (

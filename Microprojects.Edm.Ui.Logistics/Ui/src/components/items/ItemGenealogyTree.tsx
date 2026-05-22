@@ -1,7 +1,7 @@
 import './index' // side-effect: registers the `items` namespace
 import Api from '@features/api/api'
 import { Loading } from '@features/utils/Utils'
-import { EMPTY_GUID } from '@logistics/components/MasterDetail.tsx'
+import { EMPTY_GUID } from '@microprojects/edm-components/components'
 import type {
     GenealogyEdge,
     ItemGenealogy,

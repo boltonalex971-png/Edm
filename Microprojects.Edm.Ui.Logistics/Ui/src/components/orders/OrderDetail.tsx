@@ -7,10 +7,12 @@ import { useAlertSetter } from '@logistics/hooks/useAlertSetter'
 import {
     Detail,
     type DetailProps,
+} from '@logistics/components/MasterDetail'
+import {
+    Editor,
     EMPTY_GUID,
     Info,
-    MuiEditor,
-} from '@logistics/components/MasterDetail.tsx'
+} from '@microprojects/edm-components/components'
 import { NomenclatureDetail } from '@logistics/components/config/nomenclature/Nomenclatures.tsx'
 import { ProcessDetail } from '@logistics/components/config/process/Processes.tsx'
 import { AllocateOutputWindow } from '@logistics/components/orders/AllocateOutputWindow.tsx'
@@ -418,7 +420,7 @@ export function OrderDetail({
                     />
                 }
                 editor={
-                    <MuiEditor
+                    <Editor
                         type={props.type}
                         api={props.api}
                         path={props.path}
