@@ -1,10 +1,10 @@
-﻿import {requestType, useFetch} from './useFetch';
+﻿import {requestType, useFetch, type UseFetchOptions} from './useFetch';
 
-export function useGet(
+export function useGet<T = any>(
     url: string | null | undefined,
     deps?: React.DependencyList,
-    afterLoad?: (json: any) => any,
-    quiet = false
+    afterLoadOrOptions?: ((json: any) => T) | UseFetchOptions<T>,
+    quiet = false,
 ) {
-    return useFetch(url, deps, requestType.get, null, afterLoad, quiet);
+    return useFetch<T>(url, deps, requestType.get, null, afterLoadOrOptions, quiet);
 }
