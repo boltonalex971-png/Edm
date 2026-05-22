@@ -8,6 +8,10 @@ import {
     useSyncExternalStore,
 } from 'react';
 
+// Stable no-op subscribe / getSnapshot for useOptionalEntityToken when no provider is mounted.
+const _noOpSubscribe = (_cb: () => void) => () => {};
+const _zeroSnapshot = () => 0;
+
 // Tag-based entity invalidation primitive. Lifted from Logistics — generic,
 // no plugin coupling. Plugins build their own SignalR-to-tag bridges on top
 // (see Logistics's entityRefreshBridge for the canonical example).
@@ -114,3 +118,32 @@ export function useOptionalInvalidateEntities(): (tags: EntityTag[]) => void {
 }
 
 const NO_OP_INVALIDATE: (tags: EntityTag[]) => void = () => {};
+
+/** Returns the current refresh token for the given tags, or 0 when no
+ *  `EntityRefreshProvider` is mounted. Pair with effects that re-fetch
+ *  when the token changes. Always calls the same hooks regardless of
+ *  whether a provider is present (rules of hooks). */
+export function useOptionalEntityToken(tags: EntityTag[]): number {
+    const ctx = useContext(EntityRefreshContext);
+    const fingerprint = tags.map(tagKey).join('|');
+    const keys = useMemo(() => tags.map(tagKey), [fingerprint]);
+
+    const subscribe = useCallback(
+        (cb: () => void) => {
+            if (!ctx) return _noOpSubscribe(cb);
+            ctx.listeners.current.add(cb);
+            return () => { ctx.listeners.current.delete(cb); };
+        },
+        [ctx],
+    );
+
+    const getSnapshot = useCallback(() => {
+        if (!ctx) return 0;
+        const m = ctx.counters.current;
+        let sum = 0;
+        for (const k of keys) sum += m.get(k) ?? 0;
+        return sum;
+    }, [ctx, keys]);
+
+    return useSyncExternalStore(subscribe, getSnapshot);
+}

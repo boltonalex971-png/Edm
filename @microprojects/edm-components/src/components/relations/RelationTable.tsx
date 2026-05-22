@@ -23,6 +23,7 @@ import {
 import {DataGrid, GridRowModes, useGridApiRef} from '@mui/x-data-grid';
 
 import {useGet} from '../../hooks/useGet';
+import {EMPTY_GUID} from '../master/MasterDetail';
 import {ParentContext} from '../master/ParentContext';
 import {useDialog} from '../../hooks/useDialog';
 import {useToast} from '../states/Toast';
@@ -159,9 +160,8 @@ export interface RelationTableProps {
      *  uses this to re-pull rows after a successful POST). */
     onRowSelected?: (row: any, update: () => void) => void;
     /** Sentinel id stamped onto a new row's POST body so the backend recognises
-     *  it as a fresh record. Default `0` matches Tech's int-keyed entities;
-     *  Logistics passes the empty Guid because its ids are Guid-typed and `0`
-     *  fails model binding. */
+     *  it as a fresh record. Default is the empty Guid (all consumers are
+     *  Guid-keyed after the Tech directory unification). */
     newId?: string | number;
     /** Optional content rendered in the toolbar before the search field — the
      *  left side of the toolbar row that holds Search and "Add record". Use
@@ -186,7 +186,7 @@ export function RelationTable({
     readonly = false,
     selectable = false,
     onRowSelected,
-    newId = 0,
+    newId = EMPTY_GUID,
     toolbarStart,
     toolbarEnd,
 }: RelationTableProps) {

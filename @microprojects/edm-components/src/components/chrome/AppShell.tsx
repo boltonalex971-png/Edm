@@ -3,6 +3,7 @@ import {Check as CheckIcon, Language as LanguageIcon} from '@mui/icons-material'
 import type {ReactNode} from 'react';
 import {useTranslation} from 'react-i18next';
 import {densityClass, useUiPreferences} from '../../styles/UiPreferencesContext';
+import {UserProvider} from '../auth/UserContext';
 import {Layout} from './Layout';
 import {NavMenu, type NavMenuItem, type NavMenuRoleDescriptor, type NavMenuUser} from './NavMenu';
 
@@ -143,16 +144,18 @@ export const AppShell = ({
             data-plugin={pluginAttr}
             data-role={roleAttr || undefined}
         >
-            <Layout
-                navMenu={navMenu}
-                versionsApiUrl={versionsApiUrl}
-                versionChipName={versionChipName}
-                versionChipVersionKey={versionChipVersionKey}
-                copyrightOwner={copyrightOwner}
-                copyrightStartYear={copyrightStartYear}
-            >
-                {children}
-            </Layout>
+            <UserProvider value={user ?? undefined}>
+                <Layout
+                    navMenu={navMenu}
+                    versionsApiUrl={versionsApiUrl}
+                    versionChipName={versionChipName}
+                    versionChipVersionKey={versionChipVersionKey}
+                    copyrightOwner={copyrightOwner}
+                    copyrightStartYear={copyrightStartYear}
+                >
+                    {children}
+                </Layout>
+            </UserProvider>
         </div>
     );
 };

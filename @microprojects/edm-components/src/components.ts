@@ -29,4 +29,5 @@ export * from './components/relations/DetailLinkText';
 export * from './components/relations/DateCell';
 export * from './components/relations/DateTimeCell';
 export * from './components/auth/AuthInterstitial';
+export * from './components/auth/UserContext';
 export * from './components/page/Search';
