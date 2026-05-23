@@ -1,16 +1,18 @@
 import '@logistics/components/orders' // side-effect: registers the `orders` namespace
 import api from '@features/api/api.ts'
 import Api from '@features/api/api.ts'
-import { DetailLinkText } from '@logistics/components/DropDownCell.tsx'
-import { HierarchyPicker } from '@logistics/components/HierarchyPicker.tsx'
-import { useAlertSetter } from '@logistics/components/InlineAlert.tsx'
+import { DetailLinkText } from '@microprojects/edm-components/components'
+import { HierarchyPicker } from '@microprojects/edm-components/components/forms/HierarchyPicker'
+import { useAlertSetter } from '@logistics/hooks/useAlertSetter'
 import {
     Detail,
     type DetailProps,
+} from '@microprojects/edm-components/components'
+import {
+    Editor,
     EMPTY_GUID,
     Info,
-    MuiEditor,
-} from '@logistics/components/MasterDetail.tsx'
+} from '@microprojects/edm-components/components'
 import { NomenclatureDetail } from '@logistics/components/config/nomenclature/Nomenclatures.tsx'
 import { ProcessDetail } from '@logistics/components/config/process/Processes.tsx'
 import { AllocateOutputWindow } from '@logistics/components/orders/AllocateOutputWindow.tsx'
@@ -28,10 +30,10 @@ import {
     listTag,
     useEntityToken,
     useInvalidateEntities,
-} from '@logistics/hooks/entityRefresh'
-import { useGet } from '@logistics/hooks/hooks.ts'
+} from '@microprojects/edm-components/hooks'
+import { useGet } from '@microprojects/edm-components/hooks'
 import { resolveError } from '@logistics/i18n/resolveError'
-import { formatLocalDate, parseUtcDate } from '@logistics/utils/format'
+import { formatLocalDate, parseUtcDate } from '@microprojects/edm-components/utils/dates'
 import {
     EditorSection,
     Field,
@@ -418,7 +420,7 @@ export function OrderDetail({
                     />
                 }
                 editor={
-                    <MuiEditor
+                    <Editor
                         type={props.type}
                         api={props.api}
                         path={props.path}

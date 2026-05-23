@@ -7,9 +7,9 @@ import { BrowserRouter } from 'react-router-dom'
 // before React mounts so the first paint is in the persisted locale.
 import i18n from './i18n/i18n'
 import App from './App'
-import { EntityRefreshProvider } from './hooks/entityRefresh'
+import { EntityRefreshProvider, setDefaultAcceptLanguage } from '@microprojects/edm-components/hooks'
 import { EntityRefreshSignalRBridge } from './hooks/entityRefreshBridge'
-import { LockProvider, type LockPublisher } from './hooks/entityLocks'
+import { LockProvider, type LockPublisher } from '@microprojects/edm-components/hooks'
 import { getCurrentConnectionId, publishLogisticsMessage } from './hooks/signalRHooks'
 import { events, parseEntityType } from './hooks/logisticsEvents'
 // Use granular subpath imports to avoid pulling the package's RR5-bound
@@ -17,12 +17,30 @@ import { events, parseEntityType } from './hooks/logisticsEvents'
 // Logistics is on react-router-dom@7 and those modules wouldn't link.
 import { CssBaseline, ThemeProvider } from '@mui/material'
 import { ToastProvider } from '@microprojects/edm-components/components/states/Toast'
+import { MasterDetailDefaultsProvider } from '@microprojects/edm-components/components/master/MasterDetail'
+import { UserProvider } from '@microprojects/edm-components/components/auth/UserContext'
 import { UiPreferencesProvider } from '@microprojects/edm-components/styles/UiPreferencesContext'
 import { defaultTheme } from '@microprojects/edm-components/styles/theme'
+import { Folder } from '@microprojects/edm-components/components/master/Folder'
+import { LOGISTICS_ENTITY_TYPE_MAP, LOGISTICS_ICON_MAP } from '@logistics/logistics-config'
+import api from '@logistics/features/api/api'
+import { useSelector } from 'react-redux'
+import type { RootState } from '@logistics/store'
 import store from './store'
 import '@microprojects/edm-components/styles/tokens.css'
 import '@microprojects/edm-components/styles/chrome.css'
 import './logistics-entities.css'
+
+// Bridges Redux user state into the package's UserContext so Detail can
+// acquire cross-user edit locks without callers passing username explicitly.
+function UserBridge({ children }: { children: React.ReactNode }) {
+    const user = useSelector((s: RootState) => s.user)
+    return (
+        <UserProvider value={{ name: user.name, role: user.role, roles: user.roles, divisions: user.divisions }}>
+            {children}
+        </UserProvider>
+    )
+}
 
 // Bridge Logistics's existing SignalR publisher to the package's lock
 // store. Validates `type` via parseEntityType so a typo never escapes
@@ -44,6 +62,10 @@ const lockPublisher: LockPublisher = {
         publishLogisticsMessage(events.orderReleased(orderId, username)),
     getCurrentConnectionId,
 }
+
+// Register the Accept-Language getter so the package's useFetch/query helpers
+// stamp the same locale as the axios interceptor below.
+setDefaultAcceptLanguage(() => i18n.language)
 
 // Required so the X-Auth-Token cookie and Negotiate handshake travel on
 // cross-origin XHR when the SPA is served from the rsbuild dev server
@@ -69,6 +91,7 @@ if (rootEl) {
     const root = createRoot(rootEl)
     root.render(
         <Provider store={store}>
+            <UserBridge>
             <React.StrictMode>
                 <ThemeProvider theme={defaultTheme}>
                     <CssBaseline />
@@ -77,15 +100,24 @@ if (rootEl) {
                             <EntityRefreshProvider>
                                 <LockProvider publisher={lockPublisher}>
                                     <EntityRefreshSignalRBridge />
-                                    <BrowserRouter basename={base}>
-                                        <App />
-                                    </BrowserRouter>
+                                    <MasterDetailDefaultsProvider value={{
+                                        hierarchiesApi: api.directories,
+                                        entityTypeMap: LOGISTICS_ENTITY_TYPE_MAP,
+                                        iconMap: LOGISTICS_ICON_MAP,
+                                        folderComponent: Folder,
+                                        unwrapSingleRoot: true,
+                                    }}>
+                                        <BrowserRouter basename={base}>
+                                            <App />
+                                        </BrowserRouter>
+                                    </MasterDetailDefaultsProvider>
                                 </LockProvider>
                             </EntityRefreshProvider>
                         </ToastProvider>
                     </UiPreferencesProvider>
                 </ThemeProvider>
             </React.StrictMode>
+            </UserBridge>
         </Provider>,
     )
 }

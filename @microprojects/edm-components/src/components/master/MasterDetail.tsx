@@ -1,9 +1,11 @@
-import React, {createContext, useCallback, useContext, useEffect, useRef, useState} from 'react';
+import React, {createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode} from 'react';
 import {useNavigate, Routes, Route, useLocation} from 'react-router-dom';
 import {Trans, useTranslation} from 'react-i18next';
 import axios from 'axios';
+import {useDialog} from '../../hooks/useDialog';
 import {useAcquireEntityLock, useEntityLockState} from '../../hooks/entityLocks';
-import {listTag, useOptionalInvalidateEntities} from '../../hooks/entityRefresh';
+import {listTag, useOptionalEntityToken, useOptionalInvalidateEntities} from '../../hooks/entityRefresh';
+import {useOptionalUser} from '../auth/UserContext';
 import {useStickyHeaderOffset} from '../../hooks/useStickyHeaderOffset';
 import {
     Box,
@@ -121,17 +123,52 @@ export interface MasterDetailProps {
     newId?: string;
 }
 
+export interface MasterDetailDefaults {
+    hierarchiesApi?: string;
+    entityTypeMap?: MasterDetailProps['entityTypeMap'];
+    iconMap?: MasterDetailProps['iconMap'];
+    folderComponent?: MasterDetailProps['folderComponent'];
+    unwrapSingleRoot?: boolean;
+}
+
+const MasterDetailDefaultsContext = createContext<MasterDetailDefaults>({});
+
+export interface MasterDetailDefaultsProviderProps {
+    value: MasterDetailDefaults;
+    children: ReactNode;
+}
+
+export function MasterDetailDefaultsProvider({value, children}: MasterDetailDefaultsProviderProps) {
+    return <MasterDetailDefaultsContext.Provider value={value}>{children}</MasterDetailDefaultsContext.Provider>;
+}
+
 const SEPARATOR_MIN_PX = 80;
 
 export function MasterDetail(props: MasterDetailProps) {
     const navigate = useNavigate();
+    const defaults = useContext(MasterDetailDefaultsContext);
     const {path, resizable = true, newId = EMPTY_GUID} = props;
     const dynamicOffset = useStickyHeaderOffset();
-    const FolderComponent = props.folderComponent;
+
+    // Merge context defaults with props (props win).
+    const hierarchiesApi = props.hierarchiesApi ?? defaults.hierarchiesApi;
+    const entityTypeMap = props.entityTypeMap ?? defaults.entityTypeMap;
+    const iconMap = props.iconMap ?? defaults.iconMap;
+    const FolderComponent = props.folderComponent ?? defaults.folderComponent;
+    const unwrapSingleRoot = props.unwrapSingleRoot ?? defaults.unwrapSingleRoot;
+
     // Capitalize the URL-derived entity type so it matches backend HierarchyType enum
     // values (Workplace/Process/Host/Device). FolderComponent uses this when POSTing
     // a new folder so the backend knows which typed-hierarchy bucket to put it in.
-    const entityTypeLower = getEntityType(props.api, props.entityTypeMap || DEFAULT_ENTITY_TYPE_MAP);
+    const entityTypeLower = getEntityType(props.api, entityTypeMap || DEFAULT_ENTITY_TYPE_MAP);
+
+    // When no explicit refreshToken is given, subscribe internally so callers
+    // don't need to wire useEntityToken themselves.
+    const internalRefreshToken = useOptionalEntityToken(
+        entityTypeLower ? [{type: entityTypeLower}] : [],
+    );
+    const effectiveRefreshToken = props.refreshToken !== undefined ? props.refreshToken : internalRefreshToken;
+
     const folderEntityType = entityTypeLower
         ? entityTypeLower.charAt(0).toUpperCase() + entityTypeLower.slice(1)
         : undefined;
@@ -195,14 +232,14 @@ export function MasterDetail(props: MasterDetailProps) {
                 <SmartScrollContent style={masterStyle}>
                     <TreeViewMaster
                         api={props.api}
-                        hierarchiesApi={props.hierarchiesApi}
+                        hierarchiesApi={hierarchiesApi}
                         onCurrentRootChanged={(root: TreeNode) => { _selectedItem = root; }}
-                        entityTypeMap={props.entityTypeMap}
-                        iconMap={props.iconMap}
-                        refreshToken={props.refreshToken}
+                        entityTypeMap={entityTypeMap}
+                        iconMap={iconMap}
+                        refreshToken={effectiveRefreshToken}
                         onRootLoaded={props.onRootLoaded}
                         getHierarchyQuery={props.getHierarchyQuery}
-                        unwrapSingleRoot={props.unwrapSingleRoot}
+                        unwrapSingleRoot={unwrapSingleRoot}
                         entityType={props.entityType}
                         newId={newId}
                     />
@@ -225,7 +262,7 @@ export function MasterDetail(props: MasterDetailProps) {
                                 path="folder/:id"
                                 element={
                                     <FolderComponent
-                                        api={props.hierarchiesApi}
+                                        api={hierarchiesApi}
                                         path={path}
                                         entityType={folderEntityType}
                                         onChange={() => reloadMaster()}
@@ -427,12 +464,16 @@ export function Detail(props: DetailProps) {
     const isNewItem = props.id === 0 || props.id === EMPTY_GUID;
     editMode = editMode || isNewItem;
 
+    // Fall back to UserContext when no explicit username prop is supplied.
+    const userContext = useOptionalUser();
+    const effectiveUsername = props.username ?? userContext?.name;
+
     // Cross-user edit lock — opt-in. Only effective when LockProvider is
     // mounted (Logistics) AND props.type / props.id / props.username are
     // present; otherwise the hooks return NO_LOCK and the acquire effect
     // skips. Tech doesn't mount LockProvider so all of this is inert there.
     const lockableId = props.id && !isNewItem ? String(props.id) : undefined;
-    useAcquireEntityLock(props.type, lockableId, editMode, props.username || '');
+    useAcquireEntityLock(props.type, lockableId, editMode, effectiveUsername || '');
     const remoteLock = useEntityLockState(props.type, lockableId);
     const lockedByOther = !!remoteLock.lockedBy && !remoteLock.isOwn;
     const outdated = props.outdated ?? !!props.data?.outdated;
@@ -945,7 +986,7 @@ export function InfoItem({label, value, children, xs = 12, md = 6}: InfoItemProp
 }
 
 export interface EditorProps {
-    content?: React.ReactNode | ((args: {values: any; handleChange: (e: any) => void}) => React.ReactNode);
+    content?: React.ReactNode | ((args: {values: any; handleChange: (e: any) => void; setValues: (next: any | ((prev: any) => any)) => void}) => React.ReactNode);
     setData: (data: any) => void;
     type?: string;
     onUpdate?: (data: any) => void;
@@ -981,6 +1022,15 @@ export function Editor(props: EditorProps) {
     const setDetailEditMode = useContext(DetailEditModeContext);
     const invalidate = useOptionalInvalidateEntities();
     const [values, setValues] = useState<any>(props.data);
+    const lastSyncedIdRef = useRef<unknown>(undefined);
+    useEffect(() => {
+        if (!props.data || props.data.id === undefined) return;
+        if (lastSyncedIdRef.current === props.data.id) return;
+        lastSyncedIdRef.current = props.data.id;
+        setValues(props.data);
+    }, [props.data]);
+
+    const {dialog, confirm} = useDialog();
 
     const handleChange = (e: any) => {
         const {name, value} = e.target;
@@ -1030,9 +1080,12 @@ export function Editor(props: EditorProps) {
                         ) {
                             const detail = r.response?.data?.detail
                                 || t('editor.forkDefaultDetail', 'This change will create a new version.');
-                            if (window.confirm(t('editor.forkConfirm', '{{detail}}\n\nProceed and create a new version?', {detail}))) {
-                                return sendUpdate(true);
-                            }
+                            confirm({
+                                title: t('editor.forkTitle', 'Create new version?'),
+                                message: detail,
+                                actionLabel: t('editor.forkAction', 'Create version'),
+                                onConfirm: () => { sendUpdate(true); },
+                            });
                             return;
                         }
                         onSaveError(r);
@@ -1081,13 +1134,14 @@ export function Editor(props: EditorProps) {
     };
 
     const content = typeof props.content === 'function'
-        ? props.content({values, handleChange})
+        ? props.content({values, handleChange, setValues})
         : (props.content && React.isValidElement(props.content)
-            ? React.cloneElement(props.content as React.ReactElement<any>, {values, handleChange})
+            ? React.cloneElement(props.content as React.ReactElement<any>, {values, handleChange, setValues})
             : props.content);
 
     return (
         <Box component="form" onSubmit={handleSubmit} noValidate>
+            {dialog}
             <Box>
                 {content}
             </Box>

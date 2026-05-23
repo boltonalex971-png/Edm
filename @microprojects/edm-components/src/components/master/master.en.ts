@@ -33,6 +33,8 @@ export default {
     editor: {
         forkDefaultDetail: 'This change will create a new version.',
         forkConfirm: '{{detail}}\n\nProceed and create a new version?',
+        forkTitle: 'Create new version?',
+        forkAction: 'Create version',
     },
     title: {
         newItem: 'New Item',
@@ -53,5 +55,24 @@ export default {
         workplace: 'Workplaces',
         host: 'Hosts',
         device: 'Devices',
+    },
+    folder: {
+        identity: 'Identity',
+        name: 'Name',
+        nameMissing: 'Folder name is required',
+        nameHelp: 'Folder name shown in the tree and in the breadcrumb',
+        description: 'Description',
+        accessControl: 'Access control',
+        restrictedAccess: 'Restricted access',
+        openToEveryone: 'Open to everyone',
+        openBanner: 'Anyone with platform access can see this folder and its contents.',
+        restrictedNote_one: '{{count}} group can view this folder.',
+        restrictedNote_few: '{{count}} groups can view this folder.',
+        restrictedNote_many: '{{count}} groups can view this folder.',
+        openNote: 'Add a group to restrict who can see this folder.',
+        groups: 'Groups',
+        addAnotherGroup: 'Add another group…',
+        leaveEmptyOpen: 'Leave empty to keep this folder open to everyone',
+        emptyMeansEveryone: 'When the list is empty, <0>everyone</0> with platform access can see this folder.',
     },
 } as const

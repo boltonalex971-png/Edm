@@ -2,15 +2,17 @@ import api from '@features/api/api'
 import {
     Detail,
     type DetailProps,
+} from '@microprojects/edm-components/components'
+import {
+    Editor,
     EMPTY_GUID,
     Info,
-    MuiEditor,
-} from '@logistics/components/MasterDetail'
+} from '@microprojects/edm-components/components'
 import '@logistics/components/supplies' // side-effect: registers the `supplies` namespace
 import { SupplyTabs } from '@logistics/components/supplies/SupplyTabs'
 import type { DetailEventHandler, Supply, UUID } from '@logistics/data/types'
-import { useGet } from '@logistics/hooks/hooks'
-import { formatLocalDateTime } from '@logistics/utils/format'
+import { useGet } from '@microprojects/edm-components/hooks'
+import { formatLocalDateTime } from '@microprojects/edm-components/utils/dates'
 import {
     EditorSection,
     Field,
@@ -90,7 +92,7 @@ export function SupplyDetail({
                 />
             }
             editor={
-                <MuiEditor
+                <Editor
                     type={props.type || 'none'}
                     api={props.api}
                     path={props.path}

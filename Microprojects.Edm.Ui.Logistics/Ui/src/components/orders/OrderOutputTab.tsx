@@ -13,7 +13,7 @@ import {
     TareSchematic,
 } from '@logistics/components/tare/TareSchematic'
 import type { Item, Order, OrderOutputItems, UUID } from '@logistics/data/types'
-import { useGet } from '@logistics/hooks/hooks'
+import { useGet } from '@microprojects/edm-components/hooks'
 import {
     ExpandMoreOutlined as ChevronDown,
     ChevronRightOutlined as ChevronRight,

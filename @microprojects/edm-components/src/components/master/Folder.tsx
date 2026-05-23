@@ -3,48 +3,41 @@ import {
     Field,
     Properties,
     Property,
-} from '@microprojects/edm-components/components'
+} from '../../components';
 import {
     FolderOutlined as FolderIcon,
     LockOutlined as LockIcon,
     PublicOutlined as PublicIcon,
-} from '@mui/icons-material'
+} from '@mui/icons-material';
 import {
     Autocomplete,
     Box,
     Chip,
     TextField,
     Typography,
-} from '@mui/material'
-import type React from 'react'
-import { type MouseEventHandler, useMemo } from 'react'
-import { Trans, useTranslation } from 'react-i18next'
-import { useSelector } from 'react-redux'
-import { useParams } from 'react-router-dom'
-import type { TreeNode } from '../../data/types'
-import { useEntityToken } from '../../hooks/entityRefresh'
-import { useGet } from '../../hooks/hooks'
-import type { RootState } from '../../store'
-import {
-    Detail,
-    EMPTY_GUID,
-    Info,
-    MuiEditor,
-} from '../MasterDetail'
-import './index'
+} from '@mui/material';
+import type React from 'react';
+import {useMemo} from 'react';
+import {Trans, useTranslation} from 'react-i18next';
+import {useParams} from 'react-router-dom';
+import {useEntityToken} from '../../hooks/entityRefresh';
+import {useGet} from '../../hooks/useGet';
+import {Detail, Editor, EMPTY_GUID, Info} from '../../components';
+import {useOptionalUser} from '../auth/UserContext';
+import type {TreeNode} from './treeUtils';
 
 type FolderProps = {
-    onChange?: () => void
-    onClose: MouseEventHandler
-    path: string
-    api: string
-    type: string
-}
+    onChange?: () => void;
+    onClose: () => void;
+    path: string;
+    api: string;
+    entityType: string;
+};
 
 // Normalise heterogeneous backend shapes ([{name}] vs ['Foo'] vs 'Foo') to a
 // flat string[] so card + editor share one model.
 function toGroupNames(groups: unknown): string[] {
-    if (groups == null) return []
+    if (groups == null) return [];
     if (Array.isArray(groups)) {
         return groups
             .map((g) =>
@@ -54,32 +47,32 @@ function toGroupNames(groups: unknown): string[] {
                       ? (g as any).name
                       : null,
             )
-            .filter((x): x is string => Boolean(x && x.trim()))
+            .filter((x): x is string => Boolean(x && x.trim()));
     }
     if (typeof groups === 'string') {
-        return groups.trim() ? [groups.trim()] : []
+        return groups.trim() ? [groups.trim()] : [];
     }
-    return []
+    return [];
 }
 
 export function Folder(props: FolderProps) {
-    const { t } = useTranslation('config')
-    const user = useSelector((state: RootState) => state.user)
-    const { id } = useParams()
-    const entityToken = useEntityToken([{ type: props.type, id }])
+    const {t} = useTranslation('edm-master');
+    const user = useOptionalUser();
+    const {id} = useParams();
+    const entityToken = useEntityToken([{type: props.entityType, id}]);
     let [[data, setData], loading, error] = useGet<TreeNode>(
         `${props.api}/${id}`,
         [id, entityToken],
-    )
+    );
     if (!data || data.id === EMPTY_GUID) {
-        data = { ...data, name: '', description: '', url: '' } as TreeNode
+        data = {...data, name: '', description: '', url: ''} as TreeNode;
     }
     const cardGroups = useMemo(
         () => toGroupNames((data as any)?.groups),
         [data],
-    )
-    const restricted = cardGroups.length > 0
-    const divisions = user?.divisions || []
+    );
+    const restricted = cardGroups.length > 0;
+    const divisions = user?.divisions ?? [];
 
     return (
         <Detail
@@ -93,8 +86,6 @@ export function Folder(props: FolderProps) {
             data={data}
             card={
                 <Info
-                    {...props}
-                    data={data}
                     content={
                         <Box>
                             <Properties>
@@ -114,20 +105,20 @@ export function Folder(props: FolderProps) {
                 />
             }
             editor={
-                <MuiEditor
+                <Editor
                     {...props}
-                    type={props.type}
+                    type={props.entityType}
                     data={data}
                     setData={setData}
-                    content={({ values, handleChange }) => {
+                    content={({values, handleChange}) => {
                         const nameMissing =
                             !!values.id &&
-                            (!values.name || !String(values.name).trim())
+                            (!values.name || !String(values.name).trim());
                         const identityFilled = [values.name, values.description]
                             .filter(
                                 (v) => v && String(v).trim().length > 0,
-                            ).length
-                        const groupValues = toGroupNames(values.groups)
+                            ).length;
+                        const groupValues = toGroupNames(values.groups);
 
                         return (
                             <Box>
@@ -184,23 +175,23 @@ export function Folder(props: FolderProps) {
                                     }
                                 />
                             </Box>
-                        )
+                        );
                     }}
                 />
             }
         />
-    )
+    );
 }
 
 function AccessBanner({
     restricted,
     groups,
-}: { restricted: boolean; groups: string[] }) {
-    const { t } = useTranslation('config')
-    const Icon = restricted ? LockIcon : PublicIcon
-    const tone = restricted ? 'var(--sig-warn-deep)' : 'var(--ink-3)'
-    const bg = restricted ? 'var(--sig-warn-soft)' : 'var(--surface-2)'
-    const border = restricted ? 'var(--sig-warn)' : 'var(--line)'
+}: {restricted: boolean; groups: string[]}) {
+    const {t} = useTranslation('edm-master');
+    const Icon = restricted ? LockIcon : PublicIcon;
+    const tone = restricted ? 'var(--sig-warn-deep)' : 'var(--ink-3)';
+    const bg = restricted ? 'var(--sig-warn-soft)' : 'var(--surface-2)';
+    const border = restricted ? 'var(--sig-warn)' : 'var(--line)';
     return (
         <Box
             sx={{
@@ -215,8 +206,8 @@ function AccessBanner({
                 gap: 1,
             }}
         >
-            <Icon sx={{ fontSize: 18, color: tone, mt: '2px' }} />
-            <Box sx={{ minWidth: 0 }}>
+            <Icon sx={{fontSize: 18, color: tone, mt: '2px'}} />
+            <Box sx={{minWidth: 0}}>
                 <Typography
                     sx={{
                         fontFamily: 'var(--font-mono)',
@@ -259,21 +250,21 @@ function AccessBanner({
                 ) : (
                     <Typography
                         variant="caption"
-                        sx={{ color: 'var(--ink-3)' }}
+                        sx={{color: 'var(--ink-3)'}}
                     >
                         {t('folder.openBanner')}
                     </Typography>
                 )}
             </Box>
         </Box>
-    )
+    );
 }
 
 interface AccessSectionProps {
-    sectionNumber: number
-    groups: string[]
-    divisions: string[]
-    onChange: (next: string[]) => void
+    sectionNumber: number;
+    groups: string[];
+    divisions: string[];
+    onChange: (next: string[]) => void;
 }
 
 function AccessSection({
@@ -282,22 +273,22 @@ function AccessSection({
     divisions,
     onChange,
 }: AccessSectionProps) {
-    const { t } = useTranslation('config')
-    const restricted = groups.length > 0
-    const Icon = restricted ? LockIcon : PublicIcon
-    const tone = restricted ? 'var(--sig-warn-deep)' : 'var(--ink-3)'
+    const {t} = useTranslation('edm-master');
+    const restricted = groups.length > 0;
+    const Icon = restricted ? LockIcon : PublicIcon;
+    const tone = restricted ? 'var(--sig-warn-deep)' : 'var(--ink-3)';
     return (
         <EditorSection
             number={sectionNumber}
             title={t('folder.accessControl')}
             fillNote={
                 restricted
-                    ? t('folder.restrictedNote', { count: groups.length })
+                    ? t('folder.restrictedNote', {count: groups.length})
                     : t('folder.openNote')
             }
             done={false}
         >
-            <Box sx={{ gridColumn: '1 / -1' }}>
+            <Box sx={{gridColumn: '1 / -1'}}>
                 <Box
                     sx={{
                         display: 'flex',
@@ -306,7 +297,7 @@ function AccessSection({
                         mb: 0.75,
                     }}
                 >
-                    <Icon sx={{ fontSize: 16, color: tone }} />
+                    <Icon sx={{fontSize: 16, color: tone}} />
                     <Typography
                         sx={{
                             fontFamily: 'var(--font-mono)',
@@ -329,7 +320,7 @@ function AccessSection({
                     renderTags={(value, getTagProps) =>
                         value.map((option, index) => (
                             <Chip
-                                {...getTagProps({ index })}
+                                {...getTagProps({index})}
                                 key={option}
                                 label={option}
                                 size="small"
@@ -383,11 +374,11 @@ function AccessSection({
                 >
                     <Trans
                         i18nKey="folder.emptyMeansEveryone"
-                        ns="config"
+                        ns="edm-master"
                         components={[<b key="0" />]}
                     />
                 </Typography>
             </Box>
         </EditorSection>
-    )
+    );
 }

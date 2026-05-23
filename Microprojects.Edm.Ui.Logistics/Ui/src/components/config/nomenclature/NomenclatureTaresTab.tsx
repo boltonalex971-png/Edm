@@ -1,11 +1,10 @@
 import Api from '@features/api/api'
-import { useGet } from '@logistics/hooks/hooks'
+import { useGet } from '@microprojects/edm-components/hooks'
 import { Column as GridColumn } from '@microprojects/edm-components/components'
 import { useTranslation } from 'react-i18next'
 import type { TreeDataItem, UUID } from '../../../data/types'
-import { CheckboxCell } from '../../CheckboxCell'
-import { DropDownTreeCell } from '../../DropDownTreeCell'
-import { RelationTable } from '../../RelationTable'
+import { CheckboxCell, DropDownTreeCell } from '@microprojects/edm-components/components'
+import { RelationTable } from '@microprojects/edm-components/components'
 import { TareTypeDetail } from '../taretype/TareTypes'
 import './index' // side-effect: registers the `config/nomenclature` namespace
 

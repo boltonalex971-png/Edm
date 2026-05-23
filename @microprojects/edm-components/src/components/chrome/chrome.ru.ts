@@ -1,5 +1,6 @@
-export default {
+﻿export default {
     search: 'Поиск…',
+    language: 'Язык',
     userMenu: {
         profile: 'Профиль',
         accountSettings: 'Настройки учётной записи',

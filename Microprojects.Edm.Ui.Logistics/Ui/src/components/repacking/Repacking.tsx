@@ -3,7 +3,7 @@ import {
     HierarchyPicker,
     findInHierarchy,
     pruneHierarchy,
-} from '@logistics/components/HierarchyPicker'
+} from '@microprojects/edm-components/components/forms/HierarchyPicker'
 import '@logistics/components/repacking' // side-effect: registers the `repacking` namespace
 import { TareBarcodePicker } from '@logistics/components/tare/TareBarcodePicker'
 import { TareGroupRow } from '@logistics/components/tare/TareGroupRow'
@@ -31,8 +31,8 @@ import type {
     TreeDataItem,
     UUID,
 } from '@logistics/data/types'
-import { useAlertSetter } from '@logistics/components/InlineAlert'
-import { getData, postData, useGet } from '@logistics/hooks/hooks'
+import { useAlertSetter } from '@logistics/hooks/useAlertSetter'
+import { getData, postData, useGet } from '@microprojects/edm-components/hooks'
 import { resolveError } from '@logistics/i18n/resolveError'
 import { useTareTransfer } from '@logistics/hooks/useTareTransfer'
 import { formatUnits } from '@logistics/utils/format'

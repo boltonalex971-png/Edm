@@ -2,8 +2,8 @@ import '@logistics/components/orders' // side-effect: registers the `orders` nam
 import api from '@features/api/api.ts'
 import Api from '@features/api/api.ts'
 import { Loading } from '@features/utils/Utils'
-import { DetailLinkText } from '@logistics/components/DropDownCell'
-import { Detail } from '@logistics/components/MasterDetail'
+import { DetailLinkText } from '@microprojects/edm-components/components'
+import { Detail } from '@microprojects/edm-components/components'
 import { NomenclatureDetail } from '@logistics/components/config/nomenclature/Nomenclatures'
 import { ProcessDetail } from '@logistics/components/config/process/Processes'
 import { OrderDetail } from '@logistics/components/orders/OrderDetail'
@@ -16,10 +16,10 @@ import {
     type EntityTag,
     listTag,
     useEntityToken,
-} from '@logistics/hooks/entityRefresh'
-import { usePost } from '@logistics/hooks/hooks.ts'
+} from '@microprojects/edm-components/hooks'
+import { usePost } from '@microprojects/edm-components/hooks'
 import { useDataGridLocaleText } from '@logistics/i18n/dataGridLocale'
-import { formatLocalDate } from '@logistics/utils/format'
+import { formatLocalDate } from '@microprojects/edm-components/utils/dates'
 import { Search as SearchIcon } from '@mui/icons-material'
 import {
     Alert,

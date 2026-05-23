@@ -9,3 +9,5 @@ export * from './hooks/entityRefresh';
 export * from './hooks/entityLocks';
 export * from './hooks/useBasePath';
 export * from './hooks/useStickyHeaderOffset';
+export * from './hooks/acceptLanguage';
+export * from './hooks/query';

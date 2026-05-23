@@ -1,7 +1,7 @@
 import Api from '@features/api/api'
-import { useEntityToken } from '@logistics/hooks/entityRefresh'
-import { useGet } from '@logistics/hooks/hooks'
-import { useBasePath } from '@logistics/hooks/routerHooks'
+import { useEntityToken } from '@microprojects/edm-components/hooks'
+import { useGet } from '@microprojects/edm-components/hooks'
+import { useBasePath } from '@microprojects/edm-components/hooks'
 import {
     EditorSection,
     Field,
@@ -25,23 +25,25 @@ import type {
 import {
     Detail,
     type DetailProps,
+    MasterDetail,
+} from '@microprojects/edm-components/components'
+import {
+    Editor,
     EMPTY_GUID,
     Info,
-    MasterDetail,
-    MuiEditor,
-} from '../../MasterDetail'
+} from '@microprojects/edm-components/components'
 import './index' // side-effect: registers the `config/nomenclature` namespace
 import { NomenclatureTabs } from './NomenclatureTabs'
 
 export function Nomenclatures() {
     const type = 'nomenclature'
-    const { path } = useBasePath()
+    const path = useBasePath()
     const navigate = useNavigate()
     const api = Api.nomenclatures
     const { t } = useTranslation('config/nomenclature')
     return (
         <MasterDetail
-            type={type}
+            entityType={type}
             api={api}
             path={path || ''}
             stubMessage={t('stubMessage')}
@@ -111,7 +113,7 @@ export function NomenclatureDetail({ id, ...props }: NomenclatureDetailProps) {
                 />
             }
             editor={
-                <MuiEditor
+                <Editor
                     type={props.type}
                     api={props.api}
                     path={props.path}

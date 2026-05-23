@@ -2,7 +2,7 @@ import type { UUID } from '@logistics/data/types'
 import { Column as GridColumn } from '@microprojects/edm-components/components'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { RelationTable } from '../../RelationTable'
+import { RelationTable } from '@microprojects/edm-components/components'
 import './index' // side-effect: registers the `config/process` namespace
 
 type ProcessGradesTabProps = {

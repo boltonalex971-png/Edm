@@ -2,10 +2,11 @@ import { createSlice } from '@reduxjs/toolkit'
 
 export interface UserState {
     name: string,
-    role: 'Guest' | 'Operator' | 'Technologist' | 'Admin'
+    role: 'Guest' | 'Operator' | 'Technologist' | 'Admin',
+    divisions: string[],
 }
 
-const initialState: UserState = { name: 'Guest', role: 'Guest' }
+const initialState: UserState = { name: 'Guest', role: 'Guest', divisions: [] }
 
 export const userSlice = createSlice({
     name: 'user',

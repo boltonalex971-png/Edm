@@ -1,11 +1,11 @@
 import Api from '@features/api/api'
 import { Loading } from '@features/utils/Utils'
 import { ItemDetail } from '@logistics/components/items/ItemDetail'
-import { Detail } from '@logistics/components/MasterDetail'
+import { Detail } from '@microprojects/edm-components/components'
 import '@logistics/components/tare' // side-effect: registers the `tare` namespace
 import { TareSchematic } from '@logistics/components/tare/TareSchematic'
 import type { Item, TareInfo, UUID } from '@logistics/data/types'
-import { useGet } from '@logistics/hooks/hooks'
+import { useGet } from '@microprojects/edm-components/hooks'
 import { useDataGridLocaleText } from '@logistics/i18n/dataGridLocale'
 import { WidgetsOutlined as TareIcon } from '@mui/icons-material'
 import { Box, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material'

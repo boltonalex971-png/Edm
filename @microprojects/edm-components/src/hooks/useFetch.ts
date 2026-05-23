@@ -1,4 +1,5 @@
 ﻿import {useEffect, useReducer} from 'react';
+import {getAcceptLanguage} from './acceptLanguage';
 import {getCookie} from './getCookie';
 
 export const requestType = Object.freeze({
@@ -9,37 +10,53 @@ export const requestType = Object.freeze({
 } as const);
 export type RequestType = (typeof requestType)[keyof typeof requestType];
 
-interface FetchState {
+interface FetchState<T> {
     loading: boolean;
-    data: any;
+    data: T | null;
     error: string | false | null;
 }
 
-type SetData = (data: any) => void;
-type AfterLoad = ((json: any) => any) | undefined;
+type SetData<T> = (data: T) => void;
+type AfterLoad<T> = ((json: any) => T) | undefined;
 
-export function useFetch(
+export interface UseFetchOptions<T> {
+    afterLoad?: AfterLoad<T>;
+    quiet?: boolean;
+    credentials?: RequestCredentials;
+}
+
+export function useFetch<T = any>(
     url: string | null | undefined,
     deps: React.DependencyList = [],
     type: RequestType = requestType.get,
     data: any = null,
-    afterLoad?: AfterLoad,
-    quiet = false
-): [[any, SetData], boolean, string | false | null] {
+    afterLoadOrOptions?: AfterLoad<T> | UseFetchOptions<T>,
+    quietArg = false,
+): [[T | null, SetData<T>], boolean, string | false | null] {
+    // Back-compat: callers passed (afterLoad, quiet) positionally; new shape
+    // accepts an options object as the 5th arg. Detect by typeof.
+    const opts: UseFetchOptions<T> =
+        typeof afterLoadOrOptions === 'function'
+            ? {afterLoad: afterLoadOrOptions, quiet: quietArg}
+            : (afterLoadOrOptions ?? {quiet: quietArg});
+    const {afterLoad, quiet = false, credentials = 'same-origin'} = opts;
+
     const [state, setState] = useReducer(
-        (s: FetchState, ns: Partial<FetchState>) => ({...s, ...ns}),
-        {loading: true, data: null, error: null} as FetchState
+        (s: FetchState<T>, ns: Partial<FetchState<T>>) => ({...s, ...ns}),
+        {loading: true, data: null, error: null} as FetchState<T>,
     );
-    const setData: SetData = (d) => setState({data: d});
+    const setData: SetData<T> = (d) => setState({data: d});
     const token = getCookie('X-Auth-Token');
+    const acceptLanguage = getAcceptLanguage();
     const options: RequestInit = {
         method: type,
         mode: 'cors',
         cache: 'no-cache',
-        credentials: 'same-origin',
+        credentials,
         headers: {
             'Content-Type': 'application/json',
             ...(token && {Authorization: `Bearer ${token}`}),
+            ...(acceptLanguage && {'Accept-Language': acceptLanguage}),
         },
         redirect: 'follow',
         referrerPolicy: 'no-referrer',
@@ -56,17 +73,32 @@ export function useFetch(
         async function fetchUrl() {
             try {
                 const response = await fetch(url as string, {...options, signal: controller.signal});
-                const error = !response.ok && `Data request failed with status ${response.status}`;
-                const json = response.ok && (await response.json());
-                const result = afterLoad && afterLoad(json);
-                setState({loading: false, data: result || json, error});
+                if (!response.ok) {
+                    // Prefer server-provided detail (ProblemDetails from
+                    // GlobalExceptionHandler) over a generic status message.
+                    let message = `Data request failed with status ${response.status}`;
+                    try {
+                        const json = await response.json();
+                        message = json?.detail || json?.title || json?.message || message;
+                    } catch {
+                        // Non-JSON body — keep the generic status message.
+                    }
+                    setState({loading: false, data: null, error: message});
+                    return;
+                }
+                // Tolerate 204 No Content or 200 OK with an empty body —
+                // response.json() throws on '', which would surface as the
+                // catch-all "Cannot load the data" error otherwise.
+                const text = await response.text();
+                const json = text ? JSON.parse(text) : null;
+                const result = afterLoad ? afterLoad(json) : json;
+                setState({loading: false, data: result, error: false});
             } catch (error: any) {
                 if (error?.name !== 'AbortError') {
                     setState({loading: false, data: null, error: 'Cannot load the data'});
                 }
             }
         }
-        // Make reloading visible
         if (!quiet) {
             setState({loading: true, data: null, error: null});
         } else {

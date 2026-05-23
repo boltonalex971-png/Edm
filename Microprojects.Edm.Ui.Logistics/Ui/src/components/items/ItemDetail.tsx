@@ -1,19 +1,21 @@
 import './index' // side-effect: registers the `items` namespace
 import api from '@features/api/api.ts'
 import Api from '@features/api/api.ts'
-import { DetailLinkText } from '@logistics/components/DropDownCell.tsx'
+import { DetailLinkText } from '@microprojects/edm-components/components'
 import {
     HierarchyPicker,
     findInHierarchy,
     pruneHierarchy,
-} from '@logistics/components/HierarchyPicker.tsx'
+} from '@microprojects/edm-components/components/forms/HierarchyPicker'
 import {
     Detail,
     type DetailProps,
+} from '@microprojects/edm-components/components'
+import {
+    Editor,
     EMPTY_GUID,
     Info,
-    MuiEditor,
-} from '@logistics/components/MasterDetail.tsx'
+} from '@microprojects/edm-components/components'
 import { NomenclatureDetail } from '@logistics/components/config/nomenclature/Nomenclatures.tsx'
 import { ProcessDetail } from '@logistics/components/config/process/Processes.tsx'
 import { ItemGenealogyTree } from '@logistics/components/items/ItemGenealogyTree.tsx'
@@ -29,7 +31,7 @@ import {
     type TreeDataItem,
     type UUID,
 } from '@logistics/data/types'
-import { useGet } from '@logistics/hooks/hooks.ts'
+import { useGet } from '@microprojects/edm-components/hooks'
 import { formatUnits } from '@logistics/utils/format.ts'
 import {
     EditorSection,
@@ -394,7 +396,7 @@ export function ItemDetail({ id, title, ...props }: ItemDetailProps) {
                 />
             }
             editor={
-                <MuiEditor
+                <Editor
                     type={props.type}
                     api={props.api}
                     path={props.path}

@@ -1,8 +1,6 @@
 import '@logistics/components/orders' // side-effect: registers the `orders` namespace
-import {
-    DateTimeCell,
-    RelationTable,
-} from '@logistics/components/RelationTable.tsx'
+import { DateTimeCell } from '@microprojects/edm-components/components/relations/DateTimeCell'
+import { RelationTable } from '@microprojects/edm-components/components'
 import type { UUID } from '@logistics/data/types'
 import { Column as GridColumn } from '@microprojects/edm-components/components'
 import { useTranslation } from 'react-i18next'

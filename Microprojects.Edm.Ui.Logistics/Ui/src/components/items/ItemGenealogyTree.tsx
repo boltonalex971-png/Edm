@@ -1,14 +1,14 @@
 import './index' // side-effect: registers the `items` namespace
 import Api from '@features/api/api'
 import { Loading } from '@features/utils/Utils'
-import { EMPTY_GUID } from '@logistics/components/MasterDetail.tsx'
+import { EMPTY_GUID } from '@microprojects/edm-components/components'
 import type {
     GenealogyEdge,
     ItemGenealogy,
     ItemNode,
     UUID,
 } from '@logistics/data/types'
-import { useGet } from '@logistics/hooks/hooks'
+import { useGet } from '@microprojects/edm-components/hooks'
 import { formatUnits } from '@logistics/utils/format'
 import {
     Alert,

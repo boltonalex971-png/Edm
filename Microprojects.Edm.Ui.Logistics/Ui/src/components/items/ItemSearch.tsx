@@ -2,11 +2,8 @@ import './index' // side-effect: registers the `items` namespace
 import api from '@features/api/api'
 import Api from '@features/api/api'
 import { Loading } from '@features/utils/Utils'
-import {
-    type AlertState,
-    useAlertSetter,
-} from '@logistics/components/InlineAlert'
-import { Detail } from '@logistics/components/MasterDetail'
+import { type AlertState, useAlertSetter } from '@logistics/hooks/useAlertSetter'
+import { Detail } from '@microprojects/edm-components/components'
 import { ItemDetail } from '@logistics/components/items/ItemDetail'
 import '@logistics/components/items/ItemGenealogyTree.css'
 import { TareDetail } from '@logistics/components/tare/TareDetail'
@@ -24,8 +21,8 @@ import type {
 import {
     useEntityToken,
     useInvalidateEntities,
-} from '@logistics/hooks/entityRefresh'
-import { usePost } from '@logistics/hooks/hooks'
+} from '@microprojects/edm-components/hooks'
+import { usePost } from '@microprojects/edm-components/hooks'
 import {
     ExpandLessOutlined as ChevDown,
     ExpandMoreOutlined as ChevRight,

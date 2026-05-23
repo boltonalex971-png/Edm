@@ -1,8 +1,8 @@
 import api from '@features/api/api.ts'
 import '@logistics/components/desktop' // side-effect: registers the `desktop` namespace
 import type { Order, OrderStatus, UUID } from '@logistics/data/types'
-import { usePost } from '@logistics/hooks/hooks'
-import { formatLocalDate, parseUtcDate } from '@logistics/utils/format'
+import { usePost } from '@microprojects/edm-components/hooks'
+import { formatLocalDate, parseUtcDate } from '@microprojects/edm-components/utils/dates'
 import {
     LockOutlined as LockIcon,
     PlayArrowOutlined as PlayIcon,

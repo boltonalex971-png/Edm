@@ -1,8 +1,8 @@
 import Api from '@features/api/api'
-import { HierarchyPicker } from '@logistics/components/HierarchyPicker'
-import { useEntityToken } from '@logistics/hooks/entityRefresh'
-import { useGet } from '@logistics/hooks/hooks'
-import { useBasePath } from '@logistics/hooks/routerHooks'
+import { HierarchyPicker } from '@microprojects/edm-components/components/forms/HierarchyPicker'
+import { useEntityToken } from '@microprojects/edm-components/hooks'
+import { useGet } from '@microprojects/edm-components/hooks'
+import { useBasePath } from '@microprojects/edm-components/hooks'
 import {
     EditorSection,
     Field,
@@ -28,24 +28,25 @@ import type {
 import {
     Detail,
     type DetailProps,
+    MasterDetail,
+} from '@microprojects/edm-components/components'
+import {
+    Editor,
     EMPTY_GUID,
     Info,
-    MasterDetail,
-    MuiEditor,
-} from '../../MasterDetail'
+} from '@microprojects/edm-components/components'
 import './index' // side-effect: registers the `config/process` namespace
 import { ProcessTabs } from './ProcessTabs'
 
 export function Processes({ kind }: { kind?: ProcessKind }) {
     const type = 'process'
-    const { path } = useBasePath()
+    const path = useBasePath()
     const navigate = useNavigate()
     const api = Api.processes
     const entityType = kind ? kind.toLowerCase() : 'process'
     const { t } = useTranslation('config/process')
     return (
         <MasterDetail
-            type={type}
             api={api}
             entityType={entityType}
             getHierarchyQuery={kind ? () => ({ kind }) : undefined}
@@ -148,7 +149,7 @@ export function ProcessDetail({
                 />
             }
             editor={
-                <MuiEditor
+                <Editor
                     type={props.type ?? 'process'}
                     api={props.api}
                     path={props.path}

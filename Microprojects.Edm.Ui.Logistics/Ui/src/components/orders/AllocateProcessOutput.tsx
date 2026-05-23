@@ -3,7 +3,7 @@ import api from '@features/api/api'
 import {
     HierarchyPicker,
     pruneHierarchy,
-} from '@logistics/components/HierarchyPicker'
+} from '@microprojects/edm-components/components/forms/HierarchyPicker'
 import { OutputItemsPanel } from '@logistics/components/orders/OutputItemsPanel'
 import { TareBarcodePicker } from '@logistics/components/tare/TareBarcodePicker'
 import {
@@ -39,8 +39,8 @@ import type {
 import {
     useEntityToken,
     useInvalidateEntities,
-} from '@logistics/hooks/entityRefresh'
-import { getData, postData, useGet } from '@logistics/hooks/hooks'
+} from '@microprojects/edm-components/hooks'
+import { getData, postData, useGet } from '@microprojects/edm-components/hooks'
 import { resolveError } from '@logistics/i18n/resolveError'
 import { useTareTransfer } from '@logistics/hooks/useTareTransfer'
 import { SmartScroll, SmartScrollContent } from '@microprojects/tools'
