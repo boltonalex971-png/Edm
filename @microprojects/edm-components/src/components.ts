@@ -17,6 +17,7 @@ export * from './components/master/ParentContext';
 export * from './components/master/treeUtils';
 export * from './components/master/TreeViewMaster';
 export * from './components/master/MasterDetail';
+export * from './components/master/Folder';
 export * from './components/states/Loading';
 export * from './components/relations/RelationTable';
 export * from './components/relations/Column';

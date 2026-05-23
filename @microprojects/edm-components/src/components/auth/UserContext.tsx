@@ -4,6 +4,7 @@ export interface UserContextValue {
     name?: string;
     role?: string;
     roles?: string[];
+    divisions?: string[];
 }
 
 export const UserContext = createContext<UserContextValue | undefined>(undefined);
