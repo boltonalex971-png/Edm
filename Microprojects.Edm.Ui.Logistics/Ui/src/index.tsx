@@ -21,7 +21,7 @@ import { MasterDetailDefaultsProvider } from '@microprojects/edm-components/comp
 import { UserProvider } from '@microprojects/edm-components/components/auth/UserContext'
 import { UiPreferencesProvider } from '@microprojects/edm-components/styles/UiPreferencesContext'
 import { defaultTheme } from '@microprojects/edm-components/styles/theme'
-import { Folder } from '@logistics/components/config/Folder'
+import { Folder } from '@microprojects/edm-components/components/master/Folder'
 import { LOGISTICS_ENTITY_TYPE_MAP, LOGISTICS_ICON_MAP } from '@logistics/logistics-config'
 import api from '@logistics/features/api/api'
 import { useSelector } from 'react-redux'
@@ -36,7 +36,7 @@ import './logistics-entities.css'
 function UserBridge({ children }: { children: React.ReactNode }) {
     const user = useSelector((s: RootState) => s.user)
     return (
-        <UserProvider value={{ name: user.name, role: user.role, roles: user.roles }}>
+        <UserProvider value={{ name: user.name, role: user.role, roles: user.roles, divisions: user.divisions }}>
             {children}
         </UserProvider>
     )
