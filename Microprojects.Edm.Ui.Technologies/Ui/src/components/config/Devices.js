@@ -6,7 +6,6 @@ import { useTranslation } from 'react-i18next';
 import { useBasePath } from '@microprojects/edm-components/hooks';
 import { MasterDetail, reloadMaster, Detail, Editor } from '@microprojects/edm-components/components';
 import { DeviceTabs } from './device/DeviceTabs';
-import { Folder } from './Folder';
 import Api from '../api';
 import { Box } from '@mui/material';
 import { Memory as MemoryIcon } from '@mui/icons-material';
@@ -23,7 +22,7 @@ export function Devices() {
         <MasterDetail
             api={api}
             hierarchiesApi={Api.directories}
-            folderComponent={Folder}
+
             path={path}
             stubMessage={t('config.stub.device')}
             detail={(

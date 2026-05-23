@@ -7,7 +7,6 @@ import { useTranslation } from 'react-i18next';
 import { useBasePath } from '@microprojects/edm-components/hooks';
 import { MasterDetail, reloadMaster, Detail, Editor } from '@microprojects/edm-components/components';
 import { ProcessTabs } from './process/ProcessTabs';
-import { Folder } from './Folder';
 import { Box } from '@mui/material';
 import {
     AccountTree as AccountTreeIcon,
@@ -25,7 +24,7 @@ export function Processes() {
         <MasterDetail
             api={api}
             hierarchiesApi={Api.directories}
-            folderComponent={Folder}
+
             path={path}
             stubMessage={t('config.stub.process')}
             detail={

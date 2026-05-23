@@ -8,6 +8,8 @@ import axios from 'axios';
 // before React mounts so the first paint is in the persisted locale.
 import i18n from './i18n/i18n';
 import { setDefaultAcceptLanguage } from '@microprojects/edm-components/hooks';
+import { MasterDetailDefaultsProvider } from '@microprojects/edm-components/components/master/MasterDetail';
+import { Folder } from '@microprojects/edm-components/components/master/Folder';
 import App from './App.tsx';
 import { store } from './store';
 import { theme } from './theme';
@@ -34,9 +36,13 @@ root.render(
     <Provider store={store}>
         <ThemeProvider theme={theme}>
             <CssBaseline />
-            <BrowserRouter basename={base}>
-                <App />
-            </BrowserRouter>
+            <MasterDetailDefaultsProvider value={{
+                folderComponent: Folder,
+            }}>
+                <BrowserRouter basename={base}>
+                    <App />
+                </BrowserRouter>
+            </MasterDetailDefaultsProvider>
         </ThemeProvider>
     </Provider>
 )

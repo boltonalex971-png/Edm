@@ -6,7 +6,6 @@ import { useTranslation } from 'react-i18next';
 import { useBasePath } from '@microprojects/edm-components/hooks';
 import { MasterDetail, reloadMaster, Detail, Editor } from '@microprojects/edm-components/components';
 import { HostTabs } from './host/HostTabs';
-import { Folder } from './Folder';
 import Api from '../api';
 import { HostConsole } from './host/HostConsole';
 import { Dns as DnsIcon, Terminal as ConsoleIcon } from '@mui/icons-material';
@@ -24,7 +23,7 @@ export function Hosts() {
         <MasterDetail
             api={api}
             hierarchiesApi={Api.directories}
-            folderComponent={Folder}
+
             path={path}
             stubMessage={t('config.stub.host')}
             detail={(

@@ -8,7 +8,6 @@ import { Business as BusinessIcon } from '@mui/icons-material';
 import { MasterDetail, reloadMaster, Detail, Editor } from '@microprojects/edm-components/components';
 import { Box } from '@mui/material';
 import { WorkplaceTabs } from './workplace/WorkplaceTabs';
-import { Folder } from './Folder';
 import Api from '../api';
 import { EditorSection } from '@microprojects/edm-components/components';
 import { Field } from '@microprojects/edm-components/components';
@@ -23,7 +22,7 @@ export function Workplaces() {
         <MasterDetail
             api={api}
             hierarchiesApi={Api.directories}
-            folderComponent={Folder}
+
             path={path}
             stubMessage={t('config.stub.workplace')}
             detail={(
