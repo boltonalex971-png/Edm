@@ -1,6 +1,6 @@
 ﻿import React, {useCallback, useEffect, useRef, useState} from 'react'
 import api from "../api.js";
-import {PluginMessageTypes, usePluginMessaging} from "@microprojects/tools";
+import {PluginMessageTypes, usePluginMessaging} from "@microprojects/edm-components/iframe";
 import {useSignalR} from "@microprojects/edm-components/hooks";
 import {OperatorAction} from "./OperatorAction.tsx";
 import './OperatorAction.scss'

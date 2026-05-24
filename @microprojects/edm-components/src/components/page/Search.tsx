@@ -1,6 +1,6 @@
 ﻿import React, {useState} from 'react';
 import {Button} from '@mui/material';
-import {SmartScroll, SmartScrollContent} from '@microprojects/tools';
+import {SmartScroll, SmartScrollContent} from '../chrome/SmartScroll';
 import {useStickyHeaderOffset} from '../../hooks/useStickyHeaderOffset';
 
 export interface SearchAction {

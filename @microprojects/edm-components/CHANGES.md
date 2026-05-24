@@ -1,5 +1,11 @@
 ﻿# @microprojects/edm-components — Changes
 
+## 0.5.0 — Absorb `@microprojects/tools`
+
+- **`SmartScroll` / `SmartScrollContent` / `smartScroll`** moved into `components/chrome/SmartScroll.tsx` (+ `.css`) and re-exported from the root barrel. SmartScroll is page chrome — it manages document-scroll sticky positioning and has nothing to do with iframes; pairing it with the messaging hooks in the old `tools` package was a packaging accident, now corrected.
+- **`PluginMessageTypes` / `usePluginMessaging` / `useOperationData` / `PluginContainer`** moved into `src/iframe/` and exposed via the new `@microprojects/edm-components/iframe` subpath entry. The subpath needs only React, so iframe-only consumers (Optogen, TypeOneUi) don't pull MUI / router / axios. `IMessage` / `IPluginMessage` interfaces are now named-exported (they were file-level exports in tools but never reached the public barrel).
+- **`@microprojects/tools` peer dep dropped** from `peerDependencies` and `devDependencies`. The standalone `@microprojects/tools` package is deleted from the repo.
+
 ## 0.4.6 — Drop the `stale` connection state from the header pip
 
 - **`useConnectionState`.** Removed the 60-second client-side idle watchdog that flipped a healthy SignalR connection into a `stale` state. SignalR's own server keep-alive (default 15 s) already drives `onreconnecting` / `onclose` when the transport actually breaks, so the second-guessing layer was crying wolf during normal quiet periods — and since no consumer ever wired `notifyActivity()`, every page that didn't get a push within a minute went `stale` unconditionally.

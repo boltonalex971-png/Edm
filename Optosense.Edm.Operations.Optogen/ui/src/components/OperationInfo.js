@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import './OperationInfo.scss';
 import { Profile } from "./Profile";
 import format from 'number-format.js'
-import {PluginMessageTypes, useOperationData} from "@microprojects/tools";
+import {PluginMessageTypes, useOperationData} from "@microprojects/edm-components/iframe";
 
 export const OperationInfo = ({ settings, records, profile }) => {
     const [steps, setSteps] = useState([]);

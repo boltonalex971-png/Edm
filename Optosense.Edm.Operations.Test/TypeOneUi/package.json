@@ -5,7 +5,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@microprojects/tools": "^1.0.3",
+    "@microprojects/edm-components": "file:../../@microprojects/edm-components",
     "@progress/kendo-react-animation": "5.8.0",
     "@progress/kendo-react-buttons": "5.8.0",
     "@progress/kendo-react-dateinputs": "5.8.0",

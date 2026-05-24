@@ -13,6 +13,7 @@ export * from './components/chrome/AppShell';
 export * from './components/chrome/NavMenu';
 export * from './components/chrome/SubRootPage';
 export * from './components/chrome/Changelog';
+export * from './components/chrome/SmartScroll';
 export * from './components/master/ParentContext';
 export * from './components/master/treeUtils';
 export * from './components/master/TreeViewMaster';

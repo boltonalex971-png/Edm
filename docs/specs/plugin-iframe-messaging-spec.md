@@ -3,8 +3,8 @@
 Single source of truth for how a host plugin's SPA exchanges data with an embedded plugin's SPA running inside an `<iframe>` (operation monitors, driver-option editors, profile editors, host consoles).
 
 Trigger files (any change here implies this spec must be re-read first):
-- `@microprojects/tools/src/components/PluginContainer.tsx`
-- `@microprojects/tools/src/components/messagingHooks.ts`
+- `@microprojects/edm-components/src/iframe/PluginContainer.tsx`
+- `@microprojects/edm-components/src/iframe/messagingHooks.ts`
 - `Microprojects.Edm.Ui.Technologies/Ui/src/components/operation/OperationPluginContainer.js`
 - `Microprojects.Edm.Ui.Technologies/Ui/src/components/operation/NewOperationWizard.js` (driver-options iframe in the wizard)
 - `Microprojects.Edm.Ui.Technologies/Ui/src/components/config/profile/ProfileEditorTab.js`
@@ -49,20 +49,20 @@ The cost: every value crossing the boundary must be JSON-serialisable, bootstrap
 
 ## 2. The two packages — current state
 
-Two iframe-messaging packages exist in the repo. **All new code uses `@microprojects/tools`.** `@microprojects/react-utils` is legacy and pending removal.
+Two iframe-messaging packages exist in the repo. **All new code uses `@microprojects/edm-components/iframe`** (the absorbed successor to the former standalone `@microprojects/tools`). `@microprojects/react-utils` is legacy and pending removal.
 
 | Package | Status | Used by (callers still on it) |
 |---|---|---|
-| `@microprojects/tools` | **Canonical.** Typed message enum, frameId echo, send-cache, explicit `targetOrigin`. | `TypeOneUi`, `Operations.Optogen/ui`, `OperationPluginContainer`, the wizard's `NewOperationWizard` (host side via `PluginContainer` still on `react-utils`), `MasterDetail` (SmartScroll re-export only) |
+| `@microprojects/edm-components/iframe` | **Canonical.** Typed message enum, frameId echo, send-cache, explicit `targetOrigin`. Lifted from the former `@microprojects/tools` package and re-homed under the iframe subpath (React-only peer deps). | `TypeOneUi`, `Operations.Optogen/ui`, `OperationPluginContainer`, the wizard's `NewOperationWizard` (host side via `PluginContainer` still on `react-utils`), `MasterDetail` (SmartScroll re-export only — now via the chrome subpath) |
 | `@microprojects/react-utils` | **Legacy.** Untyped `{data, type, frameId}` messages, no targetOrigin, no caching. | `Profiles.Board/Ui`, `Profiles.Board/MuxDriverUi`, `Plugins.Operator/ui-profile`, `Plugins.Operator/ui-driver`, `Plugins.OpcUa/ui-driver`, `Drivers.RestApi/ui-driver`, `Drivers.Null/ui`, `Operations.Test/ui` (old monitor), host wrappers `ProfileEditorTab`, `DeviceConfigEditor`, `HostConsole`, and the driver-options iframe inside `NewOperationWizard` |
 
-The two packages are wire-compatible **only for the INIT path** (host posts `{type, frameId, data}`, child reads `data`). Everything else — bidirectional messaging, message-type discrimination, send-before-load caching — is unique to `@microprojects/tools`.
+The two packages are wire-compatible **only for the INIT path** (host posts `{type, frameId, data}`, child reads `data`). Everything else — bidirectional messaging, message-type discrimination, send-before-load caching — is unique to `@microprojects/edm-components/iframe`.
 
 Once Phase 6 of `.claude/plans/iframe-data-channel-migration.md` lands, `react-utils` loses its iframe surface entirely.
 
 ---
 
-## 3. The `@microprojects/tools` contract
+## 3. The `@microprojects/edm-components/iframe` contract
 
 ### 3.1 Message envelope
 
@@ -118,7 +118,7 @@ The new approach:
 
 This is deterministic and works the same cross-origin or same-origin. The "send-cache that flushes when contentWindow becomes truthy" pattern in today's `usePluginMessaging` is the wrong layer — it knows the iframe exists but not that React has mounted inside it.
 
-The transition: once READY is in `@microprojects/tools` (Phase 0), plugins migrate one at a time. Hosts can treat absence-of-READY-within-N-ms as a legacy child and fall back to onLoad-fired INIT (a temporary compat shim during Phase 1–4).
+The transition: once READY is in `@microprojects/edm-components/iframe` (Phase 0), plugins migrate one at a time. Hosts can treat absence-of-READY-within-N-ms as a legacy child and fall back to onLoad-fired INIT (a temporary compat shim during Phase 1–4).
 
 ### 3.4 targetOrigin
 
@@ -201,7 +201,7 @@ The child made zero network calls in this entire flow. It did not import `axios`
 
 ## 5. The other host-side embedders
 
-`OperationPluginContainer` is the only embedder currently on `@microprojects/tools`. The others still call the legacy `PluginContainer` from `@microprojects/react-utils`. The migration plan rebuilds them on a shared `PluginIframe` helper.
+`OperationPluginContainer` is the only embedder currently on `@microprojects/edm-components/iframe`. The others still call the legacy `PluginContainer` from `@microprojects/react-utils`. The migration plan rebuilds them on a shared `PluginIframe` helper.
 
 | Caller | Embeds | What it must send in INIT, after migration |
 |---|---|---|
@@ -235,7 +235,7 @@ Detailed phasing lives in `.claude/plans/iframe-data-channel-migration.md`. This
 - `Operations.Test/TypeOneUi` ↔ `OperationPluginContainer`
 - `Operations.Optogen/ui` ↔ `OperationPluginContainer`
 
-Both already speak `@microprojects/tools` and make no REST calls of their own. They lack the READY handshake and `protocolVersion` field; both land in Phase 0.
+Both already speak `@microprojects/edm-components/iframe` and make no REST calls of their own. They lack the READY handshake and `protocolVersion` field; both land in Phase 0.
 
 ### Pending — embedded SPAs that still call HTTP from the child
 
@@ -284,7 +284,7 @@ The migrated child should have zero knowledge of HTTP, URLs, or auth.
 
 ### Cleanup (Phase 6)
 
-Once no consumer remains, remove `PluginContainer.js` / `usePluginData` from `@microprojects/react-utils` and the unused `PluginContainer.tsx` from `@microprojects/tools`.
+Once no consumer remains, remove `PluginContainer.js` / `usePluginData` from `@microprojects/react-utils` and the currently-unused `PluginContainer.tsx` from `@microprojects/edm-components/iframe`.
 
 ---
 

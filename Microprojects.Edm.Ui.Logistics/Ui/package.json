@@ -40,7 +40,6 @@
         "@emotion/react": "^11.14.0",
         "@emotion/styled": "^11.14.1",
         "@microprojects/edm-components": "file:../../@microprojects/edm-components",
-        "@microprojects/tools": "^1.0.7",
         "@microsoft/signalr": "^10.0.0",
         "@mui/icons-material": "^7.3.5",
         "@mui/material": "^7.3.5",

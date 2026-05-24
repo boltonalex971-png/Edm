@@ -3,7 +3,7 @@ import {Route, Routes, useNavigate} from 'react-router-dom';
 import { Layout } from "./components/Layout";
 import { OperationInfo } from "./components/OperationInfo";
 import { Config } from "./components/Config";
-import {PluginMessageTypes, useOperationData, usePluginMessaging} from "@microprojects/tools";
+import {PluginMessageTypes, useOperationData, usePluginMessaging} from "@microprojects/edm-components/iframe";
 
 function App() {
     const navigate = useNavigate();
