@@ -200,6 +200,55 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
             return processes.Select(p => p.ToIdNameModel()).ToList();
         }
 
+        [HttpGet("processes/allowed")]
+        public async Task<IEnumerable<DirectoryEntryViewModel>> GetAllowedProcessesTree()
+        {
+            var workplaces = await _workplaceService.GetAll();
+            var tree = (await DirectoryHelper.BuildEntryHierarchy(
+                workplaces,
+                WellKnownDirectoryIds.Workplaces,
+                _directoryService,
+                w =>
+                {
+                    // Workplaces are selection groups in this view, not leaves.
+                    var vm = w.ToEntryViewModel();
+                    vm.IsFolder = true;
+                    return vm;
+                })).ToList();
+
+            var processesByWorkplace = (await _workplaceService.GetAllowedProcesses())
+                .GroupBy(wp => wp.WorkplaceId)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            AttachProcessLeaves(tree, processesByWorkplace);
+            return tree;
+        }
+
+        private static void AttachProcessLeaves(
+            IEnumerable<DirectoryEntryViewModel> nodes,
+            IReadOnlyDictionary<Guid, List<WorkplaceProcess>> processesByWorkplace)
+        {
+            foreach (var node in nodes)
+            {
+                if (processesByWorkplace.TryGetValue(node.Id, out var processes))
+                {
+                    var leaves = processes.Select(wp => new DirectoryEntryViewModel
+                    {
+                        Id = wp.Id,
+                        Name = wp.Process?.Name ?? string.Empty,
+                        IsFolder = false,
+                    }).ToArray();
+                    node.Items = (node.Items ?? Array.Empty<DirectoryEntryViewModel>())
+                        .Concat(leaves)
+                        .ToArray();
+                }
+                if (node.Items is { Length: > 0 })
+                {
+                    AttachProcessLeaves(node.Items, processesByWorkplace);
+                }
+            }
+        }
+
         [HttpGet("processes/{wpProcId:guid}")]
         public async Task<WorkplaceProcessModel> GetWorplaceProcess(Guid wpProcId)
         {
