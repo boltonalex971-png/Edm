@@ -1,5 +1,5 @@
 import {Box} from '@mui/material'
-import {SmartScroll, SmartScrollContent} from '@microprojects/tools'
+import {SmartScroll, SmartScrollContent} from '@microprojects/edm-components'
 import {Changelog} from '@microprojects/edm-components/components/chrome/Changelog'
 import {useEffect, useMemo, useState} from 'react'
 import {useTranslation} from 'react-i18next'

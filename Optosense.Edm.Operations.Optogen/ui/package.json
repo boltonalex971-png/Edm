@@ -5,7 +5,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@microprojects/tools": "^1.0.5",
+    "@microprojects/edm-components": "file:../../@microprojects/edm-components",
     "@popperjs/core": "^2.10.2",
     "@progress/kendo-data-query": "^1.5.5",
     "@progress/kendo-date-math": "^1.5.5",

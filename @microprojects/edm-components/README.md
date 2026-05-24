@@ -9,7 +9,8 @@ The primitives originate from the Technologies plugin v2 design handoff. This pa
 | Entry path                                | Contains                                                                                  |
 | ----------------------------------------- | ----------------------------------------------------------------------------------------- |
 | `@microprojects/edm-components`           | umbrella re-export of every entry below                                                   |
-| `@microprojects/edm-components/components`| `ValueFlash`, `Field`, `Properties`, `EditorSection`, `Toast`, `EmptyState`, `ErrorState`, `LoadingSkeleton`, `Layout`, `NavMenu`, `SubRootPage`, `RelationTable`, `TreeViewMaster`, `MasterDetail`, ... |
+| `@microprojects/edm-components/components`| `ValueFlash`, `Field`, `Properties`, `EditorSection`, `Toast`, `EmptyState`, `ErrorState`, `LoadingSkeleton`, `Layout`, `NavMenu`, `SubRootPage`, `SmartScroll`, `RelationTable`, `TreeViewMaster`, `MasterDetail`, ... |
+| `@microprojects/edm-components/iframe`    | `PluginMessageTypes`, `usePluginMessaging`, `useOperationData`, `PluginContainer` (+ `IMessage` / `IPluginMessage` types). React-only peer deps — safe for iframe-only consumers that don't want the full MUI/router/axios peer set. |
 | `@microprojects/edm-components/hooks`     | `useGet`, `usePost`, `useFetch`, `useDialog`, `useSignalR`, `useConnectionState`, `getCookie`, `getUserFromToken` |
 | `@microprojects/edm-components/styles`    | `UiPreferencesProvider`, `useUiPreferences`, `density.ts`, `scheme.ts`                    |
 | `@microprojects/edm-components/utils`     | `displayUserName`, `userInitials`                                                         |
@@ -25,7 +26,7 @@ Every component reads design-token CSS variables (`--sig-*`, `--surface*`, `--in
 
 ## Local consumption (in-repo plugins)
 
-Consume via the `file:` protocol — same pattern as `@microprojects/tools`:
+Consume via the `file:` protocol:
 
 ```jsonc
 // <plugin>/Ui/package.json

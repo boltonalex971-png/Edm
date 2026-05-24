@@ -37,7 +37,7 @@ import {
     Folder as FolderIcon,
     InsertDriveFile as FileIcon,
 } from '@mui/icons-material';
-import {SmartScroll, SmartScrollContent} from '@microprojects/tools';
+import {SmartScroll, SmartScrollContent} from '../chrome/SmartScroll';
 
 import {TreeViewMaster, refresh, TreeViewMasterProps} from './TreeViewMaster';
 import {TreeNode, getEntityType, DEFAULT_ENTITY_TYPE_MAP} from './treeUtils';

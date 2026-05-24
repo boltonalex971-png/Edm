@@ -29,7 +29,7 @@ import {
 import api, {spaUrl} from '../api';
 import {resolveError} from '../../i18n/resolveError';
 import { useGet } from '@microprojects/edm-components/hooks';
-import { SmartScroll, SmartScrollContent } from '@microprojects/tools';
+import { SmartScroll, SmartScrollContent } from '@microprojects/edm-components';
 import { Loading } from '@microprojects/edm-components/components';
 import { PluginContainer } from '@microprojects/react-utils';
 import { ApiContext } from '../../ApiContext';

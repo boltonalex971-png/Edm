@@ -4,7 +4,7 @@ import { OperationInfo } from "./components/OperationInfo";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Config } from "./components/Config";
 import { defaultOptions } from "./components/DefaultOptions";
-import {useOperationData, PluginMessageTypes, usePluginMessaging} from '@microprojects/tools'
+import {useOperationData, PluginMessageTypes, usePluginMessaging} from '@microprojects/edm-components/iframe'
 
 // Operator driver guid shouldn't be changed ever
 const OPERATOR_DRIVER_GUID = 'f222f3fa-0c13-4ae1-9b2d-cb055d4b9679'

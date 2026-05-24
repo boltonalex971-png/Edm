@@ -1,6 +1,6 @@
 {
     "name": "@microprojects/edm-components",
-    "version": "0.2.0",
+    "version": "0.5.0",
     "type": "module",
     "author": "Microprojects",
     "license": "UNLICENSED",
@@ -8,6 +8,7 @@
     "exports": {
         ".":              { "types": "./dist/index.d.ts",      "import": "./dist/index.js" },
         "./components":   { "types": "./dist/components.d.ts", "import": "./dist/components.js" },
+        "./iframe":       { "types": "./dist/iframe/index.d.ts", "import": "./dist/iframe/index.js" },
         "./hooks":        { "types": "./dist/hooks.d.ts",      "import": "./dist/hooks.js" },
         "./i18n":         { "types": "./dist/i18n/index.d.ts", "import": "./dist/i18n/index.js" },
         "./styles":       { "types": "./dist/styles.d.ts",     "import": "./dist/styles.js" },
@@ -38,7 +39,6 @@
         "@emotion/react":      "^11",
         "@emotion/styled":     "^11",
         "@microsoft/signalr":  "^10",
-        "@microprojects/tools":"^1",
         "@dnd-kit/core":       "^6",
         "@dnd-kit/modifiers":  "^9",
         "@dnd-kit/utilities":  "^3",
@@ -68,7 +68,6 @@
         "@dnd-kit/utilities":    "^3.2.2",
         "@emotion/react":        "^11.14.0",
         "@emotion/styled":       "^11.14.1",
-        "@microprojects/tools":  "file:../tools",
         "@microsoft/signalr":    "^10.0.0",
         "@mui/icons-material":   "^7.3.5",
         "@mui/material":         "^7.3.5",

@@ -37,7 +37,7 @@ import { resolveError } from '@logistics/i18n/resolveError'
 import { useTareTransfer } from '@logistics/hooks/useTareTransfer'
 import { formatUnits } from '@logistics/utils/format'
 import { SubRootPage } from '@microprojects/edm-components/components/chrome/SubRootPage'
-import { SmartScroll, SmartScrollContent } from '@microprojects/tools'
+import { SmartScroll, SmartScrollContent } from '@microprojects/edm-components'
 import {
     Alert,
     Box,

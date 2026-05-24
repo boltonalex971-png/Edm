@@ -2,7 +2,8 @@ import React, {useState} from "react"
 import {Monitor} from "./Monitor";
 import {Log} from "./Log";
 import {Sensors} from "./Sensors";
-import {PluginMessageTypes, SmartScroll, SmartScrollContent, useOperationData} from "@microprojects/tools";
+import {PluginMessageTypes, useOperationData} from "@microprojects/edm-components/iframe";
+import {SmartScroll, SmartScrollContent} from "@microprojects/edm-components/components/chrome/SmartScroll";
 
 export const OperationInfo = ({info, settings}) => {
     const [sensors, setSensors] = useState(() => {
