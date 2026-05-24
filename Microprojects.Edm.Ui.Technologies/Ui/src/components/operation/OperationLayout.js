@@ -12,9 +12,10 @@ import styles from './OperationLayout.module.scss';
 // HANDOFF · v2 PAT-03 · operator workstation. Force `data-role="op"`
 // (green accent), `data-scheme="dark"` (operator default per spec — kept
 // at "light" for now since dark token overlays aren't keyed off the
-// attribute yet, see `styles/scheme.ts` PENDING note), and `density-touch`
-// for gloved-fingertip targets. Skip the regular plugin chrome — the
-// operator console is a single-job screen, not a browser of entities.
+// attribute yet, see `styles/scheme.ts` PENDING note), and `density-compact`
+// so the chrome around the operation plugin iframe stays out of the way.
+// Skip the regular plugin chrome — the operator console is a single-job
+// screen, not a browser of entities.
 
 export function OperationLayout() {
     const {id} = useParams()
@@ -29,7 +30,7 @@ export function OperationLayout() {
 
     return (
         <div
-            className={`${styles.shell} density-touch`}
+            className={`${styles.shell} density-compact`}
             data-role="op"
             data-scheme="light"
             data-plugin="technologies"
