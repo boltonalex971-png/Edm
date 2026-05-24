@@ -62,8 +62,10 @@ export function NewOperationWizard() {
         };
 
         let list = flatten(data);
-        // Remove root node if it exists (usually id 0 or parentId 0 for the first element)
-        if (list.length > 0 && (list[0].id === 0 || list[0].parentId === 0)) {
+        // BuildEntryHierarchy wraps the workplaces subtree in a single root
+        // folder (DirectoryId = null). Drop it so the dropdown starts at the
+        // first real workplace folder.
+        if (list.length > 0 && list[0].isFolder && !list[0].directoryId) {
             list = list.slice(1).map(item => ({ ...item, level: Math.max(0, item.level - 1) }));
         }
         return list;
@@ -102,7 +104,7 @@ export function NewOperationWizard() {
             setDetail(<ProcessDetailStub />);
             return false;
         }
-        const processId = Number(value.slice('process-'.length));
+        const processId = value.slice('process-'.length);
         setDetail(<ProcessDetail id={processId} />);
     };
 

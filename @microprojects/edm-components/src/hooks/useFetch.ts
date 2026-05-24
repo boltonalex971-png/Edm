@@ -91,8 +91,12 @@ export function useFetch<T = any>(
                 // catch-all "Cannot load the data" error otherwise.
                 const text = await response.text();
                 const json = text ? JSON.parse(text) : null;
+                // Side-effect-only afterLoads (e.g. `data => dispatch(...)`) return
+                // nothing — fall back to the raw json so callers that destructure
+                // useGet's data still see the response. Only an explicit transform
+                // return overrides this.
                 const result = afterLoad ? afterLoad(json) : json;
-                setState({loading: false, data: result, error: false});
+                setState({loading: false, data: result ?? json, error: false});
             } catch (error: any) {
                 if (error?.name !== 'AbortError') {
                     setState({loading: false, data: null, error: 'Cannot load the data'});
