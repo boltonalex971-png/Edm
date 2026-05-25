@@ -422,7 +422,7 @@ export interface DetailProps {
      *  edit + copy actions and shows an "outdated" badge next to the title.
      *  When omitted, falls back to `data.outdated`. */
     outdated?: boolean;
-    /** Initial edit mode. Falls back to true when `id === 0` or `id === EMPTY_GUID`
+    /** Initial edit mode. Falls back to true when `id === EMPTY_GUID`
      *  (a fresh, unsaved record). */
     editMode?: boolean;
     /** Hide the edit / copy / delete actions entirely. Use for screens that
@@ -461,7 +461,7 @@ export function Detail(props: DetailProps) {
     let [editMode, setEditMode] = useState(props.editMode ?? false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-    const isNewItem = props.id === 0 || props.id === EMPTY_GUID;
+    const isNewItem = props.id === EMPTY_GUID;
     editMode = editMode || isNewItem;
 
     // Fall back to UserContext when no explicit username prop is supplied.
@@ -723,8 +723,7 @@ export function Detail(props: DetailProps) {
                                                         disabled={lockedByOther || outdated}
                                                         onClick={(e) => {
                                                             e.preventDefault();
-                                                            const newId = (displayProps.id === 0 || typeof displayProps.id === 'number') ? 0 : EMPTY_GUID;
-                                                            const data = {...displayProps.data, id: newId, name: `${displayProps.data?.name} (Copy)`};
+                                                            const data = {...displayProps.data, id: EMPTY_GUID, name: `${displayProps.data?.name} (Copy)`};
                                                             axios.post(`${displayProps.api}`, data)
                                                                 .then((response) => {
                                                                     toast.success(t('toast.copied', 'Copied'));
@@ -1045,9 +1044,7 @@ export function Editor(props: EditorProps) {
         const onSaveError = (err: any) =>
             toast.error(err.response?.data?.detail || err.message || t('error.saveFailed', 'Save failed'));
 
-        // EMPTY_GUID and 0 are the "unsaved" id sentinels — both are truthy as
-        // a string / 0-as-number trap, so check them explicitly.
-        const isExistingItem = data.id && data.id !== EMPTY_GUID && data.id !== 0;
+        const isExistingItem = data.id && data.id !== EMPTY_GUID;
         if (isExistingItem) {
             // PUT path with fork-required handling: backends signal "this change
             // creates a new version" via 409 + `code: 'fork-required'`. The

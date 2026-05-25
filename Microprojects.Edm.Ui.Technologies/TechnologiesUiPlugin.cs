@@ -57,6 +57,12 @@ namespace Microprojects.Edm.Ui.Technologies
             services.AddScoped<ISettingService, SettingService>();
 
             services.AddScoped<ISensorService, SensorService>();
+
+            // Jobs need plugin-tier DI (IOperationService, IProfileService, …); root scan from AddJobs can't satisfy their ctors post-#90.
+            services.AddScoped<StartOperationJob>();
+            services.AddScoped<StartAuditJob>();
+            services.AddScoped<StoreOperationRecordsJob>();
+            services.AddScoped<StartTestOperationJob>();
         }
     }
 }

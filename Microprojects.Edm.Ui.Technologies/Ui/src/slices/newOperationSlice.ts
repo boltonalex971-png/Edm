@@ -3,16 +3,16 @@ import { createSlice } from '@reduxjs/toolkit'
 export interface NewOperationState {
     process?: {} | undefined,
     workbench?: {} | undefined,
-    devices: {[index: number]: {
+    devices: {[profileId: string]: {
             device: string
             driverName: string
             profileName: string
             host: string
             driverHomepage: string
         }},
-    options: {[index: number]: {
-            id: number
-            profileId: number
+    options: {[profileId: string]: {
+            id: string
+            profileId: string
             options: {}
             output: []
         }},

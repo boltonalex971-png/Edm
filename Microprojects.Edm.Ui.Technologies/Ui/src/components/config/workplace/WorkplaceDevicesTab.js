@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { HostDetail } from '../Hosts';
 
 WorkplaceDevicesTab.propTypes = {
-    id: PropTypes.number,
+    id: PropTypes.string,
     api: PropTypes.string,
     onDetailSelected: PropTypes.func
 }

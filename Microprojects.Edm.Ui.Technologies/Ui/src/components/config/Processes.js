@@ -5,7 +5,7 @@ import { useGet } from '@microprojects/edm-components/hooks';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useBasePath } from '@microprojects/edm-components/hooks';
-import { MasterDetail, reloadMaster, Detail, Editor } from '@microprojects/edm-components/components';
+import { MasterDetail, reloadMaster, Detail, Editor, EMPTY_GUID } from '@microprojects/edm-components/components';
 import { ProcessTabs } from './process/ProcessTabs';
 import { Box } from '@mui/material';
 import {
@@ -43,7 +43,7 @@ ProcessDetail.propTypes = {
     onChange: PropTypes.func,
     path: PropTypes.string,
     api: PropTypes.string,
-    processId: PropTypes.number,
+    processId: PropTypes.string,
     onUpdate: PropTypes.func
 }
 
@@ -56,7 +56,7 @@ export function ProcessDetail({ processId, parents, ...props }) {
     const [[ops]] = useGet(`${Api.plugins}/operations`, []);
     let [[data, setData], loading, error] = useGet(`${props.api}/${id}`, [id]);
     const { t } = useTranslation('tech');
-    if (!data || data.id === 0) {
+    if (!data || data.id === EMPTY_GUID) {
         data = { ...data, name: '', description: '' };
     }
 

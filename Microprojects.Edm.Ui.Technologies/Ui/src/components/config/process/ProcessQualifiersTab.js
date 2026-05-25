@@ -4,7 +4,7 @@ import { RelationTable } from '@microprojects/edm-components/components';
 import { useTranslation } from 'react-i18next';
 
 ProcessQualifiersTab.propTypes = {
-    id: PropTypes.number,
+    id: PropTypes.string,
     api: PropTypes.string
 }
 

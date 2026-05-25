@@ -8,7 +8,7 @@ import { SmoothTabContainer } from '@microprojects/edm-components/components';
 
 ProcessTabs.propTypes = {
     api: PropTypes.string,
-    id: PropTypes.number,
+    id: PropTypes.string,
     missedInputs: PropTypes.arrayOf(PropTypes.string),
     onDetailSelected: PropTypes.func
 }

@@ -14,7 +14,7 @@ DeviceConfigEditor.propTypes = {
     onChange: PropTypes.func,
     path: PropTypes.string,
     api: PropTypes.string,
-    id: PropTypes.number
+    id: PropTypes.string
 }
 
 export function DeviceConfigEditor({ id, ...props }) {

@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { useGet } from '@microprojects/edm-components/hooks';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Detail, Editor } from '@microprojects/edm-components/components';
+import { Detail, Editor, EMPTY_GUID } from '@microprojects/edm-components/components';
 import { WorkbenchDevicesTab } from './workplace/WorkbenchDevicesTab';
 import { Box, Button as MuiButton, Typography } from '@mui/material';
 import { PlayArrow as PlayIcon, Handyman as WorkbenchIcon } from '@mui/icons-material';
@@ -20,7 +20,7 @@ WorkbenchDetail.propTypes = {
     onChange: PropTypes.func,
     path: PropTypes.string,
     api: PropTypes.string,
-    workbenchId: PropTypes.number,
+    workbenchId: PropTypes.string,
     onUpdate: PropTypes.func
 }
 
@@ -43,7 +43,7 @@ export function WorkbenchDetail({ workbenchId, parents, ...props }) {
         navigate('/operation')
     };
     useEffect(setSub, [id]);
-    if (!data || data.id === 0) {
+    if (!data || data.id === EMPTY_GUID) {
         data = { ...data, name: '', description: '', url: '' };
     }
 

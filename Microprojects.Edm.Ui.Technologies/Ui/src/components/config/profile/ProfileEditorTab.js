@@ -4,7 +4,7 @@ import { ApiContext } from '../../../ApiContext';
 import { PluginContainer } from '@microprojects/react-utils';
 
 ProfileEditorTab.propTypes = {
-    id: PropTypes.number,
+    id: PropTypes.string,
     profiler: PropTypes.string
     // api: PropTypes.string,
     // onDetailSelected: PropTypes.func

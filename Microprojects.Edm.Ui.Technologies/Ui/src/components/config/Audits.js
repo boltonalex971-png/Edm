@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { useGet } from '@microprojects/edm-components/hooks';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Detail, Editor } from '@microprojects/edm-components/components';
+import { Detail, Editor, EMPTY_GUID } from '@microprojects/edm-components/components';
 import { AuditTabs } from './audit/AuditTabs';
 import { Box } from '@mui/material';
 import { FactCheck as AuditIcon } from '@mui/icons-material';
@@ -15,7 +15,7 @@ AuditDetail.propTypes = {
     onChange: PropTypes.func,
     path: PropTypes.string,
     api: PropTypes.string,
-    auditId: PropTypes.number,
+    auditId: PropTypes.string,
     params: PropTypes.array,
     onUpdate: PropTypes.func
 }
@@ -28,7 +28,7 @@ export function AuditDetail({ auditId, parents, ...props }) {
     useEffect(setSub, [id]);
     let [[data, setData], loading, error] = useGet(`${props.api}/${id}`, [id]);
     const { t } = useTranslation('tech');
-    if (!data || data.id === 0) {
+    if (!data || data.id === EMPTY_GUID) {
         data = { ...data, name: '', description: '', url: '' };
     }
     return (

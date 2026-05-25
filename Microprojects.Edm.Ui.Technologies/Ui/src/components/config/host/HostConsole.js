@@ -4,7 +4,7 @@ import { Detail } from '@microprojects/edm-components/components';
 import { PluginContainer } from '@microprojects/react-utils';
 
 HostConsole.propTypes = {
-    id: PropTypes.number,
+    id: PropTypes.string,
     data: PropTypes.object,
     onClose: PropTypes.func
 }

@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { useGet } from '@microprojects/edm-components/hooks';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Detail, Editor } from '@microprojects/edm-components/components';
+import { Detail, Editor, EMPTY_GUID } from '@microprojects/edm-components/components';
 import { ProfileTabs } from './profile/ProfileTabs';
 import { Box, Chip, TextField, Autocomplete } from '@mui/material';
 import { Description as ProfileIcon } from '@mui/icons-material';
@@ -16,7 +16,7 @@ ProfileDetail.propTypes = {
     onChange: PropTypes.func,
     deletable: PropTypes.bool,
     api: PropTypes.string,
-    profileId: PropTypes.number,
+    profileId: PropTypes.string,
     onUpdate: PropTypes.func
 }
 
@@ -28,7 +28,7 @@ export function ProfileDetail({ profileId, parents, deletable = true, ...props }
     useEffect(setSub, [id]);
     let [[data, setData], loading, error] = useGet(`${props.api}/${id}`, [id]);
     const { t } = useTranslation('tech');
-    if (!data || data.id === 0) {
+    if (!data || data.id === EMPTY_GUID) {
         data = { ...data, name: '', description: '', url: '' };
     }
 
