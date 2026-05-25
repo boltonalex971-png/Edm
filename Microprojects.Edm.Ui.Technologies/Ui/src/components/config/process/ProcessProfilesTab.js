@@ -10,7 +10,7 @@ import { Chip, Stack, Box, Tooltip } from '@mui/material';
 import { Warning as WarningIcon, CheckCircle as CheckCircleIcon } from '@mui/icons-material';
 
 ProcessProfilesTab.propTypes = {
-    id: PropTypes.number,
+    id: PropTypes.string,
     api: PropTypes.string,
     missedInputs: PropTypes.arrayOf(PropTypes.string),
     onDetailSelected: PropTypes.func

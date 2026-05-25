@@ -31,7 +31,7 @@ import { useTranslation } from 'react-i18next';
 import { CriterionEditor, ZoneEditor } from './AuditZoneEditor';
 
 AuditEditorTab.propTypes = {
-    id: PropTypes.number,
+    id: PropTypes.string,
     api: PropTypes.string,
     params: PropTypes.array
 }
@@ -87,7 +87,7 @@ export function AuditEditorTab({ id, api, params }) {
                 setZones(newZones);
             });
         } else {
-            axios.post(`${api}/zones/${criterion.zoneId}/criteria`, { ...criterion, id: 0 }).then((response) => {
+            axios.post(`${api}/zones/${criterion.zoneId}/criteria`, criterion).then((response) => {
                 const newZones = zones.map(z => {
                     if (z.id === response.data.zoneId) {
                         return { ...z, criteria: z.criteria ? [response.data, ...z.criteria] : [response.data] };

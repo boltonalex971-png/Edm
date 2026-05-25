@@ -5,7 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useBasePath } from '@microprojects/edm-components/hooks';
 import { Business as BusinessIcon } from '@mui/icons-material';
-import { MasterDetail, reloadMaster, Detail, Editor } from '@microprojects/edm-components/components';
+import { MasterDetail, reloadMaster, Detail, Editor, EMPTY_GUID } from '@microprojects/edm-components/components';
 import { Box } from '@mui/material';
 import { WorkplaceTabs } from './workplace/WorkplaceTabs';
 import Api from '../api';
@@ -41,7 +41,7 @@ WorkplaceDetail.propTypes = {
     onChange: PropTypes.func,
     path: PropTypes.string,
     api: PropTypes.string,
-    workplaceId: PropTypes.number,
+    workplaceId: PropTypes.string,
     onUpdate: PropTypes.func
 }
 
@@ -53,7 +53,7 @@ export function WorkplaceDetail({ workplaceId, parents, ...props }) {
     let [sub, setSub] = useState();
     const { t } = useTranslation('tech');
     useEffect(setSub, [id]);
-    if (!data || data.id === 0) {
+    if (!data || data.id === EMPTY_GUID) {
         data = { ...data, name: '', description: '' };
     }
     return (

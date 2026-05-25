@@ -10,7 +10,7 @@ import { ProcessWorkbenchesDetail } from './ProcessWorkbenches';
 import { Link, Select, MenuItem, FormControl } from '@mui/material';
 
 WorkplaceProcessesTab.propTypes = {
-    id: PropTypes.number,
+    id: PropTypes.string,
     api: PropTypes.string,
     onDetailSelected: PropTypes.func
 }

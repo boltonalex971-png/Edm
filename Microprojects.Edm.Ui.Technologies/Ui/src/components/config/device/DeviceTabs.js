@@ -7,7 +7,7 @@ import { SmoothTabContainer } from '@microprojects/edm-components/components';
 
 DeviceTabs.propTypes = {
     api: PropTypes.string,
-    id: PropTypes.number,
+    id: PropTypes.string,
     onDetailSelected: PropTypes.func
 }
 

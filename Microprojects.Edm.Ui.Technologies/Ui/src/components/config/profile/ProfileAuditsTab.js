@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { AuditDetail } from '../Audits';
 
 ProfileAuditsTab.propTypes = {
-    id: PropTypes.number,
+    id: PropTypes.string,
     api: PropTypes.string,
     onDetailSelected: PropTypes.func
 }

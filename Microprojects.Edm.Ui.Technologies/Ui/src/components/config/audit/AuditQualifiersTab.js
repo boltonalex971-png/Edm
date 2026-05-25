@@ -6,7 +6,7 @@ import { DropDownCell } from '@microprojects/edm-components/components';
 import { useTranslation } from 'react-i18next';
 
 AuditQualifiersTab.propTypes = {
-    id: PropTypes.number,
+    id: PropTypes.string,
     api: PropTypes.string
 }
 

@@ -9,7 +9,7 @@ import { SmoothTabContainer } from '@microprojects/edm-components/components';
 ProfileTabs.propTypes = {
     api: PropTypes.string,
     profiler: PropTypes.string,
-    id: PropTypes.number,
+    id: PropTypes.string,
     onDetailSelected: PropTypes.func
 }
 

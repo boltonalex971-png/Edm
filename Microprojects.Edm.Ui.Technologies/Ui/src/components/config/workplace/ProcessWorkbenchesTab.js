@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { WorkbenchDetail } from '../Workbenches';
 
 ProcessWorkbenchesTab.propTypes = {
-    id: PropTypes.number,
+    id: PropTypes.string,
     api: PropTypes.string,
     onDetailSelected: PropTypes.func
 }

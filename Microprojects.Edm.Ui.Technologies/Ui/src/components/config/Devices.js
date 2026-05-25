@@ -41,7 +41,7 @@ DeviceDetail.propTypes = {
     onChange: PropTypes.func,
     path: PropTypes.string,
     api: PropTypes.string,
-    deviceId: PropTypes.number,
+    deviceId: PropTypes.string,
     onUpdate: PropTypes.func
 }
 

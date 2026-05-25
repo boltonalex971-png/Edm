@@ -12,8 +12,8 @@ import { ProfileDetail } from '../Profiles';
 import { HostDetail } from '../Hosts';
 
 WorkbenchDevicesTab.propTypes = {
-    id: PropTypes.number,
-    processId: PropTypes.number,
+    id: PropTypes.string,
+    processId: PropTypes.string,
     api: PropTypes.string,
     onDetailSelected: PropTypes.func
 }

@@ -4,7 +4,7 @@ import { useGet } from '@microprojects/edm-components/hooks';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useBasePath } from '@microprojects/edm-components/hooks';
-import { MasterDetail, reloadMaster, Detail, Editor } from '@microprojects/edm-components/components';
+import { MasterDetail, reloadMaster, Detail, Editor, EMPTY_GUID } from '@microprojects/edm-components/components';
 import { HostTabs } from './host/HostTabs';
 import Api from '../api';
 import { HostConsole } from './host/HostConsole';
@@ -42,7 +42,7 @@ HostDetail.propTypes = {
     onChange: PropTypes.func,
     path: PropTypes.string,
     api: PropTypes.string,
-    hostId: PropTypes.number,
+    hostId: PropTypes.string,
     onUpdate: PropTypes.func
 }
 
@@ -54,7 +54,7 @@ export function HostDetail({ hostId, parents, ...props }) {
     useEffect(setSub, [id]);
     let [[data, setData], loading, error] = useGet(`${props.api}/${id}`, [id]);
     const { t } = useTranslation('tech');
-    if (!data || data.id === 0) {
+    if (!data || data.id === EMPTY_GUID) {
         data = { ...data, name: '', description: '', url: '' };
     }
 

@@ -8,7 +8,7 @@ import { SmoothTabContainer } from '@microprojects/edm-components/components';
 
 AuditTabs.propTypes = {
     api: PropTypes.string,
-    id: PropTypes.number,
+    id: PropTypes.string,
     params: PropTypes.array,
     onDetailSelected: PropTypes.func
 }

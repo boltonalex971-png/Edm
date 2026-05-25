@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useGet } from '@microprojects/edm-components/hooks';
-import { MasterDetail, reloadMaster, Detail, Info, Editor } from '@microprojects/edm-components/components';
+import { MasterDetail, reloadMaster, Detail, Info, Editor, EMPTY_GUID } from '@microprojects/edm-components/components';
 import { useTranslation } from 'react-i18next';
 import { ProcessWorkbenchesTab } from './ProcessWorkbenchesTab';
 import { Handyman as WorkbenchIcon } from '@mui/icons-material';
@@ -11,7 +11,7 @@ ProcessWorkbenchesDetail.propTypes = {
     onChange: PropTypes.func,
     path: PropTypes.string,
     api: PropTypes.string,
-    workplaceProcessId: PropTypes.number
+    workplaceProcessId: PropTypes.string
 }
 
 export function ProcessWorkbenchesDetail({ workplaceProcessId, parents, ...props }) {
@@ -21,7 +21,7 @@ export function ProcessWorkbenchesDetail({ workplaceProcessId, parents, ...props
     let [sub, setSub] = useState();
     useEffect(setSub, [id]);
     let [[data, setData], loading, error] = useGet(`${props.api}/${id}`, [id]);
-    data = !data || data.id === 0 ?
+    data = !data || data.id === EMPTY_GUID ?
         { ...data, name: '', description: '', url: '' } :
         { ...data, name: t('workbench.workbenchesTitle'), description: t('workbench.forProcessOn', { processName: data.processName, workplaceName: data.workplaceName }) };
     return (

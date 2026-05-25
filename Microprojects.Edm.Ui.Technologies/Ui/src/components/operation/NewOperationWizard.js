@@ -110,17 +110,13 @@ export function NewOperationWizard() {
 
     const onOperationStart = () => {
         const data = {
-            id: 0,
             workplaceProcessId: params.process.id,
             parameters: params.parameters && JSON.stringify(params.parameters),
-            devices: Object.entries(params.devices).map(([profileId, device]) => {
-                const id = parseInt(profileId);
-                return {
-                    profileId: id,
-                    hostDeviceId: device.hostDeviceId,
-                    options: JSON.stringify(params.options[id]?.options || {})
-                }
-            }),
+            devices: Object.entries(params.devices).map(([profileId, device]) => ({
+                profileId,
+                hostDeviceId: device.hostDeviceId,
+                options: JSON.stringify(params.options[profileId]?.options || {})
+            })),
         };
         axios.post(api.operations, data)
             .then((op) => {
