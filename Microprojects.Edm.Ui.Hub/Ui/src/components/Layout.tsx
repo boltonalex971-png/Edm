@@ -25,6 +25,9 @@ const LANGUAGES = [
     { code: 'ru', label: 'Русский' },
 ] as const
 
+// Multilang UI temporarily hidden; flip to true to restore the language switcher.
+const MULTILANG_UI_ENABLED = false
+
 export function HubLayout({ user, children }: HubLayoutProps) {
     const { density, scheme } = useUiPreferences()
     const { t, i18n } = useTranslation()
@@ -67,7 +70,7 @@ export function HubLayout({ user, children }: HubLayoutProps) {
             user={user}
             navItems={[]}
             showSearch={false}
-            extraUserMenuItems={languageMenuItems}
+            extraUserMenuItems={MULTILANG_UI_ENABLED ? languageMenuItems : undefined}
         />
     )
 

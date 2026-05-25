@@ -18,7 +18,10 @@ void i18n
             en: { common: commonEn, console: consoleEn, errors: errorsEn },
             ru: { common: commonRu, console: consoleRu, errors: errorsRu },
         },
-        supportedLngs: ['en', 'ru'],
+        // Multilang UI temporarily disabled; locked to English.
+        // Re-enable: drop `lng: 'en'` and restore supportedLngs to ['en', 'ru'].
+        lng: 'en',
+        supportedLngs: ['en'],
         fallbackLng: 'en',
         defaultNS: 'common',
         interpolation: { escapeValue: false },
