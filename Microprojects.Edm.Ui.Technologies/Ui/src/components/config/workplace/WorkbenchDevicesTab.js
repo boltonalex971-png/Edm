@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { DeviceDetail } from '../Devices';
 import { DeviceConfigEditor } from './DeviceConfigEditor';
 import { ProfileDetail } from '../Profiles';
+import { HostDetail } from '../Hosts';
 
 WorkbenchDevicesTab.propTypes = {
     id: PropTypes.number,
@@ -94,7 +95,32 @@ export function WorkbenchDevicesTab({ id, api, processId, onDetailSelected }) {
                 />
             )
         },
-        { field: 'hostName', headerName: t('common.host'), width: 150, editable: false },
+        {
+            field: 'hostName',
+            headerName: t('common.host'),
+            width: 150,
+            editable: false,
+            renderCell: (params) => (
+                <LinkTextCell
+                    {...params}
+                    fieldId='hostId'
+                    editable={false}
+                    onClick={(hostId, itemUpdate) => {
+                        const path = '/config/hosts';
+                        onDetailSelected(
+                            <HostDetail
+                                hostId={hostId}
+                                api={Api.hosts}
+                                path={path}
+                                onClose={() => onDetailSelected()}
+                                onUp={() => navigate(`${path}/${hostId}`)}
+                                onUpdate={itemUpdate}
+                            />
+                        );
+                    }}
+                />
+            )
+        },
         {
             field: 'configuration',
             headerName: t('device.configurationLabel'),

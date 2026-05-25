@@ -243,6 +243,7 @@ namespace Microprojects.Edm.Ui.Technologies.Models
                 WorkbenchId = s.WorkbenchId,
                 WorkplaceHostDeviceId = s.WorkplaceHostDeviceId,
                 HostDeviceId = s.WorkplaceHostDevice?.HostDeviceId ?? Guid.Empty,
+                HostId = s.WorkplaceHostDevice?.HostDevice?.HostId ?? Guid.Empty,
                 ProfileId = s.ProfileId,
                 DeviceId = s.WorkplaceHostDevice?.HostDevice?.DeviceId ?? Guid.Empty,
                 DeviceName = s.WorkplaceHostDevice?.HostDevice?.Device?.Name,
