@@ -458,6 +458,34 @@ export function TreeViewMaster(props: TreeViewMasterProps) {
         [activeId, treeData]
     );
 
+    // Tree-root id (e.g. the Manufacturing/Technology/Operation root for
+    // Logistics processes; the per-type root for Tech). Used as the default
+    // parent for Add Folder / Add Item when nothing is selected — without
+    // it, the POST goes out with directoryId=EMPTY_GUID and the backend
+    // rejects with "must live under its type root".
+    const rootRawId = useMemo(() => {
+        if (!Array.isArray(data) || data.length === 0) return undefined;
+        return (data[0] as any)?.id as string | undefined;
+    }, [data]);
+
+    // Mirrors the Editor's "what's the parent for a new item" logic: prefer
+    // the selected node (folder → itself, leaf → its parent folder), fall
+    // back to the tree root.
+    const resolveDefaultParentId = (): string | undefined => {
+        if (currentSelectedId) {
+            const selected = findNode(treeData, currentSelectedId);
+            if (selected) {
+                return selected.isFolder ? selected.numericId : selected.parentId;
+            }
+        }
+        return rootRawId;
+    };
+
+    const navigateWithParent = (path: string) => {
+        const parentId = resolveDefaultParentId();
+        navigate(path, parentId ? {state: {parentId}} : undefined);
+    };
+
     const masterEntityType = useMemo(
         () => entityTypeOverride ?? getEntityType(apiPath, entityTypeMap),
         [entityTypeOverride, apiPath, entityTypeMap],
@@ -481,12 +509,12 @@ export function TreeViewMaster(props: TreeViewMasterProps) {
                     }}
                 />
                 <Tooltip title="Add Folder">
-                    <IconButton className={styles.actionBtn} onClick={() => navigate(`${url}/folder/${newId}`)}>
+                    <IconButton className={styles.actionBtn} onClick={() => navigateWithParent(`${url}/folder/${newId}`)}>
                         <CreateFolderIcon fontSize="small" />
                     </IconButton>
                 </Tooltip>
                 <Tooltip title="Add Item">
-                    <IconButton className={styles.actionBtn} onClick={() => navigate(`${url}/${newId}`)}>
+                    <IconButton className={styles.actionBtn} onClick={() => navigateWithParent(`${url}/${newId}`)}>
                         <AddIcon fontSize="small" />
                     </IconButton>
                 </Tooltip>
