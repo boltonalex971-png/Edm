@@ -25,6 +25,9 @@ const LANGUAGES = [
     { code: 'ru', label: 'Русский' },
 ] as const
 
+// Multilang UI temporarily hidden; flip to true to restore the language switcher.
+const MULTILANG_UI_ENABLED = false
+
 export function ConsoleLayout({ user, children }: ConsoleLayoutProps) {
     const { density, scheme } = useUiPreferences()
     const { t, i18n } = useTranslation()
@@ -68,7 +71,7 @@ export function ConsoleLayout({ user, children }: ConsoleLayoutProps) {
             user={user ?? undefined}
             navItems={[]}
             showSearch={false}
-            extraUserMenuItems={languageMenuItems}
+            extraUserMenuItems={MULTILANG_UI_ENABLED ? languageMenuItems : undefined}
         />
     )
 

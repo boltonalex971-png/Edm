@@ -17,6 +17,9 @@ const DEFAULT_LANGUAGES: readonly AppShellLanguage[] = [
     {code: 'ru', label: 'Русский'},
 ];
 
+// Multilang UI temporarily hidden; flip to true to restore the language switcher.
+const MULTILANG_UI_ENABLED = false;
+
 export interface AppShellProps {
     /** Brand text (e.g. "Logistics", "Technologies") — shown next to logo. */
     pluginName: string;
@@ -133,7 +136,7 @@ export const AppShell = ({
             roles={roles}
             setRole={setRole}
             navItems={hideMenu ? [] : navItems}
-            extraUserMenuItems={languageMenuItems}
+            extraUserMenuItems={MULTILANG_UI_ENABLED ? languageMenuItems : extraUserMenuItems}
         />
     );
 
