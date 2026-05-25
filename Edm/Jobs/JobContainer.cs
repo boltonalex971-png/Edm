@@ -1,4 +1,5 @@
-﻿using Microprojects.Edm.Utils;
+﻿using Microprojects.Edm.Plugins;
+using Microprojects.Edm.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -17,6 +18,7 @@ public class JobContainer : IJobContainer
 {
     private readonly JobConfiguration _config;
     private readonly IServiceProvider _services;
+    private readonly IPluginServiceProvider _plugins;
     private readonly ILogger<JobContainer> _logger;
 
     public ConcurrentDictionary<int, CancellableTask> RunningTasks { get; } = [];
@@ -27,11 +29,19 @@ public class JobContainer : IJobContainer
     }
 
     public JobContainer(IServiceProvider serviceProvider, IOptions<JobConfiguration> config,
-        ILogger<JobContainer> logger)
+        ILogger<JobContainer> logger, IPluginServiceProvider plugins = null)
     {
         _services = serviceProvider;
         _config = config.Value;
         _logger = logger;
+        _plugins = plugins;
+    }
+
+    // Plugin-owned jobs need their owning plugin's IServiceProvider (root can't satisfy plugin-tier deps post-#90); host/shared jobs fall back to root.
+    private IServiceScope CreateScopeFor(Type jobType)
+    {
+        var pluginProvider = _plugins?.TryGetProviderFor(jobType.Assembly);
+        return (pluginProvider ?? _services).CreateScope();
     }
 
     public void Start()
@@ -89,7 +99,7 @@ public class JobContainer : IJobContainer
             switch (jobType.GetJobLifetime())
             {
                 case JobLifetime.ShortRunning:
-                    using (var scope = _services.CreateScope())
+                    using (var scope = CreateScopeFor(jobType))
                     {
                         var job = await GetScopedJob(scope, jobType, parameters);
                         var result = await job.ExecuteAsync();
@@ -285,7 +295,7 @@ public class JobContainer : IJobContainer
         var semaphore = new TaskCompletionSource<ResponseData>();
         var task = Task.Run(async () =>
         {
-            using var scope = _services.CreateScope();
+            using var scope = CreateScopeFor(jobType);
             IJob job = null;
             try
             {
