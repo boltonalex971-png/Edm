@@ -1045,7 +1045,10 @@ export function Editor(props: EditorProps) {
         const onSaveError = (err: any) =>
             toast.error(err.response?.data?.detail || err.message || t('error.saveFailed', 'Save failed'));
 
-        if (data.id) {
+        // EMPTY_GUID and 0 are the "unsaved" id sentinels — both are truthy as
+        // a string / 0-as-number trap, so check them explicitly.
+        const isExistingItem = data.id && data.id !== EMPTY_GUID && data.id !== 0;
+        if (isExistingItem) {
             // PUT path with fork-required handling: backends signal "this change
             // creates a new version" via 409 + `code: 'fork-required'`. The
             // user is asked to confirm; on yes we resend with `?force=true`.

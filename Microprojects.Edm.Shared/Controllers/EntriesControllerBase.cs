@@ -118,6 +118,16 @@ public abstract class EntriesControllerBase<TEntry, TEntryViewModel, TService> :
     public virtual async Task<TEntry> CreateEntry([FromBody] TEntryViewModel model)
     {
         var entry = ToEntity(model);
+        // No folder picked (Add pressed with nothing selected in the tree) →
+        // drop the new entry at the kind's type root.
+        if (entry.DirectoryId is null || entry.DirectoryId == Guid.Empty)
+        {
+            entry.DirectoryId = GetEntryRootIdFor(entry)
+                ?? throw new EdmException(
+                    "Edm.Directory.NoTypeRoot",
+                    new Dictionary<string, object> { ["entryType"] = typeof(TEntry).Name },
+                    $"No type root configured for {typeof(TEntry).Name}.");
+        }
         await EnsureEntryParent(entry);
         var result = await Service.Save(entry);
         return result;
