@@ -20,7 +20,7 @@ import type React from 'react';
 import {useMemo} from 'react';
 import {Trans, useTranslation} from 'react-i18next';
 import {useParams} from 'react-router-dom';
-import {useEntityToken} from '../../hooks/entityRefresh';
+import {useOptionalEntityToken} from '../../hooks/entityRefresh';
 import {useGet} from '../../hooks/useGet';
 import {Detail, Editor, EMPTY_GUID, Info} from '../../components';
 import {useOptionalUser} from '../auth/UserContext';
@@ -59,7 +59,7 @@ export function Folder(props: FolderProps) {
     const {t} = useTranslation('edm-master');
     const user = useOptionalUser();
     const {id} = useParams();
-    const entityToken = useEntityToken([{type: props.entityType, id}]);
+    const entityToken = useOptionalEntityToken([{type: props.entityType, id}]);
     let [[data, setData], loading, error] = useGet<TreeNode>(
         `${props.api}/${id}`,
         [id, entityToken],
@@ -87,7 +87,7 @@ export function Folder(props: FolderProps) {
             card={
                 <Info
                     content={
-                        <Box>
+                        <Box sx={{width: '100%'}}>
                             <Properties>
                                 <Property
                                     full
