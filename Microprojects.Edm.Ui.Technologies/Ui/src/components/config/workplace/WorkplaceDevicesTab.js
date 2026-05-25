@@ -1,7 +1,7 @@
 ﻿import React from 'react';
 import PropTypes from 'prop-types';
 import { RelationTable } from '@microprojects/edm-components/components';
-import { DropDownCell } from '@microprojects/edm-components/components';
+import { DropDownCell, LinkTextCell } from '@microprojects/edm-components/components';
 import { useGet } from '@microprojects/edm-components/hooks';
 import { useTranslation } from 'react-i18next';
 import { DeviceDetail } from '../Devices';
@@ -18,7 +18,6 @@ WorkplaceDevicesTab.propTypes = {
 export function WorkplaceDevicesTab({ id, api, onDetailSelected, parents }) {
     const navigate = useNavigate();
     const [[deviceList]] = useGet(`${api}/devices`, [api]);
-    const [[hostList]] = useGet(Api.hosts, []);
     const { t } = useTranslation('tech');
 
     const columns = [
@@ -52,18 +51,15 @@ export function WorkplaceDevicesTab({ id, api, onDetailSelected, parents }) {
             )
         },
         {
-            field: 'hostId',
+            field: 'host',
             headerName: t('common.host'),
             width: 200,
             editable: false,
             renderCell: (params) => (
-                <DropDownCell
+                <LinkTextCell
                     {...params}
-                    getData={() => hostList || []}
-                    dataKey='id'
-                    text='name'
                     fieldId='hostId'
-                    fieldName='host'
+                    editable={false}
                     onClick={(hostId, itemUpdate) => {
                         const path = '/config/hosts';
                         onDetailSelected(

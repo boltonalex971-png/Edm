@@ -8,6 +8,7 @@ namespace Microprojects.Edm.Ui.Technologies.Models
         public Guid WorkbenchId { get; set; }
         public Guid WorkplaceHostDeviceId { get; set; }
         public Guid HostDeviceId { get; set; }
+        public Guid HostId { get; set; }
         public Guid ProfileId { get; set; }
         public Guid DeviceId { get; set; }
         public string ProfileOutput { get; set; }
