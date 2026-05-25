@@ -139,6 +139,7 @@ public class ServiceBase<TContext, TEntity> : IGenericService<TEntity>
         return await Set()
             .Include(include)
             .Include(include2)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(p => id == p.Id);
     }
 
