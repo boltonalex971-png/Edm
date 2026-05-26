@@ -13,12 +13,3 @@ public class DomainObject : IDomainObject
     // substitution before checking criteria).
     public DomainObject Copy() => (DomainObject)MemberwiseClone();
 }
-
-public static class DomainObjectHelper
-{
-    public static T SetId<T>(this T obj) where T : DomainObject
-    {
-        obj.Id = DomainObject.NewGuid();
-        return obj;
-    }
-}

@@ -167,15 +167,15 @@ public class ServiceBase<TContext, TEntity> : IGenericService<TEntity>
     public virtual async Task<TEntity> Save(TEntity entity)
     {
         var state = entity.Id == Guid.Empty ? EntityState.Added : EntityState.Modified;
-        var id = DomainObject.NewGuid();
         if (entity is IWithMeta withMeta)
         {
             if (state == EntityState.Added)
             {
-                entity.Id = id;
+                // Mint up-front so Meta can share the same PK (1:1 FK).
+                entity.Id = DomainObject.NewGuid();
                 withMeta.Meta = new Meta
                 {
-                    Id = id,
+                    Id = entity.Id,
                     Owner = NameOrPlaceholder(UserService?.GetUserName()),
                     Metatype = typeof(TEntity).Name,
                 };
@@ -191,7 +191,6 @@ public class ServiceBase<TContext, TEntity> : IGenericService<TEntity>
                 meta.Modified = DateTime.UtcNow;
                 Set<History>().Add(new History
                 {
-                    Id = DomainObject.NewGuid(),
                     MetaId = meta.Id,
                     Author = NameOrPlaceholder(UserService?.GetUserName()),
                     JsonValue = JsonConvert.SerializeObject(withMeta)
@@ -199,12 +198,12 @@ public class ServiceBase<TContext, TEntity> : IGenericService<TEntity>
                 Set().Attach(entity).State = EntityState.Modified;
             }
         }
+        else if (state == EntityState.Added)
+        {
+            Set().Add(entity);
+        }
         else
         {
-            if (state == EntityState.Added)
-            {
-                entity.Id = id;
-            }
             Set().Attach(entity).State = state;
         }
 
@@ -226,12 +225,12 @@ public class ServiceBase<TContext, TEntity> : IGenericService<TEntity>
             };
             Set<T>().Add(entity);
         }
+        else if (state == EntityState.Added)
+        {
+            Set<T>().Add(entity);
+        }
         else
         {
-            if (state == EntityState.Added)
-            {
-                entity.Id = DomainObject.NewGuid();
-            }
             Set<T>().Attach(entity).State = state;
         }
         await Db.SaveChangesAsync();

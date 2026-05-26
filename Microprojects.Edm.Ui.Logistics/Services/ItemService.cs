@@ -807,7 +807,6 @@ public class ItemService : ServiceBase<Item>, IItemService
                 // No OrderProcess because repack is not part of order execution.
                 Db.Add(new ItemLink
                 {
-                    Id = DomainObject.NewGuid(),
                     SourceItemId = item.Id,
                     TargetItemId = newItem.Id,
                     ConsumedQuantity = move.Quantity,

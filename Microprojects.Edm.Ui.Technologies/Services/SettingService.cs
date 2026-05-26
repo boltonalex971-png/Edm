@@ -1,8 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microprojects.Edm.Ui.Technologies.Contracts;
 using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Ui.Technologies.Models;
 using Microprojects.Edm.Ui.Technologies.Persistence;
 using System;
 using System.Collections.Generic;

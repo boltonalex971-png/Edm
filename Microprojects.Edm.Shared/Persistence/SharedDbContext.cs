@@ -25,7 +25,7 @@ public abstract class SharedDbContext : DbContext
     {
         base.OnModelCreating(builder);
 
-        builder.ConfigureGuidIdsValueGeneratedNever();
+        builder.ConfigureGuidIdsUseUuidV8();
         builder.ConfigureMetaEntities();
     }
 }

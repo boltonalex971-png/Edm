@@ -88,7 +88,6 @@ public class TareTypeService : ServiceBase<TareType>, ITareTypeService
         {
             Db.NomenclatureTareTypes.Add(new NomenclatureTareType
             {
-                Id = DomainObject.NewGuid(),
                 NomenclatureId = link.NomenclatureId,
                 TareTypeId = newId,
             });
@@ -179,7 +178,7 @@ public class TareTypeService : ServiceBase<TareType>, ITareTypeService
         {
             NomenclatureId = nomenclatureId,
             TareTypeId = tareTypeId,
-        }.SetId();
+        };
 
         Db.NomenclatureTareTypes.Add(row);
         await Db.SaveChangesAsync();
