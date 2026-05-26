@@ -300,6 +300,8 @@
         "startOperation": "Запустить операцию",
         "startedSuccess": "Операция успешно запущена!",
         "finallyCreate": "Наконец, вы можете создать операцию",
+        "operationNumber": "Номер операции",
+        "refreshNumber": "Обновить номер",
         "createNow": "Создать операцию сейчас",
         "selectProcessToStart": "Выберите процесс для запуска",
         "selectedProcessInfo": "Информация о процессе",

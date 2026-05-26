@@ -10,7 +10,8 @@
             "AlreadyFinished": "Operation has been finished already.",
             "StartFailed": "Cannot start operation: {{message}}",
             "RemoteJobFailed": "{{message}}",
-            "DeviceJobFailed": "{{deviceJob}} failed: {{message}}"
+            "DeviceJobFailed": "{{deviceJob}} failed: {{message}}",
+            "DuplicateNumber": "Operation number \"{{number}}\" is already in use. Pick a different number."
         },
         "Workbench": {
             "NotFound": "Workbench for the specified process cannot be found."

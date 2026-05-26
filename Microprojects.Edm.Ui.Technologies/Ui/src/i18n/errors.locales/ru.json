@@ -10,7 +10,8 @@
             "AlreadyFinished": "Операция уже завершена.",
             "StartFailed": "Не удалось запустить операцию: {{message}}",
             "RemoteJobFailed": "{{message}}",
-            "DeviceJobFailed": "{{deviceJob}}: {{message}}"
+            "DeviceJobFailed": "{{deviceJob}}: {{message}}",
+            "DuplicateNumber": "Номер операции «{{number}}» уже используется. Укажите другой номер."
         },
         "Workbench": {
             "NotFound": "Не удалось найти рабочее место для указанного процесса."
