@@ -235,8 +235,7 @@ function OperationCard({operation, onMore}) {
             tabIndex={0}
         >
             <header className={styles.opCardHead}>
-                {/*<span className={styles.opCardId}>#{operation.id}</span>*/}
-                <span className={styles.opCardId}>&nbsp;</span>
+                <span className={styles.opCardId}>#{operation.number}</span>
                 <span className={styles.opCardBadgeWrap}>
                     <span className={`badge ${visual.badge}`}>
                         <span className="dot" />

@@ -24,7 +24,8 @@ import {
     Edit as EditIcon,
     PlayArrow as PlayIcon,
     CheckCircle as CheckCircleIcon,
-    ArrowForward as ArrowForwardIcon
+    ArrowForward as ArrowForwardIcon,
+    Refresh as RefreshIcon
 } from '@mui/icons-material';
 import api, {spaUrl} from '../api';
 import {resolveError} from '../../i18n/resolveError';
@@ -35,7 +36,7 @@ import { PluginContainer } from '@microprojects/react-utils';
 import { ApiContext } from '../../ApiContext';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
-import { clearDevices, reset, setDevice, setDriverOptions, setParameters, setProcess, setProfiles, setWorkbench } from '../../slices/newOperationSlice.ts';
+import { clearDevices, reset, setDevice, setDriverOptions, setNumber, setParameters, setProcess, setProfiles, setWorkbench } from '../../slices/newOperationSlice.ts';
 import axios from 'axios';
 import { SubRootPage } from '@microprojects/edm-components/components';
 
@@ -77,6 +78,17 @@ export function NewOperationWizard() {
     const step3Disabled = !(params.devices && params.options && params.profiles?.every(p => params.devices[p] && params.options[p]))
     const step4Disabled = !params.parameters || step3Disabled;
 
+    const fetchNextNumber = () => {
+        axios.get(`${api.operations}/next-number`)
+            .then((res) => dispatch(setNumber(res.data)))
+            .catch(() => {});
+    };
+
+    useEffect(() => {
+        if (step4Disabled) return;
+        fetchNextNumber();
+    }, [step4Disabled, dispatch]);
+
     useEffect(() => {
         const updateOffset = () => {
             const stickyHeaders = document.querySelectorAll('[data-sticky-header="true"]');
@@ -110,6 +122,7 @@ export function NewOperationWizard() {
 
     const onOperationStart = () => {
         const data = {
+            number: params.number ?? '',
             workplaceProcessId: params.process.id,
             parameters: params.parameters && JSON.stringify(params.parameters),
             devices: Object.entries(params.devices).map(([profileId, device]) => ({
@@ -226,6 +239,33 @@ export function NewOperationWizard() {
                                     <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
                                         {t('newOperation.finallyCreate')}
                                     </Typography>
+                                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: 2 }}>
+                                        <TextField
+                                            fullWidth
+                                            size="small"
+                                            label={t('newOperation.operationNumber')}
+                                            value={params.number ?? ''}
+                                            onChange={(e) => dispatch(setNumber(e.target.value))}
+                                            inputProps={{ maxLength: 32 }}
+                                            error={(params.number?.length ?? 0) >= 32}
+                                            helperText={
+                                                (params.number?.length ?? 0) >= 24
+                                                    ? `${params.number.length}/32`
+                                                    : ' '
+                                            }
+                                        />
+                                        <Tooltip title={t('newOperation.refreshNumber')}>
+                                            <IconButton
+                                                size="small"
+                                                color="primary"
+                                                onClick={fetchNextNumber}
+                                                aria-label={t('newOperation.refreshNumber')}
+                                                sx={{ mt: 0.5 }}
+                                            >
+                                                <RefreshIcon fontSize="small" />
+                                            </IconButton>
+                                        </Tooltip>
+                                    </Box>
                                     {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
                                     <Button
                                         variant="contained"

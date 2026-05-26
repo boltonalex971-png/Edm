@@ -11,6 +11,8 @@ using Microprojects.Edm.Shared.Services;
 using Microprojects.Edm.Ui.Technologies.Contracts;
 using Microprojects.Edm.Ui.Technologies.Models;
 using Microprojects.Edm.Ui.Technologies.Persistence;
+using Microprojects.Edm.Ui.Technologies.Utils;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace Microprojects.Edm.Ui.Technologies.Services
@@ -48,8 +50,49 @@ namespace Microprojects.Edm.Ui.Technologies.Services
                 operation.WorkplaceProcessId = wb.WorkplaceProcessId;
             }
 
+            if (string.IsNullOrEmpty(operation.Number))
+            {
+                operation.Number = await GetNextNumber();
+            }
+
             operation.Created = DateTime.UtcNow;
-            return await Save(operation);
+            try
+            {
+                return await Save(operation);
+            }
+            catch (DbUpdateException ex) when (IsDuplicateNumber(ex))
+            {
+                throw new EdmException(
+                    "Technologies.Operation.DuplicateNumber",
+                    new Dictionary<string, object> { ["number"] = operation.Number },
+                    $"Operation number '{operation.Number}' is already in use.",
+                    ex);
+            }
+        }
+
+        private static bool IsDuplicateNumber(DbUpdateException ex)
+        {
+            for (var current = (Exception)ex; current != null; current = current.InnerException)
+            {
+                if (current is SqlException sql && sql.Errors.Cast<SqlError>().Any(e =>
+                        (e.Number == 2601 || e.Number == 2627)
+                        && e.Message.Contains("IX_Operations_Number")))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public async Task<string> GetNextNumber()
+        {
+            var latest = await Set().AsNoTracking()
+                .Include(o => o.Meta)
+                .Where(o => o.Number != null && o.Number != "")
+                .OrderByDescending(o => o.Meta.Created)
+                .Select(o => o.Number)
+                .FirstOrDefaultAsync();
+            return OperationNumberHelper.GenerateNext(latest);
         }
 
         public async Task<Operation> Copy(Guid operationId)

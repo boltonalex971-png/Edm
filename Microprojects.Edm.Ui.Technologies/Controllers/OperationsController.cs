@@ -44,6 +44,9 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
         [HttpPost]
         public async Task<Operation> Create(Operation model) => await _operationService.Create(model);
 
+        [HttpGet("next-number")]
+        public async Task<string> GetNextNumber() => await _operationService.GetNextNumber();
+
         [HttpGet("launch")]
         public async Task<OperationLaunchResponse> Launch([FromQuery] string processUid, [FromQuery] string workbenchUid)
         {
@@ -182,6 +185,7 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
         [HttpGet("{id:guid}/info")]
         public async Task<OperationInfo> GetOperationInfo(Guid id)
         {
+            var operation = await _operationService.Get(id);
             var status = await Status(id);
             var process = await GetProcessInfo(id);
             var devices = await GetOperationDevices(id);
@@ -190,6 +194,7 @@ namespace Microprojects.Edm.Ui.Technologies.Controllers
             return new OperationInfo
             {
                 Id = status.Id,
+                Number = operation.Number,
                 State = status.State,
                 StateTimestamp = status.StateTimestamp,
                 Error = status.Error,

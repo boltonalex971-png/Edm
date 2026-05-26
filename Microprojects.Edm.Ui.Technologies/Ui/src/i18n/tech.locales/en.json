@@ -296,6 +296,8 @@
         "startOperation": "Start operation",
         "startedSuccess": "Operation has been started successfully!",
         "finallyCreate": "Finally, you can create the operation",
+        "operationNumber": "Operation #",
+        "refreshNumber": "Refresh number",
         "createNow": "Create operation now",
         "selectProcessToStart": "Select process to start",
         "selectedProcessInfo": "Selected process info",

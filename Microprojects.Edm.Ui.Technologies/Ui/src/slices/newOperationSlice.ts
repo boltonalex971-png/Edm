@@ -18,6 +18,7 @@ export interface NewOperationState {
         }},
     parameters?: {} | undefined,
     profiles?: {} | undefined,
+    number?: string,
 }
 
 const initialState: NewOperationState = { devices: {}, options: {} }
@@ -45,6 +46,9 @@ export const newOperationSlice = createSlice({
         setProfiles: (state, action) => {
             state.profiles = action.payload
         },
+        setNumber: (state, action) => {
+            state.number = action.payload
+        },
         clearProcess: (state) => {
             state.process = undefined
             state.profiles = undefined
@@ -70,6 +74,7 @@ export const {
     setWorkbench,
     setDevice,
     setProfiles,
+    setNumber,
     clearProcess,
     clearDevices,
     clearWorkbench

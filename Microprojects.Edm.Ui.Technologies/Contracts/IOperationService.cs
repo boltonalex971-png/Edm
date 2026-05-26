@@ -23,5 +23,6 @@ namespace Microprojects.Edm.Ui.Technologies.Contracts
         Task<Operation> CompleteOperation(Guid operationId);
         Task<Operation> Copy(Guid id);
         Task<OperationStatus> GetStatus(Operation operation);
+        Task<string> GetNextNumber();
     }
 }

@@ -148,6 +148,7 @@ namespace Microprojects.Edm.Ui.Technologies.Models
             new OperationViewModel
             {
                 Id = s.Id,
+                Number = s.Number,
                 WorkbenchId = s.WorkbenchId ?? Guid.Empty,
                 WorkbenchName = s.Workbench?.Name,
                 WorkplaceName = s.WorkplaceProcess?.Workplace?.Name,

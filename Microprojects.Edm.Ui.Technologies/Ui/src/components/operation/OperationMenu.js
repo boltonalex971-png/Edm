@@ -72,7 +72,7 @@ export function OperationMenu({operation, to, onCollapse, collapsed}) {
     return (
         <header className={styles.menu} data-collapsed={collapsed ? 'true' : 'false'}>
             <div className={styles.identity}>
-                {/*<span className={styles.opCode}>#{operation.id}</span>*/}
+                <span className={styles.opCode}>#{operation.number}</span>
                 <span className={styles.opSep}>·</span>
                 <span className={styles.processName} title={operation.process.name}>
                     {operation.process.name}
