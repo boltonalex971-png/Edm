@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microprojects.Edm.Domain;
 using Microprojects.Edm.Plugins;
 using Microprojects.Edm.Shared.Contracts;
 using Microprojects.Edm.Shared.Services;
@@ -62,6 +63,7 @@ namespace Microprojects.Edm.Ui.Technologies.Services
 
         public async Task<HostDevice> AttachHost(HostDevice hostDevice)
         {
+            hostDevice.Id = DomainObject.NewGuid();
             var result = Db.HostDevices.Add(hostDevice);
             await Db.SaveChangesAsync();
             return result.Entity;

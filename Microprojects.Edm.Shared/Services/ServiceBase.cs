@@ -208,8 +208,23 @@ public class ServiceBase<TContext, TEntity> : IGenericService<TEntity>
             Set().Attach(entity).State = state;
         }
 
+        MintIdsForCascadedAddedEntities();
         await Db.SaveChangesAsync();
         return entity;
+    }
+
+    // Navigation-cascaded children (e.g. Operation.Devices populated from JSON or in-code)
+    // arrive with Id == Guid.Empty. ConfigureGuidIdsValueGeneratedNever blocks EF's default
+    // generator, so without this they all insert as Guid.Empty -> PK violation on the 2nd row.
+    private void MintIdsForCascadedAddedEntities()
+    {
+        foreach (var entry in Db.ChangeTracker.Entries<IDomainObject>())
+        {
+            if (entry.State == EntityState.Added && entry.Entity.Id == Guid.Empty)
+            {
+                entry.Entity.Id = DomainObject.NewGuid();
+            }
+        }
     }
 
     protected virtual async Task<T> Save<T>(T entity) where T : class, IDomainObject
@@ -234,6 +249,7 @@ public class ServiceBase<TContext, TEntity> : IGenericService<TEntity>
             }
             Set<T>().Attach(entity).State = state;
         }
+        MintIdsForCascadedAddedEntities();
         await Db.SaveChangesAsync();
         return entity;
     }

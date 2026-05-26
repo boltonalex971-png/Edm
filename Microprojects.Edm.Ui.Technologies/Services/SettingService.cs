@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microprojects.Edm.Domain;
 using Microprojects.Edm.Ui.Technologies.Contracts;
-using Microprojects.Edm.Ui.Technologies.Models;
-using Microprojects.Edm.Ui.Technologies.Models;
 using Microprojects.Edm.Ui.Technologies.Models;
 using Microprojects.Edm.Ui.Technologies.Persistence;
 using System;
@@ -29,7 +28,7 @@ namespace Microprojects.Edm.Ui.Technologies.Services
                 .FirstOrDefaultAsync(s => s.Guid == guid && s.Name == name);
             if (result == null)
             {
-                result =  new Setting { Guid = guid, Name = name };
+                result =  new Setting { Id = DomainObject.NewGuid(), Guid = guid, Name = name };
                 _db.Settings.Add(result);
             }
             return result;

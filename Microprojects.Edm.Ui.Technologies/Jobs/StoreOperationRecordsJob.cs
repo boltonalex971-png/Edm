@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microprojects.Edm.Domain;
 using Microprojects.Edm.Drivers;
 using Microprojects.Edm.Intercom;
 using Microprojects.Edm.Jobs;
@@ -53,6 +54,7 @@ namespace Microprojects.Edm.Ui.Technologies.Jobs
                     // TODO Cache coming record to avoid loosing it and handle them later
                     var rec = new RecordEvent
                     {
+                        Id = DomainObject.NewGuid(),
                         ScheduledAt = r.ScheduledAt,
                         ExecutedAt = r.ExecutedAt,
                         Request = r.Request,
