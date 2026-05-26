@@ -116,7 +116,6 @@ public class OrderService : ServiceBase<Order>, IOrderService
             // today we always use a single row matching the order's root process.
             Db.Add(new OrderProcess
             {
-                Id = DomainObject.NewGuid(),
                 OrderId = order.Id,
                 ProcessId = order.ProcessId,
                 Ordering = 10,
@@ -147,7 +146,7 @@ public class OrderService : ServiceBase<Order>, IOrderService
                     NomenclatureId = row.NomenclatureId,
                     ProcessId = order.ProcessId,
                     Quantity = row.Quantity,
-                }.SetId());
+                });
             }
 
             await Db.SaveChangesAsync();
@@ -379,7 +378,6 @@ public class OrderService : ServiceBase<Order>, IOrderService
             // allocation. No OrderProcess since this is not order execution.
             Db.Add(new ItemLink
             {
-                Id = DomainObject.NewGuid(),
                 SourceItemId = parentId,
                 TargetItemId = storeItem.Id,
                 ConsumedQuantity = splitQty,
@@ -665,7 +663,6 @@ public class OrderService : ServiceBase<Order>, IOrderService
 
                     Db.ItemLinks.Add(new ItemLink
                     {
-                        Id = DomainObject.NewGuid(),
                         OrderProcessId = orderProcess.Id,
                         SourceItemId = inputItem.Id,
                         TargetItemId = targetItem.Id,

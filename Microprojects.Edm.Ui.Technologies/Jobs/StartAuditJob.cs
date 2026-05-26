@@ -8,7 +8,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using AdaptiveExpressions;
 using Microprojects.Edm.Cache;
-using Microprojects.Edm.Domain;
 using Microprojects.Edm.Intercom;
 using Microprojects.Edm.Jobs;
 using Microprojects.Edm.Ui.Technologies.Auditing;
@@ -156,7 +155,6 @@ namespace Microprojects.Edm.Ui.Technologies.Jobs
                                                                  && oc.Selector == selector))
                                                          ?? db.OperationCriteria.Add(new OperationCriterion
                                                          {
-                                                             Id = DomainObject.NewGuid(),
                                                              AuditCriterionId = criterion.Id,
                                                              OperationId = Parameters.Operation,
                                                              Selector = selector
@@ -166,7 +164,6 @@ namespace Microprojects.Edm.Ui.Technologies.Jobs
                                 operationCriterion.Message = auditResult.Message;
                                 db.RecordOperationCriteria.Add(new RecordOperationCriterion
                                 {
-                                    Id = DomainObject.NewGuid(),
                                     RecordId = rec.Id,
                                     OperationCriterion = operationCriterion
                                 });

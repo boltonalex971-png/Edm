@@ -82,7 +82,6 @@ public class NomenclatureService : ServiceBase<Nomenclature>, INomenclatureServi
         {
             Db.NomenclatureTareTypes.Add(new NomenclatureTareType
             {
-                Id = DomainObject.NewGuid(),
                 NomenclatureId = newId,
                 TareTypeId = link.TareTypeId,
             });
@@ -173,7 +172,7 @@ public class NomenclatureService : ServiceBase<Nomenclature>, INomenclatureServi
         {
             NomenclatureId = nomenclatureId,
             TareTypeId = tareTypeId,
-        }.SetId();
+        };
 
         Db.NomenclatureTareTypes.Add(row);
         if (makeDefault)

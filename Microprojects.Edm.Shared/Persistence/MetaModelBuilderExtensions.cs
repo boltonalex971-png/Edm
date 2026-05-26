@@ -23,11 +23,12 @@ public static class MetaModelBuilderExtensions
         }
     }
 
-    // Disable the SQL Server convention that would otherwise plug in
-    // SqlServerSequentialGuidValueGenerator and produce non-time-sortable
-    // UUIDv4 Ids whenever a code path forgets to call SetId() before
-    // SaveChanges. All Guid Ids come from DomainObject.NewGuid().
-    public static void ConfigureGuidIdsValueGeneratedNever(this ModelBuilder builder)
+    // Replace SQL Server's default SqlServerSequentialGuidValueGenerator (UUIDv4)
+    // with UuidV8ValueGenerator (DomainObject.NewGuid()) on every IDomainObject.Id.
+    // EF invokes the generator only when the property is at its CLR default on Add,
+    // so callers that set Id explicitly are still respected, and forgetting to set
+    // it no longer silently inserts Guid.Empty -> PK violation on the second row.
+    public static void ConfigureGuidIdsUseUuidV8(this ModelBuilder builder)
     {
         var entityTypes = builder.Model.GetEntityTypes()
             .Where(t => typeof(IDomainObject).IsAssignableFrom(t.ClrType));
@@ -36,7 +37,8 @@ public static class MetaModelBuilderExtensions
         {
             builder.Entity(entityType.ClrType)
                 .Property(nameof(IDomainObject.Id))
-                .ValueGeneratedNever();
+                .HasValueGenerator<UuidV8ValueGenerator>()
+                .ValueGeneratedOnAdd();
         }
     }
 }

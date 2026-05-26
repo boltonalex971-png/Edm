@@ -65,7 +65,6 @@ namespace Microprojects.Edm.Ui.Technologies.Services
 
         public async Task<HostDevice> AttachDevice(HostDevice hostDevice)
         {
-            hostDevice.Id = DomainObject.NewGuid();
             var result = Db.HostDevices.Add(hostDevice);
             await Db.SaveChangesAsync();
             return result.Entity;
