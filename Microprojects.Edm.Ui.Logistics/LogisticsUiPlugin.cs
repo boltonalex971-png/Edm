@@ -44,6 +44,7 @@ namespace Microprojects.Edm.Ui.Logistics
             services.AddScoped<ITareService, TareService>();
             services.AddScoped<ITareTypeService, TareTypeService>();
             services.AddScoped<ISpecificationService, SpecificationService>();
+            services.AddScoped<ITechLinkService, TechLinkService>();
             // IUserService is root-tier — registered once by EdmHostBuilderExtensions.
         }
     }

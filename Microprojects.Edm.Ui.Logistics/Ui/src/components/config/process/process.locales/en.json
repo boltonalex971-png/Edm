@@ -29,7 +29,8 @@
     },
     "card": {
         "kind": "Kind",
-        "nomenclature": "Nomenclature"
+        "nomenclature": "Nomenclature",
+        "cellMode": "Cell mode"
     },
     "tabs": {
         "processes": "Processes",
@@ -54,5 +55,15 @@
         "process": "Process",
         "kind": "Kind",
         "description": "Description"
+    },
+    "linkTech": {
+        "action": "Link Tech process",
+        "title": "Link a Tech process as a step",
+        "process": "Tech process",
+        "notCellAware": "(not cell-aware)",
+        "perCellUnavailable": "— needs a cell-aware plugin",
+        "link": "Link",
+        "cancel": "Cancel",
+        "error": "Failed to link the Tech process."
     }
 }

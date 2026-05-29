@@ -1,5 +1,9 @@
 import Api from '@features/api/api'
-import { HierarchyPicker } from '@microprojects/edm-components/components/forms/HierarchyPicker'
+import {
+    type HierarchyNode,
+    HierarchyPicker,
+    pruneHierarchy,
+} from '@microprojects/edm-components/components/forms/HierarchyPicker'
 import { useEntityToken } from '@microprojects/edm-components/hooks'
 import { useGet } from '@microprojects/edm-components/hooks'
 import { useBasePath } from '@microprojects/edm-components/hooks'
@@ -93,9 +97,17 @@ export function ProcessDetail({
         [],
     )
     const [[tareTypes]] = useGet<TareType[]>(Api.taretypes, [])
-    const fixtureTareTypes = (tareTypes ?? []).filter(
-        (tt) => tt.role === 'Fixture',
+    const [[tareTypeTree]] = useGet<HierarchyNode[]>(
+        `${Api.taretypes}/hierarchy`,
+        [],
     )
+    // Constrain the tare-type hierarchy to fixture-role types, preserving folders.
+    const fixtureIds = new Set(
+        (tareTypes ?? [])
+            .filter((tt) => tt.role === 'Fixture')
+            .map((tt) => tt.id),
+    )
+    const fixtureTree = pruneHierarchy(tareTypeTree, fixtureIds)
     const entityToken = useEntityToken([
         { type: props.type ?? 'process', id: id },
     ])
@@ -145,10 +157,22 @@ export function ProcessDetail({
                         data && (
                             <Properties>
                                 <Property label={t('card.kind')} value={data.kind} />
-                                <Property
-                                    label={t('card.nomenclature')}
-                                    value={data.nomenclatureName}
-                                />
+                                {data.kind === 'Technology' && (
+                                    <Property
+                                        label={t('card.nomenclature')}
+                                        value={data.nomenclatureName}
+                                    />
+                                )}
+                                {data.kind === 'Operation' && (
+                                    <Property
+                                        label={t('card.cellMode')}
+                                        value={
+                                            data.mode
+                                                ? t(`field.mode${data.mode}`)
+                                                : t('field.modeUnset')
+                                        }
+                                    />
+                                )}
                             </Properties>
                         )
                     }
@@ -322,6 +346,8 @@ export function ProcessDetail({
                                     )}
                                 </EditorSection>
 
+                                {((values.kind as string) || kind) ===
+                                    'Technology' && (
                                 <EditorSection
                                     number={2}
                                     title={t('section.target')}
@@ -373,42 +399,26 @@ export function ProcessDetail({
                                             >
                                                 {t('field.fixtureTareType')}
                                             </Typography>
-                                            <Select
-                                                fullWidth
-                                                size="small"
-                                                displayEmpty
+                                            <HierarchyPicker
+                                                data={fixtureTree}
                                                 value={
-                                                    (values.fixtureTareTypeId as string) ??
-                                                    ''
+                                                    values.fixtureTareTypeId as
+                                                        | string
+                                                        | undefined
                                                 }
-                                                onChange={(e) =>
+                                                placeholder={t(
+                                                    'field.fixtureTareTypeNone',
+                                                )}
+                                                clearable
+                                                onChange={(v) =>
                                                     handleChange({
                                                         target: {
                                                             name: 'fixtureTareTypeId',
-                                                            value:
-                                                                e.target
-                                                                    .value ||
-                                                                null,
+                                                            value: v ?? null,
                                                         },
                                                     })
                                                 }
-                                            >
-                                                <MenuItem value="">
-                                                    <em>
-                                                        {t(
-                                                            'field.fixtureTareTypeNone',
-                                                        )}
-                                                    </em>
-                                                </MenuItem>
-                                                {fixtureTareTypes.map((tt) => (
-                                                    <MenuItem
-                                                        key={tt.id}
-                                                        value={tt.id}
-                                                    >
-                                                        {tt.name}
-                                                    </MenuItem>
-                                                ))}
-                                            </Select>
+                                            />
                                             <Typography
                                                 variant="caption"
                                                 sx={{
@@ -421,6 +431,7 @@ export function ProcessDetail({
                                         </Box>
                                     )}
                                 </EditorSection>
+                                )}
                             </Box>
                         )
                     }}

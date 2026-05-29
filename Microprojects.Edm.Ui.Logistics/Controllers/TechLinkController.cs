@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microprojects.Edm.Contracts.ProcessDefinition;
+using Microprojects.Edm.Ui.Logistics.Contracts;
+using Microprojects.Edm.Ui.Logistics.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Microprojects.Edm.Ui.Logistics.Controllers;
@@ -15,10 +17,12 @@ namespace Microprojects.Edm.Ui.Logistics.Controllers;
 public class TechLinkController : ControllerBase
 {
     private readonly IProcessDefinitionService _processDefinitions;
+    private readonly ITechLinkService _techLink;
 
-    public TechLinkController(IProcessDefinitionService processDefinitions)
+    public TechLinkController(IProcessDefinitionService processDefinitions, ITechLinkService techLink)
     {
         _processDefinitions = processDefinitions;
+        _techLink = techLink;
     }
 
     [HttpGet("processes")]
@@ -28,4 +32,14 @@ public class TechLinkController : ControllerBase
     [HttpGet("processes/{id:guid}/qualifiers")]
     public Task<IReadOnlyList<TechQualifier>> GetQualifiers(Guid id, CancellationToken cancellationToken) =>
         _processDefinitions.ListQualifiersAsync(id, cancellationToken);
+
+    // Links a Tech process as an ordered step of the given Technology process.
+    [HttpPost("processes/{technologyProcessId:guid}/link")]
+    public async Task<IActionResult> Link(Guid technologyProcessId, [FromBody] LinkTechStepRequest body)
+    {
+        await _techLink.LinkTechStep(technologyProcessId, body.TechProcessId, body.Mode, body.Order);
+        return Ok();
+    }
+
+    public sealed record LinkTechStepRequest(Guid TechProcessId, ProcessMode? Mode, int Order);
 }

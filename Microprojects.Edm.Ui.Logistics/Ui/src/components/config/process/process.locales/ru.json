@@ -31,7 +31,8 @@
     },
     "card": {
         "kind": "Тип",
-        "nomenclature": "Номенклатура"
+        "nomenclature": "Номенклатура",
+        "cellMode": "Режим ячеек"
     },
     "tabs": {
         "processes": "Процессы",
@@ -56,5 +57,15 @@
         "process": "Процесс",
         "kind": "Тип",
         "description": "Описание"
+    },
+    "linkTech": {
+        "action": "Связать Tech-процесс",
+        "title": "Связать Tech-процесс как шаг",
+        "process": "Tech-процесс",
+        "notCellAware": "(без ячеек)",
+        "perCellUnavailable": "— нужен плагин с поддержкой ячеек",
+        "link": "Связать",
+        "cancel": "Отмена",
+        "error": "Не удалось связать Tech-процесс."
     }
 }
