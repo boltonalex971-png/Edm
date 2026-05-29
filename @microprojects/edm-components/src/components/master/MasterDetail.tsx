@@ -505,7 +505,13 @@ export function Detail(props: DetailProps) {
             }, 200);
             return () => clearTimeout(timer);
         } else {
+            // Settled path: props now match what's displayed. A transition that
+            // reverted inside the 200ms fade window (e.g. a refetch flips
+            // loading false→true→false faster than the timer) lands here with
+            // its commit timer already cleared — so reset the fade flag here,
+            // otherwise isMainFading is stuck true and the overlay spins forever.
             setDisplayProps(props);
+            setIsMainFading(false);
         }
     }, [props, displayProps.loading, displayProps.id]);
 
@@ -524,6 +530,10 @@ export function Detail(props: DetailProps) {
             }, 200);
             return () => clearTimeout(timer);
         }
+        // Same defect class as the main-detail transition above: if subDetail
+        // reverts to the buffered value inside the fade window, the timer is
+        // cleared and we land here — reset isFading so it can't stick true.
+        setIsFading(false);
     }, [props.subDetail, bufferedSubDetail]);
 
     React.useEffect(() => {
