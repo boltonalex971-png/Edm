@@ -253,6 +253,10 @@ export interface OrderSearchQuery {
     active?: boolean
 }
 
+export interface SupplySearchQuery {
+    active?: boolean
+}
+
 export interface ExecuteResult {
     completed: boolean
     pendingCount: number

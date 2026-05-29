@@ -16,6 +16,13 @@ public class SuppliesController : CrudControllerBase<Supply, SupplyViewModel, IS
     protected override SupplyViewModel ToViewModel(Supply entry) => entry.ToViewModel();
     protected override Supply ToEntity(SupplyViewModel model) => model.ToEntity();
 
+    [HttpPost("search")]
+    public async Task<IEnumerable<SupplyViewModel>> Search([FromBody] SupplySearchQuery query)
+    {
+        var result = await Service.Search(query);
+        return result.Select(s => s.ToViewModel()).ToList();
+    }
+
     [HttpGet("{id:guid}/items")]
     public async Task<IEnumerable<ItemViewModel>> GetItems(Guid id)
     {

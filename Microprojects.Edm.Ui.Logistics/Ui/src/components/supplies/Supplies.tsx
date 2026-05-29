@@ -3,8 +3,9 @@ import { Loading } from '@features/utils/Utils.tsx'
 import { Detail } from '@microprojects/edm-components/components'
 import '@logistics/components/supplies' // side-effect: registers the `supplies` namespace
 import { SupplyDetail } from '@logistics/components/supplies/SupplyDetail'
-import type { Supply } from '@logistics/data/types'
-import { useGet } from '@microprojects/edm-components/hooks'
+import type { Supply, SupplySearchQuery } from '@logistics/data/types'
+import { useRouteMatch } from '@logistics/hooks/useRouteMatch'
+import { usePost } from '@microprojects/edm-components/hooks'
 import { useDataGridLocaleText } from '@logistics/i18n/dataGridLocale'
 import { formatLocalDateTime } from '@microprojects/edm-components/utils/dates'
 import { SubRootPage } from '@microprojects/edm-components/components/chrome/SubRootPage'
@@ -30,10 +31,27 @@ import {
 import type React from 'react'
 import { type EffectCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 
 export function Supplies() {
     const path = useBasePath()
+    const { name } = useRouteMatch()
+    const navigate = useNavigate()
     const { t } = useTranslation('supplies')
+    const [query, setQuery] = useState<SupplySearchQuery>()
+
+    // Header "Supplies" link points at bare /supplies. Land there → bounce to
+    // /supplies/remaining so Remains is the default and the tab strip
+    // highlights it. `replace` so back doesn't ping-pong.
+    useEffect(() => {
+        if (name === '' || name === '/') {
+            navigate(`${path}/remaining`, { replace: true })
+        }
+    }, [name, path, navigate])
+
+    useEffect(() => {
+        setQuery({ active: name.includes('remaining') })
+    }, [name])
 
     const menuItems = [
         { label: t('page.menu.remains'), path: `${path}/remaining`, icon: <RemainsIcon fontSize="small" /> },
@@ -48,7 +66,7 @@ export function Supplies() {
                         key: 'search',
                         label: t('actions.search'),
                         icon: <SearchIcon fontSize="small" />,
-                        panel: <SupplySearch />,
+                        panel: <SupplySearch query={query} />,
                     },
                     {
                         key: 'create',
@@ -87,11 +105,15 @@ function useColumns(): GridColDef<Supply>[] {
     )
 }
 
-function SupplySearch() {
+function SupplySearch({ query }: { query?: SupplySearchQuery }) {
     const { t } = useTranslation('supplies')
     const dgLocaleText = useDataGridLocaleText()
     const columns = useColumns()
-    const [[data], loading, error] = useGet<Supply[]>(`${api.supplies}`, [api])
+    const [[data], loading, error] = usePost<Supply[]>(
+        `${api.supplies}/search`,
+        query || {},
+        [query?.active],
+    )
     const [filter, setFilter] = useState<string>('')
     const [subDetail, setSubDetail] = useState<React.ReactElement>()
 
