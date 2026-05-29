@@ -8,5 +8,6 @@ public class GradeViewModel
     public string? Description { get; set; }
     public string? QualifierName { get; set; }
     public string Color { get; set; }
+    public bool IsTerminating { get; set; }
 }
 

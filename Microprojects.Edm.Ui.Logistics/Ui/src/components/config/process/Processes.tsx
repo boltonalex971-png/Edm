@@ -14,7 +14,7 @@ import {
     PlayArrowOutlined as OperationIcon,
     PrecisionManufacturingOutlined as TechnologyIcon,
 } from '@mui/icons-material'
-import { Box, Typography } from '@mui/material'
+import { Box, MenuItem, Select, Typography } from '@mui/material'
 import { type EffectCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -22,6 +22,8 @@ import type {
     DetailEventHandler,
     Process,
     ProcessKind,
+    ProcessMode,
+    TareType,
     TreeDataItem,
     UUID,
 } from '../../../data/types'
@@ -89,6 +91,10 @@ export function ProcessDetail({
     const [[noms]] = useGet<TreeDataItem[]>(
         `${Api.nomenclatures}/hierarchy`,
         [],
+    )
+    const [[tareTypes]] = useGet<TareType[]>(Api.taretypes, [])
+    const fixtureTareTypes = (tareTypes ?? []).filter(
+        (tt) => tt.role === 'Fixture',
     )
     const entityToken = useEntityToken([
         { type: props.type ?? 'process', id: id },
@@ -251,6 +257,69 @@ export function ProcessDetail({
                                                 '—'}
                                         </Box>
                                     </Box>
+                                    {((values.kind as string) || kind) ===
+                                        'Operation' && (
+                                        <Box>
+                                            <Typography
+                                                sx={{
+                                                    fontFamily:
+                                                        'var(--font-mono)',
+                                                    fontSize: 11,
+                                                    fontWeight: 700,
+                                                    textTransform: 'uppercase',
+                                                    letterSpacing: '0.07em',
+                                                    color: 'var(--ink-3)',
+                                                    mb: 0.5,
+                                                }}
+                                            >
+                                                {t('field.mode')}
+                                            </Typography>
+                                            <Select
+                                                fullWidth
+                                                size="small"
+                                                displayEmpty
+                                                value={
+                                                    (values.mode as string) ??
+                                                    ''
+                                                }
+                                                onChange={(e) =>
+                                                    handleChange({
+                                                        target: {
+                                                            name: 'mode',
+                                                            value:
+                                                                e.target
+                                                                    .value ||
+                                                                null,
+                                                        },
+                                                    })
+                                                }
+                                            >
+                                                <MenuItem value="">
+                                                    <em>
+                                                        {t('field.modeUnset')}
+                                                    </em>
+                                                </MenuItem>
+                                                <MenuItem value="PerCell">
+                                                    {t('field.modePerCell')}
+                                                </MenuItem>
+                                                <MenuItem value="SingleCell">
+                                                    {t('field.modeSingleCell')}
+                                                </MenuItem>
+                                                <MenuItem value="Global">
+                                                    {t('field.modeGlobal')}
+                                                </MenuItem>
+                                            </Select>
+                                            <Typography
+                                                variant="caption"
+                                                sx={{
+                                                    display: 'block',
+                                                    color: 'var(--ink-3)',
+                                                }}
+                                            >
+                                                {t('field.modeHelp')}
+                                            </Typography>
+                                        </Box>
+                                    )}
                                 </EditorSection>
 
                                 <EditorSection
@@ -287,6 +356,70 @@ export function ProcessDetail({
                                             }
                                         />
                                     </Box>
+                                    {((values.kind as string) || kind) ===
+                                        'Technology' && (
+                                        <Box sx={{ gridColumn: '1 / -1' }}>
+                                            <Typography
+                                                sx={{
+                                                    fontFamily:
+                                                        'var(--font-mono)',
+                                                    fontSize: 11,
+                                                    fontWeight: 700,
+                                                    textTransform: 'uppercase',
+                                                    letterSpacing: '0.07em',
+                                                    color: 'var(--ink-3)',
+                                                    mb: 0.5,
+                                                }}
+                                            >
+                                                {t('field.fixtureTareType')}
+                                            </Typography>
+                                            <Select
+                                                fullWidth
+                                                size="small"
+                                                displayEmpty
+                                                value={
+                                                    (values.fixtureTareTypeId as string) ??
+                                                    ''
+                                                }
+                                                onChange={(e) =>
+                                                    handleChange({
+                                                        target: {
+                                                            name: 'fixtureTareTypeId',
+                                                            value:
+                                                                e.target
+                                                                    .value ||
+                                                                null,
+                                                        },
+                                                    })
+                                                }
+                                            >
+                                                <MenuItem value="">
+                                                    <em>
+                                                        {t(
+                                                            'field.fixtureTareTypeNone',
+                                                        )}
+                                                    </em>
+                                                </MenuItem>
+                                                {fixtureTareTypes.map((tt) => (
+                                                    <MenuItem
+                                                        key={tt.id}
+                                                        value={tt.id}
+                                                    >
+                                                        {tt.name}
+                                                    </MenuItem>
+                                                ))}
+                                            </Select>
+                                            <Typography
+                                                variant="caption"
+                                                sx={{
+                                                    display: 'block',
+                                                    color: 'var(--ink-3)',
+                                                }}
+                                            >
+                                                {t('field.fixtureTareTypeHelp')}
+                                            </Typography>
+                                        </Box>
+                                    )}
                                 </EditorSection>
                             </Box>
                         )

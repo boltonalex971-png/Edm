@@ -17,6 +17,9 @@ public static class WebModelMappings
             Kind = s.Kind,
             NomenclatureId = s.NomenclatureId,
             NomenclatureName = s.Nomenclature?.Name,
+            Mode = s.Mode,
+            FixtureTareTypeId = s.FixtureTareTypeId,
+            FixtureTareTypeName = s.FixtureTareType?.Name,
         };
 
     public static Process ToEntity(this ProcessViewModel s) =>
@@ -28,6 +31,8 @@ public static class WebModelMappings
             Description = s.Description,
             Kind = s.Kind,
             NomenclatureId = s.NomenclatureId,
+            Mode = s.Mode,
+            FixtureTareTypeId = s.FixtureTareTypeId,
             Meta = null!,
         };
 
@@ -61,6 +66,7 @@ public static class WebModelMappings
             Description = s.Description,
             QualifierName = s.QualifierName,
             Color = s.Color,
+            IsTerminating = s.IsTerminating,
         };
 
     public static Grade ToEntity(this GradeViewModel s) =>
@@ -72,6 +78,7 @@ public static class WebModelMappings
             Description = s.Description,
             QualifierName = s.QualifierName,
             Color = s.Color,
+            IsTerminating = s.IsTerminating,
         };
 
     public static NomenclatureViewModel ToViewModel(this Nomenclature s) =>

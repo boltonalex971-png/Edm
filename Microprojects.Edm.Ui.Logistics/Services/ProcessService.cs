@@ -32,6 +32,7 @@ public class ProcessService : ServiceBase<Process>, IProcessService
     {
         var result = await Set().AsNoTracking()
             .Include(p => p.Nomenclature)
+            .Include(p => p.FixtureTareType)
             .FirstOrDefaultAsync(p => id == p.Id);
         return result;
     }

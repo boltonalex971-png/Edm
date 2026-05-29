@@ -11,5 +11,8 @@ namespace Microprojects.Edm.Ui.Logistics.ViewModels
         public ProcessKinds Kind { get; set; }
         public string? NomenclatureName { get; set; }
         public Guid? NomenclatureId { get; set; }
+        public ProcessMode? Mode { get; set; }
+        public Guid? FixtureTareTypeId { get; set; }
+        public string? FixtureTareTypeName { get; set; }
     }
 }

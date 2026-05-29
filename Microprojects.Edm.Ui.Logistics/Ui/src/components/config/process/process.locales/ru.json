@@ -14,7 +14,16 @@
         "name": "Название",
         "description": "Описание",
         "processKind": "Тип процесса",
-        "nomenclature": "Номенклатура"
+        "nomenclature": "Номенклатура",
+        "mode": "Режим ячеек",
+        "modeUnset": "(не задан)",
+        "modePerCell": "По ячейкам",
+        "modeSingleCell": "Одна ячейка",
+        "modeGlobal": "Общий",
+        "modeHelp": "Как связанный с Tech шаг распределяет работу по ячейкам оснастки.",
+        "fixtureTareType": "Тип тары оснастки",
+        "fixtureTareTypeNone": "(нет)",
+        "fixtureTareTypeHelp": "Оснастка (тип тары с ролью «Оснастка»), на которой выполняется эта технологическая цепочка."
     },
     "help": {
         "nameMissing": "Процесс должен иметь название.",
@@ -33,7 +42,8 @@
         "name": "Название",
         "description": "Описание",
         "qualifier": "Квалификатор",
-        "color": "Цвет"
+        "color": "Цвет",
+        "isTerminating": "Завершающий"
     },
     "specification": {
         "category": "Категория",
