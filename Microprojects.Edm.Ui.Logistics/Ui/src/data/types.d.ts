@@ -56,6 +56,8 @@ export interface Nomenclature extends DataItem {
     defaultTareTypeName?: string
 }
 
+export type TareRole = 'Container' | 'Fixture'
+
 export interface TareType extends DataItem {
     units: string
     countable: boolean
@@ -64,6 +66,8 @@ export interface TareType extends DataItem {
     sizeZ?: number
     dimensions: number
     capacity: number
+    role: TareRole
+    layoutJson?: string
 }
 
 export interface NomenclatureTareType {

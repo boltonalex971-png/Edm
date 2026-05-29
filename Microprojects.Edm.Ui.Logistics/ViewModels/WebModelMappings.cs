@@ -129,6 +129,8 @@ public static class WebModelMappings
             SizeZ = s.SizeZ,
             Dimensions = s.Dimensions,
             Capacity = s.Capacity,
+            Role = s.Role,
+            LayoutJson = s.LayoutJson,
             Outdated = s.Meta?.Completed != null,
         };
 
@@ -145,6 +147,8 @@ public static class WebModelMappings
             SizeY = s.SizeY,
             SizeZ = s.SizeZ,
             Capacity = s.Capacity,
+            Role = s.Role,
+            LayoutJson = s.LayoutJson,
             Meta = null!,
         };
 

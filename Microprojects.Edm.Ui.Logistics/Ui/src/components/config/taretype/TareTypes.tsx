@@ -127,6 +127,7 @@ export function TareTypeDetail({ id, ...props }: TareTypeDetailProps) {
                     content={
                         data && (
                             <Properties>
+                                <Property label={t('card.role')} value={t(`field.role${data.role === 'Fixture' ? 'Fixture' : 'Container'}`)} />
                                 <Property label={t('card.countable')} value={data.countable ? t('common:yes') : t('common:no')} />
                                 <Property label={t('card.measuredIn')} value={data.units} mono />
                                 {data.countable && <Property label={t('card.size')} value={formatSize(data)} mono />}
@@ -209,6 +210,18 @@ function TareTypeEditorBody({ values, handleChange, setValues }: EditorBodyProps
     }
 
     const computedCapacity = Math.max(1, (x || 1) * (y || 1) * (z || 1))
+
+    const role = (values.role as string) || 'Container'
+    const layoutText = (values.layoutJson as string) ?? ''
+    const layoutValid = useMemo(() => {
+        if (!layoutText.trim()) return true
+        try {
+            JSON.parse(layoutText)
+            return true
+        } catch {
+            return false
+        }
+    }, [layoutText])
 
     return (
         <Box>
@@ -478,6 +491,68 @@ function TareTypeEditorBody({ values, handleChange, setValues }: EditorBodyProps
                         />
                     </Box>
                 )}
+            </EditorSection>
+
+            <EditorSection
+                number={3}
+                title={t('section.role')}
+                filled={role ? 1 : 0}
+                total={1}
+                done={!!role && layoutValid}
+            >
+                <Box sx={{ gridColumn: '1 / -1' }}>
+                    <Typography
+                        sx={{
+                            fontFamily: 'var(--font-mono)',
+                            fontSize: 11,
+                            fontWeight: 700,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.07em',
+                            color: 'var(--ink-3)',
+                            mb: 0.5,
+                        }}
+                    >
+                        {t('field.role')}
+                    </Typography>
+                    <RadioGroup
+                        row
+                        value={role}
+                        onChange={(e) =>
+                            handleChange({
+                                target: { name: 'role', value: e.target.value },
+                            })
+                        }
+                    >
+                        <FormControlLabel
+                            value="Container"
+                            control={<Radio size="small" />}
+                            label={t('field.roleContainer')}
+                        />
+                        <FormControlLabel
+                            value="Fixture"
+                            control={<Radio size="small" />}
+                            label={t('field.roleFixture')}
+                        />
+                    </RadioGroup>
+                    <Typography
+                        variant="caption"
+                        sx={{ display: 'block', color: 'var(--ink-3)' }}
+                    >
+                        {t('field.roleHelp')}
+                    </Typography>
+                </Box>
+
+                <Field
+                    full
+                    kind="textarea"
+                    name="layoutJson"
+                    label={t('field.layoutJson')}
+                    rows={6}
+                    value={layoutText}
+                    onChange={handleChange}
+                    state={layoutValid ? 'pristine' : 'invalid'}
+                    help={layoutValid ? t('field.layoutJsonHelp') : t('field.layoutJsonInvalid')}
+                />
             </EditorSection>
         </Box>
     )

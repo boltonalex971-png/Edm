@@ -14,6 +14,8 @@ namespace Microprojects.Edm.Ui.Logistics.ViewModels
         public int? SizeY { get; set; }
         public int? SizeZ { get; set; }
         public int Dimensions { get; set; }
-        public double Capacity { get; set; } 
+        public double Capacity { get; set; }
+        public TareRole Role { get; set; }
+        public string? LayoutJson { get; set; }
     }
 }

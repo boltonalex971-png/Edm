@@ -2,7 +2,8 @@
     "stubMessage": "Please select a tare type",
     "section": {
         "identity": "Identity",
-        "capacity": "Capacity"
+        "capacity": "Capacity",
+        "role": "Role & layout"
     },
     "field": {
         "name": "Name",
@@ -19,7 +20,14 @@
         "capacity": "Capacity",
         "capacityWithUnits": "Capacity ({{units}})",
         "computedCapacity_one": "Capacity (auto): {{count}} slot",
-        "computedCapacity_other": "Capacity (auto): {{count}} slots"
+        "computedCapacity_other": "Capacity (auto): {{count}} slots",
+        "role": "Role",
+        "roleContainer": "Container",
+        "roleFixture": "Fixture",
+        "roleHelp": "Fixtures can host the cells of a technology-process step. Containers are ordinary tares.",
+        "layoutJson": "Cell layout (JSON)",
+        "layoutJsonHelp": "Optional cell geometry/schema. A visual editor will come later; for now, raw JSON.",
+        "layoutJsonInvalid": "Invalid JSON."
     },
     "help": {
         "nameMissing": "A tare type must have a name.",
@@ -29,7 +37,8 @@
         "countable": "Countable",
         "measuredIn": "Measured in",
         "size": "Size",
-        "capacity": "Capacity"
+        "capacity": "Capacity",
+        "role": "Role"
     },
     "tabs": {
         "allowedNomenclatures": "Allowed nomenclatures"

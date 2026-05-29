@@ -2,7 +2,8 @@
     "stubMessage": "Выберите тип тары",
     "section": {
         "identity": "Идентификация",
-        "capacity": "Вместимость"
+        "capacity": "Вместимость",
+        "role": "Роль и размещение"
     },
     "field": {
         "name": "Название",
@@ -21,7 +22,14 @@
         "computedCapacity_one": "Вместимость (авто): {{count}} ячейка",
         "computedCapacity_few": "Вместимость (авто): {{count}} ячейки",
         "computedCapacity_many": "Вместимость (авто): {{count}} ячеек",
-        "computedCapacity_other": "Вместимость (авто): {{count}} ячеек"
+        "computedCapacity_other": "Вместимость (авто): {{count}} ячеек",
+        "role": "Роль",
+        "roleContainer": "Контейнер",
+        "roleFixture": "Оснастка",
+        "roleHelp": "Оснастка может содержать ячейки шага технологического процесса. Контейнеры — обычная тара.",
+        "layoutJson": "Размещение ячеек (JSON)",
+        "layoutJsonHelp": "Необязательная геометрия/схема ячеек. Визуальный редактор появится позже; пока — необработанный JSON.",
+        "layoutJsonInvalid": "Некорректный JSON."
     },
     "help": {
         "nameMissing": "Тип тары должен иметь название.",
@@ -31,7 +39,8 @@
         "countable": "Штучный учёт",
         "measuredIn": "Измеряется в",
         "size": "Размер",
-        "capacity": "Вместимость"
+        "capacity": "Вместимость",
+        "role": "Роль"
     },
     "tabs": {
         "allowedNomenclatures": "Допустимые номенклатуры"
