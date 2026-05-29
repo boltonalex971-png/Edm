@@ -3,6 +3,7 @@ using Microprojects.Edm.Ui.Logistics.Contracts;
 using Microprojects.Edm.Ui.Logistics.Models;
 using Microprojects.Edm.Ui.Logistics.Persistence;
 using Microprojects.Edm.Ui.Logistics.Utils;
+using Microprojects.Edm.Ui.Logistics.ViewModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace Microprojects.Edm.Ui.Logistics.Services;
@@ -40,6 +41,26 @@ public class SupplyService : ServiceBase<Supply>, ISupplyService
         }
 
         return await query.ToListAsync();
+    }
+
+    public async Task<IEnumerable<Supply>> Search(SupplySearchQuery query)
+    {
+        var baseQuery = Set().AsNoTracking()
+            .Include(s => s.Meta)
+            .Where(s => s.Meta.Deleted == null);
+
+        // A supply has no completion state of its own — its lifecycle is
+        // derived from its items. "Remains" = still holds at least one active
+        // (non-consumed) item, or holds none yet (freshly created); "Consumed"
+        // = holds items and none are active. The two are complementary, so
+        // every live supply lands in exactly one tab.
+        var scoped = query.Active
+            ? baseQuery.Where(s => !s.Items.Any()
+                || s.Items.Any(i => i.Meta.Deleted == null && i.Meta.Completed == null))
+            : baseQuery.Where(s => s.Items.Any()
+                && !s.Items.Any(i => i.Meta.Deleted == null && i.Meta.Completed == null));
+
+        return await scoped.ToListAsync();
     }
 
     public async Task<IEnumerable<Item>> GetItems(Guid supplyId)
