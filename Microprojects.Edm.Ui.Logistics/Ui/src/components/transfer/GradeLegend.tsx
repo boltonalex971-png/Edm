@@ -1,7 +1,6 @@
 import '@logistics/components/transfer' // side-effect: registers the `transfer` namespace
 import type { LegendEntry } from '@logistics/components/transfer/visibleFromItems'
 import type { UUID } from '@logistics/data/types'
-import { colorForGradeId } from '@logistics/utils/gradePalette'
 import { useTranslation } from 'react-i18next'
 
 type GradeLegendProps = {
@@ -51,8 +50,7 @@ export function GradeLegend({ grades, onPick }: GradeLegendProps) {
                             width: 12,
                             height: 12,
                             borderRadius: 3,
-                            background:
-                                colorForGradeId(g.id) ?? 'var(--surface-3)',
+                            background: g.color ?? 'var(--surface-3)',
                             border: '1px solid rgba(0,0,0,0.15)',
                         }}
                     />

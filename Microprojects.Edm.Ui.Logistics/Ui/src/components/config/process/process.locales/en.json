@@ -30,7 +30,8 @@
     "grades": {
         "name": "Name",
         "description": "Description",
-        "qualifier": "Qualifier"
+        "qualifier": "Qualifier",
+        "color": "Color"
     },
     "specification": {
         "category": "Category",

@@ -3,7 +3,6 @@ import { ItemSlotTooltip } from '@logistics/components/tare/ItemSlotTooltip'
 import '@logistics/components/tare/TareSchematic.css'
 import type { Item, UUID } from '@logistics/data/types'
 import { formatQuantity } from '@logistics/utils/format'
-import { colorForGradeId } from '@logistics/utils/gradePalette'
 import { Popper } from '@mui/material'
 import type React from 'react'
 import { useCallback, useMemo, useRef, useState } from 'react'
@@ -111,7 +110,7 @@ export function OutputItemsPanel({
             </div>
             <div className="tare-flex-grid">
                 {items.map((item) => {
-                    const color = colorForGradeId(item.gradeId)
+                    const color = item.gradeColor
                     const selected = selectedSet.has(item.id)
                     // Selection indicator stays color-independent — the
                     // grade tint is set inline so it would otherwise hide

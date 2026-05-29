@@ -6,5 +6,6 @@ public class Grade : DomainObject
     public string Name { get; set; }
     public string? Description { get; set; }
     public string? QualifierName { get; set; }
+    public string Color { get; set; } = "#7dd3fc";
     public Process Process { get; set; }
 }
