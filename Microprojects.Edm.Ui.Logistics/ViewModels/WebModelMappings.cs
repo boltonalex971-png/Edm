@@ -60,6 +60,7 @@ public static class WebModelMappings
             Name = s.Name,
             Description = s.Description,
             QualifierName = s.QualifierName,
+            Color = s.Color,
         };
 
     public static Grade ToEntity(this GradeViewModel s) =>
@@ -70,6 +71,7 @@ public static class WebModelMappings
             Name = s.Name,
             Description = s.Description,
             QualifierName = s.QualifierName,
+            Color = s.Color,
         };
 
     public static NomenclatureViewModel ToViewModel(this Nomenclature s) =>
@@ -185,6 +187,7 @@ public static class WebModelMappings
             ProcessName = s.Process?.Name,
             GradeId = s.GradeId,
             GradeName = s.Grade?.Name,
+            GradeColor = s.Grade?.Color,
             IsOutput = s.ProcessId != null,
             Inactive = s.Meta != null && (s.Meta.Deleted != null || s.Meta.Completed != null),
             // IsStore is populated post-mapping by ItemFlags.Apply; leave it default.

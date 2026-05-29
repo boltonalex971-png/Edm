@@ -146,6 +146,11 @@ public class ProcessService : ServiceBase<Process>, IProcessService
         grade.ProcessId = processId;
         grade.Description ??= string.Empty;
         grade.QualifierName ??= string.Empty;
+        if (string.IsNullOrWhiteSpace(grade.Color))
+        {
+            grade.Color = "#7dd3fc";
+        }
+
         grade.Process = null!;
 
         var entry = Set<Grade>().Add(grade);
@@ -159,6 +164,11 @@ public class ProcessService : ServiceBase<Process>, IProcessService
         grade.ProcessId = processId;
         grade.Description ??= string.Empty;
         grade.QualifierName ??= string.Empty;
+        if (string.IsNullOrWhiteSpace(grade.Color))
+        {
+            grade.Color = "#7dd3fc";
+        }
+
         grade.Process = null!;
 
         var entry = Set<Grade>().Attach(grade);

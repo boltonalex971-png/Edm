@@ -46,6 +46,7 @@ export interface Grade extends DataItem {
     processId: UUID
     description?: string
     qualifierName?: string
+    color: string
 }
 
 export interface Nomenclature extends DataItem {
@@ -98,6 +99,8 @@ export interface Item extends DataItem {
     /** Process grade assigned to this output item, nullable. */
     gradeId?: UUID
     gradeName?: string
+    /** User-chosen color of the assigned grade (hex). */
+    gradeColor?: string
     nomenclatureName: string
     nomenclatureId: UUID
     nomenclatureCountable?: boolean

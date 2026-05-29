@@ -1,6 +1,5 @@
 import '@logistics/components/tare' // side-effect: registers the `tare` namespace
 import type { Item, TareInfo, UUID } from '@logistics/data/types'
-import { colorForGradeId } from '@logistics/utils/gradePalette'
 import { Popper } from '@mui/material'
 import type React from 'react'
 import { useCallback, useMemo, useRef, useState } from 'react'
@@ -222,10 +221,13 @@ export const TareSchematic = (props: TareSchematicProps) => {
         selectedSlot === addr || (selectedSlots?.has(addr) ?? false)
 
     const presentGrades = useMemo(() => {
-        const map = new Map<UUID, string>()
+        const map = new Map<UUID, { name: string; color?: string }>()
         for (const it of items) {
             if (it.gradeId && it.gradeName && !map.has(it.gradeId)) {
-                map.set(it.gradeId, it.gradeName)
+                map.set(it.gradeId, {
+                    name: it.gradeName,
+                    color: it.gradeColor,
+                })
             }
         }
         return [...map.entries()]
@@ -244,7 +246,7 @@ export const TareSchematic = (props: TareSchematicProps) => {
                         color: 'var(--ink-2)',
                     }}
                 >
-                    {presentGrades.map(([id, name]) => (
+                    {presentGrades.map(([id, grade]) => (
                         <span
                             key={id}
                             style={{
@@ -259,11 +261,11 @@ export const TareSchematic = (props: TareSchematicProps) => {
                                     height: 10,
                                     borderRadius: 2,
                                     background:
-                                        colorForGradeId(id) ?? 'var(--surface-3)',
+                                        grade.color ?? 'var(--surface-3)',
                                     border: '1px solid rgba(0,0,0,0.15)',
                                 }}
                             />
-                            {name}
+                            {grade.name}
                         </span>
                     ))}
                 </div>
@@ -307,7 +309,7 @@ export const TareSchematic = (props: TareSchematicProps) => {
                                     slot.item
                                         ? slotColor
                                             ? slotColor(slot.item)
-                                            : colorForGradeId(slot.item.gradeId)
+                                            : slot.item.gradeColor
                                         : undefined
                                 }
                                 dimmed={

@@ -32,7 +32,8 @@
     "grades": {
         "name": "Название",
         "description": "Описание",
-        "qualifier": "Квалификатор"
+        "qualifier": "Квалификатор",
+        "color": "Цвет"
     },
     "specification": {
         "category": "Категория",

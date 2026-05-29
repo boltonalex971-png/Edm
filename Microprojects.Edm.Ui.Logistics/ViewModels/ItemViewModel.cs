@@ -47,6 +47,8 @@ public class ItemViewModel
     public Guid? GradeId { get; set; }
     /// <summary>Display label for the grade — Grade.Name.</summary>
     public string? GradeName { get; set; }
+    /// <summary>User-chosen color for the grade — Grade.Color (hex).</summary>
+    public string? GradeColor { get; set; }
 
     /// <summary>
     /// True when this item is an order execution output (produced by a process),

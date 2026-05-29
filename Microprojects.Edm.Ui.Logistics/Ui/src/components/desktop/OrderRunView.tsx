@@ -27,7 +27,6 @@ import {
     parseUtcDate,
 } from '@microprojects/edm-components/utils/dates'
 import { formatUnits } from '@logistics/utils/format'
-import { colorForGradeId } from '@logistics/utils/gradePalette'
 import {
     ArrowBackOutlined as BackIcon,
     CheckOutlined as CheckIcon,
@@ -994,9 +993,7 @@ const groupByGrade = (items: Item[], noGradeLabel: string): GradeBucket[] => {
             map.set(key, {
                 gradeId: item.gradeId ?? null,
                 gradeName: item.gradeName ?? noGradeLabel,
-                color: item.gradeId
-                    ? colorForGradeId(item.gradeId)
-                    : 'var(--surface-3)',
+                color: item.gradeColor ?? 'var(--surface-3)',
                 quantity: 0,
             })
         }
