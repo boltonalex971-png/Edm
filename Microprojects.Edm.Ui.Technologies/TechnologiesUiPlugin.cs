@@ -3,9 +3,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microprojects.Edm.Infrastructure;
+using Microprojects.Edm.Contracts.ProcessDefinition;
 using Microprojects.Edm.Plugins;
 using Microprojects.Edm.Shared.Contracts;
 using Microprojects.Edm.Shared.Services;
+using Microprojects.Edm.Ui.Technologies.ContractAdapters;
 using Microprojects.Edm.Ui.Technologies.Contracts;
 using Microprojects.Edm.Ui.Technologies.Jobs;
 using Microprojects.Edm.Ui.Technologies.Persistence;
@@ -55,6 +57,10 @@ namespace Microprojects.Edm.Ui.Technologies
             services.AddScoped<IQualifierService, QualifierService>();
             services.AddScoped<IOperationService, OperationService>();
             services.AddScoped<ISettingService, SettingService>();
+
+            // Cross-plugin contract: provider-side implementation. Consumers
+            // (Logistics) reach this via the host's forwarding bridge.
+            services.AddScoped<IProcessDefinitionService, InProcessProcessDefinitionService>();
 
             services.AddScoped<ISensorService, SensorService>();
 

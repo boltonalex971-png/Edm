@@ -13,6 +13,7 @@ const api = {
     taretypes: `${baseUrl}/${appApiUrl}/taretypes`,
     orders: `${baseUrl}/${appApiUrl}/orders`,
     meta: `${baseUrl}/${appApiUrl}/meta`,
+    techlink: `${baseUrl}/${appApiUrl}/techlink`,
 }
 
 export default api

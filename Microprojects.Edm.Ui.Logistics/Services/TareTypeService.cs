@@ -123,13 +123,15 @@ public class TareTypeService : ServiceBase<TareType>, ITareTypeService
     private static bool IsTrivialChange(TareType persisted, TareType proposed)
     {
         // Trivial = only Name/Description/DirectoryId differ. Shape fields
-        // (Units, Countable, sizes, Capacity) drive the auto-fork behavior.
+        // (Units, Countable, sizes, Capacity, Role, LayoutJson) drive the auto-fork behavior.
         return persisted.Units == proposed.Units
             && persisted.Countable == proposed.Countable
             && persisted.SizeX == proposed.SizeX
             && persisted.SizeY == proposed.SizeY
             && persisted.SizeZ == proposed.SizeZ
-            && Math.Abs(persisted.Capacity - proposed.Capacity) < 1e-9;
+            && Math.Abs(persisted.Capacity - proposed.Capacity) < 1e-9
+            && persisted.Role == proposed.Role
+            && persisted.LayoutJson == proposed.LayoutJson;
     }
 
     private async Task<bool> HasReferences(Guid tareTypeId)

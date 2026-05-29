@@ -1,5 +1,9 @@
 import Api from '@features/api/api'
-import { HierarchyPicker } from '@microprojects/edm-components/components/forms/HierarchyPicker'
+import {
+    type HierarchyNode,
+    HierarchyPicker,
+    pruneHierarchy,
+} from '@microprojects/edm-components/components/forms/HierarchyPicker'
 import { useEntityToken } from '@microprojects/edm-components/hooks'
 import { useGet } from '@microprojects/edm-components/hooks'
 import { useBasePath } from '@microprojects/edm-components/hooks'
@@ -14,7 +18,7 @@ import {
     PlayArrowOutlined as OperationIcon,
     PrecisionManufacturingOutlined as TechnologyIcon,
 } from '@mui/icons-material'
-import { Box, Typography } from '@mui/material'
+import { Box, MenuItem, Select, Typography } from '@mui/material'
 import { type EffectCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -22,6 +26,8 @@ import type {
     DetailEventHandler,
     Process,
     ProcessKind,
+    ProcessMode,
+    TareType,
     TreeDataItem,
     UUID,
 } from '../../../data/types'
@@ -90,6 +96,18 @@ export function ProcessDetail({
         `${Api.nomenclatures}/hierarchy`,
         [],
     )
+    const [[tareTypes]] = useGet<TareType[]>(Api.taretypes, [])
+    const [[tareTypeTree]] = useGet<HierarchyNode[]>(
+        `${Api.taretypes}/hierarchy`,
+        [],
+    )
+    // Constrain the tare-type hierarchy to fixture-role types, preserving folders.
+    const fixtureIds = new Set(
+        (tareTypes ?? [])
+            .filter((tt) => tt.role === 'Fixture')
+            .map((tt) => tt.id),
+    )
+    const fixtureTree = pruneHierarchy(tareTypeTree, fixtureIds)
     const entityToken = useEntityToken([
         { type: props.type ?? 'process', id: id },
     ])
@@ -139,10 +157,22 @@ export function ProcessDetail({
                         data && (
                             <Properties>
                                 <Property label={t('card.kind')} value={data.kind} />
-                                <Property
-                                    label={t('card.nomenclature')}
-                                    value={data.nomenclatureName}
-                                />
+                                {data.kind === 'Technology' && (
+                                    <Property
+                                        label={t('card.nomenclature')}
+                                        value={data.nomenclatureName}
+                                    />
+                                )}
+                                {data.kind === 'Operation' && (
+                                    <Property
+                                        label={t('card.cellMode')}
+                                        value={
+                                            data.mode
+                                                ? t(`field.mode${data.mode}`)
+                                                : t('field.modeUnset')
+                                        }
+                                    />
+                                )}
                             </Properties>
                         )
                     }
@@ -251,8 +281,73 @@ export function ProcessDetail({
                                                 '—'}
                                         </Box>
                                     </Box>
+                                    {((values.kind as string) || kind) ===
+                                        'Operation' && (
+                                        <Box>
+                                            <Typography
+                                                sx={{
+                                                    fontFamily:
+                                                        'var(--font-mono)',
+                                                    fontSize: 11,
+                                                    fontWeight: 700,
+                                                    textTransform: 'uppercase',
+                                                    letterSpacing: '0.07em',
+                                                    color: 'var(--ink-3)',
+                                                    mb: 0.5,
+                                                }}
+                                            >
+                                                {t('field.mode')}
+                                            </Typography>
+                                            <Select
+                                                fullWidth
+                                                size="small"
+                                                displayEmpty
+                                                value={
+                                                    (values.mode as string) ??
+                                                    ''
+                                                }
+                                                onChange={(e) =>
+                                                    handleChange({
+                                                        target: {
+                                                            name: 'mode',
+                                                            value:
+                                                                e.target
+                                                                    .value ||
+                                                                null,
+                                                        },
+                                                    })
+                                                }
+                                            >
+                                                <MenuItem value="">
+                                                    <em>
+                                                        {t('field.modeUnset')}
+                                                    </em>
+                                                </MenuItem>
+                                                <MenuItem value="PerCell">
+                                                    {t('field.modePerCell')}
+                                                </MenuItem>
+                                                <MenuItem value="SingleCell">
+                                                    {t('field.modeSingleCell')}
+                                                </MenuItem>
+                                                <MenuItem value="Global">
+                                                    {t('field.modeGlobal')}
+                                                </MenuItem>
+                                            </Select>
+                                            <Typography
+                                                variant="caption"
+                                                sx={{
+                                                    display: 'block',
+                                                    color: 'var(--ink-3)',
+                                                }}
+                                            >
+                                                {t('field.modeHelp')}
+                                            </Typography>
+                                        </Box>
+                                    )}
                                 </EditorSection>
 
+                                {((values.kind as string) || kind) ===
+                                    'Technology' && (
                                 <EditorSection
                                     number={2}
                                     title={t('section.target')}
@@ -287,7 +382,56 @@ export function ProcessDetail({
                                             }
                                         />
                                     </Box>
+                                    {((values.kind as string) || kind) ===
+                                        'Technology' && (
+                                        <Box sx={{ gridColumn: '1 / -1' }}>
+                                            <Typography
+                                                sx={{
+                                                    fontFamily:
+                                                        'var(--font-mono)',
+                                                    fontSize: 11,
+                                                    fontWeight: 700,
+                                                    textTransform: 'uppercase',
+                                                    letterSpacing: '0.07em',
+                                                    color: 'var(--ink-3)',
+                                                    mb: 0.5,
+                                                }}
+                                            >
+                                                {t('field.fixtureTareType')}
+                                            </Typography>
+                                            <HierarchyPicker
+                                                data={fixtureTree}
+                                                value={
+                                                    values.fixtureTareTypeId as
+                                                        | string
+                                                        | undefined
+                                                }
+                                                placeholder={t(
+                                                    'field.fixtureTareTypeNone',
+                                                )}
+                                                clearable
+                                                onChange={(v) =>
+                                                    handleChange({
+                                                        target: {
+                                                            name: 'fixtureTareTypeId',
+                                                            value: v ?? null,
+                                                        },
+                                                    })
+                                                }
+                                            />
+                                            <Typography
+                                                variant="caption"
+                                                sx={{
+                                                    display: 'block',
+                                                    color: 'var(--ink-3)',
+                                                }}
+                                            >
+                                                {t('field.fixtureTareTypeHelp')}
+                                            </Typography>
+                                        </Box>
+                                    )}
                                 </EditorSection>
+                                )}
                             </Box>
                         )
                     }}

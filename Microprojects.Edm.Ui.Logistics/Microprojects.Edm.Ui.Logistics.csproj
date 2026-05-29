@@ -48,6 +48,7 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\Edm\Edm.csproj" />
 	  <ProjectReference Include="..\Microprojects.Edm.Shared\Microprojects.Edm.Shared.csproj" />
+	  <ProjectReference Include="..\Microprojects.Edm.Contracts.ProcessDefinition\Microprojects.Edm.Contracts.ProcessDefinition.csproj" />
 	</ItemGroup>
 
 	<!--

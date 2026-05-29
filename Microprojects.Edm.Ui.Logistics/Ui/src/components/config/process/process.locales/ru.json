@@ -14,7 +14,16 @@
         "name": "Название",
         "description": "Описание",
         "processKind": "Тип процесса",
-        "nomenclature": "Номенклатура"
+        "nomenclature": "Номенклатура",
+        "mode": "Режим ячеек",
+        "modeUnset": "(не задан)",
+        "modePerCell": "По ячейкам",
+        "modeSingleCell": "Одна ячейка",
+        "modeGlobal": "Общий",
+        "modeHelp": "Как связанный с Tech шаг распределяет работу по ячейкам оснастки.",
+        "fixtureTareType": "Тип тары оснастки",
+        "fixtureTareTypeNone": "(нет)",
+        "fixtureTareTypeHelp": "Оснастка (тип тары с ролью «Оснастка»), на которой выполняется эта технологическая цепочка."
     },
     "help": {
         "nameMissing": "Процесс должен иметь название.",
@@ -22,7 +31,8 @@
     },
     "card": {
         "kind": "Тип",
-        "nomenclature": "Номенклатура"
+        "nomenclature": "Номенклатура",
+        "cellMode": "Режим ячеек"
     },
     "tabs": {
         "processes": "Процессы",
@@ -33,7 +43,8 @@
         "name": "Название",
         "description": "Описание",
         "qualifier": "Квалификатор",
-        "color": "Цвет"
+        "color": "Цвет",
+        "isTerminating": "Завершающий"
     },
     "specification": {
         "category": "Категория",
@@ -46,5 +57,15 @@
         "process": "Процесс",
         "kind": "Тип",
         "description": "Описание"
+    },
+    "linkTech": {
+        "action": "Связать Tech-процесс",
+        "title": "Связать Tech-процесс как шаг",
+        "process": "Tech-процесс",
+        "notCellAware": "(без ячеек)",
+        "perCellUnavailable": "— нужен плагин с поддержкой ячеек",
+        "link": "Связать",
+        "cancel": "Отмена",
+        "error": "Не удалось связать Tech-процесс."
     }
 }

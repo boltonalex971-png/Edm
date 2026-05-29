@@ -114,6 +114,13 @@ public class LogisticsContext : SharedDbContext
             .IsRequired(false)
             .OnDelete(DeleteBehavior.SetNull);
 
+        builder.Entity<Process>()
+            .HasOne(p => p.FixtureTareType)
+            .WithMany()
+            .HasForeignKey(p => p.FixtureTareTypeId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.NoAction);
+
         builder.Entity<ItemLink>()
             .HasOne(l => l.OrderProcess)
             .WithMany()

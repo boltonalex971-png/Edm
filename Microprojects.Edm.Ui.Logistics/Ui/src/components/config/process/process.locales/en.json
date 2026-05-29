@@ -12,7 +12,16 @@
         "name": "Name",
         "description": "Description",
         "processKind": "Process kind",
-        "nomenclature": "Nomenclature"
+        "nomenclature": "Nomenclature",
+        "mode": "Cell mode",
+        "modeUnset": "(not set)",
+        "modePerCell": "Per cell",
+        "modeSingleCell": "Single cell",
+        "modeGlobal": "Global",
+        "modeHelp": "How a Tech-linked step distributes work across fixture cells.",
+        "fixtureTareType": "Fixture tare type",
+        "fixtureTareTypeNone": "(none)",
+        "fixtureTareTypeHelp": "The fixture (Role = Fixture tare type) this technology chain runs on."
     },
     "help": {
         "nameMissing": "A process must have a name.",
@@ -20,7 +29,8 @@
     },
     "card": {
         "kind": "Kind",
-        "nomenclature": "Nomenclature"
+        "nomenclature": "Nomenclature",
+        "cellMode": "Cell mode"
     },
     "tabs": {
         "processes": "Processes",
@@ -31,7 +41,8 @@
         "name": "Name",
         "description": "Description",
         "qualifier": "Qualifier",
-        "color": "Color"
+        "color": "Color",
+        "isTerminating": "Terminating"
     },
     "specification": {
         "category": "Category",
@@ -44,5 +55,15 @@
         "process": "Process",
         "kind": "Kind",
         "description": "Description"
+    },
+    "linkTech": {
+        "action": "Link Tech process",
+        "title": "Link a Tech process as a step",
+        "process": "Tech process",
+        "notCellAware": "(not cell-aware)",
+        "perCellUnavailable": "— needs a cell-aware plugin",
+        "link": "Link",
+        "cancel": "Cancel",
+        "error": "Failed to link the Tech process."
     }
 }

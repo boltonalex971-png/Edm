@@ -1,5 +1,6 @@
 import type { UUID } from '@logistics/data/types'
 import {
+    CheckboxCell,
     ColorCell,
     Column as GridColumn,
     RelationTable,
@@ -26,6 +27,12 @@ export function ProcessGradesTab({ id, api }: ProcessGradesTabProps) {
             <GridColumn field="name" title={t('grades.name')} width={200} />
             <GridColumn field="description" title={t('grades.description')} width="auto" />
             <GridColumn field="qualifierName" title={t('grades.qualifier')} width={200} />
+            <GridColumn
+                field="isTerminating"
+                title={t('grades.isTerminating')}
+                width={140}
+                cell={(p) => <CheckboxCell {...p} />}
+            />
         </RelationTable>
     )
 }

@@ -19,6 +19,11 @@ public sealed class PluginServiceProviderRegistry : IPluginServiceProvider, IDis
 {
     private readonly Dictionary<Guid, IServiceProvider> _byGuid = new();
     private readonly Dictionary<Assembly, Guid> _assemblyToGuid = new();
+    // Maps a service type to the plugin whose own blueprint registered it.
+    // Used to bridge a cross-plugin contract to its single providing plugin
+    // (see ForwardingProcessDefinitionService). Only plugin-private
+    // registrations are recorded — root delegations are skipped.
+    private readonly Dictionary<Type, Guid> _serviceTypeToGuid = new();
     private bool _initialized;
 
     public void Initialize(
@@ -89,6 +94,14 @@ public sealed class PluginServiceProviderRegistry : IPluginServiceProvider, IDis
             foreach (var d in blueprint)
             {
                 childCollection.Add(d);
+                if (!d.ServiceType.IsGenericTypeDefinition)
+                {
+                    // Record provider-of-record for each plugin-private service
+                    // type. Last write wins; harmless for shared service types
+                    // (never queried via the contract bridge), correct for
+                    // single-implementation contract interfaces.
+                    _serviceTypeToGuid[d.ServiceType] = plugin.Guid;
+                }
             }
 
             var childProvider = childCollection.BuildServiceProvider();
@@ -114,6 +127,17 @@ public sealed class PluginServiceProviderRegistry : IPluginServiceProvider, IDis
     {
         EnsureInitialized();
         return _assemblyToGuid.TryGetValue(assembly, out var g) && _byGuid.TryGetValue(g, out var p)
+            ? p
+            : null;
+    }
+
+    // Returns the child provider of the plugin that registered serviceType in
+    // its own container, or null if no plugin provides it. The host's contract
+    // forwarders use this to bridge a consumer call into the provider's scope.
+    public IServiceProvider? GetProviderForServiceType(Type serviceType)
+    {
+        EnsureInitialized();
+        return _serviceTypeToGuid.TryGetValue(serviceType, out var g) && _byGuid.TryGetValue(g, out var p)
             ? p
             : null;
     }

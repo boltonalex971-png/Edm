@@ -31,6 +31,7 @@
   </Project>
   <Project Path="Edm.WebApi.Client/Edm.WebApi.Client.csproj" />
   <Project Path="Edm/Edm.csproj" />
+  <Project Path="Microprojects.Edm.Contracts.ProcessDefinition/Microprojects.Edm.Contracts.ProcessDefinition.csproj" />
   <Project Path="Microprojects.Edm.Host/Microprojects.Edm.Host.csproj" />
   <Project Path="Microprojects.Edm.Install/Microprojects.Edm.Install.csproj" />
   <Project Path="Microprojects.Edm.Shared/Microprojects.Edm.Shared.csproj" />

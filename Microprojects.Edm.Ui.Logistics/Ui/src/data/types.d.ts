@@ -35,11 +35,16 @@ export interface TreeNode extends TreeDataItem {
     isFolder: true
 }
 
+export type ProcessMode = 'PerCell' | 'SingleCell' | 'Global'
+
 export interface Process extends DataItem {
     message: string
     kind: ProcessKind
     nomenclatureName?: string
     nomenclatureId?: number
+    mode?: ProcessMode
+    fixtureTareTypeId?: UUID
+    fixtureTareTypeName?: string
 }
 
 export interface Grade extends DataItem {
@@ -47,6 +52,7 @@ export interface Grade extends DataItem {
     description?: string
     qualifierName?: string
     color: string
+    isTerminating: boolean
 }
 
 export interface Nomenclature extends DataItem {
@@ -56,6 +62,8 @@ export interface Nomenclature extends DataItem {
     defaultTareTypeName?: string
 }
 
+export type TareRole = 'Container' | 'Fixture'
+
 export interface TareType extends DataItem {
     units: string
     countable: boolean
@@ -64,6 +72,8 @@ export interface TareType extends DataItem {
     sizeZ?: number
     dimensions: number
     capacity: number
+    role: TareRole
+    layoutJson?: string
 }
 
 export interface NomenclatureTareType {

@@ -4,6 +4,7 @@ using Microprojects.Edm.Ui.Logistics.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 {
     [DbContext(typeof(LogisticsContext))]
-    partial class LogisticsContextModelSnapshot : ModelSnapshot
+    [Migration("20260529165919_TareTypeRoleLayout")]
+    partial class TareTypeRoleLayout
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -172,9 +175,6 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsTerminating")
-                        .HasColumnType("bit");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -432,13 +432,7 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
                     b.Property<Guid?>("DirectoryId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("FixtureTareTypeId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<int>("Kind")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("Mode")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
@@ -451,8 +445,6 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("DirectoryId");
-
-                    b.HasIndex("FixtureTareTypeId");
 
                     b.HasIndex("NomenclatureId");
 
@@ -866,11 +858,6 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("DirectoryId");
 
-                    b.HasOne("Microprojects.Edm.Ui.Logistics.Models.TareType", "FixtureTareType")
-                        .WithMany()
-                        .HasForeignKey("FixtureTareTypeId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
                     b.HasOne("Microprojects.Edm.Domain.Meta", "Meta")
                         .WithOne()
                         .HasForeignKey("Microprojects.Edm.Ui.Logistics.Models.Process", "Id")
@@ -882,8 +869,6 @@ namespace Microprojects.Edm.Ui.Logistics.Persistence.Migrations
                         .HasForeignKey("NomenclatureId");
 
                     b.Navigation("Directory");
-
-                    b.Navigation("FixtureTareType");
 
                     b.Navigation("Meta");
 
