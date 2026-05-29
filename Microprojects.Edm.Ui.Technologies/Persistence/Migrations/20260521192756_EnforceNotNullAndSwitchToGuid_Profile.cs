@@ -11,12 +11,44 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
     // OperationHostDevices.ProfileId, WorkbenchDeviceConfigurations.ProfileId,
     // AuditQualifier.QualifiersId (the EF-managed m2m join).
     //
-    // Requires AddGuidShadowColumns_Profile applied + TechHierarchyBackfill run
-    // so every NewId / NewProfileId / NewQualifiersId column is populated.
+    // Up() runs an inline data backfill (BackfillSql) that populates every NewId /
+    // NewProfileId / NewQualifiersId column added by AddGuidShadowColumns_Profile,
+    // replacing the external TechHierarchyBackfill tool that was never wired into the
+    // installer.
     public partial class EnforceNotNullAndSwitchToGuid_Profile : Migration
     {
+        // Data backfill (replaces the retired TechHierarchyBackfill tool): give Profiles and
+        // Qualifiers database-friendly Guids (no NEWID) + a Meta row each, then map the FK
+        // shadow columns added by AddGuidShadowColumns_Profile. Runs before the swap below.
+        private const string BackfillSql = @"
+DECLARE @base bigint = CONVERT(bigint, DATEDIFF_BIG(SECOND, '2020-01-01T00:00:00', SYSUTCDATETIME()));
+DECLARE @now datetime2 = SYSUTCDATETIME();
+
+;WITH s AS (SELECT Id, ROW_NUMBER() OVER (ORDER BY Id) AS rn FROM dbo.Profiles WHERE NewId IS NULL)
+UPDATE p SET NewId = CAST(CAST(CRYPT_GEN_RANDOM(10) +
+            CONVERT(binary(6), @base * 65536 + (s.rn % 65536)) AS binary(16)) AS uniqueidentifier)
+FROM dbo.Profiles p JOIN s ON p.Id = s.Id;
+INSERT INTO dbo.Meta (Id, Metatype, Owner, Groups, Created, Deleted)
+SELECT NewId, N'Profile', N'', N'[]', @now, CASE WHEN IsActive = 0 THEN @now ELSE NULL END FROM dbo.Profiles;
+
+;WITH s AS (SELECT Id, ROW_NUMBER() OVER (ORDER BY Id) AS rn FROM dbo.Qualifiers WHERE NewId IS NULL)
+UPDATE q SET NewId = CAST(CAST(CRYPT_GEN_RANDOM(10) +
+            CONVERT(binary(6), @base * 65536 + (s.rn % 65536)) AS binary(16)) AS uniqueidentifier)
+FROM dbo.Qualifiers q JOIN s ON q.Id = s.Id;
+INSERT INTO dbo.Meta (Id, Metatype, Owner, Groups, Created, Deleted)
+SELECT NewId, N'Qualifier', N'', N'[]', @now, CASE WHEN IsActive = 0 THEN @now ELSE NULL END FROM dbo.Qualifiers;
+
+UPDATE a  SET NewProfileId   = p.NewId FROM dbo.Audits a JOIN dbo.Profiles p ON a.ProfileId = p.Id;
+UPDATE pp SET NewProfileId   = p.NewId FROM dbo.ProfilePoint pp JOIN dbo.Profiles p ON pp.ProfileId = p.Id;
+UPDATE o  SET NewProfileId   = p.NewId FROM dbo.OperationHostDevices o JOIN dbo.Profiles p ON o.ProfileId = p.Id;
+UPDATE w  SET NewProfileId   = p.NewId FROM dbo.WorkbenchDeviceConfigurations w JOIN dbo.Profiles p ON w.ProfileId = p.Id;
+UPDATE aq SET NewQualifiersId = q.NewId FROM dbo.AuditQualifier aq JOIN dbo.Qualifiers q ON aq.QualifiersId = q.Id;
+";
+
         protected override void Up(MigrationBuilder b)
         {
+            b.Sql(BackfillSql);
+
             // 1. Drop inbound FKs that reference the int Profile.Id / Qualifier.Id.
             b.DropForeignKey("FK_Audits_Profiles_ProfileId", "Audits");
             b.DropForeignKey("FK_ProfilePoint_Profiles_ProfileId", "ProfilePoint");

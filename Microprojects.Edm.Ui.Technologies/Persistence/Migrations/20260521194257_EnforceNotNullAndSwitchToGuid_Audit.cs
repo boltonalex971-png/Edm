@@ -17,8 +17,40 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
     // around, then continue with the standard drop+sp_rename pattern.
     public partial class EnforceNotNullAndSwitchToGuid_Audit : Migration
     {
+        // Data backfill (replaces the retired TechHierarchyBackfill tool): Audit gets a
+        // database-friendly Guid (no NEWID) + Meta row; AuditZone/AuditCriterion get Guids
+        // (no Meta — subordinate); then the FK shadow columns are mapped. Runs first so the
+        // existing AuditQualifier.NewAuditId backfill below finds Audits.NewId populated.
+        private const string BackfillSql = @"
+DECLARE @base bigint = CONVERT(bigint, DATEDIFF_BIG(SECOND, '2020-01-01T00:00:00', SYSUTCDATETIME()));
+DECLARE @now datetime2 = SYSUTCDATETIME();
+
+;WITH s AS (SELECT Id, ROW_NUMBER() OVER (ORDER BY Id) AS rn FROM dbo.Audits WHERE NewId IS NULL)
+UPDATE a SET NewId = CAST(CAST(CRYPT_GEN_RANDOM(10) +
+            CONVERT(binary(6), @base * 65536 + (s.rn % 65536)) AS binary(16)) AS uniqueidentifier)
+FROM dbo.Audits a JOIN s ON a.Id = s.Id;
+INSERT INTO dbo.Meta (Id, Metatype, Owner, Groups, Created, Deleted)
+SELECT NewId, N'Audit', N'', N'[]', @now, CASE WHEN IsActive = 0 THEN @now ELSE NULL END FROM dbo.Audits;
+
+;WITH s AS (SELECT Id, ROW_NUMBER() OVER (ORDER BY Id) AS rn FROM dbo.AuditZones WHERE NewId IS NULL)
+UPDATE z SET NewId = CAST(CAST(CRYPT_GEN_RANDOM(10) +
+            CONVERT(binary(6), @base * 65536 + (s.rn % 65536)) AS binary(16)) AS uniqueidentifier)
+FROM dbo.AuditZones z JOIN s ON z.Id = s.Id;
+
+;WITH s AS (SELECT Id, ROW_NUMBER() OVER (ORDER BY Id) AS rn FROM dbo.AuditCriteria WHERE NewId IS NULL)
+UPDATE c SET NewId = CAST(CAST(CRYPT_GEN_RANDOM(10) +
+            CONVERT(binary(6), @base * 65536 + (s.rn % 65536)) AS binary(16)) AS uniqueidentifier)
+FROM dbo.AuditCriteria c JOIN s ON c.Id = s.Id;
+
+UPDATE z  SET NewAuditId         = a.NewId FROM dbo.AuditZones z JOIN dbo.Audits a ON z.AuditId = a.Id;
+UPDATE c  SET NewZoneId          = z.NewId FROM dbo.AuditCriteria c JOIN dbo.AuditZones z ON c.ZoneId = z.Id;
+UPDATE oc SET NewAuditCriterionId = c.NewId FROM dbo.OperationCriteria oc JOIN dbo.AuditCriteria c ON oc.AuditCriterionId = c.Id;
+";
+
         protected override void Up(MigrationBuilder b)
         {
+            b.Sql(BackfillSql);
+
             // 0. AuditQualifier.NewAuditId shadow + backfill.
             b.Sql("ALTER TABLE AuditQualifier ADD NewAuditId uniqueidentifier NULL;");
             b.Sql(@"UPDATE aq SET NewAuditId = a.NewId

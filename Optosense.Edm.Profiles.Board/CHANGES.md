@@ -5,6 +5,10 @@ This plugin contributes:
 - the **Board** profile (`profiles/board`) — define a sequence of board commands and instructions and what parameters each one returns;
 - the **Mux board** driver (`drivers/mux`) — drives the 20-socket MUX board over a serial port, executing the plan generated from a Board profile.
 
+## v2.0.2
+
+- **Profile editor loads and saves again.** The board profile editor and its instructions list now use the correct address, so opening and saving a profile work after the recent API path changes. <!-- cite: PR #81 -->
+
 ## v1.13.0
 
 - **Smoother serial-port behaviour on slow lines.** A configurable pre-instruction gap stops the board from missing leading characters, and in-flight Mux jobs stop cleanly when an operation completes or is cancelled, so the next run starts on a clean port. <!-- cite: PR 700, PR 701, PR 702, PR 703 -->

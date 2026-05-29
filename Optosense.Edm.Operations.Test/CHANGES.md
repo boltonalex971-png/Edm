@@ -7,6 +7,10 @@ This plugin contributes two operation UIs:
 
 Both run in the operation window while a job is active.
 
+## v2.0.2
+
+- **Operation monitor opens reliably.** Launching the operation's monitor view opens correctly again. <!-- cite: 289e0e9 -->
+
 ## v1.13.0
 
 - **TypeOne UX overhaul.** Cleaner layout with larger live readings, a per-sensor pass/fail badge, and a real-time log pane next to the sensor grid; the indicator now follows the latest reading even when readings arrive out of order. <!-- cite: PR 786, PR 789, PR 808, PR 810, PR 812 -->

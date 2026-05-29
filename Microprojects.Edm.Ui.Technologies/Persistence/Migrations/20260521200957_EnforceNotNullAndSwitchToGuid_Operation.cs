@@ -17,8 +17,65 @@ namespace Microprojects.Edm.Ui.Technologies.Persistence.Migrations
     //   - Operations.WorkbenchId (nullable)
     public partial class EnforceNotNullAndSwitchToGuid_Operation : Migration
     {
+        // Data backfill (replaces the retired TechHierarchyBackfill tool): Operation and
+        // Workbench get database-friendly Guids (no NEWID) + Meta rows; Record,
+        // OperationCriterion, OperationHostDevice, WorkbenchDeviceConfiguration and
+        // RecordOperationCriteria get Guids (no Meta); then FK shadow columns are mapped.
+        // Operations/Workbenches have no legacy IsActive, so Meta.Deleted stays NULL.
+        private const string BackfillSql = @"
+DECLARE @base bigint = CONVERT(bigint, DATEDIFF_BIG(SECOND, '2020-01-01T00:00:00', SYSUTCDATETIME()));
+DECLARE @now datetime2 = SYSUTCDATETIME();
+
+;WITH s AS (SELECT Id, ROW_NUMBER() OVER (ORDER BY Id) AS rn FROM dbo.Operations WHERE NewId IS NULL)
+UPDATE o SET NewId = CAST(CAST(CRYPT_GEN_RANDOM(10) +
+            CONVERT(binary(6), @base * 65536 + (s.rn % 65536)) AS binary(16)) AS uniqueidentifier)
+FROM dbo.Operations o JOIN s ON o.Id = s.Id;
+INSERT INTO dbo.Meta (Id, Metatype, Owner, Groups, Created) SELECT NewId, N'Operation', N'', N'[]', @now FROM dbo.Operations;
+
+;WITH s AS (SELECT Id, ROW_NUMBER() OVER (ORDER BY Id) AS rn FROM dbo.Workbenches WHERE NewId IS NULL)
+UPDATE w SET NewId = CAST(CAST(CRYPT_GEN_RANDOM(10) +
+            CONVERT(binary(6), @base * 65536 + (s.rn % 65536)) AS binary(16)) AS uniqueidentifier)
+FROM dbo.Workbenches w JOIN s ON w.Id = s.Id;
+INSERT INTO dbo.Meta (Id, Metatype, Owner, Groups, Created) SELECT NewId, N'Workbench', N'', N'[]', @now FROM dbo.Workbenches;
+
+;WITH s AS (SELECT Id, ROW_NUMBER() OVER (ORDER BY Id) AS rn FROM dbo.Records WHERE NewId IS NULL)
+UPDATE r SET NewId = CAST(CAST(CRYPT_GEN_RANDOM(10) +
+            CONVERT(binary(6), @base * 65536 + (s.rn % 65536)) AS binary(16)) AS uniqueidentifier)
+FROM dbo.Records r JOIN s ON r.Id = s.Id;
+
+;WITH s AS (SELECT Id, ROW_NUMBER() OVER (ORDER BY Id) AS rn FROM dbo.OperationCriteria WHERE NewId IS NULL)
+UPDATE c SET NewId = CAST(CAST(CRYPT_GEN_RANDOM(10) +
+            CONVERT(binary(6), @base * 65536 + (s.rn % 65536)) AS binary(16)) AS uniqueidentifier)
+FROM dbo.OperationCriteria c JOIN s ON c.Id = s.Id;
+
+;WITH s AS (SELECT Id, ROW_NUMBER() OVER (ORDER BY Id) AS rn FROM dbo.OperationHostDevices WHERE NewId IS NULL)
+UPDATE o SET NewId = CAST(CAST(CRYPT_GEN_RANDOM(10) +
+            CONVERT(binary(6), @base * 65536 + (s.rn % 65536)) AS binary(16)) AS uniqueidentifier)
+FROM dbo.OperationHostDevices o JOIN s ON o.Id = s.Id;
+
+;WITH s AS (SELECT Id, ROW_NUMBER() OVER (ORDER BY Id) AS rn FROM dbo.WorkbenchDeviceConfigurations WHERE NewId IS NULL)
+UPDATE w SET NewId = CAST(CAST(CRYPT_GEN_RANDOM(10) +
+            CONVERT(binary(6), @base * 65536 + (s.rn % 65536)) AS binary(16)) AS uniqueidentifier)
+FROM dbo.WorkbenchDeviceConfigurations w JOIN s ON w.Id = s.Id;
+
+;WITH s AS (SELECT Id, ROW_NUMBER() OVER (ORDER BY Id) AS rn FROM dbo.RecordOperationCriteria WHERE NewId IS NULL)
+UPDATE r SET NewId = CAST(CAST(CRYPT_GEN_RANDOM(10) +
+            CONVERT(binary(6), @base * 65536 + (s.rn % 65536)) AS binary(16)) AS uniqueidentifier)
+FROM dbo.RecordOperationCriteria r JOIN s ON r.Id = s.Id;
+
+UPDATE o  SET NewWorkbenchId        = w.NewId FROM dbo.Operations o JOIN dbo.Workbenches w ON o.WorkbenchId = w.Id;
+UPDATE r  SET NewOperationHostDeviceId = ohd.NewId FROM dbo.Records r JOIN dbo.OperationHostDevices ohd ON r.OperationHostDeviceId = ohd.Id;
+UPDATE c  SET NewOperationId        = o.NewId FROM dbo.OperationCriteria c JOIN dbo.Operations o ON c.OperationId = o.Id;
+UPDATE ohd SET NewOperationId       = o.NewId FROM dbo.OperationHostDevices ohd JOIN dbo.Operations o ON ohd.OperationId = o.Id;
+UPDATE w  SET NewWorkbenchId        = wb.NewId FROM dbo.WorkbenchDeviceConfigurations w JOIN dbo.Workbenches wb ON w.WorkbenchId = wb.Id;
+UPDATE r  SET NewRecordId           = rec.NewId FROM dbo.RecordOperationCriteria r JOIN dbo.Records rec ON r.RecordId = rec.Id;
+UPDATE r  SET NewOperationCriterionId = c.NewId FROM dbo.RecordOperationCriteria r JOIN dbo.OperationCriteria c ON r.OperationCriterionId = c.Id;
+";
+
         protected override void Up(MigrationBuilder b)
         {
+            b.Sql(BackfillSql);
+
             // 0. The Serials view is SCHEMABINDING-bound to Records.OperationHostDeviceId
             //    + OperationHostDevices.HostDeviceId/OperationId. Drop it before the
             //    column-type changes and recreate it at the end with the new types.

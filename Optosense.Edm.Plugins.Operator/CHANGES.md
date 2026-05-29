@@ -6,6 +6,10 @@ The Operator plugin lets a human stand in for any device. It contributes:
 - the **Operator** driver (`drivers/operator`) — attach to a workbench device to capture human input where hardware would normally answer;
 - the **Operator** operation screen (`apps/operator`) — what the operator sees while a job is running.
 
+## v2.0.2
+
+- **Profile editor loads and saves again.** The operator profile editor now uses the correct address, so opening and saving a profile work after the recent API path changes. <!-- cite: PR #81 -->
+
 ## v1.13.0
 
 - **Smoother device lifecycle.** Fewer stuck devices, faster cancel, and finishing the device after the last operator step now closes the operation cleanly instead of leaving it in "waiting" state. <!-- cite: PR 756, PR 809, PR 814 -->

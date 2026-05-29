@@ -2,6 +2,14 @@
 
 The Logistics app (`/logistics`) covers nomenclature, tare, supplies, items, orders, repacking, allocation, the operator desktop, and the manufacturing process tree. It was added in v1.13.0 and has been the focus of most recent work.
 
+## v2.0.2
+
+- **Folders and entries in the navigation tree create and open reliably.** Creating a new entry or folder, and opening a folder's details, work again. <!-- cite: PR #96, PR #98 -->
+- **Folders shared with a group are visible to its members.** A folder restricted to a group now appears for users in that group instead of staying hidden. <!-- cite: PR #83 -->
+- **Supply components shown as tare.** A supply's components are now displayed as tare, matching how tare appears elsewhere. <!-- cite: PR #82 -->
+- **Faster first load.** The app's scripts are split so the screen appears sooner on first visit. <!-- cite: PR #80 -->
+- **Source and target barcodes stay after adding a tare.** During repacking the source and target barcodes are no longer cleared once a tare is added, so you can keep scanning. <!-- cite: PR #78 -->
+
 ## v2.0.0.0
 
 - **Refreshed look across the app.** Homepages, the operator desktop, the configuration trees (Nomenclature, Tare types, Processes) and the item / order / allocation flows pick up the same fonts, density and colour scheme as Technologies, Console and the Hub. <!-- cite: PR #58 -->
