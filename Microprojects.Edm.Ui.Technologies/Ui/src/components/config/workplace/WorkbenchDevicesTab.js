@@ -1,15 +1,16 @@
 ﻿import React from 'react';
 import Api from '../../api';
 import PropTypes from 'prop-types';
-import { RelationTable } from '@microprojects/edm-components/components';
-import { DropDownCell, LinkTextCell } from '@microprojects/edm-components/components';
-import { useGet } from '@microprojects/edm-components/hooks';
-import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
-import { DeviceDetail } from '../Devices';
-import { DeviceConfigEditor } from './DeviceConfigEditor';
-import { ProfileDetail } from '../Profiles';
-import { HostDetail } from '../Hosts';
+import {RelationTable} from '@microprojects/edm-components/components';
+import {DropDownCell, LinkTextCell} from '@microprojects/edm-components/components';
+import {useGet} from '@microprojects/edm-components/hooks';
+import {useTranslation} from 'react-i18next';
+import {useNavigate} from 'react-router-dom';
+import {DeviceDetail} from '../Devices';
+import {DeviceConfigEditor} from './DeviceConfigEditor';
+import {ProfileDetail} from '../Profiles';
+import {HostDetail} from '../Hosts';
+import {EMPTY_GUID} from '@microprojects/edm-components/components';
 
 WorkbenchDevicesTab.propTypes = {
     id: PropTypes.string,
@@ -18,9 +19,9 @@ WorkbenchDevicesTab.propTypes = {
     onDetailSelected: PropTypes.func
 }
 
-export function WorkbenchDevicesTab({ id, api, processId, onDetailSelected }) {
+export function WorkbenchDevicesTab({id, api, processId, onDetailSelected}) {
     const navigate = useNavigate();
-    const { t } = useTranslation('tech');
+    const {t} = useTranslation('tech');
     const [[devices]] = useGet(`${Api.workplaces}/processes/workbenches/${id}/requireddevices`, [id]);
     const [[profiles]] = useGet(`${Api.processes}/${processId}/profiles`, [processId]);
     const devicesPath = '/config/devices';
@@ -39,7 +40,7 @@ export function WorkbenchDevicesTab({ id, api, processId, onDetailSelected }) {
     const handleDeviceChange = (e, onChange) => {
         onChange(e);
         const device = devices.find(d => d.id === e.value);
-        profilers = profiles.filter(p => device.profilerGuid === '00000000-0000-0000-0000-000000000000' || p.profilerGuid === device.profilerGuid);
+        profilers = profiles.filter(p => device.profilerGuid === EMPTY_GUID || p.profilerGuid === device.profilerGuid);
     };
 
     const columns = [
@@ -139,9 +140,9 @@ export function WorkbenchDevicesTab({ id, api, processId, onDetailSelected }) {
     ];
 
     return (
-        <RelationTable 
-            api={`${api}/${id}/devices`} 
-            removable 
+        <RelationTable
+            api={`${api}/${id}/devices`}
+            removable
             columns={columns}
         />
     );

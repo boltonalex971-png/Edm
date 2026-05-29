@@ -2,6 +2,15 @@
 
 The Main UI is the EDM home screen: dashboard, new-operation wizard, the configuration trees (workbenches, devices, profiles, processes, audits) and the operation card with sensor reports. It is mounted at the site root.
 
+## v2.0.2
+
+- **Operations are numbered automatically.** Every new operation gets a sequential operation number from a running counter, shown on the dashboard and in the operation card. <!-- cite: PR #103 -->
+- **Workplace and workbench device tables show the correct host.** The Host column on the workplace and workbench device tabs now resolves and displays the host each device belongs to. <!-- cite: PR #100 -->
+- **Folders and entries in the configuration trees create and open reliably.** Creating a new entry or folder, and opening a folder's details, work again across the configuration trees. <!-- cite: PR #96, PR #98 -->
+- **Operation plugins open again.** Launching an operation's monitor (for example a Test or Optogen run) opens correctly. <!-- cite: 289e0e9 -->
+- **The new-operation wizard lists available processes again.** The wizard could come up with no selectable processes for a workplace; it now loads the workplace's processes correctly. <!-- cite: PR #94 -->
+- **Faster first load.** The app's scripts are split so the home screen appears sooner on first visit. <!-- cite: PR #80 -->
+
 ## v2.0.0.0
 
 - **Configuration trees now use globally-unique IDs.** Host, device, process and workplace records moved off the old per-table integer counters onto stable Guid IDs that are unique across the whole platform. Old bookmarks pointing at `/api/technologies/hierarchies/...` URLs need re-bookmarking under `/api/technologies/directories/...`; in-app links update themselves. Every editable entity (host, device, process, workplace, profile, qualifier, audit, operation, workbench) now records who created or modified it, and deleted rows are soft-hidden instead of erased so historical operations and records keep their context. <!-- cite: F-global-directories -->

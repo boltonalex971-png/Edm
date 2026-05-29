@@ -4,6 +4,14 @@ This changelog covers the host (`Optosense.Edm.WebApi`) and the libraries loaded
 
 The product version is set in `Optosense.Edm.Setup/Optosense.Edm.Setup.vdproj` (`ProductVersion`). Versions below correspond to the value shipped in the MSI at the time.
 
+## v2.0.2
+
+- **Guid identity migration — UUIDv8 keys and the shared Directory tree everywhere** (PR #89, PR #101, PR #102). Every entity across Technologies and Logistics is Guid-keyed; the legacy per-table integer ids are gone, and the shared `Directory`/`DirectoryEntry` tree replaces the old per-plugin hierarchies. Ids are minted as database-friendly UUIDv8 through a dedicated EF value generator (`Uuid.NewDatabaseFriendly`), so keys stay sequential in SQL Server without `NEWID()`/`NEWSEQUENTIALID()`. Out-of-tree code that assumed int ids or the old `hierarchies` routes must move to Guid ids and the `directories` routes.
+- **Per-plugin DI scope** (PR #90, PR #91). Each plugin resolves its controllers and hubs from its own `IServiceProvider` via a plugin-scoped controller/hub activator, so plugins register services without colliding in a shared container; the composite-registry workarounds and the now-redundant plugin hub activator were removed.
+- **Server-side localization** (PR #87). The host adds ASP.NET request localization (EN + RU) and `EdmException` gains a code/parameters constructor so business errors can be localized. SPA language selection ships behind a flag and is currently pinned to English.
+- **Plugin `FileVersion` kept in the csproj** (PR #77). Each plugin stamps `<FileVersion>` from its `.csproj` instead of a command-line `/p:FileVersion`, so versions live in source control and can't cascade into shared `<ProjectReference>` assemblies; shared-library `AssemblyVersion` stays governed by `EdmAssemblyInfo.cs`.
+- **Expired auth token no longer breaks data loads** (PR #76). A request arriving with an expired token used to surface as a failed data load in the SPA; the host now handles expiry so the client refreshes instead of erroring.
+
 ## v2.0.0
 
 The v2 release is a platform-wide reshape. The host's plugin model, project layout and discovery convention are all reworked; a new Hub application plugin ships in the MSI; shared frontend primitives move to a separate npm package consumed by every UI plugin. Major version bump signals the breaking API surface, not just visual changes.

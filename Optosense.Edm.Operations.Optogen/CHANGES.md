@@ -2,6 +2,10 @@
 
 Optogen (`apps/optogen`) is the general operator UI. It runs while a job is in progress, shows the live device readings, accepts operator input, and relays parameters to and from drivers.
 
+## v2.0.2
+
+- **Operation monitor opens reliably.** Launching the operation's monitor view opens correctly again. <!-- cite: 289e0e9 -->
+
 ## v1.13.0
 
 - **More reliable parameter handover.** Round-trips with drivers no longer drop parameters, and operator actions submitted in Optogen survive a reload of the screen. <!-- cite: PR 723, PR 809 -->
