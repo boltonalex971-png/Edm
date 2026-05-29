@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text.Json.Serialization;
 using Microprojects.Edm;
+using Microprojects.Edm.Contracts.ProcessDefinition;
 using Microprojects.Edm.Host;
 using Microprojects.Edm.Host.SignalR;
 using Microprojects.Edm.Plugins;
@@ -54,6 +55,13 @@ public static class EdmHostBuilderExtensions
         // reference-handover. Anything plugins inject for themselves
         // (DirectoryService, leaf services) stays plugin-tier.
         builder.Services.AddScoped<IUserService, UserService>();
+
+        // Cross-plugin contract bridges. Registered here (before AddPlugins)
+        // so they live in the root descriptor snapshot and are delegated into
+        // every plugin's child container. A consumer plugin that does not
+        // register its own impl resolves this forwarder, which bridges into
+        // the provider plugin's scope. See ForwardingProcessDefinitionService.
+        builder.Services.AddScoped<IProcessDefinitionService, ForwardingProcessDefinitionService>();
 
         // Custom controller activator dispatches controller construction
         // to the owning plugin's IServiceProvider so each plugin can only
